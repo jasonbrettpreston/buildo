@@ -344,16 +344,50 @@ async function editFileHandler(args, ctx) {
   return { toolResult: { ok: true, path: relPosix, replacements, sha256 }, pre, post };
 }
 
+// §C.4 Windows cmd.exe route hardening (SUB-ENG-1 commit 6). Any argv token
+// containing a cmd.exe metacharacter, or beginning with '/', is refused
+// BEFORE a process is ever spawned — a defense-in-depth guard kept even
+// though `resolveNpmCliEntry` below normally avoids the cmd.exe route
+// entirely (Windows can spawn a plain .js file with `node`, shell:false,
+// with no shim in between).
+const UNSAFE_CMD_TOKEN_RE = /[&|<>^%!"\r\n]/;
+
+function hasUnsafeCmdToken(argv) {
+  return argv.some((tok) => typeof tok === 'string' && (UNSAFE_CMD_TOKEN_RE.test(tok) || tok.startsWith('/')));
+}
+
 // Windows cannot spawn `npm`/`npx` (.cmd shims) with shell:false — Node core
-// has no non-shell path to a .cmd file. Every token reaching this point has
-// ALREADY passed matchArgv's strict per-token validation (literal policy
-// tokens or a value matching a closed regex/path-confinement check), so
-// there is no free-form string here for cmd.exe's own tokenizer to exploit;
-// routing exactly {npm, npx} through `cmd.exe /d /s /c <argv>` on Windows
-// only (git/node/npx-resolved-binaries below are spawned directly) is the
+// has no non-shell path to a .cmd file. `resolveNpmCliEntry` finds the real
+// `npm-cli.js`/`npx-cli.js` script bundled next to the running Node binary
+// (the same layout `node_modules/npm/bin/*` uses in every npm distribution)
+// so the call can be routed as `node <cli.js> <rest>` with shell:false,
+// exactly like any other argv — no cmd.exe metacharacter parsing at all on
+// that path. Falls back to the cmd.exe route only when that file cannot be
+// found on this host.
+function resolveNpmCliEntry(bin) {
+  const cliFile = bin === 'npm' ? 'npm-cli.js' : 'npx-cli.js';
+  const candidate = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', cliFile);
+  try {
+    return fs.existsSync(candidate) ? candidate : null;
+  } catch {
+    return null;
+  }
+}
+
+// Every token reaching the cmd.exe fallback below has ALREADY passed
+// matchArgv's strict per-token validation (literal policy tokens or a value
+// matching a closed regex/path-confinement check) AND hasUnsafeCmdToken
+// (checked by the caller before this function runs), so there is no
+// free-form string here for cmd.exe's own tokenizer to exploit; routing
+// exactly {npm, npx} through `cmd.exe /d /s /c <argv>` on Windows only
+// (git/node/npx-resolved-binaries below are spawned directly) is the
 // narrowest fix for a real Node/Windows limitation, not a general shell.
 function spawnAllowlisted(argv, opts) {
   if (process.platform === 'win32' && (argv[0] === 'npm' || argv[0] === 'npx')) {
+    const cliPath = resolveNpmCliEntry(argv[0]);
+    if (cliPath) {
+      return spawn(process.execPath, [cliPath, ...argv.slice(1)], { ...opts, shell: false });
+    }
     return spawn('cmd.exe', ['/d', '/s', '/c', ...argv], { ...opts, windowsHide: true });
   }
   return spawn(argv[0], argv.slice(1), { ...opts, shell: false });
@@ -441,6 +475,18 @@ async function runBashCommandHandler(args, ctx) {
   if (!match.allowed) {
     const post = captureWorktree(repoRoot);
     return { toolResult: { ok: false, error: { code: match.code, message: match.reason } }, pre, post };
+  }
+
+  // §1.4 Windows cmd.exe route hardening — checked even for an argv that just
+  // passed the allowlist, because `npm`/`npx` may still fall back to the
+  // cmd.exe route on a host where resolveNpmCliEntry finds nothing.
+  if (process.platform === 'win32' && (args.argv[0] === 'npm' || args.argv[0] === 'npx') && hasUnsafeCmdToken(args.argv)) {
+    const post = captureWorktree(repoRoot);
+    return {
+      toolResult: { ok: false, error: { code: 'ARGV_UNSAFE_TOKEN', message: `unsafe token for the cmd.exe route: ${args.argv.join(' ')}` } },
+      pre,
+      post,
+    };
   }
 
   const requested = args.timeout_ms || limits.timeout_ms || 600000;

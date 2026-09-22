@@ -5,135 +5,21 @@
 // a directly-injected `opts.modelClient` — no lock in this file makes a live
 // API call, per §11.3 ("no lock may need a live API call").
 //
-// Test hygiene (tasks/lessons.md, 2026-09-21 — "a test that shells out to git
-// inherits the SESSION's GIT_* env"): every child git process this suite
-// spawns runs with a GIT_*-scrubbed, allowlisted env and a fail-closed guard
-// that refuses to touch anything but a throwaway temp repo, checked BEFORE
-// any mutating git command.
+// The throwaway-repo + transcript-client harness (GIT_*-scrubbed env,
+// fail-closed temp-repo guard per tasks/lessons.md 2026-09-21, toolTurn/
+// hookedClient/ledgerRecords helpers) is shared with
+// src/tests/deepseek-exec-fences.infra.test.ts via
+// src/tests/helpers/deepseek-exec-harness.ts (Phase 2 commit 6 extraction —
+// same behavior, single definition, avoiding two copies of the same guard).
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-
-const REPO_ROOT = path.resolve(__dirname, '../../');
-const FORBIDDEN_REPO_ROOTS = ['C:\\Users\\User\\buildo-engine', 'C:\\Users\\User\\Buildo', REPO_ROOT];
-
-// Git exports GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE/... into hook environments;
-// a child `git` that inherits them ignores `cwd` (tasks/lessons.md, capture-
-// harness-overwrite.infra.test.ts precedent). Scrub at module load.
-for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR', 'GIT_PREFIX']) delete process.env[k];
-
-const GIT_TEST_IDENTITY = {
-  GIT_AUTHOR_NAME: 'deepseek-exec-test',
-  GIT_AUTHOR_EMAIL: 'test@example.invalid',
-  GIT_COMMITTER_NAME: 'deepseek-exec-test',
-  GIT_COMMITTER_EMAIL: 'test@example.invalid',
-};
-const ALLOWED_ENV_KEYS = ['PATH', 'Path', 'HOME', 'USERPROFILE', 'TEMP', 'TMP', 'SystemRoot', 'ComSpec', 'APPDATA', 'LOCALAPPDATA'];
-
-type ChildEnv = { NODE_ENV: 'development' | 'production' | 'test'; [key: string]: string };
-
-function scrubbedChildEnv(): ChildEnv {
-  const nodeEnv = process.env.NODE_ENV;
-  const out: ChildEnv = { NODE_ENV: nodeEnv === 'development' || nodeEnv === 'production' ? nodeEnv : 'test' };
-  for (const k of Object.keys(process.env)) {
-    const v = process.env[k];
-    if (ALLOWED_ENV_KEYS.includes(k) && v !== undefined) out[k] = v;
-  }
-  Object.assign(out, GIT_TEST_IDENTITY);
-  return out;
-}
-
-function assertThrowawayRepo(repo: string): void {
-  const norm = (p: string) => fs.realpathSync.native(path.resolve(p)).toLowerCase();
-  const repoNorm = norm(repo);
-  if (FORBIDDEN_REPO_ROOTS.some((f) => { const fn = norm(f); return repoNorm === fn || repoNorm.startsWith(fn + path.sep); })) {
-    throw new Error(`refusing to run a mutating git command against ${repo} — a real project root, not a throwaway repo`);
-  }
-  if (!repoNorm.startsWith(norm(os.tmpdir()) + path.sep) && repoNorm !== norm(os.tmpdir())) {
-    throw new Error(`refusing: ${repo} is not under the OS temp dir`);
-  }
-}
-
-function makeRepo(): string {
-  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-test-'));
-  assertThrowawayRepo(repo);
-  const env = scrubbedChildEnv();
-  const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  git('-c', 'core.autocrlf=false', 'init', '-q');
-  assertThrowawayRepo(repo);
-  git('config', 'user.email', GIT_TEST_IDENTITY.GIT_AUTHOR_EMAIL);
-  git('config', 'user.name', GIT_TEST_IDENTITY.GIT_AUTHOR_NAME);
-  git('config', 'core.autocrlf', 'false');
-  fs.writeFileSync(path.join(repo, 'seed.txt'), 'seed\n');
-  git('add', '-A');
-  git('commit', '-q', '-m', 'seed');
-  return repo;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS engine
-const engineMod = require(path.join(REPO_ROOT, 'scripts/deepseek-exec.js'));
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ledgerMod = require(path.join(REPO_ROOT, 'scripts/lib/exec-ledger.js'));
-
-const runEngine: (opts: Record<string, unknown>) => Promise<{
-  status: string; run_id: string; ledger_path: string; iterations: number;
-  usage_total: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
-  tool_calls_total: number; blocked_total: number; commits: string[];
-}> = engineMod.runEngine;
-const resolveProvider: (flag: string | undefined, env: string | undefined) => { provider: string; provider_source: string } = engineMod.resolveProvider;
-const redact: (s: string, extra?: string[]) => string = ledgerMod.redact;
-
-type ToolCall = { id: string; type: 'function'; function: { name: string; arguments: string } };
-type Turn = {
-  message: { role: 'assistant'; content: string | null; tool_calls: ToolCall[] };
-  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
-  finish_reason: string;
-};
-
-function toolTurn(id: string, name: string, args: unknown): Turn {
-  return {
-    message: { role: 'assistant', content: null, tool_calls: [{ id, type: 'function', function: { name, arguments: JSON.stringify(args) } }] },
-    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
-    finish_reason: 'tool_calls',
-  };
-}
-function rawToolTurn(id: string, name: string, rawArguments: string): Turn {
-  return {
-    message: { role: 'assistant', content: null, tool_calls: [{ id, type: 'function', function: { name, arguments: rawArguments } }] },
-    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
-    finish_reason: 'tool_calls',
-  };
-}
-function stopTurn(): Turn {
-  return { message: { role: 'assistant', content: 'done', tool_calls: [] }, usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }, finish_reason: 'stop' };
-}
-
-function hookedClient(turns: Turn[], hooks: Record<number, () => void> = {}) {
-  let i = 0;
-  return {
-    async next() {
-      const hook = hooks[i];
-      if (hook) hook();
-      const t = turns[i];
-      i += 1;
-      if (!t) return stopTurn();
-      return t;
-    },
-  };
-}
-
-function writeBrief(repo: string): string {
-  const briefPath = path.join(repo, 'brief.md');
-  fs.writeFileSync(briefPath, 'test brief\n');
-  return briefPath;
-}
-
-function ledgerRecords(ledgerDir: string, runId: string): Array<Record<string, unknown>> {
-  const text = fs.readFileSync(path.join(ledgerDir, `${runId}.jsonl`), 'utf8');
-  return text.trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));
-}
+import {
+  makeRepo, scrubbedChildEnv, runEngine, resolveProvider, redact,
+  toolTurn, rawToolTurn, hookedClient, writeBrief, ledgerRecords,
+} from './helpers/deepseek-exec-harness';
 
 describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
   let repo = '';
