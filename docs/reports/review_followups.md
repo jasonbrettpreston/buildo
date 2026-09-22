@@ -4010,3 +4010,17 @@ authorization model named anywhere in the spec). Closes with 5 named questions f
 Spec 124 prose/register integrity) is far beyond one output-panel peel; the next owning WF should re-run both
 `npm run review:deepseek` commands above fresh (this transcript will have rotted) and triage CRITICAL first
 (C1/C2/C3 each have a named draft-07-expressible fix in the original transcript).
+
+## 2026-09-22 — Spec 08 Part A (§A/§B substrate mapping, 3b9df652..211acc8d) output panel — DeepSeek CLI + Haiku grounder, deferred from the landing session
+
+Grounder adjudicated 8 DeepSeek findings: 8 CONFIRMED (0 refuted). All DEFERRED here rather than fixed inline — the operator's directive is the SUB-ENG-1 engine build; items 3 and 4 fold into that plan's Phase 3 commit 12 (which already extends `agent-roster.infra.test.ts`).
+
+| Sev | Finding | Fix owner |
+|---|---|---|
+| HIGH | `.claude/workflows.md` WF1/WF2 "Tool call 3" spawns `code-reviewer-grounded` with `isolation: "worktree"` AND tells it to run `npm run review:deepseek` — a harness worktree has no `node_modules`/`.env`, so the CLI cannot run there. Rule: the CLI runs from the main tree (Tool call 2); the worktree grounder reads that output, never re-runs it (also removes the MEDIUM duplicate-pass cost). | WF2 doc peel on `.claude/workflows.md` + `scripts/CLAUDE.md` §Multi-Agent Review |
+| HIGH | Spec 08 §11.5 still says CLI yield "never folds into a diff review" while §A/§B + the 2026-09-21 ruling make the DeepSeek CLI the Code Reviewer (A3) pass. §11.5 is the stale half — amend to "folds only through a grounder". | same WF2 peel |
+| HIGH | `agent-roster.infra.test.ts` has no arm asserting every `subagent_type: "X"` in `.claude/workflows.md`/`CLAUDE.md` resolves to a §3 seat id. | **SUB-ENG-1 Phase 3 commit 12** |
+| HIGH | T6 `WRITE_PATTERN` misses `fs.promises.writeFile` and false-positives on `regex.exec(`. | **SUB-ENG-1 Phase 3 commit 12** |
+| HIGH | T3 resolves the `SUB-ENG-1` tracked id against untracked `.cursor/wf1_deepseek_execution_engine_active_task.md` — red on any fresh worktree/clone (measured 2026-09-22 in `../buildo-engine`: 25/26 until the plan was copied in). Resolve against Spec 08 §C (tracked) as an alternative anchor; moot once §A flips to `live`. | SUB-ENG-1 commit 14 (the flip) |
+| MED | WF3 text says both "DeepSeek-first" and "adversarial CLIs only on request". | WF2 doc peel |
+| MED | Spec 08 §4 cites "§11" for the spawn-prompt enforcement; the templates live in §10.1. T5 pins §4's digest, so the fix re-pins. | WF2 doc peel |
