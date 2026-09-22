@@ -155,12 +155,21 @@ describe('compute_parcel_cost_estimates — test 6: counter-root, both direction
   });
 });
 
-describe('compute_parcel_cost_estimates — test 11: the vacuous counter, pinned', () => {
-  it('unmapped_residential_family_fallback_count vacuity is declared in limitations[] with its measured blast radius', () => {
+describe('compute_parcel_cost_estimates — test 11: CPCE-D3 CLOSED — the counter is declared, not pinned', () => {
+  it('unmapped_residential_family_fallback_count is a real checks[] entry (WARN, viol==0, retighten_when) — the vacuity limitations[] pin is gone', () => {
     const descriptor = loadDescriptor();
-    const hit = descriptor.limitations.find((l: { what: string }) => l.what.includes('unmapped_residential_family_fallback_count'));
-    expect(hit, 'a limitations[] entry naming unmapped_residential_family_fallback_count').toBeDefined();
-    expect(hit.what).toMatch(/105,595/);
+    const pinned = descriptor.limitations.find((l: { what: string }) => l.what.includes('unmapped_residential_family_fallback_count'));
+    expect(pinned, 'the vacuity limitations[] pin must be deleted once D3 is closed').toBeUndefined();
+
+    const check = descriptor.checks.find((c: { id: string }) => c.id === 'unmapped_residential_family_fallback_count');
+    expect(check, 'a checks[] entry for unmapped_residential_family_fallback_count').toBeDefined();
+    expect(check.limit).toBe('viol == 0');
+    expect(check.severity).toBe('WARN');
+    expect(check.blocking).toBe(false);
+    expect(check.retighten_when).toMatch(/Spec 88 P2/);
+    expect(check.why.text).toMatch(/105,595/);
+    // R-H adjudication: NO new logic variable — the plan's alternative ceiling was rejected.
+    expect(descriptor.config.logic_variables.find((v: { name: string }) => v.name === 'compute_parcel_cost_unmapped_family_max_count')).toBeUndefined();
   });
 });
 
@@ -288,5 +297,81 @@ describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs,
     const future = await runPost({ rates_as_of: '2099-01-01', rates_age_months: -900, index_age_months: 2, rates_future: true });
     expect(future.matched.cost_rates_stale).toBe(2);
     expect(future.matched.cost_rates_stale_detail).toBe('future_dated');
+  });
+});
+
+describe('compute_parcel_cost_estimates — CPCE-D3: the unmapped-family counter measures the real fall-through', () => {
+  const BUILD_NORMS_PATH = path.join(REPO_ROOT, 'scripts/lib/build-norms.js');
+  const COMPUTE_PATH = path.join(REPO_ROOT, COMPUTE_REL);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function makeCtx(parcels: Array<Record<string, unknown>>): any {
+    return {
+      config: {
+        cost_escalation_index: 100,
+        compute_parcel_cost_fsi_max_plausible: 99.999,
+        compute_parcel_cost_escalation_min_multiplier: 1,
+        compute_parcel_cost_escalation_fallback_multiplier: 1,
+        compute_parcel_cost_premium_default: 1,
+        compute_parcel_cost_adjustment_factor_default: 1,
+        compute_parcel_cost_min_priceable_area_sqm: 0,
+        compute_parcel_cost_batch_size: 1000,
+        compute_parcel_cost_stream_batch_size: 1000,
+      },
+      contract: { rates: {}, ratesAsOf: null, indexUpdatedAt: null },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stream: async function* (): AsyncGenerator<any> {
+        for (const p of parcels) yield p;
+      },
+      flushBatch: async () => ({ rowCount: 0 }),
+      onProgress: () => {},
+    };
+  }
+
+  it('unmappedFamilyCount === 4 for RD×3/RS×1/RT×1/RM×1/R×2/RA×1/RAC×1 — RED today (no such field; the literal is 0)', async () => {
+    const compute = loadCompute();
+    const parcels = [
+      { zoning_class: 'RD' }, { zoning_class: 'RD' }, { zoning_class: 'RD' },
+      { zoning_class: 'RS' }, { zoning_class: 'RT' }, { zoning_class: 'RM' },
+      { zoning_class: 'R' }, { zoning_class: 'R' }, { zoning_class: 'RA' }, { zoning_class: 'RAC' },
+    ];
+    const result = await compute.runCostMenuPass(null, makeCtx(parcels));
+    expect(result.scanned).toBe(10);
+    expect(result.unmappedFamilyCount).toBe(4);
+  });
+
+  it('both directions — an RD/RS/RT/RM-only population reports unmappedFamilyCount === 0 (proves it counts the fall-through, not the whole stream)', async () => {
+    const compute = loadCompute();
+    const parcels = [{ zoning_class: 'RD' }, { zoning_class: 'RS' }, { zoning_class: 'RT' }, { zoning_class: 'RM' }];
+    const result = await compute.runCostMenuPass(null, makeCtx(parcels));
+    expect(result.unmappedFamilyCount).toBe(0);
+  });
+
+  it('RED — a family bucket Σ that does not sum to scanned throws (a bucketing defect must not silently under-report)', async () => {
+    delete require.cache[require.resolve(BUILD_NORMS_PATH)];
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const buildNorms = require(BUILD_NORMS_PATH);
+    const orig = buildNorms.parcelFamilyFromZoning;
+    let calls = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    buildNorms.parcelFamilyFromZoning = (zc: any) => {
+      calls++;
+      // First call returns a value outside the four known buckets — the Σ-identity check
+      // sees it counted nowhere (not detached/townhouse/multiplex/unmapped), so the sum
+      // undercounts `scanned` by exactly 1.
+      if (calls === 1) return 'not_a_real_family';
+      return orig(zc);
+    };
+    delete require.cache[require.resolve(COMPUTE_PATH)];
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const stubbedCompute = require(COMPUTE_PATH);
+      const parcels = [{ zoning_class: 'RD' }, { zoning_class: 'RS' }];
+      await expect(stubbedCompute.runCostMenuPass(null, makeCtx(parcels))).rejects.toThrow(/Σ-identity broke/);
+    } finally {
+      buildNorms.parcelFamilyFromZoning = orig;
+      delete require.cache[require.resolve(BUILD_NORMS_PATH)];
+      delete require.cache[require.resolve(COMPUTE_PATH)];
+    }
   });
 });

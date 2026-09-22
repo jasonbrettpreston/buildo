@@ -155,6 +155,14 @@ by field, explicitly named here so none is silently waved through:
   legacy standalone capture's OWN `pipeline_runs` ledger row differs in shape from the converted
   form's row (new `ledger_row`/`terminal`/`chain_run_id` keys per the generic runner contract,
   Class A) — same run-completion fact, richer declared shape.
+- **`warnings`** (`summary.records_meta.warnings`, 1 difference, both chains — NEW as of WF3
+  CPCE-D1/D2/D3 commit 2, 2026-09-21): a runner-injected array naming every non-PASS,
+  non-INFO audit row (`["unmapped_residential_family_fallback_count: 105595"]` on this capture) —
+  absent from every prior capture of this step because the step had never reached a genuine
+  standing WARN before CPCE-D3 CLOSED added `unmapped_residential_family_fallback_count` (WARN,
+  `viol == 0`, a structurally non-zero population until Spec 88 P2). Standard converted-shell
+  telemetry (the same mechanism every other WARN-carrying converted step's goldens already show),
+  not a step-specific addition — absent whenever the audit table is all PASS/INFO.
 
 **Mechanical key-set diff, independent confirmation (`compute-parcel-cost-keyset-diff.mjs`, both
 arms, run 2026-09-21 post-recapture):** `records_meta` — 2 keys only-in-legacy (`dry_run`,
@@ -373,6 +381,17 @@ by numeric prefix — `205` the filename number was the exact guessed-value defe
 - Cutover ③ landed the same day as commits ①/②/2c (compressed programme cadence, coordinator-
   directed) rather than in a later session — see the handback message for the final commit
   hashes and the full O1–O4 + cutover accounting.
+- **WF3 CPCE-D1/D2/D3 (2026-09-21, one commit per defect, D1 → D3 → D2 order):** **CPCE-D1
+  CLOSED** commit 1 — the undatable-rate-table arm now folds into code 1/`'undatable'` WARN,
+  symmetric with `cost_index_stale`; both arms remain unreachable live (precondition lock
+  unchanged); `table_state[0].content_hash` byte-identical, 28 audit rows unchanged. **CPCE-D3
+  CLOSED** commit 2 — `unmapped_residential_family_fallback_count` now measures the real
+  `parcelFamilyFromZoning` fall-through (105,595 of 437,279, via a coded Σ-identity), reported by
+  a new WARN `checks[]` entry (`viol == 0`, `retighten_when`, **no new logic variable** — Spec 124
+  operator adjudication overrode the plan's high-water-mark-ceiling draft in favour of the R-H
+  LM-D6/LM-D11 precedent form); hash unchanged, 28→29 audit rows, verdict PASS→WARN (a standing,
+  declared WARN, not a regression). `docs/reports/defect-ledger.md` CPCE-D1/D3 → CLOSED; Spec 88
+  §2.9/§2.11 amended in the same commits as each fix.
 
 ---
 
@@ -426,10 +445,10 @@ converted step runs, and both independently restore it to the exact same baselin
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 0 | 1 | no PH-5/Seam map section found |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=22 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=0 it-count=27 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=22 |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=27 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -456,14 +475,15 @@ converted step runs, and both independently restore it to the exact same baselin
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 275 · unexplained: 0
+- compare ran: true · diffs found: 289 · unexplained: 0
 
 ### Test suite (item iii)
-- 1338/1338 passed (suite success=true)
+- 1349/1350 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -482,7 +502,7 @@ converted step runs, and both independently restore it to the exact same baselin
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=39381B notes=0B checks=22 rows records_meta=5789B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=40992B notes=0B checks=23 rows records_meta=5980B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

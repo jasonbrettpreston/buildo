@@ -195,6 +195,13 @@ async function runCostMenuPass(client, ctx) {
   let newBuildFallbackCount = 0;
   let fitGatedSuiteCount = 0;
   let fitGatedGarageCount = 0;
+  // CPCE-D3 — the real family fall-through, not the legacy's structural-0 literal. All four
+  // buckets are accumulated (not just the fall-through) so the Σ-identity below can catch a
+  // bucketing defect instead of silently under-reporting one (FOLD-RC3's cost_by_zone precedent).
+  let detachedFamilyCount = 0;
+  let townhouseFamilyCount = 0;
+  let multiplexFamilyCount = 0;
+  let unmappedFamilyCount = 0;
   const confidenceTotals = { high: 0, medium: 0, low: 0 };
   const lineCoverage = {};
   for (const line of PARCEL_COST_LINES) lineCoverage[line.id] = 0;
@@ -215,9 +222,23 @@ async function runCostMenuPass(client, ctx) {
 
   for await (const parcel of ctx.stream(SOURCE_SQL, [], { batchSize: streamBatchSize })) {
     scanned++;
+    // CPCE-D3 — hoisted OUTSIDE the try (parcelFamilyFromZoning never throws — it is a pure
+    // string classify with an 'all' backstop, build-norms.js) so every SCANNED parcel is
+    // counted into exactly one family bucket, including one whose engine call below throws.
+    // Counting inside the try would let an engine error silently exclude a row from every
+    // bucket, defeating the Σ-identity check below by construction.
+    const family = parcelFamilyFromZoning(parcel.zoning_class);
+    // Deliberately FOUR explicit equality arms, no catch-all `else` — an unrecognized return
+    // value from parcelFamilyFromZoning (a future vocabulary change) lands in NONE of the four
+    // buckets, so the Σ-identity below genuinely can break instead of being unreachable by
+    // construction (a bare `else` would silently fold anything unknown into "unmapped").
+    if (family === 'detached') detachedFamilyCount++;
+    else if (family === 'townhouse') townhouseFamilyCount++;
+    else if (family === 'multiplex') multiplexFamilyCount++;
+    else if (family === 'all') unmappedFamilyCount++; // fall-through — R/RA/RAC today (CPCE-D3)
     try {
       // R2 detached-only grounding (F6, Spec 78 P2 R2) — ported byte-for-byte.
-      const r2Grounded = parcelFamilyFromZoning(parcel.zoning_class) === 'detached';
+      const r2Grounded = family === 'detached';
       const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig });
       if (built.fsiImplausible) fsiImplausibleCount++;
       if (parcel.new_build_used_fallback) newBuildFallbackCount++;
@@ -254,6 +275,20 @@ async function runCostMenuPass(client, ctx) {
   }
   await flush();
 
+  // CPCE-D3 — Σ-identity CODED, not merely declared (FOLD-RC3's cost_by_zone precedent,
+  // computePostPhase :386-391). Every scanned parcel falls into exactly one of the four
+  // buckets by construction (parcelFamilyFromZoning always returns one of the four), so this
+  // can only fire on a genuine bucketing defect — a future zoning-vocabulary change that
+  // silently drops a family reddens the run instead of under-reporting unmappedFamilyCount.
+  const familySum = detachedFamilyCount + townhouseFamilyCount + multiplexFamilyCount + unmappedFamilyCount;
+  if (familySum !== scanned) {
+    throw new Error(
+      `${TAG} unmapped_residential_family_fallback Σ-identity broke: detached(${detachedFamilyCount}) + `
+      + `townhouse(${townhouseFamilyCount}) + multiplex(${multiplexFamilyCount}) + unmapped(${unmappedFamilyCount}) `
+      + `= ${familySum} !== scanned (${scanned}) — a family-bucketing defect, not a data condition.`,
+    );
+  }
+
   return {
     scanned,
     updated,
@@ -262,6 +297,7 @@ async function runCostMenuPass(client, ctx) {
     nullGeomBasisCount,
     fsiImplausibleCount,
     newBuildFallbackCount,
+    unmappedFamilyCount,
     fitGatedSuiteCount,
     fitGatedGarageCount,
     lineCoverage,
@@ -318,6 +354,8 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
   const nullGeomBasisCount = Number(pass.nullGeomBasisCount || 0);
   const fsiImplausibleCount = Number(pass.fsiImplausibleCount || 0);
   const newBuildFallbackCount = Number(pass.newBuildFallbackCount || 0);
+  // CPCE-D3 CLOSED (commit 2) — was the literal 0; now the real family fall-through count.
+  const unmappedFamilyCount = Number(pass.unmappedFamilyCount || 0);
   const fitGatedSuiteCount = Number(pass.fitGatedSuiteCount || 0);
   const fitGatedGarageCount = Number(pass.fitGatedGarageCount || 0);
   const lineCoverage = pass.lineCoverage || {};
@@ -423,7 +461,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       cost_index_stale_detail: indexAgeMonths === null ? 'undatable' : indexStale,
       cost_escalation_index: indexMissing ? null : Number(config.cost_escalation_index),
       rates_max_as_of_date: maxRateAsOf ? String(maxRateAsOf) : null,
-      unmapped_residential_family_fallback_count: 0, // P1: structurally 0 — limitations[]
+      unmapped_residential_family_fallback_count: unmappedFamilyCount, // CPCE-D3 CLOSED
       records_updated: updated,
       records_skipped: recordsSkipped,
       compute_parcel_cost_menu_coverage_min_pct: Number(menuCoveragePct.toFixed(1)),
@@ -484,6 +522,13 @@ function compute_parcel_cost_empty_menu_max_pct(ctx) {
 function compute_parcel_cost_line_total_max_cad(ctx) {
   ctx.report('compute_parcel_cost_line_total_max_cad', { value: ctx.matched.compute_parcel_cost_line_total_max_cad });
 }
+// CPCE-D3 CLOSED (commit 2, 2026-09-21) — was structurally 0 (a literal); now the real
+// parcelFamilyFromZoning 'all' fall-through count. `violations` (not `value`) is reported so
+// the descriptor's `viol == 0` bound actually compares the count (R-H adjudicated, LM-D6/
+// LM-D11 precedent form: a standing non-zero population is WARN + retighten_when, never FAIL).
+function unmapped_residential_family_fallback_count(ctx) {
+  ctx.report('unmapped_residential_family_fallback_count', { violations: ctx.matched.unmapped_residential_family_fallback_count });
+}
 function line_coverage_max_build(ctx) {
   ctx.report('line_coverage_max_build', { violations: 0, detail: ctx.matched.line_coverage.max_build });
 }
@@ -534,6 +579,7 @@ const CHECKS = {
   compute_parcel_cost_menu_coverage_min_pct,
   compute_parcel_cost_empty_menu_max_pct,
   compute_parcel_cost_line_total_max_cad,
+  unmapped_residential_family_fallback_count,
   line_coverage_max_build,
   line_coverage_coa_build,
   line_coverage_solar_max,
