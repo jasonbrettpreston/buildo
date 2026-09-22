@@ -222,7 +222,12 @@ describe.skipIf(!dbAvailable())('Spec 88 compute-parcel-cost-estimates — live 
 
   it('a parcel with NO computable line counts as null_geom_basis (menu has no lines)', async () => {
     await insParcel(pool, P(4), {
-      max_buildable_gfa_sqm: null,
+      // S0.2 (WF3 existing-structure-area-artifacts): max_buildable_gfa_sqm must be NON-NULL for
+      // this parcel to be scanned at all (the product-scope bound excludes NULL from the stream
+      // entirely) — 0 satisfies that while still being <= compute_parcel_cost_min_priceable_area_sqm
+      // (default 0), so the COALESCE'd new_build area is priceable-floor-excluded, not NULL-excluded;
+      // same "no computable line" outcome as the pre-S0.2 fixture, reached a different way.
+      max_buildable_gfa_sqm: 0,
       opt_aor_gfa_sqm: null, // WF3: null both so the COALESCE'd new_build area is also NULL (no computable line)
       max_buildable_footprint_sqm: null,
       opt_coa_gfa_sqm: null,

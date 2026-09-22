@@ -262,9 +262,13 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
       // truncated zone-aggregate row set (RD's row entirely absent) for the ZONE_SQL text and
       // passes every other query straight through to the real pool — so the REAL compute
       // code runs, on data that genuinely cannot sum to `scanned`.
-      await insParcel(pool, P(70), { zoning_class: 'RD' });
+      // S0.2: the fixture must be IN the product scope (a real max_buildable_gfa_sqm, existing
+      // GFA under the 750 cut) or it would be excluded from BOTH `scanned` and ZONE_SQL — which
+      // would trivially satisfy the Σ-identity for the wrong reason (0 == 0), not exercise it.
+      await insParcel(pool, P(70), { zoning_class: 'RD', max_buildable_gfa_sqm: 200, cur_floor_gfa_sqm: 100 });
       const scanned = (await pool.query(
-        `SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'`,
+        `SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'
+           AND max_buildable_gfa_sqm IS NOT NULL AND (cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= 750)`,
       )).rows[0].n;
       const stubPool = {
         query: (sql: string, params?: unknown[]) => {
@@ -280,7 +284,7 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
       await expect(
         compute.computePostPhase(stubPool, {
           passRaw: { cost_menu: { scanned, updated: 0, recordsSkipped: 0, engineErrorCount: 0, nullGeomBasisCount: 0, fsiImplausibleCount: 0, newBuildFallbackCount: 0, fitGatedSuiteCount: 0, fitGatedGarageCount: 0, lineCoverage: {}, confidenceTotals: { high: 0, medium: 0, low: 0 } } },
-          config: { cost_rates_stale_months: 3, cost_index_stale_months: 4, cost_escalation_index: 100 },
+          config: { cost_rates_stale_months: 3, cost_index_stale_months: 4, cost_escalation_index: 100, product_scope_max_existing_gfa_sqm: 750 },
           runAt: new Date(),
         }),
       ).rejects.toThrow(/cost_by_zone identity broke/);

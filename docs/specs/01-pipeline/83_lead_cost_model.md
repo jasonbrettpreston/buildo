@@ -92,6 +92,8 @@ The engine is split into "Muscle" (Execution) and "Brain" (Logic).
 (MEC/SITE/ENV-only, demolition, repair, tagless) and ALL non-residential remain on Steps A–D
 (the "T4" path) **unchanged** — including its Liar's Gate, matrix safe-skips and placeholder rule.
 
+**Vocabulary reuse note (WF3 S0.2, 2026-09-21/22, `wf3_existing_structure_area_artifacts_active_task.md` Ask 1).** This spec's `not_lowrise`/`isLowRiseResidential` already own the "out of low-rise scope" WORD for a **permit's** structure type — `compute_parcel_cost_estimates`' NEW product-scope bound (Spec 88 §2.1) reuses the same vocabulary and the same estate-level judgment (a large/mid-high-rise structure is out of scope for a low-rise cost model), but scopes a different subject: a **parcel's** product population (`zoning_class LIKE 'R%' AND max_buildable_gfa_sqm IS NOT NULL AND cur_floor_gfa_sqm <= product_scope_max_existing_gfa_sqm`), not a permit's `structure_type`. Spec 80's `residential` type-class (including `apartment`) is deliberately UNCHANGED by Spec 88's bound — an apartment PERMIT is still a real Steps A–D lead; an apartment-scale PARCEL is out of the cost-menu product population. Two scopes, one word, declared once here rather than diverging silently in three files.
+
 **The mapper:** normalizes tags (strip any `word:` prefix — `alter:`/`new:`/etc.; fold
 `finished-basement`/`basement-finish`→basement; `second-suite`→gut), maps tag→line, resolves
 multi-scope via the dominance hierarchy `max_build > laneway > addition > gut > underpin > basement >

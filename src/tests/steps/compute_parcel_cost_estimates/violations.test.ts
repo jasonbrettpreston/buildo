@@ -120,9 +120,9 @@ describe('compute_parcel_cost_estimates — test 4: named exports + declared hoo
 });
 
 describe('compute_parcel_cost_estimates — test 5: Rule 3, both directions', () => {
-  it('every config.logic_variables[].name has a seed row with on_invalid:"fail" and a seeded admin.group; 19 total', () => {
+  it('every config.logic_variables[].name has a seed row with on_invalid:"fail" and a seeded admin.group; 20 total (19 + S0.2\'s product_scope_max_existing_gfa_sqm)', () => {
     const descriptor = loadDescriptor();
-    expect(descriptor.config.logic_variables).toHaveLength(19);
+    expect(descriptor.config.logic_variables).toHaveLength(20);
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seeds: any = require(path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json'));
     for (const v of descriptor.config.logic_variables) {
@@ -231,7 +231,7 @@ describe('compute_parcel_cost_estimates — test 16: the stream batch size is LI
   it('GREEN — the pass calls ctx.stream with an explicit batchSize option sourced from config.compute_parcel_cost_stream_batch_size', () => {
     const compute = loadCompute();
     const src = compute.runCostMenuPass.toString();
-    expect(src).toMatch(/ctx\.stream\(SOURCE_SQL,\s*\[\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
+    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(maxExistingGfaSqm\),\s*\[\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
     expect(src).toMatch(/streamBatchSize\s*=\s*Number\(config\.compute_parcel_cost_stream_batch_size\)/);
   });
 });
@@ -386,13 +386,19 @@ describe('compute_parcel_cost_estimates — CPCE-D2: writes[1] codegen lock (fak
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const write = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js'));
 
-  it('buildWritePlan(writes[1]) renders a clear_sql whose WHERE is (<non-R scope>) AND (<16 guards OR-joined>) — the parenthesised scope is load-bearing (SQL AND/OR precedence)', () => {
+  it('buildWritePlan(writes[1]) renders a clear_sql whose WHERE is (<widened S0.2 scope>) AND (<16 guards OR-joined>) — the OUTER parenthesised scope is load-bearing (SQL AND/OR precedence): without it, "A OR (B AND C) AND (guards)" parses as "A OR ((B AND C) AND (guards))", silently dropping the guard off arm A', () => {
     const descriptor = loadDescriptor();
     const plan = write.buildWritePlan(descriptor.outputs.writes[1], descriptor);
     expect(plan.mechanic).toBe('set_based_null_retract');
+    // the WHOLE widened scope (both S0.2 arms) must be wrapped in ONE outer paren pair, so
+    // "AND (<guards>)" binds to the entire OR, not just its last disjunct.
     expect(plan.clear_sql).toMatch(
-      /WHERE \(zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%'\) AND \(parcel_cost_menu IS DISTINCT FROM null OR/,
+      /WHERE \(\(zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%'\) OR \(upper\(zoning_class\) LIKE 'R%' AND \(max_buildable_gfa_sqm IS NULL OR cur_floor_gfa_sqm > 750\)\)\) AND \(parcel_cost_menu IS DISTINCT FROM null OR/,
     );
+    // RED-proof of the precedence bug itself: a row matching ONLY the non-R% arm, with every
+    // guard column already NULL (nothing to retract), must NOT be selected by this WHERE — the
+    // un-parenthesised form would wrongly select it (guard silently dropped off that arm).
+    expect(plan.clear_sql.startsWith('UPDATE parcels SET'), 'sanity: this is the UPDATE statement').toBe(true);
     // all 16 columns SET to the literal NULL, none bound as a row value
     for (const col of ['parcel_cost_menu', 'cost_fb_total', 'cost_coa_total', 'cost_solar_total',
       'cost_garden_suite_total', 'cost_laneway_suite_total', 'cost_garage_total', 'cost_gut_total',
@@ -500,9 +506,9 @@ describe('compute_parcel_cost_estimates — CPCE peel O1: buildZoneBuckets order
     expect(buckets.RD.p50_cost_fb).toBe(12345);
   });
 
-  it('ZONE_SQL declares ORDER BY 1 (read determinism, belt-and-suspenders with the order-independent JS fold)', () => {
-    const { ZONE_SQL } = loadCompute();
-    expect(ZONE_SQL).toMatch(/ORDER BY 1\s*$/);
+  it('buildZoneSql declares ORDER BY 1 (read determinism, belt-and-suspenders with the order-independent JS fold)', () => {
+    const { buildZoneSql } = loadCompute();
+    expect(buildZoneSql(750)).toMatch(/ORDER BY 1\s*$/);
   });
 });
 
@@ -526,5 +532,61 @@ describe('compute_parcel_cost_estimates — CPCE peel O3 (refuted): stream/flush
     const paramsPerRow = 2 + ALL_SCALAR_COLS.length; // id + menu + every scalar column
     expect(paramsPerRow, 'sanity: the real per-row param count the DeepSeek finding miscounted as 18').toBe(17);
     expect(maxBatch * paramsPerRow, 'must stay under the Postgres 65,535 bind-parameter ceiling').toBeLessThanOrEqual(65535);
+  });
+});
+
+// S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22, Spec 88 §2.1) — the product-scope
+// bound. RED->GREEN proof shape: buildSourceSql's OLD form (no bound) would stream every R%
+// parcel regardless of max_buildable_gfa_sqm/cur_floor_gfa_sqm, pricing reno lines on
+// out-of-model parcels (the §0.1 headline finding, $77,593,312,011.51 of cost_gut_total on
+// 18,529 parcels). The NEW form excludes them from the stream entirely, and the WIDENED
+// writes[1] retraction (the SAME target CPCE-D2 built, never a second code path per FOLD-I1)
+// NULLs any of them still carrying a stale menu from before this bound existed.
+describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 §2.1, FOLD-I1/FOLD-RC2)', () => {
+  it('buildSourceSql excludes out-of-model parcels (max_buildable_gfa_sqm IS NULL) and oversized-existing parcels (cur_floor_gfa_sqm > bound)', () => {
+    const { buildSourceSql } = loadCompute();
+    const sql = buildSourceSql(750);
+    expect(sql).toContain('AND p.max_buildable_gfa_sqm IS NOT NULL');
+    expect(sql).toContain('p.cur_floor_gfa_sqm <= 750');
+    // the bound is a genuine parameter, not a re-baked literal — a different config value renders differently.
+    const sql2 = buildSourceSql(500);
+    expect(sql2).toContain('p.cur_floor_gfa_sqm <= 500');
+    expect(sql2).not.toBe(sql);
+  });
+
+  it('runCostMenuPass threads config.product_scope_max_existing_gfa_sqm into buildSourceSql (source text proof, mirrors test 16\'s own pattern)', () => {
+    const compute = loadCompute();
+    const src = compute.runCostMenuPass.toString();
+    expect(src).toMatch(/maxExistingGfaSqm\s*=\s*Number\(config\.product_scope_max_existing_gfa_sqm\)/);
+    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(maxExistingGfaSqm\),\s*\[\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
+  });
+
+  it('descriptor declares product_scope_max_existing_gfa_sqm, on_invalid:"fail", default 750 in the seed', () => {
+    const descriptor = loadDescriptor();
+    const v = descriptor.config.logic_variables.find((x: { name: string }) => x.name === 'product_scope_max_existing_gfa_sqm');
+    expect(v, 'product_scope_max_existing_gfa_sqm must be declared').toBeTruthy();
+    expect(v.on_invalid).toBe('fail');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const seed = require(path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json'));
+    expect(seed.product_scope_max_existing_gfa_sqm.default).toBe(750);
+  });
+
+  it('writes[1].write_discipline.scope is WIDENED by OR-extension — the ORIGINAL non-R% arm is byte-preserved, the new arm is R%-guarded so it cannot overlap it (Decision 10/FOLD-I1: no second code path)', () => {
+    const descriptor = loadDescriptor();
+    const scope: string = descriptor.outputs.writes[1].write_discipline.scope;
+    expect(scope, 'the ORIGINAL CPCE-D2 arm must survive byte-for-byte').toContain("(zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%')");
+    expect(scope).toContain("upper(zoning_class) LIKE 'R%'");
+    expect(scope).toContain('max_buildable_gfa_sqm IS NULL');
+    expect(scope).toContain('cur_floor_gfa_sqm > 750');
+    // still exactly ONE writes[1] target — S0.2 widens, it does not add a second retraction.
+    expect(descriptor.outputs.writes).toHaveLength(2);
+  });
+
+  it('no_cost_outside_population widens the SAME statement (never a second invariant) to the new population bound', () => {
+    const descriptor = loadDescriptor();
+    const invs = descriptor.invariants.filter((i: { id: string }) => i.id === 'no_cost_outside_population');
+    expect(invs, 'exactly one no_cost_outside_population row — S0.2 widens it, never duplicates it').toHaveLength(1);
+    expect(invs[0].sql).toContain('max_buildable_gfa_sqm IS NULL');
+    expect(invs[0].sql).toContain('cur_floor_gfa_sqm > 750');
   });
 });

@@ -5806,5 +5806,15 @@
     "admin": {
       "group": "Data Quality Thresholds"
     }
+  },
+  "product_scope_max_existing_gfa_sqm": {
+    "default": 750,
+    "type": "number",
+    "min": 0,
+    "max": 100000,
+    "description": "WF3 S0.2 (2026-09-21/22, Spec 88 §2.1, FOLD-RC2) — the residual product-scope cut: a parcel whose EXISTING structure (cur_floor_gfa_sqm) exceeds this is never priced, even if it is inside the max-build model. EXCLUSIVE (excluded iff cur_floor_gfa_sqm > this; a parcel at exactly 750.00 m2 is IN scope). Evidence: inside the in-model population (max_buildable_gfa_sqm IS NOT NULL, n=411,076) existing-GFA p99=337, p999=716, max=1,739; >750 = 322 parcels (0.078%) — ~2.2x p99, just above p999. This distribution holds ONLY under the R% zoning filter (FOLD-RC2: without it, p99=449/max=1,947) — CONSUMED by compute-parcel-cost-estimates.js's buildSourceSql, which carries the SAME `upper(zoning_class) LIKE 'R%'` clause as the population this bound was measured against. Retighten (M2): S1.4 re-derives this against the post-apportionment distribution (expected near 500) and records the result whether or not the value changes.",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
   }
 }

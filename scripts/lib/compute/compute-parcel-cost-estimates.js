@@ -104,7 +104,16 @@ async function readCostContract(pool) {
 // enrich_parcels pass-5 shape). `writes_ref` 0.
 // ===========================================================================
 
-const SOURCE_SQL = `
+// S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22, Spec 88 §2.1) — the PRODUCT-SCOPE
+// bound: a parcel out of enrich_parcels' own max-build model (max_buildable_gfa_sqm IS NULL —
+// lot outside [max_build_lot_min_sqm, max_build_lot_max_sqm], S0.1) or whose EXISTING structure
+// exceeds the residual not-a-low-rise-dwelling cut (cur_floor_gfa_sqm > product_scope_max_
+// existing_gfa_sqm, exclusive — FOLD-RC2) is never priced at all — the two passes must agree on
+// "is this parcel in the model" (tasks/lessons.md:30). `maxExistingGfaSqm` is threaded from LIVE
+// config (product_scope_max_existing_gfa_sqm) by the caller; the function form (was a bare
+// template constant) is what makes this genuinely config-driven rather than a baked literal.
+function buildSourceSql(maxExistingGfaSqm) {
+  return `
     SELECT
       p.id,
       p.lot_size_sqm::float8                 AS lot_size_sqm,
@@ -128,7 +137,10 @@ const SOURCE_SQL = `
       p.zoning_class
     FROM parcels p
     WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
+      AND p.max_buildable_gfa_sqm IS NOT NULL
+      AND (p.cur_floor_gfa_sqm IS NULL OR p.cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
     ORDER BY p.id ASC`;
+}
 
 /** Builds the per-batch parameterised UPDATE, byte-identical to the legacy `flushBatch`. */
 function buildFlushSql(batch) {
@@ -214,6 +226,7 @@ async function runCostMenuPass(client, ctx) {
 
   const batchSize = Number(config.compute_parcel_cost_batch_size);
   const streamBatchSize = Number(config.compute_parcel_cost_stream_batch_size);
+  const maxExistingGfaSqm = Number(config.product_scope_max_existing_gfa_sqm); // S0.2
   let batch = [];
 
   async function flush() {
@@ -226,7 +239,7 @@ async function runCostMenuPass(client, ctx) {
     if (typeof ctx.onProgress === 'function') ctx.onProgress(updated);
   }
 
-  for await (const parcel of ctx.stream(SOURCE_SQL, [], { batchSize: streamBatchSize })) {
+  for await (const parcel of ctx.stream(buildSourceSql(maxExistingGfaSqm), [], { batchSize: streamBatchSize })) {
     scanned++;
     // CPCE-D3 — hoisted OUTSIDE the try (parcelFamilyFromZoning never throws — it is a pure
     // string classify with an 'all' backstop, build-norms.js) so every SCANNED parcel is
@@ -329,7 +342,14 @@ async function runCostMenuPass(client, ctx) {
 /** FOLD-RC1/A8 — per-zone visibility block, scoped to the step's own R% population (FOLD-V4:
  * an UNSCOPED GROUP BY sums to 486,530, not residential_parcels_examined — the Σ-identity
  * below would fail on its first run against the unscoped form). */
-const ZONE_SQL = `
+// S0.2 — buildZoneSql's WHERE MUST mirror buildSourceSql's population EXACTLY (the same
+// tasks/lessons.md:30 "two passes must agree" discipline this whole WF3 exists to enforce):
+// computePostPhase's own Σ-identity check (zoneParcelsSum === scanned, below) compares this
+// query's row counts against the stream's scanned count, and would (correctly) THROW if the
+// two populations ever disagreed — as they did the moment this bound landed and ZONE_SQL had
+// not yet been updated to match (measured live: Σ 437,279 !== scanned 410,754).
+function buildZoneSql(maxExistingGfaSqm) {
+  return `
     SELECT upper(zoning_class) AS zone, COUNT(*)::int AS parcels,
            COUNT(*) FILTER (WHERE parcel_cost_menu IS NOT NULL AND parcel_cost_menu != '{"_schema_version": 1}'::jsonb)::int AS menus,
            COUNT(*) FILTER (WHERE parcel_cost_menu = '{"_schema_version": 1}'::jsonb)::int AS empty_menus,
@@ -337,8 +357,11 @@ const ZONE_SQL = `
            MAX(cost_gut_total)::float8 AS max_cost_gut
       FROM parcels
      WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'
+       AND max_buildable_gfa_sqm IS NOT NULL
+       AND (cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
      GROUP BY 1
      ORDER BY 1`;
+}
 
 /**
  * CPCE peel (DeepSeek/grounded, 2026-09-21, HIGH) — `buckets.other` folds MULTIPLE `ZONE_SQL` rows
@@ -460,7 +483,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
 
   // §7/A8 — the per-zone visibility block. FOLD-RC3: the Σ-identity is CODED, not merely
   // declared — a bucketing/scoping defect reddens the run rather than silently under-reporting.
-  const zoneRows = await pool.query(ZONE_SQL);
+  const zoneRows = await pool.query(buildZoneSql(Number(config.product_scope_max_existing_gfa_sqm)));
   const byZone = buildZoneBuckets(zoneRows.rows);
   const zoneParcelsSum = Object.values(byZone).reduce((n, z) => n + z.parcels, 0);
   if (zoneParcelsSum !== scanned) {
@@ -712,9 +735,9 @@ const passes = [
 
 module.exports = Object.assign(compute, {
   checks: CHECKS,
-  SOURCE_SQL,
+  buildSourceSql,
   buildFlushSql,
-  ZONE_SQL,
+  buildZoneSql,
   buildZoneBuckets,
   readCostContract,
   runCostMenuPass,
