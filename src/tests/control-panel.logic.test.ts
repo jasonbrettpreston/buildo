@@ -132,6 +132,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'reno_kitchen_gfa_pct', // Spec 65 §6 SC-3 — kitchen reno as %-of-footprint
   'reno_bath_gfa_pct', // Spec 65 §6 SC-3 — bath reno as %-of-footprint
   'mislink_footprint_lot_tol', // Spec 65 §5 (WF3-A) — mislink guard tolerance (footprint > lot)
+  'max_build_lot_min_sqm', // Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — promoted LOT_MIN_SQM literal (50 m²)
+  'max_build_lot_max_sqm', // Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — promoted LOT_MAX_SQM literal (2000 m²)
   'max_build_min_dimension_m', // Spec 65 §4 MB-3 (WF3 Phase 1 D-C) — viability floor for build dims
   'storey_height_m', // Spec 65 §6 SC-4 — residential storey-height (max-build derivation)
   // Spec 65 §7 (Phase 3) — accessory garage + laneway/garden rear-suite by-law constants.

@@ -65,3 +65,33 @@ describe('WF3 D-C max_build_min_dimension_m — four-surface literal parity', ()
     expect(c2.applies).not.toBe(c.applies);
   });
 });
+
+// S0.1 (WF3 existing-structure-area-artifacts, 2026-09-21, Spec 65 §4 MB-2 / Rule 3 / R-G):
+// max_build_lot_min_sqm / max_build_lot_max_sqm promote the bare LOT_MIN_SQM/LOT_MAX_SQM literals
+// (scripts/lib/max-build.js:27-28) to registered logic variables — the SAME ratified 50/2000 m² band,
+// never a re-invented number. This is a two-surface (no migration 239-style precedent) parity lock:
+// the seed JSON default and the max-build.js JS-fallback default must never drift, and
+// enrich-parcels.js's SQL builder must read the config value, not the bare literal
+// (proven directly in src/tests/steps/enrich_parcels/violations.test.ts's S0.1 describe block).
+describe('WF3 S0.1 max_build_lot_min_sqm / max_build_lot_max_sqm — seed/code literal parity (Rule 3 / R-G)', () => {
+  const seed2 = JSON.parse(read('scripts/seeds/logic_variables.json'));
+
+  it('seed JSON default === max-build.js LOT_MIN_SQM (the already-ratified floor, promoted not reinvented)', () => {
+    expect(seed2.max_build_lot_min_sqm?.default).toBe(mb.LOT_MIN_SQM);
+    expect(mb.LOT_MIN_SQM).toBe(50);
+  });
+
+  it('seed JSON default === max-build.js LOT_MAX_SQM (the already-ratified ceiling, promoted not reinvented)', () => {
+    expect(seed2.max_build_lot_max_sqm?.default).toBe(mb.LOT_MAX_SQM);
+    expect(mb.LOT_MAX_SQM).toBe(2000);
+  });
+
+  it('both are declared in scripts/enrich-parcels.descriptor.json config.logic_variables, on_invalid:"fail"', () => {
+    const descriptor = JSON.parse(read('scripts/enrich-parcels.descriptor.json'));
+    const byName = Object.fromEntries(
+      (descriptor.config.logic_variables as Array<{ name: string; on_invalid: string }>).map((v) => [v.name, v]),
+    );
+    expect(byName.max_build_lot_min_sqm?.on_invalid).toBe('fail');
+    expect(byName.max_build_lot_max_sqm?.on_invalid).toBe('fail');
+  });
+});

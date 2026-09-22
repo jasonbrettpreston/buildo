@@ -2598,3 +2598,103 @@ describe('counters — the three declared sources resolve against the enrich cou
     expect(counters.records_total).toBe(486_530);
   });
 });
+
+// S0.1 (WF3 existing-structure-area-artifacts, 2026-09-21) — Spec 65 §4 MB-2 / Rule 3 / R-G:
+// the lot band (`lot_size_confidence`, `emit`, `envelope_constraint_reason`) must be driven by
+// `max_build_lot_min_sqm` / `max_build_lot_max_sqm` (registered logic variables), never by the
+// bare `LOT_MIN_SQM`/`LOT_MAX_SQM` literals baked into the generated SQL at build time. Before this
+// commit `buildMaxBuildSql` had no `lotMinSqm`/`lotMaxSqm` params at all — this suite is RED against
+// that tree (TypeError: no such export shape / the SQL always reads 50/2000 regardless of config).
+describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driven, not literals (Spec 65 §4 MB-2, Rule 3 / R-G)', () => {
+  it('buildMaxBuildSql interpolates the CALLER-SUPPLIED lot band, not the bare 50/2000 literal', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
+      buildMaxBuildSql: (opts: {
+        scopeWhere?: string; full?: boolean; storeyHeight: number; acc: Record<string, unknown>;
+        mislinkTol: number; minDim: number; lotMinSqm?: number; lotMaxSqm?: number;
+      }) => string;
+    };
+    const sql = ep.buildMaxBuildSql({
+      full: true, storeyHeight: 3, acc: {}, mislinkTol: 0.05, minDim: 3,
+      lotMinSqm: 77, lotMaxSqm: 1234,
+    });
+    expect(sql, 'lot_size_confidence/envelope_constraint_reason CASE must read the config-supplied floor')
+      .toContain('best_area < 77');
+    expect(sql, 'lot_size_confidence/envelope_constraint_reason CASE must read the config-supplied ceiling')
+      .toContain('best_area > 1234');
+    expect(sql, "'lot_too_small' must be driven by the config-supplied floor, not the 50 default")
+      .toContain("lot_size_sqm < 77 THEN 'lot_too_small'");
+    expect(sql, "'lot_too_large' must be driven by the config-supplied ceiling, not the 2000 default")
+      .toContain("lot_size_sqm > 1234 THEN 'lot_too_large'");
+    expect(sql, 'the old bare 50 literal must not leak into the band comparisons').not.toContain('best_area < 50 ');
+    expect(sql, 'the old bare 2000 literal must not leak into the band comparisons').not.toContain('best_area > 2000 ');
+  });
+
+  it('buildMaxBuildSql falls back to mb.LOT_MIN_SQM/LOT_MAX_SQM (the JS bootstrap defaults) when the caller omits lotMinSqm/lotMaxSqm', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mb = require(path.join(REPO_ROOT, 'scripts/lib/max-build.js')) as { LOT_MIN_SQM: number; LOT_MAX_SQM: number };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
+      buildMaxBuildSql: (opts: {
+        scopeWhere?: string; full?: boolean; storeyHeight: number; acc: Record<string, unknown>;
+        mislinkTol: number; minDim: number;
+      }) => string;
+    };
+    const sql = ep.buildMaxBuildSql({ full: true, storeyHeight: 3, acc: {}, mislinkTol: 0.05, minDim: 3 });
+    expect(sql).toContain(`best_area < ${mb.LOT_MIN_SQM}`);
+    expect(sql).toContain(`best_area > ${mb.LOT_MAX_SQM}`);
+  });
+
+  it('runPass2 threads config.max_build_lot_min_sqm/max_build_lot_max_sqm into buildMaxBuildSql (emit is config-driven end to end)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
+    const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
+      runPass2: (client: { query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, ctx: { scopeWhere: string; full: boolean; clock: { now: () => Date } }, config: Record<string, number>) => Promise<unknown>;
+    };
+    let capturedSql = '';
+    const client = {
+      query: async (text: string) => {
+        if (/^\s*CREATE TEMP TABLE parcel_max_build/.test(text)) { capturedSql = text; return { rows: [] }; }
+        if (/^\s*DROP TABLE/.test(text)) return { rows: [] };
+        if (/^\s*SELECT[\s\S]*FROM parcel_max_build/.test(text)) return { rows: [{ scoped: 0 }] };
+        if (/^\s*UPDATE parcels/.test(text)) return { rows: [], rowCount: 0 };
+        if (/^\s*UPDATE parcel_max_build/.test(text) || /massing_enriched_at/.test(text)) return { rows: [], rowCount: 0 };
+        return { rows: [], rowCount: 0 };
+      },
+    };
+    const config: Record<string, number> = {
+      storey_height_m: 3, max_build_min_dimension_m: 3, mislink_footprint_lot_tol: 0.05,
+      max_build_lot_min_sqm: 321, max_build_lot_max_sqm: 4321,
+      garden_suite_min_lot_sqm: 270, garden_suite_min_rear_yard_m: 5, garden_suite_max_gfa_sqm: 60,
+      garage_min_lot_sqm: 230, garage_max_gfa_sqm: 60, garage_min_footprint_sqm: 20,
+      accessory_max_coverage_pct: 0.35, car_footprint_sqm: 15,
+      laneway_suite_max_gfa_sqm: 60, laneway_suite_min_lot_sqm: 270, laneway_suite_min_rear_yard_m: 5,
+      min_soft_landscaping_pct: 0.3, laneway_suite_storeys: 1, garden_suite_storeys: 1,
+    };
+    await ep.runPass2(client, { scopeWhere: 'TRUE', full: true, clock: { now: () => new Date('2026-09-21T00:00:00.000Z') } }, config);
+    expect(capturedSql, 'runPass2 must have issued the parcel_max_build CREATE').not.toBe('');
+    expect(capturedSql).toContain('best_area < 321');
+    expect(capturedSql).toContain('best_area > 4321');
+  });
+
+  it('scripts/enrich-parcels.descriptor.json declares both names in config.logic_variables, on_invalid:"fail" (R-G, write-affecting)', () => {
+    const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, DESCRIPTOR_REL), 'utf8')) as {
+      config: { logic_variables: Array<{ name: string; min: number; max: number; on_invalid: string }> };
+    };
+    const byName: Record<string, { name: string; min: number; max: number; on_invalid: string }> =
+      Object.fromEntries(descriptor.config.logic_variables.map((v) => [v.name, v]));
+    expect(byName.max_build_lot_min_sqm, 'max_build_lot_min_sqm must be declared').toBeTruthy();
+    expect(byName.max_build_lot_max_sqm, 'max_build_lot_max_sqm must be declared').toBeTruthy();
+    expect(byName.max_build_lot_min_sqm!.on_invalid).toBe('fail');
+    expect(byName.max_build_lot_max_sqm!.on_invalid).toBe('fail');
+  });
+
+  it('scripts/seeds/logic_variables.json defaults === mb.LOT_MIN_SQM / mb.LOT_MAX_SQM (the promoted literal keeps its ratified value, byte for byte)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mb = require(path.join(REPO_ROOT, 'scripts/lib/max-build.js')) as { LOT_MIN_SQM: number; LOT_MAX_SQM: number };
+    const seed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, SEEDS_REL), 'utf8')) as {
+      max_build_lot_min_sqm: { default: number }; max_build_lot_max_sqm: { default: number };
+    };
+    expect(seed.max_build_lot_min_sqm.default).toBe(mb.LOT_MIN_SQM);
+    expect(seed.max_build_lot_max_sqm.default).toBe(mb.LOT_MAX_SQM);
+  });
+});

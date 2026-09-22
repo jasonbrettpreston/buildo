@@ -59,6 +59,26 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "max_build_lot_min_sqm": {
+    "default": 50,
+    "type": "number",
+    "description": "Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — lower bound of the sane residential lot band (m²), inclusive: lot_size_sqm >= this. A lot below this floor gets lot_size_confidence='low' and envelope_constraint_reason='lot_too_small' (emit=false — no max-build envelope). Promoted from the bare literal scripts/lib/max-build.js LOT_MIN_SQM (mislinks 7,695 parcels; 24 of them priced pre-S0.2). CONSUMED by enrich-parcels.js (buildMaxBuildSql, the lot_size_confidence/envelope_constraint_reason CASE). NOTE: WF3 S0.2 (Spec 88 §2.1) will widen the reno cost-menu product-scope bound to honour this same variable in a SEPARATE step's descriptor, landed and declared there, not here. Operator-tunable.",
+    "min": 0,
+    "max": 500,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "max_build_lot_max_sqm": {
+    "default": 2000,
+    "type": "number",
+    "description": "Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — upper bound of the sane residential lot band (m²), inclusive: lot_size_sqm <= this. A lot above this ceiling gets lot_size_confidence='low' and envelope_constraint_reason='lot_too_large' — buildable, just not modelled by the residential max-build MODEL (the UI must not say 'can't build'). Promoted from the bare literal scripts/lib/max-build.js LOT_MAX_SQM. CONSUMED by enrich-parcels.js (buildMaxBuildSql). NOTE: WF3 S0.2 (Spec 88 §2.1) will widen the reno cost-menu product-scope bound (18,529 parcels, $77,593,312,011.51 of cost_gut_total pre-S0.2) to honour this same variable in a SEPARATE step's descriptor, landed and declared there, not here. Operator-tunable.",
+    "min": 500,
+    "max": 50000,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
   "max_build_min_dimension_m": {
     "default": 3,
     "type": "number",

@@ -187,6 +187,8 @@
       "link_massing_link_rate_fail_pct",
       "link_massing_centroid_confidence",
       "link_massing_nearest_confidence",
+      "max_build_lot_min_sqm",
+      "max_build_lot_max_sqm",
       "max_build_min_dimension_m",
       "storey_height_m",
       "garage_min_lot_sqm",

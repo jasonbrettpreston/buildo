@@ -424,14 +424,19 @@ function buildMassingScopeWhere({ full = false } = {}) {
 
 /**
  * SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only.
- * @param {{scopeWhere?: string, full?: boolean, storeyHeight: number, acc: object, mislinkTol: number, minDim: number}} opts
+ * @param {{scopeWhere?: string, full?: boolean, storeyHeight: number, acc: object, mislinkTol: number, minDim: number, lotMinSqm?: number, lotMaxSqm?: number}} opts
  */
-function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight, acc, mislinkTol, minDim }) {
+function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight, acc, mislinkTol, minDim, lotMinSqm, lotMaxSqm }) {
   const incremental = full
     ? 'TRUE'
     : `(p.lot_size_confidence IS NULL OR EXISTS (SELECT 1 FROM parcel_zoning_enrich z WHERE z.parcel_id = p.parcel_id) OR ${buildMassingScopeWhere({ full: false })})`;
-  const { LOT_TOLERANCE: tol, LOT_MIN_SQM, LOT_MAX_SQM, RAVINE_SETBACK_M } = mb;
+  const { LOT_TOLERANCE: tol, RAVINE_SETBACK_M } = mb;
   const N = (v, d) => Number(v ?? d);
+  // S0.1 (Rule 3 / R-G): the lot band is now a caller-supplied, admin-tunable pair
+  // (max_build_lot_min_sqm / max_build_lot_max_sqm) — mb.LOT_MIN_SQM/LOT_MAX_SQM survive only as
+  // the JS-fallback defaults for callers (tests, bootstrap) that omit lotMinSqm/lotMaxSqm.
+  const lotMinNum = N(lotMinSqm, mb.LOT_MIN_SQM);
+  const lotMaxNum = N(lotMaxSqm, mb.LOT_MAX_SQM);
   const gardenMinLot = N(acc.gardenMinLot, mb.GARDEN_SUITE_MIN_LOT_SQM);
   const gardenMinRearYard = N(acc.gardenMinRearYard, mb.GARDEN_SUITE_MIN_REAR_YARD_M);
   const gardenMaxGfa = N(acc.gardenMaxGfa, mb.GARDEN_SUITE_MAX_GFA_SQM);
@@ -518,14 +523,14 @@ tier AS (
   SELECT lot.*,
     CASE
       WHEN best_area IS NULL THEN NULL
-      WHEN best_area < ${LOT_MIN_SQM} OR best_area > ${LOT_MAX_SQM} THEN 'low'
+      WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'low'
       WHEN pair_lg AND pair_lf AND pair_gf THEN 'high'
       WHEN pair_lg OR pair_lf OR pair_gf THEN 'medium'
       ELSE 'low'
     END AS lot_size_confidence,
     CASE
       WHEN best_area IS NULL THEN NULL
-      WHEN best_area < ${LOT_MIN_SQM} OR best_area > ${LOT_MAX_SQM} THEN 'oob'
+      WHEN best_area < ${lotMinNum} OR best_area > ${lotMaxNum} THEN 'oob'
       WHEN pair_lg AND pair_lf AND pair_gf THEN '3way'
       WHEN pair_lg OR pair_lf OR pair_gf THEN 'pair'
       ELSE 'single'
@@ -707,8 +712,8 @@ SELECT pid, parcel_id, lot_size_confidence, lot_size_basis,
     -- WF3: split the NOT-emit reason so a future cost/build UI can distinguish an unbuildable sliver from a
     -- large lot that merely exceeds the residential max-build MODEL range (LOT_MAX) — the latter is buildable,
     -- just not modelled. NULL lot (NULL < LOT_MIN is NULL, not TRUE) correctly falls through to low_lot_confidence.
-    WHEN NOT emit AND lot_size_sqm < ${LOT_MIN_SQM} THEN 'lot_too_small'
-    WHEN NOT emit AND lot_size_sqm > ${LOT_MAX_SQM} THEN 'lot_too_large'
+    WHEN NOT emit AND lot_size_sqm < ${lotMinNum} THEN 'lot_too_small'
+    WHEN NOT emit AND lot_size_sqm > ${lotMaxNum} THEN 'lot_too_large'
     WHEN NOT emit THEN 'low_lot_confidence'
     WHEN heritage_no_massing THEN (CASE WHEN heritage_footprint_mislink THEN 'heritage_footprint_exceeds_lot' ELSE 'heritage_no_massing' END)
     WHEN heritage THEN 'heritage'
@@ -783,6 +788,8 @@ async function runPass2(client, ctx, config) {
   const storeyHeight = Number(config.storey_height_m);
   const minDimNum = Number(config.max_build_min_dimension_m);
   const mislinkTolNum = Number(config.mislink_footprint_lot_tol);
+  const lotMinNum = Number(config.max_build_lot_min_sqm);
+  const lotMaxNum = Number(config.max_build_lot_max_sqm);
   const acc = {
     gardenMinLot: config.garden_suite_min_lot_sqm, gardenMinRearYard: config.garden_suite_min_rear_yard_m,
     gardenMaxGfa: config.garden_suite_max_gfa_sqm, garageMinLot: config.garage_min_lot_sqm,
@@ -793,7 +800,7 @@ async function runPass2(client, ctx, config) {
     lanewayStoreys: config.laneway_suite_storeys, gardenStoreys: config.garden_suite_storeys,
   };
   await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, storeyHeight, acc, mislinkTol: mislinkTolNum, minDim: minDimNum }));
+  await client.query(buildMaxBuildSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, storeyHeight, acc, mislinkTol: mislinkTolNum, minDim: minDimNum, lotMinSqm: lotMinNum, lotMaxSqm: lotMaxNum }));
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
