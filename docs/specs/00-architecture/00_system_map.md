@@ -12,7 +12,7 @@
 | 05 | `00-architecture/05_knowledge_operating_model.md` | Knowledge Operating Model | `scripts/harvest-commits.mjs` | — | PROPOSED — future-state doctrine; not all wiring exists yet. |
 | 06 | `00-architecture/06_permits_rest_api.md` | Permit Data API | `src/app/api/permits/route.ts`, `src/app/api/permits/[id]/route.ts`, `src/app/api/permits/geo/route.ts`, `src/app/api/trades/route.ts`, `src/app/api/sync/route.ts` | `src/tests/api.infra.test.ts` | Done |
 | 07 | `00-architecture/07_backend_prod_eval.md` | Backend Production Readiness Evaluation | `src/lib/logger.ts`, `src/app/api/leads/feed/route.ts` | — | Done |
-| 08 | `00-architecture/08_agents.md` | Agent Architecture (Review & Assurance Roster) | `src/lib/db/generated/schema.ts` | — | ACTIVE (v1, 2026-07-14) |
+| 08 | `00-architecture/08_agents.md` | Agent Architecture (Review & Assurance Roster) | `src/lib/db/generated/schema.ts` | `src/tests/agent-roster.infra.test.ts` | ACTIVE (v1, 2026-07-14) |
 | 112 | `00-architecture/112_backup_recovery.md` | Database Backup & Recovery | `scripts/backup-db.js`, `scripts/restore-db.js`, `scripts/manifest.json` | `src/tests/backup-db.logic.test.ts`, `src/tests/restore-db.infra.test.ts` | ACTIVE |
 | 113 | `00-architecture/113_supabase_infrastructure.md` | Supabase Infrastructure | `scripts/lib/ssl-config.js`, `scripts/lib/pipeline.js`, `scripts/migrate.js`, `scripts/validation/run-step.mjs`, `src/lib/db/client.ts`, `src/lib/supabase/`, `scripts/ai-env-check.mjs`, `scripts/manifest.json`, `scripts/restore-db.js` | `src/tests/schema-authority.logic.test.ts` | ACTIVE |
 | 114 | `00-architecture/114_rls_policy_catalog.md` | RLS Policy Catalog | `src/lib/auth/verify-admin.ts` | — | ACTIVE |
