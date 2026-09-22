@@ -223,9 +223,15 @@ describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS 
     }
   });
 
-  it('the accept-lists are descriptor DATA (Ask A2(a)): 24 + 42 numeric ids', () => {
+  it('the surviving accept-list is descriptor DATA (Ask A2(a)): 24 numeric ids (COST_FB_GT15M_LEGIT, out of scope for S0.2 — no new-build $50M+ ids dissolved)', () => {
     expect(fields.COST_FB_GT15M_LEGIT).toHaveLength(24);
-    expect(fields.COST_ADDITION_GT50M_LEGIT).toHaveLength(42);
+  });
+
+  it('S0.4 (WF3, 2026-09-21/22) — COST_ADDITION_GT50M_LEGIT is RETIRED WHOLE: no longer exported, no longer an accept on cost_addition_gt_50m', () => {
+    expect(fields.COST_ADDITION_GT50M_LEGIT).toBeUndefined();
+    const def = fields.CHECK_DEFS.find((c: { id: string }) => c.id === 'cost_addition_gt_50m');
+    expect(def, 'cost_addition_gt_50m must still be declared — the BOUND survives, only the accept-list is retired').toBeTruthy();
+    expect(def.accept, 'the accept array itself must be gone, not merely emptied').toBeUndefined();
   });
 
   it('DIST_DEFS has exactly 8 entries', () => {

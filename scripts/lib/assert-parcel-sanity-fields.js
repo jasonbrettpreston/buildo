@@ -45,7 +45,17 @@ const LOWRISE = `upper(zoning_class) LIKE 'RD%' OR upper(zoning_class) LIKE 'RS%
 // logic variable (config.logic_variables[] is {name,min,max,on_invalid}, numbers
 // only). Verbatim from parcel-sanity-audit.js.
 const COST_FB_GT15M_LEGIT = [7402, 76620, 240610, 308831, 393793, 393848, 393866, 393872, 393885, 415256, 417357, 430889, 430890, 452644, 452653, 452655, 452677, 452682, 452703, 452936, 452944, 452950, 474449, 476327];
-const COST_ADDITION_GT50M_LEGIT = [1096, 3021, 15436, 41830, 48643, 81364, 105495, 105525, 120450, 123813, 133347, 134995, 138167, 162520, 175697, 175909, 179540, 186327, 189058, 207546, 242291, 244885, 257628, 291670, 292205, 300270, 326738, 341581, 347402, 349013, 356988, 361751, 364903, 417376, 425388, 454880, 459774, 467393, 471142, 473844, 482958, 1944521];
+// S0.4 (WF3 existing-structure-area-artifacts, 2026-09-21/22) — COST_ADDITION_GT50M_LEGIT
+// RETIRED WHOLE (42/42 ids DISSOLVED BY CONSTRUCTION under S0.2's product-scope bound,
+// §2 Decision 5 / §1 row H): every one of the 42 accept-listed parcels was out-of-model
+// (108,333... no — measured exactly: 42 of 42 have max_buildable_gfa_sqm IS NULL, S0.1's
+// lot-band cut), so S0.2's writes[1] retraction already NULLs their cost_addition_total —
+// live-verified 2026-09-22, POST-S0.2: `cost_addition_total > 50000000` (unfiltered, no
+// accept-list) reads 0 across the WHOLE population, not merely the 42 — the bound
+// calibrates the tripwire directly; an accept-list that exists to excuse an out-of-
+// population output is retired BY the bound, never curated (Spec 124 R-⟨next⟩ draft, §9
+// Ask 1). `cost_addition_gt_50m`'s own bound (parcel_sanity_cost_addition_max_cad) is
+// UNCHANGED — it is now a genuinely calibrated tripwire, not an accept-listed one.
 
 // Already-registered, REUSED (Ask A6(a)) — one copy of the policy, parity-locked
 // by src/tests/logic-var-parity.logic.test.ts against the resolved config value.
@@ -226,10 +236,9 @@ const CHECK_DEFS = [
     bad: (cfg) => `cost_fb_total > ${num(cfg.parcel_sanity_lowrise_cost_fb_max_cad, 'parcel_sanity_lowrise_cost_fb_max_cad')}`,
     accept: COST_FB_GT15M_LEGIT },
   { fam: 'BOUND', id: 'cost_addition_gt_50m', sev: 'MED', gate: false,
-    why: 'A2: new >$50M addition line (huge-lot artifact; watch for new members).',
+    why: 'A2: new >$50M addition line (huge-lot artifact; watch for new members). S0.4 (WF3, 2026-09-21/22): the 42-id COST_ADDITION_GT50M_LEGIT accept-list is RETIRED — every one of those ids was out-of-model and is now un-priced by S0.2s product-scope bound (writes[1] retraction), so this check is a genuinely calibrated tripwire, not an accept-listed one. Live-verified post-S0.2: 0 violations, unfiltered, across the whole population.',
     applies: () => `cost_addition_total IS NOT NULL`,
-    bad: (cfg) => `cost_addition_total > ${num(cfg.parcel_sanity_cost_addition_max_cad, 'parcel_sanity_cost_addition_max_cad')}`,
-    accept: COST_ADDITION_GT50M_LEGIT },
+    bad: (cfg) => `cost_addition_total > ${num(cfg.parcel_sanity_cost_addition_max_cad, 'parcel_sanity_cost_addition_max_cad')}` },
   // ---- INVARIANTS (cross-field) — zero-baseline coherence laws are GATED ----
   { fam: 'INVARIANT', id: 'max_build_dim_exceeds_lot_dim', sev: 'HIGH', gate: true,
     why: 'high-side lot bound: width <= frontage, length <= depth (wrong-axis error class).',
@@ -393,7 +402,7 @@ function slugify(s) {
 
 module.exports = {
   RES, ZC, LOWRISE,
-  COST_FB_GT15M_LEGIT, COST_ADDITION_GT50M_LEGIT,
+  COST_FB_GT15M_LEGIT,
   REUSED_MAX_BUILD_MIN_DIMENSION_M, REUSED_MISLINK_FOOTPRINT_LOT_TOL,
   LOGIC_VAR_DEFS, CHECK_DEFS, DIST_DEFS, INVARIANT_DEFS,
   num, slugify,

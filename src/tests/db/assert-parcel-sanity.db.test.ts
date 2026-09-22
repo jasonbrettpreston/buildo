@@ -163,6 +163,22 @@ describe.skipIf(!dbAvailable())('assert_parcel_sanity — runSanity FAIL-gate (l
     expect(Number(c.pop)).toBe(2); // both rows are in the applies population (lowrise, cost_fb_total NOT NULL)
     expect(Number(c.viol)).toBe(1); // only the NEW (non-accept-listed) id counts as a violation
   }, 120_000);
+
+  // S0.4 (WF3 existing-structure-area-artifacts, 2026-09-21/22) — COST_ADDITION_GT50M_LEGIT
+  // (the sibling accept-list to the one exercised above) is RETIRED WHOLE, not merely emptied:
+  // cost_addition_gt_50m no longer accepts ANY id, unlike lowrise_cost_fb_gt_15m above which
+  // still filters COST_FB_GT15M_LEGIT (a genuinely different, unaffected 24-id list, out of
+  // S0.2's scope). A synthetic $50M+ addition parcel must count as a violation unconditionally.
+  it('cost_addition_gt_50m has NO accept-list anymore (S0.4): every >$50M addition line counts, unconditionally', async () => {
+    await pool.query(
+      `INSERT INTO parcels (parcel_id, feature_type, geometry, geom, zoning_class, lot_size_sqm, cost_addition_total)
+       VALUES ('SANITY-TEST-ADD50M', 'TEST', $1::jsonb, ST_SetSRID(ST_GeomFromGeoJSON($1::text),4326), 'RD', 1500, 75000000)`,
+      [sq(0, 0, 0.0002)],
+    );
+    const { results } = await runSanity(pool);
+    const c = results.find((r: { id: string }) => r.id === 'cost_addition_gt_50m');
+    expect(Number(c.viol)).toBeGreaterThanOrEqual(1);
+  }, 120_000);
 });
 
 // S0.3 — existing_structure_onlot_share_low is a `frequency:"validate_only"` invariants[]

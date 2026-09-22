@@ -883,7 +883,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "A2: new >$50M addition line (huge-lot artifact; watch for new members). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "A2: new >$50M addition line (huge-lot artifact; watch for new members). S0.4 (WF3, 2026-09-21/22): the 42-id COST_ADDITION_GT50M_LEGIT accept-list is RETIRED — every one of those ids was out-of-model and is now un-priced by S0.2s product-scope bound (writes[1] retraction), so this check is a genuinely calibrated tripwire, not an accept-listed one. Live-verified post-S0.2: 0 violations, unfiltered, across the whole population. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"

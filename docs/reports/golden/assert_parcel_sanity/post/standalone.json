@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-parcel-sanity.js",
   "chain": "none",
-  "git_head": "06dcd3306af402413b9ab71de1536ad4dccdc047",
+  "git_head": "ffeb703b8620de958e45efab621126a6eb8d06d4",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -52,15 +52,12 @@
         "max_build_min_dimension_m": 3,
         "mislink_footprint_lot_tol": 0.05
       },
-      "terminal": "parcel_sanity_gate_failed",
+      "terminal": "all_checks_passed",
       "ledger_row": "owned",
       "chain_run_id": null,
       "pool_errors": 0,
-      "checks_failed": 1,
+      "checks_failed": 0,
       "checks_warned": 13,
-      "errors": [
-        "ravine_constrained_carries_priced_reno: 12135 / 12968"
-      ],
       "warnings": [
         "max_build_width_gt_30m: 953 / 382569",
         "max_build_length_gt_100m: 94 / 403404",
@@ -69,7 +66,7 @@
         "lowrise_coverage_gt_50pct: 39 / 246962",
         "lowrise_height_gt_15m: 12 / 270800",
         "footprint_coverage_gt_65pct: 1232 / 411076",
-        "max_build_fsi_gt_5: 5 / 411076",
+        "max_build_fsi_gt_5: 5 / 410754",
         "lowrise_maxbuild_height_gt_15m: 12 / 254953",
         "lowrise_maxbuild_stories_gt_4: 4 / 263037",
         "rd_maxbuild_stories_gt_3: 44 / 221995",
@@ -79,7 +76,7 @@
       "audit_table": {
         "phase": 25,
         "name": "Parcel Sanity Profile",
-        "verdict": "FAIL",
+        "verdict": "WARN",
         "rows": [
           {
             "metric": "lot_size_out_of_range",
@@ -139,7 +136,7 @@
           },
           {
             "metric": "priced_newbuild_lt_30sqm",
-            "value": "421 / 411076",
+            "value": "421 / 410754",
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check"
@@ -188,14 +185,14 @@
           },
           {
             "metric": "max_build_fsi_gt_5",
-            "value": "5 / 411076",
+            "value": "5 / 410754",
             "threshold": "viol == 0",
             "status": "WARN",
             "source": "check"
           },
           {
             "metric": "coa_fsi_gt_5",
-            "value": "0 / 411076",
+            "value": "0 / 410754",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
@@ -258,7 +255,7 @@
           },
           {
             "metric": "newbuild_cost_per_sqm_out_of_band",
-            "value": "0 / 411076",
+            "value": "0 / 410754",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
@@ -272,14 +269,14 @@
           },
           {
             "metric": "lowrise_cost_fb_gt_15m",
-            "value": "0 / 263037",
+            "value": "0 / 262978",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
           },
           {
             "metric": "cost_addition_gt_50m",
-            "value": "0 / 398317",
+            "value": "0 / 379466",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
@@ -314,7 +311,7 @@
           },
           {
             "metric": "new_build_cost_gt_coa_build_cost",
-            "value": "0 / 411076",
+            "value": "0 / 410754",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
@@ -342,14 +339,14 @@
           },
           {
             "metric": "stale_cost_fsi_without_gfa",
-            "value": "0 / 411076",
+            "value": "0 / 410754",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
           },
           {
             "metric": "cost_fb_on_footprint_gt_lot",
-            "value": "0 / 411076",
+            "value": "0 / 410754",
             "threshold": "viol == 0",
             "status": "PASS",
             "source": "check"
@@ -391,9 +388,9 @@
           },
           {
             "metric": "ravine_constrained_carries_priced_reno",
-            "value": "12135 / 12968",
+            "value": "0 / 12968",
             "threshold": "viol == 0",
-            "status": "FAIL",
+            "status": "PASS",
             "source": "check"
           },
           {
@@ -405,7 +402,7 @@
           },
           {
             "metric": "dist_max_build_fsi",
-            "value": "802 outliers (worst 5.93)",
+            "value": "797 outliers (worst 5.93)",
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "plausibility"
@@ -515,7 +512,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 34034,
+            "value": 25479,
             "threshold": null,
             "status": "INFO"
           }
@@ -567,20 +564,20 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "FAIL",
+  "verdict": "WARN",
   "ledger_status": [
-    "failed"
+    "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_parcel_sanity]\",\"msg\":\"[assert_parcel_sanity] target: assert_parcel_sanity (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_parcel_sanity]\",\"msg\":\"=== Parcel Sanity Profile: folded scan ===\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"parcel_sanity_lot_size_min_sqm\":40,\"parcel_sanity_lot_size_max_sqm\":100000,\"parcel_sanity_max_build_width_max_m\":30,\"parcel_sanity_max_build_length_max_m\":100,\"parcel_sanity_lowrise_opt_aor_gfa_max_sqm\":2500,\"parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm\":3500,\"parcel_sanity_comp_fsi_p50_max\":4,\"parcel_sanity_comp_fsi_p50_min\":0.05,\"parcel_sanity_priced_newbuild_min_gfa_sqm\":30,\"parcel_sanity_lowrise_bylaw_fsi_max\":1.5,\"parcel_sanity_bylaw_fsi_max\":8,\"parcel_sanity_lowrise_coverage_max_pct\":50,\"parcel_sanity_lowrise_bylaw_height_max_m\":15,\"parcel_sanity_footprint_coverage_max_ratio\":0.65,\"parcel_sanity_max_build_fsi_max\":5,\"parcel_sanity_coa_fsi_max\":5,\"parcel_sanity_lowrise_maxbuild_height_max_m\":15,\"parcel_sanity_lowrise_maxbuild_stories_max\":4,\"parcel_sanity_rd_maxbuild_stories_max\":3,\"parcel_sanity_height_per_storey_min_m\":2.5,\"parcel_sanity_height_per_storey_max_m\":5.5,\"parcel_sanity_opt_storeys_max\":12,\"parcel_sanity_newbuild_cost_per_sqm_min\":2000,\"parcel_sanity_newbuild_cost_per_sqm_max\":12000,\"parcel_sanity_lowrise_cost_fb_max_cad\":15000000,\"parcel_sanity_cost_addition_max_cad\":50000000,\"parcel_sanity_dim_lot_tolerance_m\":0.01,\"parcel_sanity_gfa_coherence_tolerance_sqm\":0.5,\"parcel_sanity_cost_coherence_tolerance_cad\":1,\"parcel_sanity_greenspace_tolerance_sqm\":0.5,\"parcel_sanity_realized_fsi_p90_min\":0.1,\"parcel_sanity_realized_fsi_p90_max\":6,\"parcel_sanity_distribution_percentile\":0.99,\"parcel_sanity_distribution_median_multiplier\":3,\"parcel_sanity_distribution_median_floor\":0.0001,\"parcel_sanity_onlot_share_rd_min\":0.9,\"parcel_sanity_onlot_share_attached_min\":0.5,\"max_build_min_dimension_m\":3,\"mislink_footprint_lot_tol\":0.05},\"terminal\":\"parcel_sanity_gate_failed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":1,\"checks_warned\":13,\"errors\":[\"ravine_constrained_carries_priced_reno: 12135 / 12968\"],\"warnings\":[\"max_build_width_gt_30m: 953 / 382569\",\"max_build_length_gt_100m: 94 / 403404\",\"nonlowrise_opt_aor_gfa_gt_3500: 1 / 148039\",\"lowrise_bylaw_fsi_gt_1_5: 3 / 1312\",\"lowrise_coverage_gt_50pct: 39 / 246962\",\"lowrise_height_gt_15m: 12 / 270800\",\"footprint_coverage_gt_65pct: 1232 / 411076\",\"max_build_fsi_gt_5: 5 / 411076\",\"lowrise_maxbuild_height_gt_15m: 12 / 254953\",\"lowrise_maxbuild_stories_gt_4: 4 / 263037\",\"rd_maxbuild_stories_gt_3: 44 / 221995\",\"existing_structure_shared_with_other_parcel: 97987 / 398317\",\"existing_structure_borrowed_primary: 47882 / 398317\"],\"audit_table\":{\"phase\":25,\"name\":\"Parcel Sanity Profile\",\"verdict\":\"FAIL\",\"rows\":[{\"metric\":\"lot_size_out_of_range\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_size_out_of_range_common_condo\",\"value\":\"3911 / 437279\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_implausible_correctly_excluded\",\"value\":\"3911 / 3911\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_width_gt_30m\",\"value\":\"953 / 382569\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"max_build_length_gt_100m\",\"value\":\"94 / 403404\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"lowrise_opt_aor_gfa_gt_2500\",\"value\":\"0 / 263037\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nonlowrise_opt_aor_gfa_gt_3500\",\"value\":\"1 / 148039\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"comp_fsi_p50_gt_4\",\"value\":\"612 / 160321\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"priced_newbuild_lt_30sqm\",\"value\":\"421 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_dim_below_floor\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lowrise_bylaw_fsi_gt_1_5\",\"value\":\"3 / 1312\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"residential_bylaw_fsi_gt_8\",\"value\":\"0 / 1336\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_coverage_gt_50pct\",\"value\":\"39 / 246962\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"lowrise_height_gt_15m\",\"value\":\"12 / 270800\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"footprint_coverage_gt_65pct\",\"value\":\"1232 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"max_build_fsi_gt_5\",\"value\":\"5 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"coa_fsi_gt_5\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_maxbuild_height_gt_15m\",\"value\":\"12 / 254953\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"comp_fsi_p50_implausibly_low\",\"value\":\"0 / 160321\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lowrise_maxbuild_stories_gt_4\",\"value\":\"4 / 263037\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"rd_maxbuild_stories_gt_3\",\"value\":\"44 / 221995\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"maxbuild_stories_basis_existing_retired\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"bylaw_height_per_storey_impossible\",\"value\":\"0 / 185267\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"bylaw_height_per_storey_generous\",\"value\":\"217 / 185267\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"opt_storeys_gt_12\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"newbuild_cost_per_sqm_out_of_band\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nulllot_on_gfa_or_cost_bearing\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_cost_fb_gt_15m\",\"value\":\"0 / 263037\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"cost_addition_gt_50m\",\"value\":\"0 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"max_build_dim_exceeds_lot_dim\",\"value\":\"0 / 406390\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_constrained_carries_priced_cost\",\"value\":\"0 / 12968\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_gfa_gt_opt_coa_gfa\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_storeys_gt_opt_coa_storeys\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"new_build_cost_gt_coa_build_cost\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"footprint_gt_lot_x105\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"existing_floor_gt_lot_x105\",\"value\":\"0 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_basis_footprint_gt_lot\",\"value\":\"0 / 4215\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"stale_cost_fsi_without_gfa\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"cost_fb_on_footprint_gt_lot\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"greenspace_out_of_range\",\"value\":\"0 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_gfa_gt_max_buildable_gfa\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"realized_fsi_p90_out_of_range\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"existing_structure_shared_with_other_parcel\",\"value\":\"97987 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"existing_structure_borrowed_primary\",\"value\":\"47882 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"ravine_constrained_carries_priced_reno\",\"value\":\"12135 / 12968\",\"threshold\":\"viol == 0\",\"status\":\"FAIL\",\"source\":\"check\"},{\"metric\":\"dist_bylaw_max_fsi\",\"value\":\"2 outliers (worst 2.00)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_max_build_fsi\",\"value\":\"802 outliers (worst 5.93)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_footprint_coverage\",\"value\":\"12 outliers (worst 1.05)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_max_build_height_m\",\"value\":\"91 outliers (worst 54.00)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_newbuild_cost_per_sqm\",\"value\":\"0 outliers\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_opt_aor_gfa_sqm\",\"value\":\"3134 outliers (worst 3843.42)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_comp_fsi_p50\",\"value\":\"205 outliers (worst 6.62)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_lot_size_sqm\",\"value\":\"4311 outliers (worst 543499.59)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"sys_dist_bylaw_max_fsi_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_max_build_fsi_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_footprint_coverage_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_max_build_height_m_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_newbuild_cost_per_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_opt_aor_gfa_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_comp_fsi_p50_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_lot_size_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"residential_parcels_scanned\",\"value\":437279,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":34034,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"coa_fsi\",\"comp_fsi_p50\",\"cost_addition_total\",\"cost_coa_total\",\"cost_fb_total\",\"cost_solar_total\",\"cur_floor_gfa_sqm\",\"depth_m\",\"envelope_constraint_reason\",\"existing_greenspace_sqm\",\"feature_type\",\"frontage_m\",\"id\",\"lot_size_sqm\",\"max_build_fsi\",\"max_build_height_m\",\"max_build_length_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_width_m\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_basis\",\"max_buildable_gfa_sqm\",\"opt_aor_gfa_sqm\",\"opt_aor_storeys\",\"opt_coa_gfa_sqm\",\"opt_coa_storeys\",\"realized_fsi_p90\",\"zoning_class\"]},\"writes\":{}}\n\n[assert_parcel_sanity] completed in 34.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_parcel_sanity]\",\"msg\":\"[assert_parcel_sanity] target: assert_parcel_sanity (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_parcel_sanity]\",\"msg\":\"=== Parcel Sanity Profile: folded scan ===\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"parcel_sanity_lot_size_min_sqm\":40,\"parcel_sanity_lot_size_max_sqm\":100000,\"parcel_sanity_max_build_width_max_m\":30,\"parcel_sanity_max_build_length_max_m\":100,\"parcel_sanity_lowrise_opt_aor_gfa_max_sqm\":2500,\"parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm\":3500,\"parcel_sanity_comp_fsi_p50_max\":4,\"parcel_sanity_comp_fsi_p50_min\":0.05,\"parcel_sanity_priced_newbuild_min_gfa_sqm\":30,\"parcel_sanity_lowrise_bylaw_fsi_max\":1.5,\"parcel_sanity_bylaw_fsi_max\":8,\"parcel_sanity_lowrise_coverage_max_pct\":50,\"parcel_sanity_lowrise_bylaw_height_max_m\":15,\"parcel_sanity_footprint_coverage_max_ratio\":0.65,\"parcel_sanity_max_build_fsi_max\":5,\"parcel_sanity_coa_fsi_max\":5,\"parcel_sanity_lowrise_maxbuild_height_max_m\":15,\"parcel_sanity_lowrise_maxbuild_stories_max\":4,\"parcel_sanity_rd_maxbuild_stories_max\":3,\"parcel_sanity_height_per_storey_min_m\":2.5,\"parcel_sanity_height_per_storey_max_m\":5.5,\"parcel_sanity_opt_storeys_max\":12,\"parcel_sanity_newbuild_cost_per_sqm_min\":2000,\"parcel_sanity_newbuild_cost_per_sqm_max\":12000,\"parcel_sanity_lowrise_cost_fb_max_cad\":15000000,\"parcel_sanity_cost_addition_max_cad\":50000000,\"parcel_sanity_dim_lot_tolerance_m\":0.01,\"parcel_sanity_gfa_coherence_tolerance_sqm\":0.5,\"parcel_sanity_cost_coherence_tolerance_cad\":1,\"parcel_sanity_greenspace_tolerance_sqm\":0.5,\"parcel_sanity_realized_fsi_p90_min\":0.1,\"parcel_sanity_realized_fsi_p90_max\":6,\"parcel_sanity_distribution_percentile\":0.99,\"parcel_sanity_distribution_median_multiplier\":3,\"parcel_sanity_distribution_median_floor\":0.0001,\"parcel_sanity_onlot_share_rd_min\":0.9,\"parcel_sanity_onlot_share_attached_min\":0.5,\"max_build_min_dimension_m\":3,\"mislink_footprint_lot_tol\":0.05},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":13,\"warnings\":[\"max_build_width_gt_30m: 953 / 382569\",\"max_build_length_gt_100m: 94 / 403404\",\"nonlowrise_opt_aor_gfa_gt_3500: 1 / 148039\",\"lowrise_bylaw_fsi_gt_1_5: 3 / 1312\",\"lowrise_coverage_gt_50pct: 39 / 246962\",\"lowrise_height_gt_15m: 12 / 270800\",\"footprint_coverage_gt_65pct: 1232 / 411076\",\"max_build_fsi_gt_5: 5 / 410754\",\"lowrise_maxbuild_height_gt_15m: 12 / 254953\",\"lowrise_maxbuild_stories_gt_4: 4 / 263037\",\"rd_maxbuild_stories_gt_3: 44 / 221995\",\"existing_structure_shared_with_other_parcel: 97987 / 398317\",\"existing_structure_borrowed_primary: 47882 / 398317\"],\"audit_table\":{\"phase\":25,\"name\":\"Parcel Sanity Profile\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"lot_size_out_of_range\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_size_out_of_range_common_condo\",\"value\":\"3911 / 437279\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_implausible_correctly_excluded\",\"value\":\"3911 / 3911\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_width_gt_30m\",\"value\":\"953 / 382569\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"max_build_length_gt_100m\",\"value\":\"94 / 403404\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"lowrise_opt_aor_gfa_gt_2500\",\"value\":\"0 / 263037\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nonlowrise_opt_aor_gfa_gt_3500\",\"value\":\"1 / 148039\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"comp_fsi_p50_gt_4\",\"value\":\"612 / 160321\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"priced_newbuild_lt_30sqm\",\"value\":\"421 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_dim_below_floor\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lowrise_bylaw_fsi_gt_1_5\",\"value\":\"3 / 1312\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"residential_bylaw_fsi_gt_8\",\"value\":\"0 / 1336\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_coverage_gt_50pct\",\"value\":\"39 / 246962\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"lowrise_height_gt_15m\",\"value\":\"12 / 270800\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"footprint_coverage_gt_65pct\",\"value\":\"1232 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"max_build_fsi_gt_5\",\"value\":\"5 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"coa_fsi_gt_5\",\"value\":\"0 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_maxbuild_height_gt_15m\",\"value\":\"12 / 254953\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"comp_fsi_p50_implausibly_low\",\"value\":\"0 / 160321\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lowrise_maxbuild_stories_gt_4\",\"value\":\"4 / 263037\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"rd_maxbuild_stories_gt_3\",\"value\":\"44 / 221995\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"maxbuild_stories_basis_existing_retired\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"bylaw_height_per_storey_impossible\",\"value\":\"0 / 185267\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"bylaw_height_per_storey_generous\",\"value\":\"217 / 185267\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"opt_storeys_gt_12\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"newbuild_cost_per_sqm_out_of_band\",\"value\":\"0 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nulllot_on_gfa_or_cost_bearing\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lowrise_cost_fb_gt_15m\",\"value\":\"0 / 262978\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"cost_addition_gt_50m\",\"value\":\"0 / 379466\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"max_build_dim_exceeds_lot_dim\",\"value\":\"0 / 406390\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"ravine_constrained_carries_priced_cost\",\"value\":\"0 / 12968\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_gfa_gt_opt_coa_gfa\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_storeys_gt_opt_coa_storeys\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"new_build_cost_gt_coa_build_cost\",\"value\":\"0 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"footprint_gt_lot_x105\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"existing_floor_gt_lot_x105\",\"value\":\"0 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_basis_footprint_gt_lot\",\"value\":\"0 / 4215\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"stale_cost_fsi_without_gfa\",\"value\":\"0 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"cost_fb_on_footprint_gt_lot\",\"value\":\"0 / 410754\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"greenspace_out_of_range\",\"value\":\"0 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_gfa_gt_max_buildable_gfa\",\"value\":\"0 / 411076\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"realized_fsi_p90_out_of_range\",\"value\":\"inert (population 0)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"existing_structure_shared_with_other_parcel\",\"value\":\"97987 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"existing_structure_borrowed_primary\",\"value\":\"47882 / 398317\",\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"ravine_constrained_carries_priced_reno\",\"value\":\"0 / 12968\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"dist_bylaw_max_fsi\",\"value\":\"2 outliers (worst 2.00)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_max_build_fsi\",\"value\":\"797 outliers (worst 5.93)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_footprint_coverage\",\"value\":\"12 outliers (worst 1.05)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_max_build_height_m\",\"value\":\"91 outliers (worst 54.00)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_newbuild_cost_per_sqm\",\"value\":\"0 outliers\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_opt_aor_gfa_sqm\",\"value\":\"3134 outliers (worst 3843.42)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_comp_fsi_p50\",\"value\":\"205 outliers (worst 6.62)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"dist_lot_size_sqm\",\"value\":\"4311 outliers (worst 543499.59)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"sys_dist_bylaw_max_fsi_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_max_build_fsi_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_footprint_coverage_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_max_build_height_m_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_newbuild_cost_per_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_opt_aor_gfa_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_comp_fsi_p50_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_dist_lot_size_sqm_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"source\":\"context\",\"metric\":\"residential_parcels_scanned\",\"value\":437279,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":25479,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"bylaw_max_coverage_pct\",\"bylaw_max_fsi\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"coa_fsi\",\"comp_fsi_p50\",\"cost_addition_total\",\"cost_coa_total\",\"cost_fb_total\",\"cost_solar_total\",\"cur_floor_gfa_sqm\",\"depth_m\",\"envelope_constraint_reason\",\"existing_greenspace_sqm\",\"feature_type\",\"frontage_m\",\"id\",\"lot_size_sqm\",\"max_build_fsi\",\"max_build_height_m\",\"max_build_length_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_width_m\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_basis\",\"max_buildable_gfa_sqm\",\"opt_aor_gfa_sqm\",\"opt_aor_storeys\",\"opt_coa_gfa_sqm\",\"opt_coa_storeys\",\"realized_fsi_p90\",\"zoning_class\"]},\"writes\":{}}\n\n[assert_parcel_sanity] completed in 25.5s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1951,
+      "id": 1954,
       "pipeline": "assert_parcel_sanity",
-      "status": "failed",
-      "started_at": "2026-09-22T06:13:50.874Z",
-      "completed_at": "2026-09-22T06:14:24.866Z",
-      "duration_ms": 34035,
+      "status": "completed_with_warnings",
+      "started_at": "2026-09-22T07:17:31.855Z",
+      "completed_at": "2026-09-22T07:17:57.304Z",
+      "duration_ms": 25480,
       "records_total": null,
       "records_new": null,
       "records_updated": null,
@@ -626,10 +623,7 @@
           "parcel_sanity_distribution_median_multiplier": 3,
           "parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm": 3500
         },
-        "errors": [
-          "ravine_constrained_carries_priced_reno: 12135 / 12968"
-        ],
-        "terminal": "parcel_sanity_gate_failed",
+        "terminal": "all_checks_passed",
         "warnings": [
           "max_build_width_gt_30m: 953 / 382569",
           "max_build_length_gt_100m: 94 / 403404",
@@ -638,7 +632,7 @@
           "lowrise_coverage_gt_50pct: 39 / 246962",
           "lowrise_height_gt_15m: 12 / 270800",
           "footprint_coverage_gt_65pct: 1232 / 411076",
-          "max_build_fsi_gt_5: 5 / 411076",
+          "max_build_fsi_gt_5: 5 / 410754",
           "lowrise_maxbuild_height_gt_15m: 12 / 254953",
           "lowrise_maxbuild_stories_gt_4: 4 / 263037",
           "rd_maxbuild_stories_gt_3: 44 / 221995",
@@ -706,7 +700,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "421 / 411076",
+              "value": "421 / 410754",
               "metric": "priced_newbuild_lt_30sqm",
               "source": "check",
               "status": "INFO",
@@ -755,14 +749,14 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "5 / 411076",
+              "value": "5 / 410754",
               "metric": "max_build_fsi_gt_5",
               "source": "check",
               "status": "WARN",
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 411076",
+              "value": "0 / 410754",
               "metric": "coa_fsi_gt_5",
               "source": "check",
               "status": "PASS",
@@ -825,7 +819,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 411076",
+              "value": "0 / 410754",
               "metric": "newbuild_cost_per_sqm_out_of_band",
               "source": "check",
               "status": "PASS",
@@ -839,14 +833,14 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 263037",
+              "value": "0 / 262978",
               "metric": "lowrise_cost_fb_gt_15m",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 398317",
+              "value": "0 / 379466",
               "metric": "cost_addition_gt_50m",
               "source": "check",
               "status": "PASS",
@@ -881,7 +875,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 411076",
+              "value": "0 / 410754",
               "metric": "new_build_cost_gt_coa_build_cost",
               "source": "check",
               "status": "PASS",
@@ -909,14 +903,14 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 411076",
+              "value": "0 / 410754",
               "metric": "stale_cost_fsi_without_gfa",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0"
             },
             {
-              "value": "0 / 411076",
+              "value": "0 / 410754",
               "metric": "cost_fb_on_footprint_gt_lot",
               "source": "check",
               "status": "PASS",
@@ -958,10 +952,10 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "12135 / 12968",
+              "value": "0 / 12968",
               "metric": "ravine_constrained_carries_priced_reno",
               "source": "check",
-              "status": "FAIL",
+              "status": "PASS",
               "threshold": "viol == 0"
             },
             {
@@ -972,7 +966,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": "802 outliers (worst 5.93)",
+              "value": "797 outliers (worst 5.93)",
               "metric": "dist_max_build_fsi",
               "source": "plausibility",
               "status": "INFO",
@@ -1082,24 +1076,24 @@
               "threshold": null
             },
             {
-              "value": 34034,
+              "value": 25479,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
           "phase": 25,
-          "verdict": "FAIL"
+          "verdict": "WARN"
         },
         "pool_errors": 0,
         "chain_run_id": null,
-        "checks_failed": 1,
+        "checks_failed": 0,
         "checks_warned": 13
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1950,
+  "pipeline_runs_max_id_before": 1953,
   "table_state": [],
   "tables_source": "none",
   "table_row_ceiling": 100000,
@@ -1116,7 +1110,7 @@
     },
     {
       "name": "dist_max_build_fsi",
-      "value": "802"
+      "value": "797"
     },
     {
       "name": "dist_footprint_coverage",
@@ -1237,7 +1231,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "421 / 411076"
+              "value": "421 / 410754"
             },
             {
               "metric": "max_build_dim_below_floor",
@@ -1286,14 +1280,14 @@
               "source": "check",
               "status": "WARN",
               "threshold": "viol == 0",
-              "value": "5 / 411076"
+              "value": "5 / 410754"
             },
             {
               "metric": "coa_fsi_gt_5",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 411076"
+              "value": "0 / 410754"
             },
             {
               "metric": "lowrise_maxbuild_height_gt_15m",
@@ -1356,7 +1350,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 411076"
+              "value": "0 / 410754"
             },
             {
               "metric": "nulllot_on_gfa_or_cost_bearing",
@@ -1370,14 +1364,14 @@
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 263037"
+              "value": "0 / 262978"
             },
             {
               "metric": "cost_addition_gt_50m",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 398317"
+              "value": "0 / 379466"
             },
             {
               "metric": "max_build_dim_exceeds_lot_dim",
@@ -1412,7 +1406,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 411076"
+              "value": "0 / 410754"
             },
             {
               "metric": "footprint_gt_lot_x105",
@@ -1440,14 +1434,14 @@
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 411076"
+              "value": "0 / 410754"
             },
             {
               "metric": "cost_fb_on_footprint_gt_lot",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
-              "value": "0 / 411076"
+              "value": "0 / 410754"
             },
             {
               "metric": "greenspace_out_of_range",
@@ -1487,9 +1481,9 @@
             {
               "metric": "ravine_constrained_carries_priced_reno",
               "source": "check",
-              "status": "FAIL",
+              "status": "PASS",
               "threshold": "viol == 0",
-              "value": "12135 / 12968"
+              "value": "0 / 12968"
             },
             {
               "metric": "dist_bylaw_max_fsi",
@@ -1503,7 +1497,7 @@
               "source": "plausibility",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "802 outliers (worst 5.93)"
+              "value": "797 outliers (worst 5.93)"
             },
             {
               "metric": "dist_footprint_coverage",
@@ -1555,9 +1549,9 @@
               "value": 437279
             }
           ],
-          "verdict": "FAIL"
+          "verdict": "WARN"
         },
-        "checks_failed": 1,
+        "checks_failed": 0,
         "checks_warned": 13,
         "config": {
           "max_build_min_dimension_m": 3,
@@ -1600,12 +1594,9 @@
           "parcel_sanity_realized_fsi_p90_max": 6,
           "parcel_sanity_realized_fsi_p90_min": 0.1
         },
-        "errors": [
-          "ravine_constrained_carries_priced_reno: 12135 / 12968"
-        ],
         "ledger_row": "owned",
         "pool_errors": 0,
-        "terminal": "parcel_sanity_gate_failed",
+        "terminal": "all_checks_passed",
         "warnings": [
           "max_build_width_gt_30m: 953 / 382569",
           "max_build_length_gt_100m: 94 / 403404",
@@ -1614,7 +1605,7 @@
           "lowrise_coverage_gt_50pct: 39 / 246962",
           "lowrise_height_gt_15m: 12 / 270800",
           "footprint_coverage_gt_65pct: 1232 / 411076",
-          "max_build_fsi_gt_5: 5 / 411076",
+          "max_build_fsi_gt_5: 5 / 410754",
           "lowrise_maxbuild_height_gt_15m: 12 / 254953",
           "lowrise_maxbuild_stories_gt_4: 4 / 263037",
           "rd_maxbuild_stories_gt_3: 44 / 221995",
@@ -1740,7 +1731,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "421 / 411076"
+                "value": "421 / 410754"
               },
               {
                 "metric": "max_build_dim_below_floor",
@@ -1789,14 +1780,14 @@
                 "source": "check",
                 "status": "WARN",
                 "threshold": "viol == 0",
-                "value": "5 / 411076"
+                "value": "5 / 410754"
               },
               {
                 "metric": "coa_fsi_gt_5",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 411076"
+                "value": "0 / 410754"
               },
               {
                 "metric": "lowrise_maxbuild_height_gt_15m",
@@ -1859,7 +1850,7 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 411076"
+                "value": "0 / 410754"
               },
               {
                 "metric": "nulllot_on_gfa_or_cost_bearing",
@@ -1873,14 +1864,14 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 263037"
+                "value": "0 / 262978"
               },
               {
                 "metric": "cost_addition_gt_50m",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 398317"
+                "value": "0 / 379466"
               },
               {
                 "metric": "max_build_dim_exceeds_lot_dim",
@@ -1915,7 +1906,7 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 411076"
+                "value": "0 / 410754"
               },
               {
                 "metric": "footprint_gt_lot_x105",
@@ -1943,14 +1934,14 @@
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 411076"
+                "value": "0 / 410754"
               },
               {
                 "metric": "cost_fb_on_footprint_gt_lot",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "0 / 411076"
+                "value": "0 / 410754"
               },
               {
                 "metric": "greenspace_out_of_range",
@@ -1990,9 +1981,9 @@
               {
                 "metric": "ravine_constrained_carries_priced_reno",
                 "source": "check",
-                "status": "FAIL",
+                "status": "PASS",
                 "threshold": "viol == 0",
-                "value": "12135 / 12968"
+                "value": "0 / 12968"
               },
               {
                 "metric": "dist_bylaw_max_fsi",
@@ -2006,7 +1997,7 @@
                 "source": "plausibility",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "802 outliers (worst 5.93)"
+                "value": "797 outliers (worst 5.93)"
               },
               {
                 "metric": "dist_footprint_coverage",
@@ -2058,9 +2049,9 @@
                 "value": 437279
               }
             ],
-            "verdict": "FAIL"
+            "verdict": "WARN"
           },
-          "checks_failed": 1,
+          "checks_failed": 0,
           "checks_warned": 13,
           "config": {
             "max_build_min_dimension_m": 3,
@@ -2103,12 +2094,9 @@
             "parcel_sanity_realized_fsi_p90_max": 6,
             "parcel_sanity_realized_fsi_p90_min": 0.1
           },
-          "errors": [
-            "ravine_constrained_carries_priced_reno: 12135 / 12968"
-          ],
           "ledger_row": "owned",
           "pool_errors": 0,
-          "terminal": "parcel_sanity_gate_failed",
+          "terminal": "all_checks_passed",
           "warnings": [
             "max_build_width_gt_30m: 953 / 382569",
             "max_build_length_gt_100m: 94 / 403404",
@@ -2117,7 +2105,7 @@
             "lowrise_coverage_gt_50pct: 39 / 246962",
             "lowrise_height_gt_15m: 12 / 270800",
             "footprint_coverage_gt_65pct: 1232 / 411076",
-            "max_build_fsi_gt_5: 5 / 411076",
+            "max_build_fsi_gt_5: 5 / 410754",
             "lowrise_maxbuild_height_gt_15m: 12 / 254953",
             "lowrise_maxbuild_stories_gt_4: 4 / 263037",
             "rd_maxbuild_stories_gt_3: 44 / 221995",
@@ -2128,7 +2116,7 @@
         "records_new": null,
         "records_total": null,
         "records_updated": null,
-        "status": "failed"
+        "status": "completed_with_warnings"
       }
     ],
     "stdout_lines": [
@@ -2148,7 +2136,7 @@
       },
       {
         "name": "dist_max_build_fsi",
-        "value": "802"
+        "value": "797"
       },
       {
         "name": "dist_footprint_coverage",
@@ -2176,7 +2164,7 @@
       }
     ]
   },
-  "source_fingerprint": "9b7a7dcb1f8598ac2a7f549c9f409a2cf6febcb06e4927a104403c64c387155f",
+  "source_fingerprint": "9e141d8499313b79d9461f6f4a62638a69c88c49810ee97625a4b46246ffe395",
   "fingerprint_files": [
     "scripts/lib/compute/assert-parcel-sanity.js",
     "scripts/quality/assert-parcel-sanity.descriptor.json",
