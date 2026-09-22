@@ -36,6 +36,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
 9. **Library Docs:** Use the Context7 MCP server (`resolve-library-id` → `get-library-docs`) before writing code against any external library. Prevents hallucinated API calls against outdated versions.
 10. **Spec-First, No Assumptions:** Before explaining or acting on how any script, chain, migration, schema, or table behaves — including debugging and ops, not just planning — READ the governing spec first (find it via `docs/specs/00-architecture/00_system_map.md`). Cite it. Never infer behavior from a name or guess; if no spec exists, read the code. An unverified claim about system behavior is a defect.
+11. **Execution Provider (Spec 08 §B/§C):** resolve `EXECUTION_PROVIDER` at task start (`--provider` > env > default `claude`), **state it in the Active Task header and in the Green Light evidence**. `deepseek` routes the *execution* step only (code/tests written by `node scripts/deepseek-exec.js --brief <file> --provider=deepseek`; the brief's front matter declares `write_scope`; registry files in `exec-policy.json` `registry_reserved` are edited by the orchestrator at landing, never by the engine). Downgrade to `claude` **with a logged reason** whenever the engine is unavailable, the step is a verification seat, or the step touches money/auth/PII/migrations. Verification seats never route to a tool-less substrate, under any provider value.
 
 ### Execution Order Constraint
 > 1. Read `docs/specs/00_engineering_standards.md` AND the relevant feature spec before generating the Active Task.
@@ -81,6 +82,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
 * **Goal:** [What are we building/fixing?]
 * **Target Spec:** MISSING (search `docs/specs/` and replace before proceeding)
 * **Key Files:** [List specific src files]
+* **Execution Provider:** [deepseek | claude] — [reason if downgraded; engine run_id(s) once run]
 
 ## Technical Implementation
 * **New/Modified Components:** [e.g. `PermitCard.tsx`]

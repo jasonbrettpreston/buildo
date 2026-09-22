@@ -9,15 +9,23 @@
  * tree.
  *
  * Honest limitations: T6 is a static source guard, not a runtime sandbox. T7
- * locks the documented CONTRACT TEXT only — scripts/deepseek-exec.js does not
- * exist yet (SUB-ENG-1) and nothing reads EXECUTION_PROVIDER today; runtime
- * enforcement is that engine's own lock (PART B).
+ * locks the documented CONTRACT TEXT AND RUNTIME (SUB-ENG-1 commit 12 — the
+ * engine now exists, Phases 1-3 landed; the honest upgrade this docblock
+ * used to promise as future work is delivered here): the contract-text arm
+ * still checks §B's prose, and a new runtime arm spawns the REAL
+ * `scripts/deepseek-exec.js` CLI and asserts the fallback actually fires —
+ * an unrecognised/absent provider resolves to `claude`, never a throw-and-
+ * halt, exactly as §B promises.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
+import { execFileSync, spawnSync } from 'child_process';
+import {
+  makeRepo, scrubbedChildEnv, writeBrief,
+} from './helpers/deepseek-exec-harness';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SPEC_PATH = path.join(REPO_ROOT, 'docs/specs/00-architecture/08_agents.md');
@@ -233,7 +241,14 @@ function checkT5(text: string): { errors: string[]; digests: { s4: string; s52: 
 // ---------------------------------------------------------------------------
 // T6 — CLIs stay read-only
 // ---------------------------------------------------------------------------
-const WRITE_PATTERN = /fs\.write\w*|appendFile|child_process|spawn|exec\(|execSync|unlink|mkdir/;
+// SUB-ENG-1 commit 12 (review_followups 2026-09-22): the previous pattern's
+// bare `exec\(` alternative false-positived on `regex.exec(line)` / a
+// `.exec(str)` call — a plain RegExp match, not a write. Tightened to the
+// actual write-capable surfaces: `fs.write*`/`fs.promises.write*` and the
+// sibling mutating fs.* methods, `child_process` as a whole word (the module
+// name, not a substring), `execSync(` and `spawn(`/`spawnSync(` specifically
+// — never a bare `exec(`.
+const WRITE_PATTERN = /\bfs\.(promises\.)?(write|append|rm|unlink|mkdir|rename|truncate)\w*\s*\(|\bchild_process\b|\bexecSync\s*\(|\bspawn(Sync)?\s*\(/;
 function checkT6(cliSource: string): string[] {
   return WRITE_PATTERN.test(cliSource) ? ['write-capable pattern found in CLI source'] : [];
 }
@@ -280,6 +295,25 @@ function checkT8(files: { path: string; content: string }[]): string[] {
   const errors: string[] = [];
   for (const f of files) {
     if (STALE_PATTERN.test(f.content)) errors.push(`stale feature-dev ref in ${f.path}`);
+  }
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
+// T9 — workflow-seat drift (SUB-ENG-1 commit 12, review_followups 2026-09-22)
+// ---------------------------------------------------------------------------
+const SUBAGENT_TYPE_RE = /subagent_type:\s*["'`]([^"'`]+)["'`]/g;
+function extractSubagentTypes(content: string): string[] {
+  return [...content.matchAll(SUBAGENT_TYPE_RE)].map((m) => m[1] ?? '');
+}
+
+function checkT9(files: { path: string; content: string }[], projectSeats: Map<string, { hasModel: boolean; hasBash: boolean }>): string[] {
+  const errors: string[] = [];
+  for (const f of files) {
+    for (const seat of extractSubagentTypes(f.content)) {
+      if (HARNESS_SEATS.has(seat) || projectSeats.has(seat)) continue;
+      errors.push(`${f.path}: subagent_type "${seat}" in neither PROJECT_SEATS nor HARNESS_SEATS`);
+    }
   }
   return errors;
 }
@@ -444,9 +478,19 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
       const p = mkTmpFile('t6.js', mutated);
       expect(checkT6(readTmp(p))).not.toEqual([]);
     });
+    it('RED: fixture copy with one fs.promises.writeFile( injected (SUB-ENG-1 commit 12 — the `promises.` form is now caught too)', () => {
+      const real = fs.readFileSync(DEEPSEEK_CLI_PATH, 'utf8');
+      const mutated = `${real}\nfs.promises.writeFile('x', 'y');\n`;
+      const p = mkTmpFile('t6-promises.js', mutated);
+      expect(checkT6(readTmp(p))).not.toEqual([]);
+    });
+    it('GREEN: a fixture containing only pattern.exec(line) is NOT flagged (a regex .exec() call is not a write — the old pattern\'s false positive, SUB-ENG-1 commit 12)', () => {
+      const content = "const pattern = /x/; const m = pattern.exec(line);\nconst n = /y/.exec(str);\n";
+      expect(checkT6(content)).toEqual([]);
+    });
   });
 
-  describe('T7 — §B fallback doctrine (contract text, not runtime)', () => {
+  describe('T7 — §B fallback doctrine (contract text AND runtime)', () => {
     it('GREEN: §B carries the literal fallback contract', () => {
       expect(checkT7(specText)).toEqual([]);
     });
@@ -468,6 +512,73 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
       const p = mkTmpFile('t7-c.md', mutated);
       expect(checkT7(readTmp(p))).toContain('deepseek-inert-with-tracked-id clause missing');
     });
+
+    // -------------------------------------------------------------------
+    // T7 runtime (SUB-ENG-1 commit 12) — the REAL CLI, not the doc text.
+    // Scrubbed env per the harness (no GIT_*, no DEEPSEEK_*, no
+    // EXECUTION_PROVIDER); a throwaway repo per src/tests/helpers/deepseek-
+    // exec-harness.ts (never the real tree).
+    // -------------------------------------------------------------------
+    describe('T7 runtime — the real scripts/deepseek-exec.js CLI resolves an unrecognised/absent provider to claude, never a throw-and-halt', () => {
+      let repo = '';
+      beforeEach(() => { repo = makeRepo(); });
+      afterEach(() => { if (repo) fs.rmSync(repo, { recursive: true, force: true }); });
+
+      it('--provider=bogus + a transcript ⇒ exit 0, run_start.provider==="claude", provider_source matches /^fallback:/', () => {
+        const briefPath = writeBrief(repo);
+        const transcriptPath = path.join(repo, 'empty-transcript.json');
+        fs.writeFileSync(transcriptPath, JSON.stringify([]));
+        const ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-roster-t7-ledger-'));
+        const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+        try {
+          const stdout = execFileSync(process.execPath, [
+            cliPath, '--brief', briefPath, '--provider=bogus', '--transcript', transcriptPath, '--ledger-dir', ledgerDir,
+          ], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+          const summary = JSON.parse(stdout.trim().split('\n').pop()!) as { run_id: string; status: string };
+          expect(summary.status).toBe('delegated_to_claude');
+          const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
+          const records = raw.trim().split('\n').map((l) => JSON.parse(l) as { kind: string; provider?: string; provider_source?: string });
+          const runStart = records.find((r) => r.kind === 'run_start')!;
+          expect(runStart.provider).toBe('claude');
+          expect(runStart.provider_source).toMatch(/^fallback:/);
+        } finally {
+          fs.rmSync(ledgerDir, { recursive: true, force: true });
+        }
+      });
+
+      it('no --provider given (and no EXECUTION_PROVIDER in the scrubbed env) ⇒ provider_source === "default"', () => {
+        const briefPath = writeBrief(repo);
+        const ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-roster-t7-ledger2-'));
+        const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+        try {
+          const stdout = execFileSync(process.execPath, [
+            cliPath, '--brief', briefPath, '--ledger-dir', ledgerDir,
+          ], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+          const summary = JSON.parse(stdout.trim().split('\n').pop()!) as { run_id: string; status: string };
+          expect(summary.status).toBe('delegated_to_claude');
+          const raw = fs.readFileSync(path.join(ledgerDir, `${summary.run_id}.jsonl`), 'utf8');
+          const runStart = JSON.parse(raw.trim().split('\n')[0]!) as { provider?: string; provider_source?: string };
+          expect(runStart.provider).toBe('claude');
+          expect(runStart.provider_source).toBe('default');
+        } finally {
+          fs.rmSync(ledgerDir, { recursive: true, force: true });
+        }
+      });
+
+      it('the CLI process NEVER throws/crashes (exit 0) on a bogus provider — a real subprocess-level proof of "never a throw-and-halt"', () => {
+        const briefPath = writeBrief(repo);
+        const ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-roster-t7-ledger3-'));
+        const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+        try {
+          const result = spawnSync(process.execPath, [
+            cliPath, '--brief', briefPath, '--provider=not-a-real-provider', '--ledger-dir', ledgerDir,
+          ], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+          expect(result.status).toBe(0);
+        } finally {
+          fs.rmSync(ledgerDir, { recursive: true, force: true });
+        }
+      });
+    });
   });
 
   describe('T8 — stale tool-less agent types, scoped to live protocol surfaces', () => {
@@ -487,6 +598,33 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
       expect(scanned.every((p) => !p.includes(`${path.sep}.cursor${path.sep}`))).toBe(true);
       expect(scanned.every((p) => !p.includes('review_followups.md'))).toBe(true);
       expect(scanned.every((p) => !p.includes(`${path.sep}worktrees${path.sep}`))).toBe(true);
+    });
+  });
+
+  describe('T9 — workflow-seat drift (SUB-ENG-1 commit 12)', () => {
+    const seats = loadProjectSeats(AGENTS_DIR);
+    const liveFiles = [
+      path.join(REPO_ROOT, '.claude/workflows.md'),
+      path.join(REPO_ROOT, 'CLAUDE.md'),
+    ].map((p) => ({ path: p, content: fs.readFileSync(p, 'utf8') }));
+
+    it('GREEN: every subagent_type in .claude/workflows.md and CLAUDE.md resolves to PROJECT_SEATS ∪ HARNESS_SEATS', () => {
+      expect(checkT9(liveFiles, seats)).toEqual([]);
+    });
+    it('RED: a copy of workflows.md with subagent_type: "observability-reviewer-v2"', () => {
+      const real = fs.readFileSync(path.join(REPO_ROOT, '.claude/workflows.md'), 'utf8');
+      const mutated = `${real}\n<!-- subagent_type: "observability-reviewer-v2" -->\n`;
+      const p = mkTmpFile('t9.md', mutated);
+      const files = [{ path: p, content: readTmp(p) }];
+      expect(checkT9(files, seats)).not.toEqual([]);
+    });
+    it('GREEN control: every real seat used today (code-reviewer-grounded, observability-reviewer, general-purpose, regression-guardian) resolves cleanly', () => {
+      const workflowsContent = fs.readFileSync(path.join(REPO_ROOT, '.claude/workflows.md'), 'utf8');
+      const found = new Set(extractSubagentTypes(workflowsContent));
+      expect(found.size).toBeGreaterThan(0);
+      for (const seat of found) {
+        expect(HARNESS_SEATS.has(seat) || seats.has(seat)).toBe(true);
+      }
     });
   });
 });
