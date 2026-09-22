@@ -4,9 +4,9 @@
     "122": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 1243,
-        "bytes": 143947,
-        "commit": "0820685d"
+        "lines": 1283,
+        "bytes": 159946,
+        "commit": "1a1cf7c3"
       }
     },
     "123": {
@@ -20,9 +20,9 @@
     "124": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 356,
-        "bytes": 115130,
-        "commit": "4c14d82d"
+        "lines": 361,
+        "bytes": 129322,
+        "commit": "1a1cf7c3"
       }
     }
   },
@@ -255,6 +255,19 @@
       "commit": "4c14d82d",
       "classification": "HISTORICAL",
       "evidence": "R-AA prerequisite move (WF2 'Cloud acceptance model + cron cadence', operator Ask 1, 2026-09-18): Spec 124 grew to 129,491 bytes against its stale 117,729-byte measured_at (10 bytes of headroom left, ceiling 129,501), so a new §5 register row (R-AQ) could not be added without a move. No §5 register row (R-AA..R-AP) is itself historical/superseded — every one carries a live 'Enforced by' clause. §8 is Spec 124's largest non-Rules, non-register section: a regenerated-per-pilot-cutover illustrative snapshot ('what a converted step actually looks like TODAY'), not one of Rules 1-13's binding policy statements, and its own text says the layer table is 'Mirrored, condensed, at Spec 122 §5.6' — a condensed equivalent survives in-place even after this move. The '## §8.' heading itself is PRESERVED by the stub (per this tool's own heading-anchor convention), so every existing 'Spec 124 §8' citation (docs/specs, .cursor plans) still resolves to a real heading; none needed a known_dangling entry."
+    },
+    {
+      "id": "M07",
+      "from_spec": "124",
+      "anchor": "## §R-8 Pilot retrospective (after the eighth, 2026-09-03)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A13 — Pilot retrospective (moved from Spec 124 §R-8) — HISTORICAL, 2026-09-22",
+      "content_sha256": "70978b32fb49d6a29cffd51e05d1afd884ec4c7df63dbe796f9b8d1307ac83f3",
+      "line_count": 19,
+      "moved_at": "2026-09-22",
+      "commit": "1a1cf7c3",
+      "classification": "HISTORICAL",
+      "evidence": "WF2 'runner row-error policy' prerequisite move (2026-09-22): Spec 124 had ~1.2 KB of its 10%-headroom budget remaining and this WF2's own R-AX register row (~2.6 KB) could not land without a move. §R-8 is explicitly retrospective ('after the eighth [pilot]'), carries no 'Enforced by' clause, and matches M06's own criterion ('a regenerated-per-pilot-cutover illustrative snapshot, not one of Rules 1-13's binding policy statements') exactly — it is a dated lessons table, not live policy. The '## §R-8' heading itself is PRESERVED by the stub (this tool's own heading-anchor convention), so every existing 'Spec 124 §R-8' citation still resolves to a real heading."
     }
   ]
 }

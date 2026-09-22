@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-centroids.js",
   "chain": "none",
-  "git_head": "62c35b65be688f33db3aa0fe85105f464fb48587",
+  "git_head": "1a1cf7c3940ba0836c4c59cba411be250436e35f",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 1111,
+      "duration_ms": 6550,
       "parcels_processed": 0,
       "centroids_computed": 0,
       "failed_geometries": 0,
@@ -56,7 +56,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 1115,
+            "value": 6559,
             "threshold": null,
             "status": "INFO"
           }
@@ -89,16 +89,16 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=244 (floor 16)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1111,\"parcels_processed\":0,\"centroids_computed\":0,\"failed_geometries\":0,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"zero_work\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":5,\"name\":\"Centroid Computation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1115,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 1.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=244 (floor 16)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"backfill: 0 eligible rows — nothing to compute\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":6550,\"parcels_processed\":0,\"centroids_computed\":0,\"failed_geometries\":0,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"zero_work\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":5,\"name\":\"Centroid Computation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":6559,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 6.6s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1871,
+      "id": 1960,
       "pipeline": "compute_centroids",
       "status": "completed",
-      "started_at": "2026-09-14T11:53:34.701Z",
-      "completed_at": "2026-09-14T11:53:35.781Z",
-      "duration_ms": 1115,
+      "started_at": "2026-09-22T11:01:49.925Z",
+      "completed_at": "2026-09-22T11:01:56.432Z",
+      "duration_ms": 6556,
       "records_total": 0,
       "records_new": 0,
       "records_updated": 0,
@@ -134,7 +134,7 @@
               "threshold": null
             },
             {
-              "value": 1115,
+              "value": 6559,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -143,7 +143,7 @@
           "phase": 5,
           "verdict": "PASS"
         },
-        "duration_ms": 1111,
+        "duration_ms": 6550,
         "pool_errors": 0,
         "chain_run_id": null,
         "checks_failed": 0,
@@ -158,7 +158,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1870,
+  "pipeline_runs_max_id_before": 1959,
   "table_state": [
     {
       "table": "parcels",
@@ -179,7 +179,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 1612
+    "parcels": 4653
   },
   "table_specs": {
     "parcels": {
@@ -413,7 +413,7 @@
       }
     ]
   },
-  "source_fingerprint": "7df399e07c27556955eb838686e73fd791c3d1cc929948eacdecfd0cb1b93d83",
+  "source_fingerprint": "eecef32b8d23e47799655eb689bdee5b876cf8e7923ca498a49e5b357dd4d250",
   "fingerprint_files": [
     "scripts/compute-centroids.descriptor.json",
     "scripts/compute-centroids.js",

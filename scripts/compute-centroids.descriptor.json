@@ -148,7 +148,7 @@
     "batch": "none",
     "needs_disk_mb": "none",
     "partial_fill": "atomic",
-    "on_row_error": "skip",
+    "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {

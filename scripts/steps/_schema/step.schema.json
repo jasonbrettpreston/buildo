@@ -1381,7 +1381,23 @@
           "x-frozen": true
         },
         "on_row_error": { "enum": ["fail_fast", "quarantine", "skip"], "x-frozen": true },
-        "on_row_error_max_pct": { "anyOf": [{ "const": "none" }, { "type": "number", "minimum": 0, "maximum": 1 }] },
+        "on_row_error_max_pct": {
+          "description": "RE-FREEZE #12 (R-AX, 2026-09-21): x-banned-for-new. Measured 2026-09-21 (G0.4, WF2 'runner row-error policy'): the two literal values ever declared (load_ravines 0.05, compute_parcel_cost_estimates 0) each DUPLICATED a bound that already lives once as a registered logic variable behind a declared FAIL check (Rule 3's own 'second source of truth' violation) — deleted from both descriptors in the same commit. The field stays in the schema (R-X: a retired/banned value is a declaration, never a deletion) so an existing descriptor could still carry it with a why, but no NEW descriptor may declare it — the bound is expressed exactly once, via execution.on_row_error_why.liveness pointing at the declared check that already carries it.",
+          "x-banned-for-new": true,
+          "anyOf": [{ "const": "none" }, { "type": "number", "minimum": 0, "maximum": 1 }]
+        },
+        "on_row_error_why": {
+          "description": "RE-FREEZE #12 (R-AX, 2026-09-21). The one field this WF2 adds, closing a 3-of-4 asymmetry: on_batch_error/on_check_error/on_degrade each already had a `_why`; on_row_error alone did not. Required exactly when on_row_error is skip|quarantine (the allOf conditional below). `liveness` takes the existing {kind:\"check\", ref} form — the check named must be a FAIL-severity, bound-carrying check in the SAME descriptor (verified per-descriptor by step-validate.mjs fast invariant #27 ROW-ERROR-GATE, not by AJV, which cannot reach into a sibling checks[] array). This makes the tolerance rung (b)/(c) of Spec 124 §7's ladder CITABLE, not merely true by construction.",
+          "$ref": "#/definitions/why",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse on_row_error_max_pct, tightened to REQUIRE a value — REFUTED: G0.4 measured the bound this field would carry already lives once, as a registered logic variable behind a declared FAIL check; requiring a max_pct would create a SECOND, literal copy of that same bound (Rule 3's own violation), not remove the gap",
+              "rung (b) a check-step-shape.mjs source-text rule over compute, asserting a per-row catch increments a counter a FAIL check reads — REFUTED: a source-text pattern can refuse a bad body but cannot say WHICH check bounds it, and two of the three set-based archetypes have no per-row catch to pattern-match against at all (G0.3)",
+              "rung (c) a bare declared check id (no why wrapper) — REFUTED: every sibling posture field (on_batch_error_why/on_check_error_why/on_degrade_why) already uses the {text, liveness} why shape; a fourth, differently-shaped citation field would be the exact 'one concept, two spellings' drift R-AJ's own registry exists to prevent"
+            ],
+            "why": "G0.1 measured on_row_error is the only one of four sibling execution.* posture fields with no _why — an asymmetry, not a designed omission (its three siblings all gained one at the original R-T addendum). G0.4 measured the tolerance a skip/quarantine declaration implies is ALREADY bounded, once, by a declared FAIL check — the gap was never 'no bound exists', it was 'the bound cannot be cited from the declaration that claims it'. Reusing the existing why/liveness{kind:\"check\",ref} shape (already live on load_ravines' on_check_error_why, enrich_parcels' opt_config_engine_errors citations elsewhere in this same file) is the last-resort, cheapest rung — it adds zero new threshold surface, only a citation."
+          }
+        },
         "on_batch_error": {
           "description": "NEW (§1.6). A WHOLE BATCH swallowed and discarded, counted as one row error — load-address-points.js:374-378, load-parcels.js:550-554, load-massing.js:378-382.",
           "enum": ["fail_step", "drop_batch", "retry"],
@@ -1471,8 +1487,9 @@
       },
       "allOf": [
         {
+          "x-rule": "F-1 (RE-FREEZE #12, R-AX, 2026-09-21): this conditional used `properties` where its three siblings (on_batch_error/on_check_error/on_degrade, below) use `required` — a `properties`-only arm constrains a value ONLY IF PRESENT, so skip/quarantine with NO on_row_error_max_pct at all validated (AJV-proven live against compute_centroids, 2026-09-21). Replaced with the same `required` shape its siblings already use, now naming on_row_error_why (the field that carries the truth) rather than on_row_error_max_pct (which is x-banned-for-new, RE-FREEZE #12, same commit) — a skip/quarantine declaration with no bound at all is now a real AJV RED, in both arms, matching its siblings' own contract for the first time.",
           "if": { "properties": { "on_row_error": { "enum": ["quarantine", "skip"] } }, "required": ["on_row_error"] },
-          "then": { "properties": { "on_row_error_max_pct": { "type": "number" } } }
+          "then": { "required": ["on_row_error_why"] }
         },
         {
           "if": { "properties": { "on_batch_error": { "const": "drop_batch" } }, "required": ["on_batch_error"] },

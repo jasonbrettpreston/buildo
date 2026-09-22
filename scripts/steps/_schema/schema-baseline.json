@@ -42,6 +42,7 @@
     "execution.on_degrade_why",
     "execution.on_row_error",
     "execution.on_row_error_max_pct",
+    "execution.on_row_error_why",
     "execution.partial_fill",
     "execution.phase_deadline_minutes_from_config",
     "execution.phases",

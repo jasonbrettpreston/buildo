@@ -202,7 +202,10 @@
     "needs_disk_mb": "none",
     "partial_fill": "staged",
     "on_row_error": "skip",
-    "on_row_error_max_pct": 0,
+    "on_row_error_why": {
+      "text": "RE-FREEZE #12 (R-AX, 2026-09-21). A per-parcel engine exception is caught, counted (engineErrorCount) and sentinelled (error: 'engine_error'); the stream continues. The tolerance is bounded by the declared, FAIL-severity, config-resolved check below — the literal 0 this field carried until this commit duplicated that same bound (Rule 3 violation, G0.4) and is deleted.",
+      "liveness": { "kind": "check", "ref": "engine_error_count" }
+    },
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {

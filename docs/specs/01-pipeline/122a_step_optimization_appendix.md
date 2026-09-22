@@ -585,3 +585,29 @@ Rule 2 ("compute is just compute") is this table's own normative claim, restated
 Neither T4 nor T5 has a migrated descriptor equivalent as of this commit — both remain reachable only via a manual `node scripts/validation/run-step.mjs` invocation. Filed as a `nice_to_have` programme-items.json row (`TRIPWIRE-T4T5`, §9 below) rather than silently left unenumerated.
 
 **What is NOT yet proven**, because no RECORDER or ENRICHER has converted: the publish/WAP pointer mechanism end-to-end; whether ENRICHER's 5-pass/scope-defer shape fits inside `pipeline.step()` unmodified; whether the two remaining archetypes force further "zero library growth" refutations the way BACKFILL just did (3 of the last 4 pilots needed real library growth, not zero — INGESTOR and ASSERT were the only "port verbatim" cases); Spec 120 §6b's reset-SQL generator and its 3 destructive-reset guards (programme items `STA-2`/`STA-3`, `cutover_prereq` blocking `refresh_snapshot` specifically, since RECORDER is the first archetype in the pilot order likely to need a real scoped reset).
+
+
+---
+
+## Appendix §A13 — Pilot retrospective (moved from Spec 124 §R-8) — HISTORICAL, 2026-09-22
+
+Moved from Spec 124 — WF2 'runner row-error policy' prerequisite move (2026-09-22): Spec 124 had ~1.2 KB of its 10%-headroom budget remaining and this WF2's own R-AX register row (~2.6 KB) could not land without a move. §R-8 is explicitly retrospective ('after the eighth [pilot]'), carries no 'Enforced by' clause, and matches M06's own criterion ('a regenerated-per-pilot-cutover illustrative snapshot, not one of Rules 1-13's binding policy statements') exactly — it is a dated lessons table, not live policy. The '## §R-8' heading itself is PRESERVED by the stub (this tool's own heading-anchor convention), so every existing 'Spec 124 §R-8' citation still resolves to a real heading.
+
+## §R-8 Pilot retrospective (after the eighth, 2026-09-03)
+
+| Lesson | Evidence (hash) | Standardisation |
+|---|---|---|
+| Gates authored before measurement block on theory | `32eec17f` | `gate.applies_when` (RS-D-STA) |
+| Checkers widened to fit compute have blind spots | `32eec17f` | known-bad fixtures required at widening (§4.4) |
+| Declaration drift between descriptor and ledger | `3f41f2a5`, `87834ac2` | tier-3 cross-check + snapshot freshness gate — **OPEN** |
+| A descriptor is a fingerprint, not free-edit text | `87834ac2` | recapture procedure (Spec 123 §7 commit 5) |
+| Same-commit spec amendment missed 4× | `f5446fa3` | commit-9 spec-diff-or-N-A line (Spec 123 §7 commit 9) |
+| Hand-maintained trackers rot | `3ca3180b` | R-R extends to plan files and spec counts |
+| stdout ≠ observable, and skip verdicts read as PASS | `00659574` | Rule 10 / Spec 48 checkers — **CLOSED** (WF3 VRD-SKIP, 2026-09-09, LG-29 — `skipRecordsMeta`'s `status` row now declares `WARN`) |
+| 302/436 tunables admin-invisible → measured 280/451 (the 302/436 figure was stale by both numbers) → **0/451, RESOLVED** (WF2 "ADMIN-1 ratchet to zero", 2026-09-09, 5 reviewed batches) | `00659574` | Rule 3 reverse test — **CLOSED**; monotonic ratchet (`scripts/steps/_schema/admin-unclassified-high-water-mark.json`, pinned at 0) + `unclassified` retired from the closed hidden-reason enum keep a new admin-invisible key structurally impossible |
+| Cloud parity was never a per-step gate | `3ca3180b` | CLOUDPARITY per step |
+| One committer at a time; concurrent full suites collide on the local DB's temp state | session evidence: `restore-db.infra.test.ts` temp-file collisions, hook retries | operating discipline, not yet a built gate |
+| Freeze not claimable at 8; KFM 5 reported per batch | `programme-items.json`: **2** `batching_prereq` items open (corrected 2026-09-09, WF2 "FREEZE-1, the freeze precondition" commit 2 — was stale "7"; WD-1 and ADMIN-1 both closed 2026-09-09, measured `node -r dotenv/config scripts/analysis/step-validate.mjs --staged --fast` → `blocks batching: 2`) → **1** (STD-7 → BUILT, pilot 9 commit 9, 2026-09-11 — `FREEZE-1` alone remains open) | programme-backlog (§9 above) |
+| **Spec prose rots exactly like a tracker** — Specs 122/123/124's own citations, line counts, and section numbers were found dangling/stale at a genuinely large scale (49+ sites for one mislabel alone) despite this register's own "hand-maintained trackers rot" lesson above | this task's own ground-truth census, 2026-09-10 | standardisation: `npm run spec:split-check -- --check` (R-AA) — hook-wired, `.husky/pre-commit`/`pre-push` |
+| A cloud dispatch against a branch name, not a pinned commit, can silently grade stale code (EP-D13, 2026-09-08) | `defect-ledger.md` EP-D13: run 34231689122 graded the LEGACY script because `origin/…` was 191 commits behind local at dispatch — every hypothesis built on the observed budget-kill was reasoning about code that never executed | `gh run view <id> --json headSha == git rev-parse HEAD` (and push first), asserted before trusting any cloud acceptance run — `tasks/lessons.md` |
+| The ENRICHER archetype (pilot 9) needed a genuine schema bump (`execution.shape`, `execution.phases[]`, then `execution.maintenance.txn_scope:"step"`) — the first pilot the frozen 8-shape enum could not absorb | RE-FREEZE #1-#6 (Spec 122 §8 / 122a §A9); `template-freeze.json`'s `does_not_freeze` clause paid explicitly, once per bump | `does_not_freeze`'s stated price is not theoretical — a real archetype needed it on its very first (and, by `frozen_after_pilot: 9`, last) contact with the freeze |

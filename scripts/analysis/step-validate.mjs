@@ -1650,6 +1650,64 @@ function fastInvariants(rows, converted, pending) {
     });
   }
 
+  // 27. ROW-ERROR-GATE (Spec 124 R-AX, WF2 "runner row-error policy", 2026-09-21) —
+  // every descriptor declaring execution.on_row_error skip|quarantine must cite, via
+  // on_row_error_why.liveness{kind:"check", ref} (RE-FREEZE #12), a checks[] id IN THE
+  // SAME DESCRIPTOR that is FAIL-severity and carries a limit. The schema conditional
+  // (step.schema.json, on_row_error/on_row_error_why) already REQUIRES the field to
+  // exist for skip|quarantine (F-1's fix); this invariant proves the CITATION
+  // RESOLVES to a real bound — AJV cannot reach into a sibling checks[] array, so this
+  // is a genuinely different mechanism, not a restatement of the schema requirement.
+  // Registry-scoped with `blockedSlugs` (the id-9/22/25/26 shape).
+  {
+    const manifestForRowError = loadManifest();
+    const rowErrorRows = [];
+    for (const relFile of converted) {
+      let slug;
+      try {
+        slug = slugFor(manifestForRowError, relFile);
+      } catch {
+        continue;
+      }
+      const abs = path.join(REPO_ROOT, harness.descriptorPathFor(relFile));
+      if (!existsSync(abs)) continue;
+      let descriptor;
+      try {
+        descriptor = JSON.parse(readFileSync(abs, 'utf8'));
+      } catch {
+        continue; // unparsable — checkDescriptor owns that failure, never silently passed here
+      }
+      const exec = descriptor.execution;
+      const onRowError = exec && exec !== 'none' ? exec.on_row_error : undefined;
+      if (onRowError !== 'skip' && onRowError !== 'quarantine') continue; // fail_fast is not applicable — nothing to bound
+      const why = exec.on_row_error_why;
+      const hasWhy = !!(why && typeof why === 'object');
+      const liveness = hasWhy ? why.liveness : null;
+      const livenessKindOk = !!(liveness && typeof liveness === 'object' && liveness.kind === 'check' && typeof liveness.ref === 'string');
+      const ref = livenessKindOk ? liveness.ref : null;
+      const checksArr = Array.isArray(descriptor.checks) ? descriptor.checks : [];
+      const cited = ref ? checksArr.find((c) => c && c.id === ref) : null;
+      rowErrorRows.push({
+        slug,
+        onRowError,
+        hasWhy,
+        livenessKindOk,
+        ref,
+        refFound: !!cited,
+        refSeverity: cited ? cited.severity : null,
+        refHasLimit: !!(cited && cited.limit),
+      });
+    }
+    const gate = checkRowErrorGate(rowErrorRows);
+    results.push({
+      id: 27,
+      slug: '(registry)',
+      pass: gate.pass,
+      blockedSlugs: gate.blockedSlugs,
+      detail: gate.detail,
+    });
+  }
+
   return results;
 }
 
@@ -3063,6 +3121,56 @@ function checkCounterSourceRoots(rows, rootsByShape, parseError = null) {
 }
 
 // ---------------------------------------------------------------------------
+// ROW-ERROR-GATE (fast invariant #27, Spec 124 R-AX, WF2 "runner row-error policy",
+// 2026-09-21) — the recurrence-prevention half of RE-FREEZE #12. Measured 2026-09-21
+// (G0.4): a step's declared skip|quarantine tolerance was ALREADY bounded by a real
+// FAIL-severity check in 2 of 3 live cases (load_ravines/ravine_geometry_skipped_pct,
+// compute_parcel_cost_estimates/engine_error_count) but the field claiming it (the
+// literal on_row_error_max_pct) was a SECOND, duplicate copy of that bound (Rule 3),
+// and NOTHING checked the citation resolved to anything real. This predicate is that
+// check: PURE over already-resolved facts (the caller, fastInvariants, does the disk
+// read — does on_row_error_why exist, does its liveness{kind:"check",ref} name a
+// checks[] id IN THE SAME DESCRIPTOR, what severity/limit does that check carry).
+//
+// A descriptor declaring on_row_error:"fail_fast" is NOT APPLICABLE (vacuous pass) —
+// the gate only binds skip|quarantine, the same scope RE-FREEZE #12's schema
+// conditional (on_row_error_why required) already narrows to.
+// ---------------------------------------------------------------------------
+
+/**
+ * @param {Array<{slug:string, onRowError:string, hasWhy:boolean, livenessKindOk:boolean, ref:string|null, refFound:boolean, refSeverity:string|null, refHasLimit:boolean}>} rows
+ * @returns {{pass:boolean, blockedSlugs:string[], violations:Array<{slug:string,why:string}>, detail:string}}
+ */
+export function checkRowErrorGate(rows) {
+  const applicable = rows.filter((r) => r.onRowError === 'skip' || r.onRowError === 'quarantine');
+  const violations = [];
+  for (const r of applicable) {
+    if (!r.hasWhy) {
+      violations.push({ slug: r.slug, why: 'on_row_error_why is missing (the schema conditional should already refuse this descriptor; caught here belt-and-braces)' });
+    } else if (!r.livenessKindOk) {
+      violations.push({ slug: r.slug, why: 'on_row_error_why.liveness is not {kind:"check", ref:<string>}' });
+    } else if (!r.refFound) {
+      violations.push({ slug: r.slug, why: `on_row_error_why.liveness.ref "${r.ref}" does not resolve to a checks[] id in the same descriptor` });
+    } else if (r.refSeverity !== 'FAIL') {
+      violations.push({ slug: r.slug, why: `cited check "${r.ref}" has severity ${JSON.stringify(r.refSeverity)}, not FAIL` });
+    } else if (!r.refHasLimit) {
+      violations.push({ slug: r.slug, why: `cited check "${r.ref}" carries no limit — not a real bound` });
+    }
+  }
+  const blockedSlugs = [...new Set(violations.map((v) => v.slug))];
+  return {
+    pass: violations.length === 0,
+    blockedSlugs,
+    violations,
+    detail: violations.length
+      ? `ROW-ERROR-GATE: ${violations.length} skip/quarantine declaration(s) whose citation does not bound them: ${violations.map((v) => `${v.slug} (${v.why})`).join('; ')}`
+      : applicable.length
+        ? `ROW-ERROR-GATE: ${applicable.length} skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor`
+        : 'ROW-ERROR-GATE: not applicable (0 descriptors declare on_row_error skip|quarantine)',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // (vi) POLICY COVERAGE MATRIX — Spec 124 Rules 1-13, per the header map above.
 // ---------------------------------------------------------------------------
 /**
@@ -3824,6 +3932,43 @@ function selfTest() {
     }
     const errored = checkCounterSourceRoots([], {}, 'synthetic parse failure');
     if (errored.pass) throw new Error('self-test FAILED: checkCounterSourceRoots must FAIL when the parse errored, never pass on an empty root map');
+  }
+  // ROW-ERROR-GATE (fast invariant #27, Spec 124 R-AX, WF2 "runner row-error policy",
+  // 2026-09-21) — checkRowErrorGate, both directions on in-memory fixture rows.
+  {
+    // L4.1 RED — ref names a check id that does not exist in the descriptor.
+    const missingRef = checkRowErrorGate([{ slug: 'x', onRowError: 'skip', hasWhy: true, livenessKindOk: true, ref: 'no_such_check', refFound: false, refSeverity: null, refHasLimit: false }]);
+    if (missingRef.pass || JSON.stringify(missingRef.blockedSlugs) !== '["x"]' || !missingRef.detail.includes('does not resolve')) {
+      throw new Error(`self-test FAILED: checkRowErrorGate did not RED an on_row_error_why.liveness.ref that names no real check (${JSON.stringify(missingRef)})`);
+    }
+    // L4.2 RED — the cited check exists but is WARN, not FAIL.
+    const warnSeverity = checkRowErrorGate([{ slug: 'y', onRowError: 'skip', hasWhy: true, livenessKindOk: true, ref: 'some_check', refFound: true, refSeverity: 'WARN', refHasLimit: true }]);
+    if (warnSeverity.pass || JSON.stringify(warnSeverity.blockedSlugs) !== '["y"]' || !warnSeverity.detail.includes('WARN')) {
+      throw new Error(`self-test FAILED: checkRowErrorGate did not RED a cited check whose severity is WARN, not FAIL (${JSON.stringify(warnSeverity)})`);
+    }
+    // RED — the cited check is FAIL-severity but carries no limit at all (no real bound).
+    const noLimit = checkRowErrorGate([{ slug: 'z', onRowError: 'quarantine', hasWhy: true, livenessKindOk: true, ref: 'some_check', refFound: true, refSeverity: 'FAIL', refHasLimit: false }]);
+    if (noLimit.pass || JSON.stringify(noLimit.blockedSlugs) !== '["z"]' || !noLimit.detail.includes('no limit')) {
+      throw new Error(`self-test FAILED: checkRowErrorGate did not RED a FAIL-severity cited check with no limit (${JSON.stringify(noLimit)})`);
+    }
+    // RED — on_row_error_why missing entirely (belt-and-braces; the schema conditional
+    // should already refuse this descriptor, but the invariant must not silently pass it).
+    const noWhy = checkRowErrorGate([{ slug: 'w', onRowError: 'skip', hasWhy: false, livenessKindOk: false, ref: null, refFound: false, refSeverity: null, refHasLimit: false }]);
+    if (noWhy.pass || JSON.stringify(noWhy.blockedSlugs) !== '["w"]') {
+      throw new Error(`self-test FAILED: checkRowErrorGate did not RED a skip declaration with no on_row_error_why at all (${JSON.stringify(noWhy)})`);
+    }
+    // L4.4 GREEN — the live shape: a real FAIL-severity, bound-carrying check cited.
+    const liveShape = checkRowErrorGate([
+      { slug: 'load_ravines', onRowError: 'skip', hasWhy: true, livenessKindOk: true, ref: 'ravine_geometry_skipped_pct', refFound: true, refSeverity: 'FAIL', refHasLimit: true },
+      { slug: 'compute_parcel_cost_estimates', onRowError: 'skip', hasWhy: true, livenessKindOk: true, ref: 'engine_error_count', refFound: true, refSeverity: 'FAIL', refHasLimit: true },
+      { slug: 'enrich_parcels', onRowError: 'skip', hasWhy: true, livenessKindOk: true, ref: 'opt_config_engine_errors', refFound: true, refSeverity: 'FAIL', refHasLimit: true },
+    ]);
+    if (!liveShape.pass || liveShape.blockedSlugs.length !== 0) throw new Error(`self-test FAILED: checkRowErrorGate must PASS the three live skip declarations, each citing a real FAIL-severity, bound-carrying check (${JSON.stringify(liveShape)})`);
+    // L4.5 GREEN — vacuous on fail_fast (no demand at all — compute_centroids' own shape).
+    const notApplicable = checkRowErrorGate([{ slug: 'compute_centroids', onRowError: 'fail_fast', hasWhy: false, livenessKindOk: false, ref: null, refFound: false, refSeverity: null, refHasLimit: false }]);
+    if (!notApplicable.pass || notApplicable.blockedSlugs.length !== 0 || !notApplicable.detail.includes('not applicable')) {
+      throw new Error(`self-test FAILED: checkRowErrorGate must be vacuous (PASS, "not applicable") on a fail_fast declaration, never demand a why it does not need (${JSON.stringify(notApplicable)})`);
+    }
   }
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on

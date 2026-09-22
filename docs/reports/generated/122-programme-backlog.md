@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **126**
+Total items: **127**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 31 |
+| ⬜ NOT_STARTED | 32 |
 | ⚠️ PARTIAL | 16 |
 | ✅ BUILT | 75 |
 | ⏭️ SUPERSEDED | 4 |
@@ -54,7 +54,7 @@ Total items: **126**
 | `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ⬜ NOT_STARTED | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-21 |
 | `B2-OWNER-SPEC-DIFF` | 123 §7 row 9; 124 §4.5 | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ⬜ NOT_STARTED | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-21 |
 
-## Nice-to-have — real gap, not currently blocking (99)
+## Nice-to-have — real gap, not currently blocking (100)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -157,6 +157,7 @@ Total items: **126**
 | `SPECTBL-1` | 43 §2 / 42 §2 / 41 §2 | Chain-spec Step Breakdown tables reconciled to manifest.chains + drift-locked | ✅ BUILT | wf: wf: chain-spec step tables (SPECTBL-1) | — | 2026-09-15 |
 | `SPECTBL-GEN` | 122 batch-2 amendment item 5 | Step Breakdown tables generated rather than hand-authored | ⬜ NOT_STARTED | followup: .cursor/batch2_c5_active_task.md §Proposed policy amendments item 5 (batch-2 row 0.8) | — | 2026-09-15 |
 | `ENR-1` | 122 §1.10 | runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door | ✅ BUILT | followup: docs/reports/review_followups.md - WF2 batch-2 Phase 0.10b section, the class-based-target MED row (the 0.10 matched-telemetry MED row it supersedes is CLOSED) | — | 2026-09-16 |
+| `ROW-ERR-QUARANTINE` | 120 §6 | step_quarantine sink for execution.on_row_error:"quarantine" | ⬜ NOT_STARTED | followup: review_followups.md (2026-09-21 row-error policy filing) | — | 2026-09-21 |
 
 ---
 

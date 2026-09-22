@@ -2270,6 +2270,23 @@
         ]
       },
       "last_reviewed": "2026-09-21"
+    },
+    {
+      "id": "ROW-ERR-QUARANTINE",
+      "spec": "120 §6",
+      "title": "step_quarantine sink for execution.on_row_error:\"quarantine\"",
+      "promised": "a dead-letter table (step_quarantine, Spec 120 §6's exact DDL) so a row dropped under on_row_error:\"quarantine\" is durably retained, not merely counted",
+      "status": "NOT_STARTED",
+      "evidence": "WF2 'runner row-error policy' (2026-09-21, R-AX): 0 live descriptors declare quarantine, 0 mentions of quarantine|rejected_rows|dead_letter|row_errors across 247 migrations, and the migration numbers Spec 120 §6 originally proposed (245-248) are already consumed by unrelated work — dispositioned retire in scripts/steps/_schema/execution-posture-disposition.json, basis:\"sink_unbuilt\", not banned_for_new (the mechanism is specified and buildable, merely never built)",
+      "owner": {
+        "kind": "followup",
+        "ref": "review_followups.md (2026-09-21 row-error policy filing)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-21"
     }
   ]
 }

@@ -160,7 +160,10 @@
     "needs_disk_mb": 64,
     "partial_fill": "atomic",
     "on_row_error": "skip",
-    "on_row_error_max_pct": 0.05,
+    "on_row_error_why": {
+      "text": "RE-FREEZE #12 (R-AX, 2026-09-21). A dropped-geometry row is counted and the load continues; the tolerance is bounded by the declared, FAIL-severity, config-resolved check below — the literal 0.05 this field carried until this commit duplicated that same bound (Rule 3 violation, G0.4) and is deleted.",
+      "liveness": { "kind": "check", "ref": "ravine_geometry_skipped_pct" }
+    },
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {

@@ -474,6 +474,32 @@ magnitude inconsistent with a straight population narrowing (every line-coverage
 never increased; `null_geom_basis_count` and `area_confidence.medium` both decreased too, matching
 a smaller population with the SAME per-parcel distribution shape).
 
+## Addendum (2026-09-22, WF2 "runner row-error policy") — `pool_errors` is a new, unrelated field
+
+This step's goldens were recaptured (skip→skip truthing, `on_row_error_why` added, F-1 schema fix, see Spec
+124 R-AX) for the first time since commit `19e08fe5` ("createPool/createResolvedPool attach
+`pool.on('error')`") added `records_meta.pool_errors` to every step's summary. The PRE captures predate that
+commit, so the fresh POST captures show `pool_errors` (value `0`) as a new field with no prior counterpart —
+a genuine, cross-cutting library addition unrelated to this step's own conversion or to this WF2's row-error
+work, not a behaviour regression. G8's diff-compare treats it as any other declared diff: named here so it
+resolves as explained rather than unexplained.
+
+`table_state[0].content_hash` also differs from the PRE capture (`21ac2f1c…` -> `cc881bde…`, both
+`row_count:486530`). Root cause, measured live: this same WF2 session ran `enrich_parcels` (unrelated to
+`compute_parcel_cost_estimates`'s own conversion) for its own recapture work, and one of those runs
+genuinely completed a full 5-pass enrichment (`parcels.massing_enriched_at` moved to `2026-09-22T05:32Z`,
+confirmed live against the DB) — a real, legitimate re-enrichment of the `zoning_class`/`max_buildable_gfa_sqm`
+inputs `compute_parcel_cost_estimates` reads. `compute_parcel_cost_estimates` itself is confirmed idempotent
+against UNCHANGED inputs (`PRE` and the original committed `POST` share the identical `21ac2f1c…` hash); this
+diff is the same "a live table's own natural drift between two non-simultaneous captures produces a diff
+bucket unrelated to the conversion" class `load_ravines`' own assessment report names in its Known Failure
+Modes table (`docs/reports/2026-08-25-pilot2-load-ravines-assessment.md`), here via a sibling step's
+legitimate write (`enrich_parcels`) rather than the table's own passive drift. **Superseded by the
+rebase onto `bb53f34b`** (below) — the goldens are recaptured fresh against the rebased descriptor
+(carrying both S0.2's product-scope bound and this WF2's `on_row_error_why`), so this addendum's own
+numbers (`21ac2f1c…`/`cc881bde…`) describe a since-recaptured state, kept here only as the historical
+record of that measurement.
+
 ---
 
 ## Validation scorecard (generated)

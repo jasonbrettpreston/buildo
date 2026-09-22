@@ -3958,3 +3958,23 @@ also unaliased). `parcels.id` (fully qualified, no local alias) is the only spel
 those 5 contexts; aliasing to `p.id` would require also changing `parcel-field-dump.js`'s FROM clauses — a
 Reality-Check instrument, outside this peel's proper scope — for a cosmetic rename with zero functional
 benefit and real regression risk. No code change made for this finding beyond the explanatory comment.
+
+## WF2 "runner row-error policy" — filed, not fixed here (2026-09-22, Spec 124 R-AX)
+
+Source: `.cursor/wf2_runner_row_error_policy_active_task.md` §10. Filed during the R-X posture-disposition
+registry build; each is its own scoped remedy, deliberately not folded into this WF2 (feedback_wf3_granularity).
+
+| ID | Severity | Where | Finding | Disposition |
+|---|---|---|---|---|
+| F-1 | HIGH | `scripts/steps/_schema/step.schema.json` (`on_row_error`/`on_row_error_max_pct` conditional) | The `if/then` used `properties` where its three siblings (`on_batch_error`/`on_check_error`/`on_degrade`) use `required` — a `skip`/`quarantine` descriptor with NO bound at all validated (AJV-proven live against `compute_centroids`, both before and after the fix). | **CLOSED in this WF2** (RE-FREEZE #12) — the conditional now reads `required: ["on_row_error_why"]`, matching its siblings. Filed here only so the CLASS (copy-paste divergence across sibling `allOf` conditionals in the same schema) gets a sweep of the ~10 other `if/then` blocks for the same defect shape. |
+| F-2 | MED | Spec 124 §5 R-X row | R-X's own field list named `on_prior_read_error`, which has 0 hits anywhere in `step.schema.json` or `scripts/lib/step/*.js` (measured 2026-09-21). | **CORRECTED in this WF2** — R-X's row amended in place (recorded as never-existing, not silently dropped). Filed as further evidence for the "spec prose rots like a tracker" class (§R-8, now Spec 122a Appendix §A13). |
+| F-3 | MED | `scripts/lib/compute/enrich-parcels.js:1578` | A whole-batch swallow books the failure as EXACTLY `idsBatch.length` row errors — a knowingly-approximate counter feeding a FAIL check (Spec 122:454's own recorded concession, "lost rows inflate this count slightly"). | **OPEN — own WF3.** `enrich_parcels`'s own truthing (`on_batch_error: "drop_batch"` + `on_batch_error_why` naming the over-count) is drafted for this WF2 but NOT landed in its first commit — its golden recapture (a genuine `--full` 5-pass recompute) did not finish inside this session, deferred to a follow-up commit. Once landed, the count-fidelity fix itself stays separate (Ask A1 PIN, per Spec 123 §3.1 pin-then-fix). |
+| F-4 | MED | `scripts/enrich-parcels.descriptor.json` `opt_config_engine_errors` check | Carries a literal `viol == 0` with no `limit_from_config`, unlike the sibling ENRICHER `compute_parcel_cost_estimates`'s `engine_error_count`, which uses one for the identical concept — a §7 rung-(c) miss and a Rule 3 gap. | **OPEN — own WF2.** `step-validate.mjs` fast invariant #27 ROW-ERROR-GATE was deliberately built to require only a real FAIL-severity, bound-carrying check (rung b), not a config-resolved one (rung c), specifically so it does not silently demand this fix as a side effect of the row-error policy WF2. |
+| F-5 | LOW | `assert-data-bounds.js` (several `return { skip: '…failed' }` swallows), `assert-engine-health.js:353` (`vacuumErrors[]`) | Two `on_check_error`-adjacent boundary cases the row-error audit surfaced. Both declare `on_check_error: fail_step`. | **OPEN — candidates for the next posture-registry pass**, not this one (out of scope: neither is `on_row_error`). |
+| F-6 | LOW | Spec 48 §4.10 | Cites "Spec 47 §11" for the primary-entity `records_total` rule; Spec 47 §11 is actually *Pre-Flight Checks*. Dangling cross-ref. | **OPEN — small docs fix**, own WF3 or folded into the next Spec 47/48 touch. |
+| F-7 | LOW | `scripts/CLAUDE.md` | The Backend/Pipeline domain file's required-reading table does not cite Spec 124, though Spec 124 is where Rules 1-13 and "the McDonald's standard" live. | **OPEN — one-line addition** to `scripts/CLAUDE.md`'s required-reading table, own WF2 (out of this WF2's owned-files scope: it touches `scripts/steps/_schema/`, schema, descriptors and specs, not the domain CLAUDE.md itself). |
+
+Also filed by this WF2's G0.1 grounding pass: the `execution.on_row_error_max_pct` field is retained
+(`x-banned-for-new: true`) rather than pruned, per R-X ("retiring a class is a declaration that stays in the
+frozen enum, never a removal"); a future, separately-authorized re-freeze may prune it once every existing
+descriptor citing it (none, post this WF2) is confirmed gone.
