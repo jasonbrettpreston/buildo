@@ -24,6 +24,9 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Test Scaffolding:** Create `src/tests/[feature].{logic,infra,ui}.test.ts`.
 - [ ] **Red Light:** Run `npm run test`. Must see failing tests.
 - [ ] **Implementation:** Write code to pass tests.
+      Provider per CLAUDE.md PD 11: `deepseek` ⇒ write the engine brief (front-matter `write_scope`, the
+      task's file list), run `node scripts/deepseek-exec.js --brief <file> --provider=deepseek`, cite the
+      ledger run_id; the orchestrator lands registry edits. `claude` ⇒ as today. Verification seats never route to the engine.
 - [ ] **Auth Boundary & Secrets:** Verify middleware protection.
       No `.env` secrets in client components.
 - [ ] **Pre-Review Self-Checklist:** BEFORE Green Light, generate a 5-10 item
@@ -55,7 +58,8 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       and walks the checklist for staleness. Backend/Pipeline mandatory; frontend lean (§11.5-FE).
 - [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste final test
       summary line and typecheck result. Both must show zero failures.
-      List each prior step as DONE or N/A. → WF6.
+      List each prior step as DONE or N/A. State the execution provider (+ downgrade
+      reason, + engine run_id) in the evidence. → WF6.
 ```
 
 ---
@@ -77,6 +81,9 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Guardrail Test:** Add/update test for new behavior.
 - [ ] **Red Light:** Verify new test fails.
 - [ ] **Implementation:** Modify code to pass.
+      Provider per CLAUDE.md PD 11: `deepseek` ⇒ write the engine brief (front-matter `write_scope`, the
+      task's file list), run `node scripts/deepseek-exec.js --brief <file> --provider=deepseek`, cite the
+      ledger run_id; the orchestrator lands registry edits. `claude` ⇒ as today. Verification seats never route to the engine.
 - [ ] **UI Regression Check:** If modifying shared component,
       `npx vitest run src/tests/*.ui.test.tsx`.
 - [ ] **Pre-Review Self-Checklist:** Generate a 5-10 item self-skeptical checklist from
@@ -99,7 +106,8 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
       + one Cross-read Adversary (Spec 08 §10 roster) checks the folded decisions PAIRWISE and
       walks every checklist line for staleness. Backend/Pipeline: mandatory. Frontend: lean
       (one validator), mandatory only where the fold asserts executable facts (§11.5-FE).
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence. → WF6.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence.
+      State the execution provider (+ downgrade reason, + engine run_id) in the evidence. → WF6.
 ```
 
 ---
@@ -116,6 +124,9 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Reproduction:** Create failing test that isolates the bug.
 - [ ] **Red Light:** Run test. MUST fail to confirm reproduction.
 - [ ] **Fix:** Modify code to resolve.
+      Provider per CLAUDE.md PD 11: `deepseek` ⇒ write the engine brief (front-matter `write_scope`, the
+      task's file list), run `node scripts/deepseek-exec.js --brief <file> --provider=deepseek`, cite the
+      ledger run_id; the orchestrator lands registry edits. `claude` ⇒ as today. Verification seats never route to the engine.
 - [ ] **Idempotency Check (Backend/Pipeline only):** If the fix touches a pipeline script,
       confirm it remains safe to re-run: upsert pattern used instead of bare INSERT,
       no unconditional state mutations that compound on re-run. If unclear, add a smoke
@@ -134,7 +145,8 @@ Loaded on demand when a WF is triggered — not auto-loaded every session.
 - [ ] **Fold Validation (Spec 08 §11.2):** after folding ANY review round and BEFORE implementing —
       one grounder re-executes every claim + one Cross-read Adversary (pairwise + checklist
       staleness). Backend/Pipeline mandatory; frontend lean (§11.5-FE).
-- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence. → WF6.
+- [ ] **Green Light:** Run `npm run test && npm run lint -- --fix`. Paste evidence.
+      State the execution provider (+ downgrade reason, + engine run_id) in the evidence. → WF6.
 ```
 
 ---
