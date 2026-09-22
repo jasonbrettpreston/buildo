@@ -70,8 +70,33 @@ function memo(ctx, key, loader) {
   return byKey.get(key);
 }
 
-function isMissingTable(err) {
-  return !!(err && err.message && err.message.includes('does not exist'));
+/**
+ * Deploy-ordering guard: is `err` Postgres 42P01 for the ONE relation a loader
+ * is allowed to treat as "not yet migrated"?
+ *
+ * ── WHY THE TABLE NAME IS A REQUIRED ARGUMENT (review_followups LOW, 2026-08-13) ──
+ * This predicate used to be table-agnostic — `err.message.includes('does not
+ * exist')` — and every call site guarded a MULTI-QUERY block. `loadWsibBranch`
+ * is the case that broke: its last query joins `entities`, so a missing
+ * `entities` (an outage of a table this step does NOT own) raised
+ * `relation "entities" does not exist`, matched the broad predicate, and made
+ * the whole WSIB block report `{ checked: false }` — a SKIP meaning "nothing to
+ * check" for a metric that was never read. "I could not check" must never read
+ * as "nothing to check".
+ *
+ * Naming the guarded relation narrows the guard to exactly the deploy-order
+ * case it was written for: every OTHER missing relation rethrows out of
+ * `compute()` and halts the chain, per the file header's Spec 30 §5.4.1 halt
+ * contract.
+ *
+ * Both the bare (`relation "x" does not exist`) and schema-qualified
+ * (`relation "public.x" does not exist`) message forms are accepted, so a
+ * non-default search_path does not silently disable a guard.
+ */
+function isMissingTable(err, table) {
+  if (!err || !err.message || !table) return false;
+  return err.message.includes(`relation "${table}" does not exist`)
+    || err.message.includes(`relation "public.${table}" does not exist`);
 }
 
 // ── permits (fatal-eligible: no local catch) ────────────────────────────────
@@ -239,7 +264,7 @@ async function loadSourcesBranch(ctx) {
       const r = await pool.query(`SELECT COUNT(*) FROM ravines`);
       ravinesCount = parseInt(r.rows[0].count, 10);
     } catch (err) {
-      if (!isMissingTable(err)) throw err;
+      if (!isMissingTable(err, 'ravines')) throw err;
     }
 
     let heritagePropsCount = null;
@@ -250,7 +275,7 @@ async function loadSourcesBranch(ctx) {
       const hd = await pool.query(`SELECT COUNT(*) FROM heritage_districts`);
       heritageDistrictsCount = parseInt(hd.rows[0].count, 10);
     } catch (err) {
-      if (!isMissingTable(err)) throw err;
+      if (!isMissingTable(err, 'heritage_properties') && !isMissingTable(err, 'heritage_districts')) throw err;
       heritagePropsCount = null;
       heritageDistrictsCount = null;
     }
@@ -260,7 +285,7 @@ async function loadSourcesBranch(ctx) {
       const c = await pool.query(`SELECT COUNT(*) FROM toronto_centreline`);
       centrelineCount = parseInt(c.rows[0].count, 10);
     } catch (err) {
-      if (!isMissingTable(err)) throw err;
+      if (!isMissingTable(err, 'toronto_centreline')) throw err;
     }
 
     return { apCount, apDupes, parcelCount, parcelDupes, lotOutliers, bfCount, heightOutliers, nhoodCount, nhoodDupes, ravinesCount, heritagePropsCount, heritageDistrictsCount, centrelineCount };
@@ -297,7 +322,11 @@ async function loadWsibBranch(ctx) {
 
       return { checked: true, wsibNoName, wsibNonG, wsibBadNaics, wsibOrphan };
     } catch (err) {
-      if (isMissingTable(err)) return { checked: false, wsibNoName: 0, wsibNonG: 0, wsibBadNaics: 0, wsibOrphan: 0 };
+      // ONLY a missing `wsib_registry` is SKIP-safe here. The orphan query
+      // above joins `entities` — a missing `entities` is a DIFFERENT relation's
+      // outage and must rethrow (review_followups LOW, 2026-08-13: the
+      // table-agnostic predicate used to mask it as "nothing to check").
+      if (isMissingTable(err, 'wsib_registry')) return { checked: false, wsibNoName: 0, wsibNonG: 0, wsibBadNaics: 0, wsibOrphan: 0 };
       throw err; // fatal — :696-705
     }
   });
@@ -361,7 +390,7 @@ async function loadInspectionBranch(ctx) {
         dateBeforePermit: parseInt(dateBeforePermitRes.rows[0].count, 10),
       };
     } catch (err) {
-      if (isMissingTable(err)) return empty;
+      if (isMissingTable(err, 'permit_inspections')) return empty;
       throw err; // fatal — :829-837
     }
   });
@@ -584,3 +613,10 @@ async function compute(ctx) {
 module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
+// Named loader exports — additive, for direct unit testing of the
+// deploy-ordering guard WITHOUT a live database (src/tests/steps/
+// assert_data_bounds/missing-table-guard.test.ts). The loaders already took
+// `ctx` as their only argument; exporting them changes no production path
+// (loadBranch — the sole internal caller — is untouched).
+module.exports.loadWsibBranch = loadWsibBranch;
+module.exports.loadInspectionBranch = loadInspectionBranch;
