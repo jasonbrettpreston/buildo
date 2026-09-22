@@ -16,12 +16,7 @@ The governing principle (manual §6.2): *five identical skeptics find the same b
 <architecture>
 ## 2. The two agent substrates
 
-Agents run on one of two substrates. Choosing correctly is a cost + capability decision (§7).
-
-| Substrate | What it is | Tools / access | Cost | Use for |
-|-----------|-----------|----------------|------|---------|
-| **External-model CLI** | `scripts/gemini-review.js` (Gemini 2.5 Pro), `scripts/deepseek-review.js` (DeepSeek-R1) | **None** — reads the file(s) you pass, no repo/DB/tool access | Cheap (esp. DeepSeek); different model lineage → different blind spots | Broad adversarial coverage; single-file or spec/plan review where the answer is in the text |
-| **Claude Task agent** (`subagent_type`) | A spawned Claude sub-agent (`feature-dev:code-reviewer`, `feature-dev:code-explorer`, `general-purpose`, `pipeline-reality-check`, …) | Full tools — Read/Grep/Glob/Bash, git, live DB, worktree isolation | Pricier | Roles that MUST touch the real tree, git history, or the live database |
+Agents run on one of two LIVE substrates today, plus a third that is **PLANNED but not built** (tracked **SUB-ENG-1**). Choosing correctly is a cost + capability decision (§7). **§A** gives the full reality-mapped substrate table (what exists vs what is planned, with an explicit STATUS per row); **§B** gives the execution-provider toggle contract.
 
 **CLI invocation (both mirror the same interface):**
 ```
@@ -30,28 +25,47 @@ npm run review:deepseek -- review <file> --context <spec-path>
 npm run review:gemini   -- spec <spec-path>        # spec gap/contradiction review
 npm run review:deepseek -- plan                    # reviews .cursor/active_task.md
 ```
-Env keys: `GEMINI_API_KEY`, `DEEPSEEK_API_KEY` (in `.env`). The `spec`/`plan` commands are how agents review at **plan altitude** (§5.2).
+Env keys: `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` (**live**, in `.env`); `EXECUTION_PROVIDER` (**PLANNED** — SUB-ENG-1, inert today, §B). **`FABLE_API_KEY` does not exist and is never added as a provider key** — "Fable" is one of the Claude model ids (`sonnet | opus | haiku | fable`) the orchestrator session itself may run on, not a provider (§A).
+
+## A. Substrate Reality Mapping
+
+| Substrate | What it is | Tools / access | Cost | Use for | **STATUS** |
+|---|---|---|---|---|---|
+| **External-model CLIs** | `scripts/deepseek-review.js` (DeepSeek-R1 default, `deepseek-chat`/V3 via `DEEPSEEK_MODEL`) · `scripts/gemini-review.js` (Gemini 2.5 Pro, hardcoded) | **None** — reads only the files passed; **no repo, DB, git, shell, and NO WRITE PATH** (locked by T6) | Cheap | Static review: adversarial lenses, `spec`/`plan` altitude, Compliance, Round-2, whole-file code-quality reads | **`live`** |
+| **Claude Task agents** (tool-bearing) | the four project-defined seats in `.claude/agents/` (`code-reviewer-grounded`, `observability-reviewer`, `pipeline-reality-check`, `regression-guardian`) + the harness seats (`general-purpose`, `frontend-design`, `/security-review`), spawned on `sonnet \| opus \| haiku \| fable` — the harness's closed model enum. **DeepSeek cannot be a sub-agent.** | Full: Read/Grep/Glob/**Bash**, git, live DB, worktree isolation | Pricier | The verification seats that MUST touch reality: **A4, A5, A6, A7, A8, A9, A13** | **`live`** |
+| **DeepSeek Execution Engine** | `scripts/deepseek-exec.js` — a Node agentic function-calling loop with `read_file`/`grep_files`/`write_file`/`run_bash_command`/`git_commit` | Shell + filesystem + git, under built fences | Cheapest per token; **highest blast radius** | Code generation, file writing/editing, committing — the execution seat | **`PLANNED` — not built; tracked as SUB-ENG-1** (`.cursor/wf1_deepseek_execution_engine_active_task.md`) |
+
+## B. Substrate Toggle Contract
+
+* **Vocabulary:** `EXECUTION_PROVIDER=deepseek|claude`, CLI equivalent `--provider=deepseek|claude`. **Two values only.** `fable` is never a provider value; it appears in this spec solely as one of the Claude model ids the orchestrator session may run on.
+* **Default & fallback (the load-bearing clause):** the default is **`claude`**, and **pure Claude is the operational fallback for ALL execution steps.** An unset, unrecognised, or engine-unavailable provider **resolves to `claude` and logs the downgrade with its reason** — never a throw-and-halt, never a half-executed run.
+* **Honest landing point:** honoured by the **brief protocol** (`CLAUDE.md` + `.claude/workflows.md`: the orchestrator resolves the provider at task start, states it in the brief and in the Green Light evidence) **and by the engine CLI's own flag**. **NOT** a runtime switch inside `scripts/run-chain.js` — that script orchestrates pipeline data steps, not WF tasks (out of scope, §8).
+* **STATUS:** `deepseek` is **inert until SUB-ENG-1 ships**; nothing in the tree reads `EXECUTION_PROVIDER` today. Flips to `live` only via the engine's own exit criteria.
+* **Invariant:** **no role marked tool-required may ever be routed to a tool-less substrate, under any provider value.** The toggle governs *execution*, never *verification*. Mechanised by `src/tests/agent-roster.infra.test.ts` (T2).
 
 ## 3. The roster
 
 The full assurance roster — one heterogeneous menu, each role defined by **the one question no other role asks**. Isolation defaults to a worktree; the roles that must see live state run in the **main tree** (+ live DB where noted). §5 gives each role's deeper rationale, dependencies, and fire-conditions; §6 the domain rosters; §7 the composition rules; §10 the copy-paste spawn templates.
 
-| # | Agent | The one question it asks | Substrate |
-|---|-------|--------------------------|-----------|
-| A1 | **Gemini (adversarial)** | "What would a hostile expert of a different model lineage catch?" | CLI (Gemini 2.5 Pro) |
-| A2 | **DeepSeek (adversarial)** | Same question, different lineage → different blind spots | CLI (DeepSeek-R1) |
-| A3 | **Code Reviewer** | "Is the code correct, typed, telemetered, free of dead code?" | `feature-dev:code-reviewer` |
-| A4 | **Observability** | "Is every state change auditable? Do counters/verdicts/producer-consumer contracts hold?" | `feature-dev:code-reviewer` |
-| A5 | **Integration** | "Does this match the REAL codebase — SDK signatures, wiring, seams, migration mechanics — not the spec's idealized version?" | `general-purpose` · main tree |
-| A6 | **Regression Guardian** | "For every deleted/altered line — WHY did it exist? Is that intent knowingly preserved?" (Chesterton's Fence) | `feature-dev:code-explorer` · main tree |
-| A7 | **Reality-Check** | "Are the output VALUES physically/domain-plausible?" — reads data, not code | `pipeline-reality-check` · main tree + DB |
-| A8 | **Schema-Fidelity** | "Does every DB field read/written EXIST with the assumed type, nullability, constraint, and ON CONFLICT arbiter?" | `general-purpose` · main tree + DB |
-| A9 | **Ground-truth** | "Is the SPEC still TRUE against live code/DB/behavior?" (gates Compliance) | `general-purpose` · main tree + DB |
-| A10 | **Compliance** | "Does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?" | DeepSeek `spec` / `general-purpose` |
-| A11 | **User-Advocate (UX)** | "Does this serve the human on the other end?" (journey, states, a11y, honest copy) | `general-purpose` / `frontend-design` |
-| A12 | **Security** | "How is this exploited?" — authz/IDOR/injection/secrets/PII/forgery/replay (money/auth/PII/admin only) | `/security-review` / `general-purpose` |
-| A13 | **Op-Model Compliance** | "Did WE follow the doctrine?" — meta-audit of the decision trail (WF6 exit gate only) | `general-purpose` · main tree + git |
-| A14 | **Roster Manager** | "Is the ROSTER itself right — who earns their keep, who to improve, what's missing?" (periodic meta-governance) | `general-purpose` / workflow |
+**Closed Substrate vocabulary — exactly four values:** `Gemini CLI` · `DeepSeek CLI` · `DeepSeek CLI + Claude grounder` · `Claude`. The compound value means *the CLI produces the pass; a tool-bearing Claude grounder adjudicates every executable claim before any finding is folded (§9 CLI blind spots, §11.5)* (provenance: the 2026-09-21 operator ruling, memory `feedback_deepseek_review_seats.md:11-15`).
+**`Tools required?`** is a closed marker column: `no` · `yes (tree)` · `yes (tree+DB)` · `yes (tree+git)`. The SUBSTRATE RULE (§10.2) keys on this column, never on row numbers — a future A15 inherits the invariant automatically.
+
+| # | Agent | The one question it asks | Substrate | Tools required? | Seat id |
+|---|-------|--------------------------|-----------|------------------|---------|
+| A1 | **Gemini (adversarial)** | "What would a hostile expert of a different model lineage catch?" | `Gemini CLI` | no | — |
+| A2 | **DeepSeek (adversarial)** | Same question, different lineage → different blind spots | `DeepSeek CLI` | no | — |
+| A3 | **Code Reviewer** | "Is the code correct, typed, telemetered, free of dead code?" | `DeepSeek CLI + Claude grounder` | no | `code-reviewer-grounded` (the grounder half) |
+| A4 | **Observability** | "Is every state change auditable? Do counters/verdicts/producer-consumer contracts hold?" | `Claude` | yes (tree+DB) | `observability-reviewer` |
+| A5 | **Integration** | "Does this match the REAL codebase — SDK signatures, wiring, seams, migration mechanics — not the spec's idealized version?" | `Claude` | yes (tree) | `general-purpose` |
+| A6 | **Regression Guardian** | "For every deleted/altered line — WHY did it exist? Is that intent knowingly preserved?" (Chesterton's Fence) | `Claude` | yes (tree+git) | `regression-guardian` |
+| A7 | **Reality-Check** | "Are the output VALUES physically/domain-plausible?" — reads data, not code | `Claude` | yes (tree+DB) | `pipeline-reality-check` |
+| A8 | **Schema-Fidelity** | "Does every DB field read/written EXIST with the assumed type, nullability, constraint, and ON CONFLICT arbiter?" | `Claude` | yes (tree+DB) | `general-purpose` |
+| A9 | **Ground-truth** | "Is the SPEC still TRUE against live code/DB/behavior?" (gates Compliance) | `Claude` | yes (tree+DB) | `general-purpose` |
+| A10 | **Compliance** | "Does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?" | `DeepSeek CLI + Claude grounder` | no | `general-purpose` (the grounder half) |
+| A11 | **User-Advocate (UX)** | "Does this serve the human on the other end?" (journey, states, a11y, honest copy) | `Claude` | no | `general-purpose` / `frontend-design` |
+| A12 | **Security** | "How is this exploited?" — authz/IDOR/injection/secrets/PII/forgery/replay (money/auth/PII/admin only) | `Claude` | no | `/security-review` / `general-purpose` |
+| A13 | **Op-Model Compliance** | "Did WE follow the doctrine?" — meta-audit of the decision trail (WF6 exit gate only) | `Claude` | yes (tree+git) | `general-purpose` |
+| A14 | **Roster Manager** | "Is the ROSTER itself right — who earns their keep, who to improve, what's missing?" (periodic meta-governance) | `Claude` | yes (tree+git) | `general-purpose` |
 
 **Not every agent runs on every change** — the roster is a MENU (§7.7). Compose the smallest *diverse* panel for the change's actual risks (§6) + Round-2 (§5.3). Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Roster Manager on a periodic cadence (§5.9).
 </architecture>
@@ -98,6 +112,7 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
 **Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
 
 ### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
 Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
 
 ### 5.4 Schema-Fidelity
@@ -210,6 +225,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
 7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
 
 ## 7b. Effectiveness scoreboard — MAINTAINED BY THE ROSTER MANAGER (A14, §5.9)
 > **Last updated: 2026-07-15 · window: P24/P25/P26 + the two 25E panels (plan `823a7c1e`→output `00486949`) + the 2026-07-14 new-agent blind test.** Machine-owned: A14 OVERWRITES each run (~every 15 panels) and re-stamps date/window. Do not hand-edit — file evidence to `review_followups.md`; A14 folds it. Columns split PLAN vs OUTPUT effectiveness (§6.4).
@@ -237,9 +253,9 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
 ---
 
 ## 8. Operating Boundaries
-**Target files:** `scripts/gemini-review.js`, `scripts/deepseek-review.js`, this spec, `CLAUDE.md` §Review Agent Reference, `scripts/CLAUDE.md` §Multi-Agent Review, `.claude/workflows.md` panel steps.
-**Out of scope:** the workflow *sequencing* (owned by `.claude/workflows.md`); lesson-routing (Spec 05); the husky footgun/migration gates (deterministic, not agents).
-**Cross-spec dependencies:** Spec 05 (knowledge operating model / lesson routing), Spec 47/48 (pipeline observability contracts the Observability agent checks), Spec 01 (DB schema the Schema-Fidelity agent checks against), Spec 00 (system map).
+**Target files:** `scripts/gemini-review.js`, `scripts/deepseek-review.js`, this spec, `CLAUDE.md` §Review Agent Reference, `scripts/CLAUDE.md` §Multi-Agent Review, `.claude/workflows.md` panel steps, `.claude/agents/*.md`, `docs/specs/00_claude_code_operating_model.md` (§0.4 drift), `src/tests/agent-roster.infra.test.ts`, and `scripts/deepseek-exec.js` *(PLANNED — SUB-ENG-1)*.
+**Out of scope:** the workflow *sequencing* (owned by `.claude/workflows.md`); lesson-routing (Spec 05); the husky footgun/migration gates (deterministic, not agents); `scripts/run-chain.js` (orchestrates pipeline data steps, not WF tasks — never a toggle host, §B).
+**Cross-spec dependencies:** Spec 05 (knowledge operating model / lesson routing), Spec 47/48 (pipeline observability contracts the Observability agent checks), Spec 01 (DB schema the Schema-Fidelity agent checks against), Spec 00 (system map), Spec 122/124 (consumers of this spec's panel roster).
 
 ## 9. Known Failure Modes
 - **Panel-of-clones.** Running five agents that share a lens finds one bug five times (manual §6.2). The roster is deliberately heterogeneous — enforce lens-diversity, not agent-count.
@@ -249,6 +265,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
 - **Meta-governance overhead.** A13 (Op-Model Compliance) and A14 (Roster Manager) are meta-layers — powerful, but prone to becoming self-referential bureaucracy. Keep A13 to one WF6 pass and A14 to a periodic cadence; both are ADVISORY (they recommend; a human ratifies — never auto-mint/retire). The §7b scoreboard is **machine-owned by A14** — a hand-edit is drift.
 - **CLI blind spots.** Gemini/DeepSeek see only the file(s) passed — they cannot verify against the real codebase/DB and WILL confidently hallucinate integration facts. Their findings on wiring/schema/values must be adjudicated by a tool-having agent (Integration/Schema-Fidelity/Reality-Check) before folding.
 - **Tool-less substrate silently downgrades a seat to static reasoning (found 2026-08-16, B3 output panel).** Three seats — Code Reviewer, Observability, Regression Guardian — were spawned on `feature-dev:*` agent types that **declare no Bash tool**. Each was briefed to execute (query `pipeline_runs`, run the DB suite, `git blame` every fence) and each *could not*. They degraded gracefully and said so up front, which is the correct behavior — but the panel still produced PASS verdicts grounded in reading rather than execution, including the DS4 skip-emission PASS, whose failure mode is a permanent silent skip. That PASS turned out to be correct when the orchestrator executed the test afterwards; the point is that **nothing in the panel would have caught it had it been wrong.** The Guardian, meanwhile, could not `git blame` a single fence in a role whose entire method is git history. Fixed by minting `code-reviewer-grounded` / `observability-reviewer` / `regression-guardian` in `.claude/agents/` with `tools: Bash, Read, Grep, Glob`, and by the SUBSTRATE RULE at §10.2. **The general lesson: a seat that cannot execute does not report that it is blocked — it reports a verdict.** Verify the substrate grants the tools before trusting the verdict.
+- **Substrate aspiration recorded as capability.** A spec that names an engine, env var or flag that does not exist reads as a *capability* to the next operator and to every agent that cites it. This spec ran that risk the moment it was asked to document an execution engine that had not been built. Mitigation: the §A STATUS column + `agent-roster.infra.test.ts`, which fails if any `PLANNED` row lacks a tracked item id, if a tool-required role is routed to a tool-less substrate, or if §B's fallback clause is weakened.
 
 ---
 
