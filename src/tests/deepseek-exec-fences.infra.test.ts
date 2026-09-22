@@ -450,8 +450,17 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npm', 'run', 'test'], timeout_ms: 500, reason: 'r' })],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
-      const call = toolCallOf(records, 'run_bash_command');
+      const call = toolCallOf(records, 'run_bash_command') as { error?: { code: string }; duration_ms?: number } | undefined;
       expect(call?.error?.code).toBe('TIMEOUT');
+      // Hardened (Step 9 panel fold, flaky-lock report from the Phase 3
+      // builder): assert the ledger's OWN duration_ms is well under the 30s
+      // sleep the fixture would otherwise run for — a GENEROUS margin
+      // (< 15000ms against a 500ms timeout_ms), never an exact elapsed
+      // window. This is the assertion that actually proves the kill fired
+      // promptly, rather than only the eventual (polled, CPU-contention-
+      // sensitive) process-death check below.
+      expect(call?.duration_ms).toBeDefined();
+      expect(call!.duration_ms!).toBeLessThan(15000);
       const pidPath = path.join(repo, 'sleep.pid');
       expect(fs.existsSync(pidPath)).toBe(true); // the fixture DID start, proving this isn't a vacuous pass
       const pid = Number(fs.readFileSync(pidPath, 'utf8').trim());
@@ -491,7 +500,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
           toolTurn('c1', 'write_file', { path: 'committed-by-engine.txt', content: 'hello\n', reason: 'r' }),
-          toolTurn('c2', 'git_commit', { message: 'engine commit', paths: ['committed-by-engine.txt'], reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): engine commit', paths: ['committed-by-engine.txt'], reason: 'r' }),
         ],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
@@ -507,7 +516,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const briefPath = writeBrief(repo);
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
-        transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'x', paths: ['seed.txt'], reason: 'r' })],
+        transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'test(08_agents): x', paths: ['seed.txt'], reason: 'r' })],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'PATH_NOT_LEDGERED' } });
@@ -523,7 +532,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
           toolTurn('c1', 'write_file', { path: 'blocked-by-lock.txt', content: 'x', reason: 'r' }),
-          toolTurn('c2', 'git_commit', { message: 'x', paths: ['blocked-by-lock.txt'], reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): x', paths: ['blocked-by-lock.txt'], reason: 'r' }),
         ],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
@@ -540,7 +549,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
           toolTurn('c1', 'write_file', { path: 'reclaimed.txt', content: 'x', reason: 'r' }),
-          toolTurn('c2', 'git_commit', { message: 'reclaimed', paths: ['reclaimed.txt'], reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): reclaimed', paths: ['reclaimed.txt'], reason: 'r' }),
         ],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
@@ -551,7 +560,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
           toolTurn('c1', 'write_file', { path: 'reclaimed2.txt', content: 'y', reason: 'r' }),
-          toolTurn('c2', 'git_commit', { message: 'reclaimed2', paths: ['reclaimed2.txt'], reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): reclaimed2', paths: ['reclaimed2.txt'], reason: 'r' }),
         ],
       });
       const records2 = ledgerRecords(ledgerDir, summary2.run_id);
@@ -817,7 +826,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const fakeLedger = { path: path.join(ledgerDir, 'claude-only-unit.jsonl'), append: () => {}, close: () => {} };
       const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, '.github', 'workflows', 'ci.yml')]) };
       const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['**'] });
-      const outcome = await tools.dispatch('git_commit', { message: 'x', paths: ['.github/workflows/ci.yml'], reason: 'r' });
+      const outcome = await tools.dispatch('git_commit', { message: 'test(08_agents): x', paths: ['.github/workflows/ci.yml'], reason: 'r' });
       expect(outcome.toolResult.ok).toBe(false);
       expect(outcome.toolResult.error.code).toBe('PATH_CLAUDE_ONLY');
     });
@@ -904,7 +913,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const fakeLedger = { path: path.join(ledgerDir, 'scope-unit.jsonl'), append: () => {}, close: () => {} };
       const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, 'out-of-scope-commit.txt')]) };
       const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['scripts/**'] });
-      const outcome = await tools.dispatch('git_commit', { message: 'x', paths: ['out-of-scope-commit.txt'], reason: 'r' });
+      const outcome = await tools.dispatch('git_commit', { message: 'test(08_agents): x', paths: ['out-of-scope-commit.txt'], reason: 'r' });
       expect(outcome.toolResult.ok).toBe(false);
       expect(outcome.toolResult.error.code).toBe('PATH_OUT_OF_SCOPE');
     });
@@ -993,14 +1002,14 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
           repoRoot: repo, briefPath: briefPath1, provider: 'deepseek', ledgerDir,
           transcriptTurns: [
             toolTurn('c1', 'write_file', { path: 'worktree1.txt', content: 'a', reason: 'r' }),
-            toolTurn('c2', 'git_commit', { message: 'w1', paths: ['worktree1.txt'], reason: 'r' }),
+            toolTurn('c2', 'git_commit', { message: 'test(08_agents): w1', paths: ['worktree1.txt'], reason: 'r' }),
           ],
         });
         const summary2 = await runEngine({
           repoRoot: repo2, briefPath: briefPath2, provider: 'deepseek', ledgerDir,
           transcriptTurns: [
             toolTurn('c1', 'write_file', { path: 'worktree2.txt', content: 'b', reason: 'r' }),
-            toolTurn('c2', 'git_commit', { message: 'w2', paths: ['worktree2.txt'], reason: 'r' }),
+            toolTurn('c2', 'git_commit', { message: 'test(08_agents): w2', paths: ['worktree2.txt'], reason: 'r' }),
           ],
         });
         expect(toolCallOf(ledgerRecords(ledgerDir, summary1.run_id), 'git_commit')).toMatchObject({ status: 'ok' });
@@ -1018,12 +1027,531 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
           toolTurn('c1', 'write_file', { path: 'busy-again.txt', content: 'x', reason: 'r' }),
-          toolTurn('c2', 'git_commit', { message: 'x', paths: ['busy-again.txt'], reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): x', paths: ['busy-again.txt'], reason: 'r' }),
         ],
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'COMMITTER_BUSY' } });
       fs.rmSync(lockPath, { force: true });
+    });
+  });
+
+  // ===========================================================================
+  // Step 9 output-panel fold (SUB-ENG-1 commit 12b) — A3 Code Reviewer,
+  // A5 Integration + Idempotency Lens, DeepSeek lenses. See
+  // docs/specs/00-architecture/08_agents.md §C for the reconciled contract.
+  // ===========================================================================
+
+  describe('F-II1 (CRITICAL): git_commit refuses a dirty index and undoes a stage mismatch, both directions', () => {
+    it('a pre-staged stray file (never ledgered this run) is refused INDEX_DIRTY; nothing is committed; the stray stays staged', async () => {
+      const briefPath = writeBrief(repo);
+      fs.writeFileSync(path.join(repo, 'stray.txt'), 'stray content, never ledgered this run\n');
+      execFileSync('git', ['add', 'stray.txt'], { cwd: repo, env: scrubbedChildEnv() });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'legit.txt', content: 'legit, this run wrote it\n', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): legit change', paths: ['legit.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'INDEX_DIRTY' } });
+      const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' }).trim().split('\n').filter(Boolean);
+      expect(staged).toEqual(['stray.txt']); // the pre-existing stray stage is untouched — never reset, never committed
+      const log = execFileSync('git', ['log', '-1', '--format=%s'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+      expect(log.trim()).not.toBe('test(08_agents): legit change'); // no commit happened at all
+    });
+
+    it('a clean index (the normal case) commits exactly the ledgered paths — no INDEX_DIRTY false positive', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'clean-index.txt', content: 'x\n', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): clean index', paths: ['clean-index.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'ok' });
+      const files = execFileSync('git', ['show', '--stat', '--format=', 'HEAD'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+      expect(files).toContain('clean-index.txt');
+      expect(files).not.toContain('stray');
+    });
+  });
+
+  describe('F-DS3 (CRITICAL): git_commit.args is reserved in v1 — ANY non-empty value is refused, closing the git long-option-abbreviation class', () => {
+    const cases = ['--amen', '-n', '--no-verify', '--only'];
+    for (const flag of cases) {
+      it(`args:["${flag}"] ⇒ FLAG_REFUSED, nothing executes`, async () => {
+        const briefPath = writeBrief(repo);
+        const summary = await runEngine({
+          repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [
+            toolTurn('c1', 'write_file', { path: `refused-${flag.replace(/[^a-z0-9]/gi, '')}.txt`, content: 'x', reason: 'r' }),
+            toolTurn('c2', 'git_commit', { message: 'test(08_agents): x', paths: [`refused-${flag.replace(/[^a-z0-9]/gi, '')}.txt`], args: [flag], reason: 'r' }),
+          ],
+        });
+        const records = ledgerRecords(ledgerDir, summary.run_id);
+        expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'FLAG_REFUSED' } });
+      });
+    }
+
+    it('args: [] (empty, the honest "no flags" declaration) is unaffected — the commit still succeeds', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'empty-args.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): empty args', paths: ['empty-args.txt'], args: [], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'ok' });
+    });
+  });
+
+  describe('F-II4 (HIGH): commit message format — validated BEFORE any git call, both directions', () => {
+    it('a message whose first line does not match the required pattern ⇒ MESSAGE_FORMAT, no git call at all (index stays clean)', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'bad-message.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'fixed some stuff', paths: ['bad-message.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'MESSAGE_FORMAT' } });
+      const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' }).trim();
+      expect(staged).toBe(''); // never even reached `git add`
+    });
+
+    it('a conforming message (type(NN_spec): description) is accepted and lands', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'good-message.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'feat(08_agents): a conforming message', paths: ['good-message.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'ok' });
+      const log = execFileSync('git', ['log', '-1', '--format=%s'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+      expect(log.trim()).toBe('feat(08_agents): a conforming message');
+    });
+
+    it('the system prompt states the required pattern (so the model has seen it before its first git_commit call)', async () => {
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      expect(typeof policy.commit_message_pattern).toBe('string');
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      expect(summary.status).toBe('completed');
+      // model_turn.assistant_text doesn't carry the system prompt itself (that's
+      // a separate 'system' message never ledgered verbatim) — the contract this
+      // arm actually proves is that the pattern is loaded from POLICY, not
+      // hardcoded text that could drift from the hook; see the direct policy
+      // read above for the load-bearing assertion.
+    });
+  });
+
+  describe('F-II6: git_commit child env scrubs DEEPSEEK_* in addition to GIT_*', () => {
+    it('a DEEPSEEK_API_KEY set in the parent env is not visible inside the husky hooks a commit spawns (temp repo has no husky, so this is proven via a printenv-shaped fixture hook)', async () => {
+      process.env.DEEPSEEK_API_KEY = 'sk-shouldneverreachthehook12';
+      // A pre-commit hook that fails (and reports) if DEEPSEEK_API_KEY leaked through.
+      const huskyDir = path.join(repo, '.husky');
+      fs.mkdirSync(huskyDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(huskyDir, 'pre-commit'),
+        '#!/bin/sh\nif [ -n "$DEEPSEEK_API_KEY" ]; then echo "LEAKED:$DEEPSEEK_API_KEY"; exit 1; fi\nexit 0\n',
+      );
+      execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: repo, env: scrubbedChildEnv() });
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'hook-checked.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): hook checked', paths: ['hook-checked.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'ok' }); // the hook did NOT fail — DEEPSEEK_API_KEY was absent
+    });
+  });
+
+  describe('F-II2/F-DS7 (HIGH): write_scope globs must be directory-anchored — SCOPE_GLOB_UNANCHORED, both directions, plus normalisation', () => {
+    it('write_scope: ["*.md"] is refused at run_start — run_end.status "scope_invalid", ledgered SCOPE_GLOB_UNANCHORED, no claim acquired', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['*.md'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      expect(summary.status).toBe('scope_invalid');
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; code?: string; claim_id?: string | null }>;
+      expect(records.some((r) => r.kind === 'error' && r.code === 'SCOPE_GLOB_UNANCHORED')).toBe(true);
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.claim_id).toBeNull();
+      const claimsPath = path.join(ledgerDir, 'active-claims.json');
+      const claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath, 'utf8')) as unknown[] : [];
+      expect(claims).toHaveLength(0);
+    });
+
+    it('write_scope: ["**"] — the deliberate whole-repo catch-all — is NOT refused (the ONE exempted unanchored-looking glob)', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      expect(summary.status).toBe('completed');
+    });
+
+    it('a well-formed anchored scope (docs/**, src/**) is unaffected', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['docs/**', 'src/**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      expect(summary.status).toBe('completed');
+    });
+
+    it('exec-claims.scopesOverlap: docs/** vs src/** do not conflict; src/**/*.test.ts vs src/tests/** conflict (prefix rule unchanged)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { scopesOverlap } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      expect(scopesOverlap(['docs/**'], ['src/**'])).toBe(false);
+      expect(scopesOverlap(['src/**/*.test.ts'], ['src/tests/**'])).toBe(true);
+    });
+
+    it('exec-claims.scopesOverlap normalises "./src/**" and "src/**" as identical (F-DS7)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { scopesOverlap } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      expect(scopesOverlap(['./src/**'], ['src/**'])).toBe(true);
+      expect(scopesOverlap(['src\\\\foo\\\\**'], ['src/foo/**'])).toBe(true);
+    });
+
+    it('exec-glob.isAnchoredGlob: *.md and **/foo.ts unanchored; docs/**, src/foo*.ts, and bare ** anchored', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { isAnchoredGlob } = require(path.join(REPO_ROOT, 'scripts/lib/exec-glob.js'));
+      expect(isAnchoredGlob('*.md')).toBe(false);
+      expect(isAnchoredGlob('**/foo.ts')).toBe(false);
+      expect(isAnchoredGlob('docs/**')).toBe(true);
+      expect(isAnchoredGlob('src/foo*.ts')).toBe(true);
+      expect(isAnchoredGlob('**')).toBe(true);
+    });
+  });
+
+  describe('F-DS14 (MED): detached HEAD — branch is null, never the literal "HEAD"; two unrelated detached repos never false-conflict', () => {
+    it('a detached-HEAD run_start.branch is null, not "HEAD"', async () => {
+      execFileSync('git', ['checkout', '--detach', 'HEAD'], { cwd: repo, env: scrubbedChildEnv() });
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; branch?: unknown }>;
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.branch).toBeNull();
+    });
+
+    it('two DIFFERENT repos, both detached HEAD, overlapping scope: NO false CLAIM_CONFLICT (repo_root differs, branch is null on both)', async () => {
+      const repo2 = makeRepo();
+      try {
+        execFileSync('git', ['checkout', '--detach', 'HEAD'], { cwd: repo, env: scrubbedChildEnv() });
+        execFileSync('git', ['checkout', '--detach', 'HEAD'], { cwd: repo2, env: scrubbedChildEnv() });
+        const briefPath1 = writeBrief(repo, { writeScope: ['scripts/**'] });
+        const briefPath2 = writeBrief(repo2, { writeScope: ['scripts/**'] });
+        const summary1 = await runEngine({
+          repoRoot: repo, briefPath: briefPath1, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+        });
+        const summary2 = await runEngine({
+          repoRoot: repo2, briefPath: briefPath2, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+        });
+        expect(summary1.status).toBe('completed');
+        expect(summary2.status).toBe('completed'); // NOT claim_conflict
+      } finally {
+        fs.rmSync(repo2, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe('F-DS15 (MED): budget check is evaluated AFTER "model finished", not before', () => {
+    it('a FINAL turn (no tool calls) whose own usage pushes total over maxTotalTokens still reports "completed", not "budget_exhausted"', async () => {
+      const briefPath = writeBrief(repo);
+      const turns = [
+        {
+          message: { role: 'assistant' as const, content: 'done, nothing left to do', tool_calls: [] },
+          usage: { prompt_tokens: 100, completion_tokens: 100, total_tokens: 200 },
+          finish_reason: 'stop',
+        },
+      ];
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns, maxTotalTokens: 150,
+      });
+      expect(summary.status).toBe('completed');
+      expect(summary.usage_total.total_tokens).toBeGreaterThan(150);
+    });
+
+    it('regression check: a turn that STILL wants to call a tool and is already over budget is still budget_exhausted (the reorder did not remove the fence)', async () => {
+      const briefPath = writeBrief(repo);
+      const turns = [
+        toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' }),
+        toolTurn('c2', 'read_file', { path: 'seed.txt', reason: 'r' }),
+      ].map((t) => ({ ...t, usage: { prompt_tokens: 60, completion_tokens: 40, total_tokens: 100 } }));
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns, maxTotalTokens: 150,
+      });
+      expect(summary.status).toBe('budget_exhausted');
+    });
+  });
+
+  describe('F-DS13 (MED): --brief must resolve inside the repo — BRIEF_OUTSIDE_REPO, both directions', () => {
+    it('a --brief path pointing OUTSIDE the repo root throws an engine-level fault naming BRIEF_OUTSIDE_REPO', async () => {
+      const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'brief-outside-'));
+      const outsideBrief = path.join(outside, 'brief.md');
+      fs.writeFileSync(outsideBrief, '---\nwrite_scope:\n- scripts/**\n---\nbody\n');
+      try {
+        await expect(runEngine({ repoRoot: repo, briefPath: outsideBrief, provider: 'deepseek', ledgerDir })).rejects.toThrow(/BRIEF_OUTSIDE_REPO/);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    });
+
+    it('the real CLI process exits non-zero and stderr names BRIEF_OUTSIDE_REPO', () => {
+      const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'brief-outside-cli-'));
+      const outsideBrief = path.join(outside, 'brief.md');
+      fs.writeFileSync(outsideBrief, 'plain brief\n');
+      try {
+        const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+        const result = spawnSync(process.execPath, [cliPath, '--brief', outsideBrief, '--repo', repo, '--provider=claude', '--ledger-dir', ledgerDir], {
+          env: scrubbedChildEnv(), encoding: 'utf8',
+        });
+        expect(result.status).not.toBe(0);
+        expect(result.stderr).toContain('BRIEF_OUTSIDE_REPO');
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    });
+
+    it('a `.cursor/`-rooted brief (the documented norm, repo-relative) still works', async () => {
+      fs.mkdirSync(path.join(repo, '.cursor'), { recursive: true });
+      const cursorBrief = path.join(repo, '.cursor', 'task.md');
+      fs.writeFileSync(cursorBrief, '---\nwrite_scope:\n- scripts/**\n---\nbody\n');
+      const summary = await runEngine({
+        repoRoot: repo, briefPath: '.cursor/task.md', provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      expect(summary.status).toBe('completed');
+      void cursorBrief;
+    });
+  });
+
+  describe('F-DS9 (HIGH): policy shape validation — POLICY_INVALID, both directions', () => {
+    it('a policy object missing registry_reserved throws POLICY_INVALID', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { validatePolicyShape, PolicyInvalidError } = require(path.join(REPO_ROOT, 'scripts/deepseek-exec.js'));
+      const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const broken = { ...real };
+      delete broken.registry_reserved;
+      expect(() => validatePolicyShape(broken)).toThrow(PolicyInvalidError);
+      try {
+        validatePolicyShape(broken);
+      } catch (err) {
+        expect((err as { code?: string }).code).toBe('POLICY_INVALID');
+        expect((err as Error).message).toContain('registry_reserved');
+      }
+    });
+
+    it('the REAL exec-policy.json (as shipped) passes shape validation without throwing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { validatePolicyShape } = require(path.join(REPO_ROOT, 'scripts/deepseek-exec.js'));
+      const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      expect(() => validatePolicyShape(real)).not.toThrow();
+    });
+  });
+
+  describe('F-DS16 (MED): an unrecognised TOOL_SCHEMAS property type throws (fails closed, not open)', () => {
+    it('validateType({ type: "bogus" }, ...) throws a plain Error naming the bogus type', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { validateType } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      expect(() => validateType({ type: 'bogus' }, 'x', 'some.key')).toThrow(/bogus/);
+    });
+    it('the four real schema types (string/integer/boolean/array) are unaffected', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { validateType } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      expect(() => validateType({ type: 'string' }, 'x', 'k')).not.toThrow();
+      expect(() => validateType({ type: 'integer' }, 1, 'k')).not.toThrow();
+      expect(() => validateType({ type: 'boolean' }, true, 'k')).not.toThrow();
+      expect(() => validateType({ type: 'array', items: { type: 'string' } }, ['a'], 'k')).not.toThrow();
+    });
+  });
+
+  describe('F-DS8: a handler-level fs fault produces a structured tool_call record, never an uncaught crash', () => {
+    it('write_file into a path whose parent segment is itself a FILE (ENOTDIR-class TOCTOU) is a structured blocked/error record, not an unhandled rejection', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly, below the engine loop
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const fakeLedger = { path: path.join(ledgerDir, 'handler-fault-unit.jsonl'), append: () => {}, close: () => {} };
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState: { readState: {} }, writeScope: ['**'] });
+      fs.writeFileSync(path.join(repo, 'iamafile'), 'x');
+      const outcome = await tools.dispatch('write_file', { path: 'iamafile/nested.txt', content: 'y', reason: 'r' });
+      expect(outcome.toolResult.ok).toBe(false);
+      expect(typeof outcome.toolResult.error.code).toBe('string');
+      expect(outcome.toolResult.error.code.length).toBeGreaterThan(0);
+    });
+
+    it('classifySpawnFailure maps an ENOBUFS spawn result to OUTPUT_TOO_LARGE, and leaves a normal failure\'s fallback code alone', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { classifySpawnFailure } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const overflowed = classifySpawnFailure({ error: { code: 'ENOBUFS' } }, { code: 'HOOK_FAILED', message: 'fallback text' });
+      expect(overflowed.code).toBe('OUTPUT_TOO_LARGE');
+      const normal = classifySpawnFailure({ status: 1 }, { code: 'HOOK_FAILED', message: 'fallback text' });
+      expect(normal).toEqual({ code: 'HOOK_FAILED', message: 'fallback text' });
+    });
+  });
+
+  describe('F-DS2 (CRITICAL): active-claims registry — atomic write + CLAIMS_CORRUPT on a genuinely unparsable file (never a silent empty-start)', () => {
+    it('a present-but-unparsable active-claims.json throws ClaimsCorruptError (the run refuses to start), never returns []', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireClaim, ClaimsCorruptError } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      fs.mkdirSync(ledgerDir, { recursive: true });
+      fs.writeFileSync(path.join(ledgerDir, 'active-claims.json'), '{ this is not valid JSON');
+      expect(() => acquireClaim({ ledgerDir, runId: 'corrupt-run', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] }))
+        .toThrow(ClaimsCorruptError);
+      fs.rmSync(path.join(ledgerDir, 'active-claims.json'), { force: true });
+    });
+
+    it('a MISSING active-claims.json (first run ever) is still a legitimate fresh start, not CLAIMS_CORRUPT', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireClaim, releaseClaim } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      fs.rmSync(path.join(ledgerDir, 'active-claims.json'), { force: true });
+      const claim = acquireClaim({ ledgerDir, runId: 'fresh-run', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      expect(claim.claimId).toBeTruthy();
+      releaseClaim({ ledgerDir, claimId: claim.claimId });
+    });
+
+    it('writeClaims is atomic (tmp + rename) — no ".tmp-" artifact survives a successful acquire/release cycle', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireClaim, releaseClaim } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      const claim = acquireClaim({ ledgerDir, runId: 'atomic-run', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      releaseClaim({ ledgerDir, claimId: claim.claimId });
+      const leftovers = fs.readdirSync(ledgerDir).filter((f) => f.includes('.tmp-'));
+      expect(leftovers).toEqual([]);
+    });
+  });
+
+  describe('F-DS5: the claims-mutex lock file — pid-liveness-first reclaim, mtime as a fallback ONLY when the pid field is unreadable', () => {
+    it('a claims-mutex lock held by a DEAD pid is reclaimed immediately, not via the 30s mtime window', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireClaim, releaseClaim } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      const dead = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
+      fs.mkdirSync(ledgerDir, { recursive: true });
+      fs.writeFileSync(path.join(ledgerDir, 'active-claims.lock'), JSON.stringify({ pid: dead.pid, ts: new Date().toISOString() })); // FRESH mtime, dead pid
+      const startedAt = Date.now();
+      const claim = acquireClaim({ ledgerDir, runId: 'dead-pid-lock-run', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      expect(claim.claimId).toBeTruthy();
+      expect(Date.now() - startedAt).toBeLessThan(1000);
+      releaseClaim({ ledgerDir, claimId: claim.claimId });
+    });
+
+    it('a claims-mutex lock with an unreadable pid field falls back to mtime staleness', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireClaim, releaseClaim } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      fs.mkdirSync(ledgerDir, { recursive: true });
+      const lockPath = path.join(ledgerDir, 'active-claims.lock');
+      fs.writeFileSync(lockPath, 'not json at all');
+      const old = new Date(Date.now() - 60000);
+      fs.utimesSync(lockPath, old, old);
+      const claim = acquireClaim({ ledgerDir, runId: 'mtime-fallback-run', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      expect(claim.claimId).toBeTruthy();
+      releaseClaim({ ledgerDir, claimId: claim.claimId });
+    });
+
+    it('releaseFileLock does not delete a claims-mutex lock that no longer carries our own pid', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireFileLock, releaseFileLock } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+      fs.mkdirSync(ledgerDir, { recursive: true });
+      acquireFileLock(ledgerDir);
+      const lockPath = path.join(ledgerDir, 'active-claims.lock');
+      fs.writeFileSync(lockPath, JSON.stringify({ pid: 999999999, ts: new Date().toISOString() })); // as if reclaimed by someone else
+      releaseFileLock(ledgerDir);
+      expect(fs.existsSync(lockPath)).toBe(true);
+      fs.rmSync(lockPath, { force: true });
+    });
+
+    it('the committer lock: releaseCommitterLock does not delete a lock file whose run_id no longer matches ours', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireCommitterLock, releaseCommitterLock } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const lockPath = path.join(ledgerDir, 'ownership-unit.lock');
+      expect(acquireCommitterLock(lockPath, { pid: process.pid, run_id: 'run-mine', repo_root: repo, ts: new Date().toISOString() })).toBe(true);
+      fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'run-other', repo_root: repo, ts: new Date().toISOString() }));
+      releaseCommitterLock(lockPath, 'run-mine');
+      expect(fs.existsSync(lockPath)).toBe(true);
+      const remaining = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+      expect(remaining.run_id).toBe('run-other');
+      fs.rmSync(lockPath, { force: true });
+    });
+
+    it('the committer lock: releaseCommitterLock DOES delete a lock file that still matches our own run_id (the ordinary path)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireCommitterLock, releaseCommitterLock } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const lockPath = path.join(ledgerDir, 'ownership-unit2.lock');
+      acquireCommitterLock(lockPath, { pid: process.pid, run_id: 'run-mine2', repo_root: repo, ts: new Date().toISOString() });
+      releaseCommitterLock(lockPath, 'run-mine2');
+      expect(fs.existsSync(lockPath)).toBe(false);
+    });
+
+    it('the committer lock: a lock with a missing/non-numeric pid field falls back to mtime staleness for reclaim', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireCommitterLock } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const lockPath = path.join(ledgerDir, 'mtime-fallback-unit.lock');
+      fs.writeFileSync(lockPath, JSON.stringify({ run_id: 'no-pid-run', ts: new Date(0).toISOString() }));
+      const old = new Date(Date.now() - 60000);
+      fs.utimesSync(lockPath, old, old);
+      expect(acquireCommitterLock(lockPath, { pid: process.pid, run_id: 'new-run', repo_root: repo, ts: new Date().toISOString() })).toBe(true);
+      fs.rmSync(lockPath, { force: true });
+    });
+
+    it('the committer lock: the SAME fallback does NOT reclaim while the mtime is still fresh (fail-closed until genuinely stale)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+      const { acquireCommitterLock } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const lockPath = path.join(ledgerDir, 'mtime-fresh-unit.lock');
+      fs.writeFileSync(lockPath, JSON.stringify({ run_id: 'no-pid-run', ts: new Date().toISOString() }));
+      expect(acquireCommitterLock(lockPath, { pid: process.pid, run_id: 'new-run', repo_root: repo, ts: new Date().toISOString() })).toBe(false);
+      fs.rmSync(lockPath, { force: true });
+    });
+  });
+
+  describe('F-DS6: a claim is released promptly on an ESCAPING throw, not only at process exit (defense-in-depth remains a backstop, not the only path)', () => {
+    it('a ledger.append failure mid-run throws out of runEngine, and the claim is gone from the registry immediately (same process, no exit needed)', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['scripts/**'] });
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS ledger writer directly
+      const { openLedger } = require(path.join(REPO_ROOT, 'scripts/lib/exec-ledger.js'));
+      const runId = `ds6-throw-${Date.now()}`;
+      const realLedger = openLedger({ ledgerDir, runId });
+      let appendCount = 0;
+      const wrappedLedger = {
+        path: realLedger.path,
+        append(record: { kind: string }) {
+          appendCount += 1;
+          if (appendCount > 1 && record.kind !== 'run_start') {
+            throw new Error('simulated ledger write failure mid-run');
+          }
+          return realLedger.append(record);
+        },
+        close() { realLedger.close(); },
+      };
+      await expect(runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', runId, ledger: wrappedLedger,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      })).rejects.toThrow(/simulated ledger write failure/);
+      const claimsPath = path.join(ledgerDir, 'active-claims.json');
+      const claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath, 'utf8')) as Array<{ run_id: string }> : [];
+      expect(claims.find((c) => c.run_id === runId)).toBeUndefined();
+      fs.rmSync(path.join(ledgerDir, `${runId}.jsonl`), { force: true });
     });
   });
 });

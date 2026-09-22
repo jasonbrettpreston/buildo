@@ -50,6 +50,13 @@ The body (everything after the closing `---`) is the system prompt's payload —
 <the commit message scope/subject the orchestrator expects; git_commit.paths must
 be exactly the files this task's write_scope covers>
 
+The message's FIRST LINE must match the husky commit-msg hook's pattern
+(`scripts/hooks/validate-commit-msg.sh`, mirrored in `exec-policy.json`'s
+`commit_message_pattern` and validated by `git_commit` BEFORE any git call,
+§C.1.8): `type(NN[a-z]_spec_name): description` — allowed types `feat`,
+`fix`, `refactor`, `test`, `docs`, `chore`. A non-conforming message is
+refused `MESSAGE_FORMAT`, not silently reworded.
+
 ## Stop
 <what "done" looks like — do not scope-creep past this>
 ```

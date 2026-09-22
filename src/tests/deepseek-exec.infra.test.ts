@@ -169,6 +169,62 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
   });
 
   // ---------------------------------------------------------------------
+  // Step 9 panel fold, F-DS10 — edit_file's replacement is inserted
+  // LITERALLY, never interpreted for `$&`/`$'`/`$1`-style patterns (a plain
+  // `.replace(searchString, replacementString)` DOES interpret those even
+  // with a string search value — confirmed before this fix: `"hello
+  // WORLD".replace('WORLD', "$'")` produced "hello " + the post-match
+  // slice, silently splicing in file content the model never wrote).
+  // ---------------------------------------------------------------------
+  it('F-DS10: new_string containing "$\'" (and "$&") is inserted verbatim, not interpreted as a replacement pattern', async () => {
+    const target = path.join(repo, 'dollar.txt');
+    fs.writeFileSync(target, 'hello WORLD end\n');
+    execFileSync('git', ['add', '-A'], { cwd: repo, env: scrubbedChildEnv() });
+    execFileSync('git', ['commit', '-q', '-m', 'dollar'], { cwd: repo, env: scrubbedChildEnv() });
+
+    const briefPath = writeBrief(repo);
+    const turns = [
+      toolTurn('c1', 'read_file', { path: 'dollar.txt', reason: 'r' }),
+      toolTurn('c2', 'edit_file', { path: 'dollar.txt', old_string: 'WORLD', new_string: "literal $' and $& here", reason: 'r' }),
+    ];
+    const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns });
+    const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; tool?: string; status?: string }>;
+    expect(records.filter((r) => r.kind === 'tool_call' && r.tool === 'edit_file')[0]).toMatchObject({ status: 'ok' });
+    expect(fs.readFileSync(target, 'utf8')).toBe("hello literal $' and $& here end\n");
+  });
+
+  // ---------------------------------------------------------------------
+  // Step 9 panel fold, F-DS11 — `old_string: ""` has no defined match
+  // semantics (every character boundary trivially "matches"); the schema
+  // now requires `minLength: 1`, so this is a MALFORMED_TOOL_CALL (the run
+  // aborts BEFORE editFileHandler ever runs), not an AMBIGUOUS_MATCH/whatever
+  // fallout from actually attempting the split.
+  // ---------------------------------------------------------------------
+  it('F-DS11: edit_file with old_string:"" is MALFORMED_TOOL_CALL (schema minLength), never reaches the handler', async () => {
+    const target = path.join(repo, 'empty-old-string.txt');
+    fs.writeFileSync(target, 'abc\n');
+    execFileSync('git', ['add', '-A'], { cwd: repo, env: scrubbedChildEnv() });
+    execFileSync('git', ['commit', '-q', '-m', 'eos'], { cwd: repo, env: scrubbedChildEnv() });
+
+    const briefPath = writeBrief(repo);
+    const turns = [
+      toolTurn('c1', 'read_file', { path: 'empty-old-string.txt', reason: 'r' }),
+      toolTurn('c2', 'edit_file', { path: 'empty-old-string.txt', old_string: '', new_string: 'x', reason: 'r' }),
+    ];
+    const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns });
+    expect(summary.status).toBe('aborted');
+    const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; code?: string; tool?: string }>;
+    expect(records.some((r) => r.kind === 'error' && r.code === 'MALFORMED_TOOL_CALL')).toBe(true);
+    // read_file's turn (iteration 1) already succeeded before edit_file's
+    // turn (iteration 2) is even attempted — that ONE tool_call record is
+    // read_file's, never edit_file's (validateArgs threw before dispatch).
+    const toolCalls = records.filter((r) => r.kind === 'tool_call');
+    expect(toolCalls).toHaveLength(1);
+    expect(toolCalls[0]).toMatchObject({ tool: 'read_file' });
+    expect(fs.readFileSync(target, 'utf8')).toBe('abc\n'); // untouched
+  });
+
+  // ---------------------------------------------------------------------
   // Lock 6 — every tool call ledgered exactly once; seq gap-free
   // ---------------------------------------------------------------------
   it('lock 6: every tool call appears in the ledger exactly once; seq is gap-free', async () => {

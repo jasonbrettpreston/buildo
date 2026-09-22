@@ -214,11 +214,12 @@ function checkClaudeOnly(relPosix, ctx) {
 
 // §C.6.1 (F13, commit 10b) — the brief's declared write_scope. `ctx.writeScope`
 // is populated from the brief's front matter (scripts/lib/exec-brief.js) at
-// `runEngine` startup; an empty/missing scope for provider `deepseek` already
-// refused the run before any tool ever dispatches (NO_WRITE_SCOPE), so by the
-// time this runs, a non-empty scope is guaranteed — but this function still
-// fails closed (denies) on an empty scope defensively, rather than assuming
-// that invariant holds.
+// `runEngine` startup; an empty scope for provider `deepseek` downgrades the
+// run to `claude` before `run_start` (§B — commit 11 folded the old
+// NO_WRITE_SCOPE terminal refusal into that downgrade), so by the time this
+// runs, a non-empty scope is guaranteed — but this function still fails
+// closed (denies) on an empty scope defensively, belt-and-braces, rather
+// than assuming that invariant holds.
 function checkWriteScope(relPosix, ctx) {
   const scope = ctx.writeScope;
   if (!Array.isArray(scope) || scope.length === 0) {
@@ -283,7 +284,7 @@ const TOOL_SCHEMAS = {
       required: ['path', 'old_string', 'new_string', 'reason'],
       properties: {
         path: { type: 'string' },
-        old_string: { type: 'string' },
+        old_string: { type: 'string', minLength: 1 },
         new_string: { type: 'string' },
         replace_all: { type: 'boolean' },
         reason: { type: 'string' },
@@ -336,6 +337,14 @@ function validateType(propSchema, value, keyPath) {
       if (typeof value !== 'string') {
         throw new MalformedToolCallError(`"${keyPath}" must be a string`);
       }
+      // Step 9 panel fold, F-DS11 — `minLength` on a string property (used by
+      // edit_file's `old_string`, §C.2): an empty old_string has undefined
+      // match semantics (every character boundary "matches"), so it is
+      // rejected here, before the handler ever runs, rather than reaching
+      // editFileHandler's occurrence-counting logic at all.
+      if (propSchema.minLength !== undefined && value.length < propSchema.minLength) {
+        throw new MalformedToolCallError(`"${keyPath}" must be at least ${propSchema.minLength} character(s)`);
+      }
       return;
     case 'integer':
       if (!Number.isInteger(value)) {
@@ -362,7 +371,13 @@ function validateType(propSchema, value, keyPath) {
       }
       return;
     default:
-      return;
+      // Step 9 panel fold, F-DS16 — an unrecognised `propSchema.type` is a
+      // BUG IN TOOL_SCHEMAS itself (a schema-authoring error), never a valid
+      // "no constraint" no-op. Failing open here would silently admit ANY
+      // value for a property whose type was mistyped/misspelled in this
+      // file. This throws a plain Error (not MalformedToolCallError) because
+      // it is our own programmer error, not a bad model call.
+      throw new Error(`exec-tools.js: TOOL_SCHEMAS has an unrecognised property type "${propSchema.type}" at "${keyPath}" — a schema-authoring bug, not a bad tool call`);
   }
 }
 
@@ -567,9 +582,17 @@ async function editFileHandler(args, ctx) {
   }
 
   const replacements = args.replace_all ? occurrences : 1;
+  // Step 9 panel fold, F-DS10 — `String.prototype.replace(searchString,
+  // replacementString)` interprets `$&`/`$'`/`` $` ``/`$1`… patterns in the
+  // REPLACEMENT even when the search value is a plain string, not a regex.
+  // A `new_string` containing a literal `$'` (or similar) would silently
+  // splice in a slice of the original file rather than being inserted
+  // verbatim. A FUNCTION replacer disables all `$`-pattern interpretation
+  // (its return value is always used literally). The `replace_all` path
+  // above (`.split().join()`) was already magic-free.
   const updated = args.replace_all
     ? original.split(args.old_string).join(args.new_string)
-    : original.replace(args.old_string, args.new_string);
+    : original.replace(args.old_string, () => args.new_string);
 
   fs.writeFileSync(absPath, updated, 'utf8');
   const post = captureWorktree(repoRoot);
@@ -776,10 +799,27 @@ async function runBashCommandHandler(args, ctx) {
   };
 }
 
-async function notImplementedHandler(name) {
-  return {
-    toolResult: { ok: false, error: { code: 'NOT_IMPLEMENTED', message: `${name} is not implemented in this phase` } },
-  };
+// Step 9 panel fold, F-DS8 — maps a raw Node fs error code (thrown by a
+// handler, e.g. an mkdirSync/writeFileSync/readFileSync/statSync TOCTOU race
+// that slips past this tool's own inline checks) to a structured tool-result
+// code, so the engine loop never sees an uncaught exception from a handler.
+// Returns `null` for anything not in this short list — the dispatch-level
+// catch-all below falls back to the generic `HANDLER_FAULT` in that case.
+function mapFsErrorCode(err) {
+  if (!err || typeof err.code !== 'string') {
+    return null;
+  }
+  switch (err.code) {
+    case 'ENOENT':
+      return 'NOT_FOUND';
+    case 'EACCES':
+    case 'EPERM':
+      return 'PERMISSION_DENIED';
+    case 'EISDIR':
+      return 'IS_DIRECTORY';
+    default:
+      return null;
+  }
 }
 
 // §C.2 read_file. Content is windowed by (offset, limit) — 1-based line
@@ -873,9 +913,15 @@ async function grepFilesHandler(args, ctx) {
     argv.push('--', ...pathspecs);
   }
 
-  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', shell: false });
+  // Step 9 panel fold, F-DS12 — a timeout + a bounded maxBuffer (previously
+  // absent: an unbounded `git grep` had no time limit and Node's own 1 MiB
+  // default buffer would ENOBUFS on a legitimately large result set instead
+  // of reporting a specific, recoverable code).
+  const grepLimits = { timeout: (policy && policy.limits && policy.limits.timeout_ms) || 600000, maxBuffer: SPAWN_MAX_BUFFER_BYTES };
+  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', shell: false, ...grepLimits });
   if (result.error) {
-    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `git grep failed to start: ${result.error.message}` } } };
+    const failure = classifySpawnFailure(result, { code: 'BAD_PATTERN', message: `git grep failed to start: ${result.error.message}` });
+    return { toolResult: { ok: false, error: failure } };
   }
   // git grep exits 1 when there are zero matches — not a fault.
   if (result.status !== 0 && result.status !== 1) {
@@ -901,14 +947,25 @@ async function grepFilesHandler(args, ctx) {
   return { toolResult: { ok: true, matches: allMatches.slice(0, cap), truncated } };
 }
 
-// §C.1.8 (G9) — refused, never stripped-and-retried (F12(c)): silently
-// rewriting the model's argv would hide intent and make the ledger a lie.
-const GIT_COMMIT_REFUSED_FLAGS = new Set(['--no-verify', '-n', '--amend', '--allow-empty', '--no-gpg-sign']);
-
 function tailBytes(str, capBytes) {
   const buf = Buffer.from(str || '', 'utf8');
   return buf.length > capBytes ? buf.subarray(buf.length - capBytes).toString('utf8') : (str || '');
 }
+
+// Step 9 panel fold, F-DS12 — a `spawnSync` whose output exceeds `maxBuffer`
+// sets `result.error.code === 'ENOBUFS'` (the process itself may have run to
+// completion; only the CAPTURE overflowed) — this must surface as the
+// specific, recoverable `OUTPUT_TOO_LARGE`, not the generic fallback code a
+// caller would otherwise report for "spawn produced a non-zero/failed
+// result". `fallback` is `{ code, message }` for every other failure shape.
+function classifySpawnFailure(result, fallback) {
+  if (result && result.error && result.error.code === 'ENOBUFS') {
+    return { code: 'OUTPUT_TOO_LARGE', message: `output exceeded the buffer cap: ${fallback.message}` };
+  }
+  return fallback;
+}
+
+const SPAWN_MAX_BUFFER_BYTES = 16 * 1024 * 1024; // 16 MiB — F-DS12
 
 // §C.6.4 (F13, commit 10b) — the committer lock is keyed PER WORKTREE, so
 // engines in different worktrees commit independently (a global
@@ -925,15 +982,29 @@ function committerLockFileName(repoRoot) {
 // §C.1.8 — the single-committer advisory lock. `lockPath` is a parameter
 // (not hardcoded) so commit 10b can key it per worktree
 // (`committer-<hash>.lock`) without changing this function's contract.
+//
+// Step 9 panel fold, F-DS4 — `process.kill(pid, 0)` throws EPERM when the
+// pid EXISTS but this process lacks permission to signal it, and ESRCH when
+// it genuinely does not exist; only the latter means "dead". Duplicated from
+// exec-claims.js's own `isPidAlive` deliberately (§C.1.8's committer lock and
+// §C.6.3's claims registry are two independently-testable modules; folding
+// them into one shared import was judged not worth the coupling for a
+// three-line function) — both copies now carry the identical fix.
 function isPidAlive(pid) {
   try {
     process.kill(pid, 0);
     return true;
-  } catch {
-    return false;
+  } catch (err) {
+    return Boolean(err && err.code === 'EPERM');
   }
 }
 
+const COMMITTER_LOCK_STALE_MS = 30000;
+
+// Step 9 panel fold, F-DS5 — reclaim is pid-liveness-first (ESRCH), never
+// mtime alone; mtime is used ONLY as a fallback when the lock file's `pid`
+// field cannot be read at all (the file exists but is unparsable, or the pid
+// field is missing/non-numeric) — never as the primary signal.
 function acquireCommitterLock(lockPath, payload) {
   const line = JSON.stringify(payload);
   try {
@@ -946,15 +1017,25 @@ function acquireCommitterLock(lockPath, payload) {
       throw err;
     }
   }
-  // Contended — check whether the holder is a dead pid (a crashed engine's
-  // stale lock) and reclaim it exactly once.
   let existing;
   try {
     existing = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
   } catch {
-    return false; // unreadable/corrupt lock — fail closed as BUSY
+    return false; // unreadable/corrupt lock — fail closed as BUSY (no pid to check, no safe mtime signal on an unparsable file)
   }
-  if (!existing || typeof existing.pid !== 'number' || isPidAlive(existing.pid)) {
+  const holderPid = existing && typeof existing.pid === 'number' ? existing.pid : null;
+  let reclaimable;
+  if (holderPid !== null) {
+    reclaimable = !isPidAlive(holderPid);
+  } else {
+    try {
+      const stat = fs.statSync(lockPath);
+      reclaimable = Date.now() - stat.mtimeMs > COMMITTER_LOCK_STALE_MS;
+    } catch {
+      reclaimable = false;
+    }
+  }
+  if (!reclaimable) {
     return false;
   }
   try {
@@ -968,7 +1049,21 @@ function acquireCommitterLock(lockPath, payload) {
   }
 }
 
-function releaseCommitterLock(lockPath) {
+// Step 9 panel fold, F-DS5 — unlinks the lock file ONLY if its contents
+// still carry OUR OWN `run_id`. Without this check, a lock that was already
+// reclaimed from under us (e.g. this process hung long enough to be judged
+// stale, and another engine took over) would have its NEW rightful holder's
+// lock deleted by our own late, unconditional release — the exact bug this
+// fold closes.
+function releaseCommitterLock(lockPath, runId) {
+  try {
+    const existing = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+    if (existing && existing.run_id !== (runId || 'unknown')) {
+      return; // not ours (reclaimed from under us) — never delete another holder's lock
+    }
+  } catch {
+    // unreadable/missing — best-effort release proceeds (nothing to protect)
+  }
   try {
     fs.unlinkSync(lockPath);
   } catch {
@@ -986,10 +1081,31 @@ async function gitCommitHandler(args, ctx) {
   const { repoRoot, policy, runState, ledger, runId, model } = ctx;
   const pre = captureWorktree(repoRoot);
 
-  const refused = (args.args || []).filter((a) => GIT_COMMIT_REFUSED_FLAGS.has(a));
-  if (refused.length > 0) {
+  // Step 9 panel fold, F-DS3 — git accepts unambiguous long-option
+  // abbreviations (`--amen` resolves to `--amend`), so an exact-match refusal
+  // Set is bypassable by construction. The v1 fix is not a bigger denylist:
+  // `git_commit.args` is now a RESERVED field — ANY non-empty value is
+  // refused, closing the whole abbreviation class rather than chasing it.
+  if (Array.isArray(args.args) && args.args.length > 0) {
     return {
-      toolResult: { ok: false, error: { code: 'FLAG_REFUSED', message: `refused flag(s), nothing executed: ${refused.join(', ')}` } },
+      toolResult: { ok: false, error: { code: 'FLAG_REFUSED', message: `git_commit.args is reserved in v1; any value is refused: ${args.args.join(', ')}` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
+  }
+
+  // Step 9 panel fold, F-II4 — the commit message's first line is validated
+  // against the husky commit-msg hook's own pattern (scripts/hooks/validate-
+  // commit-msg.sh) BEFORE any git call, so a malformed message is refused
+  // here with a specific code rather than surfacing later as an opaque
+  // HOOK_FAILED from the hook itself. `policy.commit_message_pattern` is
+  // required policy shape (F-DS9); its absence is an engine-level fault, not
+  // reachable here — loadPolicy() would already have thrown POLICY_INVALID.
+  const messagePattern = new RegExp(policy.commit_message_pattern);
+  const messageFirstLine = String(args.message || '').split(/\r?\n/)[0];
+  if (!messagePattern.test(messageFirstLine)) {
+    return {
+      toolResult: { ok: false, error: { code: 'MESSAGE_FORMAT', message: `commit message first line does not match the required pattern: ${messageFirstLine}` } },
       pre,
       post: captureWorktree(repoRoot),
     };
@@ -1053,20 +1169,57 @@ async function gitCommitHandler(args, ctx) {
     const authorName = process.env.EXEC_GIT_AUTHOR_NAME || 'deepseek-exec';
     const authorEmail = process.env.EXEC_GIT_AUTHOR_EMAIL || 'deepseek-exec@buildo.invalid';
     // §C.2 — "env scrubbed of every GIT_* variable EXCEPT the four author/
-    // committer vars, which the engine sets explicitly."
+    // committer vars, which the engine sets explicitly." Step 9 panel fold,
+    // F-II6: ALSO scrub DEEPSEEK_* — the husky hooks this spawns (typecheck/
+    // lint/vitest child processes) have no legitimate reason to inherit
+    // DEEPSEEK_API_KEY, and every other git-shelling call in this file
+    // already scrubs it (run_bash_command, grep_files) — this was the one
+    // gap.
     const env = {
-      ...scrubbedEnv(),
+      ...scrubbedEnv(['DEEPSEEK_']),
       GIT_AUTHOR_NAME: authorName,
       GIT_AUTHOR_EMAIL: authorEmail,
       GIT_COMMITTER_NAME: authorName,
       GIT_COMMITTER_EMAIL: authorEmail,
     };
+    const spawnLimits = { timeout: (policy && policy.limits && policy.limits.timeout_ms) || 600000, maxBuffer: SPAWN_MAX_BUFFER_BYTES };
 
-    const addResult = spawnSync('git', ['add', '--', ...relPaths], { cwd: repoRoot, env, encoding: 'utf8', shell: false });
-    if (addResult.error || addResult.status !== 0) {
+    // Step 9 panel fold, F-II1 (CRITICAL) — the index must be EMPTY before
+    // we stage anything of our own: pre-staged stray content (a crash
+    // between a previous add/commit, or anything else) would otherwise be
+    // silently swept into THIS commit even though it was never ledgered this
+    // run. Refuse rather than reset someone else's staged work.
+    const beforeAdd = spawnSync('git', ['diff', '--cached', '--name-only'], { cwd: repoRoot, env, encoding: 'utf8', shell: false, ...spawnLimits });
+    const strayStaged = (beforeAdd.stdout || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (strayStaged.length > 0) {
       const post = captureWorktree(repoRoot);
       return {
-        toolResult: { ok: false, error: { code: 'HOOK_FAILED', message: `git add failed (exit ${addResult.status}): ${tailBytes((addResult.stderr || '') + (addResult.stdout || ''), 65536)}` } },
+        toolResult: { ok: false, error: { code: 'INDEX_DIRTY', message: `the index already has staged content before this commit; refusing to touch it: ${strayStaged.join(', ')}` } },
+        pre,
+        post,
+      };
+    }
+
+    const addResult = spawnSync('git', ['add', '--', ...relPaths], { cwd: repoRoot, env, encoding: 'utf8', shell: false, ...spawnLimits });
+    if (addResult.error || addResult.status !== 0) {
+      const post = captureWorktree(repoRoot);
+      const failure = classifySpawnFailure(addResult, { code: 'HOOK_FAILED', message: `git add failed (exit ${addResult.status}): ${tailBytes((addResult.stderr || '') + (addResult.stdout || ''), 65536)}` });
+      return { toolResult: { ok: false, error: failure }, pre, post };
+    }
+
+    // Step 9 panel fold, F-II1 — after our OWN `git add`, the staged set must
+    // equal `relPaths` EXACTLY. Anything else (a hook side-effect, a race)
+    // is undone with a targeted `git reset -- <paths>` — touching only what
+    // WE just staged, never anyone else's index state.
+    const afterAdd = spawnSync('git', ['diff', '--cached', '--name-only'], { cwd: repoRoot, env, encoding: 'utf8', shell: false, ...spawnLimits });
+    const stagedNow = (afterAdd.stdout || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean).sort();
+    const expected = [...relPaths].sort();
+    const stageMismatch = stagedNow.length !== expected.length || stagedNow.some((p, i) => p !== expected[i]);
+    if (stageMismatch) {
+      spawnSync('git', ['reset', '-q', '--', ...relPaths], { cwd: repoRoot, env, encoding: 'utf8', shell: false, ...spawnLimits });
+      const post = captureWorktree(repoRoot);
+      return {
+        toolResult: { ok: false, error: { code: 'STAGE_MISMATCH', message: `staged set after "git add" (${stagedNow.join(', ') || '<empty>'}) does not match the requested paths (${expected.join(', ')}); the add was undone` } },
         pre,
         post,
       };
@@ -1074,21 +1227,20 @@ async function gitCommitHandler(args, ctx) {
 
     const trailer = `Executed-By: deepseek-exec ${model || 'unknown'} run=${runId || 'unknown'}`;
     const fullMessage = `${args.message}\n\n${trailer}\n`;
-    // args.args has already been screened for GIT_COMMIT_REFUSED_FLAGS above.
-    const commitArgv = ['commit', '-m', fullMessage, ...(args.args || [])];
-    const commitResult = spawnSync('git', commitArgv, { cwd: repoRoot, env, encoding: 'utf8', shell: false });
+    // args.args is guaranteed empty here — any non-empty value was already
+    // refused above (F-DS3) — so the commit argv never carries model-
+    // supplied flags at all.
+    const commitArgv = ['commit', '-m', fullMessage];
+    const commitResult = spawnSync('git', commitArgv, { cwd: repoRoot, env, encoding: 'utf8', shell: false, ...spawnLimits });
     const post = captureWorktree(repoRoot);
     if (commitResult.error || commitResult.status !== 0) {
-      return {
-        toolResult: { ok: false, error: { code: 'HOOK_FAILED', message: `git commit failed (exit ${commitResult.status}): ${tailBytes((commitResult.stdout || '') + (commitResult.stderr || ''), 65536)}` } },
-        pre,
-        post,
-      };
+      const failure = classifySpawnFailure(commitResult, { code: 'HOOK_FAILED', message: `git commit failed (exit ${commitResult.status}): ${tailBytes((commitResult.stdout || '') + (commitResult.stderr || ''), 65536)}` });
+      return { toolResult: { ok: false, error: failure }, pre, post };
     }
 
     return { toolResult: { ok: true, sha: post.head_sha, files: relPaths }, pre, post };
   } finally {
-    releaseCommitterLock(lockPath);
+    releaseCommitterLock(lockPath, runId);
   }
 }
 
@@ -1126,9 +1278,29 @@ function createTools({ repoRoot, policy, ledger, runState, runId, model, committ
   async function dispatch(name, args) {
     // §C.1.10 — validation happens before ANY handler executes.
     validateArgs(name, args);
-    const handler = handlers[name] || (() => notImplementedHandler(name));
+    // Every schema-validated tool name has a real handler (the handlers
+    // map's keys are exactly TOOL_SCHEMAS' keys) — validateArgs just above
+    // already threw MalformedToolCallError for anything else, so
+    // `handlers[name]` is never undefined here (Step 9 panel fold, F-CR1:
+    // the old `|| notImplemented` fallback was dead code — every tool has
+    // shipped a real handler since Phase 1/2 — removed rather than kept
+    // unreachable).
+    const handler = handlers[name];
     const startedAt = Date.now();
-    const outcome = await handler(args, ctx);
+    let outcome;
+    try {
+      outcome = await handler(args, ctx);
+    } catch (err) {
+      // Step 9 panel fold, F-DS8 — a handler that throws a raw exception
+      // (e.g. an fs TOCTOU race not caught by its own inline checks) must
+      // still produce exactly one structured tool_call record (§C.1.1), not
+      // crash the engine loop. `pre`/`post` are omitted here (unlike a
+      // normal blocked/ok outcome) because the fault happened INSIDE the
+      // handler, at an unknown point relative to any worktree capture it may
+      // have already taken — there is no reliable bracket to report.
+      const code = mapFsErrorCode(err) || 'HANDLER_FAULT';
+      outcome = { toolResult: { ok: false, error: { code, message: err && err.message ? err.message : String(err) } } };
+    }
     return {
       ...outcome,
       duration_ms: Date.now() - startedAt,
@@ -1148,7 +1320,14 @@ function createTools({ repoRoot, policy, ledger, runState, runId, model, committ
 module.exports = {
   createTools,
   validateArgs,
+  validateType,
   MalformedToolCallError,
   TOOL_SCHEMAS,
   committerLockFileName,
+  // Step 9 panel fold — exported for direct unit testing (mirrors
+  // exec-claims.js's own acquireClaim/releaseClaim exports).
+  acquireCommitterLock,
+  releaseCommitterLock,
+  classifySpawnFailure,
+  mapFsErrorCode,
 };

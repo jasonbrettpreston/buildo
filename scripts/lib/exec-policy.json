@@ -11,13 +11,17 @@
     { "argv": ["git", "log"], "flags": ["--oneline", "-n", "<int>", "-p", "--stat", "--follow", "--", "<path>..."] },
     { "argv": ["git", "show", "<rev>"], "flags": ["--stat", "--", "<path>..."] },
     { "argv": ["git", "blame", "<path>"], "flags": ["-L", "<range>"] },
-    { "argv": ["node", "<validator>"], "flags": ["--check", "--step=<slug>", "--all", "--fast"] },
+    { "argv": ["node", "scripts/analysis/step-validate.mjs"], "flags": ["--step=<slug>", "--all", "--fast", "--staged"] },
+    { "argv": ["node", "scripts/analysis/step-churn-complexity.mjs"], "flags": ["--check"] },
+    { "argv": ["node", "scripts/analysis/spec-split-check.mjs"], "flags": ["--check"] },
+    { "argv": ["node", "scripts/steps/_schema/generate-template-freeze.mjs"], "flags": ["--check"] },
     { "argv": ["npm", "run", "build"] },
     { "argv": ["npx", "tsc", "--noEmit"] },
     { "argv": ["npx", "eslint", "<path>..."] },
     { "argv": ["git", "ls-files"], "flags": ["--", "<path>..."] }
   ],
   "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
+  "commit_message_pattern": "^(feat|fix|refactor|test|docs|chore)\\([0-9]{2,3}[a-z]?_[a-z0-9_]+\\)!?: .+",
   "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
   "registry_reserved": [
     "scripts/manifest.json",
