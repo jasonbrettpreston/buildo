@@ -339,12 +339,19 @@ describe('invariants file — validation + one-scalar result shaping', () => {
     expect(derived).toEqual([{ name: 'a', sql: 'SELECT 1' }, { name: 'b', sql: 'SELECT 2' }, { name: 'c', sql: 'SELECT 3' }]);
   });
 
-  it('the migrated link_massing descriptor\'s invariants[]/plausibility[] derive to exactly the 6 R-T-addendum entries, each a real SELECT', () => {
+  // WF3 S0.3 (2026-09-21, Spec 56 §3) added ONE new plausibility[] row to
+  // link-massing.descriptor.json — `borrowed_primary_links` (WARN, the PRODUCING step's
+  // own visibility into a match_type='nearest' primary that is ALSO another parcel's
+  // primary, the producer-side mirror of assert_parcel_sanity's
+  // existing_structure_borrowed_primary) — growing the 6 original R-T-addendum entries
+  // to 7. Pin updated here (pre-push full-suite rejection, 2026-09-22) — this test was
+  // not repointed at S0.3's own commit.
+  it('the migrated link_massing descriptor\'s invariants[]/plausibility[] derive to exactly the 6 R-T-addendum entries + S0.3\'s borrowed_primary_links (7 total), each a real SELECT', () => {
     const descriptor = require('../../scripts/link-massing.descriptor.json');
     const derived = deriveInvariantSpecFromDescriptor(descriptor);
     expect(derived?.map((i: { name: string }) => i.name)).toEqual([
       'pb_unique_pairs_violations', 'pb_rows', 'pb_distinct_parcels', 'parcels_with_centroid',
-      'nearest_share_pct', 'linked_parcel_null_centroid_count',
+      'nearest_share_pct', 'linked_parcel_null_centroid_count', 'borrowed_primary_links',
     ]);
     for (const inv of derived ?? []) expect(inv.sql).toMatch(/^SELECT /);
   });
@@ -569,9 +576,12 @@ describe('projection bypasses the ceiling on the UNPROJECTED count; ORDER BY pre
     // the deletion itself, not the round-trip (a live-DB concern, out of scope here).
     const descriptor = require('../../scripts/link-massing.descriptor.json');
     const derived = deriveInvariantSpecFromDescriptor(descriptor);
+    // WF3 S0.3 (2026-09-21) appended borrowed_primary_links — see the derivation test
+    // above (line ~342) for the full justification; same pin, same commit, updated here
+    // (pre-push full-suite rejection, 2026-09-22).
     expect(derived?.map((i: { name: string }) => i.name)).toEqual([
       'pb_unique_pairs_violations', 'pb_rows', 'pb_distinct_parcels', 'parcels_with_centroid',
-      'nearest_share_pct', 'linked_parcel_null_centroid_count',
+      'nearest_share_pct', 'linked_parcel_null_centroid_count', 'borrowed_primary_links',
     ]);
   });
 });

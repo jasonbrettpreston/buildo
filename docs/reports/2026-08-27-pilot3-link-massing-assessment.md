@@ -361,8 +361,6 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | `key:pipeline_runs[0].started_at` · `key:pipeline_runs[0].completed_at` · `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`); written out in full because the inventory is machine-read key-by-key |
 | `key:id` · `key:run_id` · `key:timestamp` · `key:elapsed_ms` · `key:elapsed_s` · `key:generated_at` · `key:checked_at` · `key:captured_at` · `key:summary.records_meta.chain_run_id` · `key:pipeline_runs[0].records_meta.chain_run_id` | `excluded-with-reason` | `VOLATILE_KEYS` (harness); `chain_run_id` added 2026-09-03 (WF2 "Rules 10/11/12 mechanical checkers" C2 — a per-invocation chain-run correlation UUID, R-B/R-U, run-scoped by design; stamped on both the emitted summary and the persisted `pipeline_runs` row) |
 | `row:sys_duration_ms` · `row:sys_velocity_rows_sec` · `row:sys_linked_parcel_null_centroid_count_duration_ms` · `row:sys_nearest_share_pct_duration_ms` · `row:sys_parcels_with_centroid_duration_ms` · `row:sys_pb_distinct_parcels_duration_ms` · `row:sys_pb_rows_duration_ms` · `row:sys_pb_unique_pairs_violations_duration_ms` · `row:sys_borrowed_primary_links_duration_ms` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — every per-check timing companion row, observed on every audited run. This row was updated WF3 S0.3 (2026-09-22): a fresh, non-stale recapture (this session's own goldens) surfaced 6 pre-existing `sys_*_duration_ms` companions (added by plausibility rows landed after this report was authored on 2026-08-27) that the inventory never named, plus the new `sys_borrowed_primary_links_duration_ms` this commit's own plausibility row adds — all now declared explicitly rather than silently passing on a stale golden that predated them. |
-
-**WF3 S0.3 (2026-09-22) recapture note — 2 further pre-existing fields, structural, not this commit's own:** the same fresh recapture also surfaced `summary.records_meta.audit_table.rows[4].order_guarantee` (the `empty_source_guard` row's Rule-11 order-guarantee annotation, `scripts/link-massing.js` D-20) and `summary.records_meta.pool_errors` (the generic runner-level pool-error counter, always `0` on a healthy run) — both landed in the runner/step machinery well after this report's 2026-08-27 authoring date and were invisible in every stale capture since. Neither is new BEHAVIOUR (both are structurally-present, always-emitted fields with the same steady-state value every prior run would have shown had it been captured fresh); this is the inventory catching up to already-landed fields, the same class as the `sys_*_duration_ms` gap immediately above.
 | `pattern:duration_literal` | `normalize-then-match` | `completed in 8.4s`, the `Linking complete` `duration: '7.9s'`, progress `— 7.8s —` → `<DUR>` |
 | `pattern:iso_timestamp` · `pattern:pg_timestamp` · `pattern:rows_per_sec` · `pattern:run_id_literal` · `pattern:pipeline_runs_id_literal` · `pattern:pid_literal` | `normalize-then-match` | harness masks (`<TS>`, `<RATE>` for the progress line's `rows/s`, `<RUN_ID>`, `pipeline_runs <ID>`, `pid=<PID>`) |
 | `key:summary.records_meta.duration_ms` (= `meta.duration_ms`) | `excluded-with-reason` | `Date.now() - startTime` `:662` — the only emitted wall-clock value (the harness key form, as the captures declare it) |
@@ -381,6 +379,10 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | `meta.reads` · `meta.writes` | `must-match-exactly` | D-1 (`geom` added, `geometry` removed) / D-2 recorded in the post capture, not normalised away |
 | `stdout` (after patterns) · `stderr` | `must-match-exactly` | the full-gate line, `Mode:` line, `Parcels to process: 1,395`, the progress lines (D-9 declared at commit 7) — a diff is reviewed |
 | `env:LINK_MASSING_FORCE_FULL` · `argv:--full` · `env:PIPELINE_CHAIN` | `excluded-with-reason` | capture AXES, not output: 3 invocations × {incremental, forced FULL}; the forced FULL costs **21.9 min** (`pipeline_runs.duration_ms` 1,314,440 on run 1401) and re-stamps 520,492 `linked_at`s, re-scoping `enrich_parcels` from 0 to 485,135 — a budgeted act with a declared cleanup (D-19) |
+
+**WF3 S0.3 (2026-09-22) recapture note — 2 further pre-existing fields, structural, not this commit's own:** the same fresh recapture also surfaced `summary.records_meta.audit_table.rows[4].order_guarantee` (the `empty_source_guard` row's Rule-11 order-guarantee annotation, `scripts/link-massing.js` D-20) and `summary.records_meta.pool_errors` (the generic runner-level pool-error counter, always `0` on a healthy run) — both landed in the runner/step machinery well after this report's 2026-08-27 authoring date and were invisible in every stale capture since. Neither is new BEHAVIOUR (both are structurally-present, always-emitted fields with the same steady-state value every prior run would have shown had it been captured fresh); this is the inventory catching up to already-landed fields, the same class as the `sys_*_duration_ms` gap immediately above.
+
+**Slice-0 pre-push-rejection peel (2026-09-22) fix note:** the note above (and this one) previously sat BETWEEN two rows of the Non-determinism inventory table (a bare paragraph with no leading `|`), which silently truncated the table `mdTables()`/`reportTable()` parse to rows 358-363 only — every row from `pattern:duration_literal` onward (including `key:summary.records_meta.duration_ms`, `table:parcel_buildings.*`, and everything through the `env:*` row above) was invisible to `#151a`'s closed-vocabulary check, which is exactly why that test started failing at the pre-push full suite despite every declared row being textually present in this file. Fixed by moving both prose notes to AFTER the table's last row instead of splitting it — the table is now one contiguous `|`-block, rows 358-383.
 
 ---
 
@@ -527,14 +529,17 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 434 · unexplained: 0
+- compare ran: true · diffs found: 450 · unexplained: 0
 
 ### Test suite (item iii)
-- 1358/1358 passed (suite success=true)
+- 1375/1378 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (3):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -553,7 +558,7 @@ Spec 124 §2 Rule 13's R-T addendum lands `invariants[]`/`plausibility[]` (5 net
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link runner=runLinkPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=68637B notes=17389B checks=19 rows records_meta=4690B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=70629B notes=17389B checks=19 rows records_meta=6177B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

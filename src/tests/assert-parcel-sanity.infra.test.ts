@@ -31,7 +31,7 @@ const DESCRIPTOR = JSON.parse(fs.readFileSync(DESCRIPTOR_PATH, 'utf8')) as {
   identity: { lock: number; archetype: string };
   checks: Array<{ id: string; severity: string; blocking: boolean; when: string }>;
   plausibility: Array<{ id: string; kind: string; severity: string }>;
-  invariants: string;
+  invariants: string | Array<{ id: string; frequency: string }>;
   config: { logic_variables: Array<{ name: string; on_invalid: string }>; validation: string };
 };
 
@@ -50,14 +50,24 @@ describe('assert-parcel-sanity.js — frozen shell + descriptor contract', () =>
     expect(DESCRIPTOR.identity.lock).toBe(107);
   });
 
-  it('archetype is ASSERT with exactly 42 checks[] and 8 plausibility[] rows, invariants "none"', () => {
+  // WF3 S0.3 (2026-09-21, Spec 43 step #25) added 3 checks[] rows (existing_structure_
+  // shared_with_other_parcel, existing_structure_borrowed_primary, ravine_constrained_
+  // carries_priced_reno — 42 -> 45) and 1 validate_only invariants[] entry
+  // (existing_structure_onlot_share_low — "none" -> a 1-entry array), per
+  // scripts/lib/assert-parcel-sanity-fields.js CHECK_DEFS/INVARIANT_DEFS. plausibility[]
+  // (the 8 dist_* rows) is unaffected by S0.3. Pin updated here (pre-push full-suite
+  // rejection, 2026-09-22) — this file was not repointed at S0.3's own commit.
+  it('archetype is ASSERT with exactly 45 checks[] (42 + S0.3\'s 3) and 8 plausibility[] rows, 1 validate_only invariant (S0.3\'s existing_structure_onlot_share_low)', () => {
     expect(DESCRIPTOR.identity.archetype).toBe('ASSERT');
-    expect(DESCRIPTOR.checks).toHaveLength(42);
+    expect(DESCRIPTOR.checks).toHaveLength(45);
     expect(DESCRIPTOR.plausibility).toHaveLength(8);
-    expect(DESCRIPTOR.invariants).toBe('none');
+    expect(Array.isArray(DESCRIPTOR.invariants)).toBe(true);
+    const invariants = DESCRIPTOR.invariants as Array<{ id: string }>;
+    expect(invariants).toHaveLength(1);
+    expect(invariants[0]?.id).toBe('existing_structure_onlot_share_low');
   });
 
-  it('every checks[] row is blocking:false, when:"post" (Spec 30 §5.4.1 non-halting-by-design, all 42 read FINAL enriched values)', () => {
+  it('every checks[] row is blocking:false, when:"post" (Spec 30 §5.4.1 non-halting-by-design, all 45 read FINAL enriched values)', () => {
     for (const c of DESCRIPTOR.checks) {
       expect(c.blocking, c.id).toBe(false);
       expect(c.when, c.id).toBe('post');

@@ -970,22 +970,14 @@ fast invariant #26 (COUNTER-ROOT), which REDs any declared counter source whose 
 - compare ran: true · diffs found: 584 · unexplained: 0
 
 ### Test suite (item iii)
-- 1367/1378 passed (suite success=false)
+- 1375/1378 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (11):
-  - src/tests/golden-fingerprint.infra.test.ts > golden-fingerprint — the golden capture is a LOCKFILE (ruling R-C, 2026-08-28) > scripts/quality/assert-schema.js (slug "assert_schema") > every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)
-  - src/tests/golden-fingerprint.infra.test.ts > golden-fingerprint — the golden capture is a LOCKFILE (ruling R-C, 2026-08-28) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (3):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource) > a real `--step` run reports Rule 10 as enforced-green — VRD-SKIP closed, zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS
-  - src/tests/step-conformance.infra.test.ts > Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource) > the SAME sanctioned sites still pass with no override at all — the fixture above is additive, never a narrowing of the real corpus
-  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > a step with NO when:"pre_write" checks reports Rule 11 enforced-green, vacuously
-  - src/tests/steps/link_massing/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #151a The non-determinism disposition vocabulary is CLOSED — and the junction's id / linked_at / count are dispositioned
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
