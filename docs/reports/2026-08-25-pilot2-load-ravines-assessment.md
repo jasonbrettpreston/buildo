@@ -354,7 +354,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | `key:pipeline_runs[0].id` | `excluded-with-reason` | serial PK (`VOLATILE_KEYS`) |
 | `key:pipeline_runs[0].started_at` · `key:pipeline_runs[0].completed_at` · `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`). Written out in full rather than abbreviated after the first suffix: the inventory is machine-read key-by-key, and `completed_at` on its own does not declare `pipeline_runs[0].completed_at`. Observed on the STANDALONE captures only — in-chain the ledger row belongs to `run-chain`, so the step's own capture has no `pipeline_runs` rows to strip. |
 | `key:id` · `run_id` · `timestamp` · `elapsed_ms` · `elapsed_s` · `generated_at` · `checked_at` · `captured_at` · `key:summary.records_meta.chain_run_id` · `key:pipeline_runs[0].records_meta.chain_run_id` | `excluded-with-reason` | `VOLATILE_KEYS` (harness); `chain_run_id` added 2026-09-03 (WF2 "Rules 10/11/12 mechanical checkers" C2 — a per-invocation chain-run correlation UUID, R-B/R-U, run-scoped by design; stamped on both the emitted summary and the persisted `pipeline_runs` row) |
-| `row:sys_duration_ms` · `row:sys_velocity_rows_sec` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed on both baseline runs |
+| `row:sys_duration_ms` · `row:sys_velocity_rows_sec` · `row:sys_ravines_distinct_source_dataset_version_duration_ms` · `row:sys_ravines_area_km2_duration_ms` · `row:sys_parcels_sign_law_violations_duration_ms` · `row:sys_permits_sign_law_violations_duration_ms` · `row:sys_coa_sign_law_violations_duration_ms` · `row:sys_parcels_lineage_mismatch_duration_ms` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — observed on both baseline runs; the last six are the `sys_*_duration_ms` timing rows for load_ravines' own six declared invariants/plausibility checks (`ravines_distinct_source_dataset_version`, `ravines_area_km2`, `parcels_sign_law_violations`, `permits_sign_law_violations`, `coa_sign_law_violations`, `parcels_lineage_mismatch`) — same `sys_` disposition as the other two, named individually here only because #151a matches declared keys by exact string, never by prefix pattern (output-panel peel, 2026-09-22, same class as `ce69a76c`'s link_massing fix: no vocabulary widened, an already-covered class simply never enumerated its own members) |
 | `pattern:duration_literal` | `normalize-then-match` | `completed in 3.1s` → `<DUR>` |
 | `pattern:iso_timestamp` · `pg_timestamp` · `rows_per_sec` · `run_id_literal` · `pipeline_runs_id_literal` · `pid_literal` | `normalize-then-match` | harness masks (`<TS>`, `<RATE>`, `<RUN_ID>`, `pipeline_runs <ID>`, `pid=<PID>`) |
 | `table:ravines.updated_at` | `excluded-with-reason` | = `runAt` (DB clock) on every written row; a forced reload (A-3) re-stamps changed rows only (`IS DISTINCT FROM`), an unchanged source re-stamps none — excluded from the ordered content hash, but `count(*) FILTER (WHERE updated_at >= run.started_at)` is compared as `rows_changed` |
@@ -456,7 +456,7 @@ resolves as explained rather than unexplained.
 | G3 | 1 | 2 | table rows=58 vocab-hit rows=17 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 12 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=2 it-count=79 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -482,21 +482,37 @@ resolves as explained rather than unexplained.
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 18 converted slug(s) — 10 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 41 declared counter source(s) across 14 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 2 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 83 · unexplained: 0
+- compare ran: true · diffs found: 85 · unexplained: 0
 
 ### Test suite (item iii)
-- 1375/1378 passed (suite success=false)
+- 1360/1378 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (3):
+- failing (18):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
@@ -516,7 +532,7 @@ resolves as explained rather than unexplained.
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 2 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=48334B notes=8569B checks=19 rows records_meta=2060B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=47917B notes=8569B checks=19 rows records_meta=2076B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

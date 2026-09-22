@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 460 declarable fields
+# The step contract — 20 categories, 465 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -19,7 +19,7 @@
 | 3 | `outputs` | 93 | 25 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 70 | 15 | 1 |
+| 6 | `execution` | 75 | 16 | 1 |
 | 7 | `checks` | 31 | 6 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
@@ -372,6 +372,11 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `partial_fill` | `atomic` · `batched` · `staged` · `mixed` · `none` | † ! |
 | `on_row_error` | `fail_fast` · `quarantine` · `skip` | † ! |
 | `on_row_error_max_pct` | `none` \| number >= 0, <= 1 | — |
+| `on_row_error_why` | object {text, liveness} | — |
+| `on_row_error_why.text` | string | † |
+| `on_row_error_why.liveness` | `none` \| object {kind, ref} | † |
+| `on_row_error_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `on_row_error_why.liveness.ref` | string | † |
 | `on_batch_error` | `fail_step` · `drop_batch` · `retry` | † ! |
 | `on_batch_error_why` | object {text, liveness} | — |
 | `on_batch_error_why.text` | string | † |

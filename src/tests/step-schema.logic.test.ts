@@ -348,6 +348,70 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     });
   });
 
+  describe('x-banned-for-new scalar_fields is ENFORCED (output-panel peel, R-AX, 2026-09-22)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const { validateDescriptor, loadGrandfathered, assertBannedScalarFields } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
+      validateDescriptor: (d: unknown) => unknown;
+      loadGrandfathered: () => { steps: Record<string, { scalar_fields?: string[] }> };
+      assertBannedScalarFields: (d: unknown, findings: string[]) => void;
+    };
+    const SF_ALLOWED = path.join(FIXTURES, 'valid', 'scalar-field-banned-allowed.descriptor.json');
+    const SF_REFUSED = path.join(FIXTURES, 'invalid', 'scalar-field-banned-not-grandfathered.json');
+
+    it('the two fixtures differ by IDENTITY ONLY — so a difference in outcome can only be the allowlist', () => {
+      const a = readJson(SF_ALLOWED);
+      const b = readJson(SF_REFUSED);
+      expect(JSON.stringify(b.execution)).toBe(JSON.stringify(a.execution));
+      expect((b.identity as { name: string }).name).not.toBe((a.identity as { name: string }).name);
+    });
+
+    it('AJV ALONE accepts the un-allowlisted descriptor — which IS the gap this closes (the field was inline `x-banned-for-new: true` with no consumer until this peel)', () => {
+      expect(validate(readJson(SF_REFUSED)), 'if AJV rejected it, the enforcer below would be proving nothing').toBe(true);
+    });
+
+    it('GREEN — a scalar_fields:["execution.on_row_error_max_pct"]-allowlisted step keeps the field', () => {
+      expect(() => validateDescriptor(readJson(SF_ALLOWED))).not.toThrow();
+      const entry = loadGrandfathered().steps[(readJson(SF_ALLOWED).identity as { name: string }).name];
+      expect(entry, 'the green direction must be green BECAUSE of an allowlist entry').toBeDefined();
+      expect(entry?.scalar_fields).toContain('execution.on_row_error_max_pct');
+    });
+
+    it('RED — the same field is REFUSED when the step is not on the scalar_fields[] allowlist', () => {
+      expect(() => validateDescriptor(readJson(SF_REFUSED))).toThrow(/scalar_fields/);
+      expect(() => validateDescriptor(readJson(SF_REFUSED))).toThrow(/grandfathered/);
+    });
+
+    it('RED — removing the allowlist entry reddens the green fixture too (the rule is the allowlist, not the name)', () => {
+      const d = readJson(SF_ALLOWED) as { identity: { name: string } };
+      d.identity = { ...d.identity, name: 'fixture_name_no_scalar_fields_allowlist_will_ever_have' };
+      expect(() => validateDescriptor(d)).toThrow(/scalar_fields/);
+    });
+
+    it('a descriptor that does not declare the field at all is never flagged (presence-only ban, not a value ban)', () => {
+      const d = readJson(SF_REFUSED) as { execution: Record<string, unknown> };
+      delete d.execution.on_row_error_max_pct;
+      const findings: string[] = [];
+      assertBannedScalarFields(d, findings);
+      expect(findings, 'omitting the banned field entirely must never trip the predicate').toEqual([]);
+    });
+
+    it('every LIVE converted descriptor is clean — the real fleet declares no banned scalar field (measured 2026-09-22: the two literal instances were deleted by this WF2, RE-FREEZE #12)', () => {
+      const dirs = ['scripts', 'scripts/quality'];
+      let checked = 0;
+      for (const dir of dirs) {
+        for (const f of fs.readdirSync(path.join(REPO_ROOT, dir))) {
+          if (!f.endsWith('.descriptor.json')) continue;
+          const d = readJson(path.join(REPO_ROOT, dir, f));
+          const findings: string[] = [];
+          assertBannedScalarFields(d, findings);
+          expect(findings, `${dir}/${f} declares a banned scalar field with no allowlist entry`).toEqual([]);
+          checked += 1;
+        }
+      }
+      expect(checked, 'the live-fleet scan must find descriptors, or this lock is vacuous').toBeGreaterThan(0);
+    });
+  });
+
   it('the #54 lock is proven in BOTH directions', () => {
     // Same descriptor, one array populated. If the positive control also failed,
     // the negative would be firing for some unrelated reason.

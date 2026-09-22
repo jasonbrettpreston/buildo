@@ -236,6 +236,45 @@ function assertNoRetraction(descriptor, findings) {
 }
 
 /**
+ * THE FIELD-PRESENCE ENFORCER for `x-banned-for-new.scalar_fields` (RE-FREEZE #12
+ * output-panel peel, R-AX, 2026-09-22) — the sibling of `assertGrandfathered`'s
+ * `values` (a banned ENUM VALUE within a field) for a field banned in its ENTIRETY:
+ * any presence at all is the banned state, so there is no value to name, only a
+ * dot-path. Mirrors `assertNoRetraction`'s grandfathering shape (a named array on
+ * the step's `grandfathered.json` entry, checked independently of `paths`) rather
+ * than `assertGrandfathered`'s value-list shape, because a presence ban has nothing
+ * for `paths[path]` to hold besides the path itself.
+ *
+ * Resolves each declared path against the descriptor with a plain dot-walk — every
+ * `x-banned-for-new.scalar_fields.paths[]` entry today is a SCALAR field directly
+ * under a category (`execution.on_row_error_max_pct`), never inside an array, so
+ * no `[]` segment-handling is needed; a future path with one would need this
+ * resolver extended, not silently mis-walked.
+ */
+function resolveScalarPath(descriptor, dotPath) {
+  return dotPath.split('.').reduce((node, key) => (node && typeof node === 'object' ? node[key] : undefined), descriptor);
+}
+
+function assertBannedScalarFields(descriptor, findings) {
+  const paths = ((loadSchema()['x-banned-for-new'] || {}).scalar_fields || {}).paths || [];
+  if (paths.length === 0) return;
+  const slug = descriptor.identity && descriptor.identity.name;
+  const entry = (loadGrandfathered().steps || {})[slug];
+  const grandfatheredPaths = new Set((entry && Array.isArray(entry.scalar_fields) && entry.scalar_fields) || []);
+  for (const dotPath of paths) {
+    const value = resolveScalarPath(descriptor, dotPath);
+    if (value === undefined) continue; // not declared — nothing banned to find
+    if (grandfatheredPaths.has(dotPath)) continue;
+    findings.push(
+      `  /${dotPath.replace(/\./g, '/')}: field is x-banned-for-new (scalar_fields), and "${slug}" has no `
+      + `scalar_fields:["${dotPath}"] entry in scripts/steps/_schema/grandfathered.json. Declaring the field `
+      + 'with a why alone does not grandfather it — the allowlist entry (step, path, why, commit) is the '
+      + 'adjudication, and it is a reviewed diff rather than something a descriptor can grant itself.',
+    );
+  }
+}
+
+/**
  * The SEMANTIC rules — everything true of a descriptor that JSON Schema cannot say
  * because it needs a cross-reference between two fields, or a shorthand expanded first.
  * Run AFTER AJV, so a structurally broken descriptor reports its shape errors rather
@@ -246,6 +285,7 @@ function semanticFindings(descriptor) {
   assertNoRunClockGuard(descriptor, findings);
   assertGrandfathered(descriptor, findings);
   assertNoRetraction(descriptor, findings);
+  assertBannedScalarFields(descriptor, findings);
   return findings;
 }
 
@@ -291,6 +331,7 @@ module.exports = {
   collectExtensionKeywords,
   effectiveGuardColumns,
   assertNoRetraction,
+  assertBannedScalarFields,
   semanticFindings,
   validateDescriptor,
 };

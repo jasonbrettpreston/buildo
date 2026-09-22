@@ -3978,3 +3978,35 @@ Also filed by this WF2's G0.1 grounding pass: the `execution.on_row_error_max_pc
 (`x-banned-for-new: true`) rather than pruned, per R-X ("retiring a class is a declaration that stays in the
 frozen enum, never a removal"); a future, separately-authorized re-freeze may prune it once every existing
 descriptor citing it (none, post this WF2) is confirmed gone.
+
+## WF2 "runner row-error policy" output-panel peel — DeepSeek adversarial review, step.schema.json vs Spec 124 (2026-09-22)
+
+Source: `npm run review:deepseek -- review scripts/steps/_schema/step.schema.json --context docs/specs/01-pipeline/124_step_standard_policy.md`
++ a companion self-review of Spec 124 itself, run as this WF2's own §11 grounded-review pass over the file it
+touched. Full text preserved in the run's own scratchpad transcript (not reproduced verbatim here — ~40
+findings across both passes). **All PRE-EXISTING** — none is caused by this WF2's own diff (RE-FREEZE #12,
+invariant #27, the scalar_fields ban registry); filed so a genuinely large, already-grounded adversarial pass
+is not silently lost, not fixed here.
+
+| Severity | Count | Representative findings (schema pass) |
+|---|---|---|
+| CRITICAL | 3 | `recovery: "none"` has no conditional tying it to a destructive `retract`, so a LINK/INGESTOR/MATCHER step can validate with no crash posture (Rule 12 unenforced outside MATERIALIZER/BACKFILL); `terminal.records_meta` still permits a literal `verdict` key (the one thing the 18th category exists to forbid); `bind:"wkb_geometry"` + `guards.srid:"none"` validates and would write SRID-less geometry. |
+| HIGH | 11 | `staleness.trigger[]`'s three conditionally-required fields (`variable`/`table`/`emit_key`) enforce nothing; `execution.shape` and `identity.archetype` are mutually unconstrained (`archetype:"ASSERT"` + `shape:"enrich"` validates); the `execution.maintenance` conditional narrows `txn_scope`'s 4-value enum to the same 4 values (a tautology); the banned-value mechanism now has three spellings (`x-banned-for-new.values`, `.x-banned`, inline `"x-banned-for-new": true`) and `execution.criticality:"best_effort"` is allowlisted with no `criticality_why` field existing anywhere; `guard_columns` has no `"none"` arm so `guard:"none"` targets must declare a false `"all_declared"`; two `*_minutes_from_config` fields are consumed as MILLISECONDS (a 60,000x unit error on the exact axis that already killed a 300-min run); the four R-AX-retired enum values carry no in-schema marker (only a test, `execution-posture-disposition.json`, catches them) — noted here because `on_row_error_max_pct`'s own `x-banned-for-new: true` marker (this WF2, RE-FREEZE #12) is the one exception, and the review's H10 flags the asymmetry directly. |
+| MEDIUM | 16 | `outputs.invalidates` cannot be `"none"` unlike its sibling `cascades`; `plausibility.kind:"distribution"` rows must declare a fabricated `bound` they cannot use; `last_measured` is essentially unconstrained (`{sample_n:1, cost_ms:0}` passes, defeating Fold B-1's "not a single-session number" rule); LG-9's `all_declared` x `run_at` conflict is schema-expressible and unenforced (`validate.js`-only today — the same class this peel's own finding 1 just closed for `scalar_fields`, left open for this pair); `set_based_*` is enumerated inconsistently across 3 separate rules. |
+| LOW/NIT | 10 | stale doc-counts (13 vs 15 write-discipline classes), `$ref`-sibling footguns, inconsistent zero-handling between `srid` and `needs_disk_mb`, contract_version has no maximum. |
+
+Spec 124 self-review (companion pass): **10 direct internal contradictions** (Rule 12 says "both halves CLOSED"
+30 lines from its own "behavioural half blocked" admission; ASSERT's `config` forced `"none"` while R-D
+requires `config.probe_presence`; R-X bans live `banned_for_new` declarations while §9 names one as
+grandfathered; the compute-rule count given as 5, 6, and "8" in three different rules), **7 "✅ CLOSED" claims
+with no real lock** (G-1's own `--write` bypasses the review gate it claims to enforce; G-4's predicate is
+stale post-R-AD; R-Z's only exercised arm is vacuous), **12 unenforced/undefined predicates**, register-integrity
+gaps (discoverer=adjudicator waived twice, R-P/R-Q still literally "pending fold"), 8 scaling/operational
+blind spots (no named CI job runs `step:validate --all`; `--no-verify` on both hooks is undescribed), and a
+security-gaps section (`logic_variables` is the admin surface for every halt-deciding threshold with no
+authorization model named anywhere in the spec). Closes with 5 named questions for the spec's author.
+
+**Disposition: OPEN — filed, not triaged into individual WF2/WF3 items.** Scope (both schema conditionals and
+Spec 124 prose/register integrity) is far beyond one output-panel peel; the next owning WF should re-run both
+`npm run review:deepseek` commands above fresh (this transcript will have rotted) and triage CRITICAL first
+(C1/C2/C3 each have a named draft-07-expressible fix in the original transcript).

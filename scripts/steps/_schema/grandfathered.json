@@ -72,6 +72,16 @@
       "date": "2026-08-29",
       "lock_test": "src/tests/step-schema.logic.test.ts"
     },
+    "fixture_scalar_field_banned_allowed": {
+      "scalar_fields": [
+        "execution.on_row_error_max_pct"
+      ],
+      "why": "The schema's own exemplar for the x-banned-for-new scalar_fields shape (RE-FREEZE #12 output-panel peel, R-AX, 2026-09-22) — a FIXTURE, never a runnable step, exercising the presence ban in isolation. Exists so src/tests/step-schema.logic.test.ts can prove assertBannedScalarFields' GREEN direction is real, mirroring fixture_no_retraction_allowed's role for assertNoRetraction.",
+      "commit": "lands in this same commit — a fixture cannot cite its own not-yet-computed hash; see the commit that introduces assertBannedScalarFields in git log",
+      "adjudicated_by": "WF2 'runner row-error policy' output-panel peel (schema fixture, not a manifest step)",
+      "date": "2026-09-22",
+      "lock_test": "src/tests/step-schema.logic.test.ts"
+    },
     "compute_centroids": {
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"

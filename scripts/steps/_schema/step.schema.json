@@ -53,6 +53,10 @@
       "outputs.writes[].write_discipline.guard": ["none"],
       "execution.criticality": ["best_effort"]
     },
+    "scalar_fields": {
+      "$comment": "RE-FREEZE #12 output-panel peel (R-AX, 2026-09-22). A SIBLING form of `values` above for a field banned in its ENTIRETY (any presence, not one enum value) — `execution.on_row_error_max_pct`'s own inline `x-banned-for-new: true` annotation was, until this peel, METADATA WITH NO CONSUMER (the exact G0.2/POST-B1-1 class this whole node's own header already names once, now recurring at the field grain): `assertGrandfathered` only ever read `values[GUARD_PATH]`, so nothing checked this path at all. Enforced by `scripts/lib/step/validate.js assertBannedScalarFields`, the same allowlist file, a SIBLING shape (`grandfathered.json` steps[].scalar_fields: string[] naming this path, never a value — there is only one banned state, presence) — grep-verified never trusted.",
+      "paths": ["execution.on_row_error_max_pct"]
+    },
     "rules": [
       {
         "id": "no_retraction",
