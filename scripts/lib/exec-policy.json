@@ -15,5 +15,15 @@
   ],
   "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
   "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
+  "registry_reserved": [
+    "scripts/manifest.json",
+    "scripts/steps/_schema/converted.json",
+    "scripts/steps/_schema/converted.json.pending",
+    "scripts/steps/_schema/step-archetype-census.json",
+    "scripts/steps/_schema/programme-items.json",
+    "scripts/steps/_schema/template-freeze.json",
+    "scripts/steps/_schema/schema-baseline.json",
+    "docs/specs/00-architecture/00_system_map.md"
+  ],
   "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
 }

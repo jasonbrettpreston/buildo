@@ -26,6 +26,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import {
   makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv,
 } from './helpers/deepseek-exec-harness';
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly
+const { committerLockFileName } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
 
 describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
   let repo = '';
@@ -205,10 +207,15 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       expect(call?.status).toBe('blocked');
       expect(['PATH_DENIED', 'PATH_OUTSIDE_REPO']).toContain(call?.error?.code);
       const after = fs.readdirSync(ledgerDir).sort();
-      // The blocked command never ran, so the ONLY change to ledgerDir is
-      // this run's own ledger file landing — nothing named by the blocked
-      // argv was created, read into, or otherwise touched.
-      expect(after.filter((f) => !before.includes(f))).toEqual([`${summary.run_id}.jsonl`]);
+      // The blocked command never ran, so the only NEW entries in ledgerDir
+      // are this run's own ledger file and (as of commit 10b) its own
+      // active-claims.json registry write — nothing named by the blocked
+      // argv (e.g. "some-other-run.jsonl") was ever created, read into, or
+      // otherwise touched.
+      const newEntries = after.filter((f) => !before.includes(f));
+      expect(newEntries).not.toContain('some-other-run.jsonl');
+      expect(newEntries.every((f) => f === `${summary.run_id}.jsonl` || f === 'active-claims.json')).toBe(true);
+      expect(newEntries).toContain(`${summary.run_id}.jsonl`);
     });
   });
 
@@ -509,7 +516,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
 
   describe('commit 10: git_commit — single-committer advisory lock', () => {
     it('a committer lock already held by a LIVE pid ⇒ COMMITTER_BUSY', async () => {
-      const lockPath = path.join(ledgerDir, 'committer.lock');
+      const lockPath = path.join(ledgerDir, committerLockFileName(repo));
       fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'other-run', repo_root: repo, ts: new Date().toISOString() }));
       const briefPath = writeBrief(repo);
       const summary = await runEngine({
@@ -526,7 +533,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
 
     it('a stale committer lock (dead pid) is reclaimed, and the commit succeeds', async () => {
       const dead = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
-      const lockPath = path.join(ledgerDir, 'committer.lock');
+      const lockPath = path.join(ledgerDir, committerLockFileName(repo));
       fs.writeFileSync(lockPath, JSON.stringify({ pid: dead.pid, run_id: 'stale-run', repo_root: repo, ts: new Date(0).toISOString() }));
       const briefPath = writeBrief(repo);
       const summary = await runEngine({
@@ -605,6 +612,230 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       });
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'ok' });
+    });
+  });
+
+  // =========================================================================
+  // Commit 10b — multi-worker isolation (F13, §C.6): write scope, reserved
+  // registries, active claims, per-worktree committer lock
+  // =========================================================================
+  describe('commit 10b: exec-brief.js front-matter parser (unit, no repo needed)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+    const { parseBrief } = require(path.join(REPO_ROOT, 'scripts/lib/exec-brief.js'));
+    it('parses write_scope and strips the front-matter block from the body', () => {
+      const content = '---\nwrite_scope:\n- scripts/**\n- src/tests/**\n---\nBody text here\n';
+      const { writeScope, body } = parseBrief(content);
+      expect(writeScope).toEqual(['scripts/**', 'src/tests/**']);
+      expect(body).toBe('Body text here\n');
+    });
+    it('no front matter ⇒ empty scope, body === the whole content', () => {
+      const content = 'plain brief, no front matter\n';
+      const { writeScope, body } = parseBrief(content);
+      expect(writeScope).toEqual([]);
+      expect(body).toBe(content);
+    });
+    it('an unterminated front-matter block ⇒ empty scope, body === the whole content (not an error)', () => {
+      const content = '---\nwrite_scope:\n- scripts/**\nno closing delimiter\n';
+      const { writeScope, body } = parseBrief(content);
+      expect(writeScope).toEqual([]);
+      expect(body).toBe(content);
+    });
+  });
+
+  describe('commit 10b: exec-glob.js minimal matcher (unit, pure)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+    const { matchGlob } = require(path.join(REPO_ROOT, 'scripts/lib/exec-glob.js'));
+    it('scripts/steps/x/** matches scripts/steps/x/a/b.js', () => {
+      expect(matchGlob('scripts/steps/x/**', 'scripts/steps/x/a/b.js')).toBe(true);
+    });
+    it('scripts/steps/x/** does NOT match scripts/steps/xy/a.js (segment-boundary honesty, not a naive prefix match)', () => {
+      expect(matchGlob('scripts/steps/x/**', 'scripts/steps/xy/a.js')).toBe(false);
+    });
+    it('src/tests/*.test.ts matches a direct file but NOT a nested one (single * stays within one segment)', () => {
+      expect(matchGlob('src/tests/*.test.ts', 'src/tests/foo.test.ts')).toBe(true);
+      expect(matchGlob('src/tests/*.test.ts', 'src/tests/nested/foo.test.ts')).toBe(false);
+    });
+  });
+
+  describe('commit 10b: NO_WRITE_SCOPE — provider deepseek refuses to start with no declared scope', () => {
+    it('run_start then run_end{status:"no_write_scope"}, write_scope recorded empty', async () => {
+      const briefPath = writeBrief(repo, { writeScope: null });
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir });
+      expect(summary.status).toBe('no_write_scope');
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; write_scope?: string[]; status?: string }>;
+      expect(records[0]!.kind).toBe('run_start');
+      expect(records[0]!.write_scope).toEqual([]);
+      expect(records[records.length - 1]).toMatchObject({ kind: 'run_end', status: 'no_write_scope' });
+    });
+
+    it('the real CLI process exits non-zero on NO_WRITE_SCOPE', () => {
+      const briefPath = writeBrief(repo, { writeScope: null });
+      const transcriptPath = path.join(repo, 'empty-transcript.json');
+      fs.writeFileSync(transcriptPath, JSON.stringify([]));
+      const cliPath = path.join(REPO_ROOT, 'scripts', 'deepseek-exec.js');
+      let exitCode = 0;
+      try {
+        execFileSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
+          cwd: repo, env: scrubbedChildEnv(), stdio: 'pipe',
+        });
+      } catch (err) {
+        exitCode = (err as { status?: number }).status ?? 1;
+      }
+      expect(exitCode).not.toBe(0);
+    });
+
+    it('provider claude is UNAFFECTED by an empty write_scope (it never dispatches a tool)', async () => {
+      const briefPath = writeBrief(repo, { writeScope: null });
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'claude', ledgerDir });
+      expect(summary.status).toBe('delegated_to_claude');
+    });
+  });
+
+  describe('commit 10b: PATH_OUT_OF_SCOPE — write_file/edit_file, both directions', () => {
+    it('write_file outside a declared write_scope is blocked; inside the same scope is allowed', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['scripts/**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'outside-scope.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'write_file', { path: 'scripts/inside-scope.js', content: 'x', reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const calls = records.filter((r) => r.kind === 'tool_call' && r.tool === 'write_file') as Array<{ status?: string; error?: { code: string } }>;
+      expect(calls[0]).toMatchObject({ status: 'blocked', error: { code: 'PATH_OUT_OF_SCOPE' } });
+      expect(calls[1]).toMatchObject({ status: 'ok' });
+    });
+
+    it('git_commit.paths outside the declared write_scope is blocked PATH_OUT_OF_SCOPE (direct dispatch — normal flow cannot even reach this state, since a write outside scope is already refused; this proves the tool\'s OWN independent check, defense-in-depth)', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      const realRepo = fs.realpathSync(repo);
+      fs.writeFileSync(path.join(realRepo, 'out-of-scope-commit.txt'), 'x');
+      const fakeLedger = { path: path.join(ledgerDir, 'scope-unit.jsonl'), append: () => {}, close: () => {} };
+      const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, 'out-of-scope-commit.txt')]) };
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['scripts/**'] });
+      const outcome = await tools.dispatch('git_commit', { message: 'x', paths: ['out-of-scope-commit.txt'], reason: 'r' });
+      expect(outcome.toolResult.ok).toBe(false);
+      expect(outcome.toolResult.error.code).toBe('PATH_OUT_OF_SCOPE');
+    });
+  });
+
+  describe('commit 10b: PATH_RESERVED — registry_reserved wins even when scope names the file', () => {
+    it('scope scripts/** + write to scripts/manifest.json ⇒ PATH_RESERVED', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['scripts/**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'scripts/manifest.json', content: '{}', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'PATH_RESERVED' } });
+    });
+  });
+
+  describe('commit 10b: active-claims registry (unit — direct acquireClaim/releaseClaim, bypassing the run lifecycle to hold a claim open across two calls)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS module directly
+    const { acquireClaim, releaseClaim, ClaimConflictError } = require(path.join(REPO_ROOT, 'scripts/lib/exec-claims.js'));
+
+    it('two runs, same worktree, overlapping scope ⇒ CLAIM_CONFLICT on the second', () => {
+      const claim1 = acquireClaim({ ledgerDir, runId: 'run-a', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      expect(() => acquireClaim({ ledgerDir, runId: 'run-b', repoRoot: repo, branch: 'main', writeScope: ['scripts/foo/**'] }))
+        .toThrow(ClaimConflictError);
+      releaseClaim({ ledgerDir, claimId: claim1.claimId });
+    });
+
+    it('disjoint scopes ⇒ both start', () => {
+      const claim1 = acquireClaim({ ledgerDir, runId: 'run-a', repoRoot: repo, branch: 'main', writeScope: ['scripts/steps/a/**'] });
+      const claim2 = acquireClaim({ ledgerDir, runId: 'run-b', repoRoot: repo, branch: 'main', writeScope: ['scripts/steps/b/**'] });
+      expect(claim1.claimId).not.toBe(claim2.claimId);
+      releaseClaim({ ledgerDir, claimId: claim1.claimId });
+      releaseClaim({ ledgerDir, claimId: claim2.claimId });
+    });
+
+    it('a stale entry (dead pid) is dropped, freeing an otherwise-overlapping scope', () => {
+      const claimsPath = path.join(ledgerDir, 'active-claims.json');
+      const dead = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
+      fs.writeFileSync(claimsPath, JSON.stringify([{
+        claim_id: 'stale-1', run_id: 'stale-run', pid: dead.pid, repo_root: fs.realpathSync(repo),
+        branch: 'main', write_scope: ['scripts/**'], ts: new Date(0).toISOString(),
+      }]));
+      const claim = acquireClaim({ ledgerDir, runId: 'run-c', repoRoot: repo, branch: 'main', writeScope: ['scripts/**'] });
+      expect(claim.claimId).toBeTruthy();
+      const claims = JSON.parse(fs.readFileSync(claimsPath, 'utf8')) as Array<{ claim_id: string }>;
+      expect(claims.find((c) => c.claim_id === 'stale-1')).toBeUndefined();
+      releaseClaim({ ledgerDir, claimId: claim.claimId });
+    });
+
+    it('the claim is gone from the registry after run_end (end-to-end via runEngine)', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      const claimsPath = path.join(ledgerDir, 'active-claims.json');
+      const claims = fs.existsSync(claimsPath) ? JSON.parse(fs.readFileSync(claimsPath, 'utf8')) as Array<{ run_id: string }> : [];
+      expect(claims.find((c) => c.run_id === summary.run_id)).toBeUndefined();
+    });
+  });
+
+  describe('commit 10b: run_start gains write_scope + claim_id', () => {
+    it('run_start records the declared write_scope and a non-empty claim_id', async () => {
+      const briefPath = writeBrief(repo, { writeScope: ['scripts/**', 'src/tests/**'] });
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id) as Array<{ kind: string; write_scope?: string[]; claim_id?: string }>;
+      const runStart = records.find((r) => r.kind === 'run_start')!;
+      expect(runStart.write_scope).toEqual(['scripts/**', 'src/tests/**']);
+      expect(typeof runStart.claim_id).toBe('string');
+      expect(runStart.claim_id!.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('commit 10b: committer lock is per-worktree (amends commit 10)', () => {
+    it('two DIFFERENT worktrees commit without COMMITTER_BUSY colliding — their lock filenames differ', async () => {
+      const repo2 = makeRepo();
+      try {
+        expect(committerLockFileName(repo)).not.toBe(committerLockFileName(repo2));
+        const briefPath1 = writeBrief(repo);
+        const briefPath2 = writeBrief(repo2);
+        const summary1 = await runEngine({
+          repoRoot: repo, briefPath: briefPath1, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [
+            toolTurn('c1', 'write_file', { path: 'worktree1.txt', content: 'a', reason: 'r' }),
+            toolTurn('c2', 'git_commit', { message: 'w1', paths: ['worktree1.txt'], reason: 'r' }),
+          ],
+        });
+        const summary2 = await runEngine({
+          repoRoot: repo2, briefPath: briefPath2, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [
+            toolTurn('c1', 'write_file', { path: 'worktree2.txt', content: 'b', reason: 'r' }),
+            toolTurn('c2', 'git_commit', { message: 'w2', paths: ['worktree2.txt'], reason: 'r' }),
+          ],
+        });
+        expect(toolCallOf(ledgerRecords(ledgerDir, summary1.run_id), 'git_commit')).toMatchObject({ status: 'ok' });
+        expect(toolCallOf(ledgerRecords(ledgerDir, summary2.run_id), 'git_commit')).toMatchObject({ status: 'ok' });
+      } finally {
+        fs.rmSync(repo2, { recursive: true, force: true });
+      }
+    });
+
+    it('the SAME repo twice (lock still held) ⇒ COMMITTER_BUSY', async () => {
+      const lockPath = path.join(ledgerDir, committerLockFileName(repo));
+      fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'holder', repo_root: repo, ts: new Date().toISOString() }));
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'busy-again.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'x', paths: ['busy-again.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'COMMITTER_BUSY' } });
+      fs.rmSync(lockPath, { force: true });
     });
   });
 });

@@ -42,6 +42,7 @@ const { scrubbedEnv } = require('./exec-env');
 const { redact } = require('./exec-ledger');
 const { captureWorktree } = require('./exec-worktree');
 const { matchArgv } = require('./exec-policy-match');
+const { matchesAnyGlob } = require('./exec-glob');
 
 class MalformedToolCallError extends Error {
   constructor(message) {
@@ -174,6 +175,38 @@ function checkSelfProtection(absPath, relPosix, ctx) {
   const ledgerDirAbs = ctx.ledger && ctx.ledger.path ? path.dirname(ctx.ledger.path) : null;
   if (isUnderLedgerDir(absPath, ledgerDirAbs)) {
     return { ok: false, error: { code: 'PATH_DENIED', message: 'self-protection: the run ledger directory is unreachable by any tool' } };
+  }
+  return null;
+}
+
+// §C.6.2 (F13, commit 10b) — orchestrator-only registries. A write here is
+// PATH_RESERVED even when the brief's write_scope names the file: scope
+// cannot widen past policy. Evaluated BEFORE write_scope (§C.6 evaluation
+// order: confinement -> self-protection -> C.6.2 reserved -> C.6.1 scope ->
+// secrets -> read-state) — a scope of `scripts/**` does not rescue a write
+// to `scripts/manifest.json`.
+function checkRegistryReserved(relPosix, ctx) {
+  const reserved = (ctx.policy && ctx.policy.registry_reserved) || [];
+  if (reserved.includes(relPosix)) {
+    return { ok: false, error: { code: 'PATH_RESERVED', message: `${relPosix} is an orchestrator-only registry; the engine ships code and tests, the landing commit performs registry edits` } };
+  }
+  return null;
+}
+
+// §C.6.1 (F13, commit 10b) — the brief's declared write_scope. `ctx.writeScope`
+// is populated from the brief's front matter (scripts/lib/exec-brief.js) at
+// `runEngine` startup; an empty/missing scope for provider `deepseek` already
+// refused the run before any tool ever dispatches (NO_WRITE_SCOPE), so by the
+// time this runs, a non-empty scope is guaranteed — but this function still
+// fails closed (denies) on an empty scope defensively, rather than assuming
+// that invariant holds.
+function checkWriteScope(relPosix, ctx) {
+  const scope = ctx.writeScope;
+  if (!Array.isArray(scope) || scope.length === 0) {
+    return { ok: false, error: { code: 'PATH_OUT_OF_SCOPE', message: `${relPosix}: no write_scope declared` } };
+  }
+  if (!matchesAnyGlob(scope, relPosix)) {
+    return { ok: false, error: { code: 'PATH_OUT_OF_SCOPE', message: `${relPosix} does not match the declared write_scope (${scope.join(', ')})` } };
   }
   return null;
 }
@@ -399,6 +432,16 @@ async function writeFileHandler(args, ctx) {
     return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
   }
 
+  // §C.6 evaluation order: reserved registries (C.6.2), THEN write scope (C.6.1).
+  const reservedBlock = checkRegistryReserved(relPosix, ctx);
+  if (reservedBlock) {
+    return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+  }
+  const scopeBlock = checkWriteScope(relPosix, ctx);
+  if (scopeBlock) {
+    return { toolResult: scopeBlock, pre, post: captureWorktree(repoRoot) };
+  }
+
   // §C.1.5 (G5, commit 8) — a secret-denied path is never WRITTEN either,
   // not only read: evaluated at invariant position 5, after self-protection
   // (4) and before read-before-write (6).
@@ -457,6 +500,15 @@ async function editFileHandler(args, ctx) {
   const selfProtectBlock = checkSelfProtection(absPath, relPosix, ctx);
   if (selfProtectBlock) {
     return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
+  }
+
+  const reservedBlock = checkRegistryReserved(relPosix, ctx);
+  if (reservedBlock) {
+    return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+  }
+  const scopeBlock = checkWriteScope(relPosix, ctx);
+  if (scopeBlock) {
+    return { toolResult: scopeBlock, pre, post: captureWorktree(repoRoot) };
   }
 
   // §C.1.5 (G5, commit 8) — a secret-denied path is never edited either.
@@ -830,6 +882,18 @@ function tailBytes(str, capBytes) {
   return buf.length > capBytes ? buf.subarray(buf.length - capBytes).toString('utf8') : (str || '');
 }
 
+// §C.6.4 (F13, commit 10b) — the committer lock is keyed PER WORKTREE, so
+// engines in different worktrees commit independently (a global
+// `committer.lock`, commit 10's original name, would have serialised commits
+// across every worktree on the machine). `repoRoot`'s realpath, not its raw
+// string, so two paths to the same worktree (a symlinked mount, a differently-
+// cased drive letter) hash identically.
+function committerLockFileName(repoRoot) {
+  const real = fs.realpathSync(repoRoot);
+  const hash = crypto.createHash('sha256').update(real).digest('hex').slice(0, 12);
+  return `committer-${hash}.lock`;
+}
+
 // §C.1.8 — the single-committer advisory lock. `lockPath` is a parameter
 // (not hardcoded) so commit 10b can key it per worktree
 // (`committer-<hash>.lock`) without changing this function's contract.
@@ -917,6 +981,14 @@ async function gitCommitHandler(args, ctx) {
     if (selfProtectBlock) {
       return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
     }
+    const reservedBlock = checkRegistryReserved(relPosix, ctx);
+    if (reservedBlock) {
+      return { toolResult: reservedBlock, pre, post: captureWorktree(repoRoot) };
+    }
+    const scopeBlock = checkWriteScope(relPosix, ctx);
+    if (scopeBlock) {
+      return { toolResult: scopeBlock, pre, post: captureWorktree(repoRoot) };
+    }
     if (isSecretDenied(relPosix, (policy && policy.secret_read_deny) || [])) {
       return {
         toolResult: { ok: false, error: { code: 'SECRET_DENIED', message: `commit denied: ${relPosix}` } },
@@ -936,7 +1008,7 @@ async function gitCommitHandler(args, ctx) {
   }
 
   const ledgerDirAbs = ledger && ledger.path ? path.dirname(ledger.path) : null;
-  const lockPath = ctx.committerLockPath || (ledgerDirAbs ? path.join(ledgerDirAbs, 'committer.lock') : null);
+  const lockPath = ctx.committerLockPath || (ledgerDirAbs ? path.join(ledgerDirAbs, committerLockFileName(repoRoot)) : null);
   if (!lockPath) {
     return { toolResult: { ok: false, error: { code: 'COMMITTER_BUSY', message: 'no ledger directory to key the committer lock against' } }, pre, post: captureWorktree(repoRoot) };
   }
@@ -997,7 +1069,7 @@ async function gitCommitHandler(args, ctx) {
  * write_file/edit_file on success). `runId`/`model` are threaded through for
  * the git_commit trailer and the committer-lock payload.
  */
-function createTools({ repoRoot, policy, ledger, runState, runId, model, committerLockPath } = {}) {
+function createTools({ repoRoot, policy, ledger, runState, runId, model, committerLockPath, writeScope } = {}) {
   if (!repoRoot) {
     throw new Error('createTools requires repoRoot');
   }
@@ -1008,7 +1080,7 @@ function createTools({ repoRoot, policy, ledger, runState, runId, model, committ
   if (!state.writtenPaths) {
     state.writtenPaths = new Set();
   }
-  const ctx = { repoRoot, policy, ledger, runState: state, runId, model, committerLockPath };
+  const ctx = { repoRoot, policy, ledger, runState: state, runId, model, committerLockPath, writeScope };
 
   const handlers = {
     read_file: readFileHandler,
@@ -1046,4 +1118,5 @@ module.exports = {
   validateArgs,
   MalformedToolCallError,
   TOOL_SCHEMAS,
+  committerLockFileName,
 };

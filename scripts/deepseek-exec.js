@@ -27,6 +27,8 @@ const { createTools, MalformedToolCallError } = require('./lib/exec-tools');
 const { createTranscriptClient, createDeepSeekClient } = require('./lib/exec-model');
 const { scrubbedEnv } = require('./lib/exec-env');
 const { safeParsePositiveInt } = require('./lib/safe-math');
+const { parseBrief } = require('./lib/exec-brief');
+const { acquireClaim, releaseClaim, ClaimConflictError } = require('./lib/exec-claims');
 
 const ENGINE_VERSION = '0.1.0-phase1';
 const POLICY_PATH = path.join(__dirname, 'lib', 'exec-policy.json');
@@ -173,6 +175,11 @@ async function runEngine(opts = {}) {
     throw new Error(`unable to read brief at ${briefAbs}: ${err.message}`);
   }
   const briefSha256 = sha256Hex(briefContent);
+  // §C.6.1 (F13, commit 10b) — the brief's write_scope front matter. The
+  // parsed body is not currently threaded into the system prompt separately
+  // from the raw content (the model sees the whole brief, front matter
+  // included) — only the ENGINE reads the parsed `write_scope`.
+  const { writeScope } = parseBrief(briefContent);
 
   const { provider, provider_source: providerSource } = resolveProvider(opts.provider, process.env.EXECUTION_PROVIDER);
   const model = opts.model || process.env.DEEPSEEK_EXEC_MODEL || 'deepseek-chat';
@@ -184,6 +191,49 @@ async function runEngine(opts = {}) {
   const ledger = opts.ledger || openLedger({ ledgerDir: opts.ledgerDir, runId });
   const ledgerDir = path.dirname(ledger.path);
   const { headSha, branch } = gitInfo(repoRoot);
+
+  // §C.6.3 (F13, commit 10b) — the active-claims registry. Only the LIVE
+  // execution path (provider `deepseek`) ever touches a tool, so only it
+  // acquires a claim; `claude` delegates and never dispatches a tool call.
+  let claimId = null;
+  if (provider === 'deepseek' && writeScope.length > 0) {
+    try {
+      const claim = acquireClaim({ ledgerDir, runId, repoRoot, branch, writeScope });
+      claimId = claim.claimId;
+    } catch (err) {
+      if (err instanceof ClaimConflictError) {
+        ledger.append({
+          kind: 'run_start', provider, provider_source: providerSource, model, repo_root: repoRoot,
+          head_sha: headSha, branch, brief_path: briefAbs, brief_sha256: briefSha256, policy_sha256: policySha256,
+          budgets: { max_iterations: maxIterations, max_total_tokens: maxTotalTokens }, engine_version: ENGINE_VERSION,
+          write_scope: writeScope, claim_id: null,
+        });
+        ledger.append({
+          kind: 'run_end', status: 'claim_conflict', iterations: 0, usage_total: emptyUsage(),
+          tool_calls_total: 0, blocked_total: 0, commits: [], duration_ms: 0,
+        });
+        ledger.close();
+        return {
+          status: 'claim_conflict', run_id: runId, ledger_path: ledger.path,
+          iterations: 0, usage_total: emptyUsage(), tool_calls_total: 0, blocked_total: 0, commits: [],
+        };
+      }
+      throw err;
+    }
+  }
+  const releaseThisClaim = () => releaseClaim({ ledgerDir, claimId });
+  // Defense-in-depth: a crash that skips `finish()` (e.g. an unhandled
+  // exception outside runEngine's own control flow) must not strand a claim
+  // in the registry forever.
+  process.on('exit', releaseThisClaim);
+  // Every normal exit path below removes the listener after releasing —
+  // otherwise a long-lived host process (many runEngine() calls, e.g. a
+  // test suite) accumulates one 'exit' listener per run and eventually
+  // trips Node's MaxListenersExceededWarning.
+  function finalizeClaim() {
+    releaseThisClaim();
+    process.removeListener('exit', releaseThisClaim);
+  }
 
   const runStart = {
     kind: 'run_start',
@@ -198,6 +248,8 @@ async function runEngine(opts = {}) {
     policy_sha256: policySha256,
     budgets: { max_iterations: maxIterations, max_total_tokens: maxTotalTokens },
     engine_version: ENGINE_VERSION,
+    write_scope: writeScope,
+    claim_id: claimId,
   };
   ledger.append(runStart);
 
@@ -213,15 +265,32 @@ async function runEngine(opts = {}) {
       duration_ms: 0,
     });
     ledger.close();
+    finalizeClaim();
     return {
       status: 'delegated_to_claude', run_id: runId, ledger_path: ledger.path,
       iterations: 0, usage_total: emptyUsage(), tool_calls_total: 0, blocked_total: 0, commits: [],
     };
   }
 
+  // §C.6.1 — provider `deepseek` with an empty/missing write_scope refuses
+  // to start (NO_WRITE_SCOPE), AFTER run_start (the plan's exact ordering:
+  // "run_start then run_end{status:'no_write_scope'}").
+  if (writeScope.length === 0) {
+    ledger.append({
+      kind: 'run_end', status: 'no_write_scope', iterations: 0, usage_total: emptyUsage(),
+      tool_calls_total: 0, blocked_total: 0, commits: [], duration_ms: 0,
+    });
+    ledger.close();
+    finalizeClaim();
+    return {
+      status: 'no_write_scope', run_id: runId, ledger_path: ledger.path,
+      iterations: 0, usage_total: emptyUsage(), tool_calls_total: 0, blocked_total: 0, commits: [],
+    };
+  }
+
   const startedAt = Date.now();
   const runState = { readState: {} };
-  const tools = createTools({ repoRoot, policy, ledger, runState, runId, model });
+  const tools = createTools({ repoRoot, policy, ledger, runState, runId, model, writeScope });
 
   let modelClient = opts.modelClient;
   if (!modelClient) {
@@ -263,6 +332,8 @@ async function runEngine(opts = {}) {
     };
     ledger.append(record);
     ledger.close();
+    // §C.6.3 — "the claim is removed at run_end (any status)."
+    finalizeClaim();
     return {
       status, run_id: runId, ledger_path: ledger.path,
       iterations: iteration, usage_total: usageTotal, tool_calls_total: toolCallsTotal,

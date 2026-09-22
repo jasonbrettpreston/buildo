@@ -131,10 +131,23 @@ export function hookedClient(turns: Turn[], hooks: Record<number, () => void> = 
   };
 }
 
-export function writeBrief(repo: string, frontMatter?: string): string {
+/**
+ * writeBrief(repo, opts) — §C.6.1 front matter. DEFAULTS to
+ * `write_scope: ['**']` (matches everything) so every PRE-existing call site
+ * (all of Phase 1 + Phase 2 commits 6-10, none of which declare a scope)
+ * keeps behaving exactly as before once commit 10b's NO_WRITE_SCOPE-refusal
+ * and PATH_OUT_OF_SCOPE fences land — a real scope was always "supposed" to
+ * be there, `['**']` is the honest default for a test that isn't exercising
+ * scope itself. Pass `{ writeScope: null }` (or `{ writeScope: [] }`) for the
+ * NO_WRITE_SCOPE lock, or a narrow glob array for the PATH_OUT_OF_SCOPE lock.
+ */
+export function writeBrief(repo: string, opts?: { writeScope?: string[] | null }): string {
   const briefPath = path.join(repo, 'brief.md');
-  const body = 'test brief\n';
-  fs.writeFileSync(briefPath, frontMatter ? `${frontMatter}\n${body}` : body);
+  const scope = opts && Object.prototype.hasOwnProperty.call(opts, 'writeScope') ? opts.writeScope : ['**'];
+  const frontMatter = (scope === null || scope === undefined || scope.length === 0)
+    ? ''
+    : `---\nwrite_scope:\n${scope.map((g) => `- ${g}`).join('\n')}\n---\n`;
+  fs.writeFileSync(briefPath, `${frontMatter}test brief\n`);
   return briefPath;
 }
 
