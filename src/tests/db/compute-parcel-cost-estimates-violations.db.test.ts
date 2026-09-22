@@ -314,8 +314,14 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
   }, 60_000);
 
   // ── the unreachability PRECONDITION lock (FOLD-V7 §5 test 10 replacement) — durable because
-  // it reds the instant a migration relaxes any of these three NOT NULL constraints. ──────────
-  it('precondition lock — logic_variables.updated_at / archetype_cost_rates.{updated_at,as_of_date} are NOT NULL (the undatable arms are unreachable)', async () => {
+  // it reds the instant a migration relaxes any of these three NOT NULL constraints. CPCE-D1
+  // CLOSED (commit 1, 2026-09-21): the rates/index undatable arms are now SYMMETRIC (both WARN,
+  // detail 'undatable') — this lock still measures "unreachable today", not "declared
+  // asymmetric" (there was never a live-DB assertion of the asymmetry itself, only of the
+  // descriptor's now-deleted limitations[] pin). If a future migration relaxes any of the three
+  // NOT NULL constraints below, both arms become reachable AND already symmetric — no follow-up
+  // fix is owed. ──────────────────────────────────────────────────────────────────────────────
+  it('precondition lock — logic_variables.updated_at / archetype_cost_rates.{updated_at,as_of_date} are NOT NULL (the undatable arms are unreachable, now symmetric once they are not)', async () => {
     const r = await pool.query(
       `SELECT table_name, column_name, is_nullable FROM information_schema.columns
         WHERE (table_name = 'logic_variables' AND column_name = 'updated_at')

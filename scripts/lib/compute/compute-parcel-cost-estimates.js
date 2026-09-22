@@ -362,7 +362,11 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
   // the string 'future_dated' is not Number.isFinite and would score "unevaluable" (measured
   // live 2026-09-21, caught by the POST golden capture). 0=fresh, 1=stale/undatable (WARN),
   // 2=future-dated (FAIL, cost_rates_stale only — cost_index_stale never reaches this tier).
-  const ratesStaleCode = ratesFuture ? 2 : ratesStale ? 1 : 0;
+  // CPCE-D1 CLOSED (commit 1) — the undatable arm now folds into code 1 (WARN), symmetric
+  // with the index clock one line below: "I could not measure freshness" is no longer
+  // conflated with "measured, and fresh" (code 0). `ratesStale` itself is untouched (it is
+  // the *stale* predicate, not the *undatable* one) so the two concepts stay separable here.
+  const ratesStaleCode = ratesFuture ? 2 : (ratesAgeMonths === null || ratesStale) ? 1 : 0;
   const indexStaleCode = indexAgeMonths === null ? 1 : indexStale ? 1 : 0;
 
   const emptyMenuPct = scanned > 0 ? (nullGeomBasisCount / scanned) * 100 : 0;
@@ -410,7 +414,9 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       // human-readable false/true/'future_dated' string (rendered in the audit row instead —
       // scripts/lib/step/verdict.js#checkRow prefers observation.detail over observation.value).
       cost_rates_stale: ratesStaleCode,
-      cost_rates_stale_detail: ratesFuture ? 'future_dated' : ratesStale,
+      // CPCE-D1 CLOSED — 'undatable' now rides the same detail slot the index clock already
+      // used; the asymmetry (undatable rates silently PASS while undatable index WARNs) is gone.
+      cost_rates_stale_detail: ratesFuture ? 'future_dated' : (ratesAgeMonths === null ? 'undatable' : ratesStale),
       cost_rates_age_months: ratesAgeMonths,
       cost_index_age_months: indexAgeMonths,
       cost_index_stale: indexStaleCode,

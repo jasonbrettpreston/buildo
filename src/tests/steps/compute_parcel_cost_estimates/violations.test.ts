@@ -235,3 +235,58 @@ describe('compute_parcel_cost_estimates — CPCE-A1: run-ledger gate retirement,
     expect(hit.adjudicated_by).toMatch(/CPCE-A1/);
   });
 });
+
+describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs, symmetric with the index clock', () => {
+  const compute = loadCompute();
+
+  // computePostPhase issues exactly three pool.query calls (freshness, menu-coverage %, the
+  // ZONE_SQL per-zone block) — this fake pool answers all three off SQL-text fingerprints
+  // (`AS pct` / `GROUP BY 1` / else-freshness) so the RED/GREEN cases below never touch a DB.
+  // The zone bucket is a single RD row carrying the whole `scanned` count so the `:386`
+  // cost_by_zone Σ-identity holds trivially and never masks the assertion under test.
+  function stubPool(freshRow: Record<string, unknown>, scanned: number) {
+    const zoneRows = [{ zone: 'RD', parcels: scanned, menus: 0, empty_menus: 0, p50_cost_fb: null, max_cost_gut: null }];
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: async (sql: string): Promise<any> => {
+        if (sql.includes('AS pct')) return { rows: [{ pct: 100 }] };
+        if (sql.includes('GROUP BY 1')) return { rows: zoneRows };
+        return { rows: [freshRow] };
+      },
+    };
+  }
+
+  async function runPost(freshRow: Record<string, unknown>, scanned = 5) {
+    return compute.computePostPhase(stubPool(freshRow, scanned), {
+      passRaw: {
+        cost_menu: {
+          scanned, updated: 0, recordsSkipped: 0, engineErrorCount: 0, nullGeomBasisCount: 0,
+          fsiImplausibleCount: 0, newBuildFallbackCount: 0, fitGatedSuiteCount: 0, fitGatedGarageCount: 0,
+          lineCoverage: {}, confidenceTotals: { high: 0, medium: 0, low: 0 }, ratesAsOf: null, indexUpdatedAt: null,
+        },
+      },
+      config: { cost_rates_stale_months: 3, cost_index_stale_months: 4, cost_escalation_index: 100 },
+      runAt: new Date('2026-09-21T00:00:00Z'),
+    });
+  }
+
+  it('undatable rate table (MAX(as_of_date) IS NULL) scores cost_rates_stale=1, detail="undatable" — was 0/false', async () => {
+    const result = await runPost({ rates_as_of: null, rates_age_months: null, index_age_months: 2, rates_future: false });
+    expect(result.matched.cost_rates_stale).toBe(1);
+    expect(result.matched.cost_rates_stale_detail).toBe('undatable');
+  });
+
+  it('both directions — fresh(2mo)=0/false, stale(9mo)=1/true, future-dated=2/"future_dated" (the FAIL tier is not swallowed by the fix)', async () => {
+    const fresh = await runPost({ rates_as_of: '2026-07-01', rates_age_months: 2, index_age_months: 2, rates_future: false });
+    expect(fresh.matched.cost_rates_stale).toBe(0);
+    expect(fresh.matched.cost_rates_stale_detail).toBe(false);
+
+    const stale = await runPost({ rates_as_of: '2026-01-01', rates_age_months: 9, index_age_months: 2, rates_future: false });
+    expect(stale.matched.cost_rates_stale).toBe(1);
+    expect(stale.matched.cost_rates_stale_detail).toBe(true);
+
+    const future = await runPost({ rates_as_of: '2099-01-01', rates_age_months: -900, index_age_months: 2, rates_future: true });
+    expect(future.matched.cost_rates_stale).toBe(2);
+    expect(future.matched.cost_rates_stale_detail).toBe('future_dated');
+  });
+});
