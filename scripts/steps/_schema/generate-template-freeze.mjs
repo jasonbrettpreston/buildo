@@ -356,7 +356,12 @@ export function runnerRanges(source) {
 export function extractPhaseOrder(lines, range) {
   const body = lines
     .slice(range.start, range.end)
-    .map((l) => l.replace(/\/\/.*$/, '')) // strip line comments — code only
+    // strip line comments — code only. Tolerate an optional trailing \r: on a
+    // CRLF checkout (or a file rewritten by `git apply`, autocrlf=true) `.*`
+    // stops at the \r and `$` (no `m` flag) needs end-of-string, so `// (pipeline.
+    // withAdvisoryLock(...)` survived and manufactured a "freeze drift" on a
+    // clean diff — tasks/lessons.md "WD-1 landing, 2026-09-09".
+    .map((l) => l.replace(/\/\/.*\r?$/, ''))
     .join('\n');
   const seen = new Set();
   const seq = [];

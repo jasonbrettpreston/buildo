@@ -332,6 +332,41 @@ describe('phase_order — GAP G-3 re-derivation (C5)', () => {
     const order = mod.extractPhaseOrder(lines, ranges.runCommentTestPhase!);
     expect(order).toEqual(['staleness.readPriorEmit', 'write.assertWritePrivileges']);
   });
+
+  // CRLF tolerance — remediation, 2026-09-09 (tasks/lessons.md, "WD-1 landing,
+  // 2026-09-09", follow-up LOW). The stripper was `l.replace(/\/\/.*$/, '')`:
+  // on a `\r`-terminated line `.*` stops at the `\r` and `$` (no `m` flag)
+  // needs end-of-string, so the comment survived and a remark like
+  // `// (pipeline.withAdvisoryLock(...)` leaked a call name into phase_order —
+  // manufacturing a "freeze drift" on a clean diff on a CRLF checkout. These
+  // two arms pin BOTH directions: CRLF must behave exactly like LF.
+  it('CRLF-tolerant — a trailing line comment on a \\r-terminated line is stripped, so a commented-out library call is never extracted (2026-09-09 manufactured-drift lesson)', async () => {
+    const mod = await loadGenerator();
+    const body = [
+      'async function runCrlfCommentTestPhase({ pool, fn }) {',
+      '  await pipeline.withTransaction(pool, fn); // then (pipeline.withAdvisoryLock(...)) later',
+      '  await staleness.readPriorEmit(pool);',
+      '}',
+    ];
+    const crlfLines = body.map((l, i) => (i === 1 ? `${l}\r` : l));
+    const order = mod.extractPhaseOrder(crlfLines, { start: 0, end: crlfLines.length });
+    expect(order).not.toContain('pipeline.withAdvisoryLock');
+    expect(order).toContain('pipeline.withTransaction');
+  });
+
+  it('LF control — the same lines with plain \\n newlines extract identically (the un-broken path is unchanged)', async () => {
+    const mod = await loadGenerator();
+    const body = [
+      'async function runCrlfCommentTestPhase({ pool, fn }) {',
+      '  await pipeline.withTransaction(pool, fn); // then (pipeline.withAdvisoryLock(...)) later',
+      '  await staleness.readPriorEmit(pool);',
+      '}',
+    ];
+    const lfLines = [...body];
+    const order = mod.extractPhaseOrder(lfLines, { start: 0, end: lfLines.length });
+    expect(order).not.toContain('pipeline.withAdvisoryLock');
+    expect(order).toContain('pipeline.withTransaction');
+  });
 });
 
 // ---------------------------------------------------------------------------
