@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-X, R-AW
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-X, R-AX
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §8 RE-FREEZE #12
 //
 // WF2 "runner row-error policy" (2026-09-21) — R-X's own POST-B1-1 addendum named this
@@ -20,7 +20,7 @@
 //  (3) every `executed` row that cites `executor.file`+`executor.anchor` is GREPPED out
 //      of that file, never trusted from the registry's own prose;
 //  (4) no live descriptor declares a `retire`d value;
-//  (5) every `descriptive`/`retire` row is named in Spec 124's own R-X/R-AW text — a
+//  (5) every `descriptive`/`retire` row is named in Spec 124's own R-X/R-AX text — a
 //      reader of the spec, not just of this file, learns the declaration is inert/retired.
 
 import { describe, it, expect } from 'vitest';
@@ -81,7 +81,7 @@ function liveDescriptors(): Array<{ slug: string; file: string; execution: Recor
   return out;
 }
 
-describe('execution-posture-disposition (Spec 124 R-X/R-AW) — every execution.* posture enum value is executed or dispositioned', () => {
+describe('execution-posture-disposition (Spec 124 R-X/R-AX) — every execution.* posture enum value is executed or dispositioned', () => {
   it('(1) every LIVE enum value of every posture field has EXACTLY one registry row; no orphan row', () => {
     for (const field of POSTURE_FIELDS) {
       const live = new Set(liveEnumValues(field));
@@ -140,7 +140,7 @@ describe('execution-posture-disposition (Spec 124 R-X/R-AW) — every execution.
     expect(checkedCount, 'at least one live descriptor must declare a posture field, or this lock is vacuous').toBeGreaterThan(0);
   });
 
-  it('(5) every `descriptive`/`retire` row is named in Spec 124\'s own R-X/R-AW text — a spec reader, not just a reader of this file, learns the declaration is inert', () => {
+  it('(5) every `descriptive`/`retire` row is named in Spec 124\'s own R-X/R-AX text — a spec reader, not just a reader of this file, learns the declaration is inert', () => {
     const spec = fs.readFileSync(SPEC124_PATH, 'utf8');
     let namedCount = 0;
     for (const field of POSTURE_FIELDS) {
@@ -156,11 +156,11 @@ describe('execution-posture-disposition (Spec 124 R-X/R-AW) — every execution.
     expect(namedCount, 'at least one descriptive/retire row, or (5) is vacuous').toBeGreaterThan(0);
     // The retired VALUES themselves (not just the field names) must be legible from the
     // spec text — quarantine/retry/prior_values/zeroes are the four first `retire` rows
-    // in the estate (R-AW's own claim) and must each be findable by name.
+    // in the estate (R-AX's own claim) and must each be findable by name.
     for (const [field, values] of Object.entries(registry.declarations) as Array<[PostureField, Record<string, DispositionRow>]>) {
       for (const [value, row] of Object.entries(values)) {
         if (row.disposition !== 'retire') continue;
-        expect(spec.includes(value), `Spec 124 never names the retired value "${value}" (execution.${field}) anywhere — R-AW must state it, not just this registry`).toBe(true);
+        expect(spec.includes(value), `Spec 124 never names the retired value "${value}" (execution.${field}) anywhere — R-AX must state it, not just this registry`).toBe(true);
       }
     }
   });

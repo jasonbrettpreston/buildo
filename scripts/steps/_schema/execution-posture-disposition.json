@@ -1,7 +1,7 @@
 {
   "$comment": [
     "WF2 'runner row-error policy' (2026-09-21) — THE R-X DISPOSITION REGISTRY FOR THE",
-    "`execution.*` POSTURE ENUMS (Spec 124 §5 R-X, R-AW).",
+    "`execution.*` POSTURE ENUMS (Spec 124 §5 R-X, R-AX).",
     "",
     "R-X named this exact generalization as 'not yet built' at its own POST-B1-1 addendum:",
     "`write-class-disposition.json` covers only `outputs.write_discipline.class` and",
@@ -41,7 +41,7 @@
     "  (3) every `executed` row that cites a `file`+`anchor` greps out of that file;",
     "  (4) no live descriptor (scripts/*.descriptor.json, scripts/quality/*.descriptor.json)",
     "      declares a `retire`d value;",
-    "  (5) every `descriptive`/`retire` row is named in Spec 124's R-X/R-AW disposition text."
+    "  (5) every `descriptive`/`retire` row is named in Spec 124's R-X/R-AX disposition text."
   ],
   "menu": [
     "descriptive",
