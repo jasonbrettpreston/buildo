@@ -43,6 +43,87 @@ Env keys: `DEEPSEEK_API_KEY`, `GEMINI_API_KEY` (**live**, in `.env`); `EXECUTION
 * **STATUS:** `deepseek` is **inert until SUB-ENG-1 ships**; nothing in the tree reads `EXECUTION_PROVIDER` today. Flips to `live` only via the engine's own exit criteria.
 * **Invariant:** **no role marked tool-required may ever be routed to a tool-less substrate, under any provider value.** The toggle governs *execution*, never *verification*. Mechanised by `src/tests/agent-roster.infra.test.ts` (T2).
 
+## C. Execution Engine Contract (SUB-ENG-1) — the tool-call, ledger and denylist schemas
+
+> Authored by the SUB-ENG-1 plan's FIRST commit, before any engine code exists (`.cursor/wf1_deepseek_execution_engine_active_task.md` F12: the contract and the audit trail exist before anything can act). This section is the source of truth for `scripts/deepseek-exec.js`, `scripts/lib/exec-tools.js`, `scripts/lib/exec-ledger.js`, `scripts/lib/exec-policy.json` and their locks (`src/tests/deepseek-exec.infra.test.ts`, `src/tests/deepseek-exec-fences.infra.test.ts`). Spec 124 §6 disclaims the engine; Spec 08 §8 owns it. Nothing here is a runtime switch in `scripts/run-chain.js` (§B).
+
+### C.1 Invariants (the fences every tool honours, in this order of evaluation)
+
+1. **Ledger-or-abort.** The engine may not take a tool call it cannot log. Every tool invocation produces **exactly one** ledger record (C.3) — status `ok`, `error` or `blocked` — appended BEFORE the result is returned to the model; a ledger write failure aborts the run.
+2. **Kill switch first.** The sentinel (C.5) is checked before every model turn and before every tool call. Present ⇒ a `kill` record, run status `killed`, no further calls.
+3. **Path confinement.** Every path argument is resolved (`fs.realpathSync` on the deepest existing ancestor, so a symlink/junction escape is caught) and must lie under the repo root. Outside ⇒ `blocked` with code `PATH_OUTSIDE_REPO`.
+4. **Self-protection denylist (G10, enforced in the tool layer — a constant in `exec-tools.js`, never policy data the model could edit).** The following are **unwritable, uneditable and un-`bash`-reachable** (a bash argv token resolving to one is a block): `scripts/deepseek-exec.js` · `scripts/lib/exec-tools.js` · `scripts/lib/exec-ledger.js` · `scripts/lib/exec-policy.json` · `.husky/**` · `.git/**` · `package.json` · `package-lock.json` · `eslint.config.mjs` · `vitest.config.ts` · `tsconfig.json` · `src/tests/hooks-composition.infra.test.ts` · `src/tests/agent-roster.infra.test.ts` · `src/tests/deepseek-exec*.test.ts` · the ledger directory (wherever it resolves). Reads of these remain allowed except where C.1.5 denies them. Block code `PATH_DENIED`.
+5. **Secret fence (G5).** Read-denied globs: `.env`, `.env.*`, `*.key`, `*.pem`, `*.p12`, `*.pfx`, `**/secrets/**` — code `SECRET_DENIED`. Every string that enters a model message OR a ledger record passes redaction: `sk-[A-Za-z0-9_-]{16,}` · `AIza[0-9A-Za-z_-]{30,}` · `gh[pousr]_[A-Za-z0-9]{30,}` · the password segment of any `postgres(ql)?://user:pass@` URL · `(api[_-]?key|secret|token|password)\s*[=:]\s*["']?[^\s"']{8,}` (case-insensitive) · the literal current values of `DEEPSEEK_API_KEY` and `DATABASE_URL`. Replacement text is `[REDACTED]`. `DEEPSEEK_API_KEY` is read from the environment only and never appears in stdout, a prompt or the ledger.
+6. **Read-before-write (G3) + staleness (G4).** `write_file`/`edit_file` on an EXISTING file require a `read_file` of that path earlier in the same run (`NOT_READ`), and the file's sha256 + mtime must equal the values captured at that read (`STALE`). Creating a new file needs no prior read. An edit whose `old_string` matches zero or more than one location fails (`NO_MATCH` / `AMBIGUOUS_MATCH`) — never guesses.
+7. **Read-only bash by construction (G1, F10).** `run_bash_command` takes an **argv array, never a shell string**; it is matched against the allowlist in `exec-policy.json` (C.4) deny-by-default. Every flag must be individually allowlisted for that argv form. No tree-mutating command is allowlisted in v1. There is no redirect, no pipe, no `&&`, no background spawn, no `cwd` override — the cwd is always the repo root.
+8. **Commit fences (G9).** Commits happen ONLY through `git_commit`. Bash argv `git commit …`, `git add …`, `git push`, `git reset`, `git checkout`, `git restore`, `git stash`, `git clean`, `git rebase`, `git merge` are unmatched by the allowlist and therefore blocked. `git_commit` stages **only the enumerated `paths`**, each of which must be the target of a successful `write_file`/`edit_file` record earlier in the run (`PATH_NOT_LEDGERED`) — `git add -A`/`-u`/`.` do not exist as a code path. Any of `--no-verify`, `-n`, `--amend`, `--allow-empty`, `--no-gpg-sign` in `args` ⇒ **the whole call is REFUSED and ledgered** (`FLAG_REFUSED`), never stripped and retried. A single-committer advisory lock (`<ledger_dir>/committer.lock`, `O_EXCL`, holds `{pid, run_id, repo_root, ts}`; stale if the pid is dead) must be held for the duration of the commit — contention ⇒ `COMMITTER_BUSY`.
+9. **Budgets (G6/G8).** `max_iterations` (default 40), `max_total_tokens` (default 400 000), per-command `timeout_ms` (default 600 000, ceiling 1 200 000), bash output cap 64 KiB per stream, `read_file` cap 256 KiB, `write_file` cap 512 KiB. Exceeding a budget ends the run with status `budget_exhausted`.
+10. **Fail closed on a malformed call.** A tool call whose name is unknown, whose arguments do not validate against C.2, or whose JSON does not parse ⇒ an `error` record with code `MALFORMED_TOOL_CALL` and the run aborts with status `aborted`. The engine never improvises a repair.
+
+### C.2 Tool-call contract (v1 — five tools, every one returns `{ ok: true, … }` or `{ ok: false, error: { code, message } }`)
+
+| Tool | Arguments (JSON schema, `additionalProperties: false`) | Success shape | Error codes (beyond C.1's) |
+|---|---|---|---|
+| `read_file` | `{ path: string, offset?: int ≥ 1, limit?: int ≥ 1, reason: string }` | `{ path, content, sha256, mtime_ms, lines_total, truncated: bool }` — content is the requested window; `sha256`/`mtime_ms` are of the WHOLE file and are what C.1.6 later re-checks | `NOT_FOUND`, `IS_DIRECTORY`, `TOO_LARGE` |
+| `grep_files` | `{ pattern: string (ERE), path?: string, glob?: string, max_results?: int (default 200, ceiling 1000), reason: string }` | `{ matches: [{ path, line, text }], truncated: bool }` — implemented over `git grep -n -I -E --untracked`; results under a C.1.5 glob are dropped, every `text` is redacted | `BAD_PATTERN` |
+| `write_file` | `{ path: string, content: string, reason: string }` | `{ path, bytes, sha256, created: bool }` — full overwrite; the new sha256/mtime replace the read-state so a later edit in the same run is not `STALE` | `NOT_READ`, `STALE`, `TOO_LARGE` |
+| `edit_file` | `{ path: string, old_string: string, new_string: string, replace_all?: bool, reason: string }` | `{ path, replacements, sha256 }` — exact-string match; `replace_all: false` (default) requires exactly one occurrence | `NOT_READ`, `STALE`, `NO_MATCH`, `AMBIGUOUS_MATCH` |
+| `run_bash_command` | `{ argv: string[] (≥ 1), timeout_ms?: int, reason: string }` | `{ exit_code, stdout, stderr, truncated: bool, duration_ms }` — spawned with `shell: false`, cwd = repo root, env = the parent env minus every `GIT_*` and `DEEPSEEK_*` variable | `COMMAND_NOT_ALLOWED`, `FLAG_NOT_ALLOWED`, `TIMEOUT` |
+| `git_commit` | `{ message: string, paths: string[] (≥ 1), args?: string[], reason: string }` | `{ sha, files: string[] }` — runs `git add -- <paths>` then `git commit -m <message> [args]` through the husky hooks; the engine appends a trailer line `Executed-By: deepseek-exec <model> run=<run_id>` to `message` | `PATH_NOT_LEDGERED`, `FLAG_REFUSED`, `COMMITTER_BUSY`, `HOOK_FAILED` (the hook's exit code + last 64 KiB of its output are in the record) |
+
+`reason` is mandatory on every tool: it is the model's stated intent, recorded verbatim (redacted) in the ledger (G7). The tool list is closed — v1 has no `delete_file`, no `move_file`, no network tool; a step that needs one is a Claude-provider step (§B).
+
+### C.3 Ledger record schema (`<ledger_dir>/<run_id>.jsonl`, one JSON object per line, append-only)
+
+`ledger_dir` = `$BUILDO_EXEC_LEDGER_DIR` if set, else `%LOCALAPPDATA%/buildo-exec-runs` (Windows) / `~/.local/share/buildo-exec-runs` (POSIX) — **outside the repo by design (F11)**, opened with flag `'a'` (`O_APPEND | O_CREAT`); the writer has no truncate, rename or delete path. `run_id` = `<UTC yyyymmddThhmmssZ>-<8 hex>`.
+
+Common fields on every record: `{ v: 1, run_id, seq (1-based, gap-free), ts (ISO-8601 UTC), kind }`.
+
+| `kind` | Additional fields |
+|---|---|
+| `run_start` | `provider` (`deepseek`\|`claude`), `provider_source` (`flag`\|`env`\|`default`\|`fallback:<reason>`), `model`, `repo_root`, `head_sha`, `branch`, `brief_path`, `brief_sha256`, `policy_sha256`, `budgets: { max_iterations, max_total_tokens }`, `engine_version` |
+| `model_turn` | `iteration`, `usage: { prompt_tokens, completion_tokens, total_tokens }`, `tool_calls: int`, `finish_reason`, `assistant_text` (redacted, ≤ 4 KiB) |
+| `tool_call` | `iteration`, `tool`, `call_id`, `args` (redacted; `content`/`new_string` replaced by `{ bytes, sha256 }`), `reason`, `status: ok\|error\|blocked`, `error?: { code, message }`, `duration_ms`, `result_summary` (tool-specific: bytes/sha256 for reads and writes; `exit_code`+`truncated` for bash; `sha` for commits), **`pre` and `post`** (see below) |
+| `kill` | `sentinel_path` |
+| `error` | `code`, `message`, `iteration?` — engine-level faults (`MALFORMED_TOOL_CALL`, `PROVIDER_ERROR`, `LEDGER_WRITE_FAILED` is never ledgered — it is the abort) |
+| `run_end` | `status: completed\|aborted\|killed\|budget_exhausted\|delegated_to_claude\|hook_failed`, `iterations`, `usage_total`, `tool_calls_total`, `blocked_total`, `commits: string[]`, `duration_ms` |
+
+**`pre` / `post` worktree capture (F10)** — present on EVERY `tool_call` whose tool is `write_file`, `edit_file`, `run_bash_command` or `git_commit`, captured immediately before and after the handler: `{ status_porcelain: string (verbatim `git status --porcelain`, ≤ 16 KiB), status_sha256, diff_sha256 (sha256 of `git diff HEAD`), head_sha }`. Reconciliation rule (exit criterion #2): a `write_file`/`edit_file` record's pre→post delta names exactly its `path`; a `run_bash_command` record's delta is EMPTY; a `git_commit` record's delta is confined to its `paths` plus `lint-staged` formatting of those same paths, and `head_sha` advances. Any other delta is a fence breach.
+
+### C.4 Policy file (`scripts/lib/exec-policy.json`) — the allowlist is DATA, the denylist is CODE
+
+```json
+{
+  "v": 1,
+  "bash_allow": [
+    { "argv": ["npm", "run", "typecheck"] },
+    { "argv": ["npm", "run", "lint"] },
+    { "argv": ["npm", "run", "test"] },
+    { "argv": ["npx", "vitest", "run", "<path>..."], "flags": ["--run"] },
+    { "argv": ["npx", "vitest", "related", "<path>..."], "flags": ["--run"] },
+    { "argv": ["git", "status", "--porcelain"] },
+    { "argv": ["git", "diff"], "flags": ["--cached", "--stat", "--", "<path>..."] },
+    { "argv": ["git", "log"], "flags": ["--oneline", "-n", "<int>", "-p", "--stat", "--follow", "--", "<path>..."] },
+    { "argv": ["git", "show", "<rev>"], "flags": ["--stat", "--", "<path>..."] },
+    { "argv": ["git", "blame", "<path>"], "flags": ["-L", "<range>"] },
+    { "argv": ["node", "<validator>"], "flags": ["--check", "--step=<slug>", "--all", "--fast"] }
+  ],
+  "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
+  "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
+  "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
+}
+```
+
+Matching rules: literal tokens match exactly, by position; `<path>` is one repo-confined, non-denied path; `<path>...` one or more; `<rev>` matches `^([0-9a-f]{4,40}|HEAD(~[0-9]+)?)$`; `<int>` matches `^[0-9]{1,5}$`; `<range>` matches `^[0-9]+,[0-9]+$`; `<slug>` matches `^[a-z0-9_]+$`; `<validator>` must be a member of `validators`. Any token beginning with `-` that is not in the entry's `flags` ⇒ `FLAG_NOT_ALLOWED` (`--fix`, `--write`, `--output`, `--reporter`, `--outputFile`, `-C`, `--git-dir`, `--work-tree`, `-c` are therefore all rejected without being named — the Cross-read collision "a path-confinement rule and an allowlist entry each safe alone" is closed by positional matching: `git -C ../x status` fails at position 1). Policy is loaded once at `run_start`, its sha256 ledgered; the file is on the C.1.4 denylist, so the model cannot widen it mid-run.
+
+### C.5 Loop, kill switch and provider
+
+* **Loop.** `brief → system prompt (this section's tool list + the brief) → model turn → for each tool_call: kill check → handler → ledger → tool result → next turn` until the model returns no tool calls (`completed`), a budget trips, a fault aborts, or the sentinel appears. The model client is an interface (`next(messages, tools) → assistant message`) with two implementations: `deepseek` (OpenAI-compatible `chat.completions` with `tools`, model `DEEPSEEK_EXEC_MODEL` default `deepseek-chat`) and `transcript` (replays a recorded JSON array of assistant turns — **every lock runs on this; no lock may need a live API call**).
+* **Kill switch.** Sentinel files `<ledger_dir>/KILL` (all runs) and `<ledger_dir>/<run_id>.kill` (one run). Checked per C.1.2. Removing the sentinel does not resume a killed run.
+* **Provider (§B).** Precedence `--provider` > `EXECUTION_PROVIDER` > default `claude`; an unknown value resolves to `claude` and the downgrade + reason land in `run_start.provider_source`. With provider `claude` the engine writes `run_start` + `run_end{status: delegated_to_claude}` and executes nothing — the Claude session is the executor.
+* **CLI.** `node scripts/deepseek-exec.js --brief <file> [--provider=deepseek|claude] [--model <id>] [--max-iterations <n>] [--transcript <file>] [--ledger-dir <dir>]`. The entry throws on any fault; a thin wrapper sets `process.exitCode` (no `process.exit()`). Exit code 0 only for `completed`/`delegated_to_claude`.
+
+
 ## 3. The roster
 
 The full assurance roster — one heterogeneous menu, each role defined by **the one question no other role asks**. Isolation defaults to a worktree; the roles that must see live state run in the **main tree** (+ live DB where noted). §5 gives each role's deeper rationale, dependencies, and fire-conditions; §6 the domain rosters; §7 the composition rules; §10 the copy-paste spawn templates.
@@ -253,7 +334,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
 ---
 
 ## 8. Operating Boundaries
-**Target files:** `scripts/gemini-review.js`, `scripts/deepseek-review.js`, this spec, `CLAUDE.md` §Review Agent Reference, `scripts/CLAUDE.md` §Multi-Agent Review, `.claude/workflows.md` panel steps, `.claude/agents/*.md`, `docs/specs/00_claude_code_operating_model.md` (§0.4 drift), `src/tests/agent-roster.infra.test.ts`, and `scripts/deepseek-exec.js` *(PLANNED — SUB-ENG-1)*.
+**Target files:** `scripts/gemini-review.js`, `scripts/deepseek-review.js`, this spec, `CLAUDE.md` §Review Agent Reference, `scripts/CLAUDE.md` §Multi-Agent Review, `.claude/workflows.md` panel steps, `.claude/agents/*.md`, `docs/specs/00_claude_code_operating_model.md` (§0.4 drift), `src/tests/agent-roster.infra.test.ts`, and `scripts/deepseek-exec.js`, `scripts/lib/exec-tools.js`, `scripts/lib/exec-ledger.js`, `scripts/lib/exec-policy.json`, `src/tests/deepseek-exec.infra.test.ts`, `src/tests/deepseek-exec-fences.infra.test.ts` *(SUB-ENG-1 — §C contract landed; engine PLANNED until Phase 4 exit criteria)*.
 **Out of scope:** the workflow *sequencing* (owned by `.claude/workflows.md`); lesson-routing (Spec 05); the husky footgun/migration gates (deterministic, not agents); `scripts/run-chain.js` (orchestrates pipeline data steps, not WF tasks — never a toggle host, §B).
 **Cross-spec dependencies:** Spec 05 (knowledge operating model / lesson routing), Spec 47/48 (pipeline observability contracts the Observability agent checks), Spec 01 (DB schema the Schema-Fidelity agent checks against), Spec 00 (system map), Spec 122/124 (consumers of this spec's panel roster).
 
