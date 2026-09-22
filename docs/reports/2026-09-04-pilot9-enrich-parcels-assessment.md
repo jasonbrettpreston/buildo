@@ -936,7 +936,7 @@ fast invariant #26 (COUNTER-ROOT), which REDs any declared counter source whose 
 | G3 | 1 | 2 | table rows=10 vocab-hit rows=9 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 18 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 19 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=3 it-count=91 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -970,11 +970,12 @@ fast invariant #26 (COUNTER-ROOT), which REDs any declared counter source whose 
 - compare ran: true · diffs found: 584 · unexplained: 0
 
 ### Test suite (item iii)
-- 1338/1338 passed (suite success=true)
+- 1344/1345 passed (suite success=false)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
