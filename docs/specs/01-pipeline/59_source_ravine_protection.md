@@ -504,6 +504,8 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 | Spec 58 | Pattern model; L11 cross-WF serialization; potential reuse of `scripts/lib/geometry-validator.js` |
 | Spec 43 | Chain step placement (§8c/§8d) |
 | Spec 42 | CoA JOIN path for §8e |
+| Spec 65 §4 | `is_in_ravine_protection_area` drives the max-build pass's `envelope_constraint_reason='ravine_constrained'` withheld-envelope class (this spec's own DATA, downstream logic owned by Spec 65) |
+| Spec 43 §25 | `assert_parcel_sanity`'s gated tripwire that a `ravine_constrained` parcel must never carry a priced line — `ravine_constrained_carries_priced_cost` (max-build fields) + `ravine_constrained_carries_priced_reno` (WF3 S0.3, 2026-09-21 — the reno-line half of the SAME withheld-envelope contract: `cost_gut_total`/`cost_addition_total`/`parcel_cost_menu`'s `gut`/`addition` keys) |
 - `scripts/load-permits.js` — referenced only for schema-as-built context (intro); not modified by this spec.
 - `scripts/load-parcels.js` — referenced only for chain-ordering context (`load_ravines` AFTER `parcels` slug, §8c) and migration-numbering context; not modified by this spec.
 - `scripts/link-parcels.js` — referenced only for chain-ordering context (`enrich_ravines` AFTER `link_parcels` slug, §8d); not modified by this spec.

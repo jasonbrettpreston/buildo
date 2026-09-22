@@ -90,6 +90,7 @@ Predicted **before** capture:
 
 **Measured, actual diff count: 260 (sources), 261 (standalone) — 0 unexplained.** Two Class-A diffs were NOT predicted in advance and are recorded here, corrected, rather than silently folded into the predicted list:
 - **(viii) `audit_table.phase` changes `107` → `25`.** Legacy hardcoded `phase: ADVISORY_LOCK_ID` (the lock id, 107); the converted step's `resolvePhase()` reads `sharing.varies_by_chain.phase.sources` (25, the manifest chain POSITION) — matching every sibling ASSERT descriptor's own convention (`assert_data_bounds`: 22/11/27/5, none of which are lock ids either). Correct, not a defect.
+- **(ix) WF3 S0.3 (2026-09-22) recapture — 8 differences measured** across `rows` (3, in `summary.records_meta.audit_table`) and `invariants` (1, in the golden `invariants.json` file — each of the 2 recaptured files, `sources.json`/`standalone.json`, contributing one `invariants[8]` diff and 3 `rows[51..53]` diffs = 8 total), all structural additions from this commit's own 3 new checks + 1 new invariant, none a Class B data-drift regression: the 3 new `rows` entries (`existing_structure_shared_with_other_parcel`, `existing_structure_borrowed_primary`, `ravine_constrained_carries_priced_reno`) land at the array's new tail per the SAME "declaration-order, `extraRows` last" convention item (vii) above already documents — byte-for-byte the identical mechanism, not a new one. The 1 new `invariants` entry (`existing_structure_onlot_share_low`) is appended after the 8 pre-existing `dist_*` distribution rows in the same file. All 4 are genuinely new declared checks this commit adds, not drift in an existing one.
 - **(ix) `records_total`/`records_new`/`records_updated` go `1`/`0`/`0` → `null`/`null`/`null`.** The generic runner's ASSERT/Observer convention (`counters: "none"`) — matches `assert_data_bounds`/`assert_global_coverage`'s own precedent, not predicted in the plan's draft list but consistent with "records_total: 1 for an Observer — already the estate's ASSERT shape" (§1) being wrong about the literal value (it is `null`, not `1`, once counters:"none" applies generically — the plan's own text under-specified this).
 - **(x) `meta[0].reads.parcels` list** changes from the 24 pre-conversion columns to the 33 measured ones (APS-D1, already explained at commit 1).
 
@@ -183,7 +184,7 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 - compare ran: true · diffs found: 521 · unexplained: 0
 
 ### Test suite (item iii)
-- 1338/1338 passed (suite success=true)
+- 1358/1358 passed (suite success=true)
 - harvested: 23 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0

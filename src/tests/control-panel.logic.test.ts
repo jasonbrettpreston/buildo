@@ -455,6 +455,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'parcel_sanity_lowrise_cost_fb_max_cad', 'parcel_sanity_cost_addition_max_cad', 'parcel_sanity_dim_lot_tolerance_m', 'parcel_sanity_gfa_coherence_tolerance_sqm',
   'parcel_sanity_cost_coherence_tolerance_cad', 'parcel_sanity_greenspace_tolerance_sqm', 'parcel_sanity_realized_fsi_p90_min', 'parcel_sanity_realized_fsi_p90_max',
   'parcel_sanity_distribution_percentile', 'parcel_sanity_distribution_median_multiplier', 'parcel_sanity_distribution_median_floor',
+  // WF3 S0.3 (2026-09-21) — existing_structure_onlot_share_low's zone-aware floors.
+  'parcel_sanity_onlot_share_rd_min', 'parcel_sanity_onlot_share_attached_min',
   // Batch-2 row 2.4 (2026-09-21, compute_parcel_cost_estimates) — 19 new vars: the 3 EXISTING
   // migration-205-seeded keys added to this seed file for the first time (§0.6 refutation —
   // they existed live but a fresh cloud seed apply would have left them unset) + 16 new

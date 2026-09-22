@@ -282,6 +282,8 @@ const GROUP_ORDER = [
       "parcel_sanity_distribution_percentile",
       "parcel_sanity_distribution_median_multiplier",
       "parcel_sanity_distribution_median_floor",
+      "parcel_sanity_onlot_share_rd_min",
+      "parcel_sanity_onlot_share_attached_min",
       "enrich_ravines_distance_plausible_min_magnitude_m",
       "enrich_ravines_distance_plausible_max_m",
       "enrich_ravines_distance_collapse_floor_m"

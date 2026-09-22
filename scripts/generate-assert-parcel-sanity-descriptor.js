@@ -69,7 +69,7 @@ const PARCELS_COLUMNS = [
   'opt_coa_gfa_sqm', 'opt_coa_storeys', 'realized_fsi_p90', 'zoning_class',
 ].sort();
 
-function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured) {
+function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS = []) {
   const checks = CHECK_DEFS.map((def) => ({
     id: def.id,
     kind: 'bound',
@@ -80,6 +80,12 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured) {
     when: 'post',
     chains: ['sources'],
     accept_until: 'none',
+    // S0.3 (WF3 existing-structure-area-artifacts, 2026-09-21, Decision 3: R-H + Spec 48
+    // §4.9 — WARN + a declared machine-observable retighten_when, never FAIL, never
+    // INFO-by-taste) — only present on defs that declare one; every existing def is
+    // unaffected (the key is simply absent, matching every other severity:"WARN" row
+    // fleet-wide that has no retighten_when of its own, e.g. structure_class_link_rate_warn).
+    ...(def.retightenWhen ? { retighten_when: def.retightenWhen } : {}),
     why: checkWhy(def),
   }));
 
@@ -206,7 +212,12 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured) {
     },
 
     checks,
-    invariants: 'none',
+    // S0.3 — validate_only invariants (the link-parcel-addresses `missed_link_count`
+    // precedent shape: source:"invariant", frequency:"validate_only", a declared
+    // statement_timeout, real last_measured from a live execution). Empty array stays
+    // 'none' (fleet convention: no declared invariants[] renders as the string 'none',
+    // never an empty array — see e.g. compute-parcel-cost-estimates.descriptor.json).
+    invariants: INVARIANT_DEFS.length ? INVARIANT_DEFS : 'none',
     plausibility,
 
     emits: [
@@ -338,13 +349,13 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured) {
 module.exports = { buildDescriptor, PARCELS_COLUMNS };
 
 if (require.main === module) {
-  const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS } = require('./lib/assert-parcel-sanity-fields');
+  const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, INVARIANT_DEFS } = require('./lib/assert-parcel-sanity-fields');
   if (!fs.existsSync(DIST_MEASURED_PATH)) {
     console.error(`[generate-assert-parcel-sanity-descriptor] missing ${DIST_MEASURED_PATH} — run scripts/one-time/measure-assert-parcel-sanity-distribution.js first to capture real last_measured values.`);
     process.exit(1);
   }
   const distMeasured = JSON.parse(fs.readFileSync(DIST_MEASURED_PATH, 'utf8'));
-  const descriptor = buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured);
+  const descriptor = buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS || []);
   const rendered = `${JSON.stringify(descriptor, null, 2)}\n`;
 
   if (process.argv.includes('--check')) {
@@ -357,13 +368,13 @@ if (require.main === module) {
     const checkPath = checkAgainstArg ? checkAgainstArg.slice('--check-against='.length) : OUT;
     const committed = fs.existsSync(checkPath) ? fs.readFileSync(checkPath, 'utf8') : null;
     if (committed === rendered) {
-      console.log(`[generate-assert-parcel-sanity-descriptor] clean — no drift (${descriptor.checks.length} checks, ${descriptor.plausibility.length} plausibility, ${descriptor.config.logic_variables.length} logic_variables)`);
+      console.log(`[generate-assert-parcel-sanity-descriptor] clean — no drift (${descriptor.checks.length} checks, ${Array.isArray(descriptor.invariants) ? descriptor.invariants.length : 0} invariants, ${descriptor.plausibility.length} plausibility, ${descriptor.config.logic_variables.length} logic_variables)`);
     } else {
       console.error(`[generate-assert-parcel-sanity-descriptor] DRIFT — ${checkPath} is stale relative to the live tree. Run \`node scripts/generate-assert-parcel-sanity-descriptor.js\` to regenerate.`);
       process.exitCode = 1;
     }
   } else {
     fs.writeFileSync(OUT, rendered, 'utf8');
-    console.log(`Wrote ${OUT} (${descriptor.checks.length} checks, ${descriptor.plausibility.length} plausibility, ${descriptor.config.logic_variables.length} logic_variables)`);
+    console.log(`Wrote ${OUT} (${descriptor.checks.length} checks, ${Array.isArray(descriptor.invariants) ? descriptor.invariants.length : 0} invariants, ${descriptor.plausibility.length} plausibility, ${descriptor.config.logic_variables.length} logic_variables)`);
   }
 }

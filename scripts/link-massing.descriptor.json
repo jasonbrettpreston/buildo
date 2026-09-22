@@ -693,6 +693,25 @@
         "text": "R-T addendum, commit 3 — the ONE plausibility candidate this pass identifies (Archetype table: 'centroid freshness vs. compute_centroids, the 1 live seam pair'). No exact SQL was pinned anywhere in the plan text for this candidate, so this is my own construction, grounded directly in the join's own eligibility predicate: scripts/lib/compute/link-massing.js:101 declares PARCEL_ELIGIBILITY = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL' as a structural precondition for a parcel to be linkable at all — a PRIMARY link on a parcel with a NULL centroid is therefore impossible under normal operation, making this a genuine cross-table PHYSICAL-BOUND (Fold A-5), not TELEMETRY-ONLY: it checks an invariant relationship between link_massing's own write (parcel_buildings.is_primary) and a DIFFERENT step's column (parcels.centroid_lat/lng, written by compute_centroids), the exact shape plausibility[] exists for. Measured 0 (matches expectation). Not the formal chain_run_id-based seam-validation MECHANISM (that lands at commit 5, R-U/Fold B-5) — this is the descriptor-side plausibility declaration Fold A-5 asked commit 3 to land alongside LM-D6/LM-D11's severity fix; commit 5's seam pass is a structurally different, RUN-level freshness comparison, not a duplicate of this row-level check.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-massing.js" }
       }
+    },
+    {
+      "id": "borrowed_primary_links",
+      "sql": "SELECT count(*)::int AS viol FROM parcel_buildings pb1 WHERE pb1.is_primary AND pb1.match_type = 'nearest' AND EXISTS (SELECT 1 FROM parcel_buildings pb2 WHERE pb2.building_id = pb1.building_id AND pb2.is_primary AND pb2.parcel_id <> pb1.parcel_id)",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows — closes when the overlap-only fallback narrowing (Spec 56 §3 new subsection, slice 1) retires the disjoint nearest matches that fabricate a borrowed primary; the surviving genuinely-overlapping nearest links resolve to a real apportioned share instead.",
+      "last_measured": {
+        "value": 101799, "at": "2026-09-22T00:00:00.000Z", "commit": "06dcd330", "cost_ms": 153, "sample_n": 1,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "S0.3 (WF3 existing-structure-area-artifacts, 2026-09-21) — LINK_MASSING's OWN visibility into the class assert_parcel_sanity's existing_structure_borrowed_primary observes downstream (Spec 56 §3): a `match_type='nearest'` primary link whose building is ALSO primary for >=1 other parcel — the bounded fallback attributing a neighbour's building to this parcel as its own primary (ES-2: 'a low link may be a neighbour's building'). Unscoped over ALL of parcel_buildings (not just valued/cur_floor_gfa_sqm-bearing parcels, the way assert_parcel_sanity's sibling check is), matching §0.2's own grounding figure exactly (101,799). WARN + retighten_when (R-H) — a structural property of the bounded nearest fallback, not a defect this run introduces. Closes review_followups.md:3123 from the PRODUCING step's own side, not only the consuming sanity audit's.",
+        "liveness": { "kind": "table", "ref": "parcel_buildings" }
+      }
     }
   ],
 

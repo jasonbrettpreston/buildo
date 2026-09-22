@@ -33,21 +33,24 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
     expect(descriptor.identity.archetype).toBe('ASSERT');
   });
 
-  it('exactly 42 checks[], 8 plausibility[], invariants "none" (Ask A1)', () => {
-    expect(descriptor.checks).toHaveLength(42);
+  it('exactly 45 checks[] (42 + S0.3\'s 3), 8 plausibility[], 1 invariants[] (S0.3\'s validate_only on-lot-share row)', () => {
+    expect(descriptor.checks).toHaveLength(45);
     expect(descriptor.plausibility).toHaveLength(8);
-    expect(descriptor.invariants).toBe('none');
+    expect(descriptor.invariants).toHaveLength(1);
+    expect(descriptor.invariants[0].id).toBe('existing_structure_onlot_share_low');
+    expect(descriptor.invariants[0].frequency).toBe('validate_only');
   });
 
-  it('the 12 gate ids carry severity FAIL, the rest WARN or INFO (statusFor parity)', () => {
+  it('the 13 gate ids carry severity FAIL, the rest WARN or INFO (statusFor parity)', () => {
     const gateIds = new Set([
       'max_build_dim_below_floor', 'maxbuild_stories_basis_existing_retired',
       'bylaw_height_per_storey_impossible', 'max_build_dim_exceeds_lot_dim',
       'ravine_constrained_carries_priced_cost', 'opt_aor_gfa_gt_opt_coa_gfa',
       'new_build_cost_gt_coa_build_cost', 'footprint_gt_lot_x105', 'existing_floor_gt_lot_x105',
       'heritage_basis_footprint_gt_lot', 'cost_fb_on_footprint_gt_lot', 'opt_aor_gfa_gt_max_buildable_gfa',
+      'ravine_constrained_carries_priced_reno',
     ]);
-    expect(gateIds.size).toBe(12);
+    expect(gateIds.size).toBe(13);
     for (const c of descriptor.checks) {
       if (gateIds.has(c.id)) expect(c.severity, c.id).toBe('FAIL');
       else expect(c.severity, c.id).not.toBe('FAIL');
@@ -61,12 +64,14 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
     }
   });
 
-  it('37 logic_variables declared (35 new parcel_sanity_* + 2 reused), all on_invalid:"fail"', () => {
-    expect(descriptor.config.logic_variables).toHaveLength(37);
+  it('39 logic_variables declared (37 new parcel_sanity_* [35 + S0.3\'s 2] + 2 reused), all on_invalid:"fail"', () => {
+    expect(descriptor.config.logic_variables).toHaveLength(39);
     const names = descriptor.config.logic_variables.map((v: { name: string }) => v.name);
     expect(names).toContain('max_build_min_dimension_m');
     expect(names).toContain('mislink_footprint_lot_tol');
-    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(35);
+    expect(names).toContain('parcel_sanity_onlot_share_rd_min');
+    expect(names).toContain('parcel_sanity_onlot_share_attached_min');
+    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(37);
     for (const v of descriptor.config.logic_variables) expect(v.on_invalid, v.name).toBe('fail');
   });
 
@@ -103,27 +108,28 @@ describe('assert_parcel_sanity — descriptor generator drift lock (both directi
   const GENERATOR_PATH = path.join(ROOT, 'scripts/generate-assert-parcel-sanity-descriptor.js');
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS generator
   const { buildDescriptor } = require(GENERATOR_PATH) as {
-    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[], distDefs: unknown[], distMeasured: unknown) => unknown;
+    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[], distDefs: unknown[], distMeasured: unknown, invariantDefs?: unknown[]) => unknown;
   };
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS } = require('../../../../scripts/lib/assert-parcel-sanity-fields.js') as {
+  const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, INVARIANT_DEFS } = require('../../../../scripts/lib/assert-parcel-sanity-fields.js') as {
     CHECK_DEFS: Array<{ id: string } & Record<string, unknown>>;
     LOGIC_VAR_DEFS: unknown[];
     DIST_DEFS: unknown[];
+    INVARIANT_DEFS: unknown[];
   };
   const DIST_MEASURED_PATH = path.join(ROOT, 'scripts/quality/generated/assert-parcel-sanity.dist-measured.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const distMeasured = require(DIST_MEASURED_PATH);
 
   it('regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)', () => {
-    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured), null, 2)}\n`;
+    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS), null, 2)}\n`;
     const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
     expect(regenerated).toBe(committed);
   });
 
   it('the drift lock is not vacuous: a mutated in-memory CHECK_DEFS fixture produces a descriptor that differs from the committed file', () => {
     const mutated = CHECK_DEFS.map((d, i) => (i === 0 ? { ...d, id: `${d.id}_mutated_for_drift_lock_test` } : d));
-    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured), null, 2)}\n`;
+    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS), null, 2)}\n`;
     const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
     expect(regenerated).not.toBe(committed);
   });
@@ -161,16 +167,50 @@ describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fields = require('../../../../scripts/lib/assert-parcel-sanity-fields.js');
 
-  it('CHECK_DEFS has exactly 42 unique ids, 12 gates', () => {
-    expect(fields.CHECK_DEFS).toHaveLength(42);
+  it('CHECK_DEFS has exactly 45 unique ids (42 + S0.3\'s 3), 13 gates (+1, ravine_constrained_carries_priced_reno)', () => {
+    expect(fields.CHECK_DEFS).toHaveLength(45);
     const ids = fields.CHECK_DEFS.map((c: { id: string }) => c.id);
-    expect(new Set(ids).size).toBe(42);
-    expect(fields.CHECK_DEFS.filter((c: { gate: boolean }) => c.gate)).toHaveLength(12);
+    expect(new Set(ids).size).toBe(45);
+    expect(fields.CHECK_DEFS.filter((c: { gate: boolean }) => c.gate)).toHaveLength(13);
   });
 
-  it('LOGIC_VAR_DEFS has exactly 35 entries, all prefixed parcel_sanity_', () => {
-    expect(fields.LOGIC_VAR_DEFS).toHaveLength(35);
+  it('S0.3 (WF3 existing-structure-area-artifacts, 2026-09-21) — the 3 new checks are declared with retighten_when (WARN, never FAIL) except the ravine-reno gate', () => {
+    const shared = fields.CHECK_DEFS.find((c: { id: string }) => c.id === 'existing_structure_shared_with_other_parcel');
+    const borrowed = fields.CHECK_DEFS.find((c: { id: string }) => c.id === 'existing_structure_borrowed_primary');
+    const ravineReno = fields.CHECK_DEFS.find((c: { id: string }) => c.id === 'ravine_constrained_carries_priced_reno');
+    expect(shared, 'existing_structure_shared_with_other_parcel must be declared').toBeTruthy();
+    expect(shared.gate).toBe(false);
+    expect(typeof shared.retightenWhen).toBe('string');
+    expect(borrowed, 'existing_structure_borrowed_primary must be declared').toBeTruthy();
+    expect(borrowed.gate).toBe(false);
+    expect(typeof borrowed.retightenWhen).toBe('string');
+    expect(ravineReno, 'ravine_constrained_carries_priced_reno must be declared').toBeTruthy();
+    expect(ravineReno.gate).toBe(true);
+    expect(ravineReno.sev).toBe('HIGH');
+    // FOLD-RC3 — a SEPARATE id from its sibling, never a widening of it.
+    const sibling = fields.CHECK_DEFS.find((c: { id: string }) => c.id === 'ravine_constrained_carries_priced_cost');
+    expect(sibling).toBeTruthy();
+    expect(sibling.id).not.toBe(ravineReno.id);
+  });
+
+  it('LOGIC_VAR_DEFS has exactly 37 entries (35 + S0.3\'s 2 onlot-share zone floors), all prefixed parcel_sanity_', () => {
+    expect(fields.LOGIC_VAR_DEFS).toHaveLength(37);
     for (const v of fields.LOGIC_VAR_DEFS) expect(v.name.startsWith('parcel_sanity_'), v.name).toBe(true);
+    const rd = fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_rd_min');
+    const attached = fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_attached_min');
+    expect(rd.default).toBe(0.90);
+    expect(attached.default).toBe(0.50);
+  });
+
+  it('INVARIANT_DEFS has exactly 1 entry (existing_structure_onlot_share_low), frequency:"validate_only", real (non-invented) last_measured', () => {
+    expect(fields.INVARIANT_DEFS).toHaveLength(1);
+    const inv = fields.INVARIANT_DEFS[0];
+    expect(inv.id).toBe('existing_structure_onlot_share_low');
+    expect(inv.frequency).toBe('validate_only');
+    expect(inv.severity).toBe('WARN');
+    expect(typeof inv.sql).toBe('string');
+    expect(inv.last_measured.value).toBeGreaterThan(0);
+    expect(inv.last_measured.cost_ms).toBeGreaterThan(0);
   });
 
   it('every applies()/bad() function is callable given a full config object', () => {
