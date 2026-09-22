@@ -22,7 +22,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
   makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv,
 } from './helpers/deepseek-exec-harness';
@@ -460,5 +460,151 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       expect(stillAlive).toBe(false);
       expect(fs.existsSync(path.join(repo, 'sleep.done'))).toBe(false);
     }, 20000);
+  });
+
+  // =========================================================================
+  // Commit 10 — git_commit fences (G9)
+  // =========================================================================
+  describe('commit 10: git_commit — refused flags, never stripped-and-retried', () => {
+    it('args:["--no-verify"] is refused (FLAG_REFUSED) and NOTHING executes — no git operation, no ledgered write required first', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'nope', paths: ['seed.txt'], args: ['--no-verify'], reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'FLAG_REFUSED' } });
+    });
+  });
+
+  describe('commit 10: git_commit — the happy path, and PATH_NOT_LEDGERED', () => {
+    it('write_file then git_commit succeeds; `git log -1` in the temp repo shows the Executed-By trailer; HEAD advances', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'committed-by-engine.txt', content: 'hello\n', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'engine commit', paths: ['committed-by-engine.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const call = toolCallOf(records, 'git_commit') as { status?: string; result_summary?: { sha: string }; pre?: { head_sha: string }; post?: { head_sha: string } } | undefined;
+      expect(call?.status).toBe('ok');
+      expect(call?.post?.head_sha).not.toBe(call?.pre?.head_sha); // HEAD advanced
+      const log = execFileSync('git', ['log', '-1', '--format=%B'], { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' });
+      expect(log).toContain('Executed-By: deepseek-exec');
+      expect(log).toContain(summary.run_id);
+    });
+
+    it('git_commit with a path never written this run ⇒ PATH_NOT_LEDGERED', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'x', paths: ['seed.txt'], reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'PATH_NOT_LEDGERED' } });
+    });
+  });
+
+  describe('commit 10: git_commit — single-committer advisory lock', () => {
+    it('a committer lock already held by a LIVE pid ⇒ COMMITTER_BUSY', async () => {
+      const lockPath = path.join(ledgerDir, 'committer.lock');
+      fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'other-run', repo_root: repo, ts: new Date().toISOString() }));
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'blocked-by-lock.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'x', paths: ['blocked-by-lock.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'COMMITTER_BUSY' } });
+      fs.rmSync(lockPath, { force: true });
+    });
+
+    it('a stale committer lock (dead pid) is reclaimed, and the commit succeeds', async () => {
+      const dead = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
+      const lockPath = path.join(ledgerDir, 'committer.lock');
+      fs.writeFileSync(lockPath, JSON.stringify({ pid: dead.pid, run_id: 'stale-run', repo_root: repo, ts: new Date(0).toISOString() }));
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'reclaimed.txt', content: 'x', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'reclaimed', paths: ['reclaimed.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'ok' });
+      // the lock is released back to normal — a THIRD commit in the same
+      // process right after also succeeds, proving no lingering lock.
+      const summary2 = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'reclaimed2.txt', content: 'y', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'reclaimed2', paths: ['reclaimed2.txt'], reason: 'r' }),
+        ],
+      });
+      const records2 = ledgerRecords(ledgerDir, summary2.run_id);
+      expect(toolCallOf(records2, 'git_commit')).toMatchObject({ status: 'ok' });
+    });
+  });
+
+  describe('commit 10: bash argv — the commit-adjacent block list, and a legitimate typecheck-shaped call', () => {
+    const blockedCases: string[][] = [
+      ['git', 'add', '-A'],
+      ['git', 'push'],
+      ['git', 'reset', '--hard'],
+      ['rm', '-rf', 'x'],
+      ['npm', 'run', 'lint', '--', '--fix'],
+    ];
+    for (const argv of blockedCases) {
+      it(`${argv.join(' ')} ⇒ blocked`, async () => {
+        const briefPath = writeBrief(repo);
+        const summary = await runEngine({
+          repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv, reason: 'r' })],
+        });
+        const records = ledgerRecords(ledgerDir, summary.run_id);
+        expect(toolCallOf(records, 'run_bash_command')?.status).toBe('blocked');
+      });
+    }
+
+    it('a "npm run typecheck"-shaped call (temp repo package.json defines it as `node -e 0`) is allowed', async () => {
+      fs.writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ name: 'typecheck-fixture', version: '1.0.0', scripts: { typecheck: 'node -e 0' } }));
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npm', 'run', 'typecheck'], reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const call = toolCallOf(records, 'run_bash_command') as { status?: string; result_summary?: { exit_code: number } } | undefined;
+      expect(call?.status).toBe('ok');
+    });
+  });
+
+  describe('commit 10: write to ../outside is blocked, inside the repo is allowed', () => {
+    it('write_file("../outside-escape.txt") is blocked PATH_OUTSIDE_REPO', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: '../outside-escape.txt', content: 'nope', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'PATH_OUTSIDE_REPO' } });
+      expect(fs.existsSync(path.join(repo, '..', 'outside-escape.txt'))).toBe(false);
+    });
+
+    it('write_file to a normal path inside the repo is allowed', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'inside-ok.txt', content: 'fine\n', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'ok' });
+    });
   });
 });

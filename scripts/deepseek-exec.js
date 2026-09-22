@@ -221,7 +221,7 @@ async function runEngine(opts = {}) {
 
   const startedAt = Date.now();
   const runState = { readState: {} };
-  const tools = createTools({ repoRoot, policy, ledger, runState });
+  const tools = createTools({ repoRoot, policy, ledger, runState, runId, model });
 
   let modelClient = opts.modelClient;
   if (!modelClient) {
@@ -387,6 +387,15 @@ async function runEngine(opts = {}) {
         toolCallRecord.post = post;
       }
       ledger.append(toolCallRecord);
+
+      // §C.3 run_end.status enumerates 'hook_failed' as a distinct overall
+      // outcome, not merely a per-call error — a git_commit whose hooks (or
+      // `git add`) genuinely fail is a real problem with the commit itself
+      // (not a self-correctable fence like NOT_READ), so the run ends here
+      // rather than looping the model into retrying the same failing commit.
+      if (name === 'git_commit' && !toolResult.ok && toolResult.error && toolResult.error.code === 'HOOK_FAILED') {
+        return finish('hook_failed');
+      }
 
       messages.push({
         role: 'tool',

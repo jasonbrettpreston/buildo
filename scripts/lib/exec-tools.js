@@ -22,10 +22,15 @@
  * state) adds `write_file`/`edit_file` (both gated by the same read-before-
  * write + staleness check) and `run_bash_command` (argv-form only, matched
  * against `scripts/lib/exec-policy.json` via `scripts/lib/exec-policy-match.js`,
- * spawnSync-free). All four mutating tools carry a pre/post worktree capture
- * (`scripts/lib/exec-worktree.js`, §C.3/F10) on their ledger record. `git_commit`
- * stays a stub through the whole of Phase 1 (it ships in Phase 2 commit 10,
- * once the commit fences exist).
+ * spawnSync-free). All five mutating tools carry a pre/post worktree capture
+ * (`scripts/lib/exec-worktree.js`, §C.3/F10) on their ledger record. Phase 2
+ * commit 10 adds the self-protection denylist (commit 7), secret fences
+ * (commit 8), the Windows cmd.exe route hardening (commit 6) and, finally,
+ * `git_commit` itself — the ONLY sanctioned commit path (§C.1.8): enumerated
+ * `paths` gated on PATH_NOT_LEDGERED (each must be a successful write_file/
+ * edit_file target this run, tracked at `runState.writtenPaths`), a refused-
+ * flags list (`--no-verify` etc., never stripped-and-retried), and a
+ * single-committer advisory lock held for the commit's duration.
  */
 
 const fs = require('fs');
@@ -247,7 +252,7 @@ const TOOL_SCHEMAS = {
     },
   },
   git_commit: {
-    description: 'Stage exactly the enumerated, previously-ledgered paths and commit through the husky hooks. NOT_IMPLEMENTED until Phase 2.',
+    description: 'Stage exactly the enumerated, previously-ledgered paths and commit through the husky hooks.',
     parameters: {
       type: 'object',
       additionalProperties: false,
@@ -426,6 +431,11 @@ async function writeFileHandler(args, ctx) {
   const newStat = fs.statSync(absPath);
   const sha256 = sha256Hex(fs.readFileSync(absPath));
   runState.readState[absPath] = { sha256, mtime_ms: newStat.mtimeMs };
+  // §C.1.8 — git_commit.paths must be the target of a successful write_file/
+  // edit_file earlier in the run; this Set is that record.
+  if (runState.writtenPaths) {
+    runState.writtenPaths.add(absPath);
+  }
 
   return { toolResult: { ok: true, path: relPosix, bytes, sha256, created }, pre, post };
 }
@@ -487,6 +497,9 @@ async function editFileHandler(args, ctx) {
   const newStat = fs.statSync(absPath);
   const sha256 = sha256Hex(fs.readFileSync(absPath));
   runState.readState[absPath] = { sha256, mtime_ms: newStat.mtimeMs };
+  if (runState.writtenPaths) {
+    runState.writtenPaths.add(absPath);
+  }
 
   return { toolResult: { ok: true, path: relPosix, replacements, sha256 }, pre, post };
 }
@@ -808,15 +821,183 @@ async function grepFilesHandler(args, ctx) {
   return { toolResult: { ok: true, matches: allMatches.slice(0, cap), truncated } };
 }
 
+// §C.1.8 (G9) — refused, never stripped-and-retried (F12(c)): silently
+// rewriting the model's argv would hide intent and make the ledger a lie.
+const GIT_COMMIT_REFUSED_FLAGS = new Set(['--no-verify', '-n', '--amend', '--allow-empty', '--no-gpg-sign']);
+
+function tailBytes(str, capBytes) {
+  const buf = Buffer.from(str || '', 'utf8');
+  return buf.length > capBytes ? buf.subarray(buf.length - capBytes).toString('utf8') : (str || '');
+}
+
+// §C.1.8 — the single-committer advisory lock. `lockPath` is a parameter
+// (not hardcoded) so commit 10b can key it per worktree
+// (`committer-<hash>.lock`) without changing this function's contract.
+function isPidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function acquireCommitterLock(lockPath, payload) {
+  const line = JSON.stringify(payload);
+  try {
+    const fd = fs.openSync(lockPath, 'wx'); // O_CREAT | O_EXCL | O_WRONLY
+    fs.writeSync(fd, line);
+    fs.closeSync(fd);
+    return true;
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      throw err;
+    }
+  }
+  // Contended — check whether the holder is a dead pid (a crashed engine's
+  // stale lock) and reclaim it exactly once.
+  let existing;
+  try {
+    existing = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  } catch {
+    return false; // unreadable/corrupt lock — fail closed as BUSY
+  }
+  if (!existing || typeof existing.pid !== 'number' || isPidAlive(existing.pid)) {
+    return false;
+  }
+  try {
+    fs.unlinkSync(lockPath);
+    const fd = fs.openSync(lockPath, 'wx');
+    fs.writeSync(fd, line);
+    fs.closeSync(fd);
+    return true;
+  } catch {
+    return false; // lost the reclaim race — fail closed as BUSY
+  }
+}
+
+function releaseCommitterLock(lockPath) {
+  try {
+    fs.unlinkSync(lockPath);
+  } catch {
+    // best-effort release; a missing lock file at release time is not itself a fault
+  }
+}
+
+// §C.2 git_commit — the ONLY sanctioned commit path (§C.1.8). Stages exactly
+// the enumerated, previously-ledgered `paths`, then commits through the
+// husky hooks with the engine's own author/committer identity. Invariant
+// order mirrors write_file/edit_file: confinement (3) → self-protection (4)
+// → secret-deny (5) → PATH_NOT_LEDGERED (this tool's own §C.1.8 gate) →
+// single-committer lock → the actual git operations.
+async function gitCommitHandler(args, ctx) {
+  const { repoRoot, policy, runState, ledger, runId, model } = ctx;
+  const pre = captureWorktree(repoRoot);
+
+  const refused = (args.args || []).filter((a) => GIT_COMMIT_REFUSED_FLAGS.has(a));
+  if (refused.length > 0) {
+    return {
+      toolResult: { ok: false, error: { code: 'FLAG_REFUSED', message: `refused flag(s), nothing executed: ${refused.join(', ')}` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
+  }
+
+  const relPaths = [];
+  for (const p of args.paths) {
+    let absPath;
+    try {
+      absPath = resolveConfinedPath(repoRoot, p);
+    } catch (err) {
+      return { toolResult: pathFault(err), pre, post: captureWorktree(repoRoot) };
+    }
+    const relPosix = toRepoRelativePosix(repoRoot, absPath);
+
+    const selfProtectBlock = checkSelfProtection(absPath, relPosix, ctx);
+    if (selfProtectBlock) {
+      return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
+    }
+    if (isSecretDenied(relPosix, (policy && policy.secret_read_deny) || [])) {
+      return {
+        toolResult: { ok: false, error: { code: 'SECRET_DENIED', message: `commit denied: ${relPosix}` } },
+        pre,
+        post: captureWorktree(repoRoot),
+      };
+    }
+    const ledgered = runState.writtenPaths && runState.writtenPaths.has(absPath);
+    if (!ledgered) {
+      return {
+        toolResult: { ok: false, error: { code: 'PATH_NOT_LEDGERED', message: `${relPosix} was not the target of a successful write_file/edit_file this run` } },
+        pre,
+        post: captureWorktree(repoRoot),
+      };
+    }
+    relPaths.push(relPosix);
+  }
+
+  const ledgerDirAbs = ledger && ledger.path ? path.dirname(ledger.path) : null;
+  const lockPath = ctx.committerLockPath || (ledgerDirAbs ? path.join(ledgerDirAbs, 'committer.lock') : null);
+  if (!lockPath) {
+    return { toolResult: { ok: false, error: { code: 'COMMITTER_BUSY', message: 'no ledger directory to key the committer lock against' } }, pre, post: captureWorktree(repoRoot) };
+  }
+  const lockPayload = { pid: process.pid, run_id: runId || 'unknown', repo_root: repoRoot, ts: new Date().toISOString() };
+  if (!acquireCommitterLock(lockPath, lockPayload)) {
+    return { toolResult: { ok: false, error: { code: 'COMMITTER_BUSY', message: 'another commit is in progress in this worktree' } }, pre, post: captureWorktree(repoRoot) };
+  }
+
+  try {
+    const authorName = process.env.EXEC_GIT_AUTHOR_NAME || 'deepseek-exec';
+    const authorEmail = process.env.EXEC_GIT_AUTHOR_EMAIL || 'deepseek-exec@buildo.invalid';
+    // §C.2 — "env scrubbed of every GIT_* variable EXCEPT the four author/
+    // committer vars, which the engine sets explicitly."
+    const env = {
+      ...scrubbedEnv(),
+      GIT_AUTHOR_NAME: authorName,
+      GIT_AUTHOR_EMAIL: authorEmail,
+      GIT_COMMITTER_NAME: authorName,
+      GIT_COMMITTER_EMAIL: authorEmail,
+    };
+
+    const addResult = spawnSync('git', ['add', '--', ...relPaths], { cwd: repoRoot, env, encoding: 'utf8', shell: false });
+    if (addResult.error || addResult.status !== 0) {
+      const post = captureWorktree(repoRoot);
+      return {
+        toolResult: { ok: false, error: { code: 'HOOK_FAILED', message: `git add failed (exit ${addResult.status}): ${tailBytes((addResult.stderr || '') + (addResult.stdout || ''), 65536)}` } },
+        pre,
+        post,
+      };
+    }
+
+    const trailer = `Executed-By: deepseek-exec ${model || 'unknown'} run=${runId || 'unknown'}`;
+    const fullMessage = `${args.message}\n\n${trailer}\n`;
+    // args.args has already been screened for GIT_COMMIT_REFUSED_FLAGS above.
+    const commitArgv = ['commit', '-m', fullMessage, ...(args.args || [])];
+    const commitResult = spawnSync('git', commitArgv, { cwd: repoRoot, env, encoding: 'utf8', shell: false });
+    const post = captureWorktree(repoRoot);
+    if (commitResult.error || commitResult.status !== 0) {
+      return {
+        toolResult: { ok: false, error: { code: 'HOOK_FAILED', message: `git commit failed (exit ${commitResult.status}): ${tailBytes((commitResult.stdout || '') + (commitResult.stderr || ''), 65536)}` } },
+        pre,
+        post,
+      };
+    }
+
+    return { toolResult: { ok: true, sha: post.head_sha, files: relPaths }, pre, post };
+  } finally {
+    releaseCommitterLock(lockPath);
+  }
+}
+
 /**
- * createTools({ repoRoot, policy, ledger, runState }) — `runState` is the
- * per-run mutable state bag (§C.1.6 read-before-write tracking lives at
- * `runState.readState[absPath] = { sha256, mtime_ms }`, populated once
- * read_file/write_file/edit_file land in commits 3-4). `policy` and `ledger`
- * are threaded through now so later commits (allowlist matching, the
- * self-protection denylist) do not need a signature change.
+ * createTools({ repoRoot, policy, ledger, runState, runId, model }) —
+ * `runState` is the per-run mutable state bag (§C.1.6 read-before-write
+ * tracking lives at `runState.readState[absPath] = { sha256, mtime_ms }`;
+ * §C.1.8's `git_commit` PATH_NOT_LEDGERED check lives at
+ * `runState.writtenPaths`, a Set of absolute paths, both populated by
+ * write_file/edit_file on success). `runId`/`model` are threaded through for
+ * the git_commit trailer and the committer-lock payload.
  */
-function createTools({ repoRoot, policy, ledger, runState } = {}) {
+function createTools({ repoRoot, policy, ledger, runState, runId, model, committerLockPath } = {}) {
   if (!repoRoot) {
     throw new Error('createTools requires repoRoot');
   }
@@ -824,18 +1005,18 @@ function createTools({ repoRoot, policy, ledger, runState } = {}) {
   if (!state.readState) {
     state.readState = {};
   }
-  const ctx = { repoRoot, policy, ledger, runState: state };
+  if (!state.writtenPaths) {
+    state.writtenPaths = new Set();
+  }
+  const ctx = { repoRoot, policy, ledger, runState: state, runId, model, committerLockPath };
 
-  // Real handlers are added to this table in commits 3 (read_file,
-  // grep_files) and 4 (write_file, edit_file, run_bash_command). git_commit
-  // has no entry until Phase 2 commit 10, so it always falls through to the
-  // NOT_IMPLEMENTED stub below.
   const handlers = {
     read_file: readFileHandler,
     grep_files: grepFilesHandler,
     write_file: writeFileHandler,
     edit_file: editFileHandler,
     run_bash_command: runBashCommandHandler,
+    git_commit: gitCommitHandler,
   };
 
   async function dispatch(name, args) {
