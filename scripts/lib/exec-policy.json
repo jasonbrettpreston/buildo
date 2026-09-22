@@ -1,0 +1,19 @@
+{
+  "v": 1,
+  "bash_allow": [
+    { "argv": ["npm", "run", "typecheck"] },
+    { "argv": ["npm", "run", "lint"] },
+    { "argv": ["npm", "run", "test"] },
+    { "argv": ["npx", "vitest", "run", "<path>..."], "flags": ["--run"] },
+    { "argv": ["npx", "vitest", "related", "<path>..."], "flags": ["--run"] },
+    { "argv": ["git", "status", "--porcelain"] },
+    { "argv": ["git", "diff"], "flags": ["--cached", "--stat", "--", "<path>..."] },
+    { "argv": ["git", "log"], "flags": ["--oneline", "-n", "<int>", "-p", "--stat", "--follow", "--", "<path>..."] },
+    { "argv": ["git", "show", "<rev>"], "flags": ["--stat", "--", "<path>..."] },
+    { "argv": ["git", "blame", "<path>"], "flags": ["-L", "<range>"] },
+    { "argv": ["node", "<validator>"], "flags": ["--check", "--step=<slug>", "--all", "--fast"] }
+  ],
+  "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
+  "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
+  "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
+}
