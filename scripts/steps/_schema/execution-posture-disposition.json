@@ -1,0 +1,157 @@
+{
+  "$comment": [
+    "WF2 'runner row-error policy' (2026-09-21) — THE R-X DISPOSITION REGISTRY FOR THE",
+    "`execution.*` POSTURE ENUMS (Spec 124 §5 R-X, R-AW).",
+    "",
+    "R-X named this exact generalization as 'not yet built' at its own POST-B1-1 addendum:",
+    "`write-class-disposition.json` covers only `outputs.write_discipline.class` and",
+    "`sharing.on_contention`; the `execution.*` POSTURE enums (as opposed to the DURATION",
+    "declarations `execution-budget-disposition.json` already covers, R-AJ) are `on_row_error`,",
+    "`on_batch_error`, `on_check_error` and `on_degrade`. (`on_prior_read_error`, named in R-X's",
+    "own field list, does not exist anywhere in step.schema.json or scripts/lib/step/*.js —",
+    "measured 2026-09-21, 0 hits — recorded as never-existing, not silently dropped; see the",
+    "R-X row's own correction sentence.)",
+    "",
+    "CLOSED MENU — a row's `disposition` is exactly one of:",
+    "  * `executed`    — a named, live executor consumes the declaration. Where the executor",
+    "                    IS a static file+line (by_construction propagation, or a fixed",
+    "                    verdict.js arm), the row cites `executor.file` + `executor.anchor` and",
+    "                    the lock GREPS the anchor out of the file. Where the executor is a",
+    "                    PER-DESCRIPTOR declared check (on_row_error: skip — the bound varies by",
+    "                    which check the descriptor cites), the row cites the GENERIC evaluator",
+    "                    that bounds every such check (verdict.js evaluateLimit, itself grep-",
+    "                    verified) and the PER-DESCRIPTOR half is verified separately by",
+    "                    step-validate.mjs fast invariant #27 ROW-ERROR-GATE (P4/C4 of this WF2).",
+    "  * `descriptive` — declared, NOT enforced, and says so. (No row here uses this value —",
+    "                    every live posture value in this family is either genuinely executed",
+    "                    or genuinely retired; `descriptive` stays in the menu because",
+    "                    `execution-budget-disposition.json`'s sibling registry uses it, and one",
+    "                    closed menu, not two, is the point of naming both files' `menu[]` the",
+    "                    same three words.)",
+    "  * `retire`      — measured-refuted or structurally unbuilt. Stays in the frozen enum",
+    "                    (R-X: 'retiring a class is a declaration that stays in the frozen enum,",
+    "                    never a removal') — pruning it is a separate, deliberately-priced",
+    "                    re-freeze this ruling does not authorize.",
+    "There is no fourth value. An invented one is RED.",
+    "",
+    "Both directions locked by src/tests/execution-posture-disposition.infra.test.ts:",
+    "  (1) every value in each live x-frozen enum (on_row_error/on_batch_error/on_check_error/",
+    "      on_degrade) has exactly one row here; no orphan row;",
+    "  (2) every `disposition` is one of the 3 closed-menu words;",
+    "  (3) every `executed` row that cites a `file`+`anchor` greps out of that file;",
+    "  (4) no live descriptor (scripts/*.descriptor.json, scripts/quality/*.descriptor.json)",
+    "      declares a `retire`d value;",
+    "  (5) every `descriptive`/`retire` row is named in Spec 124's R-X/R-AW disposition text."
+  ],
+  "menu": [
+    "descriptive",
+    "executed",
+    "retire"
+  ],
+  "declarations": {
+    "on_row_error": {
+      "fail_fast": {
+        "disposition": "executed",
+        "basis": "by_construction",
+        "executor": {
+          "file": "scripts/lib/pipeline.js",
+          "anchor": "log.error(`[${name}]`, err, { phase: 'fatal' });",
+          "role": "no per-row catch exists for a fail_fast-declaring step's write (G0.3: 15/18 converted steps are set-based, no catch anywhere in their compute) — an aborted statement propagates, uncaught, to pipeline.run()'s own try/catch, which logs and RE-THROWS. The absence of a catch IS the executor; this anchor is the backstop every such error surfaces at."
+        },
+        "why": "Measured 2026-09-21 (G0.3): a row-level failure under fail_fast is not caught anywhere between the write statement and pipeline.run()'s own handler — it aborts the statement, the transaction (per txn_scope) and the step. 14/18 converted steps declare this value truthfully; compute_centroids (a set-based backfill wrongly declaring skip) is the one correction this WF2 makes (C2)."
+      },
+      "skip": {
+        "disposition": "executed",
+        "executor": {
+          "file": "scripts/lib/step/verdict.js",
+          "anchor": "function evaluateLimit(limit, observation)",
+          "role": "the GENERIC FAIL-severity bound evaluator every declared check.limit is scored against — this is rung (b)+(c) of Spec 124 §7's ladder, already live (G0.4). WHICH check bounds a given skip-declaring step is per-descriptor, named by execution.on_row_error_why.liveness.ref (P2, C3) and verified per-descriptor by step-validate.mjs fast invariant #27 ROW-ERROR-GATE (P4, C4) — this row's file+anchor citation proves the MECHANISM exists; invariant #27 proves each CITATION resolves to a real, FAIL-severity, bound-carrying check in the same descriptor."
+        },
+        "why": "Measured 2026-09-21 (G0.4): both live skip-declaring steps' per-row tolerance is already bounded by a declared, FAIL-severity, verdict-evaluated check — load_ravines by ravine_geometry_skipped_pct (limit_from_config: load_ravines_invalid_geometry_fail_pct), compute_parcel_cost_estimates by engine_error_count (limit_from_config: compute_parcel_cost_engine_error_max). enrich_parcels' pass 5 (opt_config_engine_errors) is bounded by a FAIL check with a literal limit but no limit_from_config yet — a Rule 3 gap filed separately (F-4) and not fixed by this WF2 (D10: pin the declaration to today's truthful behaviour first)."
+      },
+      "quarantine": {
+        "disposition": "retire",
+        "basis": "sink_unbuilt",
+        "executor": null,
+        "why": "Zero declarers (0/18 converted steps) and no sink ever built: Spec 120 §6's step_quarantine table was specified (exact DDL) but never created; migrations/*.sql (247 files) has zero mentions of quarantine|rejected_rows|dead_letter|row_errors (grep, 2026-09-21); the migration numbers Spec 120 §6 originally named (245-248) are already consumed by unrelated work. Spec 122a:34 already records this menu value as 'aspirational... must not read as descriptive'. `sink_unbuilt` (not R-X's `banned_for_new`) because the mechanism is specified and buildable, merely never built — banned_for_new would falsely imply the mechanism exists and is only forbidden. Revival is named, not lost: scripts/steps/_schema/programme-items.json carries a nice_to_have row citing Spec 120 §6."
+      }
+    },
+    "on_batch_error": {
+      "fail_step": {
+        "disposition": "executed",
+        "basis": "by_construction",
+        "executor": {
+          "file": "scripts/lib/pipeline.js",
+          "anchor": "log.error(`[${name}]`, err, { phase: 'fatal' });",
+          "role": "identical mechanism to on_row_error.fail_fast — a whole-batch statement failure with no catch propagates uncaught to the same run-level handler."
+        },
+        "why": "The default, uncaught-propagation posture — the same backstop on_row_error.fail_fast cites, for the batch-level rather than row-level failure class."
+      },
+      "drop_batch": {
+        "disposition": "executed",
+        "executor": {
+          "file": "scripts/steps/_schema/step.schema.json",
+          "anchor": "{ \"const\": \"drop_batch\" }",
+          "role": "the schema's OWN already-correct conditional (step.schema.json:1478, unlike on_row_error's toothless twin this WF2 fixes at C3): `on_batch_error: \"drop_batch\"` REQUIRES `on_batch_error_why` — AJV-enforced at pipeline.step() construction, not merely a convention."
+        },
+        "why": "POST-B1-1's own worked example (R-X row): the on_batch_error conditional already uses `required`, not `properties` — proven live by enrich_parcels' C2 truthing (fail_fast -> drop_batch, on_batch_error_why naming the over-count, Ask A1 PIN)."
+      },
+      "retry": {
+        "disposition": "retire",
+        "executor": null,
+        "why": "Zero declarers, zero executors anywhere in scripts/lib/ (grep, 2026-09-21) — no wait/backoff/re-attempt path exists for a batch failure."
+      }
+    },
+    "on_check_error": {
+      "fail_step": {
+        "disposition": "executed",
+        "executor": {
+          "file": "scripts/lib/step/verdict.js",
+          "anchor": "onCheckError === 'fail_step'",
+          "role": "checkRow's fail_step arm (verdict.js:284, landed POST-B1-1, 2026-09-15) — a throwing check query becomes a FAIL row, severity-independent of the check's own declared severity."
+        },
+        "why": "R-X's own POST-B1-1 addendum: on_check_error went from a frozen enum with no executor to executed by checkRow's three arms. This row moves that addendum's prose into a mechanically-grepped registry row, per R-X's own generalization instruction."
+      },
+      "warn_row": {
+        "disposition": "executed",
+        "executor": {
+          "file": "scripts/lib/step/verdict.js",
+          "anchor": "onCheckError === 'warn_row'",
+          "role": "checkRow's warn_row arm (verdict.js:271) — a throwing check query becomes a WARN row instead of a FAIL."
+        },
+        "why": "Same POST-B1-1 addendum as fail_step, the WARN arm."
+      },
+      "omit_row": {
+        "disposition": "executed",
+        "executor": {
+          "file": "scripts/lib/step/verdict.js",
+          "anchor": "onCheckError === 'omit_row'",
+          "role": "checkRow's omit_row arm (verdict.js:270) — a throwing check query is silently dropped from the audit table (the pre-POST-B1-1 default behaviour, now an explicit declared choice)."
+        },
+        "why": "Same POST-B1-1 addendum as fail_step, the omit arm."
+      }
+    },
+    "on_degrade": {
+      "none": {
+        "disposition": "executed",
+        "basis": "by_construction",
+        "executor": {
+          "file": "scripts/lib/pipeline.js",
+          "anchor": "log.error(`[${name}]`, err, { phase: 'fatal' });",
+          "role": "no substitution code exists anywhere live — a step declaring `none` gets exactly the default propagate-and-fail behaviour every other uncaught error gets; there is no separate 'degrade' code path to cite for the value that means 'do not degrade'."
+        },
+        "why": "Every live descriptor declares `none` (measured 2026-09-21). The one place degradation historically lived (refresh-snapshot.js's four hardcoded prior-value/zero substitutions behind a PASS, per the schema field's own description) predates this field and was retired at refresh_snapshot's conversion — it declares `none` today."
+      },
+      "prior_values": {
+        "disposition": "retire",
+        "executor": null,
+        "why": "Zero declarers. The substitution behaviour this value would name (refresh-snapshot.js's pre-conversion hardcoded prior-value fallback) was retired, not ported, at refresh_snapshot's own pilot 8 conversion."
+      },
+      "zeroes": {
+        "disposition": "retire",
+        "executor": null,
+        "why": "Zero declarers. Same refresh-snapshot.js history as prior_values — the hardcoded zero-substitution fallback was retired, not ported, at conversion."
+      }
+    }
+  }
+}
