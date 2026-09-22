@@ -5597,26 +5597,6 @@
       "group": "Spatial & Massing"
     }
   },
-  "parcel_sanity_onlot_share_rd_min": {
-    "default": 0.90,
-    "type": "number",
-    "description": "assert_parcel_sanity (S0.3): RD-zone on-lot share floor (ST_Intersection(parcel,building) / building footprint area) below which existing_structure_onlot_share_low WARNs. Measured live 2026-09-21: RD p50 on-lot share 1.000, 8,184 RD parcels below this floor. CONSUMED by assert_parcel_sanity (validate_only invariant).",
-    "min": 0,
-    "max": 1,
-    "admin": {
-      "group": "Spatial & Massing"
-    }
-  },
-  "parcel_sanity_onlot_share_attached_min": {
-    "default": 0.50,
-    "type": "number",
-    "description": "assert_parcel_sanity (S0.3): non-RD (attached: RS/RT/RM/RA/other) on-lot share floor for existing_structure_onlot_share_low. Measured live 2026-09-21: RS p50 on-lot share 0.520 — a genuinely shared party-wall structure legitimately sits well under RD's floor. CONSUMED by assert_parcel_sanity (validate_only invariant).",
-    "min": 0,
-    "max": 1,
-    "admin": {
-      "group": "Spatial & Massing"
-    }
-  },
   "cost_escalation_index": {
     "default": 100.0,
     "type": "number",

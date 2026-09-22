@@ -3909,3 +3909,52 @@ the peel commit (`buildZoneBuckets` nondeterminism, `no_cost_outside_population`
 | — (refuted) | Stream/flush batch-size bind-param ceiling — claimed `3,854 × 18 = 69,372 > 65,535` | Recount from the real code: `buildFlushSql` binds `2 (id, menu) + ALL_SCALAR_COLS.length (15) = 17` params/row, not 18. `3,854 × 17 = 65,518 < 65,535` — the existing `compute_parcel_cost_batch_size` max (3854) is `floor(65,535/17) = 3855`, i.e. already correctly bounded with 1 row of headroom. | **REJECTED as stated — no value change.** The finding's arithmetic used an incorrect per-row param count. |
 | — (refuted) | `new_build_cost_not_gt_coa_cost` (`cost_fb_total > cost_coa_total + 1`) returns NULL (excluded, not counted as a violation) when `cost_coa_total IS NULL` | `cost_coa_total` is genuinely NULL when a parcel has no priceable CoA line (no `opt_coa_gfa_sqm`) — there is nothing to compare `cost_fb_total` against in that case, so SQL's three-valued NULL exclusion is the CORRECT behaviour, not a hidden violation. A parcel where `cost_fb_total` is priced without `cost_coa_total` is a distinct, unaddressed question ("is a missing CoA cost itself suspicious?"), not this invariant's job. | **REJECTED — no predicate change.** If "fb priced, coa absent" ever needs its own bound, that is a NEW invariant, filed separately if ever wanted. |
 | — (rejected, per convention) | `database.min_migration: 201` vs the runtime error's "Apply migration 205" (the migration that creates `archetype_cost_rates`) | `scripts/lib/resolve-db.js` states explicitly: **the floor is a COUNT of applied migrations (`schema_migrations` has GAPS, keyed by filename, not a numeric `version`), never a literal file number** — a step needing table X does not set `min_migration` to X's own filename number. 201 is comfortably below the live DB's actual applied count (242+), so the floor is satisfied; the runtime error's "migration 205" is a human-readable hint about the TABLE, not a claim that `min_migration` encodes that file number. | **REJECTED — no value change**, consistent with `min_migration`'s documented COUNT convention. |
+
+## Slice-0 output-panel peel — pre-existing enrich-parcels.js DeepSeek findings, filed not fixed (2026-09-22)
+
+Source: `npm run review:deepseek -- review scripts/lib/compute/enrich-parcels.js --context
+docs/specs/01-pipeline/65_enrich_parcels.md` (scratchpad `deepseek_slice0.md`, run alongside the
+`assert-parcel-sanity-fields.js` review that grounded this same commit's O1-O4). Filing-only per the
+coordinator's instruction — none of these are fixed in this commit, which scopes to
+`assert-parcel-sanity-fields.js` (O1-O6) only. **Count correction (feedback_no_transcription_from_prior_artifacts):**
+the coordinator's instruction cited "16" items; the source file as re-read here enumerates **20**
+(1 HIGH, 1 MEDIUM-HIGH, 6 MEDIUM, 1 LOW-MEDIUM, 6 LOW, 4 NIT) — verified by direct count against the
+live scratchpad file rather than transcribed.
+
+| Severity | Function | One-line |
+|---|---|---|
+| HIGH | `buildEnrichmentSql` | `${heightCte}${covCte}${memberCtes}` CTE-list interpolation emits a trailing comma → invalid SQL whenever every membership overlay is stale (all 7 `col` overlays in `staleOverlays`) — a reachable degraded state per Spec 58's `zoning_layers_loaded[x]===false`. |
+| MEDIUM-HIGH | `runPass4` | `ctx.scopeWhere` is documented as "a predicate over alias `p`" but `buildComparableBuildsUpdateSql` uses alias `sp`, and the `--full` reset + final `dist` query declare no alias at all — a scoped predicate errors `missing FROM-clause entry for table "p"`; masked today only because `scopeWhere='TRUE'` in prod. |
+| MEDIUM | `consumePendingScope` | The prior-run backlog (`SELECT DISTINCT parcel_id ... consumed_at IS NULL`) is materialized entirely into a JS array before the batch loop — unbounded in the one state (a stranded `running` row blocking `retireStaleScope`) where the backlog is also unbounded. |
+| MEDIUM | `runPass4.resetIneligible` | The reset predicate omits the `zoning_class IS NULL` eligibility loss the `eligible` const itself declares — a parcel losing `zoning_class` while keeping a footprint never gets its stale `comparable_builds`/`comp_fsi_p50` reset. |
+| MEDIUM | `runPass4` | Incremental subject gate `sp.comp_count IS NULL` means a changed `max_buildable_footprint_sqm` (envelope rewrite) never re-triggers a comp refresh without `--full` — stale `comp_fsi_p50` then feeds pass 5's narrative. |
+| MEDIUM | `consumePendingScope` + `runPass5` | A deterministically-failing parcel poisons `opt_config_engine_errors` on every run forever — its scope row stays unconsumed and is retried every run, incrementing the raw error count each time with no distinction from a genuinely new error. |
+| MEDIUM | `runPass1`-`runPass4` | Every tunable (`bboxDivisor`, `storeyHeight`, `lotMinNum`, `lotMaxNum`, the whole `acc`/`comp.*` set, etc.) is raw-SQL-literal-interpolated, relying entirely on `resolveConfig`'s numeric-only validation as the sole injection defense — no `Number.isFinite` assertion at the point of use. |
+| MEDIUM | `runPass2` / `buildMaxBuildSql` | `N(v, d) = Number(v ?? d)` does not rescue `NaN` — `Number(config.max_build_lot_min_sqm)` producing `NaN` (a malformed config value) interpolates literal `NaN` into SQL instead of falling back to the JS default, dying with a syntax error instead of using the documented fallback. |
+| LOW-MEDIUM | `computePostPhase` | `zone_class_pct`'s numerator (`WHERE zoning_class IS NOT NULL`) and denominator (`WHERE geom IS NOT NULL`) use different row-set filters — a parcel with `zoning_class` set but `geom` NULL inflates the ratio past 1.0, silently passing the `< 90` WARN check on a corrupted denominator. |
+| LOW | `computePostPhase` | The "fixed five literal pass-name lookups" docblock claim is not implemented — the function still hardcodes 5 literal pass-name string lookups; a `passes[]` rename silently yields all-zero rows. |
+| LOW | `flushOptConfigBatch` | Undocumented return-shape dependency on `ctx.flushBatch` (`res.rows`/`res.rowCount` assumed, unchecked) — a boolean/count return shape throws `undefined is not iterable` only on the write path. |
+| LOW | `runPass4` | `comp_cand` temp table has no `DROP TABLE IF EXISTS` unlike passes 1-3 — safe today only because it's `ON COMMIT DROP` in a shared rolling-back txn; a trap for a future same-session retry. |
+| LOW | `retireStaleScope` | The "another run is active" guard is a `LIKE '%enrich_parcels'` pattern that silently never fires if the pipeline slug ever becomes hyphenated (`enrich-parcels`, matching the file/descriptor naming already in use elsewhere). |
+| LOW | `retireStaleScope` | A null/NaN `runId` silently no-ops the DELETE (`s.run_id <> $1` with NULL `$1` matches zero rows) rather than throwing, inconsistent with the function's own documented throw-on-bad-input contract for other params. |
+| LOW | multiple check ids | Inconsistent `violations` semantics: `scope_backlog_at_step_start`/`pending_scope_parcels` report a raw gating count, `scope_retired_rows`/`scope_retired_cohorts` hardcode `violations:0` (can never fail), `pass5_post_commit_read_order` hardcodes `{violations:0}` with a comment admitting it can never detect what it names. |
+| LOW | `consumePendingScope` | Prior-run recovery errors are folded into this run's `opt_config_engine_errors`/`genuineIds` without a provenance flag distinguishing "this run's new error" from "a retried prior-run leftover" — defensible but undocumented outside the `--full` branch. |
+| NIT | `buildNearbyBuildsSummary` | `r.neighbourhood_name \|\| \`Nbhd ${r.neighbourhood_id}\`` renders `"Nbhd undefined"` when both are NULL; `typicalFsi != null` treats a real `0` FSI as present, emitting "~0.00 FSI". |
+| NIT | `buildMassingScopeWhereForOptConfig` | Dead code kept alive via a `void` no-op — a future reader risk (mistakable for a missing gate). |
+| NIT | `flushOptConfigBatch` | No assertion that `batchSize × 12` stays under Postgres' 65,535 bind-param ceiling — `enrich_parcels_optcfg_batch_size > ~5461` is a hard failure discoverable only in prod. |
+| NIT | `compute(ctx)` | The missing-check-id throw sits outside the per-check `try`, aborting ALL check reporting on one unknown id; `ctx.report(...)` is never `await`ed, so a floats if the runner's `report` is async. |
+
+## Slice-0 output-panel peel — finding O4 rejection, `parcels.id` vs `p.id` aliasing (2026-09-22)
+
+`scripts/lib/assert-parcel-sanity-fields.js`'s `existing_structure_shared_with_other_parcel` /
+`existing_structure_borrowed_primary` `bad()` fragments were asked (peel finding O4, mirroring DeepSeek
+MEDIUM ~250) to qualify their correlated outer-row reference as `p.id` (matching
+`INVARIANT_ONLOT_SHARE_SQL`'s own standalone-query alias style) instead of the current `parcels.id`.
+**Investigated and REJECTED as unsafe**, documented inline at the check definitions: `bad()`'s text is a
+shared FRAGMENT spliced into 5 different FROM-clause shapes across 2 files — `scripts/lib/compute/assert-parcel-sanity.js`'s
+`runSanity` (`FROM parcels WHERE ${RES}`, aggregate `FILTER (WHERE ...)` form, unaliased) AND
+`scripts/analysis/parcel-field-dump.js`'s 4 own ad-hoc queries (lines 42/52/58/66, all `FROM parcels WHERE ...`,
+also unaliased). `parcels.id` (fully qualified, no local alias) is the only spelling valid in every one of
+those 5 contexts; aliasing to `p.id` would require also changing `parcel-field-dump.js`'s FROM clauses — a
+Reality-Check instrument, outside this peel's proper scope — for a cosmetic rename with zero functional
+benefit and real regression risk. No code change made for this finding beyond the explanatory comment.

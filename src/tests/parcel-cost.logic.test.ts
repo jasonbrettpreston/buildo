@@ -237,6 +237,32 @@ describe('buildParcelCostMenu — full parcel', () => {
     expect(pc.FSI_MAX_PLAUSIBLE).toBe(99.999);
   });
 
+  // Guardian carry-item (slice-0 output-panel peel, 2026-09-22) — S0.2 (commit 06dcd330,
+  // scripts/lib/compute/compute-parcel-cost-estimates.js buildSourceSql/buildZoneSql)
+  // narrowed compute_parcel_cost_estimates' SQL population to
+  // `cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= product_scope_max_existing_gfa_sqm`
+  // (default 750). Plan §5A.1's fence table promised "each [population-narrowing S0.2
+  // caller] re-assert the [FSI plausibility] guard still fires on a synthetic over-bound
+  // row" — never added at S0.2's own commit. `plausibleFsi`/`buildParcelCostMenu` are pure
+  // (no DB access, never see the SQL population filter directly), so this fixture proves
+  // the guard by SHAPE: cur_floor_gfa_sqm=110 (<= the 750 default — a row S0.2's WHERE
+  // clause KEEPS in the priced population, not one it excludes) combined with the SAME
+  // garbage max_buildable_gfa/lot_size_sqm ratio as the test above — the guard (aea1d402,
+  // lessons.md:69) must still NULL+flag the FSI for a row genuinely inside S0.2's
+  // narrowed scope, proving S0.2's population narrowing and the pre-existing FSI
+  // plausibility guard are independent, non-interfering gates.
+  it('S0.2 re-assertion: the FSI plausibility guard still fires on a synthetic over-bound row that IS inside S0.2\'s product-scope population (cur_floor_gfa_sqm <= 750)', () => {
+    const inScopeOverBound = fullParcel({
+      cur_floor_gfa_sqm: 110, // <= product_scope_max_existing_gfa_sqm default (750) — S0.2 KEEPS this row
+      lot_size_sqm: 111,
+      max_buildable_gfa_sqm: 115825, // same garbage massing-contamination shape as the guard's own test above
+    });
+    expect(inScopeOverBound.cur_floor_gfa_sqm).toBeLessThanOrEqual(750);
+    const built = pc.buildParcelCostMenu(inScopeOverBound, RATES, NO_ESCALATION, { config: CFG });
+    expect(built.scalars.max_build_fsi).toBeNull();
+    expect(built.fsiImplausible).toBe(true);
+  });
+
   it('gut line is low-confidence (storey-multiplied); basement/addition medium', () => {
     expect(menu.gut.area_confidence).toBe('low');
     expect(menu.basement.area_confidence).toBe('medium');

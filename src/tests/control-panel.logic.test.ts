@@ -134,6 +134,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'mislink_footprint_lot_tol', // Spec 65 §5 (WF3-A) — mislink guard tolerance (footprint > lot)
   'max_build_lot_min_sqm', // Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — promoted LOT_MIN_SQM literal (50 m²)
   'max_build_lot_max_sqm', // Spec 65 §4 MB-2 (WF3 S0.1, Rule 3 / R-G) — promoted LOT_MAX_SQM literal (2000 m²)
+  // Spec 88 §2.1 / Spec 43 step #23 (WF3 S0.2, 2026-09-21/22) — the product-scope
+  // cur_floor_gfa_sqm bound (compute_parcel_cost_estimates buildSourceSql/buildZoneSql).
+  // Found MISSING here during the slice-0 peel (2026-09-22): declared in the S0.2 commit's
+  // seed/descriptor/GROUP_ORDER but never added to this test's expected set — a
+  // pre-existing S0.2 completeness gap, fixed here (not a peel finding of its own, but
+  // required to keep this suite honest once the peel's own regeneration surfaced it).
+  'product_scope_max_existing_gfa_sqm',
   'max_build_min_dimension_m', // Spec 65 §4 MB-3 (WF3 Phase 1 D-C) — viability floor for build dims
   'storey_height_m', // Spec 65 §6 SC-4 — residential storey-height (max-build derivation)
   // Spec 65 §7 (Phase 3) — accessory garage + laneway/garden rear-suite by-law constants.
@@ -455,8 +462,12 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'parcel_sanity_lowrise_cost_fb_max_cad', 'parcel_sanity_cost_addition_max_cad', 'parcel_sanity_dim_lot_tolerance_m', 'parcel_sanity_gfa_coherence_tolerance_sqm',
   'parcel_sanity_cost_coherence_tolerance_cad', 'parcel_sanity_greenspace_tolerance_sqm', 'parcel_sanity_realized_fsi_p90_min', 'parcel_sanity_realized_fsi_p90_max',
   'parcel_sanity_distribution_percentile', 'parcel_sanity_distribution_median_multiplier', 'parcel_sanity_distribution_median_floor',
-  // WF3 S0.3 (2026-09-21) — existing_structure_onlot_share_low's zone-aware floors.
-  'parcel_sanity_onlot_share_rd_min', 'parcel_sanity_onlot_share_attached_min',
+  // WF3 S0.3 (2026-09-21) declared existing_structure_onlot_share_low's zone-aware floors
+  // here (parcel_sanity_onlot_share_rd_min / _attached_min) — RETIRED at the slice-0
+  // output-panel peel (2026-09-22, finding O1): INVARIANT_ONLOT_SHARE_SQL never actually
+  // consumed either value (executeEntry runs a source:"invariant" entry's sql VERBATIM,
+  // no runtime config-substitution seam), so the declared variables were dead. 0.90/0.50
+  // now live as documented, non-tunable literals in the SQL itself.
   // Batch-2 row 2.4 (2026-09-21, compute_parcel_cost_estimates) — 19 new vars: the 3 EXISTING
   // migration-205-seeded keys added to this seed file for the first time (§0.6 refutation —
   // they existed live but a fresh cloud seed apply would have left them unset) + 16 new

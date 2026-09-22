@@ -64,14 +64,14 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
     }
   });
 
-  it('39 logic_variables declared (37 new parcel_sanity_* [35 + S0.3\'s 2] + 2 reused), all on_invalid:"fail"', () => {
-    expect(descriptor.config.logic_variables).toHaveLength(39);
+  it('37 logic_variables declared (35 new parcel_sanity_* + 2 reused), all on_invalid:"fail" — peel O1 (2026-09-22) RETIRED parcel_sanity_onlot_share_rd_min/_attached_min (declared-but-never-consumed by INVARIANT_ONLOT_SHARE_SQL)', () => {
+    expect(descriptor.config.logic_variables).toHaveLength(37);
     const names = descriptor.config.logic_variables.map((v: { name: string }) => v.name);
     expect(names).toContain('max_build_min_dimension_m');
     expect(names).toContain('mislink_footprint_lot_tol');
-    expect(names).toContain('parcel_sanity_onlot_share_rd_min');
-    expect(names).toContain('parcel_sanity_onlot_share_attached_min');
-    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(37);
+    expect(names).not.toContain('parcel_sanity_onlot_share_rd_min');
+    expect(names).not.toContain('parcel_sanity_onlot_share_attached_min');
+    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(35);
     for (const v of descriptor.config.logic_variables) expect(v.on_invalid, v.name).toBe('fail');
   });
 
@@ -193,13 +193,11 @@ describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS 
     expect(sibling.id).not.toBe(ravineReno.id);
   });
 
-  it('LOGIC_VAR_DEFS has exactly 37 entries (35 + S0.3\'s 2 onlot-share zone floors), all prefixed parcel_sanity_', () => {
-    expect(fields.LOGIC_VAR_DEFS).toHaveLength(37);
+  it('LOGIC_VAR_DEFS has exactly 35 entries, all prefixed parcel_sanity_ — peel O1 (2026-09-22) RETIRED the S0.3 onlot-share zone floors (0.90/0.50 now baked as documented, non-tunable literals in INVARIANT_ONLOT_SHARE_SQL, never a declared-but-dead logic variable)', () => {
+    expect(fields.LOGIC_VAR_DEFS).toHaveLength(35);
     for (const v of fields.LOGIC_VAR_DEFS) expect(v.name.startsWith('parcel_sanity_'), v.name).toBe(true);
-    const rd = fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_rd_min');
-    const attached = fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_attached_min');
-    expect(rd.default).toBe(0.90);
-    expect(attached.default).toBe(0.50);
+    expect(fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_rd_min')).toBeUndefined();
+    expect(fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_attached_min')).toBeUndefined();
   });
 
   it('INVARIANT_DEFS has exactly 1 entry (existing_structure_onlot_share_low), frequency:"validate_only", real (non-invented) last_measured', () => {

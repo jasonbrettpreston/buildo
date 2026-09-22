@@ -103,15 +103,21 @@ const LOGIC_VAR_DEFS = [
   { name: 'parcel_sanity_distribution_percentile', default: 0.99, min: 0.5, max: 0.9999, group: 'Spatial & Massing', description: 'assert_parcel_sanity: per-zone distribution-scan outlier percentile (percentile_cont). Ported verbatim from the pre-conversion literal (0.99). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_distribution_median_multiplier', default: 3, min: 1, max: 100, group: 'Spatial & Massing', description: 'assert_parcel_sanity: per-zone distribution-scan outlier median multiplier (value > multiplier x zone median). Ported verbatim from the pre-conversion literal (3). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_distribution_median_floor', default: 0.0001, min: 0, max: 1, group: 'Spatial & Massing', description: 'assert_parcel_sanity: per-zone distribution-scan zero-median floor (GREATEST(median, floor)). Ported verbatim from the pre-conversion literal (0.0001). CONSUMED by assert_parcel_sanity.' },
-  // S0.3 (WF3 existing-structure-area-artifacts, 2026-09-21) — the zone-aware on-lot
-  // share floor for existing_structure_onlot_share_low (a validate_only invariants[]
-  // entry, not a checks[] row — R-AD "one row, zone-aware CASE inside the predicate",
-  // Decision 4). RD's snap cohort (§0.3 grounding) measured p50 on-lot share 1.000 with
-  // a 0.90 floor giving a clean 8,184-parcel WARN population; attached zones (RS/RT/RM/RA)
-  // share one lower floor (RS measured p50 0.520) since a legitimately shared party-wall
-  // structure routinely sits well under RD's near-100% floor.
-  { name: 'parcel_sanity_onlot_share_rd_min', default: 0.90, min: 0, max: 1, group: 'Spatial & Massing', description: 'assert_parcel_sanity (S0.3): RD-zone on-lot share floor (ST_Intersection(parcel,building) / building footprint area) below which existing_structure_onlot_share_low WARNs. Measured live 2026-09-21: RD p50 on-lot share 1.000, 8,184 RD parcels below this floor. CONSUMED by assert_parcel_sanity (validate_only invariant).' },
-  { name: 'parcel_sanity_onlot_share_attached_min', default: 0.50, min: 0, max: 1, group: 'Spatial & Massing', description: 'assert_parcel_sanity (S0.3): non-RD (attached: RS/RT/RM/RA/other) on-lot share floor for existing_structure_onlot_share_low. Measured live 2026-09-21: RS p50 on-lot share 0.520 — a genuinely shared party-wall structure legitimately sits well under RD\'s floor. CONSUMED by assert_parcel_sanity (validate_only invariant).' },
+  // S0.3 (2026-09-21) originally declared TWO more logic variables here
+  // (parcel_sanity_onlot_share_rd_min / _attached_min) for existing_structure_onlot_share_low's
+  // zone-aware floor. RETIRED at the slice-0 output-panel peel (2026-09-22, finding O1,
+  // DeepSeek CRITICAL on this file: "the two logic variables this invariant claims to
+  // consume are dead — the SQL inlines their defaults... the logic variable is a lie"):
+  // Spec 124 R-AD governs checks[]'s config-substituted warn_limit tiering (unrelated);
+  // R-V governs validate_only EXECUTION TIMING only — neither rules on literal-vs-config
+  // for an invariants[] `sql` string. Checked scripts/lib/step/plausibility.js#executeEntry:
+  // it runs `entry.sql` VERBATIM via `pool.query`, with zero runtime config-substitution
+  // seam for a plain source:"invariant" entry (unlike kind:"distribution", which gets a
+  // real ctx.config thread via runDistributionEntries — plausibility.js:56's own comment:
+  // "the ONLY way a registered threshold may be consumed [by a live path], never a literal
+  // baked at descriptor-generation time"). Building an equivalent live-threading dispatch
+  // for two scalar thresholds is disproportionate to this peel. See INVARIANT_ONLOT_SHARE_SQL
+  // below for where 0.90/0.50 now live as documented, non-tunable model constants.
 ];
 
 // ---------------------------------------------------------------------------
@@ -302,8 +308,20 @@ const CHECK_DEFS = [
   // INFO-by-taste) — except ravine_constrained_carries_priced_reno, which IS gate:true
   // HIGH because a withheld envelope carrying a priced reno line is never legitimate,
   // at any population size (mirrors its sibling ravine_constrained_carries_priced_cost).
-  { fam: 'INVARIANT', id: 'existing_structure_shared_with_other_parcel', sev: 'HIGH', gate: false,
-    why: "ES-4 observability (S0.3) — this parcel's primary massing building is ALSO another parcel's primary (a block/row polygon serving >=2 parcels; link-massing has no apportionment yet, Spec 56 §2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL STEP (assert_parcel_sanity's folded scan is unconditionally RES-scoped, `FROM parcels WHERE zoning_class LIKE 'R%'`, unlike a raw ad-hoc query): 97,987 — §5.2a's cited 108,333 is the UNSCOPED count (measured against all parcels, not through the step), a divergence corrected here rather than silently transcribed (feedback_no_transcription_from_prior_artifacts). Standing until slice 1's on-lot apportionment lands. review_followups.md:3123 (0 of 42 rules ever referenced parcel_buildings/is_primary) is the gap this closes.",
+  // Peel finding O4 (2026-09-22): the file's ~45 other checks' `bad()` fragments are
+  // spliced into 5 different FROM-clause shapes across 2 files (runSanity's shared
+  // aggregate `FROM parcels WHERE ${RES}` scan below, unaliased; plus
+  // scripts/analysis/parcel-field-dump.js's 4 own ad-hoc `FROM parcels WHERE ...`
+  // queries at lines 42/52/58/66, also unaliased) — the SAME bad() text runs in all 5.
+  // `parcels.id` (a fully-qualified reference to the outer, unaliased `parcels` table)
+  // is the only spelling valid in every one of those 5 contexts; giving it a local `p.`
+  // alias (matching INVARIANT_ONLOT_SHARE_SQL's own STANDALONE-query style below) would
+  // require aliasing `FROM parcels` in all 5 call sites for a cosmetic rename with no
+  // functional benefit and real regression risk to the Reality-Check instrument —
+  // REJECTED as disproportionate to this peel; `parcels.id` stays as the deliberate,
+  // portable spelling.
+  { fam: 'INVARIANT', id: 'existing_structure_shared_with_other_parcel', sev: 'WARN', gate: false,
+    why: "ES-4 observability (S0.3) — this parcel's primary massing building is ALSO another parcel's primary (a block/row polygon serving >=2 parcels; link-massing has no apportionment yet, Spec 56 §2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL STEP (assert_parcel_sanity's folded scan is unconditionally RES-scoped, `FROM parcels WHERE zoning_class LIKE 'R%'`, unlike a raw ad-hoc query): 97,987 — §5.2a's cited 108,333 is the UNSCOPED count (measured against all parcels, not through the step), a divergence corrected here rather than silently transcribed (feedback_no_transcription_from_prior_artifacts). Standing until slice 1's on-lot apportionment lands. review_followups.md:3123 (0 of 42 rules ever referenced parcel_buildings/is_primary) is the gap this closes. sev aligned HIGH->WARN at the slice-0 peel (finding O3): buildDescriptor's severity mapping (def.gate ? 'FAIL' : (def.sev === 'INFO' ? 'INFO' : 'WARN')) already rendered this as WARN in the generated descriptor regardless of the sev literal (functionally inert for any non-INFO, non-gate value) — the fix is a source-honesty correction (the field said HIGH while the block comment/Spec 43 #25/the descriptor all say WARN), not a behaviour change; verified byte-identical descriptor checks[] entry pre/post (severity was already \"WARN\").",
     retightenWhen: 'zero rows — closes only once slice 1 (link_massing overlap-only fallback + enrich_parcels on-lot apportionment) resolves each shared building to its true per-parcel share; a structural fact of the row/semi/attached housing stock, not a bug this run introduces.',
     applies: () => `cur_floor_gfa_sqm IS NOT NULL`,
     bad: () => `EXISTS (
@@ -314,8 +332,8 @@ const CHECK_DEFS = [
           WHERE pb2.building_id = pb1.building_id AND pb2.is_primary AND pb2.parcel_id <> pb1.parcel_id
         )
     )` },
-  { fam: 'INVARIANT', id: 'existing_structure_borrowed_primary', sev: 'HIGH', gate: false,
-    why: "ES-4 observability (S0.3) — the narrower cut of existing_structure_shared_with_other_parcel: THIS parcel's own link to the shared building is match_type='nearest' (the bounded fallback, Spec 56 §3 — a LOW-confidence link is a neighbour's building borrowed as this parcel's own primary, ES-2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL (RES-scoped) STEP: 47,882 — §5.2a's cited 53,926 is the UNSCOPED count, corrected here (see the sibling check's own why for the same divergence). The valued, borrowed subset of the shared-primary population, not a fourth population.",
+  { fam: 'INVARIANT', id: 'existing_structure_borrowed_primary', sev: 'WARN', gate: false,
+    why: "ES-4 observability (S0.3) — the narrower cut of existing_structure_shared_with_other_parcel: THIS parcel's own link to the shared building is match_type='nearest' (the bounded fallback, Spec 56 §3 — a LOW-confidence link is a neighbour's building borrowed as this parcel's own primary, ES-2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL (RES-scoped) STEP: 47,882 — §5.2a's cited 53,926 is the UNSCOPED count, corrected here (see the sibling check's own why for the same divergence). The valued, borrowed subset of the shared-primary population, not a fourth population. sev aligned HIGH->WARN at the slice-0 peel (finding O3, same reasoning as the sibling check's why — functionally inert, source-honesty fix only).",
     retightenWhen: "zero rows — closes when slice 1's overlap-only fallback narrowing (retiring the disjoint nearest matches, Spec 56 §3 new subsection) removes the fabricated borrows, and the survivors resolve to a genuine apportioned share instead of the whole borrowed polygon.",
     applies: () => `cur_floor_gfa_sqm IS NOT NULL`,
     bad: () => `EXISTS (
@@ -327,9 +345,9 @@ const CHECK_DEFS = [
         )
     )` },
   { fam: 'INVARIANT', id: 'ravine_constrained_carries_priced_reno', sev: 'HIGH', gate: true,
-    why: "FOLD-RC3 (§5.2a, re-verified 2026-09-21) — the RENO half of the withheld-envelope tripwire. The existing gated ravine_constrained_carries_priced_cost (:229-232 above) names only the max-build cost fields (cost_fb_total/cost_solar_total/opt_aor_gfa_sqm/opt_coa_gfa_sqm) and its predicate hits ZERO of the 14,005 ravine_constrained parcels (green because it never looked); measured live 2026-09-21, 12,135 of those 14,005 carry a priced cost_gut_total/cost_addition_total reno line — a withheld envelope co-existing with a priced gut/addition line, undetected by a HIGH gated check sitting right beside it. A SEPARATE id (never a widening of the existing check, so its own 0 baseline stays interpretable). Structural — no magnitude, no logic variable, mirrors its sibling's own shape exactly. EXPECTED 12,135 -> 0 the moment S0.2's product-scope bound lands (ravine_constrained parcels have max_buildable_gfa_sqm IS NULL, so S0.2 already un-prices them) — RED here, in S0.3, BEFORE S0.2; GREEN after. Spec 59's own ravine-protection withheld-envelope contract gains its reno-side citation here.",
+    why: "FOLD-RC3 (§5.2a, re-verified 2026-09-21) — the RENO half of the withheld-envelope tripwire. The existing gated ravine_constrained_carries_priced_cost (:229-232 above) names only the max-build cost fields (cost_fb_total/cost_solar_total/opt_aor_gfa_sqm/opt_coa_gfa_sqm) and its predicate hits ZERO of the 14,005 ravine_constrained parcels (green because it never looked); measured live 2026-09-21, 12,135 of those 14,005 carry a priced cost_gut_total/cost_addition_total reno line — a withheld envelope co-existing with a priced gut/addition line, undetected by a HIGH gated check sitting right beside it. A SEPARATE id (never a widening of the existing check, so its own 0 baseline stays interpretable). Structural — no magnitude, no logic variable, mirrors its sibling's own shape exactly. EXPECTED 12,135 -> 0 the moment S0.2's product-scope bound lands (ravine_constrained parcels have max_buildable_gfa_sqm IS NULL, so S0.2 already un-prices them) — RED here, in S0.3, BEFORE S0.2; GREEN after. Spec 59's own ravine-protection withheld-envelope contract gains its reno-side citation here. Predicate tightened at the slice-0 peel (finding O2): the JSONB arms tested mere KEY PRESENCE (`parcel_cost_menu ? 'gut'`), true even for a zeroed/NULL-totalled gut object written while retracting a price — now tests the PRICED VALUE via the same *_total columns cost_gut_total/cost_addition_total already test, dropping the redundant-and-wrong JSONB arms entirely (parcel_cost_menu's gut/addition totals are written to cost_gut_total/cost_addition_total by the same compute pass, so the *_total columns alone already cover the priced-content case the JSONB arms were trying, and failing, to express).",
     applies: () => `envelope_constraint_reason = 'ravine_constrained'`,
-    bad: () => `cost_gut_total IS NOT NULL OR cost_addition_total IS NOT NULL OR parcel_cost_menu ? 'gut' OR parcel_cost_menu ? 'addition'` },
+    bad: () => `cost_gut_total IS NOT NULL OR cost_addition_total IS NOT NULL` },
 ];
 
 // ---------------------------------------------------------------------------
@@ -341,10 +359,23 @@ const CHECK_DEFS = [
 // `missed_link_count` precedent shape (source:"invariant", frequency:"validate_only",
 // a declared statement_timeout, `sql` a REAL standalone query capture-step-golden.js
 // can execute verbatim, `last_measured` from a live timed run, never invented).
-// `sql` bakes the TWO new zone-floor logic variables' CURRENT DEFAULTS as literals —
-// the same convention DIST_DEFS's buildDistCountSql already uses (never re-rendered
-// from a live config value; Decision 4/R-AD: one row, the zone-floor CASE lives
-// INSIDE the predicate, not as 6 doubled per-zone rows).
+// `sql` bakes 0.90/0.50 as LITERAL, NON-TUNABLE model constants — NOT a rendering of a
+// live/declared logic variable (peel finding O1, 2026-09-22, DeepSeek CRITICAL: the
+// module originally declared parcel_sanity_onlot_share_rd_min/_attached_min as if they
+// governed this predicate; they never did — executeEntry() (plausibility.js) runs a
+// source:"invariant" entry's `sql` VERBATIM with zero runtime config-substitution seam,
+// unlike kind:"distribution" entries, which genuinely thread ctx.config via
+// runDistributionEntries; per plausibility.js:56's own comment, that IS "the ONLY way a
+// registered threshold may be consumed [at runtime] — never a literal baked at
+// descriptor-generation time". Spec 124 R-AD (checks[]'s config-substituted warn_limit
+// tiering) and R-V (validate_only's chain-end EXECUTION TIMING) were both checked and
+// neither rules on literal-vs-config for an invariants[] `sql` string — no register row
+// grants an exemption here. Building a live-threading dispatch equivalent to
+// kind:"distribution" for two scalar thresholds was judged disproportionate to this
+// peel, so the two variables were RETIRED (seed + GROUPS + probe list + goldens; see
+// scripts/seeds/logic_variables.json's git history) rather than kept declared-but-dead.
+// Decision 4/R-AD's zone-aware "one row, the CASE lives inside the predicate, not 6
+// doubled per-zone rows" STRUCTURE still stands — only the tunability claim is retired.
 // ---------------------------------------------------------------------------
 const INVARIANT_ONLOT_SHARE_SQL = `
   SELECT count(*)::int AS viol FROM parcels p
@@ -375,7 +406,7 @@ const INVARIANT_DEFS = [
     retighten_when: 'zero rows — closes when slice 1\'s on-lot apportionment (enrich_parcels cur_floor_gfa_sqm = ST_Intersection area, not the whole polygon) makes on-lot share genuinely 1.0 for every non-shared structure; RD/attached remain two different legitimate floors even after slice 1 (attached party-wall sharing is real, not a defect).',
     last_measured: { value: 59661, at: '2026-09-22T00:00:00.000Z', commit: '06dcd330', cost_ms: 14708, sample_n: 1, source_run: { run_id: null, chain: null, event: 'manual_timing' } },
     why: {
-      text: "S0.3 (Decision 4/R-AD: zone-aware 3-tier in ONE row, the CASE lives inside the predicate, never doubled per-zone rows). Measures the REAL on-lot share via ST_Intersection(parcel.geom, primary building.geom) / building footprint area, zone-bucketed: RD floor parcel_sanity_onlot_share_rd_min (0.90), all others parcel_sanity_onlot_share_attached_min (0.50). §0.3's own grounding (RD snap cohort p50 loss 0.00 m², RS p50 on-lot share 0.520) is what calibrated both floors. WARN + retighten_when (Decision 3, R-H) — a standing population until slice 1's apportionment lands, never FAIL. validate_only (R-V, Decision 7): a full-population ST_Intersection scan is minutes, not milliseconds — reported at chain-end-synthesis, never a runtime gate.",
+      text: "S0.3 (Decision 4/R-AD: zone-aware 3-tier in ONE row, the CASE lives inside the predicate, never doubled per-zone rows). Measures the REAL on-lot share via ST_Intersection(parcel.geom, primary building.geom) / building footprint area, zone-bucketed: RD floor 0.90, all others (attached: RS/RT/RM/RA/other) 0.50 — literal, non-tunable model constants as of the slice-0 peel (finding O1: the two logic variables these floors were originally declared as never actually reached this predicate; retired rather than left declared-but-dead — see INVARIANT_ONLOT_SHARE_SQL's own docblock above for the full ruling). §0.3's own grounding (RD snap cohort p50 loss 0.00 m², RS p50 on-lot share 0.520) is what calibrated both floors. WARN + retighten_when (Decision 3, R-H) — a standing population until slice 1's apportionment lands, never FAIL. validate_only (R-V, Decision 7): a full-population ST_Intersection scan is minutes, not milliseconds — reported at chain-end-synthesis, never a runtime gate.",
       liveness: { kind: 'table', ref: 'parcel_buildings' },
     },
   },

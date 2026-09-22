@@ -1248,7 +1248,7 @@
       "accept_until": "none",
       "retighten_when": "zero rows — closes only once slice 1 (link_massing overlap-only fallback + enrich_parcels on-lot apportionment) resolves each shared building to its true per-parcel share; a structural fact of the row/semi/attached housing stock, not a bug this run introduces.",
       "why": {
-        "text": "ES-4 observability (S0.3) — this parcel's primary massing building is ALSO another parcel's primary (a block/row polygon serving >=2 parcels; link-massing has no apportionment yet, Spec 56 §2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL STEP (assert_parcel_sanity's folded scan is unconditionally RES-scoped, `FROM parcels WHERE zoning_class LIKE 'R%'`, unlike a raw ad-hoc query): 97,987 — §5.2a's cited 108,333 is the UNSCOPED count (measured against all parcels, not through the step), a divergence corrected here rather than silently transcribed (feedback_no_transcription_from_prior_artifacts). Standing until slice 1's on-lot apportionment lands. review_followups.md:3123 (0 of 42 rules ever referenced parcel_buildings/is_primary) is the gap this closes. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "ES-4 observability (S0.3) — this parcel's primary massing building is ALSO another parcel's primary (a block/row polygon serving >=2 parcels; link-massing has no apportionment yet, Spec 56 §2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL STEP (assert_parcel_sanity's folded scan is unconditionally RES-scoped, `FROM parcels WHERE zoning_class LIKE 'R%'`, unlike a raw ad-hoc query): 97,987 — §5.2a's cited 108,333 is the UNSCOPED count (measured against all parcels, not through the step), a divergence corrected here rather than silently transcribed (feedback_no_transcription_from_prior_artifacts). Standing until slice 1's on-lot apportionment lands. review_followups.md:3123 (0 of 42 rules ever referenced parcel_buildings/is_primary) is the gap this closes. sev aligned HIGH->WARN at the slice-0 peel (finding O3): buildDescriptor's severity mapping (def.gate ? 'FAIL' : (def.sev === 'INFO' ? 'INFO' : 'WARN')) already rendered this as WARN in the generated descriptor regardless of the sev literal (functionally inert for any non-INFO, non-gate value) — the fix is a source-honesty correction (the field said HIGH while the block comment/Spec 43 #25/the descriptor all say WARN), not a behaviour change; verified byte-identical descriptor checks[] entry pre/post (severity was already \"WARN\"). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -1275,7 +1275,7 @@
       "accept_until": "none",
       "retighten_when": "zero rows — closes when slice 1's overlap-only fallback narrowing (retiring the disjoint nearest matches, Spec 56 §3 new subsection) removes the fabricated borrows, and the survivors resolve to a genuine apportioned share instead of the whole borrowed polygon.",
       "why": {
-        "text": "ES-4 observability (S0.3) — the narrower cut of existing_structure_shared_with_other_parcel: THIS parcel's own link to the shared building is match_type='nearest' (the bounded fallback, Spec 56 §3 — a LOW-confidence link is a neighbour's building borrowed as this parcel's own primary, ES-2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL (RES-scoped) STEP: 47,882 — §5.2a's cited 53,926 is the UNSCOPED count, corrected here (see the sibling check's own why for the same divergence). The valued, borrowed subset of the shared-primary population, not a fourth population. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "ES-4 observability (S0.3) — the narrower cut of existing_structure_shared_with_other_parcel: THIS parcel's own link to the shared building is match_type='nearest' (the bounded fallback, Spec 56 §3 — a LOW-confidence link is a neighbour's building borrowed as this parcel's own primary, ES-2). WARN, retighten_when declared — measured live 2026-09-22 THROUGH THE REAL (RES-scoped) STEP: 47,882 — §5.2a's cited 53,926 is the UNSCOPED count, corrected here (see the sibling check's own why for the same divergence). The valued, borrowed subset of the shared-primary population, not a fourth population. sev aligned HIGH->WARN at the slice-0 peel (finding O3, same reasoning as the sibling check's why — functionally inert, source-honesty fix only). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -1301,7 +1301,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "FOLD-RC3 (§5.2a, re-verified 2026-09-21) — the RENO half of the withheld-envelope tripwire. The existing gated ravine_constrained_carries_priced_cost (:229-232 above) names only the max-build cost fields (cost_fb_total/cost_solar_total/opt_aor_gfa_sqm/opt_coa_gfa_sqm) and its predicate hits ZERO of the 14,005 ravine_constrained parcels (green because it never looked); measured live 2026-09-21, 12,135 of those 14,005 carry a priced cost_gut_total/cost_addition_total reno line — a withheld envelope co-existing with a priced gut/addition line, undetected by a HIGH gated check sitting right beside it. A SEPARATE id (never a widening of the existing check, so its own 0 baseline stays interpretable). Structural — no magnitude, no logic variable, mirrors its sibling's own shape exactly. EXPECTED 12,135 -> 0 the moment S0.2's product-scope bound lands (ravine_constrained parcels have max_buildable_gfa_sqm IS NULL, so S0.2 already un-prices them) — RED here, in S0.3, BEFORE S0.2; GREEN after. Spec 59's own ravine-protection withheld-envelope contract gains its reno-side citation here. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "FOLD-RC3 (§5.2a, re-verified 2026-09-21) — the RENO half of the withheld-envelope tripwire. The existing gated ravine_constrained_carries_priced_cost (:229-232 above) names only the max-build cost fields (cost_fb_total/cost_solar_total/opt_aor_gfa_sqm/opt_coa_gfa_sqm) and its predicate hits ZERO of the 14,005 ravine_constrained parcels (green because it never looked); measured live 2026-09-21, 12,135 of those 14,005 carry a priced cost_gut_total/cost_addition_total reno line — a withheld envelope co-existing with a priced gut/addition line, undetected by a HIGH gated check sitting right beside it. A SEPARATE id (never a widening of the existing check, so its own 0 baseline stays interpretable). Structural — no magnitude, no logic variable, mirrors its sibling's own shape exactly. EXPECTED 12,135 -> 0 the moment S0.2's product-scope bound lands (ravine_constrained parcels have max_buildable_gfa_sqm IS NULL, so S0.2 already un-prices them) — RED here, in S0.3, BEFORE S0.2; GREEN after. Spec 59's own ravine-protection withheld-envelope contract gains its reno-side citation here. Predicate tightened at the slice-0 peel (finding O2): the JSONB arms tested mere KEY PRESENCE (`parcel_cost_menu ? 'gut'`), true even for a zeroed/NULL-totalled gut object written while retracting a price — now tests the PRICED VALUE via the same *_total columns cost_gut_total/cost_addition_total already test, dropping the redundant-and-wrong JSONB arms entirely (parcel_cost_menu's gut/addition totals are written to cost_gut_total/cost_addition_total by the same compute pass, so the *_total columns alone already cover the priced-content case the JSONB arms were trying, and failing, to express). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -1338,7 +1338,7 @@
         }
       },
       "why": {
-        "text": "S0.3 (Decision 4/R-AD: zone-aware 3-tier in ONE row, the CASE lives inside the predicate, never doubled per-zone rows). Measures the REAL on-lot share via ST_Intersection(parcel.geom, primary building.geom) / building footprint area, zone-bucketed: RD floor parcel_sanity_onlot_share_rd_min (0.90), all others parcel_sanity_onlot_share_attached_min (0.50). §0.3's own grounding (RD snap cohort p50 loss 0.00 m², RS p50 on-lot share 0.520) is what calibrated both floors. WARN + retighten_when (Decision 3, R-H) — a standing population until slice 1's apportionment lands, never FAIL. validate_only (R-V, Decision 7): a full-population ST_Intersection scan is minutes, not milliseconds — reported at chain-end-synthesis, never a runtime gate.",
+        "text": "S0.3 (Decision 4/R-AD: zone-aware 3-tier in ONE row, the CASE lives inside the predicate, never doubled per-zone rows). Measures the REAL on-lot share via ST_Intersection(parcel.geom, primary building.geom) / building footprint area, zone-bucketed: RD floor 0.90, all others (attached: RS/RT/RM/RA/other) 0.50 — literal, non-tunable model constants as of the slice-0 peel (finding O1: the two logic variables these floors were originally declared as never actually reached this predicate; retired rather than left declared-but-dead — see INVARIANT_ONLOT_SHARE_SQL's own docblock above for the full ruling). §0.3's own grounding (RD snap cohort p50 loss 0.00 m², RS p50 on-lot share 0.520) is what calibrated both floors. WARN + retighten_when (Decision 3, R-H) — a standing population until slice 1's apportionment lands, never FAIL. validate_only (R-V, Decision 7): a full-population ST_Intersection scan is minutes, not milliseconds — reported at chain-end-synthesis, never a runtime gate.",
         "liveness": {
           "kind": "table",
           "ref": "parcel_buildings"
@@ -1952,18 +1952,6 @@
       },
       {
         "name": "parcel_sanity_distribution_median_floor",
-        "min": 0,
-        "max": 1,
-        "on_invalid": "fail"
-      },
-      {
-        "name": "parcel_sanity_onlot_share_rd_min",
-        "min": 0,
-        "max": 1,
-        "on_invalid": "fail"
-      },
-      {
-        "name": "parcel_sanity_onlot_share_attached_min",
         "min": 0,
         "max": 1,
         "on_invalid": "fail"

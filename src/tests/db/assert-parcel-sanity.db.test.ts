@@ -149,6 +149,28 @@ describe.skipIf(!dbAvailable())('assert_parcel_sanity — runSanity FAIL-gate (l
     expect(Number(sibling.viol)).toBe(0);
   }, 120_000);
 
+  // Peel finding O2 (2026-09-22): the ORIGINAL predicate tested JSONB key presence
+  // (`parcel_cost_menu ? 'gut'`), true even for a zeroed/NULL-totalled gut object —
+  // this fixture is exactly that shape: the 'gut' key IS present in parcel_cost_menu,
+  // but its own total is 0 (never written a real price) AND cost_gut_total is left
+  // NULL (no rate/line was ever costed for this row). scripts/lib/parcel-cost.js's
+  // buildParcelCostMenu (:292-296) writes menu[line.id] and scalars[line.scalar]
+  // TOGETHER in the same guarded iteration, so this exact shape cannot arise from the
+  // real compute path — it is a synthetic proof that the FIXED predicate (cost_gut_total/
+  // cost_addition_total IS NOT NULL, no JSONB arm) does not key off presence alone, i.e.
+  // it does not regress to the O2 bug even under a hand-crafted adversarial row.
+  it('a ravine_constrained parcel with parcel_cost_menu.gut present but zero-totalled AND cost_gut_total NULL → does NOT trip ravine_constrained_carries_priced_reno (O2 RED case)', async () => {
+    await pool.query(
+      `INSERT INTO parcels (parcel_id, feature_type, geometry, geom, zoning_class, envelope_constraint_reason, parcel_cost_menu, cost_gut_total, cost_addition_total)
+       VALUES ('SANITY-TEST-RVR-ZM', 'TEST', $1::jsonb, ST_SetSRID(ST_GeomFromGeoJSON($1::text),4326), 'RD', 'ravine_constrained', '{"gut": {"total": 0}}'::jsonb, NULL, NULL)`,
+      [sq(0, 0, 0.0002)],
+    );
+    const { results } = await runSanity(pool);
+    const c = results.find((r: { id: string }) => r.id === 'ravine_constrained_carries_priced_reno');
+    expect(Number(c.viol)).toBe(0);
+    expect(c.status).not.toBe('FAIL');
+  }, 120_000);
+
   it('P12-A2 accept-list is a real, selective filter: a listed id (7402) is excluded, a NEW id still trips', async () => {
     await pool.query(
       `INSERT INTO parcels (id, parcel_id, feature_type, geometry, geom, zoning_class, lot_size_sqm, cost_fb_total)
