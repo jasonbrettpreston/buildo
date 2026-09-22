@@ -31,6 +31,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SPEC_PATH = path.join(REPO_ROOT, 'docs/specs/00-architecture/08_agents.md');
 const PART_B_PLAN_PATH = path.join(REPO_ROOT, '.cursor/wf1_deepseek_execution_engine_active_task.md');
 const DEEPSEEK_CLI_PATH = path.join(REPO_ROOT, 'scripts/deepseek-review.js');
+const EXEC_ENGINE_CLI_PATH = path.join(REPO_ROOT, 'scripts/deepseek-exec.js');
 const GEMINI_CLI_PATH = path.join(REPO_ROOT, 'scripts/gemini-review.js');
 const AGENTS_DIR = path.join(REPO_ROOT, '.claude/agents');
 
@@ -256,7 +257,13 @@ function checkT6(cliSource: string): string[] {
 // ---------------------------------------------------------------------------
 // T7 — §B fallback doctrine (contract text)
 // ---------------------------------------------------------------------------
-function checkT7(text: string): string[] {
+// Step 9 panel fold (Regression Guardian pass on Phase 3, 2026-09-22):
+// `engineSource` is OPTIONAL so every pre-existing call site (text-only)
+// keeps working unchanged; when supplied, §B's STATUS bullet must not claim
+// "nothing in the tree reads EXECUTION_PROVIDER" while the real engine's
+// `resolveProvider` demonstrably reads it (true since SUB-ENG-1 commit 2) —
+// a stale clause and a live reader cannot both be true.
+function checkT7(text: string, engineSource?: string): string[] {
   const errors: string[] = [];
   const bText = extractSection(text, '## B. Substrate Toggle Contract', (l) => l.trim().startsWith('## 3. The roster'));
   const enumMatch = /EXECUTION_PROVIDER=([a-z|]+)/.exec(bText);
@@ -264,6 +271,13 @@ function checkT7(text: string): string[] {
   if (!/the default is \*\*`claude`\*\*/.test(bText)) errors.push('default-claude clause missing');
   if (!/resolves to `claude` and logs the downgrade/.test(bText)) errors.push('fallback-resolves-and-logs clause missing');
   if (!/`deepseek` is \*\*inert until SUB-ENG-1 ships\*\*/.test(bText)) errors.push('deepseek-inert-with-tracked-id clause missing');
+  if (engineSource !== undefined) {
+    const staleClause = /nothing in the tree reads `EXECUTION_PROVIDER`/.test(bText);
+    const engineReadsIt = /resolveProvider/.test(engineSource);
+    if (staleClause && engineReadsIt) {
+      errors.push('stale STATUS clause: §B claims nothing reads EXECUTION_PROVIDER, but scripts/deepseek-exec.js already does');
+    }
+  }
   return errors;
 }
 
@@ -493,6 +507,22 @@ describe('agent-roster.infra.test.ts — Spec 08 §A/§B/§3 substrate locks', (
   describe('T7 — §B fallback doctrine (contract text AND runtime)', () => {
     it('GREEN: §B carries the literal fallback contract', () => {
       expect(checkT7(specText)).toEqual([]);
+    });
+
+    it('GREEN (both directions, real files): §B\'s STATUS bullet is not stale against the real engine\'s resolveProvider', () => {
+      const engineSource = fs.readFileSync(EXEC_ENGINE_CLI_PATH, 'utf8');
+      expect(checkT7(specText, engineSource)).toEqual([]);
+    });
+
+    it('RED: a fixture carrying the STALE "nothing in the tree reads EXECUTION_PROVIDER" clause, against the REAL (reading) engine source', () => {
+      const staleFixture = specText.replace(
+        '`deepseek` is **inert until SUB-ENG-1 ships**; the engine (`scripts/deepseek-exec.js`) reads it and resolves per §C.5; the toggle stays inert because the §A row is `PLANNED` — it flips only via Phase 4\'s exit criteria.',
+        '`deepseek` is **inert until SUB-ENG-1 ships**; nothing in the tree reads `EXECUTION_PROVIDER` today. Flips to `live` only via the engine\'s own exit criteria.',
+      );
+      const p = mkTmpFile('t7-stale-status.md', staleFixture);
+      const engineSource = fs.readFileSync(EXEC_ENGINE_CLI_PATH, 'utf8');
+      const errs = checkT7(readTmp(p), engineSource);
+      expect(errs.some((e) => e.includes('stale STATUS clause'))).toBe(true);
     });
     it('RED: fallback sentence deleted', () => {
       const mutated = specText.replace(
