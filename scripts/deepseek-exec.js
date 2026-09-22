@@ -175,7 +175,11 @@ async function runEngine(opts = {}) {
   const { provider, provider_source: providerSource } = resolveProvider(opts.provider, process.env.EXECUTION_PROVIDER);
   const model = opts.model || process.env.DEEPSEEK_EXEC_MODEL || 'deepseek-chat';
   const runId = opts.runId || generateRunId();
-  const ledger = openLedger({ ledgerDir: opts.ledgerDir, runId });
+  // opts.ledger is a test-only escape hatch (mirrors opts.modelClient below)
+  // — it lets a lock test prove "a ledger write failure aborts the run"
+  // deterministically (a wrapping ledger whose append() throws) rather than
+  // relying on OS filesystem-permission behavior, which differs by platform.
+  const ledger = opts.ledger || openLedger({ ledgerDir: opts.ledgerDir, runId });
   const ledgerDir = path.dirname(ledger.path);
   const { headSha, branch } = gitInfo(repoRoot);
 
