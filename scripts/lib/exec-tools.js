@@ -15,21 +15,28 @@
  *     ledger record and aborts the run WITHOUT the handler ever executing).
  *
  * Commit 2 shipped every tool as a schema-validated stub returning
- * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }`. Commit 3 (this file's
- * current state) adds real `read_file`/`grep_files` handlers, both path-
- * confined (§C.1.3) and secret-fenced (§C.1.5's `secret_read_deny`), and
- * populates `runState.readState` for §C.1.6's read-before-write tracking.
- * `write_file`/`edit_file`/`run_bash_command` land in commit 4. `git_commit`
+ * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }`. Commit 3 added real
+ * `read_file`/`grep_files` handlers, both path-confined (§C.1.3) and
+ * secret-fenced (§C.1.5's `secret_read_deny`), populating `runState.readState`
+ * for §C.1.6's read-before-write tracking. Commit 4 (this file's current
+ * state) adds `write_file`/`edit_file` (both gated by the same read-before-
+ * write + staleness check) and `run_bash_command` (argv-form only, matched
+ * against `scripts/lib/exec-policy.json` via `scripts/lib/exec-policy-match.js`,
+ * spawnSync-free). All four mutating tools carry a pre/post worktree capture
+ * (`scripts/lib/exec-worktree.js`, §C.3/F10) on their ledger record. `git_commit`
  * stays a stub through the whole of Phase 1 (it ships in Phase 2 commit 10,
  * once the commit fences exist).
  */
 
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 const { resolveConfinedPath, toRepoRelativePosix, isSecretDenied, PathDeniedError } = require('./exec-path');
 const { scrubbedEnv } = require('./exec-env');
 const { redact } = require('./exec-ledger');
+const { captureWorktree } = require('./exec-worktree');
+const { matchArgv } = require('./exec-policy-match');
 
 class MalformedToolCallError extends Error {
   constructor(message) {
@@ -216,6 +223,251 @@ function validateArgs(name, args) {
   }
 }
 
+function clampInt(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * §C.1.6 read-before-write + staleness, shared by write_file and edit_file.
+ * Returns `null` when the check passes, or a blocked toolResult otherwise.
+ * A file that does not yet exist needs no prior read (write_file may create
+ * it); edit_file has nothing to edit in that case, so it is treated as
+ * NOT_READ too (its own error-code column has no NOT_FOUND).
+ */
+function checkReadBeforeWrite(absPath, relPosix, runState, requireExisting) {
+  const existedBefore = fs.existsSync(absPath);
+  const recorded = runState.readState[absPath];
+  if (!existedBefore) {
+    if (requireExisting) {
+      return { ok: false, error: { code: 'NOT_READ', message: `edit_file requires a prior read_file of an existing file: ${relPosix}` } };
+    }
+    return null; // creating a brand-new file needs no prior read
+  }
+  if (!recorded) {
+    return { ok: false, error: { code: 'NOT_READ', message: `no prior read_file of ${relPosix} this run` } };
+  }
+  const currentStat = fs.statSync(absPath);
+  const currentSha256 = sha256Hex(fs.readFileSync(absPath));
+  if (currentSha256 !== recorded.sha256 || currentStat.mtimeMs !== recorded.mtime_ms) {
+    return { ok: false, error: { code: 'STALE', message: `${relPosix} changed since it was last read this run` } };
+  }
+  return null;
+}
+
+// §C.2 write_file — full overwrite; read-before-write + staleness (§C.1.6)
+// gate an EXISTING file, a new file needs no prior read. Pre/post worktree
+// capture (§C.3, F10) brackets the actual fs.writeFileSync call.
+async function writeFileHandler(args, ctx) {
+  const { repoRoot, policy, runState } = ctx;
+  const limits = (policy && policy.limits) || {};
+  // §C.3 — pre/post is present on EVERY write_file tool_call record,
+  // blocked or not, so a fence refusal still proves zero worktree delta.
+  const pre = captureWorktree(repoRoot);
+
+  let absPath;
+  try {
+    absPath = resolveConfinedPath(repoRoot, args.path);
+  } catch (err) {
+    return { toolResult: pathFault(err), pre, post: captureWorktree(repoRoot) };
+  }
+  const relPosix = toRepoRelativePosix(repoRoot, absPath);
+
+  const blocked = checkReadBeforeWrite(absPath, relPosix, runState, false);
+  if (blocked) {
+    return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
+  }
+  const bytes = Buffer.byteLength(args.content, 'utf8');
+  if (limits.write_max_bytes && bytes > limits.write_max_bytes) {
+    return {
+      toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} write is ${bytes} bytes, over the ${limits.write_max_bytes}-byte cap` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
+  }
+
+  const created = !fs.existsSync(absPath);
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, args.content, 'utf8');
+  const post = captureWorktree(repoRoot);
+
+  const newStat = fs.statSync(absPath);
+  const sha256 = sha256Hex(fs.readFileSync(absPath));
+  runState.readState[absPath] = { sha256, mtime_ms: newStat.mtimeMs };
+
+  return { toolResult: { ok: true, path: relPosix, bytes, sha256, created }, pre, post };
+}
+
+// §C.2 edit_file — exact-string replace inside a file read earlier this run.
+async function editFileHandler(args, ctx) {
+  const { repoRoot, runState } = ctx;
+  // §C.3 — pre/post is present on EVERY edit_file tool_call record.
+  const pre = captureWorktree(repoRoot);
+
+  let absPath;
+  try {
+    absPath = resolveConfinedPath(repoRoot, args.path);
+  } catch (err) {
+    return { toolResult: pathFault(err), pre, post: captureWorktree(repoRoot) };
+  }
+  const relPosix = toRepoRelativePosix(repoRoot, absPath);
+
+  const blocked = checkReadBeforeWrite(absPath, relPosix, runState, true);
+  if (blocked) {
+    return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
+  }
+
+  const original = fs.readFileSync(absPath, 'utf8');
+  const occurrences = original.split(args.old_string).length - 1;
+  if (occurrences === 0) {
+    return { toolResult: { ok: false, error: { code: 'NO_MATCH', message: `old_string not found in ${relPosix}` } }, pre, post: captureWorktree(repoRoot) };
+  }
+  if (occurrences > 1 && !args.replace_all) {
+    return {
+      toolResult: { ok: false, error: { code: 'AMBIGUOUS_MATCH', message: `old_string matches ${occurrences} locations in ${relPosix}; pass replace_all or a more specific old_string` } },
+      pre,
+      post: captureWorktree(repoRoot),
+    };
+  }
+
+  const replacements = args.replace_all ? occurrences : 1;
+  const updated = args.replace_all
+    ? original.split(args.old_string).join(args.new_string)
+    : original.replace(args.old_string, args.new_string);
+
+  fs.writeFileSync(absPath, updated, 'utf8');
+  const post = captureWorktree(repoRoot);
+
+  const newStat = fs.statSync(absPath);
+  const sha256 = sha256Hex(fs.readFileSync(absPath));
+  runState.readState[absPath] = { sha256, mtime_ms: newStat.mtimeMs };
+
+  return { toolResult: { ok: true, path: relPosix, replacements, sha256 }, pre, post };
+}
+
+// Windows cannot spawn `npm`/`npx` (.cmd shims) with shell:false — Node core
+// has no non-shell path to a .cmd file. Every token reaching this point has
+// ALREADY passed matchArgv's strict per-token validation (literal policy
+// tokens or a value matching a closed regex/path-confinement check), so
+// there is no free-form string here for cmd.exe's own tokenizer to exploit;
+// routing exactly {npm, npx} through `cmd.exe /d /s /c <argv>` on Windows
+// only (git/node/npx-resolved-binaries below are spawned directly) is the
+// narrowest fix for a real Node/Windows limitation, not a general shell.
+function spawnAllowlisted(argv, opts) {
+  if (process.platform === 'win32' && (argv[0] === 'npm' || argv[0] === 'npx')) {
+    return spawn('cmd.exe', ['/d', '/s', '/c', ...argv], { ...opts, windowsHide: true });
+  }
+  return spawn(argv[0], argv.slice(1), { ...opts, shell: false });
+}
+
+function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    let child;
+    try {
+      child = spawnAllowlisted(argv, { cwd, env });
+    } catch (err) {
+      resolve({ exitCode: null, stdout: '', stderr: err.message, truncated: false, timedOut: false, durationMs: Date.now() - startedAt });
+      return;
+    }
+    let stdout = '';
+    let stderr = '';
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
+    let truncated = false;
+    let timedOut = false;
+    let settled = false;
+
+    const capture = (chunk, which) => {
+      const bytesSoFar = which === 'out' ? stdoutBytes : stderrBytes;
+      if (bytesSoFar >= outputCapBytes) {
+        truncated = true;
+        return;
+      }
+      const remaining = outputCapBytes - bytesSoFar;
+      const slice = chunk.length > remaining ? chunk.subarray(0, remaining) : chunk;
+      if (chunk.length > remaining) {
+        truncated = true;
+      }
+      if (which === 'out') {
+        stdout += slice.toString('utf8');
+        stdoutBytes += slice.length;
+      } else {
+        stderr += slice.toString('utf8');
+        stderrBytes += slice.length;
+      }
+    };
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        // process may already be gone
+      }
+    }, timeoutMs);
+
+    child.stdout.on('data', (chunk) => capture(chunk, 'out'));
+    child.stderr.on('data', (chunk) => capture(chunk, 'err'));
+    child.on('error', (err) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      resolve({ exitCode: null, stdout, stderr: stderr ? `${stderr}\n${err.message}` : err.message, truncated, timedOut, durationMs: Date.now() - startedAt });
+    });
+    child.on('close', (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timer);
+      resolve({ exitCode: code, stdout, stderr, truncated, timedOut, durationMs: Date.now() - startedAt });
+    });
+  });
+}
+
+// §C.2 run_bash_command — argv-form only, deny-by-default via matchArgv
+// (§C.4), spawnSync-free (child_process.spawn), env scrubbed of GIT_*/
+// DEEPSEEK_*, output capped, per-call timeout. Pre/post capture brackets
+// the ENTIRE handler (including a blocked call) so a fence refusal still
+// proves zero worktree delta.
+async function runBashCommandHandler(args, ctx) {
+  const { repoRoot, policy } = ctx;
+  const limits = (policy && policy.limits) || {};
+  const pre = captureWorktree(repoRoot);
+
+  const match = matchArgv(args.argv, policy, { repoRoot });
+  if (!match.allowed) {
+    const post = captureWorktree(repoRoot);
+    return { toolResult: { ok: false, error: { code: match.code, message: match.reason } }, pre, post };
+  }
+
+  const requested = args.timeout_ms || limits.timeout_ms || 600000;
+  const timeoutMs = clampInt(requested, 1, limits.timeout_ceiling_ms || 1200000);
+  const outputCapBytes = limits.bash_output_bytes || 65536;
+  const env = scrubbedEnv(['DEEPSEEK_']);
+
+  const result = await runProcess(args.argv, { cwd: repoRoot, env, timeoutMs, outputCapBytes });
+  const post = captureWorktree(repoRoot);
+
+  if (result.timedOut) {
+    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}` } }, pre, post };
+  }
+  return {
+    toolResult: {
+      ok: true,
+      exit_code: result.exitCode,
+      stdout: redact(result.stdout),
+      stderr: redact(result.stderr),
+      truncated: result.truncated,
+      duration_ms: result.durationMs,
+    },
+    pre,
+    post,
+  };
+}
+
 async function notImplementedHandler(name) {
   return {
     toolResult: { ok: false, error: { code: 'NOT_IMPLEMENTED', message: `${name} is not implemented in this phase` } },
@@ -366,6 +618,9 @@ function createTools({ repoRoot, policy, ledger, runState } = {}) {
   const handlers = {
     read_file: readFileHandler,
     grep_files: grepFilesHandler,
+    write_file: writeFileHandler,
+    edit_file: editFileHandler,
+    run_bash_command: runBashCommandHandler,
   };
 
   async function dispatch(name, args) {
