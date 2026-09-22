@@ -23,7 +23,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  makeRepo, runEngine, toolTurn, writeBrief, ledgerRecords,
+  makeRepo, REPO_ROOT, runEngine, toolTurn, writeBrief, ledgerRecords,
 } from './helpers/deepseek-exec-harness';
 
 describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
@@ -86,23 +86,30 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
   });
 
   describe('commit 6: allowlist collision locks (§C.4 positional matching)', () => {
-    const cases: Array<{ name: string; argv: string[]; code: string }> = [
-      { name: 'git -C .. status --porcelain', argv: ['git', '-C', '..', 'status', '--porcelain'], code: 'COMMAND_NOT_ALLOWED' },
-      { name: 'git --git-dir=../x/.git log', argv: ['git', '--git-dir=../x/.git', 'log'], code: 'COMMAND_NOT_ALLOWED' },
-      { name: 'git log --output=x', argv: ['git', 'log', '--output=x'], code: 'FLAG_NOT_ALLOWED' },
-      { name: 'npx vitest run ... --reporter=json --outputFile=o.json', argv: ['npx', 'vitest', 'run', 'src/x.test.ts', '--reporter=json', '--outputFile=o.json'], code: 'FLAG_NOT_ALLOWED' },
-      { name: 'node step-validate.mjs --step=... --write', argv: ['node', 'scripts/analysis/step-validate.mjs', '--step=assert_data_bounds', '--write'], code: 'FLAG_NOT_ALLOWED' },
-      { name: 'node scripts/deepseek-exec.js (not a validator)', argv: ['node', 'scripts/deepseek-exec.js'], code: 'COMMAND_NOT_ALLOWED' },
+    const cases: Array<{ name: string; argv: string[]; codes: string[] }> = [
+      { name: 'git -C .. status --porcelain', argv: ['git', '-C', '..', 'status', '--porcelain'], codes: ['COMMAND_NOT_ALLOWED'] },
+      { name: 'git --git-dir=../x/.git log', argv: ['git', '--git-dir=../x/.git', 'log'], codes: ['COMMAND_NOT_ALLOWED'] },
+      { name: 'git log --output=x', argv: ['git', 'log', '--output=x'], codes: ['FLAG_NOT_ALLOWED'] },
+      { name: 'npx vitest run ... --reporter=json --outputFile=o.json', argv: ['npx', 'vitest', 'run', 'src/x.test.ts', '--reporter=json', '--outputFile=o.json'], codes: ['FLAG_NOT_ALLOWED'] },
+      { name: 'node step-validate.mjs --step=... --write', argv: ['node', 'scripts/analysis/step-validate.mjs', '--step=assert_data_bounds', '--write'], codes: ['FLAG_NOT_ALLOWED'] },
+      // As of commit 7, the self-protection scan (§C.1.4) runs BEFORE the
+      // allowlist and catches this specific path first — PATH_DENIED is the
+      // MORE specific, correct code once that fence exists; COMMAND_NOT_ALLOWED
+      // is what commit 6 alone would have produced. Both directions still
+      // prove "blocked", which is this arm's actual contract.
+      { name: 'node scripts/deepseek-exec.js (not a validator)', argv: ['node', 'scripts/deepseek-exec.js'], codes: ['COMMAND_NOT_ALLOWED', 'PATH_DENIED'] },
     ];
     for (const c of cases) {
-      it(`${c.name} ⇒ blocked ${c.code}`, async () => {
+      it(`${c.name} ⇒ blocked (${c.codes.join(' or ')})`, async () => {
         const briefPath = writeBrief(repo);
         const summary = await runEngine({
           repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
           transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: c.argv, reason: 'r' })],
         });
         const records = ledgerRecords(ledgerDir, summary.run_id);
-        expect(toolCallOf(records, 'run_bash_command')).toMatchObject({ status: 'blocked', error: { code: c.code } });
+        const call = toolCallOf(records, 'run_bash_command');
+        expect(call?.status).toBe('blocked');
+        expect(c.codes).toContain(call?.error?.code);
       });
     }
 
@@ -137,6 +144,89 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const records = ledgerRecords(ledgerDir, summary.run_id);
       const call = toolCallOf(records, 'run_bash_command');
       expect(call?.status).not.toBe('blocked');
+    });
+  });
+
+  // =========================================================================
+  // Commit 7 — self-protection denylist in the tool layer (G10, F11)
+  // =========================================================================
+  describe('commit 7: self-protection denylist (G10, F11) — the RED-first trio', () => {
+    it('write_file("scripts/lib/exec-policy.json") is blocked PATH_DENIED', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'scripts/lib/exec-policy.json', content: '{}', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'PATH_DENIED' } });
+      expect(fs.existsSync(path.join(repo, 'scripts', 'lib', 'exec-policy.json'))).toBe(false);
+    });
+
+    it('write_file("scripts/deepseek-exec.js") is blocked PATH_DENIED', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'scripts/deepseek-exec.js', content: '// tampered', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'blocked', error: { code: 'PATH_DENIED' } });
+      expect(fs.existsSync(path.join(repo, 'scripts', 'deepseek-exec.js'))).toBe(false);
+    });
+
+    it('a bash argv naming a file inside the ledger dir is blocked, and the ledger dir is untouched', async () => {
+      const briefPath = writeBrief(repo);
+      const before = fs.readdirSync(ledgerDir).sort();
+      // A run that names its OWN ledger dir's (future) file path in an
+      // otherwise-plausible git argv — the run_id is not known ahead of the
+      // call, so a synthetic sibling file under the same ledger dir proves
+      // the same fence (the block is by DIRECTORY, not by exact filename).
+      const targetInLedgerDir = path.join(ledgerDir, 'some-other-run.jsonl');
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['git', 'diff', '--', targetInLedgerDir], reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      const call = toolCallOf(records, 'run_bash_command');
+      expect(call?.status).toBe('blocked');
+      expect(['PATH_DENIED', 'PATH_OUTSIDE_REPO']).toContain(call?.error?.code);
+      const after = fs.readdirSync(ledgerDir).sort();
+      // The blocked command never ran, so the ONLY change to ledgerDir is
+      // this run's own ledger file landing — nothing named by the blocked
+      // argv was created, read into, or otherwise touched.
+      expect(after.filter((f) => !before.includes(f))).toEqual([`${summary.run_id}.jsonl`]);
+    });
+  });
+
+  describe('commit 7: self-protection — the legitimate path still works', () => {
+    it('write_file to an ordinary repo file (not on the denylist) still succeeds', async () => {
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [toolTurn('c1', 'write_file', { path: 'ordinary.txt', content: 'fine\n', reason: 'r' })],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'write_file')).toMatchObject({ status: 'ok' });
+      expect(fs.readFileSync(path.join(repo, 'ordinary.txt'), 'utf8')).toBe('fine\n');
+    });
+  });
+
+  describe('commit 7: exec-ledger.js static-source lock — no truncate/unlink/rename/writeFileSync path', () => {
+    // Strips /** */ and // comments before scanning (tasks/lessons.md,
+    // 2026-09-10 "the scanner cannot tell prose from code" — exec-ledger.js's
+    // own docblock names these five identifiers IN PROSE to explain the
+    // lock, e.g. "contains NO truncate ... or writeFileSync call", which a
+    // naive regex-over-the-whole-file scan would misread as the code it
+    // forbids. \r?\n handles a CRLF checkout (tasks/lessons.md WD-1).
+    function stripComments(src: string): string {
+      return src.replace(/\/\*[\s\S]*?\*\//g, '').split(/\r?\n/).map((l) => l.replace(/\/\/.*$/, '')).join('\n');
+    }
+    it('the ledger module CODE (comments stripped) contains none of the five identifiers', () => {
+      const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'lib', 'exec-ledger.js'), 'utf8');
+      expect(/truncate|unlinkSync|rmSync|renameSync|writeFileSync|'w'/.test(stripComments(src))).toBe(false);
+    });
+    it('sanity: the raw (unstripped) source DOES mention these identifiers in its own docblock — proves the strip is load-bearing, not vacuous', () => {
+      const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'lib', 'exec-ledger.js'), 'utf8');
+      expect(/truncate|writeFileSync/.test(src)).toBe(true);
     });
   });
 });

@@ -56,6 +56,123 @@ function pathFault(err) {
   throw err;
 }
 
+// §C.1.4 (G10, F11) — the engine's own source, policy and the repo's own
+// gate infrastructure are unwritable, uneditable and un-`bash`-reachable. A
+// FROZEN constant in the TOOL LAYER, never policy data the model could edit
+// (exec-policy.json is itself on this list). Reads remain allowed (§C.1.4:
+// "Reads of these remain allowed except where C.1.5 denies them") — this
+// list gates write_file/edit_file/git_commit.paths and bash argv only.
+const SELF_PROTECT_DENYLIST = Object.freeze([
+  'scripts/deepseek-exec.js',
+  'scripts/lib/exec-tools.js',
+  'scripts/lib/exec-ledger.js',
+  'scripts/lib/exec-policy.json',
+  '.husky/**',
+  '.git/**',
+  'package.json',
+  'package-lock.json',
+  'eslint.config.mjs',
+  'vitest.config.ts',
+  'tsconfig.json',
+  'src/tests/hooks-composition.infra.test.ts',
+  'src/tests/agent-roster.infra.test.ts',
+  'src/tests/deepseek-exec*.test.ts',
+]);
+
+// The ledger directory resolves at RUNTIME (outside the repo by design, F11)
+// so it cannot be a static repo-relative glob; it is checked separately by
+// absolute-path prefix, in addition to the static list above.
+function isSelfProtectedRelPath(relPosixPath) {
+  return isSecretDenied(relPosixPath, SELF_PROTECT_DENYLIST);
+}
+
+function realLedgerDirOf(ledgerDirAbs) {
+  if (!ledgerDirAbs) {
+    return null;
+  }
+  try {
+    return fs.realpathSync(ledgerDirAbs);
+  } catch {
+    return path.resolve(ledgerDirAbs); // ledger dir may not exist yet in a given test
+  }
+}
+
+function isUnderLedgerDir(absPath, ledgerDirAbs) {
+  const realLedgerDir = realLedgerDirOf(ledgerDirAbs);
+  if (!realLedgerDir) {
+    return false;
+  }
+  return absPath === realLedgerDir || absPath.startsWith(realLedgerDir + path.sep);
+}
+
+// A bash argv token pointing at the ledger dir is checked WITHOUT going
+// through resolveConfinedPath first — the ledger dir lives OUTSIDE the repo
+// by design (F11), so §C.1.3 confinement would already reject it, but with
+// the generic COMMAND_NOT_ALLOWED/FLAG_NOT_ALLOWED an allowlist mismatch
+// produces, not the more specific PATH_DENIED this fence exists to report.
+function bashTokenResolvesUnderLedgerDir(repoRoot, tok, ledgerDirAbs) {
+  const realLedgerDir = realLedgerDirOf(ledgerDirAbs);
+  if (!realLedgerDir) {
+    return false;
+  }
+  const candidate = path.isAbsolute(tok) ? path.normalize(tok) : path.resolve(repoRoot, tok);
+  let real;
+  try {
+    real = fs.realpathSync(candidate);
+  } catch {
+    real = candidate;
+  }
+  return real === realLedgerDir || real.startsWith(realLedgerDir + path.sep)
+    || candidate === realLedgerDir || candidate.startsWith(realLedgerDir + path.sep);
+}
+
+/**
+ * bashSelfProtectionBlock(argv, ctx) — §C.1.4 scan over every non-flag argv
+ * token: does it resolve to a self-protected repo file, or into the ledger
+ * directory? Runs BEFORE matchArgv (invariant order: confinement/self-
+ * protection, §C.1.3/§C.1.4, precede the allowlist, §C.1.7) so a self-
+ * protection breach is reported as PATH_DENIED, not an allowlist mismatch.
+ */
+function bashSelfProtectionBlock(argv, ctx) {
+  const { repoRoot } = ctx;
+  const ledgerDirAbs = ctx.ledger && ctx.ledger.path ? path.dirname(ctx.ledger.path) : null;
+  for (const tok of argv) {
+    if (typeof tok !== 'string' || tok.length === 0 || tok.startsWith('-')) {
+      continue;
+    }
+    if (bashTokenResolvesUnderLedgerDir(repoRoot, tok, ledgerDirAbs)) {
+      return { ok: false, error: { code: 'PATH_DENIED', message: 'self-protection: the run ledger directory is unreachable by any tool' } };
+    }
+    let absPath;
+    try {
+      absPath = resolveConfinedPath(repoRoot, tok);
+    } catch {
+      continue; // outside the repo and not the ledger dir — §C.1.3 confinement handles this at match time
+    }
+    const relPosix = toRepoRelativePosix(repoRoot, absPath);
+    if (isSelfProtectedRelPath(relPosix)) {
+      return { ok: false, error: { code: 'PATH_DENIED', message: `self-protection: ${relPosix} is part of the engine's own gate infrastructure` } };
+    }
+  }
+  return null;
+}
+
+/**
+ * checkSelfProtection(absPath, relPosix, ctx) — §C.1.4, invariant order
+ * position 4 (immediately after path confinement, position 3, and before
+ * every other fence). Returns a blocked toolResult or `null`.
+ */
+function checkSelfProtection(absPath, relPosix, ctx) {
+  if (isSelfProtectedRelPath(relPosix)) {
+    return { ok: false, error: { code: 'PATH_DENIED', message: `self-protection: ${relPosix} is part of the engine's own gate infrastructure and cannot be written` } };
+  }
+  const ledgerDirAbs = ctx.ledger && ctx.ledger.path ? path.dirname(ctx.ledger.path) : null;
+  if (isUnderLedgerDir(absPath, ledgerDirAbs)) {
+    return { ok: false, error: { code: 'PATH_DENIED', message: 'self-protection: the run ledger directory is unreachable by any tool' } };
+  }
+  return null;
+}
+
 // §C.2 — the closed v1 tool-call contract. `parameters` is a JSON Schema
 // with `additionalProperties: false`; `validateArgs` below enforces it.
 const TOOL_SCHEMAS = {
@@ -272,6 +389,11 @@ async function writeFileHandler(args, ctx) {
   }
   const relPosix = toRepoRelativePosix(repoRoot, absPath);
 
+  const selfProtectBlock = checkSelfProtection(absPath, relPosix, ctx);
+  if (selfProtectBlock) {
+    return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
+  }
+
   const blocked = checkReadBeforeWrite(absPath, relPosix, runState, false);
   if (blocked) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
@@ -310,6 +432,11 @@ async function editFileHandler(args, ctx) {
     return { toolResult: pathFault(err), pre, post: captureWorktree(repoRoot) };
   }
   const relPosix = toRepoRelativePosix(repoRoot, absPath);
+
+  const selfProtectBlock = checkSelfProtection(absPath, relPosix, ctx);
+  if (selfProtectBlock) {
+    return { toolResult: selfProtectBlock, pre, post: captureWorktree(repoRoot) };
+  }
 
   const blocked = checkReadBeforeWrite(absPath, relPosix, runState, true);
   if (blocked) {
@@ -470,6 +597,15 @@ async function runBashCommandHandler(args, ctx) {
   const { repoRoot, policy } = ctx;
   const limits = (policy && policy.limits) || {};
   const pre = captureWorktree(repoRoot);
+
+  // §C.1.4 (G10) — self-protection is checked BEFORE the allowlist (§C.1.3
+  // confinement / §C.1.4 self-protection precede §C.1.7's "read-only bash by
+  // construction" in the invariant order).
+  const selfProtectBlock = bashSelfProtectionBlock(args.argv, ctx);
+  if (selfProtectBlock) {
+    const post = captureWorktree(repoRoot);
+    return { toolResult: selfProtectBlock, pre, post };
+  }
 
   const match = matchArgv(args.argv, policy, { repoRoot });
   if (!match.allowed) {
