@@ -213,6 +213,10 @@ agent, a WF) REQUESTS via the two hard-stop prompts below — it is never perfor
 orchestrator itself.** There is no API/CLI path in this repo that resizes Supabase compute;
 it is a dashboard-only action (Database → Compute).
 
+Run `npm run cloud:pre` against the cloud first — it measures (a)–(e)'s DB-side items and
+writes the report under `docs/reports/pipeline-validation/cloud-pre/`; a FAIL blocks
+dispatch.
+
 1. **Pre-checks** (all cheap, all before the STOP): (a) all four scheduled chain workflows
    confirmed `disabled_manually` (`gh api repos/:owner/:repo/actions/workflows --jq
    '.workflows[]|{name,state}'`, or `gh workflow list`). (b) No `chain_sources` run in

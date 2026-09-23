@@ -34,6 +34,7 @@
     "ast-grep:leads": "bash scripts/hooks/ast-grep-leads.sh",
     "step-shape": "node scripts/hooks/check-step-shape.mjs",
     "step:validate": "node scripts/analysis/step-validate.mjs",
+    "cloud:pre": "node -r dotenv/config scripts/analysis/cloud-pre-dispatch.mjs",
     "churn-complexity": "node scripts/analysis/step-churn-complexity.mjs",
     "spec:split-check": "node scripts/analysis/spec-split-check.mjs",
     "programme-backlog": "node scripts/violations/generate-programme-backlog.mjs",

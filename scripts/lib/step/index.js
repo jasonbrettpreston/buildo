@@ -456,6 +456,35 @@ const REQUIREMENT_PROBES = {
 };
 
 /**
+ * Probe ONE `guards.requires[]` entry against the live catalog.
+ *
+ * CLOUD-PRE (Spec 123 §7.2 A5, 2026-09-21) — EXTRACTED VERBATIM from the body of
+ * `assertRequirements` below, so the pre-dispatch cloud-state checklist
+ * (`scripts/analysis/cloud-pre-dispatch.mjs`) probes a declared requirement with
+ * the SAME SQL the runner uses, rather than a second copy that can drift from
+ * it. Behaviour is byte-for-byte what the runner did inline: one query, `present
+ * = rows.length > 0`. The `detail` field carries the probe's own SQL text so an
+ * audit row can name what was asked, not merely what came back.
+ *
+ * A requirement whose `kind` has no probe (`rls_bypass_or_policy`) is NOT this
+ * function's concern — `assertRequirements` skips it (owned by
+ * `write.assertWritePrivileges`), and it returns `present: true` here so a
+ * caller iterating a descriptor's requires[] never reads an unprobed kind as a
+ * missing precondition. Callers that want the skip explicitly should test
+ * `REQUIREMENT_PROBES[r.kind]` first, as the runner does.
+ *
+ * @param {import('pg').Pool|import('pg').PoolClient} pool
+ * @param {{kind: string, name: string}} requirement
+ * @returns {Promise<{present: boolean, detail: string}>}
+ */
+async function probeRequirement(pool, requirement) {
+  const probe = REQUIREMENT_PROBES[requirement.kind];
+  if (!probe) return { present: true, detail: `no catalog probe for kind "${requirement.kind}"` };
+  const { rows } = await pool.query(probe.sql, probe.args(requirement));
+  return { present: rows.length > 0, detail: probe.sql };
+}
+
+/**
  * `guards.requires[]` — THE PRECONDITIONS, CHECKED BEFORE THE FIRST READ.
  *
  * ⚠️ B-4 IS THE REASON THIS RUNS WHERE IT RUNS. The pre-conversion step asserted its
@@ -469,15 +498,17 @@ const REQUIREMENT_PROBES = {
  *
  * `rls_bypass_or_policy` is excluded here and owned by `write.assertWritePrivileges`,
  * which MEASURES the privilege so a check can report it on the happy path too.
+ *
+ * CLOUD-PRE (Spec 123 §7.2 A5) — the per-requirement probe now lives in
+ * `probeRequirement` above; this loop's behaviour is unchanged (it calls that
+ * function and keeps the same skip, the same throw, the same warn).
  */
 async function assertRequirements(pool, descriptor, { log, tag }) {
   const requires = (descriptor.guards && descriptor.guards.requires) || [];
   const measured = {};
   for (const r of requires) {
-    const probe = REQUIREMENT_PROBES[r.kind];
-    if (!probe) continue; // rls_bypass_or_policy — measured by the write preflight
-    const { rows } = await pool.query(probe.sql, probe.args(r));
-    const present = rows.length > 0;
+    if (!REQUIREMENT_PROBES[r.kind]) continue; // rls_bypass_or_policy — measured by the write preflight
+    const { present } = await probeRequirement(pool, r);
     measured[r.name] = present;
     if (present) continue;
     if (r.on_missing === 'fail') {
@@ -5290,6 +5321,7 @@ module.exports = {
   isRecorderStep,
   isEnrichStep,
   assertRequirements,
+  probeRequirement,
   REQUIREMENT_PROBES,
   ledgerPipelineName,
   runIngestPhase,
