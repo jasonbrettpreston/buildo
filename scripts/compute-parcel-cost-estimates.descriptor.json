@@ -23,6 +23,7 @@
       ],
       "tables": [
         { "table": "archetype_cost_rates", "columns": ["archetype", "cost_per_sqm", "cost_adjustment_factor", "escalation_index_base", "as_of_date", "updated_at"] },
+        { "table": "parcel_cost_lines", "columns": ["id", "archetype", "base_confidence", "fit_permitted_values", "updated_at"] },
         { "table": "logic_variables", "columns": ["variable_key", "variable_value", "updated_at"] },
         { "table": "parcels", "columns": ["id", "zoning_class", "lot_size_sqm", "max_buildable_gfa_sqm", "opt_aor_gfa_sqm", "max_buildable_footprint_sqm", "opt_coa_gfa_sqm", "max_garden_suite_gfa_sqm", "max_laneway_suite_gfa_sqm", "cur_est_kitchen_gfa_sqm", "cur_est_bath_gfa_sqm", "max_garage_gfa_sqm", "cur_floor_gfa_sqm", "cur_pot_2story_gfa_sqm", "realized_fsi_p90", "neighbourhood_cost_premium", "rear_suite_permission", "garage_permission", "max_build_confidence"] }
       ],
@@ -290,6 +291,7 @@
     { "key": "line_coverage", "type": "object", "consumers": [] },
     { "key": "area_confidence", "type": "object", "consumers": [] },
     { "key": "rates_as_of", "type": "string", "consumers": [] },
+    { "key": "cost_lines_updated_at", "type": "string", "consumers": [] },
     { "key": "index_updated_at", "type": "string", "consumers": [] },
     { "key": "cost_rates_age_months", "type": "int", "consumers": [] },
     { "key": "cost_index_age_months", "type": "int", "consumers": [] },
@@ -340,11 +342,6 @@
       "check_id": "none"
     },
     {
-      "what": "PARCEL_COST_LINES (13 lines) and PERMITTED_VALUES are policy tables in source, not admin-visible (CPCE-A3 RULED). archetype_cost_rates (12 rows × 3 pricing fields) is the largest tunable surface this step consumes and is a DB table read via inputs.reads.tables, NOT counted toward the 'all variables externalized' claim (CPCE-A4 RULED) — it is ported byte-for-byte. An admin editor for both is a separate filed WF.",
-      "measured": "§2 of the conversion plan, 2026-09-21",
-      "check_id": "none"
-    },
-    {
       "what": "Two orphan parcel_cost_menu rows exist OUTSIDE the R% population (ids 373779 CR, 11891 O) — written before a zoning reclassification; a re-run neither refreshes nor nullifies them (CPCE-A9(i) PINNED, filed as a followup).",
       "measured": "live query, 2026-09-21",
       "check_id": "none"
@@ -355,7 +352,7 @@
       "check_id": "none"
     },
     {
-      "what": "Two non-step analysis consumers of the ENGINE (not the columns) require the config argument as a REQUIRED positional now: scripts/analysis/wf3-cost-coherence-sanity.js and scripts/analysis/wf3-sample-full-dump.js — updated in this commit to read-live-else-seed-default the 6 engine tunables (FOLD-I5/V8).",
+      "what": "Two non-step analysis consumers of the ENGINE (not the columns) require the config argument as a REQUIRED positional now: scripts/analysis/wf3-cost-coherence-sanity.js and scripts/analysis/wf3-sample-full-dump.js — updated in this commit to read-live-else-seed-default the 6 engine tunables (FOLD-I5/V8). FOLD A2 (batch-2 row 2.5) — both now ALSO pass opts.lines: each reads parcel_cost_lines from the DB and merges it via mergeCostLines(PARCEL_COST_LINES, rows), the same read-live pattern.",
       "measured": "grep -rn \"require.*parcel-cost\" scripts/ src/, 2026-09-21",
       "check_id": "none"
     },

@@ -5,7 +5,7 @@
 'use strict';
 // Spec 122 §P0 — the single database-target resolver (fail-loud, floor-asserted).
 const { createResolvedPool } = require('../lib/resolve-db');
-const { buildParcelCostMenu } = require('../lib/parcel-cost.js');
+const { buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines } = require('../lib/parcel-cost.js');
 const { parcelFamilyFromZoning } = require('../lib/build-norms.js');
 
 const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 10011, 8455, 7281];
@@ -33,6 +33,12 @@ const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 
     adjustmentFactorDefault: cfgRows.compute_parcel_cost_adjustment_factor_default ?? 1,
     minPriceableAreaSqm: cfgRows.compute_parcel_cost_min_priceable_area_sqm ?? 0,
   };
+  // FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — opts.lines now joins opts.config as a
+  // REQUIRED buildParcelCostMenu argument; same non-step analysis read-live pattern (FOLD-V8).
+  const costLines = mergeCostLines(
+    PARCEL_COST_LINES,
+    (await pool.query(`SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines ORDER BY id`)).rows,
+  );
 
   // Every field the cost engine reads + the persisted zoning/FSI context, in full.
   const rows = (await pool.query(`
@@ -56,7 +62,7 @@ const IDS = [1455, 1786, 1842, 1886, 1940, 3435, 3679, 3684, 3690, 4437, 10003, 
   for (const r of rows) {
     const parcel = { ...r, opt_aor_gfa_sqm: r.new_build_area }; // cost engine reads the COALESCE'd new_build area
     const r2Grounded = parcelFamilyFromZoning(r.zoning_class) === 'detached';
-    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig });
+    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig, lines: costLines });
     const n2 = (v) => v == null ? null : Math.round(v * 100) / 100;
     inputsRows.push({
       id: r.id, parcel_id: r.parcel_id, zc: r.zoning_class, amb: r.zoning_is_ambiguous, dom_share: n2(r.zoning_dominant_area_share),

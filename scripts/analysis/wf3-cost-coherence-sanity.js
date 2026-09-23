@@ -26,7 +26,7 @@ const descriptor = require('../enrich-parcels.descriptor.json');
 const compute = require('../lib/compute/enrich-parcels.js');
 const { resolveConfig } = require('../lib/step/config.js');
 const { streamOverClient } = require('../lib/step/index.js');
-const { buildParcelCostMenu } = require('../lib/parcel-cost.js');
+const { buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines } = require('../lib/parcel-cost.js');
 const { parcelFamilyFromZoning } = require('../lib/build-norms.js');
 const pipeline = require('../lib/pipeline.js');
 
@@ -138,6 +138,13 @@ function makeCtx({ scopeWhere, config, runAt, extra }) {
     adjustmentFactorDefault: cfgRows.compute_parcel_cost_adjustment_factor_default ?? 1,
     minPriceableAreaSqm: cfgRows.compute_parcel_cost_min_priceable_area_sqm ?? 0,
   };
+  // FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — buildParcelCostMenu now also requires
+  // opts.lines (the merged parcel_cost_lines catalogue). Same non-step analysis pattern as
+  // opts.config above (FOLD-V8): read the editable half from the DB, re-join by id.
+  const costLinesRows = (await pool.query(
+    `SELECT id, archetype, base_confidence, fit_permitted_values FROM parcel_cost_lines ORDER BY id`,
+  )).rows;
+  const costLines = mergeCostLines(PARCEL_COST_LINES, costLinesRows);
 
   const rows = (await pool.query(`
     SELECT p.id, p.zoning_class AS zc, p.lot_size_sqm::float8 AS lot, p.bylaw_max_fsi::float8 AS fsi_after,
@@ -155,7 +162,7 @@ function makeCtx({ scopeWhere, config, runAt, extra }) {
   let inverted = 0, borrowFixed = 0;
   const out = rows.map((r) => {
     const parcel = { ...r, opt_aor_gfa_sqm: r.new_build_area, max_buildable_gfa_sqm: r.maxb, opt_coa_gfa_sqm: r.opt_coa };
-    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded: parcelFamilyFromZoning(r.zc) === 'detached', config: engineConfig });
+    const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded: parcelFamilyFromZoning(r.zc) === 'detached', config: engineConfig, lines: costLines });
     const nb = built.menu.max_build ? built.menu.max_build.total : null;
     const coa = built.menu.coa_build ? built.menu.coa_build.total : null;
     const coherent = (nb == null || coa == null) ? 'n/a' : (nb <= coa + 1 ? 'OK' : 'INVERTED');

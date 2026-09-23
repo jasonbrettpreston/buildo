@@ -31,7 +31,7 @@
  * value rather than a second raw read of the same row (deviations[]).
  */
 
-const { buildParcelCostMenu, PARCEL_COST_LINES } = require('../parcel-cost');
+const { buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines } = require('../parcel-cost');
 const { parcelFamilyFromZoning } = require('../build-norms');
 const { COST_SCALAR_COLS, FSI_SCALAR_COLS } = require('../parcel-cost-cols');
 
@@ -76,6 +76,21 @@ async function readCostContract(pool) {
     };
   }
 
+  // FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — the EDITABLE half of the catalogue
+  // (archetype / base_confidence / fit_permitted_values) now lives in the parcel_cost_lines DB
+  // table; mergeCostLines re-joins it with the frozen PARCEL_COST_LINES structural bindings by id.
+  // A zero-row table is the same HALT shape as the empty-rates guard above: pricing with no
+  // catalogue would produce a 0-line menu on every parcel.
+  const linesRes = await pool.query(
+    `SELECT id, archetype, base_confidence, fit_permitted_values
+       FROM parcel_cost_lines
+      ORDER BY id`,
+  );
+  if (linesRes.rows.length === 0) {
+    throw new Error(`${TAG} parcel_cost_lines is empty — refusing to run (would produce 0% line coverage). Apply migration 248.`);
+  }
+  const lines = mergeCostLines(PARCEL_COST_LINES, linesRes.rows);
+
   // F9/D#2 — rates_as_of reads MAX(updated_at), NOT MAX(as_of_date) (a cost_per_sqm correction
   // never moves the business as_of_date). No FROM clause on either subquery ⇒ always exactly
   // one row (FOLD-I10 — the legacy's `res.rows[0] || {}` `{}` arm was dead code, not a live
@@ -83,7 +98,8 @@ async function readCostContract(pool) {
   const sigRes = await pool.query(
     `SELECT
        (SELECT MAX(updated_at) FROM archetype_cost_rates) AS rates_as_of,
-       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at`,
+       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at,
+       (SELECT MAX(updated_at) FROM parcel_cost_lines) AS cost_lines_updated_at`,
   );
   const sig = sigRes.rows[0];
   // compute-no-wall-clock (Spec 122 §5.5 (3)) bans `new Date(...)` in a compute module — the
@@ -94,8 +110,10 @@ async function readCostContract(pool) {
   const toIso = (v) => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
   return {
     rates,
+    lines,
     ratesAsOf: toIso(sig.rates_as_of),
     indexUpdatedAt: toIso(sig.index_updated_at),
+    linesUpdatedAt: toIso(sig.cost_lines_updated_at),
   };
 }
 
@@ -193,6 +211,7 @@ async function runCostMenuPass(client, ctx) {
 
   const config = ctx.config;
   const rates = ctx.contract.rates;
+  const lines = ctx.contract.lines; // FOLD A2 — the merged parcel_cost_lines catalogue
   const indexNow = num(config.cost_escalation_index); // FOLD-V9(2) — hoisted, LM-D15-validated
 
   const engineConfig = {
@@ -222,7 +241,7 @@ async function runCostMenuPass(client, ctx) {
   let unmappedFamilyCount = 0;
   const confidenceTotals = { high: 0, medium: 0, low: 0 };
   const lineCoverage = {};
-  for (const line of PARCEL_COST_LINES) lineCoverage[line.id] = 0;
+  for (const line of lines) lineCoverage[line.id] = 0;
 
   const batchSize = Number(config.compute_parcel_cost_batch_size);
   const streamBatchSize = Number(config.compute_parcel_cost_stream_batch_size);
@@ -258,13 +277,13 @@ async function runCostMenuPass(client, ctx) {
     try {
       // R2 detached-only grounding (F6, Spec 78 P2 R2) — ported byte-for-byte.
       const r2Grounded = family === 'detached';
-      const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig });
+      const built = buildParcelCostMenu(parcel, rates, indexNow, { r2Grounded, config: engineConfig, lines });
       if (built.fsiImplausible) fsiImplausibleCount++;
       if (parcel.new_build_used_fallback) newBuildFallbackCount++;
       if (built.lineCount === 0) {
         nullGeomBasisCount++;
       } else {
-        for (const line of PARCEL_COST_LINES) {
+        for (const line of lines) {
           if (built.menu[line.id]) lineCoverage[line.id]++;
         }
         confidenceTotals.high += built.confidenceCounts.high;
@@ -327,6 +346,7 @@ async function runCostMenuPass(client, ctx) {
     // precedent).
     ratesAsOf: ctx.contract.ratesAsOf,
     indexUpdatedAt: ctx.contract.indexUpdatedAt,
+    costLinesUpdatedAt: ctx.contract.linesUpdatedAt,
     // CPCE-D2 CLOSED — the ctx.retract(1, []) rowcount from the top of this pass, threaded to
     // computePostPhase the SAME way (the pass return value, not a second seam call).
     stranded,
@@ -532,6 +552,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       cost_by_zone: byZone,
       rates_as_of: pass.ratesAsOf ?? null,
       index_updated_at: pass.indexUpdatedAt ?? null,
+      cost_lines_updated_at: pass.costLinesUpdatedAt ?? null,
     },
     compute: {
       residential_parcels_examined: scanned,
@@ -709,6 +730,7 @@ function buildCostMeta(ctx) {
     cost_by_zone: m.cost_by_zone,
     rates_as_of: m.rates_as_of,
     index_updated_at: m.index_updated_at,
+    cost_lines_updated_at: m.cost_lines_updated_at,
   };
 }
 

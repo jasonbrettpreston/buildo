@@ -34,9 +34,6 @@
 /** Current parcel_cost_menu JSONB schema version (root `_schema_version`). */
 const PARCEL_COST_SCHEMA_VERSION = 1;
 
-/** Permission values for which a fit-gated line (suite/garage) is considered buildable. */
-const PERMITTED_VALUES = new Set(['as_of_right', 'coa_required']);
-
 /**
  * Max STORABLE / plausible FSI (the pre-conversion literal default — Spec 88 §2.5). The FSI
  * columns are NUMERIC(6,3) (max 999.999), and no residential parcel legitimately reaches FSI
@@ -72,24 +69,26 @@ function plausibleFsi(gfa, lot, fsiMaxPlausible) {
 }
 
 /**
- * The 13 reno lines → parcel area field + rate archetype + headline scalar.
- * Order is the menu/report order. `archetype` keys the archetype_cost_rates table.
+ * The 13 reno lines → parcel area field + headline scalar — STRUCTURAL ONLY.
+ * Order is the menu/report order.
  *
- *  - baseConfidence: §2.7 floor-AREA certainty (NOT a price range). Lot-driven
- *    envelope + SOLAR = high; cur_floor/cur_est_* derived = medium; storey-multiplied
- *    gut = low. Downgraded to 'low' when the parcel's max_build_confidence='low'
- *    (envelope lines only — see areaConfidenceFor).
- *  - fitField: present ONLY on fit-gated lines (suites/garage). Drives `fits` by
- *    PERMISSION (∈ PERMITTED_VALUES), NOT area-presence (a non-NULL garage GFA can
- *    still be not-permitted on a heritage lot).
+ * FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — the EDITABLE half of the catalogue
+ * (`archetype` — which archetype_cost_rates row the line prices against — and `baseConfidence`,
+ * plus the fit-gated permission vocabulary) moved to the `parcel_cost_lines` DB table (migration
+ * 248) so an operator can edit it without a code deploy. `mergeCostLines` re-joins the two halves
+ * by id at read time; `buildParcelCostMenu` consumes the MERGED array through `opts.lines`.
+ *
+ *  - fitField: present ONLY on fit-gated lines (suites/garage). Drives `fits` by the MERGED
+ *    `fitPermittedValues` vocabulary (from the DB row), NOT area-presence (a non-NULL garage GFA
+ *    can still be not-permitted on a heritage lot).
  *  - isCoaLine: norm_basis is CoA-line-scoped (pre_r2|r2_refined; n/a elsewhere).
  *  - scalar / scalarKind: the propagated headline column (§2.5). 'total' lines emit
  *    the full premium-inclusive total; 'per_sqm' lines (small/uncertain area) emit
  *    the area-independent premium-inclusive $/m².
  *
  * @type {ReadonlyArray<{
- *   id: string, archetype: string, areaField: string, baseConfidence: 'high'|'medium'|'low',
- *   fitField?: string, isCoaLine?: boolean, scalar: string|null, scalarKind: 'total'|'per_sqm'
+ *   id: string, areaField: string, fitField?: string, isCoaLine?: boolean,
+ *   scalar: string|null, scalarKind: 'total'|'per_sqm'
  * }>}
  */
 const PARCEL_COST_LINES = Object.freeze([
@@ -97,21 +96,81 @@ const PARCEL_COST_LINES = Object.freeze([
   // envelope — else new_build > coa_build (incoherent: CoA can only add). The SELECT COALESCEs
   // opt_aor → max_buildable_gfa for the parcels lacking opt_aor. max_build_fsi below still reports
   // the *envelope* FSI (max_buildable_gfa ÷ lot) — a distinct reference from this priced area.
-  { id: 'max_build',        archetype: 'FB',           areaField: 'opt_aor_gfa_sqm',            baseConfidence: 'high',   scalar: 'cost_fb_total',                  scalarKind: 'total' },
-  { id: 'coa_build',        archetype: 'CoA',          areaField: 'opt_coa_gfa_sqm',            baseConfidence: 'high',   scalar: 'cost_coa_total',                 scalarKind: 'total',  isCoaLine: true },
-  { id: 'solar_max',        archetype: 'SOLAR',        areaField: 'max_buildable_footprint_sqm', baseConfidence: 'high',  scalar: 'cost_solar_total',               scalarKind: 'total' },
+  { id: 'max_build',        areaField: 'opt_aor_gfa_sqm',            scalar: 'cost_fb_total',                  scalarKind: 'total' },
+  { id: 'coa_build',        areaField: 'opt_coa_gfa_sqm',            scalar: 'cost_coa_total',                 scalarKind: 'total',  isCoaLine: true },
+  { id: 'solar_max',        areaField: 'max_buildable_footprint_sqm', scalar: 'cost_solar_total',              scalarKind: 'total' },
   // solar_coa shares the SAME capped footprint as solar_max (§2.2 "up, not out") → equal cost; no separate headline scalar.
-  { id: 'solar_coa',        archetype: 'SOLAR',        areaField: 'max_buildable_footprint_sqm', baseConfidence: 'high',  scalar: null,                             scalarKind: 'total' },
-  { id: 'garden_suite',     archetype: 'LANE_GARDEN',  areaField: 'max_garden_suite_gfa_sqm',   baseConfidence: 'high',   scalar: 'cost_garden_suite_total',        scalarKind: 'total',  fitField: 'rear_suite_permission' },
-  { id: 'laneway_suite',    archetype: 'LANE_LANEWAY', areaField: 'max_laneway_suite_gfa_sqm',  baseConfidence: 'high',   scalar: 'cost_laneway_suite_total',       scalarKind: 'total',  fitField: 'rear_suite_permission' },
-  { id: 'kitchen',          archetype: 'KIT',          areaField: 'cur_est_kitchen_gfa_sqm',    baseConfidence: 'medium', scalar: 'cost_kitchen_per_sqm',           scalarKind: 'per_sqm' },
-  { id: 'bath',             archetype: 'BTH',          areaField: 'cur_est_bath_gfa_sqm',       baseConfidence: 'medium', scalar: 'cost_bath_per_sqm',              scalarKind: 'per_sqm' },
-  { id: 'garage',           archetype: 'GAR',          areaField: 'max_garage_gfa_sqm',         baseConfidence: 'high',   scalar: 'cost_garage_total',              scalarKind: 'total',  fitField: 'garage_permission' },
-  { id: 'basement_underpin', archetype: 'BAS_UNDERPIN', areaField: 'cur_floor_gfa_sqm',         baseConfidence: 'medium', scalar: 'cost_basement_underpin_per_sqm', scalarKind: 'per_sqm' },
-  { id: 'basement',         archetype: 'BAS',          areaField: 'cur_floor_gfa_sqm',          baseConfidence: 'medium', scalar: 'cost_basement_per_sqm',          scalarKind: 'per_sqm' },
-  { id: 'gut',              archetype: 'INT',          areaField: 'cur_pot_2story_gfa_sqm',     baseConfidence: 'low',    scalar: 'cost_gut_total',                 scalarKind: 'total' },
-  { id: 'addition',         archetype: 'ADD',          areaField: 'cur_floor_gfa_sqm',          baseConfidence: 'medium', scalar: 'cost_addition_total',            scalarKind: 'total' },
+  { id: 'solar_coa',        areaField: 'max_buildable_footprint_sqm', scalar: null,                            scalarKind: 'total' },
+  { id: 'garden_suite',     areaField: 'max_garden_suite_gfa_sqm',   scalar: 'cost_garden_suite_total',        scalarKind: 'total',  fitField: 'rear_suite_permission' },
+  { id: 'laneway_suite',    areaField: 'max_laneway_suite_gfa_sqm',  scalar: 'cost_laneway_suite_total',       scalarKind: 'total',  fitField: 'rear_suite_permission' },
+  { id: 'kitchen',          areaField: 'cur_est_kitchen_gfa_sqm',    scalar: 'cost_kitchen_per_sqm',           scalarKind: 'per_sqm' },
+  { id: 'bath',             areaField: 'cur_est_bath_gfa_sqm',       scalar: 'cost_bath_per_sqm',              scalarKind: 'per_sqm' },
+  { id: 'garage',           areaField: 'max_garage_gfa_sqm',         scalar: 'cost_garage_total',              scalarKind: 'total',  fitField: 'garage_permission' },
+  { id: 'basement_underpin', areaField: 'cur_floor_gfa_sqm',         scalar: 'cost_basement_underpin_per_sqm', scalarKind: 'per_sqm' },
+  { id: 'basement',         areaField: 'cur_floor_gfa_sqm',          scalar: 'cost_basement_per_sqm',          scalarKind: 'per_sqm' },
+  { id: 'gut',              areaField: 'cur_pot_2story_gfa_sqm',     scalar: 'cost_gut_total',                 scalarKind: 'total' },
+  { id: 'addition',         areaField: 'cur_floor_gfa_sqm',          scalar: 'cost_addition_total',            scalarKind: 'total' },
 ]);
+
+/**
+ * Merge the STRUCTURAL catalogue with the `parcel_cost_lines` DB rows by id → the full line
+ * objects `buildParcelCostMenu` iterates.
+ *
+ * FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — the id-set guard: a DB id unknown to
+ * the structural array, or a structural id with no DB row, is a HALT (a drift between the frozen
+ * bindings and the editable catalogue), never a silent skip. The vocabulary guard is the same
+ * shape: a fit-gated line MUST carry a permission vocabulary and a non-fit-gated line MUST NOT
+ * (the two halves of the catalogue disagreeing is a data defect, not a runtime condition).
+ *
+ * @param {ReadonlyArray<{id: string, areaField: string, fitField?: string, isCoaLine?: boolean,
+ *   scalar: string|null, scalarKind: 'total'|'per_sqm'}>} structural  PARCEL_COST_LINES
+ * @param {Array<{id: string, archetype: string, base_confidence: 'high'|'medium'|'low',
+ *   fit_permitted_values: string[]|null}>} dbRows  the parcel_cost_lines rows
+ * @returns {Array<{id: string, areaField: string, fitField?: string, isCoaLine?: boolean,
+ *   scalar: string|null, scalarKind: 'total'|'per_sqm', archetype: string,
+ *   baseConfidence: 'high'|'medium'|'low', fitPermittedValues: string[]|null}>}
+ */
+function mergeCostLines(structural, dbRows) {
+  const byId = new Map();
+  for (const row of dbRows) {
+    if (byId.has(row.id)) {
+      throw new Error(`[parcel-cost] mergeCostLines: duplicate parcel_cost_lines id: ${row.id}`);
+    }
+    byId.set(row.id, row);
+  }
+  const structuralIds = new Set();
+  for (const line of structural) structuralIds.add(line.id);
+
+  for (const line of structural) {
+    if (!byId.has(line.id)) {
+      throw new Error(`[parcel-cost] mergeCostLines: PARCEL_COST_LINES id has no parcel_cost_lines row: ${line.id} — refusing to run (the editable catalogue has drifted from the frozen structural bindings).`);
+    }
+  }
+  for (const id of byId.keys()) {
+    if (!structuralIds.has(id)) {
+      throw new Error(`[parcel-cost] mergeCostLines: parcel_cost_lines id is unknown to PARCEL_COST_LINES: ${id} — refusing to run (the editable catalogue has drifted from the frozen structural bindings).`);
+    }
+  }
+
+  return structural.map((line) => {
+    const row = byId.get(line.id);
+    const fitPermittedValues = row.fit_permitted_values ?? null;
+    if (line.fitField) {
+      if (fitPermittedValues === null || !Array.isArray(fitPermittedValues)) {
+        throw new Error(`[parcel-cost] mergeCostLines: fit-gated line ${line.id} has a null parcel_cost_lines.fit_permitted_values — a fit-gated line MUST carry its permission vocabulary.`);
+      }
+    } else if (fitPermittedValues !== null) {
+      throw new Error(`[parcel-cost] mergeCostLines: non-fit-gated line ${line.id} has a non-null parcel_cost_lines.fit_permitted_values (${JSON.stringify(fitPermittedValues)}) — only fit-gated lines carry a permission vocabulary.`);
+    }
+    return {
+      ...line,
+      archetype: row.archetype,
+      baseConfidence: row.base_confidence,
+      fitPermittedValues,
+    };
+  });
+}
+
 
 /**
  * Coerce a DB numeric (string|number|null|undefined) to a finite number, or null.
@@ -217,6 +276,12 @@ function lineCost({ areaSqm, ratePerSqm, escalationMult, adjFactor, premium }) {
  *   premiumDefault:number, adjustmentFactorDefault:number, minPriceableAreaSqm:number}} opts.config
  *   REQUIRED (batch-2 row 2.4 — Rule 3 / Spec 122 §1.2a P4: no defaulted engine tunable). Resolved
  *   by the caller from the six `compute_parcel_cost_*` logic variables (§2(d) of the conversion plan).
+ * @param {Array<{id: string, archetype: string, areaField: string, baseConfidence: 'high'|'medium'|'low',
+ *   fitField?: string, fitPermittedValues: string[]|null, isCoaLine?: boolean, scalar: string|null,
+ *   scalarKind: 'total'|'per_sqm'}>} opts.lines
+ *   REQUIRED (batch-2 row 2.5, FOLD A2 — Spec 88 §2.3 / Spec 124 R-AU): the MERGED catalogue
+ *   (`mergeCostLines(PARCEL_COST_LINES, parcel_cost_lines rows)`), so archetype + baseConfidence +
+ *   the fit vocabulary come from the editable DB table rather than source literals.
  * @returns {{
  *   menu: Record<string, unknown>,
  *   scalars: Record<string, number|null>,
@@ -230,6 +295,10 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
   const cfg = opts.config;
   if (!cfg) {
     throw new Error('[parcel-cost] buildParcelCostMenu requires opts.config (Rule 3 — no defaulted engine tunable; see scripts/lib/compute/compute-parcel-cost-estimates.js)');
+  }
+  const lines = opts.lines;
+  if (!lines) {
+    throw new Error('[parcel-cost] buildParcelCostMenu requires opts.lines (the merged parcel_cost_lines catalogue — see mergeCostLines / scripts/lib/compute/compute-parcel-cost-estimates.js)');
   }
   const premium = num(parcel.neighbourhood_cost_premium) ?? cfg.premiumDefault;
   const maxBuildConfidence = parcel.max_build_confidence ?? null;
@@ -247,7 +316,7 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
   let fitGatedGarageCount = 0;
   let lineCount = 0;
 
-  for (const line of PARCEL_COST_LINES) {
+  for (const line of lines) {
     const area = num(parcel[line.areaField]);
     if (area === null || area <= cfg.minPriceableAreaSqm) continue; // not computable → line absent (seed 0 ⇒ area <= 0, byte-identical to legacy)
 
@@ -281,7 +350,7 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
 
     if (line.fitField) {
       const permission = parcel[line.fitField] ?? null;
-      const fits = PERMITTED_VALUES.has(permission);
+      const fits = line.fitPermittedValues.includes(permission);
       entry.fits = fits;
       if (!fits) {
         if (line.fitField === 'garage_permission') fitGatedGarageCount += 1;
@@ -314,11 +383,11 @@ function buildParcelCostMenu(parcel, rates, indexNow, opts = {}) {
 module.exports = {
   PARCEL_COST_SCHEMA_VERSION,
   PARCEL_COST_LINES,
-  PERMITTED_VALUES,
   FSI_MAX_PLAUSIBLE,
   escalationMultiplier,
   areaConfidenceFor,
   plausibleFsi,
   lineCost,
+  mergeCostLines,
   buildParcelCostMenu,
 };

@@ -1,4 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/88_parcel_cost_model.md §2 (Behavioral Contract)
+// SPEC LINK: docs/specs/01-pipeline/88_parcel_cost_model.md §2.3 (line catalogue — the editable half)
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AU (pricing DATA now admin-editable)
 //
 // Logic locks for scripts/lib/parcel-cost.js (the pure engine behind
 // compute-parcel-cost-estimates.js). All functions are pure — no DB, no side effects.
@@ -45,6 +47,33 @@ const RATES = {
   INT: { cost_per_sqm: 3229, cost_adjustment_factor: 1.0, escalation_index_base: 100 },
   ADD: { cost_per_sqm: 4306, cost_adjustment_factor: 1.0, escalation_index_base: 100 },
 };
+
+// Batch-2 row 2.5 (FOLD A2, Spec 88 §2.3, Spec 124 R-AU) — the EDITABLE half of the 13-line
+// catalogue moved to the `parcel_cost_lines` DB table (migration 248); PARCEL_COST_LINES is now
+// STRUCTURAL ONLY. The fixture below is the byte-for-byte seed of that table (authored by C0,
+// also read by src/tests/db/pricing-tables.db.test.ts), so `LINES` here is exactly what
+// readCostContract hands the engine at runtime — the same merge the compute performs.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SEED_ROWS = require('./fixtures/parcel-cost-lines.seed.json') as Array<{
+  id: string;
+  archetype: string;
+  base_confidence: 'high' | 'medium' | 'low';
+  fit_permitted_values: string[] | null;
+}>;
+const LINES = pc.mergeCostLines(pc.PARCEL_COST_LINES, SEED_ROWS);
+
+/** A merged-lines variant: same rows, one line's fit vocabulary overridden (P3). */
+function linesWith(fitOverrides: Record<string, string[] | null>) {
+  return pc.mergeCostLines(
+    pc.PARCEL_COST_LINES,
+    SEED_ROWS.map((r) => (r.id in fitOverrides ? { ...r, fit_permitted_values: fitOverrides[r.id] } : r)),
+  );
+}
+
+/** A merged-lines variant: an extra/removed/duplicated DB row (P2 mismatch guards). */
+function linesWithRows(mutate: (rows: typeof SEED_ROWS) => typeof SEED_ROWS) {
+  return pc.mergeCostLines(pc.PARCEL_COST_LINES, mutate(SEED_ROWS.map((r) => ({ ...r }))));
+}
 
 // A fully-populated detached parcel (all 13 lines computable, as_of_right suites/garage).
 function fullParcel(overrides: Record<string, unknown> = {}) {
@@ -138,7 +167,7 @@ const NO_ESCALATION = 100;
 
 describe('buildParcelCostMenu — full parcel', () => {
   const { menu, scalars, lineCount, confidenceCounts, fitGatedSuiteCount, fitGatedGarageCount } =
-    pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG });
+    pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG, lines: LINES });
 
   it('emits _schema_version + all 13 lines', () => {
     expect(menu._schema_version).toBe(pc.PARCEL_COST_SCHEMA_VERSION);
@@ -161,7 +190,7 @@ describe('buildParcelCostMenu — full parcel', () => {
       fullParcel({ opt_aor_gfa_sqm: 250, max_buildable_gfa_sqm: 300 }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(built.menu.max_build.area).toBe(250);              // prices opt_aor, not 300
     expect(built.menu.max_build.total).toBeCloseTo(4844 * 250, 1);
@@ -188,11 +217,11 @@ describe('buildParcelCostMenu — full parcel', () => {
   });
 
   it('norm_basis flips to r2_refined on coa_build when r2Grounded (detached, Spec 78 P2 R2)', () => {
-    const built = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: true, config: CFG });
+    const built = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: true, config: CFG, lines: LINES });
     expect(built.menu.coa_build.norm_basis).toBe('r2_refined');
     expect(built.menu.max_build.norm_basis).toBe('n/a'); // non-CoA lines unchanged
     // townhouse/multiplex/generic (r2Grounded falsey) stay pre_r2
-    expect(pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: false, config: CFG }).menu.coa_build.norm_basis).toBe('pre_r2');
+    expect(pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { r2Grounded: false, config: CFG, lines: LINES }).menu.coa_build.norm_basis).toBe('pre_r2');
   });
 
   it('fits key present + true on fit-gated lines, absent on others', () => {
@@ -227,7 +256,7 @@ describe('buildParcelCostMenu — full parcel', () => {
       fullParcel({ lot_size_sqm: 111, max_buildable_gfa_sqm: 115825 }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(built.scalars.max_build_fsi).toBeNull();  // NULLed, not 1042 (would overflow NUMERIC(6,3))
     expect(built.fsiImplausible).toBe(true);
@@ -258,7 +287,7 @@ describe('buildParcelCostMenu — full parcel', () => {
       max_buildable_gfa_sqm: 115825, // same garbage massing-contamination shape as the guard's own test above
     });
     expect(inScopeOverBound.cur_floor_gfa_sqm).toBeLessThanOrEqual(750);
-    const built = pc.buildParcelCostMenu(inScopeOverBound, RATES, NO_ESCALATION, { config: CFG });
+    const built = pc.buildParcelCostMenu(inScopeOverBound, RATES, NO_ESCALATION, { config: CFG, lines: LINES });
     expect(built.scalars.max_build_fsi).toBeNull();
     expect(built.fsiImplausible).toBe(true);
   });
@@ -279,14 +308,14 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ max_garage_gfa_sqm: null, opt_coa_gfa_sqm: null }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect('garage' in menu).toBe(false);
     expect('coa_build' in menu).toBe(false);
   });
 
   it('zero/negative area → absent (never $0 line)', () => {
-    const { menu } = pc.buildParcelCostMenu(fullParcel({ cur_floor_gfa_sqm: 0 }), RATES, NO_ESCALATION, { config: CFG });
+    const { menu } = pc.buildParcelCostMenu(fullParcel({ cur_floor_gfa_sqm: 0 }), RATES, NO_ESCALATION, { config: CFG, lines: LINES });
     expect('basement' in menu).toBe(false);
     expect('addition' in menu).toBe(false);
   });
@@ -296,7 +325,7 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ garage_permission: 'prohibited', rear_suite_permission: 'not_permitted' }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(menu.garage.fits).toBe(false);
     expect(menu.garage.total).toBeGreaterThan(0); // still priced (hypothetical)
@@ -310,7 +339,7 @@ describe('buildParcelCostMenu — absent-line vs fits:false (§2.4)', () => {
       fullParcel({ garage_permission: 'coa_required' }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(menu.garage.fits).toBe(true);
   });
@@ -322,7 +351,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ neighbourhood_cost_premium: null }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(menu.max_build.total).toBeCloseTo(4844 * 300, 1);
   });
@@ -332,7 +361,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ neighbourhood_cost_premium: 1.85 }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(menu.max_build.total).toBeCloseTo(4844 * 300 * 1.85, 1);
   });
@@ -342,7 +371,7 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
       fullParcel({ max_build_confidence: 'low' }),
       RATES,
       NO_ESCALATION,
-      { config: CFG },
+      { config: CFG, lines: LINES },
     );
     expect(menu.max_build.area_confidence).toBe('low');
     expect(menu.garden_suite.area_confidence).toBe('low');
@@ -353,12 +382,12 @@ describe('buildParcelCostMenu — premium + confidence edges', () => {
 
   it('escalation multiplier (index_now ÷ base) flows into totals', () => {
     // indexNow=110, escalation_index_base=100 → MAX(1, 1.1) = 1.1×
-    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 110, { config: CFG });
+    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 110, { config: CFG, lines: LINES });
     expect(menu.max_build.total).toBeCloseTo(4844 * 1.1 * 300, 1);
   });
 
   it('index_now below base does NOT deflate totals (per-archetype MAX(1,…))', () => {
-    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 80, { config: CFG });
+    const { menu } = pc.buildParcelCostMenu(fullParcel(), RATES, 80, { config: CFG, lines: LINES });
     expect(menu.max_build.total).toBeCloseTo(4844 * 300, 1);
   });
 });
@@ -378,18 +407,151 @@ describe('buildParcelCostMenu / escalationMultiplier / plausibleFsi — config i
   });
 });
 
+// Batch-2 row 2.5 (FOLD A2) — P1. The catalogue the engine prices from is no longer a module
+// literal: opts.lines is REQUIRED, mirroring opts.config's own guard (batch-2 row 2.4).
+describe('buildParcelCostMenu — P1: opts.lines is REQUIRED (batch-2 row 2.5, Spec 88 §2.3 / Spec 124 R-AU)', () => {
+  it('throws a named error naming opts.lines when it is absent', () => {
+    expect(() => pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG })).toThrow(/requires opts\.lines/);
+    expect(() => pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG, lines: undefined })).toThrow(/requires opts\.lines/);
+  });
+
+  it('runs off the SUPPLIED lines — a subset array yields only those lines (RED: the old literal array always priced all 13)', () => {
+    const subset = LINES.filter((l: { id: string }) => l.id === 'max_build');
+    const { menu, lineCount } = pc.buildParcelCostMenu(fullParcel(), RATES, NO_ESCALATION, { config: CFG, lines: subset });
+    expect(lineCount).toBe(1);
+    expect('max_build' in menu).toBe(true);
+    expect('kitchen' in menu).toBe(false);
+  });
+});
+
+// Batch-2 row 2.5 (FOLD A2) — P2. mergeCostLines is the id-set + vocabulary guard between the
+// frozen structural bindings (PARCEL_COST_LINES) and the editable parcel_cost_lines DB rows.
+describe('mergeCostLines — P2: the id-set + fit-vocabulary guard (batch-2 row 2.5)', () => {
+  it('13 structural + 13 matching rows → 13 merged lines, structural fields preserved + DB fields joined', () => {
+    expect(LINES).toHaveLength(13);
+    const byId = new Map(LINES.map((l: { id: string }) => [l.id, l]));
+    expect([...byId.keys()].sort()).toEqual(SEED_ROWS.map((r) => r.id).sort());
+    const maxBuild = byId.get('max_build') as Record<string, unknown>;
+    expect(maxBuild.archetype).toBe('FB');            // from the DB row
+    expect(maxBuild.baseConfidence).toBe('high');     // from the DB row
+    expect(maxBuild.areaField).toBe('opt_aor_gfa_sqm'); // structural — unchanged
+    expect(maxBuild.scalar).toBe('cost_fb_total');    // structural — unchanged
+    expect(maxBuild.fitPermittedValues).toBeNull();
+    const garden = byId.get('garden_suite') as Record<string, unknown>;
+    expect(garden.fitField).toBe('rear_suite_permission');       // structural
+    expect(garden.fitPermittedValues).toEqual(['as_of_right', 'coa_required']); // DB
+  });
+
+  it('a DB row whose id is unknown to PARCEL_COST_LINES throws', () => {
+    expect(() => linesWithRows((rows) => [...rows, { id: 'not_a_line', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null }]))
+      .toThrow(/\[parcel-cost\] mergeCostLines: parcel_cost_lines id is unknown to PARCEL_COST_LINES: not_a_line/);
+  });
+
+  it('a structural id with no DB row throws', () => {
+    expect(() => linesWithRows((rows) => rows.filter((r) => r.id !== 'gut')))
+      .toThrow(/\[parcel-cost\] mergeCostLines: PARCEL_COST_LINES id has no parcel_cost_lines row: gut/);
+  });
+
+  it('a duplicate DB id throws', () => {
+    // noUncheckedIndexedAccess: rows[0] is `T | undefined` — the array is never empty here
+    // (13 seed rows), so the non-null assertion is safe; a plain spread of `T | undefined`
+    // widens every property to optional and fails the linesWithRows return type.
+    expect(() => linesWithRows((rows) => [...rows, { ...rows[0]! }]))
+      .toThrow(/\[parcel-cost\] mergeCostLines: duplicate parcel_cost_lines id: max_build/);
+  });
+
+  it('a fit-gated line with a null vocabulary throws', () => {
+    expect(() => linesWith({ garage: null }))
+      .toThrow(/\[parcel-cost\] mergeCostLines: fit-gated line garage has a null parcel_cost_lines\.fit_permitted_values/);
+  });
+
+  it('a non-fit-gated line with a non-null vocabulary throws', () => {
+    expect(() => linesWith({ kitchen: ['as_of_right'] }))
+      .toThrow(/\[parcel-cost\] mergeCostLines: non-fit-gated line kitchen has a non-null parcel_cost_lines\.fit_permitted_values/);
+  });
+});
+
+// Batch-2 row 2.5 (FOLD A2) — P3. `fits` is driven by the MERGED `fitPermittedValues` vocabulary.
+// RED before this change: the module-level PERMITTED_VALUES Set ignored the DB row entirely, so
+// narrowing a line's vocabulary had no effect.
+describe('buildParcelCostMenu — P3: fits is driven by the merged row vocabulary (batch-2 row 2.5)', () => {
+  it("a DB vocabulary of ['as_of_right'] makes coa_required NOT fit — the row wins over the old literal Set", () => {
+    const narrowed = linesWith({ garden_suite: ['as_of_right'], laneway_suite: ['as_of_right'], garage: ['as_of_right'] });
+    const { menu } = pc.buildParcelCostMenu(
+      fullParcel({ rear_suite_permission: 'coa_required', garage_permission: 'as_of_right' }),
+      RATES,
+      NO_ESCALATION,
+      { config: CFG, lines: narrowed },
+    );
+    expect(menu.garden_suite.fits).toBe(false);
+    expect(menu.laneway_suite.fits).toBe(false);
+    expect(menu.garage.fits).toBe(true);
+  });
+
+  it("a DB vocabulary of ['as_of_right','coa_required'] makes coa_required fit", () => {
+    const widened = linesWith({ garden_suite: ['as_of_right', 'coa_required'] });
+    const { menu } = pc.buildParcelCostMenu(
+      fullParcel({ rear_suite_permission: 'coa_required' }),
+      RATES,
+      NO_ESCALATION,
+      { config: CFG, lines: widened },
+    );
+    expect(menu.garden_suite.fits).toBe(true);
+  });
+
+  it('an empty vocabulary makes every permission not-fit (proves the array is genuinely consulted)', () => {
+    const emptied = linesWith({ garden_suite: [], laneway_suite: [], garage: [] });
+    const { menu, fitGatedSuiteCount, fitGatedGarageCount } = pc.buildParcelCostMenu(
+      fullParcel(),
+      RATES,
+      NO_ESCALATION,
+      { config: CFG, lines: emptied },
+    );
+    expect(menu.garden_suite.fits).toBe(false);
+    expect(menu.garage.fits).toBe(false);
+    expect(fitGatedSuiteCount).toBe(2);
+    expect(fitGatedGarageCount).toBe(1);
+  });
+});
+
 describe('PARCEL_COST_LINES — map integrity', () => {
-  it('13 lines, ids unique, every archetype seeded in RATES', () => {
+  it('13 structural lines, ids unique, every archetype seeded in RATES via the MERGED catalogue', () => {
     expect(pc.PARCEL_COST_LINES.length).toBe(13);
     const ids = pc.PARCEL_COST_LINES.map((l: { id: string }) => l.id);
     expect(new Set(ids).size).toBe(13);
-    for (const line of pc.PARCEL_COST_LINES) {
+    // Batch-2 row 2.5 — the structural array no longer carries `archetype`; the lock now reads
+    // the DB-joined half (the fixture of the 13 partition rows), which is what the engine prices.
+    expect(LINES.length).toBe(13);
+    for (const line of LINES) {
       expect(RATES[line.archetype as keyof typeof RATES], `rate for ${line.archetype}`).toBeDefined();
     }
+  });
+
+  it('structural-only: no archetype / baseConfidence literal survives on PARCEL_COST_LINES', () => {
+    for (const line of pc.PARCEL_COST_LINES) {
+      expect('archetype' in line, `${line.id} must not carry archetype`).toBe(false);
+      expect('baseConfidence' in line, `${line.id} must not carry baseConfidence`).toBe(false);
+    }
+    // baseConfidence still arrives — from the DB row, on the merged object.
+    expect(LINES.every((l: { baseConfidence: string }) => ['high', 'medium', 'low'].includes(l.baseConfidence))).toBe(true);
   });
 
   it('exactly the 12 §2.5 headline scalars are wired (solar_coa shares cost_solar_total)', () => {
     const scalarLines = pc.PARCEL_COST_LINES.filter((l: { scalar: string | null }) => l.scalar);
     expect(scalarLines.length).toBe(12);
+  });
+});
+
+// Batch-2 row 2.5, Spec 124 R-AU — PERMITTED_VALUES is retired; the vocabulary lives in the
+// `parcel_cost_lines` table (fit_permitted_values) and the merged line object. Verified with a
+// repo-wide search before deletion (its only reader was inside this module).
+describe('PERMITTED_VALUES — retired (batch-2 row 2.5, Spec 124 R-AU)', () => {
+  it('is no longer exported by the engine', () => {
+    expect(pc.PERMITTED_VALUES).toBeUndefined();
+  });
+
+  it('the vocabulary reaches the engine only through the merged line row', () => {
+    const garden = LINES.find((l: { id: string }) => l.id === 'garden_suite') as { fitPermittedValues: string[] };
+    expect(garden.fitPermittedValues).toEqual(['as_of_right', 'coa_required']);
   });
 });

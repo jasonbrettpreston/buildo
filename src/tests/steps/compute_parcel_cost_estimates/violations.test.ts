@@ -1,6 +1,6 @@
-// SPEC LINK: docs/specs/01-pipeline/88_parcel_cost_model.md §2.1/§2.4/§2.5/§2.8/§2.9/§2.10/§2.11 (+ Spec 43 §Step Breakdown step 23 owner, Spec 122 §5.1 shape)
+// SPEC LINK: docs/specs/01-pipeline/88_parcel_cost_model.md §2.1/§2.3/§2.4/§2.5/§2.8/§2.9/§2.10/§2.11 (+ Spec 43 §Step Breakdown step 23 owner, Spec 122 §5.1 shape)
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §1.1 (behaviour-neutral), §3.1 (PIN), §7 (commit ledger)
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 2 compute-is-just-compute, Rule 3 tunables, Rule 10 row-derived verdict)
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 2 compute-is-just-compute, Rule 3 tunables, Rule 10 row-derived verdict, R-AU pricing-data-admin-editable)
 //
 // ============================================================================
 // Batch-2 row 2.4 — `compute_parcel_cost_estimates`, ENRICHER's FIFTH converted member,
@@ -28,6 +28,16 @@ const COMPUTE_REL = 'scripts/lib/compute/compute-parcel-cost-estimates.js';
 const DESCRIPTOR_REL = 'scripts/compute-parcel-cost-estimates.descriptor.json';
 
 const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+
+// Batch-2 row 2.5 (FOLD A2) — runCostMenuPass now reads ctx.contract.lines (the merged
+// parcel_cost_lines catalogue) instead of the module-literal PARCEL_COST_LINES. Any fake ctx
+// built for this compute module's tests must carry it. Shared across the fake-ctx describe
+// blocks below (CPCE-D3) the same way the other three test files share their own `LINES` const.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- scripts/lib is CommonJS
+const { PARCEL_COST_LINES, mergeCostLines } = require(path.join(REPO_ROOT, 'scripts/lib/parcel-cost.js'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- JSON fixture, not a module
+const SEED_LINE_ROWS = require(path.join(REPO_ROOT, 'src/tests/fixtures/parcel-cost-lines.seed.json'));
+const FAKE_CTX_LINES = mergeCostLines(PARCEL_COST_LINES, SEED_LINE_ROWS);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function loadDescriptor(): any {
@@ -303,6 +313,62 @@ describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs,
   });
 });
 
+// Batch-2 row 2.5 (FOLD A2, Spec 88 §2.3, Spec 124 R-AU) — readCostContract's parcel_cost_lines
+// half: zero-row HALT (mirrors the archetype_cost_rates guard immediately above it), the
+// mergeCostLines id-mismatch HALT surfacing through the SAME function, and the happy path
+// returning 13 merged lines + linesUpdatedAt. Fake pool, no DB (C1 — mirrors CPCE-D1's stubPool
+// SQL-text-fingerprint dispatch pattern).
+describe('compute_parcel_cost_estimates — CPCE FOLD A2: readCostContract parcel_cost_lines (fake pool, no DB)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const SEED_ROWS = require('../../fixtures/parcel-cost-lines.seed.json') as Array<{
+    id: string;
+    archetype: string;
+    base_confidence: 'high' | 'medium' | 'low';
+    fit_permitted_values: string[] | null;
+  }>;
+  const ONE_RATE_ROW = [{ archetype: 'FB', cost_per_sqm: 100, cost_adjustment_factor: 1, escalation_index_base: 100 }];
+
+  function stubPool(linesRows: unknown[], sigExtra: Record<string, unknown> = {}) {
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: async (sql: string): Promise<any> => {
+        if (sql.includes('AS rates_as_of')) {
+          return { rows: [{ rates_as_of: null, index_updated_at: null, cost_lines_updated_at: '2026-09-23T00:00:00.000Z', ...sigExtra }] };
+        }
+        if (sql.includes('base_confidence')) return { rows: linesRows };
+        return { rows: ONE_RATE_ROW };
+      },
+    };
+  }
+
+  it('throws naming parcel_cost_lines + migration 248 on zero rows', async () => {
+    const compute = loadCompute();
+    await expect(compute.readCostContract(stubPool([]))).rejects.toThrow(/parcel_cost_lines is empty.*migration 248/);
+  });
+
+  it('throws (via mergeCostLines) on an id unknown to PARCEL_COST_LINES', async () => {
+    const compute = loadCompute();
+    const badRows = [...SEED_ROWS, { id: 'not_a_line', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null }];
+    await expect(compute.readCostContract(stubPool(badRows))).rejects.toThrow(/mergeCostLines: parcel_cost_lines id is unknown to PARCEL_COST_LINES: not_a_line/);
+  });
+
+  it('throws (via mergeCostLines) when a structural id has no DB row', async () => {
+    const compute = loadCompute();
+    const shortRows = SEED_ROWS.filter((r) => r.id !== 'gut');
+    await expect(compute.readCostContract(stubPool(shortRows))).rejects.toThrow(/mergeCostLines: PARCEL_COST_LINES id has no parcel_cost_lines row: gut/);
+  });
+
+  it('a good fixture returns 13 merged lines + linesUpdatedAt (ISO string, from MAX(parcel_cost_lines.updated_at))', async () => {
+    const compute = loadCompute();
+    const contract = await compute.readCostContract(stubPool(SEED_ROWS));
+    expect(contract.lines).toHaveLength(13);
+    const garden = contract.lines.find((l: { id: string }) => l.id === 'garden_suite');
+    expect(garden.archetype).toBe('LANE_GARDEN');
+    expect(garden.fitPermittedValues).toEqual(['as_of_right', 'coa_required']);
+    expect(contract.linesUpdatedAt).toBe('2026-09-23T00:00:00.000Z');
+  });
+});
+
 describe('compute_parcel_cost_estimates — CPCE-D3: the unmapped-family counter measures the real fall-through', () => {
   const BUILD_NORMS_PATH = path.join(REPO_ROOT, 'scripts/lib/build-norms.js');
   const COMPUTE_PATH = path.join(REPO_ROOT, COMPUTE_REL);
@@ -321,7 +387,7 @@ describe('compute_parcel_cost_estimates — CPCE-D3: the unmapped-family counter
         compute_parcel_cost_batch_size: 1000,
         compute_parcel_cost_stream_batch_size: 1000,
       },
-      contract: { rates: {}, ratesAsOf: null, indexUpdatedAt: null },
+      contract: { rates: {}, lines: FAKE_CTX_LINES, ratesAsOf: null, indexUpdatedAt: null, linesUpdatedAt: null },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       stream: async function* (): AsyncGenerator<any> {
         for (const p of parcels) yield p;

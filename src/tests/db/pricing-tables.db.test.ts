@@ -3,9 +3,14 @@
 //
 // Live-DB proof of migration 248 (parcel_cost_lines — the editable half of the 13-line cost
 // catalogue, batch-2 row 2.5 C0):
-//   (a) the seeded table equals src/tests/fixtures/parcel-cost-lines.seed.json byte-for-byte AND
-//       equals a fresh derivation from scripts/lib/parcel-cost.js PARCEL_COST_LINES — locking seed
-//       ≡ fixture ≡ module literals from both sides (a drift in any one of the three is caught);
+//   (a) the seeded table equals src/tests/fixtures/parcel-cost-lines.seed.json byte-for-byte;
+//       the table's id set equals PARCEL_COST_LINES.map(l => l.id) (scripts/lib/parcel-cost.js,
+//       now STRUCTURAL-ONLY after row 2.5 E3 — archetype/base_confidence/fit_permitted_values
+//       moved to this table, so a "fresh derivation from PARCEL_COST_LINES" is no longer
+//       possible: the module has nothing left to derive them FROM); and the fit-vocabulary
+//       rows (non-null fit_permitted_values) equal exactly the structural entries carrying a
+//       `fitField` — locking the two halves of the catalogue to each other by id and by which
+//       rows are fit-gated, without pretending the editable VALUES still live in the module;
 //   (b) the archetype FK refuses an unknown archetype; the base_confidence CHECK refuses 'urgent';
 //   (c) RLS is enabled (bare, no policy — Spec 88 §2.3 / 227's form) on both parcel_cost_lines and
 //       archetype_cost_rates;
@@ -23,9 +28,11 @@ import { dbAvailable, getTestPool } from './setup-testcontainer';
 const { PARCEL_COST_LINES } = require('../../../scripts/lib/parcel-cost.js') as {
   PARCEL_COST_LINES: ReadonlyArray<{
     id: string;
-    archetype: string;
-    baseConfidence: 'high' | 'medium' | 'low';
+    areaField: string;
     fitField?: string;
+    isCoaLine?: boolean;
+    scalar: string | null;
+    scalarKind: 'total' | 'per_sqm';
   }>;
 };
 
@@ -36,23 +43,24 @@ type LineRow = {
   fit_permitted_values: string[] | null;
 };
 
-/** The fixture is the single source of truth the DB seed is proven against (generated from the module — see D1/E1). */
+/** The fixture is the single source of truth the DB seed is proven against (batch-2 row 2.5 D1). */
 function readFixture(): LineRow[] {
   return JSON.parse(
     readFileSync(join(process.cwd(), 'src/tests/fixtures/parcel-cost-lines.seed.json'), 'utf8'),
   ) as LineRow[];
 }
 
-/** Fresh derivation straight from PARCEL_COST_LINES — the module-literals side of the lock. */
-function deriveFromModule(): LineRow[] {
+/** The structural-only id set left in the module — the other side of the id-set lock. */
+function structuralIds(): string[] {
+  return [...PARCEL_COST_LINES].map((line) => line.id).sort();
+}
+
+/** The structural ids the module still marks fit-gated (via `fitField`) — the other side of the fit-vocabulary lock. */
+function structuralFitGatedIds(): string[] {
   return [...PARCEL_COST_LINES]
-    .map((line) => ({
-      id: line.id,
-      archetype: line.archetype,
-      base_confidence: line.baseConfidence,
-      fit_permitted_values: line.fitField ? ['as_of_right', 'coa_required'] : null,
-    }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .filter((line) => Boolean(line.fitField))
+    .map((line) => line.id)
+    .sort();
 }
 
 /** The migration's own INSERT ... ON CONFLICT DO NOTHING statement, extracted verbatim from the file on disk. */
@@ -74,7 +82,7 @@ describe.skipIf(!dbAvailable())('migration 248 — parcel_cost_lines (live DB)',
     await pool.end();
   });
 
-  it('seed equals the fixture byte-for-byte AND equals a fresh module derivation', async () => {
+  it('seed equals the fixture byte-for-byte', async () => {
     const { rows } = await pool.query<LineRow>(
       `SELECT id, archetype, base_confidence, fit_permitted_values
          FROM parcel_cost_lines
@@ -82,12 +90,27 @@ describe.skipIf(!dbAvailable())('migration 248 — parcel_cost_lines (live DB)',
     );
 
     const fixture = [...readFixture()].sort((a, b) => a.id.localeCompare(b.id));
-    const fromModule = deriveFromModule();
 
     expect(rows).toHaveLength(13);
     expect(rows).toEqual(fixture);
-    expect(rows).toEqual(fromModule);
-    expect(fixture).toEqual(fromModule);
+  });
+
+  it("the table's id set equals PARCEL_COST_LINES.map(l => l.id) (structural ⊕ editable stay id-aligned)", async () => {
+    const { rows } = await pool.query<{ id: string }>('SELECT id FROM parcel_cost_lines ORDER BY id');
+    expect(rows.map((r) => r.id)).toEqual(structuralIds());
+  });
+
+  it('fit-vocabulary rows (non-null fit_permitted_values) equal exactly the structural fitField entries', async () => {
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM parcel_cost_lines WHERE fit_permitted_values IS NOT NULL ORDER BY id`,
+    );
+    expect(rows.map((r) => r.id)).toEqual(structuralFitGatedIds());
+
+    const { rows: nonFit } = await pool.query<{ id: string }>(
+      `SELECT id FROM parcel_cost_lines WHERE fit_permitted_values IS NULL ORDER BY id`,
+    );
+    const fitGated = new Set(structuralFitGatedIds());
+    for (const row of nonFit) expect(fitGated.has(row.id)).toBe(false);
   });
 
   it('the archetype FK refuses an unknown archetype', async () => {
