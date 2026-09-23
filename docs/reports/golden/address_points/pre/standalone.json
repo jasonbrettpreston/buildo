@@ -1,0 +1,308 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/load-address-points.js",
+  "chain": "none",
+  "git_head": "1c188590eacbfb3d236a67714055a94302343cf1",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 62932,
+      "rows_read": 525436,
+      "records_inserted": 0,
+      "records_updated": 0,
+      "records_unchanged": 525436,
+      "records_skipped": 0,
+      "errors": 0,
+      "audit_table": {
+        "phase": 2,
+        "name": "Address Points Ingestion",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "rows_read",
+            "value": 525436,
+            "threshold": ">= 500000",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_inserted",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_unchanged",
+            "value": 525436,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_skipped",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "skip_rate",
+            "value": "0.0%",
+            "threshold": "< 5%",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "address_points_csv_schema_drift",
+            "value": "none",
+            "threshold": "no missing required columns",
+            "status": "PASS"
+          },
+          {
+            "metric": "address_points_null_address_number_pct",
+            "value": "0.0%",
+            "threshold": "< 10%",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 62960,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "Toronto Open Data CSV": [
+          "ADDRESS_POINT_ID",
+          "ADDRESS_NUMBER",
+          "LINEAR_NAME_FULL",
+          "ADDRESS_FULL",
+          "LO_NUM",
+          "HI_NUM",
+          "MAINT_STAGE",
+          "ADDRESS_STATUS",
+          "ADDRESS_CLASS_DESC",
+          "CLASS_FAMILY_DESC",
+          "PLACE_NAME",
+          "LATITUDE",
+          "LONGITUDE",
+          "geometry"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "address_point_id",
+          "latitude",
+          "longitude",
+          "address_number",
+          "linear_name_full",
+          "address_full",
+          "lo_num",
+          "hi_num",
+          "maint_stage",
+          "address_status",
+          "address_class_desc",
+          "class_family_desc",
+          "place_name",
+          "addr_num_normalized",
+          "linear_name_normalized",
+          "geom"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-address-points]\",\"msg\":\"Using cached CSV: C:\\\\Users\\\\User\\\\buildo-lib\\\\data\\\\address-points-4326.csv\"}\n{\"level\":\"INFO\",\"tag\":\"[load-address-points]\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-lib\\\\data\\\\address-points-4326.csv\"}\n  [load-address-points] 50,000 / 525,000 (9.5%) — 4.5s — 11023 rows/s\n  [load-address-points] 100,000 / 525,000 (19.0%) — 9.4s — 10615 rows/s\n  [load-address-points] 150,000 / 525,000 (28.6%) — 14.3s — 10490 rows/s\n  [load-address-points] 200,000 / 525,000 (38.1%) — 21.0s — 9546 rows/s\n  [load-address-points] 250,000 / 525,000 (47.6%) — 27.2s — 9190 rows/s\n  [load-address-points] 300,000 / 525,000 (57.1%) — 34.5s — 8697 rows/s\n  [load-address-points] 350,000 / 525,000 (66.7%) — 39.6s — 8848 rows/s\n  [load-address-points] 400,000 / 525,000 (76.2%) — 48.6s — 8238 rows/s\n  [load-address-points] 450,000 / 525,000 (85.7%) — 55.4s — 8121 rows/s\n  [load-address-points] 500,000 / 525,000 (95.2%) — 60.5s — 8264 rows/s\n{\"level\":\"INFO\",\"tag\":\"[load-address-points]\",\"msg\":\"Load complete\",\"context\":{\"rows_read\":525436,\"inserted\":0,\"updated\":0,\"skipped\":0,\"errors\":0,\"duration\":\"62.9s\"}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":62932,\"rows_read\":525436,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525436,\"records_skipped\":0,\"errors\":0,\"audit_table\":{\"phase\":2,\"name\":\"Address Points Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"rows_read\",\"value\":525436,\"threshold\":\">= 500000\",\"status\":\"PASS\"},{\"metric\":\"records_inserted\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unchanged\",\"value\":525436,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"skip_rate\",\"value\":\"0.0%\",\"threshold\":\"< 5%\",\"status\":\"PASS\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"address_points_csv_schema_drift\",\"value\":\"none\",\"threshold\":\"no missing required columns\",\"status\":\"PASS\"},{\"metric\":\"address_points_null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"< 10%\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":62960,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"Toronto Open Data CSV\":[\"ADDRESS_POINT_ID\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"ADDRESS_FULL\",\"LO_NUM\",\"HI_NUM\",\"MAINT_STAGE\",\"ADDRESS_STATUS\",\"ADDRESS_CLASS_DESC\",\"CLASS_FAMILY_DESC\",\"PLACE_NAME\",\"LATITUDE\",\"LONGITUDE\",\"geometry\"]},\"writes\":{\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"address_number\",\"linear_name_full\",\"address_full\",\"lo_num\",\"hi_num\",\"maint_stage\",\"address_status\",\"address_class_desc\",\"class_family_desc\",\"place_name\",\"addr_num_normalized\",\"linear_name_normalized\",\"geom\"]}}\n\n[load-address-points] completed in 63.0s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1971,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "pattern:rows_per_sec",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/load-address-points.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Address Points Ingestion",
+          "phase": 2,
+          "rows": [
+            {
+              "metric": "rows_read",
+              "status": "PASS",
+              "threshold": ">= 500000",
+              "value": 525436
+            },
+            {
+              "metric": "records_inserted",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_unchanged",
+              "status": "INFO",
+              "threshold": null,
+              "value": 525436
+            },
+            {
+              "metric": "records_skipped",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "skip_rate",
+              "status": "PASS",
+              "threshold": "< 5%",
+              "value": "0.0%"
+            },
+            {
+              "metric": "records_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "address_points_csv_schema_drift",
+              "status": "PASS",
+              "threshold": "no missing required columns",
+              "value": "none"
+            },
+            {
+              "metric": "address_points_null_address_number_pct",
+              "status": "PASS",
+              "threshold": "< 10%",
+              "value": "0.0%"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "errors": 0,
+        "records_inserted": 0,
+        "records_skipped": 0,
+        "records_unchanged": 525436,
+        "records_updated": 0,
+        "rows_read": 525436
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "Toronto Open Data CSV": [
+            "ADDRESS_POINT_ID",
+            "ADDRESS_NUMBER",
+            "LINEAR_NAME_FULL",
+            "ADDRESS_FULL",
+            "LO_NUM",
+            "HI_NUM",
+            "MAINT_STAGE",
+            "ADDRESS_STATUS",
+            "ADDRESS_CLASS_DESC",
+            "CLASS_FAMILY_DESC",
+            "PLACE_NAME",
+            "LATITUDE",
+            "LONGITUDE",
+            "geometry"
+          ]
+        },
+        "writes": {
+          "address_points": [
+            "address_point_id",
+            "latitude",
+            "longitude",
+            "address_number",
+            "linear_name_full",
+            "address_full",
+            "lo_num",
+            "hi_num",
+            "maint_stage",
+            "address_status",
+            "address_class_desc",
+            "class_family_desc",
+            "place_name",
+            "addr_num_normalized",
+            "linear_name_normalized",
+            "geom"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Using cached CSV: C:\\\\Users\\\\User\\\\buildo-lib\\\\data\\\\address-points-4326.csv\",\"tag\":\"[load-address-points]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-lib\\\\data\\\\address-points-4326.csv\",\"tag\":\"[load-address-points]\"}",
+      "  [load-address-points] 50,000 / 525,000 (9.5%) — <DUR> — <RATE>",
+      "  [load-address-points] 100,000 / 525,000 (19.0%) — <DUR> — <RATE>",
+      "  [load-address-points] 150,000 / 525,000 (28.6%) — <DUR> — <RATE>",
+      "  [load-address-points] 200,000 / 525,000 (38.1%) — <DUR> — <RATE>",
+      "  [load-address-points] 250,000 / 525,000 (47.6%) — <DUR> — <RATE>",
+      "  [load-address-points] 300,000 / 525,000 (57.1%) — <DUR> — <RATE>",
+      "  [load-address-points] 350,000 / 525,000 (66.7%) — <DUR> — <RATE>",
+      "  [load-address-points] 400,000 / 525,000 (76.2%) — <DUR> — <RATE>",
+      "  [load-address-points] 450,000 / 525,000 (85.7%) — <DUR> — <RATE>",
+      "  [load-address-points] 500,000 / 525,000 (95.2%) — <DUR> — <RATE>",
+      "{\"context\":{\"duration\":\"<DUR>\",\"errors\":0,\"inserted\":0,\"rows_read\":525436,\"skipped\":0,\"updated\":0},\"level\":\"INFO\",\"msg\":\"Load complete\",\"tag\":\"[load-address-points]\"}",
+      "[load-address-points] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
