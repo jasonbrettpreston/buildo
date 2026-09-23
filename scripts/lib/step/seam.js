@@ -87,19 +87,80 @@ function loadConvertedDescriptors() {
  * descriptor keyed in `descriptorsByName`). Deterministically ordered so a
  * fixture asserting "exactly N pairs" never depends on object key iteration
  * order.
+ *
+ * SEAM-CHAIN-1 (Spec 122 §6.5, batch-2 row 3.1 prerequisite 0c): the
+ * ordering claim is PER CHAIN — "a step may not read a table written by a
+ * later step in the same chain" — but this function historically applied NO
+ * chain filter while `runSeamChecks` receives the LIVE chain id from
+ * `scripts/analysis/chain-end-synthesis.mjs`. The result: a `permits`
+ * chain-end synthesis evaluated `sources`-only pairs, whose producer never
+ * runs on `permits` at all. When `opts.chainId` is given, the unscoped list
+ * is filtered to pairs whose BOTH slugs are members of
+ * `loadManifest().chains[chainId]` (arrays of slugs). When `chainId` is
+ * omitted/undefined the unscoped list is returned exactly as before —
+ * byte-identical for existing callers. The observable exclusion detail lives
+ * in `deriveSeamPairsScoped`; this wrapper is the backwards-compatible
+ * `.pairs` view.
  */
-function deriveSeamPairs(descriptorsByName = loadConvertedDescriptors()) {
-  const pairs = [];
+function deriveSeamPairs(descriptorsByName = loadConvertedDescriptors(), opts = {}) {
+  return deriveSeamPairsScoped(descriptorsByName, opts && opts.chainId).pairs;
+}
+
+/**
+ * The chain-scoped derivation behind `deriveSeamPairs` (SEAM-CHAIN-1, Spec
+ * 122 §6.5). Returns `{ pairs, excluded }` — never logs, never throws on a
+ * scoped-away pair, because "nothing hidden" is the point: a caller/test must
+ * be able to assert WHAT was excluded and WHY.
+ *
+ * - `chainId` omitted/undefined → `{ pairs: <unscoped list>, excluded: [] }`
+ *   (the historical derivation, unchanged).
+ * - `chainId` given → a pair is live only when BOTH slugs are members of
+ *   `manifest.chains[chainId]`; every scoped-away pair is returned in
+ *   `excluded` with `reason: 'upstream_not_in_chain' | 'downstream_not_in_chain'`
+ *   (upstream checked first). A pair neither of whose members is in the chain
+ *   is excluded with `upstream_not_in_chain` — the first missing side named.
+ * - an unknown `chainId` (not a key of `manifest.chains`) THROWS a named
+ *   Error rather than silently returning everything (a typo'd chain must not
+ *   read as "no pairs on this chain") or nothing.
+ */
+function deriveSeamPairsScoped(descriptorsByName = loadConvertedDescriptors(), chainId) {
+  const unscoped = [];
   for (const [downstreamName, { descriptor }] of Object.entries(descriptorsByName)) {
     const reads = (descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.steps) || [];
     for (const r of reads) {
       if (Object.prototype.hasOwnProperty.call(descriptorsByName, r.step)) {
-        pairs.push({ upstream: r.step, downstream: downstreamName });
+        unscoped.push({ upstream: r.step, downstream: downstreamName });
       }
     }
   }
-  pairs.sort((a, b) => (a.downstream + ':' + a.upstream).localeCompare(b.downstream + ':' + b.upstream));
-  return pairs;
+  unscoped.sort((a, b) => (a.downstream + ':' + a.upstream).localeCompare(b.downstream + ':' + b.upstream));
+
+  if (chainId === undefined || chainId === null) {
+    return { pairs: unscoped, excluded: [] };
+  }
+
+  const manifest = loadManifest();
+  const chains = manifest.chains || {};
+  if (!Object.prototype.hasOwnProperty.call(chains, chainId)) {
+    throw new Error(
+      `deriveSeamPairsScoped: unknown chainId '${chainId}' — not a key of manifest.chains ` +
+        `(known: ${Object.keys(chains).sort().join(', ')})`,
+    );
+  }
+  const members = new Set(chains[chainId] || []);
+
+  const pairs = [];
+  const excluded = [];
+  for (const pair of unscoped) {
+    if (!members.has(pair.upstream)) {
+      excluded.push({ ...pair, reason: 'upstream_not_in_chain' });
+    } else if (!members.has(pair.downstream)) {
+      excluded.push({ ...pair, reason: 'downstream_not_in_chain' });
+    } else {
+      pairs.push(pair);
+    }
+  }
+  return { pairs, excluded };
 }
 
 function scopedPipeline(chainId, slug) {
@@ -200,9 +261,15 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
   return evaluateOrder({ metric, threshold, up, down, join: 'temporal_fallback', joinValue: null });
 }
 
-/** Runs every derived live seam pair, returns one row per pair. */
+/**
+ * Runs every derived live seam pair FOR THIS CHAIN, returns one row per pair.
+ * SEAM-CHAIN-1 (Spec 122 §6.5): the chain id is threaded through the
+ * derivation — a pair whose producer or consumer is not a member of
+ * `manifest.chains[chainId]` is not evaluated on that chain (an unknown
+ * chain id throws, see `deriveSeamPairsScoped`).
+ */
 async function runSeamChecks(pool, { chainId = 'sources', descriptorsByName } = {}) {
-  const pairs = deriveSeamPairs(descriptorsByName);
+  const { pairs } = deriveSeamPairsScoped(descriptorsByName, chainId);
   const rows = [];
   // Sequential by design: the pair list is tiny (1 today) and each check is
   // its own query, no batching contract to preserve.
@@ -216,6 +283,7 @@ module.exports = {
   descriptorPathFor,
   loadConvertedDescriptors,
   deriveSeamPairs,
+  deriveSeamPairsScoped,
   checkSeam,
   evaluateOrder,
   runSeamChecks,

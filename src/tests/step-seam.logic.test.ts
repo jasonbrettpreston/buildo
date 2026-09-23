@@ -1,5 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 13, R-T addendum, commit 5)
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.5 (SEAM-CHAIN-1, batch-2 row 3.1 prerequisite 0c)
 //
 // scripts/lib/step/seam.js — the seam-validation pass. Derives every "live"
 // seam (both endpoints converted, real descriptor) from converted.json +
@@ -14,7 +15,17 @@ import { describe, expect, it } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const seam = require('../../scripts/lib/step/seam.js') as {
   loadConvertedDescriptors: () => Record<string, { descriptor: Record<string, unknown>; slug: string; relFile: string }>;
-  deriveSeamPairs: (byName?: Record<string, { descriptor: Record<string, unknown> }>) => Array<{ upstream: string; downstream: string }>;
+  deriveSeamPairs: (
+    byName?: Record<string, { descriptor: Record<string, unknown> }>,
+    opts?: { chainId?: string },
+  ) => Array<{ upstream: string; downstream: string }>;
+  deriveSeamPairsScoped: (
+    byName: Record<string, { descriptor: Record<string, unknown> }>,
+    chainId?: string,
+  ) => {
+    pairs: Array<{ upstream: string; downstream: string }>;
+    excluded: Array<{ upstream: string; downstream: string; reason: 'upstream_not_in_chain' | 'downstream_not_in_chain' }>;
+  };
   checkSeam: (
     pool: { query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> },
     opts: { upstream: string; downstream: string; chainId?: string },
@@ -323,5 +334,56 @@ describe('runSeamChecks — one row per derived pair', () => {
     for (const row of rows) {
       expect(row?.status).toBe('WARN'); // no history in this fake pool
     }
+  });
+});
+
+describe('seam pairs are scoped to the chain they run in (SEAM-CHAIN-1, Spec 122 §6.5, batch-2 row 3.1 prerequisite 0c)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const manifest = require('../../scripts/manifest.json') as { chains: Record<string, string[]> };
+
+  // compute_centroids -> link_massing: a real pair (see the first describe block
+  // above), both slugs are members of `sources`, but compute_centroids is NOT a
+  // member of `permits` (link_massing is) — SEAM-CHAIN-1's motivating case: a
+  // permits chain-end evaluating a sources-only pair.
+  const byName = {
+    link_massing: {
+      descriptor: { inputs: { reads: { steps: [{ step: 'compute_centroids' }] } } },
+    },
+    compute_centroids: { descriptor: { inputs: { reads: { steps: [] } } } },
+  };
+  const PAIR = { upstream: 'compute_centroids', downstream: 'link_massing' };
+
+  it('the chosen pair is sources-only in the REAL manifest (upstream absent from permits, downstream present)', () => {
+    expect(manifest.chains.sources).toEqual(expect.arrayContaining(['compute_centroids', 'link_massing']));
+    expect(manifest.chains.permits).not.toContain('compute_centroids');
+    expect(manifest.chains.permits).toContain('link_massing');
+  });
+
+  it('T1 — an unscoped pair whose upstream is missing from the chain is excluded, not evaluated (RED before the fix: one row)', async () => {
+    const scoped = seam.deriveSeamPairsScoped(byName, 'permits');
+    expect(scoped.pairs).toEqual([]);
+    expect(scoped.excluded).toEqual([{ ...PAIR, reason: 'upstream_not_in_chain' }]);
+
+    const pool = fakeSeamPool([], []);
+    const rows = await seam.runSeamChecks(pool, { chainId: 'permits', descriptorsByName: byName });
+    expect(rows).toEqual([]);
+  });
+
+  it('T2 — the same pair is live, unexcluded, and produces one row on the chain both slugs belong to', async () => {
+    const scoped = seam.deriveSeamPairsScoped(byName, 'sources');
+    expect(scoped.pairs).toEqual([PAIR]);
+    expect(scoped.excluded).toEqual([]);
+
+    const pool = fakeSeamPool([], []);
+    const rows = await seam.runSeamChecks(pool, { chainId: 'sources', descriptorsByName: byName });
+    expect(rows).toHaveLength(1);
+  });
+
+  it('T3 — deriveSeamPairs with no chain argument is byte-identical to the unscoped derivation (backward compatible)', () => {
+    expect(seam.deriveSeamPairs(byName)).toEqual([PAIR]);
+  });
+
+  it('T4 — an unknown chainId throws a named Error rather than silently returning everything or nothing', () => {
+    expect(() => seam.deriveSeamPairsScoped(byName, 'not_a_real_chain')).toThrow(/unknown chainId/i);
   });
 });
