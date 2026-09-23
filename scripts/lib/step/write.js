@@ -35,6 +35,8 @@
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4, §8.2
  * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §R9
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 1 (a new schema field carries an x-ruling)
+ * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (no per-step escape hatches — geometry_kind is declared runner-wide)
  */
 'use strict';
 
@@ -169,14 +171,76 @@ function targetKey(index) {
  * the reason this SQL is not `scripts/lib/geometry-validator.js`: that helper cannot
  * emit the collection-extracted counter a frozen producer contract may freeze.
  *
- * ⚠️ IT IS A BUILDER, NOT A CONSTANT, and the parameter is the one thing in it that
- * is not an API constant: `outputs.writes[].key_sql_type`. The literal `BIGINT[]`
- * that used to sit here disagreed with the departure DELETE's cast twelve lines
- * below, which reads the DECLARED type — so a step declaring `TEXT` keys would have
- * had its keys cast to BIGINT on the way in and TEXT on the way out. Nothing in the
+ * ⚠️ IT IS A BUILDER, NOT A CONSTANT, and the parameters are the two things in it that
+ * are not API constants: `outputs.writes[].key_sql_type` and `outputs.writes[].geometry_kind`.
+ * The literal `BIGINT[]` that used to sit here disagreed with the departure DELETE's cast
+ * twelve lines below, which reads the DECLARED type — so a step declaring `TEXT` keys would
+ * have had its keys cast to BIGINT on the way in and TEXT on the way out. Nothing in the
  * descriptor said which one won; today one source says both.
+ *
+ * ⚠️ `geometry_kind` (Spec 124 Rule 1, Spec 122 §5.1, batch-2 row 3.1 c0e) is the SECOND
+ * such parameter. The SQL used to be POLYGON-ONLY by construction — `ST_Multi(…)` and an
+ * accepted-type list of Polygon/MultiPolygon — so a Point target (address_points' `geom`)
+ * had every row become a Multi geometry and crash on its first write with
+ * `Geometry type (MultiPolygon) does not match column type (Point)`. `polygon` keeps the
+ * pre-existing text BYTE-IDENTICAL (T2 pins it); `point` extracts type 1 with NO `ST_Multi`
+ * and accepts only `ST_Point`. The four statuses are UNCHANGED — a polygon write receiving a
+ * stray Point still scores it `skipped_unsupported_type`, and a MultiPoint a point write
+ * cannot land scores the same way, never a silent coercion.
  */
-const geometryValidationSql = (keyType) => `
+const GEOMETRY_KINDS = Object.freeze(['polygon', 'point']);
+
+/** The declared geometry families and the ST_CollectionExtract type code each one keeps. */
+const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1 });
+
+/** The accepted ST_GeometryType() set per kind — a polygon target refuses a Point, and vice versa. */
+const GEOMETRY_KIND_ACCEPTED_TYPES = Object.freeze({
+  polygon: "('ST_Polygon','ST_MultiPolygon')",
+  point: "('ST_Point')",
+});
+
+/** The repair/normalise expression per kind. Polygon = today's byte-identical text; point keeps 1. */
+function geometryFinalExpr(geometryKind) {
+  if (geometryKind === 'polygon') {
+    return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))';
+  }
+  return 'ST_CollectionExtract(repaired, 1)';
+}
+
+/**
+ * A NAMED runtime backstop for a plan whose write declares a `wkb_geometry` bind but no
+ * `geometry_kind` (Spec 124 Rule 1, Spec 122 §5.1). The schema's own if/then forbids the
+ * combination, so reaching this is a descriptor that bypassed the loader, not a user error;
+ * the throw keeps the validator from silently defaulting to the polygon arm.
+ */
+class MissingGeometryKindError extends Error {
+  constructor(table) {
+    super(`[write_discipline] ${table}: a column declares bind "wkb_geometry" but the write `
+      + 'declares no geometry_kind. The geometry family selects the validator repair/accept '
+      + 'path (polygon vs point) and is DECLARED, never sniffed from the payload — declare '
+      + '"geometry_kind": "polygon" | "point" on the write (scripts/steps/_schema/step.schema.json).');
+    this.name = 'MissingGeometryKindError';
+  }
+}
+
+/** Validate a DECLARED geometry_kind, throwing by name — never a silent polygon default. */
+function assertGeometryKind(geometryKind, table) {
+  if (geometryKind == null || geometryKind === '') throw new MissingGeometryKindError(table);
+  if (!GEOMETRY_KINDS.includes(geometryKind)) {
+    throw new Error(`[write_discipline] ${table}: unknown geometry_kind '${geometryKind}' `
+      + `(expected ${GEOMETRY_KINDS.map((k) => `'${k}'`).join(' or ')}).`);
+  }
+  return geometryKind;
+}
+
+const geometryValidationSql = (keyType, geometryKind) => {
+  // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
+  // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
+  // value is asserted before any text is built, so the polygon default is never silent.
+  assertGeometryKind(geometryKind, 'geometryValidationSql');
+  const finalExpr = geometryFinalExpr(geometryKind);
+  const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
+  return `
 WITH input AS (
   SELECT s.source_key, ST_GeomFromGeoJSON(g.geojson) AS geom
     FROM unnest($1::${keyType}[]) WITH ORDINALITY AS s(source_key, ord)
@@ -186,7 +250,7 @@ validated AS (
   SELECT
     source_key,
     ST_GeometryType(repaired) AS repaired_type,
-    ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired)) AS geom_final,
+    ${finalExpr} AS geom_final,
     is_valid_original
   FROM (
     SELECT source_key,
@@ -197,10 +261,10 @@ validated AS (
 )
 SELECT source_key,
        CASE
-         WHEN ST_GeometryType(geom_final) IN ('ST_Polygon','ST_MultiPolygon')
+         WHEN ST_GeometryType(geom_final) IN ${accepted}
               AND NOT ST_IsEmpty(geom_final)
               AND repaired_type = 'ST_GeometryCollection'                       THEN 'collection_extracted'
-         WHEN ST_GeometryType(geom_final) IN ('ST_Polygon','ST_MultiPolygon')
+         WHEN ST_GeometryType(geom_final) IN ${accepted}
               AND NOT ST_IsEmpty(geom_final)                                     THEN 'accepted'
          WHEN geom_final IS NULL OR ST_IsEmpty(geom_final)                       THEN 'skipped_null'
          ELSE 'skipped_unsupported_type'
@@ -208,9 +272,10 @@ SELECT source_key,
        ST_AsBinary(geom_final) AS geom_wkb,
        is_valid_original
   FROM validated;`;
+};
 
 /** The default-keyed instance, for a reader (and `load-ravines.notes.json`) that wants the shape. */
-const GEOMETRY_VALIDATION_SQL = geometryValidationSql(DEFAULT_KEY_SQL_TYPE);
+const GEOMETRY_VALIDATION_SQL = geometryValidationSql(DEFAULT_KEY_SQL_TYPE, 'polygon');
 
 /** RLS preflight subject — one row per declared `rls_bypass_or_policy` requirement. */
 const RLS_PROBE_SQL = `SELECT c.relrowsecurity AS rls_enabled,
@@ -299,6 +364,20 @@ function buildWritePlan(writeSpec, descriptor) {
       + `(${geometryColumns.join(', ')}), and the validation phase writes its output under exactly one. `
       + 'A second geometry column would be bound NULL on every row; declare one, or extend validateGeometries first.');
   }
+  // A DECLARED geometry family (Spec 124 Rule 1, Spec 122 §5.1, batch-2 row 3.1 c0e).
+  //
+  // ⚠️ THIS FUNCTION NEVER THROWS FOR A MISSING KIND. A `wkb_geometry` bind does NOT by
+  // itself mean the validator runs: LINK / CASCADE / MATERIALIZER steps bind geometry from
+  // a server-side SELECT (an UPDATE...FROM join, an INSERT...SELECT), so their plans are
+  // built and executed with `validateGeometries` never in the call graph — an INGESTOR-only
+  // requirement must not be enforced on them (measured: a throw here sent 0 write statements
+  // through the LINK dry-run path, REDing LW-D15 and Fold D). The declared kind is therefore
+  // CARRIED here (possibly `undefined` for a non-validating plan) and the named
+  // `MissingGeometryKindError` is raised by `validateGeometries` — the ingest path, which is
+  // the only caller whose SQL is selected by the kind. The schema's own INGESTOR `allOf`
+  // requires the field at descriptor load, so reaching the validator's throw is a descriptor
+  // that bypassed the loader, not a user error.
+  const geometryKind = geometryColumns.length > 0 ? (writeSpec.geometry_kind ?? null) : null;
   // ⚠️ COMPOSITE KEYS: SUPPORTED FOR THE CONFLICT TARGET, STILL REFUSED WHERE THE
   // STATEMENT GENUINELY INDEXES keys[0] (LG-2, LINK pilot 2026-08-27).
   //
@@ -563,7 +642,10 @@ function buildWritePlan(writeSpec, descriptor) {
     ? `ST_GeomFromWKB($${ordinal}, ${srid})`
     : `$${ordinal}`);
 
-  /** One `($1, ST_GeomFromWKB($2, 4326), $3, $4)` group; `offset` is the running bind index. */
+  /** One `($1, ST_GeomFromWKB($2, <guards.srid>), $3, $4)` group; `offset` is the running bind index. */
+  // ST_GeomFromWKB preserves the WKB's own geometry type (Point stays Point, MultiPolygon
+  // stays MultiPolygon), so the INSERT/bind path needs no geometry_kind branch — the
+  // declared kind only selects the VALIDATOR's repair/accept arm in `validation_sql` above.
   const valuesGroup = (offset) => `(${stepColumns.map((c, i) => bindFor(c, offset + i)).join(', ')})`;
 
   const head = `INSERT INTO ${table} (${stepColumnNames.join(', ')})\nVALUES `;
@@ -591,9 +673,20 @@ function buildWritePlan(writeSpec, descriptor) {
     // reads them — the alternative is a hand-maintained rename between two phases,
     // which is a NOT NULL violation waiting for the first forced reload.
     geometry_columns: geometryColumns,
+    // The DECLARED geometry family (polygon|point, Spec 124 Rule 1). Threaded into
+    // validateGeometries via validation_sql AND carried on the plan so an executor can
+    // read it without re-parsing the SQL. `null` on a non-validating plan (a LINK/CASCADE
+    // target binds geometry from a server-side SELECT and never runs the validator).
+    geometry_kind: geometryKind,
     // Templated from the DECLARED key type, so the cast that reads the key array agrees
     // with the cast in `delete_sql` below instead of hard-coding a second opinion.
-    validation_sql: geometryValidationSql(keyType),
+    //
+    // ⚠️ ONLY BUILT WHEN A KIND IS DECLARED. `geometryValidationSql` asserts by name (it is
+    // the SQL whose arm the kind selects), so a plan with a `wkb_geometry` bind and NO kind
+    // carries `validation_sql: null` HERE and the missing kind is diagnosed by
+    // `validateGeometries` — the one caller that can reach it. LINK/CASCADE plans build and
+    // execute with no validator SQL at all, exactly as they did before this field existed.
+    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind),
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
@@ -653,6 +746,11 @@ async function assertWritePrivileges(pool, descriptor, { log, tag }) {
  * Run the declared geometry validation over the parsed features and split them into
  * the carried rows and the counters the audit table reports.
  *
+ * The repair/accept arm is selected by the plan's DECLARED `geometry_kind`
+ * (`plan.geometry_kind`, from `outputs.writes[].geometry_kind` via `buildWritePlan`,
+ * threaded into `plan.validation_sql` — Spec 124 Rule 1, Spec 122 §5.1). This function
+ * reads no payload to decide it.
+ *
  * @param {(status: string, isValidOriginal: boolean) => object} classify - the
  *   step's own pure status→counter classifier, handed in so this file stays domain-free.
  */
@@ -660,6 +758,11 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   const keyColumn = plan.keys[0];
   const geomColumn = plan.geometry_columns[0];
   if (!geomColumn) throw new Error(`[${tag}] ${plan.table}: no column declares bind "wkb_geometry", so the validated geometry has nowhere to land`);
+  // The NAMED runtime backstop (Spec 124 Rule 1, Spec 122 §5.1, batch-2 row 3.1 c0e). The
+  // ingest path is the ONLY caller whose SQL text is selected by the kind, so this is where
+  // an absent kind must stop rather than silently defaulting to the polygon arm. `buildWritePlan`
+  // deliberately does NOT throw — a LINK/CASCADE plan binds geometry and never gets here.
+  assertGeometryKind(plan.geometry_kind, plan.table);
   const keysIn = features.map((f) => f[keyColumn]);
   const geojsons = features.map((f) => f.geojson);
   const { rows } = await pool.query(plan.validation_sql, [keysIn, geojsons]);
@@ -1183,6 +1286,11 @@ module.exports = {
   DEFAULT_KEY_SQL_TYPE,
   geometryValidationSql,
   GEOMETRY_VALIDATION_SQL,
+  GEOMETRY_KINDS,
+  GEOMETRY_KIND_EXTRACT_TYPE,
+  GEOMETRY_KIND_ACCEPTED_TYPES,
+  MissingGeometryKindError,
+  assertGeometryKind,
   RLS_PROBE_SQL,
   keyColumns,
   resolveGuardColumns,

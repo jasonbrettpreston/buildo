@@ -4,6 +4,8 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK, R-AV
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4 (write classes), §5.1 (no per-step escape hatches)
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (batch-2 row 3.1 prerequisite 0b — INGESTOR CSV acquisition)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (batch-2 row 3.1 prerequisite 0e — DECLARED geometry_kind, polygon vs point)
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 1 (new schema field carries an x-ruling), Rule 8 (per-target declarations)
 //
 // S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
 // the `assert_schema` pilot needs. The real proof of this library is the C1
@@ -5234,6 +5236,138 @@ describe('INGESTOR CSV acquisition — format axis + compute.shapeRecord (batch-
       expect(dedupeSpy.mock.calls[0]?.[0] as unknown[]).toHaveLength(4);
     } finally {
       for (const s of stubs) s.mockRestore();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// batch-2 row 3.1 prerequisite 0e — validateGeometries honours a DECLARED
+// geometry kind (point vs polygon). Spec 124 Rule 1 (the new field carries an
+// x-ruling), Spec 122 §5.1 (a runner-wide change, never a per-step hatch).
+// Measured: the converted address_points (a geometry column of type Point)
+// crashed on its first write with
+//   Geometry type (MultiPolygon) does not match column type (Point)
+// because geometryValidationSql was POLYGON-ONLY by construction. The polygon
+// arm must stay BYTE-IDENTICAL so load_ravines' golden is untouched.
+// ---------------------------------------------------------------------------
+
+describe('write.js geometry_kind — the validator repair/accept arm is DECLARED, never sniffed', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const spec = (geometryKind?: string) => {
+    const s = clone(LOAD_RAVINES.outputs.writes[0]) as Record<string, unknown>;
+    if (geometryKind === undefined) delete s.geometry_kind;
+    else s.geometry_kind = geometryKind;
+    return s;
+  };
+
+  it('T1 — a POINT-kind plan extracts type 1 and NEVER emits ST_Multi', () => {
+    const plan = writeLib.buildWritePlan(spec('point'), LOAD_RAVINES);
+    expect(plan.geometry_kind).toBe('point');
+    expect(plan.validation_sql).toContain('ST_CollectionExtract(repaired, 1)');
+    // No ST_Multi anywhere — the exact construct that produced the measured crash.
+    expect(plan.validation_sql).not.toContain('ST_Multi');
+    // Accepts ST_Point only; a MultiPoint from a >1-point extract is skipped.
+    expect(plan.validation_sql).toContain("ST_GeometryType(geom_final) IN ('ST_Point')");
+    expect(plan.validation_sql).not.toContain('ST_MultiPolygon');
+    // The outcome vocabulary is UNCHANGED — consumers count on these four.
+    for (const status of ['collection_extracted', 'accepted', 'skipped_null', 'skipped_unsupported_type']) {
+      expect(plan.validation_sql, `${status} must survive`).toContain(status);
+    }
+  });
+
+  it('T2 — the POLYGON-kind SQL is BYTE-IDENTICAL to the pre-geometry_kind text', () => {
+    // The exact `validated AS (…)` block as it read BEFORE geometry_kind existed,
+    // copied from the current file prior to editing. A byte-drift here is a diff on
+    // load_ravines' golden with no behaviour change to justify it.
+    const PREVIOUS_VALIDATED_BLOCK = [
+      'validated AS (',
+      '  SELECT',
+      '    source_key,',
+      '    ST_GeometryType(repaired) AS repaired_type,',
+      '    ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired)) AS geom_final,',
+      '    is_valid_original',
+      '  FROM (',
+      '    SELECT source_key,',
+      '           ST_IsValid(geom)   AS is_valid_original,',
+      '           ST_MakeValid(geom) AS repaired',
+      '      FROM input',
+      '  ) s',
+      ')',
+    ].join('\n');
+    const PREVIOUS_CASE_ACCEPT = [
+      "         WHEN ST_GeometryType(geom_final) IN ('ST_Polygon','ST_MultiPolygon')",
+      '              AND NOT ST_IsEmpty(geom_final)',
+      "              AND repaired_type = 'ST_GeometryCollection'                       THEN 'collection_extracted'",
+      "         WHEN ST_GeometryType(geom_final) IN ('ST_Polygon','ST_MultiPolygon')",
+      '              AND NOT ST_IsEmpty(geom_final)                                     THEN \'accepted\'',
+    ].join('\n');
+
+    const plan = writeLib.buildWritePlan(spec('polygon'), LOAD_RAVINES);
+    expect(plan.geometry_kind).toBe('polygon');
+    expect(plan.validation_sql).toContain(PREVIOUS_VALIDATED_BLOCK);
+    expect(plan.validation_sql).toContain(PREVIOUS_CASE_ACCEPT);
+    // The default-keyed module constant is the polygon shape too, byte-for-byte.
+    expect(writeLib.GEOMETRY_VALIDATION_SQL).toContain(PREVIOUS_VALIDATED_BLOCK);
+    expect(writeLib.GEOMETRY_VALIDATION_SQL).toContain(PREVIOUS_CASE_ACCEPT);
+  });
+
+  it('T3 — validateGeometries THROWS the named Error for a missing kind; buildWritePlan does NOT', async () => {
+    // The runtime backstop lives on the VALIDATOR, not on the plan builder. A plan with a
+    // wkb_geometry bind and no kind is CARRIED (never thrown for) because LINK/CASCADE steps
+    // bind geometry too and never call validateGeometries — a throw in buildWritePlan sent 0
+    // write statements through the LINK dry-run path (LW-D15). The ingest path is the only
+    // caller whose SQL is chosen by the kind, so that is where an absent kind must stop.
+    const noopLog = { warn: () => {}, info: () => {} };
+    const plan = writeLib.buildWritePlan(spec(), LOAD_RAVINES);
+    expect(plan.geometry_kind).toBeNull();
+    // No kind ⇒ no validator SQL is BUILT (the builder asserts); the plan still builds so a
+    // LINK/CASCADE step that never validates can proceed.
+    expect(plan.validation_sql).toBeNull();
+
+    await expect(writeLib.validateGeometries({ query: async () => ({ rows: [] }) }, plan, [], () => ({}), { log: noopLog, tag: '[t3]' }))
+      .rejects.toThrow(writeLib.MissingGeometryKindError);
+    try {
+      await writeLib.validateGeometries({ query: async () => ({ rows: [] }) }, plan, [], () => ({}), { log: noopLog, tag: '[t3]' });
+    } catch (err) {
+      expect((err as Error).name).toBe('MissingGeometryKindError');
+      expect((err as Error).message).toContain('geometry_kind');
+      expect((err as Error).message).toContain('wkb_geometry');
+    }
+    // A plan whose write carries a kind validates fine (it reaches the pool, which is stubbed).
+    const ok = writeLib.buildWritePlan(spec('polygon'), LOAD_RAVINES);
+    await expect(writeLib.validateGeometries({ query: async () => ({ rows: [] }) }, ok, [], () => ({}), { log: noopLog, tag: '[t3]' }))
+      .resolves.toBeDefined();
+    // An UNRECOGNISED kind is refused by name too, never a silent polygon default. The
+    // refusal comes from the SQL builder (which `buildWritePlan` invokes for a known-shaped
+    // kind), so an unknown kind still throws at PLAN time — only a MISSING kind is carried.
+    expect(() => writeLib.buildWritePlan(spec('line'), LOAD_RAVINES)).toThrow(/unknown geometry_kind/);
+    expect(plan.geometry_kind).toBeNull();
+    // And the validator SQL builder itself refuses an absent kind rather than defaulting.
+    expect(() => writeLib.geometryValidationSql('BIGINT')).toThrow(writeLib.MissingGeometryKindError);
+  });
+
+  it('T4 — AJV: both real descriptors validate; a mutant with no geometry_kind FAILS', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- descriptor load
+    const ravines = require(join(process.cwd(), 'scripts/load-ravines.descriptor.json'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- descriptor load
+    const addresses = require(join(process.cwd(), 'scripts/load-address-points.descriptor.json'));
+    expect(ravines.outputs.writes[0].geometry_kind).toBe('polygon');
+    expect(addresses.outputs.writes[0].geometry_kind).toBe('point');
+    // pipeline.step runs the full AJV validation and throws on a schema violation.
+    expect(() => pipeline.step(ravines, noop)).not.toThrow();
+    expect(() => pipeline.step(addresses, noop)).not.toThrow();
+
+    // The mutant: a wkb_geometry bind with the field stripped must FAIL the schema,
+    // naming the missing geometry_kind at the write's own path.
+    const mutant = clone(ravines);
+    delete mutant.outputs.writes[0].geometry_kind;
+    expect(() => pipeline.step(mutant, noop)).toThrow(/does not satisfy step\.schema\.json/);
+    try {
+      pipeline.step(mutant, noop);
+    } catch (err) {
+      expect((err as Error).message).toContain('geometry_kind');
     }
   });
 });

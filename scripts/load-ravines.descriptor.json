@@ -40,6 +40,7 @@
         "table": "ravines",
         "key": "source_id",
         "key_sql_type": "BIGINT",
+        "geometry_kind": "polygon",
         "columns": [
           { "name": "source_id", "vocabulary": "none", "written": "step", "bind": "value" },
           { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" },
