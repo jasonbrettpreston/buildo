@@ -1,0 +1,776 @@
+{
+  "identity": {
+    "name": "address_points",
+    "display_name": "Toronto Address Points",
+    "owner": "data",
+    "description": "Loads Toronto's Address Points CSV (~525K rows, ~183 MB) from the CKAN Open Data portal into the address_points lookup table: a class-A guarded upsert (INSERT ... ON CONFLICT (address_point_id) DO UPDATE ... WHERE <15 cols> IS DISTINCT FROM, NO retraction anywhere) over 16 columns, in one step-scoped transaction. The first write-class-A (guarded_upsert) INGESTOR in the fleet — load_ravines (the only other INGESTOR) is class B upsert_scoped_departure_delete.",
+    "lock": 96,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of address_points across the fleet (Spec 47 §A.5 lock registry row 96) [READ docs/specs/01-pipeline/47:1941]. The lock is declared here and acquired by the library from descriptor.identity.lock; scripts/load-address-points.js keeps `ADVISORY_LOCK_ID = 96` as a §5.4 source-text constant, and the two are asserted equal by src/tests/steps/address_points/violations.test.ts. The lock holds across the whole step — acquisition, parse, the write and the score — because the 525K-row load must not interleave with a second writer.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "54",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "ckan:address-points-4326",
+          "kind": "http_file",
+          "format": "csv",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv",
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "ADDRESS_POINT_ID",
+          "cache": "none",
+          "csv_options": {
+            "bom": false,
+            "relax_quotes": true
+          }
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "address_points",
+        "key": "address_point_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "point",
+        "columns": [
+          {
+            "name": "address_point_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "latitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "longitude",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "linear_name_full",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address_full",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "lo_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "hi_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "maint_stage",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address_status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address_class_desc",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "class_family_desc",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "place_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "addr_num_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "linear_name_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "latitude",
+            "longitude",
+            "address_number",
+            "linear_name_full",
+            "address_full",
+            "lo_num",
+            "hi_num",
+            "maint_stage",
+            "address_status",
+            "address_class_desc",
+            "class_family_desc",
+            "place_name",
+            "addr_num_normalized",
+            "linear_name_normalized",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Class A. The pre-conversion loader issued ONE statement shape — INSERT INTO address_points (...) VALUES ... ON CONFLICT (address_point_id) DO UPDATE SET ... WHERE <latitude, longitude, and 12 NULLIF/None-guarded source+normalized columns, plus geom> IS DISTINCT FROM — and NO DELETE anywhere in the file (0 grep matches for DELETE/TRUNCATE) [READ load-address-points.js:184-243]. The write class is therefore a guarded upsert with no retraction: a re-run of a byte-identical source updates zero rows, and no address point is ever removed by this step. The pre-conversion script wrapped each 1,000-row batch in its OWN withTransaction (:119-251, :371-383); the library wraps ALL insert batches in ONE step-scoped transaction (executeWrite, Fold B3) — declared here as the truth, with the atomicity-window widening recorded in deviations[].",
+            "liveness": {
+              "kind": "table",
+              "ref": "address_points"
+            }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly ONE write statement reaches address_points: the batched guarded upsert. There is no departure DELETE (class A, retract none), no staging replace and no retraction of any kind, so the converted step's write inventory is the pre-conversion one's single statement (which the old script issued once per 1,000-row batch). No lineage column exists on address_points (no source_dataset_version / *_when_enriched), so outputs.invalidates is none — unlike load_ravines' parcels.ravine_dataset_version_when_enriched.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "none",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "address_points",
+        "on_missing": "fail",
+        "why": {
+          "text": "RLS class-B default-deny (migration 227 enabled RLS on the address_points family with ZERO policies) means the guarded upsert works ONLY because the pipeline role has rolbypassrls=true; under a non-bypass role the INSERT ... ON CONFLICT affects 0 rows with NO error, so the counters read 0, the verdict reads PASS and the run is indistinguishable from an unchanged source. The write is a bare INSERT ... DO UPDATE, so it is unconditional on the row level; the bypass is the precondition, declared fail-loud.",
+          "liveness": {
+            "kind": "table",
+            "ref": "address_points"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_address_points_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index on address_points.geom (migration 162:63-66, partial WHERE geom IS NOT NULL) that every downstream address↔parcel spatial join (link-parcel-addresses, link-parcels, link-coa-to-parcels, geocode-permits) plans through. Without it the spatial joins degrade to sequential scans over 525K address points and 486K parcels.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/162_address_points_expanded_fields_and_parcel_bridge.sql"
+          }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "address_points",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "10m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": 1000,
+    "needs_disk_mb": 368,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A row with no usable coordinate source (neither a parseable `geometry` GeoJSON Point/MultiPoint NOR numeric LATITUDE/LONGITUDE) is counted in `skipped` and the load continues — the loader's own isNaN(lat)||isNaN(lng) guard [READ load-address-points.js:317-322]. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
+      "liveness": {
+        "kind": "check",
+        "ref": "skip_rate_pct"
+      }
+    },
+    "on_batch_error": "drop_batch",
+    "on_batch_error_why": {
+      "text": "AP-D3 (PIN, DO NOT FIX — Spec 123 §3.1). A failed batch flush is logged, `errors++`, and its rows DROPPED for the run [READ load-address-points.js:372-378]; the schema's own on_batch_error description cites this file. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it. The alternative (fail_step) would be a behaviour change smuggled into a no-op-diff commit; the post-cutover fix, if any, is a separate commit with its own RED lock.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/load-address-points.js"
+      }
+    },
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a value the library already measured (missing header columns, null-address fractions, skip rate, the rows-read floor, the geometry-parse counter), so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-address-points.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": [
+        "ckan0.cf.opendata.inter.prod-toronto.ca"
+      ],
+      "timeout": "60000ms",
+      "timeout_from_config": "address_points_download_timeout_ms",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "csv_header_drift",
+      "kind": "invariant",
+      "expect": {
+        "missing_required_columns": 0
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The OR-contract (loader :275-284 + scripts/lib/address-points-csv-drift.js detectMissingColumns): the live CKAN CSV ships a `geometry` GeoJSON Point/MultiPoint column, and LATITUDE/LONGITUDE are the FALLBACK coordinate source — a header that drops `geometry` (or the lat/lng pair) silently degrades every row to a different coordinate path, or drops the whole load. buildDriftAuditRow produced the `address_points_csv_schema_drift` WARN row (:420). The conversion declares it as a check, reused from the drift lib, never forked.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/address-points-csv-drift.js"
+        }
+      }
+    },
+    {
+      "id": "null_address_number_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "rows with an empty ADDRESS_NUMBER over rows attempted",
+        "direction": "max"
+      },
+      "limit": "pct <= 0.1",
+      "limit_from_config": "address_points_null_address_number_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "CKAN strip detector (buildNullAddressNumberAuditRow, address-points-csv-drift.js:94-96, threshold text :95). More than 10% blank ADDRESS_NUMBER means the publisher stripped the column upstream — the same 2026-05-20 strip pattern that emptied parcels.address_number. WARN, never FAIL: a null address_number does not make the address point unloadable (the guarded upsert preserves the existing value), it makes the address unusable for the downstream joins. The bound is externalized to address_points_null_address_number_max_pct (Rule 3); peeling it forces an assert_schema recapture because address-points-csv-drift.js is assert-schema.descriptor.json's only fingerprint_inputs entry.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/address-points-csv-drift.js"
+        }
+      }
+    },
+    {
+      "id": "skip_rate_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "skipped rows over rows_read",
+        "direction": "max"
+      },
+      "limit": "pct <= 5",
+      "limit_from_config": "address_points_skip_rate_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A rising coordinate/ID skip rate signals CSV drift [READ load-address-points.js:413-418]. A row is skipped when ADDRESS_POINT_ID is not an int (:288-292) or when neither a parseable geometry NOR numeric lat/lng is present (:317-322). The pre-conversion script pushed this as a WARN row; the conversion declares it with the bound externalized to address_points_skip_rate_max_pct (Rule 3).",
+        "liveness": {
+          "kind": "check",
+          "ref": "row 3.1 commit-1 assessment §1.3"
+        }
+      }
+    },
+    {
+      "id": "rows_read_floor",
+      "kind": "bound",
+      "expect": {
+        "of": "rows_read",
+        "direction": "min"
+      },
+      "limit": "viol == 0",
+      "limit_from_config": "sources_address_points_floor",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Catastrophic-load detector: the loader's own `rows_read >= 500000` (:413) DUPLICATES a fleet check — assert_data_bounds already declares the address_points ≥ 500K floor via the registered variable `sources_address_points_floor` (Spec 43 row 27; scripts/seeds/logic_variables.json, default 500000). RULING (commit-1 report §2, KEEP): this step keeps its own check but SHARES the SAME registered variable name through limit_from_config — not a second key, not retired — so there is ONE source of truth (Rule 3, one home per concern). A near-empty load must not pass silently. FAIL-severity but blocking:false (PIN, DO NOT FIX — plan D-8): a FAIL row today exits 0 and the chain continues.",
+        "liveness": {
+          "kind": "table",
+          "ref": "address_points"
+        }
+      }
+    },
+    {
+      "id": "geom_parse_failures",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "source rows whose `geometry` value would not JSON.parse, counted not gated"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "AP-D2 (PIN, DO NOT FIX — Spec 123 §3.1): try { JSON.parse(geomRaw) } catch { /* fall through */ } refuses to surface an unparseable geometry; the comment-only catch means `no-empty` never flagged it [READ load-address-points.js:293-305]. The conversion carries the swallow VERBATIM (no behaviour change) and, at the peel, turns the silent swallow into a counted, declared row. INFO is legal HERE ONLY because this is a purely DESCRIPTIVE counter: it records how many rows took the parse-failure fallback and it NEVER gates — it has no negative direction, it cannot reach WARN or FAIL, and both must-fail directions read INFO (Rule 5). The declaration is the close; a promoted WARN would be a behaviour change.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-address-points.js"
+        }
+      }
+    },
+    {
+      "id": "shaped_skipped",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rows the compute's shapeRecord refused to carry (no coordinate source at all)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The runner's shaped_skipped counter (Spec 122 §5.1 ingress seam) — the number of source records the step declined to carry into rows. Purely descriptive (INFO, no negative direction), so a healthy run shows the PASS the pre-conversion `skipped++` could not: silence used to mean both 'zero' and 'nobody looked'.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "assert_data_bounds"
+      ],
+      "skeleton": {
+        "phase": 2,
+        "name": "Address Points Ingestion",
+        "verdict": "PASS",
+        "rows": []
+      }
+    },
+    {
+      "key": "address_points_load",
+      "type": "object",
+      "consumers": [
+        "address_points"
+      ],
+      "skeleton": {
+        "duration_ms": 0,
+        "rows_read": 0,
+        "records_inserted": 0,
+        "records_updated": 0,
+        "records_unchanged": 0,
+        "records_skipped": 0,
+        "errors": 0
+      }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :119-251, :371-383)",
+      "why": {
+        "text": "Fold B3 (plan, orchestrator-ruled). The library's executeWrite wraps ALL insert batches in ONE step-scoped `withTransaction` [READ scripts/lib/step/write.js:693-745]; `execution.txn_scope` therefore declares `step` (the truth). The widening is an ATOMICITY-WINDOW change: today a mid-run failure leaves the already-committed batches persisted (partial load); converted, the run is all-or-nothing. It is NOT a success-path change — a successful run writes byte-identical rows, which is what the golden proves. The enum admits `batch` [schema:468] but no code reads it anywhere, so a per-batch executor is a library-level WF (RE-FREEZE class), never a per-step hatch. Commit 5 measured the single-txn duration + WAL for the ~525K rows; Ask O2 is triggered ONLY if that breaches the step budget.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "operator ruling, plan Fold B3 [READ .cursor/batch2_p3_1_address_points_active_task.md]",
+      "date": "2026-09-23"
+    },
+    {
+      "from": "the `process.argv[2]` local-path override (:89) and the data/address-points-4326.csv existsSync short-circuit (:92)",
+      "why": {
+        "text": "Retired per Spec 124 R-AZ (the argv-seam rule). A debug affordance let an operator run against a hand-supplied local CSV without downloading; the frozen shell reads no argv (the §5.1 shape forbids it) and the fixture tier replaces it for tests. The retirement is declared, not silent: with it goes the only fs seam the step had. inputs.reads.externals[0].cache:\"none\" records that the local file was never a revalidated artifact.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "operator ruling, Spec 124 R-AZ / plan Fold B",
+      "date": "2026-09-23"
+    },
+    {
+      "from": "Spec 54's narrated `maint_stage = REGULAR` filter and `address_status ∈ {NULL, CURRENT, NONE}` acceptance (54:35-36, :80)",
+      "why": {
+        "text": "AP-D1 (PIN, DO NOT FIX — Spec 123 §3.1) — KNOWN-DEFECT, CARRIED. Spec 54 narrates a REGULAR-only filter and a status acceptance set; the loader has NO filter on `maint_stage` OR `address_status` — every source row inserts [READ load-address-points.js §C; grep `maint_stage`/`address_status` finds INSERT column references only]. The conversion carries the CODE unfiltered (zero-diff, so the golden proves zero-diff against the live table) and pins the divergence HERE with its ledger id. Both readings are recorded and a RULING IS OWED (operator/orchestrator): (a) the spec is aspirational and the code is right; (b) the spec is right and the loader over-inserts RESERVED-stage (~1.5%, ~7.7K rows) and non-accepted-status rows. The fix, once ruled, is a separate post-cutover commit with its own RED lock.",
+        "liveness": {
+          "kind": "file",
+          "ref": "docs/specs/01-pipeline/54_source_address_points.md"
+        }
+      },
+      "adjudicated_by": "PINNED — RULING OWED (operator/orchestrator); commit-1 report §5.1 AP-D1",
+      "date": "2026-09-23"
+    },
+    {
+      "from": "declaring `guards.requires` only for what the write needs, and pinning every FAIL check as blocking:false",
+      "why": {
+        "text": "PIN, DO NOT FIX (Spec 123 §3.1, plan D-8). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the FAIL verdict and folds it into chain status completed_with_errors, and the chain CONTINUES. blocking:true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock. Likewise `guards.requires` declares ONLY the address_points GIST index and the RLS bypass the write path needs — not every index the table carries.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/run-chain.js"
+        }
+      },
+      "adjudicated_by": "operator ruling, plan D-8",
+      "date": "2026-09-23"
+    },
+    {
+      "from": "the loader's per-1000-row `pipeline.BATCH_SIZE` batching and its progress cadence",
+      "why": {
+        "text": "Fold B4/0b. The pre-conversion script streamed 525K CSV rows with `for await` and batched on the fly; the converted INGESTOR runner acquires the CSV as a WHOLE ARRAY (0b, `7e6fa3ce`) and hands it to runIngestPhase, which sizes its own inserts. `execution.batch` declares the legacy 1000 (the pre-externalization literal `pipeline.BATCH_SIZE`, the batch size the write planner reconstructs). MEASURED 2026-09-23 (docs/reports/pipeline-validation/csv-acquire-probe-2026-09-23.md): 525,436 rows, source 183,503,831 bytes (~175 MiB), peak RSS 1531 MB vs the default 4288 MB heap limit (>2× headroom) — the whole-array model is measured-safe, so Ask O3 (a streaming ingest seam) is NOT triggered.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "operator ruling, plan Fold B4 / O3 not triggered (measured)",
+      "date": "2026-09-23"
+    },
+    {
+      "from": "the legacy loader's non-idempotent guarded upsert (8,199 rows re-updated every run, values never settling; stale class_family_desc / geometry on sampled rows 9085880, 553334, 349849)",
+      "why": {
+        "text": "AP-D4 — DEFECT, not a contract: Spec 54 asserts the loader upserts the CURRENT source values; the legacy contradicts it and cannot be pinned (no stable golden exists for churn). The converted step writes the CSV values and converges (run 2: records_updated 0). Delivered INLINE as a declared change (Spec 122 rung (e)); the legacy root cause is filed post-cutover. See docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md \"Differential RULING\".",
+        "liveness": {
+          "kind": "file",
+          "ref": "docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling 2026-09-23 (operator budget session)",
+      "date": "2026-09-23"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The step has NO staleness gate: every run downloads the ~183 MB CSV and re-runs the guarded upsert. Adding a pre-acquisition `source_validator` + post-acquisition `content_hash` gate (the load_ravines two-tier shape) would make a hash-equal re-run SKIP — a genuine behaviour change (a skip is not a load), so it is NOT declared here. staleness.trigger is the legal \"none\" form and the skip-gate opportunity is recorded as this post-cutover follow-up.",
+      "measured": "load-address-points.js has no HEAD/ETag/hash read at all [READ :43-101]; the fleet INGESTOR precedent load_ravines carries the gate, this step does not",
+      "check_id": "none"
+    },
+    {
+      "what": "AP-D1 residue: because the loader has no `maint_stage`/`address_status` filter (declared as a KNOWN-DEFECT deviation), the address_points table may carry rows Spec 54's text would exclude. Downstream consumers that assume a REGULAR-only set read a slightly larger table; the ordering guarantee 'address_points before geocode_permits / link_parcel_addresses' (Spec 43 rows 4, 9) is unaffected, since a class-A loader never retracts, so a geo_id can only vanish via a source-side change the class-A shape cannot express.",
+      "measured": "grep maint_stage/address_status scripts/load-address-points.js ⇒ INSERT column references only, zero WHERE filters [MEASURED 2026-09-23]",
+      "check_id": "none"
+    },
+    {
+      "what": "The pre-conversion batch-drop path (AP-D3) means a failed batch's rows are logged, counted in `errors`, and DROPPED for the run — the load can complete with fewer than 525K rows and no per-row evidence of which. Declared via execution.on_batch_error:\"drop_batch\"; the converted runner's on_batch_error posture is the same shape, and a per-batch failure is surfaced through the run status rather than as one audit row per batch.",
+      "measured": "load-address-points.js:372-378 — catch logs, errors++, batch=[] (rows dropped); 'Note: if a batch flush fails, lost rows inflate this count slightly' at :407",
+      "check_id": "rows_read_floor"
+    },
+    {
+      "what": "The `geometry` JSON.coordinates unwrap reads only the FIRST coordinate of a GeoJSON Point/MultiPoint (coordinates[0] if it is an array, else coordinates) [READ :298-303] — a MultiPoint with more than one coordinate loses all but the first, with no counter for it. Carried verbatim (zero-diff); the surviving coordinate is the one the pre-conversion loader used.",
+      "measured": "load-address-points.js:298-303 — `const coord = Array.isArray(geom.coordinates[0]) ? geom.coordinates[0] : geom.coordinates; lng = coord[0]; lat = coord[1];`",
+      "check_id": "geom_parse_failures"
+    },
+    {
+      "what": "The `skip_rate_pct` and `rows_read_floor` bounds are compared against THIS run's numbers only; there is no vs-prior-run trend check (load_ravines' count-drift / geometry-update checks have no analogue here because the loader keeps no prior-run baseline). A source that shrinks 40% but stays above the 500K floor reads as a healthy load.",
+      "measured": "load-address-points.js:412-419 — auditRows read only this run's processed/inserted/updated/skipped counts",
+      "check_id": "rows_read_floor"
+    }
+  ],
+  "interpretation": {
+    "file": "load-address-points.notes.json",
+    "entries": 6
+  },
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture. This step is class A (`guarded_upsert`, retract:\"none\"): it has NO retraction path and NO scoped delete, so a kill mid-run leaves exactly what the step-scoped transaction left — either nothing (rolled back) or the fully-committed guarded upsert. There is no half-cleared table an incremental gate could misread as complete, and no force_full_on_next_run obligation (that rule binds retract_when full_only or retract:\"all\" targets, neither of which exists here). Nothing is owed to a successor run beyond re-running the idempotent upsert, which zero-writes on a byte-identical source.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The generic before-image mechanism mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope. This step declares retract:\"none\" with write_discipline.scope:\"none\": there is no retraction for the mechanism to mirror, so there is nothing to capture. Genuinely out of this conversion's scope rather than silently ignored.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 18,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated",
+      "scoped_by": "address_point_id"
+    },
+    "records_new": {
+      "source": "written.inserted",
+      "scoped_by": "address_point_id"
+    },
+    "records_updated": {
+      "source": "written.updated",
+      "scoped_by": "address_point_id"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "address_points_progress_bytes_window",
+        "min": 1048576,
+        "max": 67108864,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_progress_row_modulo",
+        "min": 1000,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_expected_total_rows",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_address_points_floor",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_skip_rate_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_null_address_number_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_download_timeout_ms",
+        "min": 1000,
+        "max": 1800000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 3
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "address_points_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The guarded upsert committed: rows_read parsed, inserted/updated split by RETURNING (xmax = 0), no retraction. The step has no staleness gate, so success is the NORMAL terminal (unlike load_ravines, whose normal terminal is a skip).",
+        "liveness": {
+          "kind": "table",
+          "ref": "address_points"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "address_points_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared WARN check tripped (csv_header_drift, null_address_number_pct or skip_rate_pct) with no FAIL. The WARN row is in the audit table and the status records it — the load still happened because none of these makes the data unloadable.",
+        "liveness": {
+          "kind": "check",
+          "ref": "skip_rate_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_rows_read_floor",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "address_points_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "rows_read fell below sources_address_points_floor — a near-empty or failed parse. The FAIL row is declared; blocking:false (PIN, DO NOT FIX — plan D-8) so the run is `failed` and the chain continues.",
+        "liveness": {
+          "kind": "check",
+          "ref": "rows_read_floor"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The download or the CSV parse threw. The temp file is removed on this path exactly as on every other, and no write has been attempted.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "failed_empty_source",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "inputs.expect_nonempty is true: a source that parses to ZERO records fails rather than landing an empty 'success' — an empty CSV is a publisher error, not an empty load.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 96 is held by another process. Pre-conversion the step wrapped everything in pipeline.withAdvisoryLock and returned silently when the lock was not acquired (:84, `if (!lockResult.acquired) return;`); the library now emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

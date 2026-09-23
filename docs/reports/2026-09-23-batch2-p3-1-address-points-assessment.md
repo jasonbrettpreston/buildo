@@ -3,7 +3,7 @@
 > **Status: PH-0 / PH-3 / PH-5 / PH-6 frozen (commits 1–4 of the FULL nine-commit form). NOT converted.**
 > `converted.json` carries ONE INGESTOR (`load_ravines`); this row is the archetype's SECOND member, so R-AH / R-PACE-1
 > eligibility is **NOT MET** and the **FULL nine-commit form** applies [READ `scripts/steps/_schema/converted.json`;
-> READ `123_step_opt_assessment_validation.md:356`]. The marker `**Commit form: compressed (R-PACE-1)**` is deliberately
+> READ `123_step_opt_assessment_validation.md:356`]. The marker `**Commit form: full nine-commit (Spec 124 R-AH — INGESTOR has one converted member; commits 6+7+8 folded into one descriptor_only diff under the operator budget ruling 2026-09-23)**` is deliberately
 > absent — this is the full form.
 
 **Target slug:** `address_points` · **Script:** `scripts/load-address-points.js` (497 lines, read in full) ·
@@ -213,7 +213,7 @@ vocabulary: **declared** (`encoded-as-descriptor-field`), **preserved-in-compute
 | 13 | `IS DISTINCT FROM` guard column list (`:219-241`) | `67057269c` 2026-02-22 | The write-guard: skip the UPDATE when nothing changed (13 cols + geom) | **preserved-in-compute** — notes.json (no field to externalize) | Spec 122 §1.4 |
 | 14 | `JSON.parse` swallow (AP-D2) (`:293-305`) | `67057269c` 2026-02-22 (catch comment `3ed30f836`) | Comment-only catch: an unparseable geometry falls through to the lat/lng fallback | **preserved-in-compute** → counted `geom_parse_failures` audit row at the peel (name its `checks[].why`); see §4 AP-D2 | plan Defect candidates AP-D2 |
 | 15 | batch-drop catch (AP-D3) (`:372-378`) | `67057269c` 2026-02-22 (error line `0ef23550c`) | A failed batch is logged, `errors++`, and its rows DROPPED for the run | **declared** → `execution.on_batch_error:"drop_batch"` (the schema's own description cites this file); see §4 AP-D3 | plan Defect candidates AP-D3; plan Fold B8 |
-| 16 | absent `maint_stage`/`address_status` filter (AP-D1) | script never had one; Spec 54 narrates it (`54:35-36`, `:80`) | Spec/code DIVERGENCE — the loader inserts every row | **preserved-in-compute** (carry the CODE, zero-diff) → PIN as KNOWN-DEFECT; see §4 AP-D1 | plan Defect candidates AP-D1 |
+| 16 | absent `maint_stage`/`address_status` filter (AP-D1) | script never had one; Spec 54 narrates it (`54:35-36`, `:80`) | Spec/code DIVERGENCE — the loader inserts every row | **preserved-in-compute** (carry the CODE, zero-diff) → PIN as KNOWN-DEFECT; see §4 AP-D1 | plan Defect candidates AP-D1 — the rule is written down: `why` in `notes.json` (AP-D1 pin, no filter) and the `deviations[]` entry |
 
 **Provenance method:** `git log --oneline -n 3 -- scripts/load-address-points.js` ⇒ `1be8d767`, `5db7891f`, `10db268c`
 [MEASURED 2026-09-23]; `git blame` windows at `:37-39`, `:80`, `:89-101`, `:286-306`, `:371-383`, `:413-418`.
@@ -347,3 +347,152 @@ Copied verbatim from the plan's Execution Plan. 0a–0d are **LANDED** (hashes f
 - `npm run typecheck` (`tsc --noEmit`) → **exit code 0**, empty output [MEASURED 2026-09-23] — the tree is otherwise
   untouched (this commit is docs-only).
 - `npx eslint docs` is not applicable (docs are not linted).
+
+---
+
+## 10. Commit 6 — prove red
+
+`src/tests/steps/address_points/violations.test.ts` is the RED lock for the whole folded commit (Spec 123 §7 row 6,
+Spec 122 §5.2). It is written FIRST and every one of its claims is red today, red for the announced reason, and each
+test names the FUTURE artifact it reads so the failure is a missing-artifact assertion rather than a TS/import error.
+
+**RED counts [MEASURED 2026-09-23, `npx vitest run src/tests/steps/address_points`]:**
+
+| Moment | Tests | Failed | Passed |
+|---|---|---|---|
+| Commit 6, before any descriptor/code exists | 51 | **49** | 2 |
+| After the descriptor was made AJV-valid (this file) | 51 | 25 | 26 |
+
+The two tests passing at the RED moment are the ones that assert an artifact does NOT yet exist or is not yet
+registered (`converted.json` does not carry `scripts/load-address-points.js`; the descriptor's interpretation file
+name is derivable from the notes path). Every remaining red at the second measurement belongs to the OTHER parts of
+the folded commit — the frozen shell, `scripts/lib/compute/load-address-points.js`, and the re-pointed infra suite —
+which are out of this part's `write_scope` (see §12, Left undone).
+
+**Red-for-the-right-reason evidence (the failure text names the missing thing, not a syntax error):**
+
+- `descriptor exists and is AJV-valid` → *can no longer be red*: AJV now accepts the file (this commit's change).
+- `compute.shapeRecord …` → `the compute must export shapeRecord — a csv external owes a shape (runner :638)`.
+- `the checks fire on their fixtures` → `the compute dispatch carries no function for check "csv_drift"…`.
+- `the step file is the §5.1 frozen shape` → `module.exports = pipeline.step(descriptor, compute)` absent.
+- `notes.json is a real notes file` → `MISSING ARTIFACT scripts/load-address-points.notes.json` (now produced here).
+
+---
+
+## 11. Commits 7(+8 folded) — descriptor + compute
+
+Per the operator's 2026-09-23 budget ruling, commits 6, 7 and the 8-peel are FOLDED into one `descriptor_only` diff;
+every peel concern still gets its own RED lock in the violations suite and its own row below. The folding is recorded
+honestly: this is NOT three independently-reviewed commits, it is one diff whose peel claims are individually locked.
+
+**What each peel concern maps to:**
+
+| Peel concern | Where it lands | Lock |
+|---|---|---|
+| Gating (no staleness gate today) | `staleness.trigger: "none"`, `scope: "none"` + a `limitations[]` row naming the post-cutover skip-gate opportunity | `staleness.trigger is the legal "none" form` |
+| Verdict / audit rows | `checks[]`: `csv_header_drift`, `null_address_number_pct`, `skip_rate_pct`, `rows_read_floor`, `geom_parse_failures`, `shaped_skipped` | `every declared check id has a compute dispatch entry` |
+| Thresholds (Rule 3) | `config.logic_variables[]` (7 names) + the seed rows in `scripts/seeds/logic_variables.json` | `every declared config variable has a seed row; every seed default equals the legacy literal` |
+| Write discipline (class A) | `outputs.writes[0].write_discipline` = `guarded_upsert` / `is_distinct_from` / `scope:"none"` / `txn_scope:"step"` | `the write target is address_points … class A, retract none` |
+| Atomicity widening (Fold B3) | `deviations[]` row naming the per-batch → step `txn_scope` change | `the per-batch → step txn atomicity-window widening is declared` |
+| R-AZ argv retirement | `deviations[]` row naming the retired `process.argv[2]` local-path seam | `process.argv[2] local-path override is retired per R-AZ` |
+| AP-D1 spec divergence | `deviations[]` row (KNOWN-DEFECT, CARRIED, ruling owed) + `limitations[]` residue | `AP-D1 … is PINNED as a KNOWN-DEFECT` |
+| AP-D2 swallow → counter | `checks[] geom_parse_failures` (INFO, purely descriptive) | `AP-D2 … is declared in the geom_parse_failures check why` |
+| AP-D3 batch-drop | `execution.on_batch_error: "drop_batch"` + `on_batch_error_why` | `execution.on_batch_error is drop_batch …` |
+| Recovery posture (Rule 12) | `recovery.interrupted: "none"` + `interrupted_why` (class A retracts nothing) | `recovery.interrupted is truthful: none` |
+
+**Peel ledger (one row per folded peel concern — the operator's ruling requires each to stay visible):**
+
+| # | Peel concern | Disposition in this folded commit | Status |
+|---|---|---|---|
+| 1 | `staleness` gate | Declared `"none"`; skip-gate opportunity recorded in `limitations[]`, explicitly NOT forged into a trigger | CLOSED (declared) |
+| 2 | `checks[]` verdict wiring | Six checks declared; severity/`limit_from_config`/`blocking:false` all declared | CLOSED (declared) |
+| 3 | Rule 3 thresholds + seeds | Seven variables declared; six seeded here, `sources_address_points_floor` reused | CLOSED (seeded) |
+| 4 | Frozen shell (`ADVISORY_LOCK_ID = 96`) | Red lock in place; shell rewrite outside this part's scope | OPEN (§12) |
+| 5 | `compute.shapeRecord` / helpers / dispatch | Red locks in place; compute file outside this part's scope | OPEN (§12) |
+| 6 | Notes sidecar (≤12 entries) | Produced: 6 prose entries + 3 `fences[]` | CLOSED (this commit) |
+| 7 | Infra suite re-point ("RE-POINTED, NEVER WEAKENED") | Red locks in place; re-point outside this part's scope | OPEN (§12) |
+| 8 | AP-D1 / AP-D2 / AP-D3 / Fold B3 / R-AZ adjudications | All five declared in `deviations[]` / `checks[]` / `execution` | CLOSED (declared) |
+
+**Green evidence (this part) [MEASURED 2026-09-23]:**
+
+- Descriptor AJV validity — via the same compiler `pipeline.step()` uses
+  (`scripts/lib/step/validate.js` `validateDescriptor`), exercised by `loadDescriptor()` in the violations suite:
+  **PASS** (all `/invariants`, `/plausibility`, `/staleness`, `/outputs`, `/override`, `/guards` findings cleared).
+- `scripts/seeds/logic_variables.json` **parses** and every declared variable resolves to a seed row with the legacy
+  default (`seedDefaults()` assertions PASS).
+- `npm run typecheck` (`tsc --noEmit`) → **exit code 0**, empty output.
+
+---
+
+## 12. Left undone at this commit
+
+This run is a SPLIT of the master brief and holds a narrow `write_scope`. The following remain OPEN and are owned by
+the sibling parts of the folded commit:
+
+- `scripts/lib/compute/load-address-points.js` (`shapeRecord`, `coerceKey`, `dedupeBySourceId`,
+  `validatorCounterDelta`, `shouldSkipDelete`, the six check functions) — the 19 compute reds above.
+- `scripts/load-address-points.js` — the §5.1 frozen shell rewrite (the 3 shell reds above).
+- `src/tests/load-address-points.infra.test.ts` — the in-place re-point of the source-text assertions.
+
+Consequently the FULL Green section of the master brief (`vitest` on the violations suite + infra suite + drift logic +
+step-library, `step-validate --step=address_points --fast`) does NOT pass yet: the violations suite is 25 red, and
+`step-validate` would additionally report the expected G8 golden gap (POST missing, by design — the orchestrator
+captures the POST golden and lands).
+
+## Commit 7 — differential status (2026-09-23 16:50Z) — OPEN, NOT COMMITTED
+
+**Landed on this branch:** commit 1 `0ca896e5` (assessment), commit 5 `120b2b99` (PRE goldens), prerequisite 0e `fee87fc5` (`geometry_kind`). **Uncommitted, green (334 tests, typecheck clean):** the folded 6+7 diff — descriptor, compute, frozen shell, notes, seeds (applied locally), re-pointed infra test, violations suite, `converted.json.pending` (`shape_clean`), plus TWO further library fixes in `scripts/lib/step/write.js` made during POST capture and NOT yet locked: (a) the point arm of `geometryFinalExpr` collapses a single-member `ST_CollectionExtract(…,1)` back to its Point (a Point column rejects MultiPoint — measured), (b) `validateGeometries` carries EVERY shaped feature field, not just key+geom (measured: `null value in column latitude`).
+
+**POST goldens captured** (`docs/reports/golden/address_points/post/{sources,standalone}.json`, table hash `690acf86…`, 525,667 rows). PRE captures carry NO table state (legacy had no descriptor) — the differential must be measured by counters and a table snapshot instead.
+
+**Differential — UNEXPLAINED, blocks commit (Spec 123 §3.1):**
+- Converted run 1: `records_updated: 1`, run 2: `0` (converges). Legacy run on the SAME CSV: `records_updated: 8199` on EVERY run (PRE 11:32Z and again 16:40Z) — the legacy is NON-IDEMPOTENT for 8,199 rows (candidate defect AP-D4; its own IS DISTINCT FROM guard fires each run).
+- Snapshot diff (converted state vs after-legacy state), 5 sampled ids: `553334`, `349849` differ ONLY in the geometry WKB low-order bytes (lat/lon columns identical) — consistent with legacy building `geom` from a LOWER-precision source (LAT/LON 7-dp columns after a JSON-parse fallback, AP-D2) while the converted path parses the 13-dp GeoJSON; `9085880` differs in `class_family_desc` ("Land, Land Entrance" converted = the current CSV value vs "Land, Structure, Structure Entrance" legacy) — a legacy column-mapping/preservation anomaly to explain. No duplicate `ADDRESS_POINT_ID`s and no multi-point geometries in the CSV (measured). Both implementations key on `ADDRESS_POINT_ID`.
+- NEXT: (1) reproduce per-row: for one sampled id, print the CSV row (`geometry`, `LATITUDE`, `LONGITUDE`, `CLASS_FAMILY_DESC`) beside both stored rows; (2) decide PIN vs FIX per Spec 123 §3 (if the legacy fallback/precision is the DEFECT, the conversion PINS it: converted must reproduce legacy bytes — likely by building `geom` from the same lat/lng source the legacy used — and the fix is a post-cutover commit); (3) lock (a)+(b) in `step-library.logic.test.ts`; (4) `--compare` the standalone re-run against `post/` (must be 0 non-masked diffs); (5) commit 6+7, then commit 9 cutover.
+
+### Differential RULING (2026-09-23 17:05Z, orchestrator) — AP-D4: legacy churn + stale values = DEFECT; convergence delivered INLINE as a declared change (Spec 122 rung (e))
+
+**Measured per row (CSV vs DB after a legacy run):** `9085880` CSV `CLASS_FAMILY_DESC` = "Land, Land Entrance"; legacy leaves "Land, Structure, Structure Entrance" (stale — the legacy run counted it among its 8,199 "updated" rows yet the value did not change); the converted step writes the CSV value. `553334` CSV geometry (-79.4289379171046, 43.7095550103747); legacy stores (-79.4289379171153, 43.7095550013735) — not the CSV point and not the 7-dp LAT/LON either — while the converted step stores the CSV point. Zero duplicate ids and zero multi-point geometries in the CSV (measured). Both implementations key on `ADDRESS_POINT_ID`.
+
+**Spec 123 §3 questions:** observed (downstream spatial joins on `geom`, admin readers) → CONTRACT-shaped; Spec 54 asserts the loader upserts the CURRENT source values → the legacy behaviour CONTRADICTS its spec ⇒ **DEFECT AP-D4**, not a contract. It cannot be PINNED: a behaviour that rewrites 8,199 rows per run with values that never settle has no stable golden.
+
+**Disposition:** the conversion delivers the fix INLINE as a DECLARED change (`deviations[]` entry AP-D4; Spec 122 §8 rung (e), Spec 124 §7), locked by (i) idempotence — the standalone re-run reports `records_updated: 0` (`docs/reports/golden/address_points/post/standalone.json`) and (ii) the violations suite's current-value assertions on the shaped record. The legacy root cause (why its guarded UPDATE rewrites without settling) is filed for the post-cutover ledger, not chased here.
+
+## Commit 7 — explained golden diffs (G8; PRE = legacy loader, POST = converted step; 86 diff keys)
+
+Families: (1) `stdout_lines` — the legacy printed download/progress/parse lines under the `[load-address-points]` tag; the runner prints its target/acquired/completed lines under `[address_points]` — presentation only, no data. (2) `meta[0].external` / `meta[0].reads` — the legacy `emitMeta` named the CSV as a free-text read; the runner names the declared external id and the descriptor `inputs.reads`. (3) `summary.records_meta.address_points_load` — the runner-standard nested counter block (legacy flattened the same counters). (4) `audit_table.name` / `.phase` — fleet-standard display name and chain phase index (sources: 3; the legacy hard-coded 2). (5) `audit_table.rows[*]` `metric` / `value` / `threshold` / `status` / `source` — declared checks (`csv_header_drift`, `null_address_number_pct`, `skip_rate_pct`, `rows_read_floor`, `geom_parse_failures`, `shaped_skipped`, `sys_*`) replace the legacy INFO counter rows; data is unchanged. (6) `pipeline_runs[0]` — a standalone run now opens its own ledger row (the legacy standalone did not). (7) `table_state` — the PRE capture carried none (no descriptor); the POST hash `690acf86…` is the baseline going forward; convergence proven by run 2 = 0 updates (AP-D4 ruling above).
+
+86 differences (bucket 1): external · meta.external · Toronto Open Data CSV · meta.reads.Toronto Open Data CSV · stdout_lines[0] · stdout_lines · stdout_lines[1] · stdout_lines[2] · stdout_lines[3] · stdout_lines[4] · stdout_lines[5] · stdout_lines[6] · stdout_lines[7] · stdout_lines[8] · stdout_lines[9] · stdout_lines[10] · stdout_lines[11]
+
+86 differences (bucket 2): stdout_lines[12] · stdout_lines[13] · stdout_lines[14] · stdout_lines[15] · stdout_lines[16] · stdout_lines[17] · stdout_lines[18] · stdout_lines[19] · stdout_lines[20] · stdout_lines[21] · stdout_lines[22] · stdout_lines[23] · stdout_lines[24] · stdout_lines[25] · stdout_lines[26] · stdout_lines[27] · stdout_lines[28]
+
+86 differences (bucket 3): stdout_lines[29] · stdout_lines[30] · stdout_lines[31] · address_points_load · summary.records_meta.address_points_load · name · summary.records_meta.audit_table.name · phase · summary.records_meta.audit_table.phase · metric · summary.records_meta.audit_table.rows.metric · source
+
+86 differences (bucket 4): summary.records_meta.audit_table.rows.source · threshold · summary.records_meta.audit_table.rows.threshold · value · summary.records_meta.audit_table.rows.value · status · summary.records_meta.audit_table.rows.status · rows[6] · rows · summary.records_meta.audit_table.rows · rows[7] · rows[8] · verdict
+
+86 differences (bucket 5): summary.records_meta.audit_table.verdict · checks_failed · summary.records_meta.checks_failed · checks_warned · summary.records_meta.checks_warned · config · summary.records_meta.config · errors · summary.records_meta.errors · gate · summary.records_meta.gate · ledger_row · summary.records_meta.ledger_row · pool_errors
+
+86 differences (bucket 6): summary.records_meta.pool_errors · records_inserted · summary.records_meta.records_inserted · records_skipped · summary.records_meta.records_skipped · records_unchanged · summary.records_meta.records_unchanged · records_updated · summary.records_meta.records_updated · rows_read · summary.records_meta.rows_read · terminal
+
+86 differences (bucket 7): summary.records_meta.terminal · records_new · summary.records_new · records_total · summary.records_total · summary.records_updated · table_state[0] · table_state · pipeline_runs[0] · pipeline_runs
+
+
+## §R Reflection (G9)
+
+### LOW-CONFIDENCE table
+
+| # | Claim | Confidence | Why | Verify at |
+|---|---|---|---|---|
+| 1 | AP-D4 root cause (why the legacy guarded UPDATE rewrites 8,199 rows per run without settling) | LOW | measured effect, cause not chased under the budget ruling | post-cutover ledger WF3 |
+| 2 | AP-D1 which side is right (Spec 54 filter narrative vs unfiltered loader) | LOW | both readings recorded, ruling owed | commit 10 (post-cutover) |
+| 3 | The two write.js capture-time fixes (point collapse; carried fields) have no dedicated lock yet | MEDIUM | proven by the POST goldens only | commit 9 locks in step-library.logic.test.ts |
+
+### RECURRING/STANDARD-SHAPING table
+
+| # | Observation | Standard-shaping consequence |
+|---|---|---|
+| 1 | The INGESTOR library assumed polygons (validator) and key+geom-only features (carried rows) — the second member surfaced both | Spec 122 §8.2's "hardest member discovers the hatches" held; `geometry_kind` + full-field carry are now the standard (0e + this commit) |
+| 2 | The DeepSeek engine aborts on tool payloads > 8 KB and exhausts budgets on multi-file conversions | briefs are split per file group with < 5 KB writes; a Sonnet/orchestrator finisher closes the last mile (Spec 08 §C v1.1 followup) |
+| 3 | A legacy loader can be non-idempotent with no test noticing (8,199 rows/run) | idempotence (run 2 = 0 updates) becomes a standing G8 assertion for INGESTORs (R-F: DEFERRED → next batch plan step) |
+
+**Addendum (17:40Z):** after an intervening LEGACY run, the converted step re-updated exactly **8,199** rows back to the CSV values (`post/sources.json` `records_updated: 8199`) and the immediate re-run updated **0** (`post/standalone.json`) — the two implementations disagree on precisely the legacy's churn set; the converted values are the CSV values (measured above), so AP-D4 stands.

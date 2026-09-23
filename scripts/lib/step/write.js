@@ -204,7 +204,11 @@ function geometryFinalExpr(geometryKind) {
   if (geometryKind === 'polygon') {
     return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))';
   }
-  return 'ST_CollectionExtract(repaired, 1)';
+  // Point: ST_CollectionExtract always returns a MULTI geometry, and a Point column rejects a
+  // MultiPoint (measured 2026-09-23: "Geometry type (MultiPoint) does not match column type (Point)").
+  // A single-member extract collapses back to its one Point; a multi-member one stays MultiPoint and
+  // is counted skipped_unsupported_type by the accept arm — never silently narrowed to its first point.
+  return "CASE WHEN ST_NumGeometries(ST_CollectionExtract(repaired, 1)) = 1 THEN ST_GeometryN(ST_CollectionExtract(repaired, 1), 1) ELSE ST_CollectionExtract(repaired, 1) END";
 }
 
 /**
@@ -785,7 +789,11 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
     repaired += d.repaired;
     collectionExtracted += d.collectionExtracted;
     skipped += d.skipped;
-    if (d.carry) carried.push({ [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
+    // Carry EVERY shaped field of the feature, not just key + geom — a multi-column INGESTOR
+    // (address_points: 16 columns, measured 2026-09-23 "null value in column latitude") binds them
+    // through columnValues(row); the key and geom columns win on collision. Byte-identical for a
+    // key+geom-only feature (load_ravines).
+    if (d.carry) carried.push({ ...f, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
     else skippedKeys.push(f[keyColumn]);
   }
   return { carried, repaired, collectionExtracted, skipped, skippedKeys };

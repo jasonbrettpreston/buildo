@@ -1,0 +1,87 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-address-points.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations. This file carries 6, and",
+    "descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap. It",
+    "lives here because the descriptor schema's root is additionalProperties:false",
+    "and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "Every run of this step LOADS. The loader has no staleness gate — no HEAD/ETag probe, no content hash, no local-file short-circuit that survives (the argv/local-path override was retired per Spec 124 R-AZ) — so the normal audit table is the post-write counter block plus whatever WARN/INFO rows the declared checks emit, never a skip. A gate that skipped on a hash-equal source would be a behaviour change, so it is recorded as a post-cutover follow-up in descriptor.limitations[] instead of declared here.",
+      "measured": {
+        "value": { "gate_reads_in_loader": 0, "retract_statements": 0, "write_statements": 1 },
+        "date": "2026-09-23",
+        "query": "grep -nE \"HEAD|ETag|createHash|existsSync\" scripts/load-address-points.js"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The coordinate OR-contract: a row's geometry comes from the `geometry` GeoJSON Point/MultiPoint column when it parses, and ONLY falls back to the LATITUDE/LONGITUDE pair when it does not. The two sources are not equivalent — a header that keeps lat/lng but drops `geometry` (or the reverse) silently changes every row's coordinate path, which no count-based check can see. That is why csv_header_drift is declared as its own WARN over the OR-set rather than folded into a row counter.",
+      "measured": {
+        "value": { "coordinate_sources": ["geometry (GeoJSON Point/MultiPoint)", "LATITUDE + LONGITUDE"], "first_coord_only_multi": true },
+        "date": "2026-09-23",
+        "query": "grep -n \"coordinates\" scripts/load-address-points.js"
+      }
+    },
+    {
+      "what": "The write is class A: a guarded upsert keyed on address_point_id whose DO UPDATE is gated on `IS DISTINCT FROM` over the 12 source/normalized columns plus geom. A byte-identical re-run therefore updates ZERO rows and inserts ZERO rows, and — because there is no DELETE anywhere in the step — no address point is ever removed by this loader. A run that reports inserted=0, updated=0 is the healthy no-op case, not a failure.",
+      "measured": {
+        "value": { "write_class": "guarded_upsert", "guard": "is_distinct_from", "retract": "none", "idempotent_rerun": "zero_writes" },
+        "date": "2026-09-23",
+        "query": "grep -n \"IS DISTINCT FROM\\|ON CONFLICT\" scripts/load-address-points.js"
+      }
+    },
+    {
+      "what": "COALESCE(NULLIF(...)) preservation is load-bearing on the write: some address_points columns are written from a nullable source expression, so a source-side blank must not overwrite an already-populated value with NULL. The guarded upsert's guard is what carries that preservation — reading the guard as 'skip unchanged rows' alone misses the null-preservation half of its job.",
+      "measured": {
+        "value": { "preservation_expr": "COALESCE(NULLIF(lower(source_value), ''), existing)", "guard_columns": 15 },
+        "date": "2026-09-23",
+        "query": "grep -n \"COALESCE\\|NULLIF\" scripts/load-address-points.js"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "`validatorCounterDelta` is exported but reads NO validators: the address-points loader has no cache-validator surface (no HEAD/ETag probe, and `inputs.reads.externals[0].cache` is `none`), so the helper returns the all-zero shape the runner expects and does nothing else. It exists because the INGESTOR runner's helper contract is uniform across the archetype — a step that omitted it would be a special case in the runner for no gain — not because this step has validators to compare.",
+      "why": "Declaring it as a real behaviour would be a lie (there is nothing to compare), and NOT exporting it would force the runner to branch on step identity — the inference `execution.shape` exists to retire. The honest middle is an exported no-op whose emptiness is stated here and whose shape is pinned by the violations suite's helper battery; if a pre-acquisition validator gate is ever added (the post-cutover skip-gate follow-up), this is the helper that grows.",
+      "adjudicated": "commit-1 assessment §4 (seam map, phantom-seam ledger), 2026-09-23"
+    },
+    {
+      "what": "Duplicate ADDRESS_POINT_ID values within one source file are resolved LAST-wins by the step itself (dedupeBySourceId), NOT by the database's ON CONFLICT.",
+      "why": "The pre-conversion loader's row loop let a later row for the same key overwrite the earlier one before the batch was ever built, so the surviving values are the LAST occurrence's. Letting the database arbitrate instead would make the winner depend on batch composition (the second of two duplicates could land in a different INSERT ... VALUES tuple and the conflict resolution would still pick it, but a split across batches would make the earlier row win) — a silent divergence between the two runs. Declaring dedupeBySourceId last-wins pins the loader's actual semantics, and the guard is a lock in the violations suite.",
+      "adjudicated": "commit-1 assessment §3 (AP-D-adjacent helper ledger), 2026-09-23"
+    }
+  ],
+  "fences": [
+    {
+      "const": "class A has NO delete_sql — shouldSkipDelete returns true unconditionally and the runner's 0a guard is a second wall behind it",
+      "value": "outputs.writes[0].write_discipline.class = guarded_upsert, retract = none, scope = none; recovery.interrupted = none",
+      "incident": "Severity MEDIUM. A class-A conversion that quietly acquires a departure DELETE (the load_ravines shape) would retract address points the source merely reordered — and nothing in a zero-diff golden for a SUCCESSFUL run would show it, because the DELETE only fires on a key set the new run did not see. Reverting the guard is invisible in the success-path output, which is why the lock reads the compute's export and its return value rather than the emitted counters.",
+      "commit": "pending (folded 7+8, row 3.1)",
+      "lock_test": "src/tests/steps/address_points/violations.test.ts"
+    },
+    {
+      "const": "the geometry JSON.parse swallow stays a SWALLOW (AP-D2) — the parse-failure path falls through to lat/lng and the row is CARRIED, never dropped",
+      "value": "checks[] geom_parse_failures (severity INFO, purely descriptive, never gating); shapeRecord returns null ONLY when there is no coordinate source at all",
+      "incident": "Severity LOW but a live tripwire. The pre-conversion `try { JSON.parse(geomRaw) } catch { /* fall through */ }` has a comment-only catch, so `no-empty` never flagged it and the swallow was invisible for the whole life of the loader. Turning it into a THROW (the obvious 'fix') would drop rows the current loader loads — a real behaviour change smuggled into a conversion commit. It is declared as a counted INFO row precisely so the count exists without the behaviour moving.",
+      "commit": "pending (folded 7+8, row 3.1)",
+      "lock_test": "src/tests/steps/address_points/violations.test.ts"
+    },
+    {
+      "const": "AP-D1 — Spec 54 narrates a `maint_stage = REGULAR` filter and an `address_status` acceptance set that the code does NOT implement",
+      "value": "deviations[] entry pinned with ledger id AP-D1, KNOWN-DEFECT CARRIED (never silently fixed); limitations[] records the downstream residue",
+      "incident": "Severity MEDIUM. The loader inserts EVERY source row, so the live table may carry RESERVED-stage and non-accepted-status rows Spec 54's prose would exclude. The conversion carries the CODE unfiltered (a zero-diff golden proves zero-diff against the live table) and pins the spec-vs-code divergence where a reviewer will see it — but a RULING IS OWED (is the spec aspirational, or does the loader over-insert?), and the fix, once ruled, is a separate post-cutover commit with its own RED lock.",
+      "commit": "pending (folded 7+8, row 3.1)",
+      "lock_test": "src/tests/steps/address_points/violations.test.ts"
+    }
+  ]
+}

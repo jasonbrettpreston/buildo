@@ -5010,11 +5010,71 @@
   "sources_address_points_floor": {
     "default": 500000,
     "type": "number",
-    "description": "assert-data-bounds: address_points row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 525K). CONSUMED by assert_data_bounds.",
+    "description": "assert-data-bounds: address_points row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 525K). ALSO CONSUMED by load_address_points (row 3.1, batch-2 P3.1) through its checks[].limit_from_config on rows_read_floor — the SAME registered variable, not a second key (Rule 3: one home per concern). CONSUMED by assert_data_bounds and load_address_points.",
     "min": 1,
     "max": 5000000,
     "admin": {
       "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "address_points_progress_bytes_window": {
+    "default": 10485760,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — download progress cadence in BYTES: how many bytes of the ~183 MB address-points CSV accumulate between progress log lines. 10485760 = the pre-externalization literal (10 * 1024 * 1024). Display-only: it shapes operator visibility, never a verdict, so the compute never spells ctx.config.<name> for it and it is exempt from the ctx.config-read lock. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
+    "min": 1048576,
+    "max": 67108864,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "address_points_progress_row_modulo": {
+    "default": 50000,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — download progress cadence in ROWS: the record interval at which the loader logs a processed-row line. 50000 = the pre-externalization literal. Display-only, like the byte window above; never read as a verdict bound. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
+    "min": 1000,
+    "max": 5000000,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "address_points_expected_total_rows": {
+    "default": 525000,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — the expected address_points source size, used for the human-readable progress PERCENTAGE only. 525000 = the pre-externalization literal (the live CKAN CSV is 525,436 rows). Display-only: it is NOT the catastrophic-load floor (that is the shared sources_address_points_floor, consumed by rows_read_floor); the compute never spells ctx.config.<name> for it and it is exempt from the ctx.config-read lock. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
+    "min": 1,
+    "max": 5000000,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "address_points_skip_rate_max_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — WARN ceiling on the coordinate/ID skip rate: skipped rows as a percentage of rows_read. A row is skipped when ADDRESS_POINT_ID is not an int, or when neither a parseable `geometry` NOR a numeric LATITUDE/LONGITUDE pair is present. 5 = the pre-externalization literal (loader load-address-points.js:413-418). Never FAIL: a rising skip rate is a CSV-drift signal, not a reason to halt an otherwise-loadable load. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js skip_rate_pct, via checks[].limit_from_config).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "address_points_null_address_number_max_pct": {
+    "default": 0.1,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — WARN ceiling on the percentage of rows with an EMPTY ADDRESS_NUMBER. More than this means the publisher stripped the column upstream — the same 2026-05-20 strip pattern that emptied parcels.address_number. 0.1 = the pre-externalization literal (the threshold text in scripts/lib/address-points-csv-drift.js:94-96). WARN, never FAIL: a null address_number does not make the address point unloadable (the guarded upsert preserves the existing value), it only makes the point unusable for downstream joins. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js null_address_number_pct, via checks[].limit_from_config).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "address_points_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 1800000,
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — AbortController budget for the address-points CSV download. 60000 = the fleet INGESTOR default, adopted from the sibling load_ravines_download_timeout_ms because the pre-conversion loader's downloadFile allowed NO timeout at all (it read none — there is no legacy literal to carry); the value therefore EXTERNALIZES a bound that did not previously exist, and the descriptor literal execution.network.timeout states the same 60000 as the fallback for an un-seeded database (execution.network.timeout_from_config names this variable, so there is ONE source). Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_address_points (scripts/lib/step/acquire.js download, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
     }
   },
   "sources_parcels_floor": {

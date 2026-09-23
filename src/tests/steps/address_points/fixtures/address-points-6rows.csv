@@ -1,0 +1,7 @@
+ADDRESS_POINT_ID,ADDRESS_NUMBER,LINEAR_NAME_FULL,ADDRESS_FULL,LO_NUM,HI_NUM,MAINT_STAGE,ADDRESS_STATUS,ADDRESS_CLASS_DESC,CLASS_FAMILY_DESC,PLACE_NAME,LATITUDE,LONGITUDE,geometry
+1000001,"100",Davenport Rd,"100 Davenport Rd",100,100,REGULAR,CURRENT,Land,Address,,"43.6715","-79.3968","{""type"":""Point"",""coordinates"":[-79.3968,43.6715]}"
+1000002,"200",Yonge St,"200 Yonge St",200,200,REGULAR,CURRENT,Structure,Address,,"43.6510","-79.3832","{""type"":""Point"",""coordinates"":[-79.3832,43.6510]}"
+1000003,"300",Queen St W,"300 Queen St W",300,300,REGULAR,CURRENT,Structure Entrance,Address,,"43.6500","-79.3900","{""type"":""MultiPoint"",""coordinates"":[[-79.3900,43.6500]]}"
+1000004,,Bloor St W,"400 Bloor St W",400,400,REGULAR,CURRENT,Land,Address,,"43.6600","-79.4000","{""type"":""Point"",""coordinates"":[-79.4000,43.6600]}"
+1000005,"500",Dundas St W,"500 Dundas St W",500,500,REGULAR,CURRENT,Land,Address,,"43.6550","-79.3950",
+1000006,"600",College St,"600 College St",600,600,REGULAR,CURRENT,Land,Address,,"43.6580","-79.4100","not-a-json-geometry"
