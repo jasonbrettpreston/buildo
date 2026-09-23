@@ -3,6 +3,7 @@
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6, §3.7
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK, R-AV
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4 (write classes), §5.1 (no per-step escape hatches)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.1 (batch-2 row 3.1 prerequisite 0b — INGESTOR CSV acquisition)
 //
 // S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
 // the `assert_schema` pilot needs. The real proof of this library is the C1
@@ -5030,6 +5031,210 @@ describe('executeWrite — class-A guarded_upsert issues NO departure DELETE (ba
     expect(written.delete_skipped_empty_guard).toBe(true);
     expect(l.warn).toHaveBeenCalledTimes(1);
     expect(l.warn).toHaveBeenCalledWith('load_ravines', expect.stringMatching(/empty-set guard: the scoped departure DELETE was suppressed/));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// INGESTOR CSV acquisition — format axis + compute.shapeRecord (batch-2 row 3.1
+// prerequisite 0b). Before this brief `acquireExternal` was dispatch-free:
+// `downloadArchive -> extractArchive -> locateShapefile -> parseShapefile`,
+// unconditionally, for every declared external. Three of the eight INGESTORs
+// (address_points, parcels, load_wsib) are bare CSVs, so a declared, required
+// `format` axis (`step.schema.json inputs.reads.externals[].format`) now selects
+// the parser instead of an extension sniff. `downloadArchive`/`hashThrough` (FENCE
+// 0b230472) are untouched by this brief — bytes are still hashed as they land on
+// either branch.
+// ---------------------------------------------------------------------------
+describe('INGESTOR CSV acquisition — format axis + compute.shapeRecord (batch-2 row 3.1 prerequisite 0b)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real write.js lib, spied on below
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- fixture bytes
+  const fsSync = require('node:fs');
+
+  const CSV_FIXTURES = join(process.cwd(), 'src/tests/fixtures/csv-acquire');
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+
+  /** A fake `ctxFetch`: HEAD returns headers only, GET streams the given bytes — the
+   * same two-call shape `downloadArchive`/`headValidators` drive in production. */
+  function fetchImplFor(bytes: Buffer) {
+    return async (_url: string, init?: { method?: string }) =>
+      (init && init.method === 'HEAD'
+        ? new Response(null, { headers: { 'last-modified': 'Tue, 01 Apr 2025 00:00:00 GMT' } })
+        : new Response(new Uint8Array(bytes), { headers: { 'last-modified': 'Tue, 01 Apr 2025 00:00:00 GMT' } }));
+  }
+
+  it('T1 — acquireExternal(format:"csv") parses 5 rows into {[keyColumn]: key, record}, bad_key_count 0 '
+    + '(RED before this brief: every external was unzipped unconditionally, so this threw inside extractArchive — "not a zip")', async () => {
+    const bytes = fsSync.readFileSync(join(CSV_FIXTURES, 'five-rows.csv'));
+    const external = {
+      id: 'csv-acquire-t1', format: 'csv', csv_options: { bom: false, relax_quotes: true },
+      url: 'https://example.invalid/five-rows.csv',
+    };
+    const out = await acquireLib.acquireExternal({
+      ctxFetch: fetchImplFor(bytes),
+      log: NO_LOG,
+      tag: '[csv_acquire_t1]',
+      slug: 'csv_acquire_t1',
+      external,
+      descriptor: LOAD_RAVINES,
+      prior: null,
+      timeoutMs: 30_000,
+      keyProperty: 'ID',
+      keyColumn: 'source_id',
+      coerceKey: intOrNull,
+      forced: true,
+      emitSkeleton: {},
+      preAcquisitionGate: () => ({ skip: false, reason: 'test' }),
+    });
+    expect(out.features).toHaveLength(5);
+    for (const f of out.features as Array<{ source_id: number; record: Record<string, unknown> }>) {
+      expect(typeof f.source_id).toBe('number');
+      expect(typeof f.record).toBe('object');
+    }
+    expect(out.acquired.bad_key_count).toBe(0);
+    expect(out.acquired.feature_count).toBe(5);
+  });
+
+  it('T2 — csv_options.bom is HONOURED, not inferred: bom:true keeps the key intact; bom:false leaves a '
+    + '﻿ID header, so bad_key_count is 5 (the other direction)', async () => {
+    const bomBytes = fsSync.readFileSync(join(CSV_FIXTURES, 'five-rows-bom.csv'));
+    const run = async (bom: boolean) => acquireLib.acquireExternal({
+      ctxFetch: fetchImplFor(bomBytes),
+      log: NO_LOG,
+      tag: '[csv_acquire_t2]',
+      slug: 'csv_acquire_t2',
+      external: { id: 'csv-acquire-t2', format: 'csv', csv_options: { bom, relax_quotes: true }, url: 'https://example.invalid/five-rows-bom.csv' },
+      descriptor: LOAD_RAVINES,
+      prior: null,
+      timeoutMs: 30_000,
+      keyProperty: 'ID',
+      keyColumn: 'source_id',
+      coerceKey: intOrNull,
+      forced: true,
+      emitSkeleton: {},
+      preAcquisitionGate: () => ({ skip: false, reason: 'test' }),
+    });
+
+    const withBom = await run(true);
+    expect(withBom.features, 'bom:true strips the BOM before the header is read — the first key is intact').toHaveLength(5);
+    expect(withBom.acquired.bad_key_count).toBe(0);
+
+    const withoutBom = await run(false);
+    expect(withoutBom.features, 'bom:false: EVERY row misses key_property under the ﻿ID header — options are honoured, not inferred').toHaveLength(0);
+    expect(withoutBom.acquired.bad_key_count).toBe(5);
+  });
+
+  it('T3 — format:"shapefile_zip" keeps the extract→locate→parse arm byte-identical (existing tests untouched): '
+    + 'forced still walks a non-zip payload into extractArchive and rejects there, same as before this brief', async () => {
+    const payload = Buffer.from('not-a-zip-archive');
+    await expect(acquireLib.acquireExternal({
+      ctxFetch: fetchImplFor(payload),
+      log: NO_LOG,
+      tag: '[csv_acquire_t3]',
+      slug: 'csv_acquire_t3',
+      external: { id: 'csv-acquire-t3', format: 'shapefile_zip', url: 'https://example.invalid/x.zip' },
+      descriptor: LOAD_RAVINES,
+      prior: null,
+      timeoutMs: 30_000,
+      keyProperty: 'OBJECTID',
+      keyColumn: 'source_id',
+      coerceKey: intOrNull,
+      forced: true,
+      emitSkeleton: {},
+      preAcquisitionGate: () => ({ skip: false, reason: 'test' }),
+    })).rejects.toThrow();
+  });
+
+  it('T4 — AJV: format:"csv" with no csv_options FAILS, an unrecognised format FAILS, load_ravines '
+    + '(format:"shapefile_zip") PASSES construction', () => {
+    const noCsvOptions = clone(LOAD_RAVINES);
+    noCsvOptions.inputs.reads.externals[0].format = 'csv';
+    delete noCsvOptions.inputs.reads.externals[0].csv_options;
+    expect(() => pipeline.step(noCsvOptions, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    const badFormat = clone(LOAD_RAVINES);
+    badFormat.inputs.reads.externals[0].format = 'pdf';
+    expect(() => pipeline.step(badFormat, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    expect(() => pipeline.step(LOAD_RAVINES, noop), 'load_ravines already declares format:"shapefile_zip"').not.toThrow();
+  });
+
+  it('T5 — runIngestPhase: a csv external whose compute lacks shapeRecord rejects with the named Error '
+    + 'BEFORE any download (no pool touch, no fetch)', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+    const compute = { coerceKey: intOrNull }; // no shapeRecord export
+    const pool = { query: async () => { throw new Error('the guard must fire before any pool access'); } };
+    await expect(stepLib.runIngestPhase({
+      descriptor,
+      pool,
+      compute,
+      config: {},
+      fetchImpl: async () => { throw new Error('the guard must fire before any network call'); },
+      chainId: null,
+      log: NO_LOG,
+      tag: '[csv_acquire_t5]',
+      clockNow: new Date('2026-09-23T00:00:00Z'),
+      preWriteGate: null,
+    })).rejects.toThrow(/shapeRecord/);
+  });
+
+  it('T5 — runIngestPhase: shapeRecord returning null for one of 5 records counts acquired.shaped_skipped===1 '
+    + 'and dedupeBySourceId receives the 4 survivors', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+
+    const rawFeatures = [1, 2, 3, 4, 5].map((n) => ({
+      source_id: n,
+      record: { ID: n, NAME: `row${n}`, geometry: n === 3 ? null : '{"type":"Point","coordinates":[0,0]}' },
+    }));
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord: (record: { geometry: string | null; NAME: string }) => (record.geometry == null ? null : { geojson: record.geometry, name: record.NAME }),
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+        features: rawFeatures,
+        acquired: {
+          feature_count: 5, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+          content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+          last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+        },
+      }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      }),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[csv_acquire_t5b]',
+        clockNow: new Date('2026-09-23T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.shaped_skipped).toBe(1);
+      expect(dedupeSpy).toHaveBeenCalledTimes(1);
+      expect(dedupeSpy.mock.calls[0]?.[0] as unknown[]).toHaveLength(4);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
   });
 });
 

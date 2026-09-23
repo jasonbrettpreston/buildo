@@ -50,6 +50,7 @@ const { Readable } = require('stream');
 const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
+const { parse } = require('csv-parse');
 
 const sourceVersion = require('../source-version');
 const { triggersAt } = require('./staleness');
@@ -229,6 +230,56 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
 }
 
 /**
+ * Parse a CSV into the SAME feature shape `parseShapefile` returns — one parsed record
+ * per feature, keyed by the DECLARED key column, `record` carrying the parsed row.
+ *
+ * ⚠️ `record` IS NOT `geojson`. A shapefile hands the seam a geometry object, so
+ * `parseShapefile` stringifies it into the `geojson` field the write plan's
+ * `bind: "wkb_geometry"` column validates. A CSV row's geometry is whatever the
+ * publisher put in a column, and only the STEP knows which column that is — so the
+ * whole record travels through and `compute.shapeRecord` (the INGESTOR runner's CSV
+ * arm, see `runIngestPhase`) maps it to the columns the write plan binds. Parsing
+ * stays domain-free here for the same reason `coerceKey` is handed in.
+ *
+ * The three options every loader agrees on are hard-wired (`columns` so the header is
+ * read once and each row arrives as an object; `skip_empty_lines`; `relax_column_count`
+ * because publishers ship ragged rows). `bom`/`relax_quotes` are the two the loaders
+ * DISAGREE on, so they come from the external's declared `csv_options` — honoured, never
+ * inferred (a BOM-less parse of a BOM-prefixed file makes the FIRST header `\ufeffID`,
+ * which then misses `key_property` on every row: `bad_key_count === feature_count`).
+ *
+ * @param {string} filePath - the downloaded `source.csv`
+ * @param {{bom: boolean, relax_quotes: boolean}} csvOptions - `external.csv_options`
+ * @param {string} keyProperty - the source-side attribute, `external.key_property`
+ * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion
+ * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper
+ *   reads the same field name its descriptor declares
+ * @returns {Promise<{features: Array<{record: object}>, badKey: number, nullGeometry: number}>}
+ *   `nullGeometry` is structurally 0 here — a CSV has no geometry-less rows at PARSE
+ *   time; a blank geometry cell is the step's `shapeRecord` problem, not the parser's,
+ *   and the field is carried so `acquired.null_geometry_count` keeps its meaning.
+ */
+async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn) {
+  const stream = fs.createReadStream(filePath).pipe(parse({
+    columns: true,
+    skip_empty_lines: true,
+    relax_column_count: true,
+    bom: csvOptions.bom,
+    relax_quotes: csvOptions.relax_quotes,
+  }));
+  const features = [];
+  let badKey = 0;
+  // `for await` over the piped parser — the same backpressure-shaped loop the
+  // pre-conversion CSV loaders used, so a 200 MB source never buffers whole (§9.5).
+  for await (const record of stream) {
+    const key = coerceKey(record[keyProperty]);
+    if (key == null) { badKey++; continue; }
+    features.push({ [keyColumn]: key, record });
+  }
+  return { features, badKey, nullGeometry: 0 };
+}
+
+/**
  * The `post_acquisition` gate (header item 3). Kept in this file and NOWHERE else:
  * `./staleness.js` owns the pre-acquisition position only, so there is exactly one
  * place the content-hash decision can be reverted from.
@@ -308,7 +359,12 @@ async function acquireExternal({
 
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), `${TMP_PREFIX}${slug}-`));
   try {
-    const dl = await downloadArchive(ctxFetch, external.url, path.join(tmpRoot, 'source.zip'), timeoutMs, algorithm);
+    // The downloaded file's NAME is derived from the DECLARED format, so nothing
+    // downstream has to sniff it: `.zip` for the archive, `.csv` for the flat file.
+    // Path only — `downloadArchive` is byte-identical for both, and the bytes are
+    // hashed as they land on either branch (FENCE 0b230472).
+    const destPath = path.join(tmpRoot, external.format === 'csv' ? 'source.csv' : 'source.zip');
+    const dl = await downloadArchive(ctxFetch, external.url, destPath, timeoutMs, algorithm);
     const acquired = {
       ...base,
       last_modified: dl.lastModified || head.lastModified,
@@ -330,10 +386,28 @@ async function acquireExternal({
       }) };
     }
 
-    const extractDir = path.join(tmpRoot, 'ext');
-    await extractArchive(dl.archivePath, extractDir);
-    const { shpPath, dbfPath } = locateShapefile(extractDir);
-    const parsed = await parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColumn);
+    // ── THE FORMAT AXIS (WF2 batch-2 row 3.1 prerequisite 0b) ──────────────────
+    // Before this branch the seam was dispatch-free: every external was unzipped,
+    // located and shapefile-parsed unconditionally. `format` is REQUIRED descriptor
+    // data now, so the parser is selected by a declaration and never by an
+    // extension. The shapefile arm's three lines are byte-identical to what they
+    // were; an UNRECOGNISED value throws by name rather than silently parsing as
+    // a shapefile (a CSV through `open()` fails, but a future third format would
+    // not necessarily — and a silent wrong-parser is a data-shape defect).
+    let parsed;
+    if (external.format === 'shapefile_zip') {
+      const extractDir = path.join(tmpRoot, 'ext');
+      await extractArchive(dl.archivePath, extractDir);
+      const { shpPath, dbfPath } = locateShapefile(extractDir);
+      parsed = await parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColumn);
+    } else if (external.format === 'csv') {
+      parsed = await parseCsv(dl.archivePath, external.csv_options, keyProperty, coerceKey, keyColumn);
+    } else {
+      throw new Error(`${tag} external "${external.id}" declares format "${String(external.format)}", which no parser `
+        + 'in the acquisition seam handles. Declare "shapefile_zip" or "csv" (step.schema.json '
+        + 'inputs.reads.externals[].format), or teach acquire.js the new payload format — an '
+        + 'unrecognised value must never fall through to the shapefile parser.');
+    }
     log.info(tag, `acquired ${parsed.features.length} feature(s) (${dl.bytesDownloaded} bytes, ${algorithm} ${dl.contentHash.slice(0, 8)}…)`);
     return {
       acquired: {
@@ -366,6 +440,7 @@ module.exports = {
   extractArchive,
   locateShapefile,
   parseShapefile,
+  parseCsv,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,

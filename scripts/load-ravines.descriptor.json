@@ -21,6 +21,7 @@
         {
           "id": "ckan:ravine-natural-feature-protection-area-wgs84",
           "kind": "http_file",
+          "format": "shapefile_zip",
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip",
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "OBJECTID",
