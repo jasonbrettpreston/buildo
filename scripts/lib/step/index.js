@@ -3027,6 +3027,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   const t0 = Date.now();
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
+  // Spec 124 R-AV (batch-2 row 2.6) — the SAME local alias the two link runners use
+  // (runLinkPhase :798, runLinkKeyedPhase :984). `resolveOverrides` already folds the
+  // declaration and the argv read (`dryRunArgPresent`) into one value; reading
+  // `process.argv` here instead would make a declared "none" and an absent declaration
+  // indistinguishable. Every write region below is gated on THIS.
+  const dryRun = overrides.dry_run === true;
   // R-B (Rule 12) — folded UNCONDITIONALLY into `full`: this archetype has no
   // ledger-gated-skip early return to hide behind (runnerReachability's ENRICHER
   // branch, step-validate.mjs), so an interrupted prior run forces this one to treat
@@ -3472,6 +3478,14 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   let currentPhaseName = null;
   const stopHeartbeatTicker = startHeartbeatTicker(heartbeatClient, ownRunId, () => currentPhaseName, heartbeatMs, () => rowsProcessed);
   try {
+  // Spec 124 R-AV (batch-2 row 2.6) — the shared-txn region, INCLUDING the scope hand-off
+  // `INSERT` further down, is skipped WHOLE under `dryRun`. Same shape as `runLinkPhase`'s
+  // own `if (rows.length > 0 && !dryRun)` / `runLinkKeyedPhase`'s `if (!dryRun) { … }`: the
+  // surrounding try/.catch (lock-denial self-skip, deadline capture) and the heartbeat/ticker
+  // lifecycle stay OUTSIDE the gate, so the audit assembly still emits its `dry_run_no_writes`
+  // row on a truthful run. The write seams (`ctx.joinUpdate`/`ctx.retract`) are simply never
+  // constructed, which is what makes them unreachable — no second check inside them.
+  if (!dryRun) {
   await pipeline.withTransaction(pool, async (client) => {
     const lockRow = await client.query(
       'SELECT pg_try_advisory_xact_lock($1, $2) AS acquired',
@@ -3632,6 +3646,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     if (err && err.phaseDeadline) { phaseDeadlineInfo = err.phaseDeadline; return; }
     throw err;
   });
+  } // end `if (!dryRun)` — shared-txn write region (Spec 124 R-AV)
   if (sharedTxnLockDenied) {
     return {
       matched: {}, written, prior, overrides, writeSkipped: false, skipped: true,
@@ -3655,7 +3670,13 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // transaction rolled back, so pass 5 would be recomputing against un-enriched columns;
   // running it anyway would spend another hour producing values derived from work that no
   // longer exists. The audit table is still built below, with the abort row on it.
-  for (const phase of (phaseDeadlineInfo ? [] : postCommitPhases)) {
+  //
+  // Spec 124 R-AV (batch-2 row 2.6) — `dryRun` empties this loop on the SAME reasoning as
+  // the phase-deadline arm above: a phase is a WRITE region (its `passCtx.flushBatch` is a
+  // BEGIN/COMMIT and its seams bind `postClient`), so a dry run runs NONE of them. The
+  // try/.catch (lock-denial self-skip, deadline capture) stays outside the gate, exactly as
+  // it does for the shared-txn region.
+  for (const phase of (dryRun || phaseDeadlineInfo ? [] : postCommitPhases)) {
     const passSpec = passByName(phase.name);
     // WF3 2026-09-17 — same map, same finite-or-throw resolution as the shared-txn loop above.
     // Resolving it HERE would have been worse than at :3216: this loop runs AFTER the shared

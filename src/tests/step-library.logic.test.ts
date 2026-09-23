@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §4.2, §4.3, §7.1 (S2-min)
 // SPEC LINK: docs/specs/01-pipeline/120_pipeline_step_runner.md §3.2b, §4.1
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6, §3.7
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK, R-AV
 //
 // S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
 // the `assert_schema` pilot needs. The real proof of this library is the C1
@@ -4695,6 +4695,173 @@ describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
     expect(resB.matched.scope_retired_rows).toBe(5);
     expect(resB.matched.scope_retired_cohorts).toBe(1);
     expect(resB.matched.scope_retire_window).toEqual({ hours: 24, cutoff_at: new Date('2026-09-14T00:00:00.000Z') });
+  });
+});
+
+describe('runEnrichPhase — override.dry_run seam (batch-2 row 2.6, Spec 124 R-AV)', () => {
+  // The Phase 0.10b block above scopes `poolP`/`baseDescriptor`/`argsP` to ITS own
+  // `describe`; the same three helpers are reproduced here VERBATIM so this block is
+  // independent of that one's lifetime (no shared mutable fixture).
+  interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
+
+  function poolP(rowCounts: Array<{ re: RegExp; rowCount: number }> = []) {
+    const sql: string[] = [];
+    const clients: FakeClient[] = [];
+    const answer = (text: string) => {
+      if (/pg_backend_pid/.test(text)) return { rows: [{ pid: 4242 }] };
+      if (/pg_try_advisory(?:_xact)?_lock\(\$1, \$2\)/.test(text)) return { rows: [{ acquired: true }] };
+      const hit = rowCounts.find((r) => r.re.test(text));
+      if (hit) return { rows: [], rowCount: hit.rowCount };
+      return { rows: [], rowCount: 0 };
+    };
+    const record = async (text: string) => { sql.push(text); return answer(text); };
+    return {
+      sql,
+      query: record,
+      connect: async () => { const c: FakeClient = { query: record, release: () => {} }; clients.push(c); return c; },
+    };
+  }
+
+  const baseDescriptor = () => ({
+    identity: { name: 'fixture_post_phase', lock: 987656, archetype: 'ENRICHER', spec: '999' },
+    outputs: {
+      writes: [
+        { table: 'fixture_a', key: 'id', write_discipline: { class: 'set_based_join_update' } },
+        { table: 'fixture_b', key: 'id', write_discipline: { class: 'temp_materialize' } },
+      ],
+    },
+    execution: {
+      shape: 'enrich',
+      heartbeat_minutes_from_config: 'fixture_heartbeat_minutes',
+      lock_timeout_ms_from_config: 'fixture_lock_timeout_ms',
+      phases: [
+        { name: 'geocode', order: 1, txn: 'shared', writes_ref: 0, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+        { name: 'backfill_geom', order: 2, txn: 'shared', writes_ref: 1, scope: 'full', timeout_minutes_from_config: 'fixture_pass_timeout_minutes' },
+      ],
+      invocation: { sources: { argv: [], env: {} } },
+    },
+    guards: { requires: [] },
+    recovery: 'none',
+    override: { force_full: 'none', force_run: 'none', dry_run: 'none' },
+    checks: [],
+  });
+
+  const argsP = (descriptor: Record<string, unknown>, pool: ReturnType<typeof poolP>, compute: unknown, extraConfig: Record<string, unknown> = {}) => ({
+    descriptor,
+    pool,
+    compute,
+    config: { fixture_pass_timeout_minutes: 5, fixture_heartbeat_minutes: 60, fixture_lock_timeout_ms: 0, ...extraConfig },
+    chainId: null,
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+    tag: '[fixture_post_phase]',
+    clockNow: new Date('2026-09-15T00:00:00.000Z'),
+    preWriteGate: null,
+    ownRunId: 4242,
+  });
+
+  // ---------------------------------------------------------------------------
+  // Spec 124 R-AV. `runEnrichPhase` resolved `overrides` and then read
+  // `overrides.dry_run` at ZERO sites in its body, while the shared audit assembly
+  // emitted `dryRunRow()` (`dry_run_no_writes: true`) and persisted `dry_run: true`
+  // on the run record whenever `stepCtx.overrides.dry_run` was truthy. An ENRICHER
+  // descriptor declaring an argv arm (`"dry_run": "--dry-run"`) would therefore
+  // print "no writes" on a run that WROTE. The gate keys on `overrides.dry_run`
+  // (via `staleness.resolveOverrides` → `dryRunArgPresent`), NEVER raw `process.argv`.
+  // ---------------------------------------------------------------------------
+
+  it('T1 — override.dry_run declared + --dry-run on argv ⇒ NO write region is entered (RED before: UPDATE issued, updated=30)', async () => {
+    // RED before the fix: the shared-txn pass execution runs, so `ctx.joinUpdate`
+    // issues its UPDATE and `res.written.e1.updated` reads the row count (30).
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 30 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.override as Record<string, unknown>).dry_run = '--dry-run';
+    const passLog: string[] = [];
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            passLog.push('geocode');
+            await (ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>)(
+              0, 'UPDATE fixture_a SET x = s.v FROM src s WHERE s.id = fixture_a.id', [],
+            );
+            return { updated: 30 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => { passLog.push('backfill_geom'); return {}; } },
+      ],
+    };
+    let res!: { written: Record<string, { updated: number; rows_changed: number }> };
+    await withDryRunArgv(async () => {
+      res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as typeof res;
+    });
+
+    // `poolP`'s single `record` is shared by every `connect()`ed client, so the
+    // runner's OWN heartbeat writes (`UPDATE pipeline_runs`, an observability write on
+    // a dedicated autocommit client, never a step write region) land in `pool.sql` too.
+    // The claim is that no STEP write is issued: exclude the heartbeat table, and the
+    // remaining set must be empty.
+    const writes = pool.sql.filter((t) => /^\s*(UPDATE|INSERT|DELETE)/i.test(t) && !/pipeline_runs/i.test(t));
+    expect(writes, `a dry-run must issue zero step-write statements; saw: ${writes.join(' | ')}`).toEqual([]);
+    expect(res.written.e1!.updated, 'RED before fix: 30').toBe(0);
+    expect(res.written.e1!.rows_changed, 'RED before fix: 30').toBe(0);
+    expect(passLog, 'the write region is skipped whole — the pass body must not execute').toEqual([]);
+  });
+
+  it('T2 — identical descriptor/compute WITHOUT --dry-run ⇒ the UPDATE is issued and updated=30', async () => {
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 30 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.override as Record<string, unknown>).dry_run = '--dry-run';
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            await (ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>)(
+              0, 'UPDATE fixture_a SET x = s.v FROM src s WHERE s.id = fixture_a.id', [],
+            );
+            return { updated: 30 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => ({}) },
+      ],
+    };
+    const res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as {
+      written: Record<string, { updated: number; rows_changed: number }>;
+    };
+    expect(pool.sql.some((t) => /^\s*UPDATE fixture_a/i.test(t)), 'the flag is absent — the write region runs').toBe(true);
+    expect(res.written.e1!.updated).toBe(30);
+    expect(res.written.e1!.rows_changed).toBe(30);
+  });
+
+  it('T3 — override.dry_run = "none" WITH --dry-run on argv ⇒ the UPDATE is issued and updated=30 (declaration governs, not raw argv)', async () => {
+    const pool = poolP([{ re: /UPDATE fixture_a/, rowCount: 30 }]);
+    const d = baseDescriptor() as unknown as Record<string, unknown>;
+    (d.override as Record<string, unknown>).dry_run = 'none';
+    const compute = {
+      passes: [
+        {
+          name: 'geocode',
+          txn: 'shared',
+          run: async (_client: unknown, ctx: Record<string, unknown>) => {
+            await (ctx.joinUpdate as (ref: number, sql: string, p: unknown[]) => Promise<number>)(
+              0, 'UPDATE fixture_a SET x = s.v FROM src s WHERE s.id = fixture_a.id', [],
+            );
+            return { updated: 30 };
+          },
+        },
+        { name: 'backfill_geom', txn: 'shared', run: async () => ({}) },
+      ],
+    };
+    let res!: { written: Record<string, { updated: number; rows_changed: number }> };
+    await withDryRunArgv(async () => {
+      res = await stepLib.runEnrichPhase(argsP(d, pool, compute) as never) as typeof res;
+    });
+    expect(pool.sql.some((t) => /^\s*UPDATE fixture_a/i.test(t)), 'no declared arm ⇒ --dry-run on argv means nothing here').toBe(true);
+    expect(res.written.e1!.updated).toBe(30);
+    expect(res.written.e1!.rows_changed).toBe(30);
   });
 });
 
