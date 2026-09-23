@@ -10,9 +10,9 @@ Total items: **127**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 31 |
+| ⬜ NOT_STARTED | 30 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 76 |
+| ✅ BUILT | 77 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -50,7 +50,7 @@ Total items: **127**
 | `VEL-1` | 124 R-AG (proposed) | Gate placement: full suite at pre-push, vitest related + fast invariants at pre-commit, live-DB infra tests in test:db | ✅ BUILT | wf: wf: conversion velocity (R-AG) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `VEL-2` | 124 R-AH (proposed) | Compressed 3-commit form is the default once an archetype has two full-form members | ✅ BUILT | wf: wf: conversion velocity (R-AH) | address_points, assert_parcel_sanity, compute_parcel_cost_estimates, enrich_centreline, enrich_heritage, enrich_ravines, load_centreline, load_heritage, load_wsib, load_zoning, massing, neighbourhoods, parcels, reconcile | 2026-09-14 |
 | `SEAM-CHAIN-1` | 122 §6.5 | seam checks are scoped to the chain they run in | ⬜ NOT_STARTED | followup: docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row | address_points | 2026-09-15 |
-| `B2-PRICING-ADMIN` | 124 R-AU | Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES) | ⬜ NOT_STARTED | wf: wf: batch-2 row 2.5 (.cursor/batch2_c5_active_task.md Phase 2) - Cross-Domain admin pricing editor | enrich_centreline | 2026-09-21 |
+| `B2-PRICING-ADMIN` | 124 R-AU | Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES) | ✅ BUILT | wf: wf: batch-2 row 2.5 (.cursor/batch2_p2_5_pricing_admin_active_task.md) - Cross-Domain admin pricing editor | enrich_centreline | 2026-09-23 |
 | `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ✅ BUILT | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-23 |
 | `B2-OWNER-SPEC-DIFF` | 123 §7 row 9; 124 §4.5 | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ⬜ NOT_STARTED | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-21 |
 

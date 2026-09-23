@@ -333,6 +333,8 @@ The remaining OPEN-subset `'none'` (1,615) decomposes per the §3-ARCHETYPE reje
 | Trade Costs | `base_trade_rates` | The $/sqft for all 32 trades. |
 | Geography | `income_premium_tiers` | Multiplier (1.0x to 1.85x) based on neighborhood wealth. |
 
+> **2026-09-23 (batch-2 row 2.5, Spec 124 R-AU closed):** `archetype_cost_rates` (the T3 `archetype_rate` source above) is now admin-edited on the Control Panel's Pricing section (Spec 86 §"Pricing sections"), not carried byte-for-byte. This step (`compute-cost-estimates.js`) and `compute-coa-cost-estimates.js` (§7) both `SELECT` the table live with their own SQL and pick up an edit on their next scheduled run — no code change, no cache to invalidate.
+
 ### Operating Variables (Avoiding W7, W10)
 
 | Variable Group | Variable | Requirement |

@@ -19,7 +19,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (85)
+### Tables (87)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -34,6 +34,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `data_quality_snapshots` | 73 | 2 |
 | `device_tokens` | 6 | 2 |
 | `engine_health_snapshots` | 10 | 1 |
+| `enrich_parcels_pass3_scope` | 4 | 2 |
 | `entities` | 19 | 4 |
 | `entitlements` | 9 | 1 |
 | `entity_contacts` | 8 | 3 |
@@ -57,7 +58,8 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `notifications` | 13 | 3 |
 | `parcel_address_points` | 3 | 1 |
 | `parcel_buildings` | 8 | 4 |
-| `parcels` | 158 | 6 |
+| `parcel_cost_lines` | 5 | 0 |
+| `parcels` | 159 | 7 |
 | `permit_history` | 8 | 2 |
 | `permit_inspections` | 7 | 3 |
 | `permit_parcels` | 7 | 3 |
@@ -97,7 +99,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `universal_stream_catalog` | 20 | 2 |
 | `universal_stream_trade_signals` | 3 | 2 |
 | `user_profiles` | 30 | 1 |
-| `wsib_registry` | 22 | 9 |
+| `wsib_registry` | 22 | 10 |
 | `zoning_building_setback_overlay` | 10 | 2 |
 | `zoning_bylaw_areas` | 29 | 5 |
 | `zoning_height_overlay` | 9 | 2 |
@@ -480,6 +482,15 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `seq_ratio` | NUMERIC(6,4) | NO | 0 |
 | `captured_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
+#### `enrich_parcels_pass3_scope` (4 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `run_id` | INTEGER | NO | - |
+| `parcel_id` | INTEGER | NO | - |
+| `consumed_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `created_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
 #### `entities` (19 columns)
 
 | Column | Type | Nullable | Default |
@@ -839,7 +850,17 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `match_type` | CHARACTER VARYING(30) | NO | polygon |
 | `confidence` | NUMERIC(3,2) | NO | 0.85 |
 
-#### `parcels` (158 columns)
+#### `parcel_cost_lines` (5 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `id` | TEXT | NO | - |
+| `archetype` | TEXT | NO | - |
+| `base_confidence` | TEXT | NO | - |
+| `fit_permitted_values` | ARRAY | YES | - |
+| `updated_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
+
+#### `parcels` (159 columns)
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|--------|
@@ -1001,6 +1022,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `coa_fsi` | NUMERIC(6,3) | YES | - |
 | `realized_fsi_p90` | NUMERIC(6,3) | YES | - |
 | `lot_size_source` | TEXT | YES | - |
+| `massing_enriched_at` | TIMESTAMP WITH TIME ZONE | YES | - |
 
 #### `permit_history` (8 columns)
 

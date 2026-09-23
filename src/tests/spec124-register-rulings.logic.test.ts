@@ -6,6 +6,20 @@
 // The §4.4 locks for the register rows the operator adjudicated on 2026-09-21. The discovering
 // pass proposed them; it did not rule on them (§4.2).
 //
+// R-AU CLOSED 2026-09-23 (batch-2 row 2.5, `.cursor/batch2_p2_5_pricing_admin_active_task.md`
+// Fold A8): `rAuSatisfied` (which proved the INTERIM non-admin-surface declaration) is REPLACED
+// by `rAuClosed`, which proves the inverse — no `limitations[]` entry DECLARES a pricing token a
+// non-admin surface, and no `config.logic_variables[]` entry falsely re-declares one as a tunable.
+// MEASURED COLLISION (C5, 2026-09-23): a bare substring match on `limitations[].what` is NOT
+// sufficient — the live CPCE descriptor's E3-landed limitations[3] entry legitimately names the
+// literal `PARCEL_COST_LINES` JS symbol (documenting that two analysis scripts now call
+// `mergeCostLines(PARCEL_COST_LINES, rows)`), which is unrelated to the retired CPCE-A3/A4
+// "non-admin surface" claim. `rAuClosed` therefore requires the token AND a co-located
+// non-admin-surface claim phrase, never a bare token match — and never edits the descriptor's own
+// prose to dodge the collision (that file is golden-fingerprinted; a prose edit forces an
+// expensive golden recapture entirely out of C5's scope, measured live via `step-validate --all`
+// G8 hard-stop before this fix).
+//
 // R-AT's own both-directions locks already live in `src/tests/step-library.logic.test.ts`
 // (M1e-M1h, proven RED at 39b246c0) and are deliberately NOT duplicated here — §4.4 is satisfied
 // by an existing lock, cited, never re-implemented as a second source of truth.
@@ -64,13 +78,32 @@ function rArViolations(d: Descriptorish): string[] {
   return bad;
 }
 
-/** R-AU — pricing DATA is declared as a non-admin surface, and never as a logic variable. */
-function rAuSatisfied(d: Descriptorish, pricingTokens: string[]): boolean {
+/** A `limitations[].what` string phrased as the retired CPCE-A3/A4 non-admin-surface claim
+ * ("no admin surface" / "not admin-visible" / "NOT counted toward ... externalized"). A bare
+ * mention of a pricing token (e.g. documenting a function call signature) does not match this —
+ * only an actual claim that the token is NOT admin-tunable does. */
+const NON_ADMIN_SURFACE_CLAIM = /not admin-visible|no admin surface|not\b.*\badmin.tunable|not counted toward[^.]*extern/i;
+
+/**
+ * R-AU — CLOSED (2026-09-23, batch-2 row 2.5): pricing DATA is now admin-editable, so the
+ * descriptor must carry NEITHER the old INTERIM "non-admin surface" declaration NOR a false
+ * externalization claim. `rAuClosed` is true iff (a) no `limitations[]` entry both NAMES a
+ * pricing token AND CLAIMS it a non-admin surface (`NON_ADMIN_SURFACE_CLAIM`) — the old
+ * declaration this row's closing REMOVED — and (b) no `config.logic_variables[]` entry falsely
+ * re-declares a pricing token as a scalar tunable (the second-source-of-truth failure mode
+ * Rule 3's R-AU addendum still forbids — closing the admin surface does not license a duplicate
+ * declaration). A bare, unrelated mention of a token (e.g. a call-signature in prose) never trips
+ * (a) on its own — see the MEASURED COLLISION note above the file header.
+ */
+function rAuClosed(d: Descriptorish, pricingTokens: string[]): boolean {
   const declared = (d.config && Array.isArray(d.config.logic_variables) ? d.config.logic_variables : [])
     .map((v: Descriptorish) => String(v?.name ?? ''));
   if (declared.some((n: string) => pricingTokens.some((t) => n.includes(t)))) return false;
   const limitations = Array.isArray(d.limitations) ? d.limitations : [];
-  return limitations.some((l: Descriptorish) => typeof l?.what === 'string' && pricingTokens.some((t) => l.what.includes(t)));
+  return !limitations.some((l: Descriptorish) => {
+    const text = typeof l?.what === 'string' ? l.what : '';
+    return pricingTokens.some((t) => text.includes(t)) && NON_ADMIN_SURFACE_CLAIM.test(text);
+  });
 }
 
 describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 2026-09-21)', () => {
@@ -226,27 +259,38 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
     });
   });
 
-  describe('R-AU — pricing DATA is a declared non-admin surface, not a logic variable', () => {
+  describe('R-AU — CLOSED 2026-09-23 (batch-2 row 2.5): pricing DATA is admin-editable, not a declared non-admin surface', () => {
     const tokens = ['archetype_cost_rates', 'PARCEL_COST_LINES'];
+    const CPCE_DESCRIPTOR = path.join(REPO_ROOT, 'scripts', 'compute-parcel-cost-estimates.descriptor.json');
 
     it('the predicate is proven in BOTH directions on in-memory descriptors', () => {
-      const good = {
+      const closed = { config: { logic_variables: [{ name: 'cost_est_min_tiers' }] }, limitations: [] };
+      expect(rAuClosed(closed, tokens)).toBe(true);
+
+      // RED — the old INTERIM non-admin-surface declaration, if it reappeared, must fail closure.
+      const stillDeclaredNonAdmin = {
         config: { logic_variables: [{ name: 'cost_est_min_tiers' }] },
         limitations: [{ what: 'archetype_cost_rates (12x3) is DB pricing data with no admin surface (R-AU).' }],
       };
-      expect(rAuSatisfied(good, tokens)).toBe(true);
+      expect(rAuClosed(stillDeclaredNonAdmin, tokens)).toBe(false);
 
-      const undeclared = { config: { logic_variables: [{ name: 'cost_est_min_tiers' }] }, limitations: [] };
-      expect(rAuSatisfied(undeclared, tokens)).toBe(false);
-
+      // RED — a pricing token masquerading as a scalar tunable must fail closure even with no
+      // limitations[] entry at all (a second source of truth is still wrong once closed).
       const falselyExternalized = {
         config: { logic_variables: [{ name: 'archetype_cost_rates_base' }] },
-        limitations: [{ what: 'archetype_cost_rates is DB pricing data.' }],
+        limitations: [],
       };
-      expect(rAuSatisfied(falselyExternalized, tokens)).toBe(false);
+      expect(rAuClosed(falselyExternalized, tokens)).toBe(false);
     });
 
-    it('no admin surface reads archetype_cost_rates today (the ruling’s measured premise)', () => {
+    it('the live CPCE descriptor is CLOSED: neither pricing token is named in limitations[] or logic_variables[]', () => {
+      // Live assertion against the real, landed descriptor (batch-2 row 2.5 E3, `0f1f46fb`
+      // removed the CPCE-A3/A4 non-admin-surface limitations[] entry) — not just in-memory mutants.
+      const cpce = readJson(CPCE_DESCRIPTOR);
+      expect(rAuClosed(cpce, tokens)).toBe(true);
+    });
+
+    it('an admin surface reads archetype_cost_rates now — exactly the expected file set under the four roots', () => {
       const offenders: string[] = [];
       for (const dir of ['src/app', 'src/features/admin-controls', 'src/lib/admin', 'src/components']) {
         const root = path.join(REPO_ROOT, dir);
@@ -258,11 +302,32 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
             const p = path.join(cur, entry.name);
             if (entry.isDirectory()) { stack.push(p); continue; }
             if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) continue;
-            if (fs.readFileSync(p, 'utf8').includes('archetype_cost_rates')) offenders.push(p);
+            if (fs.readFileSync(p, 'utf8').includes('archetype_cost_rates')) {
+              offenders.push(path.relative(REPO_ROOT, p).split(path.sep).join('/'));
+            }
           }
         }
       }
-      expect(offenders, 'R-AU premise broken: an admin surface now reads archetype_cost_rates').toEqual([]);
+      // Verified by grep 2026-09-23: control-panel.ts is the actual read/write surface (the
+      // closing site itself); PricingCard.tsx/RatesGrid.tsx name the table ONLY in a JSDoc
+      // comment describing what the grid renders — no query, no live reference — listed
+      // explicitly here rather than silently widening the match.
+      const expected = [
+        'src/features/admin-controls/components/PricingCard.tsx',
+        'src/features/admin-controls/components/RatesGrid.tsx',
+        'src/lib/admin/control-panel.ts',
+      ].sort();
+      expect(offenders.sort()).toEqual(expected);
+    });
+
+    it('RED control — an offender outside the expected set fails the exact-set assertion', () => {
+      const expected = [
+        'src/features/admin-controls/components/PricingCard.tsx',
+        'src/features/admin-controls/components/RatesGrid.tsx',
+        'src/lib/admin/control-panel.ts',
+      ].sort();
+      const withExtra = [...expected, 'src/components/admin/SomeUnexpectedFile.tsx'].sort();
+      expect(withExtra).not.toEqual(expected);
     });
   });
 });

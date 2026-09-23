@@ -202,19 +202,29 @@ All Control Panel UI is built mobile-first (base Tailwind classes = mobile; `md:
 
 ---
 
+## Pricing sections (row 2.5, 2026-09-23)
+
+Closes Spec 124 R-AU. `archetype_cost_rates` and `parcel_cost_lines` (Spec 88 §2.8, migration 248) join the SAME single `/configs` apply flow as every other section — no new route, no second transaction, no second StickyActionBar. `MarketplaceConfig` gains `pricingRates: RateRow[]` and `pricingLines: LineRow[]`; the PUT body gains optional `pricingRates: RatePatch[]` (keyed `archetype`) and `pricingLines: LinePatch[]` (keyed `id`), both `.strict()` — a deliberate, stated divergence from the rest of the payload (which is `.strip()` by default): a structural line field (`areaField`/`scalar`/`scalarKind`/`fitField`/`isCoaLine`) in a patch is REFUSED with 400, not silently dropped, because those fields are column bindings owned by `scripts/lib/parcel-cost.js`, never admin data (Spec 88 §2.8 as-built). `PricingCard.tsx` (`RatesGrid` 12 rows, `LinesGrid` 13 rows) mounts in `draftConfig.pricingRates`/`pricingLines`; structural cells render read-only.
+
+Applied inside `applyConfigUpdate`'s existing single transaction with enumerated `IS DISTINCT FROM` UPDATE lists per table (the `tcFields`-style pattern every other section uses); `updated_at` bumps only on rows the guard actually changed. **400 vs 500 split:** 400 = Zod (bad enum, out-of-range numeric, unknown/structural key); 500 = DB-only (an unknown `archetype`/line `id` reachable only by a crafted request, since the UI's own selects are populated from the loaded rows — no pg-error-code mapping added).
+
+**Audit, replay and concurrency are the inherited precedent, not a new contract for pricing specifically:** one audit row per PUT naming the REQUESTED section keys, written BEFORE the mutation on the bare pool (the route's `section_keys` is `Object.keys(parsed.data)`, so pricing sections are captured automatically, no route change needed) — a replay of an identical PUT therefore writes 0 UPDATE rows and 1 audit row, same as every other section. No concurrency token exists anywhere in this route; last-writer-wins, unchanged.
+
+---
+
 ## Operating Boundaries
 
 ### Target Files
 
 | Layer | File(s) |
 |-------|---------|
-| **Database migration** | `migrations/097_control_panel_final.sql` |
+| **Database migration** | `migrations/097_control_panel_final.sql`; `migrations/248_parcel_cost_lines.sql` (row 2.5 — pricing lines table, Spec 88 §2.8) |
 | **Shared types + DB helpers** | `src/lib/admin/control-panel.ts` |
 | **API routes** | `src/app/api/admin/control-panel/configs/route.ts`, `src/app/api/admin/control-panel/resync/route.ts` |
-| **Feature module** | `src/features/admin-controls/**` (store, api hooks, components, lib) |
+| **Feature module** | `src/features/admin-controls/**` (store, api hooks, components, lib) — incl. `components/PricingCard.tsx`, `components/RatesGrid.tsx`, `components/LinesGrid.tsx` (row 2.5) |
 | **Page + error boundary** | `src/app/admin/control-panel/page.tsx`, `src/app/admin/control-panel/error.tsx` |
 | **Hub tile** | `src/app/admin/page.tsx` |
-| **Tests** | `src/tests/control-panel.*.test.{ts,tsx}` |
+| **Tests** | `src/tests/control-panel.*.test.{ts,tsx}`; `src/tests/db/pricing-tables.db.test.ts` (row 2.5) |
 | **Factories** | `src/tests/factories.ts` (appended — no existing code modified) |
 | **Contracts** | `docs/specs/_contracts.json` |
 

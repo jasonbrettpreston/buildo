@@ -740,7 +740,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=244 |
+| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=245 |
 | 2 | assert_data_bounds | PASS | 26 declared, missing from seeds: none |
 | 3 | assert_data_bounds | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_data_bounds | PASS | SPEC LINK header present=true |
@@ -764,11 +764,12 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 - compare ran: true · diffs found: 644 · unexplained: 0
 
 ### Test suite (item iii)
-- 1383/1383 passed (suite success=true)
+- 1386/1387 passed (suite success=false)
 - harvested: 24 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -787,7 +788,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=64789B notes=0B checks=52 rows records_meta=6628B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=64789B notes=0B checks=52 rows records_meta=3102B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

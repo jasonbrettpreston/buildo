@@ -2219,11 +2219,11 @@
       "spec": "124 R-AU",
       "title": "Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES)",
       "promised": "the pricing rate table and the priced-line catalogue become admin-editable, and compute_parcel_cost_estimates’ descriptor non-admin-surface limitation is REMOVED (the values then count as externalized under Rule 3)",
-      "status": "NOT_STARTED",
-      "evidence": "Spec 124 R-AU (operator-adjudicated 2026-09-21) declares the ported pricing surface an INTERIM non-admin state with this row as its named closing row, not a permanent Rule 3 exemption. Measured 2026-09-21: archetype_cost_rates (12x3) has ZERO references under src/app, src/features/admin-controls, src/lib/admin or src/components (locked in src/tests/spec124-register-rulings.logic.test.ts); PARCEL_COST_LINES (~78 literals) + PERMITTED_VALUES live in scripts/lib/parcel-cost.js. BATCH-2 WORK: built after row 2.4 converts and BEFORE batch 2 closes - a Cross-Domain WF (.claude/domain-crossdomain.md), not an open-ended followup",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-23 (batch-2 row 2.5). Spec 124 R-AU (operator-adjudicated 2026-09-21) declared the ported pricing surface an INTERIM non-admin state with this row as its named closing row, not a permanent Rule 3 exemption — now CLOSED. Commits: 7c3e85eb (E1, configs payload gains pricingRates/pricingLines), d6cd1c7d (C0, migration 248 parcel_cost_lines), 3bc1eee0 (E2, PricingCard/RatesGrid/LinesGrid on the single apply flow), 0f1f46fb (E3, scripts/lib/parcel-cost.js reads the editable catalogue fields from parcel_cost_lines via mergeCostLines, zero-diff golden). archetype_cost_rates and parcel_cost_lines are both admin-edited through src/lib/admin/control-panel.ts's ONE existing /configs apply flow; the CPCE descriptor's CPCE-A3/A4 non-admin-surface limitations[] entry is REMOVED (0f1f46fb). PARCEL_COST_LINES's STRUCTURAL fields (id/areaField/scalar/scalarKind/fitField/isCoaLine) stay in scripts/lib/parcel-cost.js by design (column bindings, not pricing data — plan Fold A2) and are outside this closure. Locked (both directions) as rAuClosed in src/tests/spec124-register-rulings.logic.test.ts.",
       "owner": {
         "kind": "wf",
-        "ref": "wf: batch-2 row 2.5 (.cursor/batch2_c5_active_task.md Phase 2) - Cross-Domain admin pricing editor"
+        "ref": "wf: batch-2 row 2.5 (.cursor/batch2_p2_5_pricing_admin_active_task.md) - Cross-Domain admin pricing editor"
       },
       "gate": {
         "kind": "cutover_prereq",
@@ -2231,7 +2231,7 @@
           "enrich_centreline"
         ]
       },
-      "last_reviewed": "2026-09-21"
+      "last_reviewed": "2026-09-23"
     },
     {
       "id": "B2-DRYRUN-SEAM",
