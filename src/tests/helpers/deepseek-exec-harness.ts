@@ -46,7 +46,16 @@ export function scrubbedChildEnv(): ChildEnv {
 }
 
 export function assertThrowawayRepo(repo: string): void {
-  const norm = (p: string) => fs.realpathSync.native(path.resolve(p)).toLowerCase();
+  // A forbidden root that no longer exists on disk (the buildo-engine worktree
+  // was removed 2026-09-22) must not crash the guard — fall back to the
+  // resolved path so the comparison still fails closed on a string match.
+  const norm = (p: string) => {
+    try {
+      return fs.realpathSync.native(path.resolve(p)).toLowerCase();
+    } catch {
+      return path.resolve(p).toLowerCase();
+    }
+  };
   const repoNorm = norm(repo);
   if (FORBIDDEN_REPO_ROOTS.some((f) => { const fn = norm(f); return repoNorm === fn || repoNorm.startsWith(fn + path.sep); })) {
     throw new Error(`refusing to run a mutating git command against ${repo} — a real project root, not a throwaway repo`);

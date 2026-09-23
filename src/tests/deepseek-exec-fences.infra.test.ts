@@ -300,6 +300,60 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
   });
 
+  describe('read_file: read_max_bytes caps the WINDOW, not the file (run 20260923T003332Z-afa733d5, batch-2 row 2.6)', () => {
+    // Founding measurement: scripts/lib/step/index.js is 308,909 bytes; the
+    // first handler compared stat.size against the 262,144-byte cap BEFORE
+    // windowing, so every (offset, limit) read of the runner was TOO_LARGE and
+    // the engine spent 30 iterations grepping blind. Both directions:
+    //   - a windowed read of an over-cap file is ok (RED before the fix)
+    //   - an un-windowed read of that file is still TOO_LARGE
+    //   - a window whose OWN bytes exceed the cap is TOO_LARGE
+    //   - a file over the 16x ceiling is TOO_LARGE even windowed
+    function toolsWith(readMaxBytes: number) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly, below the engine loop
+      const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
+      const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+      policy.limits.read_max_bytes = readMaxBytes;
+      const fakeLedger = { path: path.join(ledgerDir, 'readcap-unit.jsonl'), append: () => {}, close: () => {} };
+      return createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState: { readState: {} } });
+    }
+    const LINE = 'x'.repeat(99) + '\n'; // 100 bytes per line
+
+    it('a windowed read of a file over read_max_bytes returns the window (RED before: TOO_LARGE on stat.size)', async () => {
+      fs.writeFileSync(path.join(repo, 'big.js'), LINE.repeat(50)); // 5,000 bytes
+      const tools = toolsWith(1000);
+      const outcome = await tools.dispatch('read_file', { path: 'big.js', offset: 10, limit: 5, reason: 'r' });
+      expect(outcome.toolResult.ok).toBe(true);
+      expect(outcome.toolResult.lines_total).toBe(51);
+      expect(outcome.toolResult.truncated).toBe(true);
+      expect((outcome.toolResult.content as string).split('\n')).toHaveLength(5);
+    });
+
+    it('an un-windowed read of the same file is still TOO_LARGE, and the message says to window', async () => {
+      fs.writeFileSync(path.join(repo, 'big.js'), LINE.repeat(50));
+      const tools = toolsWith(1000);
+      const outcome = await tools.dispatch('read_file', { path: 'big.js', reason: 'r' });
+      expect(outcome.toolResult).toMatchObject({ ok: false, error: { code: 'TOO_LARGE' } });
+      expect(outcome.toolResult.error.message).toMatch(/offset\+limit/);
+    });
+
+    it('a window whose own bytes exceed read_max_bytes is TOO_LARGE (the cap still protects the model)', async () => {
+      fs.writeFileSync(path.join(repo, 'big.js'), LINE.repeat(50));
+      const tools = toolsWith(1000);
+      const outcome = await tools.dispatch('read_file', { path: 'big.js', offset: 1, limit: 20, reason: 'r' }); // ~2,000 bytes
+      expect(outcome.toolResult).toMatchObject({ ok: false, error: { code: 'TOO_LARGE' } });
+      expect(outcome.toolResult.error.message).toMatch(/smaller limit/);
+    });
+
+    it('a file over the 16x ceiling is TOO_LARGE even when windowed', async () => {
+      fs.writeFileSync(path.join(repo, 'huge.js'), LINE.repeat(200)); // 20,000 bytes > 16 x 1000
+      const tools = toolsWith(1000);
+      const outcome = await tools.dispatch('read_file', { path: 'huge.js', offset: 1, limit: 2, reason: 'r' });
+      expect(outcome.toolResult).toMatchObject({ ok: false, error: { code: 'TOO_LARGE' } });
+      expect(outcome.toolResult.error.message).toMatch(/file ceiling/);
+    });
+  });
+
   describe('commit 8: redact() reaches everything the model can see', () => {
     it('a turn that both writes a secret-embedding file AND narrates the secret in its own text: zero occurrences of the raw secret anywhere in the ledger, and the narration is [REDACTED]', async () => {
       const secret = 'sk-abcdefghijklmnopqrstuvwx';

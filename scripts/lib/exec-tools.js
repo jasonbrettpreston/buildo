@@ -48,6 +48,11 @@ const { captureWorktree } = require('./exec-worktree');
 const { matchArgv } = require('./exec-policy-match');
 const { matchesAnyGlob } = require('./exec-glob');
 
+// read_file: a WINDOWED read of a file larger than `read_max_bytes` is legal
+// (the cap applies to the returned window); this factor bounds the file size
+// the handler will load at all. 16 x 262144 = 4 MiB.
+const READ_FILE_CEILING_FACTOR = 16;
+
 class MalformedToolCallError extends Error {
   constructor(message) {
     super(message);
@@ -861,8 +866,21 @@ async function readFileHandler(args, ctx) {
   if (stat.isDirectory()) {
     return { toolResult: { ok: false, error: { code: 'IS_DIRECTORY', message: `is a directory: ${relPosix}` } } };
   }
-  if (limits.read_max_bytes && stat.size > limits.read_max_bytes) {
-    return { toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} is ${stat.size} bytes, over the ${limits.read_max_bytes}-byte read cap` } } };
+  // `read_max_bytes` caps what reaches the MODEL — the returned window — not
+  // the file on disk. The first version applied it to `stat.size` BEFORE
+  // windowing, so a 309 KB runner (`scripts/lib/step/index.js`) was unreadable
+  // at any (offset, limit) and run 20260923T003332Z-afa733d5 burned 30
+  // iterations grepping blind (batch-2 row 2.6). A whole-file read (no
+  // `limit`) is still capped by the file size; a windowed read is capped by
+  // the window's bytes. `READ_FILE_CEILING_FACTOR` keeps a hard ceiling on
+  // what the handler will load into memory at all.
+  const windowed = Boolean(args.limit && args.limit > 0);
+  const fileCeiling = limits.read_max_bytes ? limits.read_max_bytes * READ_FILE_CEILING_FACTOR : 0;
+  if (limits.read_max_bytes && !windowed && stat.size > limits.read_max_bytes) {
+    return { toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} is ${stat.size} bytes, over the ${limits.read_max_bytes}-byte read cap; pass offset+limit to read a window` } } };
+  }
+  if (fileCeiling && stat.size > fileCeiling) {
+    return { toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} is ${stat.size} bytes, over the ${fileCeiling}-byte file ceiling (read_max_bytes x ${READ_FILE_CEILING_FACTOR}); not readable even windowed` } } };
   }
 
   const buf = fs.readFileSync(absPath);
@@ -873,6 +891,11 @@ async function readFileHandler(args, ctx) {
   const limit = args.limit && args.limit > 0 ? args.limit : lines.length;
   const windowLines = lines.slice(offset - 1, offset - 1 + limit);
   const truncated = offset > 1 || offset - 1 + limit < lines.length;
+  const windowText = windowLines.join('\n');
+  const windowBytes = Buffer.byteLength(windowText, 'utf8');
+  if (limits.read_max_bytes && windowBytes > limits.read_max_bytes) {
+    return { toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} lines ${offset}-${offset - 1 + windowLines.length} are ${windowBytes} bytes, over the ${limits.read_max_bytes}-byte read cap; pass a smaller limit` } } };
+  }
 
   runState.readState[absPath] = { sha256: wholeFileSha256, mtime_ms: stat.mtimeMs };
 
@@ -880,7 +903,7 @@ async function readFileHandler(args, ctx) {
     toolResult: {
       ok: true,
       path: relPosix,
-      content: windowLines.join('\n'),
+      content: windowText,
       sha256: wholeFileSha256,
       mtime_ms: stat.mtimeMs,
       lines_total: lines.length,
