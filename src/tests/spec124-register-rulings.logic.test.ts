@@ -153,8 +153,16 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
       }
     });
 
-    it('the enrich runner honours no dry-run seam, while another shape does (RED control)', () => {
-      expect(runnerBody(indexSrc, 'runEnrichPhase')).not.toMatch(/overrides\.dry_run/);
+    // 2026-09-23 (batch-2 row 2.6, `6551689a`): the ruling's INTERIM premise — "runEnrichPhase
+    // reads overrides.dry_run at ZERO sites" — is knowingly RETIRED. The runner now aliases
+    // `overrides.dry_run` once and gates BOTH write regions on it (the same shape as the link
+    // runners). The arm flips to the CLOSED state; the behaviour lock is
+    // src/tests/step-library.logic.test.ts T1–T3. The row-cap half stays open (arm below).
+    it('the enrich runner now aliases overrides.dry_run and gates both write regions on it (R-AV dry-run half CLOSED 2026-09-23)', () => {
+      const body = runnerBody(indexSrc, 'runEnrichPhase');
+      expect(body).toMatch(/const dryRun = overrides\.dry_run === true;/);
+      expect(body).toMatch(/if \(!dryRun\) \{\s*\n\s*await pipeline\.withTransaction\(pool/);
+      expect(body).toMatch(/dryRun \|\| phaseDeadlineInfo \? \[\] : postCommitPhases/);
       expect(runnerBody(indexSrc, 'runCascadePhase')).toMatch(/overrides\.dry_run/);
     });
 
