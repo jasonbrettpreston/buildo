@@ -27,10 +27,25 @@ function makeProductionConfig(): MarketplaceConfig {
     scopeMatrix: [
       { permitType: 'new building', structureType: 'sfd', gfaAllocationPercentage: 1.0 },
     ],
-    // Batch-2 row 2.5 (Spec 88 §2.3, Spec 124 R-AU) — fixture only; no UI
-    // behaviour is asserted against these here (brief E2 owns that).
-    pricingRates: [],
-    pricingLines: [],
+    // Batch-2 row 2.5 (Spec 88 §2.3, Spec 124 R-AU) — pricing fixtures for E2.
+    pricingRates: [
+      {
+        archetype: 'KIT',
+        costPerSqm: 1200,
+        costAdjustmentFactor: 1.0,
+        escalationIndexBase: 1.05,
+        source: 'seed',
+        asOfDate: '2026-01-01',
+      },
+    ],
+    pricingLines: [
+      {
+        id: 'kitchen',
+        archetype: 'KIT',
+        baseConfidence: 'high',
+        fitPermittedValues: ['as_of_right'],
+      },
+    ],
   };
 }
 
@@ -200,5 +215,57 @@ describe('useAdminControlsStore', () => {
     store.getState().refreshProductionConfig(makeProductionConfig());
 
     expect(store.getState().hasUnsavedChanges).toBe(false);
+  });
+
+  // ── Batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU): pricing draft edits ─────
+
+  // RED (before E2): store.updateDraftRate is undefined → TypeError.
+  it('S1 — updateDraftRate emits ONLY the changed field in computeDiff().pricingRates', async () => {
+    const store = await getStore();
+    store.getState().setProductionConfig(makeProductionConfig());
+    store.getState().updateDraftRate('KIT', { costPerSqm: 1300 });
+    expect(store.getState().hasUnsavedChanges).toBe(true);
+    expect(store.getState().computeDiff().pricingRates).toEqual([
+      { archetype: 'KIT', costPerSqm: 1300 },
+    ]);
+  });
+
+  // RED (before E2): store.updateDraftLine is undefined → TypeError.
+  it('S2 — updateDraftLine emits ONLY the changed field in computeDiff().pricingLines', async () => {
+    const store = await getStore();
+    store.getState().setProductionConfig(makeProductionConfig());
+    store.getState().updateDraftLine('kitchen', { baseConfidence: 'low' });
+    expect(store.getState().computeDiff().pricingLines).toEqual([
+      { id: 'kitchen', baseConfidence: 'low' },
+    ]);
+  });
+
+  // RED (before E2): computeDiff never returns a pricingRates key.
+  it('S3 — reverting a rate field to its production value drops the pricingRates key entirely', async () => {
+    const store = await getStore();
+    store.getState().setProductionConfig(makeProductionConfig());
+    store.getState().updateDraftRate('KIT', { costPerSqm: 1300 });
+    expect(store.getState().computeDiff().pricingRates).toHaveLength(1);
+    // Set it back to the production value → no change remains.
+    store.getState().updateDraftRate('KIT', { costPerSqm: 1200 });
+    const diff = store.getState().computeDiff();
+    // Convention matches the other sections: the key is ABSENT, not [].
+    expect('pricingRates' in diff).toBe(false);
+    expect(diff.pricingRates).toBeUndefined();
+    expect(store.getState().hasUnsavedChanges).toBe(false);
+  });
+
+  // RED (before E2): pricing edits can't be made, so nothing to clear.
+  it('S4 — resetDrafts clears pricing edits (draft equals production again)', async () => {
+    const store = await getStore();
+    store.getState().setProductionConfig(makeProductionConfig());
+    store.getState().updateDraftRate('KIT', { costPerSqm: 9999 });
+    store.getState().updateDraftLine('kitchen', { baseConfidence: 'low' });
+    expect(store.getState().hasUnsavedChanges).toBe(true);
+    store.getState().resetDrafts();
+    const state = store.getState();
+    expect(state.hasUnsavedChanges).toBe(false);
+    expect(state.draftConfig?.pricingRates[0]!.costPerSqm).toBe(1200);
+    expect(state.draftConfig?.pricingLines[0]!.baseConfidence).toBe('high');
   });
 });

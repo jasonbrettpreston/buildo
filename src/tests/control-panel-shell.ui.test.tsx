@@ -62,6 +62,9 @@ vi.mock('@/features/admin-controls/components/TradeGrid', () => ({
 vi.mock('@/features/admin-controls/components/IntensityMatrix', () => ({
   IntensityMatrix: () => <div data-testid="intensity-matrix" />,
 }));
+vi.mock('@/features/admin-controls/components/PricingCard', () => ({
+  PricingCard: () => <div data-testid="pricing-card" />,
+}));
 vi.mock('@/features/admin-controls/components/ConfirmSyncModal', () => ({
   ConfirmSyncModal: ({
     open,
@@ -100,9 +103,13 @@ const makeConfig = (): MarketplaceConfig => ({
   logicVariables: [{ key: 'los_base_divisor', value: 10000, jsonValue: null, description: null, updatedAt: '' }],
   tradeConfigs: [],
   scopeMatrix: [],
-  // Batch-2 row 2.5 fixture-only (Spec 88 §2.3 / Spec 124 R-AU).
-  pricingRates: [],
-  pricingLines: [],
+  // Batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU): 1 rate + 1 line.
+  pricingRates: [
+    { archetype: 'KIT', costPerSqm: 1200, costAdjustmentFactor: 1.0, escalationIndexBase: 1.05, source: 'seed', asOfDate: '2026-01-01' },
+  ],
+  pricingLines: [
+    { id: 'kitchen', archetype: 'KIT', baseConfidence: 'high', fitPermittedValues: ['as_of_right'] },
+  ],
 });
 
 const makeStore = () => ({
@@ -190,5 +197,17 @@ describe('ControlPanelShell — handleConfirm error-state differentiation', () =
     // Warning toast (not error) must fire
     expect(mockToastWarning).toHaveBeenCalledWith(expect.stringContaining('Saved'));
     expect(mockToastError).not.toHaveBeenCalled();
+  });
+
+  // SH1 — batch-2 row 2.5 E2 (Spec 88 §2.3 / Spec 124 R-AU): the shell exposes
+  // the pricing surface alongside the existing sections. RED (before E2): no
+  // "Pricing Data" tab exists.
+  it('SH1 — renders the Pricing Data section heading alongside the existing ones', async () => {
+    const { ControlPanelShell } = await import('@/features/admin-controls/components/ControlPanelShell');
+    render(<ControlPanelShell />);
+    expect(screen.getByRole('button', { name: /Platform Variables/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Trade Configurations/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Scope Matrix/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Pricing Data/i })).toBeDefined();
   });
 });

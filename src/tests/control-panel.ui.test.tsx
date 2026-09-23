@@ -30,6 +30,8 @@ const makeDefaultStore = () => ({
   updateDraftLogicVar: vi.fn(),
   updateDraftTradeConfig: vi.fn(),
   updateDraftScopeCell: vi.fn(),
+  updateDraftRate: vi.fn(),
+  updateDraftLine: vi.fn(),
   resetDrafts: vi.fn(),
   commitDrafts: vi.fn(),
   computeDiff: vi.fn(() => ({})),
@@ -209,6 +211,95 @@ describe('GlobalConfigCard — lifecycle_seq_band_* renders through ONE path onl
     expect(container.querySelectorAll('section').length).toBe(0);
     expect(screen.queryByText('Lifecycle Seq Bands')).toBeNull();
     expect(container.querySelectorAll('label').length).toBe(0);
+  });
+});
+
+// ─── PricingCard — batch-2 row 2.5 E2 (Spec 88 §2.3 / Spec 124 R-AU) ──────────
+// Every cell edit must route through the store mutators so the SINGLE apply
+// flow observes it; the card owns no second apply surface.
+describe('PricingCard — rates + lines grids', () => {
+  beforeEach(() => {
+    mockStoreState = makeDefaultStore();
+  });
+
+  const makeRates = () =>
+    Array.from({ length: 12 }, (_, i) => ({
+      archetype: `ARCH_${i}`,
+      costPerSqm: 1000 + i,
+      costAdjustmentFactor: 1.0,
+      escalationIndexBase: 1.0,
+      source: 'seed',
+      asOfDate: '2026-01-01',
+    }));
+
+  const makeLines = () =>
+    Array.from({ length: 13 }, (_, i) => ({
+      id: `line_${i}`,
+      archetype: `ARCH_${i}`,
+      baseConfidence: 'high' as const,
+      // Make ONE line a fit line so U4 can exercise both branches.
+      fitPermittedValues: i === 0 ? ['as_of_right'] : null,
+    }));
+
+  // RED (before E2): no PricingCard module exists.
+  it('U1 — renders 12 rate rows and 13 line rows', async () => {
+    const { PricingCard } = await import('@/features/admin-controls/components/PricingCard');
+    render(<PricingCard rates={makeRates()} lines={makeLines()} />);
+    // Rate rows: one archetype cell per rate.
+    expect(screen.getAllByText(/^ARCH_\d+$/).length).toBeGreaterThanOrEqual(12);
+    // Line rows: one id cell per line (rendered in a <span class="font-mono">).
+    const { container } = render(<PricingCard rates={makeRates()} lines={makeLines()} />);
+    const lineIds = Array.from(container.querySelectorAll('tbody tr'))
+      .flatMap((tr) => Array.from(tr.querySelectorAll('td span.font-mono')))
+      .map((el) => el.textContent ?? '')
+      .filter((t) => /^line_\d+$/.test(t));
+    expect(new Set(lineIds).size).toBe(13);
+  });
+
+  // RED (before E2): no costPerSqm input exists.
+  it('U2 — changing a costPerSqm input calls updateDraftRate(archetype, { costPerSqm })', async () => {
+    const { PricingCard } = await import('@/features/admin-controls/components/PricingCard');
+    render(<PricingCard rates={makeRates()} lines={makeLines()} />);
+    // KIT-named archetype: use a distinct fixture whose first rate is KIT.
+    const rates = makeRates();
+    rates[0]!.archetype = 'KIT';
+    const { container } = render(<PricingCard rates={rates} lines={makeLines()} />);
+    const input = container.querySelector('input[aria-label="KIT $/m²"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    fireEvent.change(input, { target: { value: '1300' } });
+    expect(mockStoreState.updateDraftRate).toHaveBeenCalledWith('KIT', { costPerSqm: 1300 });
+  });
+
+  // RED (before E2): no archetype select exists on line rows.
+  it('U3 — the archetype select offers exactly the fixture rate keys and routes changes', async () => {
+    const { PricingCard } = await import('@/features/admin-controls/components/PricingCard');
+    const rates = makeRates();
+    const lines = makeLines();
+    const { container } = render(<PricingCard rates={rates} lines={lines} />);
+    const select = container.querySelector('select[aria-label="line_0 Archetype"]') as HTMLSelectElement;
+    expect(select).not.toBeNull();
+    const optionValues = Array.from(select.querySelectorAll('option')).map((o) => o.value);
+    expect(optionValues.sort()).toEqual(rates.map((r) => r.archetype).sort());
+    fireEvent.change(select, { target: { value: 'ARCH_5' } });
+    expect(mockStoreState.updateDraftLine).toHaveBeenCalledWith('line_0', { archetype: 'ARCH_5' });
+  });
+
+  // RED (before E2): no fit-values cell exists.
+  it('U4 — a null-fit line renders a read-only cell; a fit line renders an input that parses vocabulary', async () => {
+    const { PricingCard } = await import('@/features/admin-controls/components/PricingCard');
+    const { container } = render(<PricingCard rates={makeRates()} lines={makeLines()} />);
+    // line_0 is the fit line → input present.
+    const fitInput = container.querySelector('input[aria-label="line_0 Fit values"]') as HTMLInputElement;
+    expect(fitInput).not.toBeNull();
+    // line_1 is null-fit → no input, shows the em-dash read-only marker.
+    expect(container.querySelector('input[aria-label="line_1 Fit values"]')).toBeNull();
+    const readOnly = container.querySelector('[aria-label="line_1 Fit values"]');
+    expect(readOnly?.textContent).toBe('—');
+    // Editing the fit input parses trimmed, non-empty tokens only.
+    fireEvent.change(fitInput, { target: { value: '  as_of_right , ,x  ' } });
+    expect(mockStoreState.updateDraftLine).toHaveBeenCalledWith('line_0', {
+      fitPermittedValues: ['as_of_right', 'x'],
+    });
   });
 });
 

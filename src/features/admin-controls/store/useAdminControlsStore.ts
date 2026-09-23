@@ -14,6 +14,8 @@ import type {
   LogicVariableRow,
   TradeConfigRow,
   ScopeMatrixRow,
+  PricingRateRow,
+  PricingLineRow,
   ConfigUpdatePayload,
 } from '@/lib/admin/control-panel';
 
@@ -34,6 +36,10 @@ interface AdminControlsState {
   updateDraftLogicVar: (key: string, value: number | null, jsonValue?: Record<string, number> | null) => void;
   updateDraftTradeConfig: (tradeSlug: string, patch: Partial<Omit<TradeConfigRow, 'tradeSlug'>>) => void;
   updateDraftScopeCell: (permitType: string, structureType: string, gfaAllocationPercentage: number) => void;
+  /** Batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU): pricing rate table draft edits. */
+  updateDraftRate: (archetype: string, patch: Partial<Omit<PricingRateRow, 'archetype'>>) => void;
+  /** Batch-2 row 2.5 (Spec 88 §2.3): parcel_cost_lines editable-half draft edits. */
+  updateDraftLine: (id: string, patch: Partial<Omit<PricingLineRow, 'id'>>) => void;
   resetDrafts: () => void;
   commitDrafts: () => void;
   resetStore: () => void;
@@ -138,6 +144,40 @@ export const useAdminControlsStore = create<AdminControlsState>((set, get) => ({
     });
   },
 
+  updateDraftRate(archetype: string, patch: Partial<Omit<PricingRateRow, 'archetype'>>) {
+    set((state) => {
+      if (!state.draftConfig) return {};
+      const draft = deepClone(state.draftConfig);
+      const idx = draft.pricingRates.findIndex((r: PricingRateRow) => r.archetype === archetype);
+      if (idx !== -1) {
+        // SAFETY: idx checked above; spread preserves the required archetype PK
+        const existing = draft.pricingRates[idx]!;
+        draft.pricingRates[idx] = { ...existing, ...patch } as PricingRateRow;
+      }
+      return {
+        draftConfig: draft,
+        hasUnsavedChanges: JSON.stringify(draft) !== JSON.stringify(state.productionConfig),
+      };
+    });
+  },
+
+  updateDraftLine(id: string, patch: Partial<Omit<PricingLineRow, 'id'>>) {
+    set((state) => {
+      if (!state.draftConfig) return {};
+      const draft = deepClone(state.draftConfig);
+      const idx = draft.pricingLines.findIndex((l: PricingLineRow) => l.id === id);
+      if (idx !== -1) {
+        // SAFETY: idx checked above; spread preserves the required id PK
+        const existing = draft.pricingLines[idx]!;
+        draft.pricingLines[idx] = { ...existing, ...patch } as PricingLineRow;
+      }
+      return {
+        draftConfig: draft,
+        hasUnsavedChanges: JSON.stringify(draft) !== JSON.stringify(state.productionConfig),
+      };
+    });
+  },
+
   resetDrafts() {
     const { productionConfig } = get();
     set({
@@ -212,6 +252,67 @@ export const useAdminControlsStore = create<AdminControlsState>((set, get) => ({
     });
     if (changedCells.length > 0) {
       diff.scopeMatrix = changedCells;
+    }
+
+    // Pricing rates diff — batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU).
+    // Built like scopeMatrix's, but the emitted row carries ONLY the key plus
+    // the fields that actually differ, so the API's IS DISTINCT FROM lists stay
+    // minimal and no non-editable/structural field can leak into the payload.
+    const changedRates = draftConfig.pricingRates
+      .map((draftRate: PricingRateRow) => {
+        const prod = productionConfig.pricingRates.find(
+          (r: PricingRateRow) => r.archetype === draftRate.archetype,
+        );
+        const patch: NonNullable<ConfigUpdatePayload['pricingRates']>[number] = {
+          archetype: draftRate.archetype,
+        };
+        let changed = !prod;
+        if (!prod || prod.costPerSqm !== draftRate.costPerSqm) {
+          patch.costPerSqm = draftRate.costPerSqm; changed = true;
+        }
+        if (!prod || prod.costAdjustmentFactor !== draftRate.costAdjustmentFactor) {
+          patch.costAdjustmentFactor = draftRate.costAdjustmentFactor; changed = true;
+        }
+        if (!prod || prod.escalationIndexBase !== draftRate.escalationIndexBase) {
+          patch.escalationIndexBase = draftRate.escalationIndexBase; changed = true;
+        }
+        if (!prod || prod.source !== draftRate.source) {
+          patch.source = draftRate.source; changed = true;
+        }
+        if (!prod || prod.asOfDate !== draftRate.asOfDate) {
+          patch.asOfDate = draftRate.asOfDate; changed = true;
+        }
+        return changed ? patch : null;
+      })
+      .filter((p): p is NonNullable<ConfigUpdatePayload['pricingRates']>[number] => p !== null);
+    if (changedRates.length > 0) {
+      diff.pricingRates = changedRates;
+    }
+
+    // Pricing lines diff — same shape, keyed by id.
+    const changedLines = draftConfig.pricingLines
+      .map((draftLine: PricingLineRow) => {
+        const prod = productionConfig.pricingLines.find(
+          (l: PricingLineRow) => l.id === draftLine.id,
+        );
+        const patch: NonNullable<ConfigUpdatePayload['pricingLines']>[number] = {
+          id: draftLine.id,
+        };
+        let changed = !prod;
+        if (!prod || prod.archetype !== draftLine.archetype) {
+          patch.archetype = draftLine.archetype; changed = true;
+        }
+        if (!prod || prod.baseConfidence !== draftLine.baseConfidence) {
+          patch.baseConfidence = draftLine.baseConfidence; changed = true;
+        }
+        if (!prod || JSON.stringify(prod.fitPermittedValues) !== JSON.stringify(draftLine.fitPermittedValues)) {
+          patch.fitPermittedValues = draftLine.fitPermittedValues; changed = true;
+        }
+        return changed ? patch : null;
+      })
+      .filter((p): p is NonNullable<ConfigUpdatePayload['pricingLines']>[number] => p !== null);
+    if (changedLines.length > 0) {
+      diff.pricingLines = changedLines;
     }
 
     return diff;

@@ -23,11 +23,12 @@ import { useTriggerPipeline } from '../api/useTriggerPipeline';
 import { GlobalConfigCard } from './GlobalConfigCard';
 import { TradeGrid } from './TradeGrid';
 import { IntensityMatrix } from './IntensityMatrix';
+import { PricingCard } from './PricingCard';
 import { ConfirmSyncModal } from './ConfirmSyncModal';
 import { StickyActionBar } from './StickyActionBar';
 import { captureAdminEvent } from '../lib/telemetry';
 
-type Tab = 'variables' | 'trades' | 'matrix';
+type Tab = 'variables' | 'trades' | 'matrix' | 'pricing';
 
 export function ControlPanelShell() {
   const [activeTab, setActiveTab] = useState<Tab>('variables');
@@ -112,6 +113,7 @@ export function ControlPanelShell() {
     { id: 'variables', label: 'Platform Variables' },
     { id: 'trades',    label: 'Trade Configurations' },
     { id: 'matrix',    label: 'Scope Matrix' },
+    { id: 'pricing',   label: 'Pricing Data' },
   ];
 
   return (
@@ -147,6 +149,14 @@ export function ControlPanelShell() {
         )}
         {activeTab === 'matrix' && (
           <IntensityMatrix cells={draftConfig.scopeMatrix} />
+        )}
+        {activeTab === 'pricing' && (
+          <section aria-label="Pricing Data">
+            <PricingCard
+              rates={draftConfig.pricingRates}
+              lines={draftConfig.pricingLines}
+            />
+          </section>
         )}
       </div>
 

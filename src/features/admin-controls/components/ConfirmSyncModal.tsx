@@ -19,7 +19,7 @@ interface ConfirmSyncModalProps {
   isPending?: boolean;
 }
 
-function formatValue(val: number | null | undefined): string {
+function formatValue(val: number | string | null | undefined): string {
   if (val === null || val === undefined) return '—';
   return String(val);
 }
@@ -37,7 +37,10 @@ export function ConfirmSyncModal({
   const changedVars = diff.logicVariables ?? [];
   const changedTrades = diff.tradeConfigs ?? [];
   const changedCells = diff.scopeMatrix ?? [];
-  const totalChanges = changedVars.length + changedTrades.length + changedCells.length;
+  const changedRates = diff.pricingRates ?? [];
+  const changedLines = diff.pricingLines ?? [];
+  const totalChanges = changedVars.length + changedTrades.length + changedCells.length
+    + changedRates.length + changedLines.length;
 
   return (
     // Backdrop — disabled during pending save to prevent race with in-flight PUT
@@ -149,6 +152,81 @@ export function ConfirmSyncModal({
                       <td className="py-1 text-xs font-medium text-blue-700">{formatValue(c.gfaAllocationPercentage)}</td>
                     </tr>
                   );
+                })}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {/* Pricing rates diff — batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU) */}
+        {changedRates.length > 0 && (
+          <section className="mb-4">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Cost Rates ({changedRates.length} rate{changedRates.length > 1 ? 's' : ''})
+            </h3>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
+                  <th className="pb-1 font-medium">Archetype</th>
+                  <th className="pb-1 font-medium">Field</th>
+                  <th className="pb-1 font-medium">Old</th>
+                  <th className="pb-1 font-medium">New</th>
+                </tr>
+              </thead>
+              <tbody>
+                {changedRates.map((r) => {
+                  const prod = productionConfig.pricingRates.find((p) => p.archetype === r.archetype);
+                  const fields = Object.entries(r).filter(([k]) => k !== 'archetype') as Array<[string, unknown]>;
+                  return fields.map(([field, newVal]) => (
+                    <tr key={`${r.archetype}:${field}`} className="border-b border-gray-50">
+                      <td className="py-1 font-mono text-xs text-gray-800">{r.archetype}</td>
+                      <td className="py-1 text-xs text-gray-500">{field}</td>
+                      <td className="py-1 text-xs text-gray-500">
+                        {formatValue(prod ? (prod as unknown as Record<string, number | null | undefined>)[field] : undefined)}
+                      </td>
+                      <td className="py-1 text-xs font-medium text-blue-700">
+                        {typeof newVal === 'string' || typeof newVal === 'number' || newVal === null || newVal === undefined
+                          ? formatValue(newVal as string | number | null | undefined)
+                          : JSON.stringify(newVal)}
+                      </td>                    </tr>
+                  ));
+                })}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {/* Pricing lines diff — batch-2 row 2.5 */}
+        {changedLines.length > 0 && (
+          <section className="mb-4">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Cost Lines ({changedLines.length} line{changedLines.length > 1 ? 's' : ''})
+            </h3>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
+                  <th className="pb-1 font-medium">Line</th>
+                  <th className="pb-1 font-medium">Field</th>
+                  <th className="pb-1 font-medium">Old</th>
+                  <th className="pb-1 font-medium">New</th>
+                </tr>
+              </thead>
+              <tbody>
+                {changedLines.map((l) => {
+                  const prod = productionConfig.pricingLines.find((p) => p.id === l.id);
+                  const fields = Object.entries(l).filter(([k]) => k !== 'id') as Array<[string, unknown]>;
+                  return fields.map(([field, newVal]) => (
+                    <tr key={`${l.id}:${field}`} className="border-b border-gray-50">
+                      <td className="py-1 font-mono text-xs text-gray-800">{l.id}</td>
+                      <td className="py-1 text-xs text-gray-500">{field}</td>
+                      <td className="py-1 text-xs text-gray-500">
+                        {prod
+                          ? JSON.stringify((prod as unknown as Record<string, unknown>)[field])
+                          : '—'}
+                      </td>
+                      <td className="py-1 text-xs font-medium text-blue-700">{JSON.stringify(newVal)}</td>
+                    </tr>
+                  ));
                 })}
               </tbody>
             </table>
