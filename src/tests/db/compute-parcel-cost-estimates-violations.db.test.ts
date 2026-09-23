@@ -97,6 +97,11 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
       const client: PoolClient = await pool.connect();
       try {
         await client.query('BEGIN');
+        // Migration 248 (row 2.5) added parcel_cost_lines.archetype REFERENCES
+        // archetype_cost_rates(archetype) with default RESTRICT — clear the referencing rows
+        // first, in the SAME rolled-back transaction, so this simulated emptiness still holds
+        // (both tables are restored on ROLLBACK; nothing outside this txn is mutated).
+        await client.query('DELETE FROM parcel_cost_lines');
         await client.query('DELETE FROM archetype_cost_rates');
         await expect(compute.readCostContract(client)).rejects.toThrow(/archetype_cost_rates is empty.*migration 205/i);
       } finally {

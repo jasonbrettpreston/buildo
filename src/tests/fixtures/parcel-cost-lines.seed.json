@@ -1,0 +1,89 @@
+[
+  {
+    "id": "max_build",
+    "archetype": "FB",
+    "base_confidence": "high",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "coa_build",
+    "archetype": "CoA",
+    "base_confidence": "high",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "solar_max",
+    "archetype": "SOLAR",
+    "base_confidence": "high",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "solar_coa",
+    "archetype": "SOLAR",
+    "base_confidence": "high",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "garden_suite",
+    "archetype": "LANE_GARDEN",
+    "base_confidence": "high",
+    "fit_permitted_values": [
+      "as_of_right",
+      "coa_required"
+    ]
+  },
+  {
+    "id": "laneway_suite",
+    "archetype": "LANE_LANEWAY",
+    "base_confidence": "high",
+    "fit_permitted_values": [
+      "as_of_right",
+      "coa_required"
+    ]
+  },
+  {
+    "id": "kitchen",
+    "archetype": "KIT",
+    "base_confidence": "medium",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "bath",
+    "archetype": "BTH",
+    "base_confidence": "medium",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "garage",
+    "archetype": "GAR",
+    "base_confidence": "high",
+    "fit_permitted_values": [
+      "as_of_right",
+      "coa_required"
+    ]
+  },
+  {
+    "id": "basement_underpin",
+    "archetype": "BAS_UNDERPIN",
+    "base_confidence": "medium",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "basement",
+    "archetype": "BAS",
+    "base_confidence": "medium",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "gut",
+    "archetype": "INT",
+    "base_confidence": "low",
+    "fit_permitted_values": null
+  },
+  {
+    "id": "addition",
+    "archetype": "ADD",
+    "base_confidence": "medium",
+    "fit_permitted_values": null
+  }
+]
