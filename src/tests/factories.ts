@@ -674,7 +674,13 @@ export function createMockWsibRegistryEntry(
 
 // ─── Control Panel factories (Spec 86) ─────────────────────────────────────────
 
-import type { LogicVariableRow, TradeConfigRow, ScopeMatrixRow } from '@/lib/admin/control-panel';
+import type {
+  LogicVariableRow,
+  TradeConfigRow,
+  ScopeMatrixRow,
+  PricingRateRow,
+  PricingLineRow,
+} from '@/lib/admin/control-panel';
 
 export function makeLogicVariable(overrides: Partial<LogicVariableRow> = {}): LogicVariableRow {
   return {
@@ -707,6 +713,29 @@ export function makeScopeMatrixCell(overrides: Partial<ScopeMatrixRow> = {}): Sc
     permitType: 'new building',
     structureType: 'sfd',
     gfaAllocationPercentage: 1.0,
+    ...overrides,
+  };
+}
+
+// Batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU) — the two pricing sections.
+export function makePricingRate(overrides: Partial<PricingRateRow> = {}): PricingRateRow {
+  return {
+    archetype: 'KIT',
+    costPerSqm: 1250,
+    costAdjustmentFactor: 1.05,
+    escalationIndexBase: 1.1,
+    source: 'RSMeans 2026',
+    asOfDate: '2026-01-01',
+    ...overrides,
+  };
+}
+
+export function makePricingLine(overrides: Partial<PricingLineRow> = {}): PricingLineRow {
+  return {
+    id: 'kitchen',
+    archetype: 'KIT',
+    baseConfidence: 'high',
+    fitPermittedValues: null,
     ...overrides,
   };
 }

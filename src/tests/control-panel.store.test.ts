@@ -1,4 +1,6 @@
 // SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 2
+//            docs/specs/01-pipeline/88_parcel_cost_model.md §2.3
+//            docs/specs/01-pipeline/124_step_standard_policy.md (R-AU)
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { MarketplaceConfig, LogicVariableRow, TradeConfigRow, ScopeMatrixRow } from '@/lib/admin/control-panel';
 
@@ -25,6 +27,10 @@ function makeProductionConfig(): MarketplaceConfig {
     scopeMatrix: [
       { permitType: 'new building', structureType: 'sfd', gfaAllocationPercentage: 1.0 },
     ],
+    // Batch-2 row 2.5 (Spec 88 §2.3, Spec 124 R-AU) — fixture only; no UI
+    // behaviour is asserted against these here (brief E2 owns that).
+    pricingRates: [],
+    pricingLines: [],
   };
 }
 

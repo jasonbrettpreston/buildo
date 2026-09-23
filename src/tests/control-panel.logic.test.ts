@@ -1,4 +1,6 @@
 // SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5
+//            docs/specs/01-pipeline/88_parcel_cost_model.md §2.3
+//            docs/specs/01-pipeline/124_step_standard_policy.md (R-AU)
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -9,6 +11,10 @@ import {
   LogicVariableUpdateSchema,
   TradeConfigUpdateSchema,
   ScopeMatrixUpdateSchema,
+  PricingRateUpdateSchema,
+  PricingLineUpdateSchema,
+  PRICING_RATE_FIELDS,
+  PRICING_LINE_FIELDS,
 } from '@/lib/admin/control-panel';
 import { GROUPS, JSON_KEYS } from '@/features/admin-controls/components/GlobalConfigCard';
 
@@ -695,5 +701,111 @@ describe('ConfigUpdatePayloadSchema', () => {
       tradeConfigs: [{ tradeSlug: '', multiplierBid: 3.0 }],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §5 pricing sections — batch-2 row 2.5 (Spec 88 §2.3, Spec 124 R-AU)
+//
+// The payload's two pricing sections carry .strict() patch schemas. That is
+// deliberate and ONLY on these two: `parcel_cost_lines` has a STRUCTURAL half
+// (`areaField`, `scalar`, `scalarKind`, `fitField`, `isCoaLine`) that the admin
+// editor must not silently round-trip — a structural key arriving here is a bug
+// in the caller, and R-AU requires the API to REFUSE it with a 400 naming the
+// key rather than strip it (plan Fold A5). The other sections keep Zod's
+// default .strip() and are untouched.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PricingRateUpdateSchema / PricingLineUpdateSchema (.strict patches)', () => {
+  // L1 — RED today: neither schema exists and ConfigUpdatePayloadSchema strips
+  // unknown keys, so `safeParse({ pricingLines: [{ id, areaField }] })` SUCCEEDS.
+  it('L1: a structural line key (areaField) is REFUSED, and the issue names it', () => {
+    const lines = ConfigUpdatePayloadSchema.safeParse({
+      pricingLines: [{ id: 'kitchen', areaField: 'x' }],
+    });
+    expect(lines.success).toBe(false);
+    if (!lines.success) {
+      const issue = lines.error.issues[0]!;
+      expect(issue.code).toBe('unrecognized_keys');
+      // Zod reports unrecognized keys on the OBJECT path (it names the key in
+      // `keys`/`message`, not in the path), so the 400 the route builds from
+      // `firstIssue.path.join('.') + ': ' + message` reads `pricingLines.0:
+      // Unrecognized key: "areaField"` — the key IS named, to the caller.
+      expect(issue.path.join('.')).toBe('pricingLines.0');
+      expect(JSON.stringify(issue)).toContain('areaField');
+    }
+
+    const rates = ConfigUpdatePayloadSchema.safeParse({
+      pricingRates: [{ archetype: 'KIT', foo: 1 }],
+    });
+    expect(rates.success).toBe(false);
+    if (!rates.success) {
+      expect(rates.error.issues[0]!.path.join('.')).toBe('pricingRates.0');
+      expect(JSON.stringify(rates.error.issues[0])).toContain('foo');
+    }
+  });
+
+  // L2 — the other direction: real patches parse.
+  it('L2: valid pricing patches parse on ConfigUpdatePayloadSchema', () => {
+    const result = ConfigUpdatePayloadSchema.safeParse({
+      pricingLines: [{ id: 'kitchen', baseConfidence: 'low' }],
+      pricingRates: [{ archetype: 'KIT', costPerSqm: 1200 }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.pricingRates).toHaveLength(1);
+      expect(result.data.pricingLines).toHaveLength(1);
+    }
+  });
+
+  // L3 — value-level bounds, one per enum/regex/sign/array rule.
+  it('L3: rejects bad enum/negative/malformed-date/empty-array; accepts null fitPermittedValues', () => {
+    expect(PricingLineUpdateSchema.safeParse({ id: 'k', baseConfidence: 'urgent' }).success).toBe(false);
+    expect(PricingRateUpdateSchema.safeParse({ archetype: 'KIT', costPerSqm: -1 }).success).toBe(false);
+    expect(PricingRateUpdateSchema.safeParse({ archetype: 'KIT', asOfDate: '2026/01/01' }).success).toBe(false);
+    expect(PricingLineUpdateSchema.safeParse({
+      id: 'k',
+      fitPermittedValues: [],
+    }).success).toBe(false);
+    expect(PricingLineUpdateSchema.safeParse({
+      id: 'k',
+      fitPermittedValues: null,
+    }).success).toBe(true);
+    // The empty-array rule also holds through the payload schema.
+    expect(ConfigUpdatePayloadSchema.safeParse({
+      pricingLines: [{ id: 'k', fitPermittedValues: [] }],
+    }).success).toBe(false);
+  });
+
+  // L4 — the enumerated-column footgun, locked. A field added to the schema but
+  // not to the editable set (or vice versa) would make applyConfigUpdate write a
+  // column the payload never validated, or drop one silently.
+  it('L4: editable column sets are exact and map 1:1 onto the patch schema keys', () => {
+    expect(PRICING_RATE_FIELDS).toEqual([
+      'cost_per_sqm',
+      'cost_adjustment_factor',
+      'escalation_index_base',
+      'source',
+      'as_of_date',
+    ]);
+    expect(PRICING_LINE_FIELDS).toEqual([
+      'archetype',
+      'base_confidence',
+      'fit_permitted_values',
+    ]);
+
+    const camelToSnake = (s: string) => s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+
+    const rateKeys = Object.keys(PricingRateUpdateSchema.shape).filter((k) => k !== 'archetype');
+    // `archetype` is the rate PK, not an editable column — the guard says so.
+    expect(Object.keys(PricingRateUpdateSchema.shape)).toContain('archetype');
+    expect(rateKeys.map(camelToSnake).sort()).toEqual(
+      (PRICING_RATE_FIELDS as readonly string[]).filter((f) => f !== 'archetype').sort(),
+    );
+
+    const lineKeys = Object.keys(PricingLineUpdateSchema.shape).filter((k) => k !== 'id');
+    // `id` is the line PK, not an editable column.
+    expect(Object.keys(PricingLineUpdateSchema.shape)).toContain('id');
+    expect(lineKeys.map(camelToSnake).sort()).toEqual([...PRICING_LINE_FIELDS].sort());
   });
 });

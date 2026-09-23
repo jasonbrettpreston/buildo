@@ -53,11 +53,51 @@ export interface ScopeMatrixRow {
   gfaAllocationPercentage: number;
 }
 
+/**
+ * A single row from archetype_cost_rates (migration 205 shape).
+ *
+ * SPEC LINK: docs/specs/01-pipeline/88_parcel_cost_model.md §2.3
+ *            docs/specs/01-pipeline/124_step_standard_policy.md (R-AU)
+ * Batch-2 row 2.5 — the PRICING DATA admin surface R-AU names as INTERIM until
+ * this row lands. These are not scalar tunables (Rule 3 territory); they are a
+ * rate table, administered here and never as logic variables.
+ */
+export interface PricingRateRow {
+  archetype: string;
+  costPerSqm: number;
+  costAdjustmentFactor: number;
+  escalationIndexBase: number;
+  source: string | null;
+  /** YYYY-MM-DD (the table column is DATE; the loader formats it, never a Date). */
+  asOfDate: string;
+}
+
+/**
+ * A single row from parcel_cost_lines (migration 248, batch-2 row 2.5) — the
+ * editable half of the 13-line catalogue. The structural half (areaField,
+ * scalar, scalarKind, fitField, isCoaLine) is NOT admin-editable: it is code
+ * shape, not data, and PricingLineUpdateSchema refuses it outright.
+ */
+export interface PricingLineRow {
+  id: string;
+  archetype: string;
+  baseConfidence: 'high' | 'medium' | 'low';
+  fitPermittedValues: string[] | null;
+}
+
 /** Complete current state of all control-panel tables. */
 export interface MarketplaceConfig {
   logicVariables: LogicVariableRow[];
   tradeConfigs: TradeConfigRow[];
   scopeMatrix: ScopeMatrixRow[];
+  /**
+   * REQUIRED (batch-2 row 2.5): the loader always returns both pricing
+   * sections. Optional fields here would turn a missing SELECT into an
+   * undefined array at the UI, which is silently indistinguishable from an
+   * empty table — a missing READ must be loud, not hidden.
+   */
+  pricingRates: PricingRateRow[];
+  pricingLines: PricingLineRow[];
 }
 
 /** Partial diff payload for PUT /api/admin/control-panel/configs */
@@ -81,6 +121,20 @@ export interface ConfigUpdatePayload {
     structureComplexityFactor?: number;
   }>;
   scopeMatrix?: ScopeMatrixRow[];
+  pricingRates?: Array<{
+    archetype: string;
+    costPerSqm?: number;
+    costAdjustmentFactor?: number;
+    escalationIndexBase?: number;
+    source?: string | null;
+    asOfDate?: string;
+  }>;
+  pricingLines?: Array<{
+    id: string;
+    archetype?: string;
+    baseConfidence?: 'high' | 'medium' | 'low';
+    fitPermittedValues?: string[] | null;
+  }>;
 }
 
 /** GET /api/admin/control-panel/configs response shape */
@@ -137,11 +191,74 @@ export const ScopeMatrixUpdateSchema = z.object({
   gfaAllocationPercentage: z.number().finite().min(0.0001).max(1.0),
 });
 
+/**
+ * Validates a single archetype_cost_rates patch. `archetype` is the PK; every
+ * other field is an optional column edit.
+ *
+ * `.strict()` IS DELIBERATE — the ONLY two schemas in this module that set it
+ * (everything else keeps Zod's default `.strip()`). Spec 124 R-AU / plan
+ * Fold A5: pricing DATA is the one admin section whose payload carries a
+ * STRUCTURAL half (parcel_cost_lines' `areaField`/`scalar`/`scalarKind`/
+ * `fitField`/`isCoaLine`). A structural key arriving here is a caller bug, not
+ * a harmless extra — stripping it would silently accept an edit the operator
+ * believes landed. Refuse it (400 naming the key) instead. `as_of_date` is a
+ * DATE column: the wire form is a strict gregorian YYYY-MM-DD string, never a
+ * Date (a Date round-trips through toISOString with a time and silently
+ * shifts the zone).
+ */
+export const PricingRateUpdateSchema = z.object({
+  archetype: z.string().min(1),
+  costPerSqm: z.number().positive().optional(),
+  costAdjustmentFactor: z.number().positive().optional(),
+  escalationIndexBase: z.number().positive().optional(),
+  source: z.string().nullable().optional(),
+  asOfDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+}).strict();
+
+/**
+ * Validates a single parcel_cost_lines patch. `id` is the PK; the three
+ * editable columns are the whole admin surface. `.strict()` — see the R-AU /
+ * Fold A5 note on PricingRateUpdateSchema above. `fitPermittedValues: null`
+ * clears the column (NULL = the line takes no fit-permitted vocabulary); an
+ * EMPTY array is refused, because "no values" and "not constrained" are
+ * different facts and only one of them is representable in the column.
+ */
+export const PricingLineUpdateSchema = z.object({
+  id: z.string().min(1),
+  archetype: z.string().min(1).optional(),
+  baseConfidence: z.enum(['high', 'medium', 'low']).optional(),
+  fitPermittedValues: z.array(z.string().min(1)).min(1).nullable().optional(),
+}).strict();
+
+/**
+ * The editable column sets for the two pricing tables — SPEC LINK: Spec 88
+ * §2.3. Exported so `control-panel.logic.test.ts` (L4) can lock them 1:1
+ * against the patch schemas: a field present in the schema but absent here
+ * would build SQL for a column the payload never validated, and a column here
+ * but absent from the schema would be silently un-editable. Keep them in
+ * snake_case — these are COLUMN names, passed to the parameterised UPDATE.
+ */
+export const PRICING_RATE_FIELDS = [
+  'cost_per_sqm',
+  'cost_adjustment_factor',
+  'escalation_index_base',
+  'source',
+  'as_of_date',
+] as const;
+
+export const PRICING_LINE_FIELDS = [
+  'archetype',
+  'base_confidence',
+  'fit_permitted_values',
+] as const;
+
 /** Full PUT body schema. */
 export const ConfigUpdatePayloadSchema = z.object({
   logicVariables: z.array(LogicVariableUpdateSchema).optional(),
   tradeConfigs: z.array(TradeConfigUpdateSchema).optional(),
   scopeMatrix: z.array(ScopeMatrixUpdateSchema).optional(),
+  pricingRates: z.array(PricingRateUpdateSchema).optional(),
+  pricingLines: z.array(PricingLineUpdateSchema).optional(),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,7 +304,8 @@ export function deltaExceeds50pct(
 
 /**
  * Loads the complete current state of all control-panel tables.
- * Issues 3 SELECTs (logic_variables, trade_configurations + trade_sqft_rates JOIN, scope_intensity_matrix).
+ * Issues 5 SELECTs (logic_variables, trade_configurations + trade_sqft_rates JOIN,
+ * scope_intensity_matrix, archetype_cost_rates, parcel_cost_lines).
  *
  * @param pool - pg Pool instance (use src/lib/db/client.ts pool)
  */
@@ -270,7 +388,56 @@ export async function loadAllConfigs(pool: Pool): Promise<MarketplaceConfig> {
     gfaAllocationPercentage: parseFloat(r.gfa_allocation_percentage),
   }));
 
-  return { logicVariables, tradeConfigs, scopeMatrix };
+  // 4. archetype_cost_rates — the pricing rate table (Spec 88 §2.3, R-AU).
+  // NUMERICs are cast to float8 in the SELECT (never returned as strings the
+  // way allocation_pct is — a rate is read as a NUMBER by the cost model).
+  const { rows: acrRows } = await pool.query<{
+    archetype: string;
+    cost_per_sqm: number;
+    cost_adjustment_factor: number;
+    escalation_index_base: number;
+    source: string | null;
+    as_of_date: string;
+  }>(
+    `SELECT archetype,
+            cost_per_sqm::float8,
+            cost_adjustment_factor::float8,
+            escalation_index_base::float8,
+            source,
+            to_char(as_of_date, 'YYYY-MM-DD') AS as_of_date
+       FROM archetype_cost_rates
+      ORDER BY archetype`,
+  );
+
+  const pricingRates: PricingRateRow[] = acrRows.map((r) => ({
+    archetype: r.archetype,
+    costPerSqm: r.cost_per_sqm,
+    costAdjustmentFactor: r.cost_adjustment_factor,
+    escalationIndexBase: r.escalation_index_base,
+    source: r.source,
+    asOfDate: r.as_of_date,
+  }));
+
+  // 5. parcel_cost_lines — the editable half of the priced-line catalogue.
+  const { rows: pclRows } = await pool.query<{
+    id: string;
+    archetype: string;
+    base_confidence: 'high' | 'medium' | 'low';
+    fit_permitted_values: string[] | null;
+  }>(
+    `SELECT id, archetype, base_confidence, fit_permitted_values
+       FROM parcel_cost_lines
+      ORDER BY id`,
+  );
+
+  const pricingLines: PricingLineRow[] = pclRows.map((r) => ({
+    id: r.id,
+    archetype: r.archetype,
+    baseConfidence: r.base_confidence,
+    fitPermittedValues: r.fit_permitted_values ?? null,
+  }));
+
+  return { logicVariables, tradeConfigs, scopeMatrix, pricingRates, pricingLines };
 }
 
 /**
@@ -381,6 +548,61 @@ export async function applyConfigUpdate(
           [cell.permitType, cell.structureType, cell.gfaAllocationPercentage],
         );
         rowsUpdated += rowCount ?? 0;
+      }
+    }
+
+    // ── archetype_cost_rates updates (batch-2 row 2.5, Spec 88 §2.3) ──
+    // Same txn, same enumerated IS DISTINCT FROM guard as every other section.
+    // `updated_at` is bumped ONLY when the guard matches: a replayed identical
+    // PUT writes 0 rows and leaves as_of_date/updated_at freshness untouched
+    // (the cost model reads both — see spec 88 §2.3 stale-index checks).
+    // A patch carrying only its PK issues no statement at all.
+    if (payload.pricingRates?.length) {
+      for (const rate of payload.pricingRates) {
+        const rateFields: { col: string; val: unknown }[] = [];
+        if (rate.costPerSqm !== undefined) rateFields.push({ col: 'cost_per_sqm', val: rate.costPerSqm });
+        if (rate.costAdjustmentFactor !== undefined) rateFields.push({ col: 'cost_adjustment_factor', val: rate.costAdjustmentFactor });
+        if (rate.escalationIndexBase !== undefined) rateFields.push({ col: 'escalation_index_base', val: rate.escalationIndexBase });
+        if (rate.source !== undefined) rateFields.push({ col: 'source', val: rate.source });
+        if (rate.asOfDate !== undefined) rateFields.push({ col: 'as_of_date', val: rate.asOfDate });
+
+        if (rateFields.length > 0) {
+          const setClauses = rateFields.map((f, i) => `${f.col} = $${i + 2}`).join(', ');
+          const distinctClauses = rateFields.map((f, i) => `${f.col} IS DISTINCT FROM $${i + 2}`).join(' OR ');
+          const params = [rate.archetype, ...rateFields.map((f) => f.val)];
+          const { rowCount } = await client.query(
+            `UPDATE archetype_cost_rates
+                SET ${setClauses}, updated_at = now()
+              WHERE archetype = $1
+                AND (${distinctClauses})`,
+            params,
+          );
+          rowsUpdated += rowCount ?? 0;
+        }
+      }
+    }
+
+    // ── parcel_cost_lines updates (batch-2 row 2.5) ───────────────────
+    if (payload.pricingLines?.length) {
+      for (const line of payload.pricingLines) {
+        const lineFields: { col: string; val: unknown }[] = [];
+        if (line.archetype !== undefined) lineFields.push({ col: 'archetype', val: line.archetype });
+        if (line.baseConfidence !== undefined) lineFields.push({ col: 'base_confidence', val: line.baseConfidence });
+        if (line.fitPermittedValues !== undefined) lineFields.push({ col: 'fit_permitted_values', val: line.fitPermittedValues });
+
+        if (lineFields.length > 0) {
+          const setClauses = lineFields.map((f, i) => `${f.col} = $${i + 2}`).join(', ');
+          const distinctClauses = lineFields.map((f, i) => `${f.col} IS DISTINCT FROM $${i + 2}`).join(' OR ');
+          const params = [line.id, ...lineFields.map((f) => f.val)];
+          const { rowCount } = await client.query(
+            `UPDATE parcel_cost_lines
+                SET ${setClauses}, updated_at = now()
+              WHERE id = $1
+                AND (${distinctClauses})`,
+            params,
+          );
+          rowsUpdated += rowCount ?? 0;
+        }
       }
     }
 

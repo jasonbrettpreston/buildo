@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 // SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 4
+//            docs/specs/01-pipeline/88_parcel_cost_model.md §2.3
+//            docs/specs/01-pipeline/124_step_standard_policy.md (R-AU)
 //
 // ControlPanelShell error-state differentiation (P20, Spec 86 §5).
 // Two-phase handleConfirm contract:
@@ -98,6 +100,9 @@ const makeConfig = (): MarketplaceConfig => ({
   logicVariables: [{ key: 'los_base_divisor', value: 10000, jsonValue: null, description: null, updatedAt: '' }],
   tradeConfigs: [],
   scopeMatrix: [],
+  // Batch-2 row 2.5 fixture-only (Spec 88 §2.3 / Spec 124 R-AU).
+  pricingRates: [],
+  pricingLines: [],
 });
 
 const makeStore = () => ({

@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 // SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phases 3-6
+//            docs/specs/01-pipeline/88_parcel_cost_model.md §2.3
+//            docs/specs/01-pipeline/124_step_standard_policy.md (R-AU)
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
@@ -122,6 +124,9 @@ describe('ConfirmSyncModal — diff display', () => {
       ],
       tradeConfigs: [],
       scopeMatrix: [],
+      // Batch-2 row 2.5 fixture-only (Spec 88 §2.3 / Spec 124 R-AU).
+      pricingRates: [],
+      pricingLines: [],
     };
     render(
       <ConfirmSyncModal
