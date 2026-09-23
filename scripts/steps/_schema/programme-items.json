@@ -2237,9 +2237,9 @@
       "id": "B2-DRYRUN-SEAM",
       "spec": "124 R-AV",
       "title": "ENRICHER runner dry-run seam",
-      "promised": "runEnrichPhase honours overrides.dry_run (and a declarable row cap), so every converted ENRICHER’s dry_run declaration is revisited and compute_parcel_cost_estimates regains its legacy --dry-run/--limit capability",
-      "status": "NOT_STARTED",
-      "evidence": "Spec 124 R-AV (operator-adjudicated 2026-09-21) declares dry_run \"none\" an INTERIM state with this row as its named closing row. Measured 2026-09-21: runEnrichPhase reads overrides.dry_run at ZERO sites (only runLinkPhase/runLinkKeyedPhase/runCascadePhase do) while the shared audit assembly emits dryRunRow() whenever overrides.dry_run is truthy - so a declared-but-unhonoured dry_run would print dry_run_no_writes:true on a run that WROTE; --limit=N has no declarable home (override is additionalProperties:false). Both directions locked in src/tests/spec124-register-rulings.logic.test.ts. BATCH-2 WORK: a shared runner change with RV-D4-style both-direction locks, built after row 2.4 and BEFORE batch 2 closes",
+      "promised": "runEnrichPhase honours overrides.dry_run so a converted ENRICHER dry_run declaration can be revisited (compute_parcel_cost_estimates regains --dry-run only); a per-invocation row cap (--limit=N) is retired by standard (Spec 124 R-AZ), never given a schema home",
+      "status": "BUILT",
+      "evidence": "Dry-run half: 6551689a (2026-09-23, SUB-ENG-1 runs ac7c6ceb+e1e54e88) - runEnrichPhase gates both write regions on `const dryRun = overrides.dry_run === true`; T1-T3 in src/tests/step-library.logic.test.ts. Row-cap half: Spec 124 R-AZ (2026-09-23) - retired by standard after Rule 1 rung ladder (config var / execution.invocation / dry_run argv arm / phases[].scope all rejected; a new override.row_cap arm rejected on cost vs need: a capped run is a partial-population write with no truthful ledger form - readPriorRunMeta filters only status=completed). Register locks in src/tests/spec124-register-rulings.logic.test.ts. Still owed separately: the five ENRICHERs dry_run declaration revisits (review_followups 2026-09-23)",
       "owner": {
         "kind": "library-wf",
         "ref": "wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam"
@@ -2250,7 +2250,7 @@
           "enrich_centreline"
         ]
       },
-      "last_reviewed": "2026-09-21"
+      "last_reviewed": "2026-09-23"
     },
     {
       "id": "B2-OWNER-SPEC-DIFF",

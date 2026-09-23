@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §4.4 ("a rule without a lock is
-// not yet a rule") + §5 register rows R-AR, R-AR.1, R-AS, R-AU, R-AV
+// not yet a rule") + §5 register rows R-AR, R-AR.1, R-AS, R-AU, R-AV, R-AZ
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §4.4 (a checker ships a
 // fixture proving it fires)
 //
@@ -173,6 +173,56 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
       expect(Object.keys(obj.properties).sort()).toEqual(['accept_anomaly', 'dry_run', 'force_full', 'force_run']);
       // dry_run's argv arm is a bare flag pattern — it cannot carry "=N".
       expect(obj.properties.dry_run.anyOf.some((a: Descriptorish) => typeof a.pattern === 'string' && a.pattern.includes('--'))).toBe(true);
+    });
+  });
+
+  // 2026-09-23 — R-AZ closes R-AV's row-cap half by RETIRING the row cap, not by giving it a
+  // home. The lock therefore pins THREE things: the register row exists and R-AV's open clause is
+  // gone (spec text), the programme item flipped BUILT with the narrowed promise (registry), and
+  // the schema's override arm set is STILL exactly the four keys — proving no `row_cap` arm was
+  // invented after all (the R-AV lock above keeps asserting that; this block cites it). Each
+  // string predicate is proven in both directions on an in-memory mutant.
+  describe('R-AZ — a per-invocation row cap is NOT an override; retired by standard (2026-09-23)', () => {
+    const SPEC_124 = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '124_step_standard_policy.md');
+    const PROGRAMME_ITEMS = path.join(REPO_ROOT, 'scripts', 'steps', '_schema', 'programme-items.json');
+    const spec = fs.readFileSync(SPEC_124, 'utf8');
+
+    const registerRow = (text: string, id: string): string | null => {
+      const m = text.match(new RegExp(`^\\| ${id.replace('-', '\\-')} \\|[^\\n]*$`, 'm'));
+      return m ? m[0] : null;
+    };
+    const rAzClosesRowCap = (text: string): boolean => {
+      const az = registerRow(text, 'R-AZ');
+      const av = registerRow(text, 'R-AV');
+      if (!az || !av) return false;
+      return /RETIRED BY STANDARD/.test(az) && /CLOSED-RETIRED \(row-cap half\)/.test(av) && !/STILL OPEN \(row-cap half\)/.test(av);
+    };
+
+    it('Spec 124 §5 carries R-AZ and R-AV no longer reads "STILL OPEN (row-cap half)"', () => {
+      expect(rAzClosesRowCap(spec)).toBe(true);
+      // RED controls — one field off each way on an in-memory mutant.
+      expect(rAzClosesRowCap(spec.replace(/^\| R-AZ \|[^\n]*\n/m, ''))).toBe(false);
+      const reopened = spec.replace('CLOSED-RETIRED (row-cap half)', 'STILL OPEN (row-cap half)');
+      expect(reopened).not.toBe(spec);
+      expect(rAzClosesRowCap(reopened)).toBe(false);
+    });
+
+    it('programme item B2-DRYRUN-SEAM is BUILT and its promise no longer names a declarable row cap', () => {
+      const registry = readJson(PROGRAMME_ITEMS);
+      const list: Descriptorish[] = Array.isArray(registry) ? registry : (registry.items ?? Object.values(registry));
+      const item = list.find((i) => i && i.id === 'B2-DRYRUN-SEAM');
+      expect(item, 'B2-DRYRUN-SEAM present').toBeTruthy();
+      expect(item!.status).toBe('BUILT');
+      expect(item!.promised).not.toMatch(/declarable row cap/);
+      expect(item!.promised).toMatch(/R-AZ/);
+      expect(item!.evidence).toMatch(/6551689a/);
+      expect(item!.evidence).toMatch(/R-AZ/);
+    });
+
+    it('the schema override arm set is unchanged — no row_cap arm was invented (cites the R-AV lock)', () => {
+      const obj = schema.properties.override.anyOf.find((a: Descriptorish) => a.type === 'object');
+      expect(Object.keys(obj.properties)).not.toContain('row_cap');
+      expect(obj.additionalProperties).toBe(false);
     });
   });
 

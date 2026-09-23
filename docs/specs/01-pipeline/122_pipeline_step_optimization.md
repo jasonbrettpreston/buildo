@@ -583,7 +583,7 @@ Hard-fails on: a concern with **no** home · a concern with **two** homes · a h
 | 13 | **Own spec / contract pin** | `identity.spec_version` · `contract_version` | semver · int |
 | 14 | **Logic version pin** | `staleness.logic_version` | author override · `none` (the computed fingerprint governs) |
 | 15 | ⚠️ **Invocation pin (argv/env)** | `execution.invocation` | **NEW — see below** |
-| 16 | **Force override** | `override` | env var name · `none` |
+| 16 | **Force override** | `override` | env var name · `none` — **a per-invocation ROW CAP (`--limit=N`) is NOT an override and gets no arm here: retired by standard at conversion as a `deviations[]` entry (Spec 124 R-AZ, 2026-09-23; no schema change, hence no RE-FREEZE entry)** |
 | 17 | **Write discipline** | `outputs.write_discipline` | ~~the **13 measured classes**~~ — **CORRECTED 2026-09-10 (measured): 15 classes** (§1.4/§8.2 corrected 2026-09-09; this concern-table row missed it). Full text: §1.4 (see 122a §A3's §3.0b pointer for the historical "§3.0b" citation this row's own forward-reference never resolved to a real heading); ⛔ D and H banned |
 | 18 | **Retraction** | `outputs.retract` | `none` · `departed` · `all` |
 | 19 | **Invalidation** | `outputs.invalidates` | `[{table, column, when}]` · `none` — ⚠️ **required when `pending` keys on a lineage column** (#54) |

@@ -60,7 +60,7 @@ Both generators **self-test against a known-bad fixture and refuse to emit if th
 | **PH-4** risk class A/B/C → test intensity ••• / •• / • | **BATCH, once** | class per step | G4 |
 | **PH-0** boundary freeze — tables/columns written, audit rows, exit codes, stdout · ⚠️ **plus re-derive the step's `write_discipline` classes from the code (Spec 122 R5 — evidence base §3f mislabels 5 steps; verify per step, never trust the port)** | **PER STEP** | I/O surface doc | G0 |
 | **PH-3** intent ledger — `git log -S` every non-obvious constant | **PER STEP**, and ⚠️ **only for the top-right quadrant + anything with fence density > 0** | ledger + evidence | G3 |
-| **PH-5** seam map — DB, clock, network, argv/env | **PER STEP** | seam list | G5 |
+| **PH-5** seam map — DB, clock, network, argv/env (a legacy `--limit`/row-cap argv seam is RETIRED at conversion as a `deviations[]` entry per Spec 124 R-AZ, never mapped as a carried seam) | **PER STEP** | seam list | G5 |
 | **P6** behaviour classification — CONTRACT / INCIDENTAL / DEFECT | **PER STEP** | classification | G6 |
 | **PH-7** test design, then **prove red** | **PER STEP** | tests | G7 |
 | **PH-8** score and exit | **PER STEP** | gate score | G8 |
