@@ -2,6 +2,7 @@
 // SPEC LINK: docs/specs/01-pipeline/120_pipeline_step_runner.md §3.2b, §4.1
 // SPEC LINK: docs/specs/01-pipeline/48_pipeline_observability.md §3.6, §3.7
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AK, R-AV
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4 (write classes), §5.1 (no per-step escape hatches)
 //
 // S2-min — `pipeline.step(descriptor, compute)`, the minimal lifecycle library
 // the `assert_schema` pilot needs. The real proof of this library is the C1
@@ -4862,6 +4863,173 @@ describe('runEnrichPhase — override.dry_run seam (batch-2 row 2.6, Spec 124 R-
     expect(pool.sql.some((t) => /^\s*UPDATE fixture_a/i.test(t)), 'no declared arm ⇒ --dry-run on argv means nothing here').toBe(true);
     expect(res.written.e1!.updated).toBe(30);
     expect(res.written.e1!.rows_changed).toBe(30);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF3 batch-2 row 3.1, prerequisite 0a — the FIRST class-A INGESTOR
+// (`address_points`) found that `runIngestPhase` had never executed a `guarded_upsert`
+// plan. `write-class-disposition.json` lists only the link/keyed/compute executors for
+// class A, so the ingest path's `executeWrite` had only ever seen a class-B plan whose
+// `delete_sql` is a string — and it issued that statement unconditionally. A class-A plan
+// carries `delete_sql: null` (buildWritePlan maps `retract: "none"` to null, rather than a
+// statement "the runner remembers not to call"), so the first non-empty class-A run
+// reached `client.query(null, [keys])` and pg threw.
+//
+// The fix is on the RUNNER, gated on the plan's own `delete_sql` — the same premise
+// `retractionFires` reads — and NOT a `shouldSkipDelete` that returns true for class A:
+// that would be the per-step escape hatch Spec 122 §5.1 forbids (and would also mark
+// `delete_skipped_empty_guard`, conflating "nothing declared" with "guard fired").
+// All three arms are locked, so the fix cannot widen the guard's meaning either.
+// ---------------------------------------------------------------------------
+
+describe('executeWrite — class-A guarded_upsert issues NO departure DELETE (batch-2 row 3.1 prerequisite 0a, Spec 122 §1.4 / §5.1)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const write = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  /**
+   * The class-B plan the ingest runner has always seen: `load-ravines`' declared write.
+   * The class-A twin is DERIVED from it (never hand-built), so the two plans differ by
+   * exactly the two declared axes the classes are named for — `write_discipline.class`
+   * and `retract` — and by the `delete_sql: null` those axes generate.
+   */
+  const classBSpec = () => clone(LOAD_RAVINES.outputs.writes[0]) as {
+    write_discipline: { class: string; guard: string; guard_columns: string[] };
+    retract: string;
+    [k: string]: unknown;
+  };
+
+  /** The class-A twin: `guarded_upsert` + `retract: "none"`, guard unchanged. */
+  const classASpec = () => {
+    const s = classBSpec();
+    s.write_discipline.class = 'guarded_upsert';
+    s.retract = 'none';
+    // Kept from class B on purpose: class A is "no departure DELETE", NOT "no guard".
+    expect(s.write_discipline.guard).toBe('is_distinct_from');
+    expect(s.write_discipline.guard_columns).toEqual(['geom', 'source_dataset_version']);
+    return s;
+  };
+
+  /** Two rows of the shape `carried` has when it arrives from `validateGeometries`. */
+  const carried = [
+    { source_id: 101, geom: '\\\\x00' },
+    { source_id: 102, geom: '\\\\x00' },
+  ];
+
+  /**
+   * The fake pool these tests use: `fakePool` PLUS the two things pg guarantees and the
+   * default helper does not — a non-string statement is a `TypeError`, and an upsert
+   * `RETURNING (xmax = 0) AS is_insert` yields one row per bound row. Without the first,
+   * the class-A RED would be a silent no-op (`sql.push(null)` succeeds); without the
+   * second, `written.inserted` could not be derived from `is_insert` rows at all.
+   *
+   * @param inserted how many of the returned `RETURNING` rows report `is_insert: true`.
+   */
+  const writePool = (inserted: number) => {
+    const pool = fakePool();
+    const statement = async (text: string, values?: unknown[]) => {
+      if (typeof text !== 'string') throw new TypeError('sql must be a string');
+      pool.sql.push(text);
+      pool.params.push(values ?? []);
+      if (/^\s*INSERT INTO/i.test(text)) {
+        const rows = Math.max(1, (values ?? []).length / 4);
+        return { rows: Array.from({ length: rows }, (_, i) => ({ is_insert: i < inserted })) };
+      }
+      if (/^\s*DELETE/i.test(text)) return { rows: [], rowCount: 1 };
+      return { rows: [], rowCount: 0 };
+    };
+    // `query` is the SAME recording surface `connect()` hands out, so the default helper's
+    // `paramsOf`/`fakePool` type is satisfied without changing what `executeWrite` sees.
+    return { ...pool, connect: async () => ({ query: statement, release: () => {} }) };
+  };
+
+  const log = () => ({ warn: vi.fn(), info: vi.fn(), error: vi.fn() });
+
+  it('T1 — a class-A plan (delete_sql === null) issues the guarded upsert and NO departure DELETE (RED before the fix: rejects with TypeError("sql must be a string") from the null statement)', async () => {
+    const spec = classASpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    // The PREMISE, asserted first: class A generates no retraction statement at all.
+    expect(plan.delete_sql, 'retract "none" ⇒ no statement, rather than a statement the runner must remember not to call').toBeNull();
+    expect(plan.mechanic).toBe('guarded_upsert');
+
+    const pool = writePool(1);
+    const l = log();
+    // Pre-fix this awaited call rejects: TypeError('sql must be a string') — the same
+    // thing pg does when `client.query(null, …)` reaches it.
+    const written = await write.executeWrite(pool, {
+      plan,
+      writeSpec: spec,
+      carried,
+      columnValues: (row: Record<string, unknown>) => ({ ...row, source_dataset_version: 3, updated_at: 'now' }),
+      shouldSkipDelete: () => false,
+      log: l,
+      tag: 'load_ravines',
+    }) as { inserted: number; updated: number; deleted: number; rows_changed: number; delete_skipped_empty_guard: boolean };
+
+    // No DELETE, and — the real RED — no query call received a non-string statement.
+    expect(pool.sql.filter((s) => /^\s*DELETE/i.test(s)), 'class A has nothing to retract').toEqual([]);
+    expect(pool.sql.every((s) => typeof s === 'string'), 'a null statement would have thrown above; assert it never got that far').toBe(true);
+    // Both rows went through the guarded upsert (counted per the fake pool's is_insert rows).
+    expect(written.inserted + written.updated).toBe(2);
+    expect(written.inserted).toBe(1);
+    expect(written.updated).toBe(1);
+    expect(written.rows_changed).toBe(2);
+    // ARM 1 is silent and does not touch the guard's counter: "nothing declared" is not
+    // "the guard fired".
+    expect(written.deleted).toBe(0);
+    expect(written.delete_skipped_empty_guard).toBe(false);
+    expect(l.warn, 'ARM 1 must not warn — the guard warning would drown on every clean class-A run').not.toHaveBeenCalled();
+  });
+
+  it('T2 — the other direction: a class-B plan still issues exactly ONE departure DELETE with [loadedKeys] as its params', async () => {
+    const spec = classBSpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    expect(typeof plan.delete_sql, 'class B generates the scoped departure DELETE').toBe('string');
+    expect(plan.delete_sql).toMatch(/^\s*DELETE FROM ravines/i);
+
+    const pool = writePool(2);
+    const written = await write.executeWrite(pool, {
+      plan,
+      writeSpec: spec,
+      carried,
+      columnValues: (row: Record<string, unknown>) => ({ ...row, source_dataset_version: 3, updated_at: 'now' }),
+      shouldSkipDelete: () => false,
+      log: log(),
+      tag: 'load_ravines',
+    }) as { inserted: number; updated: number; deleted: number; delete_skipped_empty_guard: boolean };
+
+    const deletes = pool.sql.filter((s) => /^\s*DELETE/i.test(s));
+    expect(deletes, 'exactly one departure DELETE').toHaveLength(1);
+    // The DELETE binds the keys this run just wrote — the retraction is scoped to the run.
+    expect(paramsOf(pool, (s) => /^\s*DELETE/i.test(s))).toEqual([[101, 102]]);
+    // ...and `deleted` is the statement's rowCount, not a constant.
+    expect(written.deleted).toBe(1);
+    expect(written.inserted + written.updated).toBe(2);
+    expect(written.delete_skipped_empty_guard).toBe(false);
+  });
+
+  it('T3 — the empty-set guard still suppresses a class-B DELETE, and still warns exactly once (pinned so ARM 1 cannot widen it)', async () => {
+    const spec = classBSpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    const pool = writePool(2);
+    const l = log();
+    const written = await write.executeWrite(pool, {
+      plan,
+      writeSpec: spec,
+      carried,
+      columnValues: (row: Record<string, unknown>) => ({ ...row, source_dataset_version: 3, updated_at: 'now' }),
+      shouldSkipDelete: () => true,
+      log: l,
+      tag: 'load_ravines',
+    }) as { inserted: number; updated: number; deleted: number; delete_skipped_empty_guard: boolean };
+
+    expect(pool.sql.filter((s) => /^\s*DELETE/i.test(s))).toEqual([]);
+    expect(written.deleted).toBe(0);
+    // The upsert half is untouched — only the retraction is suppressed.
+    expect(written.inserted + written.updated).toBe(2);
+    expect(written.delete_skipped_empty_guard).toBe(true);
+    expect(l.warn).toHaveBeenCalledTimes(1);
+    expect(l.warn).toHaveBeenCalledWith('load_ravines', expect.stringMatching(/empty-set guard: the scoped departure DELETE was suppressed/));
   });
 });
 

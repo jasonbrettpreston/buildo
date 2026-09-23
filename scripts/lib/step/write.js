@@ -689,8 +689,17 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
 }
 
 /**
- * Execute the class-B write: guarded upsert then scoped departure DELETE, in ONE
- * transaction (`write_discipline.txn_scope: "step"`).
+ * Execute a declared write — class A (`guarded_upsert`) or class B
+ * (`upsert_scoped_departure_delete`) — in ONE transaction
+ * (`write_discipline.txn_scope: "step"`).
+ *
+ * The retraction half is gated on `plan.delete_sql`, the SAME premise
+ * `retractionFires` reads: a class-A plan (`retract: "none"`) carries
+ * `delete_sql: null`, so there is nothing to retract and the runner must not
+ * issue `client.query(null, …)`. The gate lives HERE, on the runner, and not in
+ * the caller's `shouldSkipDelete` — a per-caller predicate that returned true for
+ * class A would be a per-step escape hatch (Spec 122 §5.1) rather than a
+ * property of the declared write class (Spec 122 §1.4).
  *
  * @returns {Promise<object>} the `ctx.written` block — the counters every
  *   write-discipline check reads, including `rows_scanned` / `rows_changed`.
@@ -716,9 +725,18 @@ async function executeWrite(pool, {
       inserted += ins;
       updated += result.rows.length - ins;
     }
-    // retract: departed — and the empty-set guard, because `<> ALL('{}')` matches
-    // every row and would retract the entire table on an empty parse.
-    if (shouldSkipDelete(loadedKeys)) {
+    // Three-way gate. ARM 1 — class A (`retract: "none"`): the plan carries NO
+    // `delete_sql`, so there is nothing to retract: no statement, no warn, and
+    // `deleted` stays 0. `<> ALL('{}')`-style bugs cannot reach here because there
+    // is no statement to bind. Before this arm the ingest runner reached
+    // `client.query(null, [keys])` on every non-empty class-A run.
+    // ARM 2 — the empty-set guard, because `<> ALL('{}')` matches every row and
+    // would retract the entire table on an empty parse.
+    // ARM 3 — retract: departed — the scoped departure DELETE.
+    if (!plan.delete_sql) {
+      // Class A: no retraction declared. Nothing to do — deliberately silent: a
+      // warn here would fire on every clean class-A run and drown the guard's.
+    } else if (shouldSkipDelete(loadedKeys)) {
       deleteSkippedEmptyGuard = true;
       log.warn(tag, 'empty-set guard: the scoped departure DELETE was suppressed');
     } else {
