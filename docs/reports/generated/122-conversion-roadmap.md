@@ -29,15 +29,15 @@ Remaining files: **45** (+ **0** pending) · remaining slugs: **47** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); CLOUD-PRE (enrich_centreline); B2-PRICING-ADMIN (enrich_centreline); B2-DRYRUN-SEAM (enrich_centreline); B2-OWNER-SPEC-DIFF (enrich_centreline) |
-| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | CLOUD-PRE (address_points); SEAM-CHAIN-1 (address_points) |
-| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | CLOUD-PRE (load_centreline) |
-| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | CLOUD-PRE (load_heritage) |
-| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | CLOUD-PRE (load_zoning) |
-| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | CLOUD-PRE (massing) |
-| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | CLOUD-PRE (neighbourhoods) |
-| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | CLOUD-PRE (parcels) |
-| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | CLOUD-PRE (load_wsib) |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); B2-OWNER-SPEC-DIFF (enrich_centreline) |
+| INGESTOR | `scripts/load-address-points.js` | address_points | sources (1) | top-left | — | — |
+| INGESTOR | `scripts/load-centreline.js` | load_centreline | sources (1) | top-left | — | — |
+| INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |
+| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
+| INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | — |
+| INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
+| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
+| INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
