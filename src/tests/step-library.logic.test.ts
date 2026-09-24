@@ -6108,9 +6108,11 @@ describe('runIngestPhase honours write_discipline.set_source:"compute" — compu
 // THEN NULL ELSE parcels.<stamp> END arms (DEC-FENCE2, #418). T5 reproduces it from
 // the two declared axes alone.
 //
-// The default-codegen path for BOTH already-converted INGESTORs (load_ravines,
-// address_points) is BYTE-IDENTICAL when neither axis is declared: T3 pins both
-// current `upsertSqlFor(1)` outputs verbatim.
+// The default-codegen path for load_ravines is BYTE-IDENTICAL to the pre-AP-D7
+// address_points shape when neither axis is declared: T3 pins load_ravines' current
+// `upsertSqlFor(1)` output verbatim. address_points now declares the on_empty axis
+// (AP-D7) and its own pin lives in
+// src/tests/steps/address_points/post-conversion-fixes.logic.test.ts.
 // ---------------------------------------------------------------------------
 
 describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outputs.invalidates[].set_null_on_change_of (batch-2 Phase 3 prerequisites 0l+0m)', () => {
@@ -6118,8 +6120,6 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
   const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS validate module
   const validateLib = require(join(process.cwd(), 'scripts/lib/step/validate.js'));
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real converted descriptor
-  const ADDRESS_POINTS = require(join(process.cwd(), 'scripts/load-address-points.descriptor.json'));
 
   /** A whitespace-insensitive comparison — collapses all runs of whitespace to one space. */
   const normalizeSql = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -6185,7 +6185,11 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     expect(plan.invalidated_on_change).toEqual([{ column: 'source_dataset_version', watched: 'source_dataset_version' }]);
   });
 
-  it('T3 (GREEN, stays) — load_ravines and address_points default-codegen plans are BYTE-IDENTICAL (pinned) with neither axis declared', () => {
+  it('T3 (GREEN, stays) — load_ravines default-codegen plan is BYTE-IDENTICAL (pinned) with neither axis declared', () => {
+    // address_points declares on_empty since AP-D7; locked in
+    // src/tests/steps/address_points/post-conversion-fixes.logic.test.ts (L1/L2/L3/L4)
+    // instead of here — this T3 pin now covers only load_ravines, which still declares
+    // neither axis.
     const ravinesWrite = (LOAD_RAVINES.outputs.writes as Array<Record<string, unknown>>)[0]!;
     const ravinesPlan = writeLib.buildWritePlan(ravinesWrite, LOAD_RAVINES);
     const RAVINES_PINNED = 'INSERT INTO ravines (source_id, geom, source_dataset_version, updated_at)\n'
@@ -6199,35 +6203,6 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     expect(ravinesPlan.upsertSqlFor(1)).toBe(RAVINES_PINNED);
     expect(ravinesPlan.on_empty_columns).toEqual([]);
     expect(ravinesPlan.invalidated_on_change).toEqual([]);
-
-    const addressesWrite = (ADDRESS_POINTS.outputs.writes as Array<Record<string, unknown>>)[0]!;
-    const addressesPlan = writeLib.buildWritePlan(addressesWrite, ADDRESS_POINTS);
-    const ADDRESSES_PINNED = 'INSERT INTO address_points (address_point_id, latitude, longitude, address_number, linear_name_full, address_full, lo_num, hi_num, maint_stage, address_status, address_class_desc, class_family_desc, place_name, addr_num_normalized, linear_name_normalized, geom)\n'
-      + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, ST_GeomFromWKB($16, 4326))\n'
-      + 'ON CONFLICT (address_point_id) DO UPDATE SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, '
-      + 'address_number = EXCLUDED.address_number, linear_name_full = EXCLUDED.linear_name_full, address_full = EXCLUDED.address_full, '
-      + 'lo_num = EXCLUDED.lo_num, hi_num = EXCLUDED.hi_num, maint_stage = EXCLUDED.maint_stage, address_status = EXCLUDED.address_status, '
-      + 'address_class_desc = EXCLUDED.address_class_desc, class_family_desc = EXCLUDED.class_family_desc, place_name = EXCLUDED.place_name, '
-      + 'addr_num_normalized = EXCLUDED.addr_num_normalized, linear_name_normalized = EXCLUDED.linear_name_normalized, geom = EXCLUDED.geom\n'
-      + '  WHERE address_points.latitude IS DISTINCT FROM EXCLUDED.latitude\n'
-      + '     OR address_points.longitude IS DISTINCT FROM EXCLUDED.longitude\n'
-      + '     OR address_points.address_number IS DISTINCT FROM EXCLUDED.address_number\n'
-      + '     OR address_points.linear_name_full IS DISTINCT FROM EXCLUDED.linear_name_full\n'
-      + '     OR address_points.address_full IS DISTINCT FROM EXCLUDED.address_full\n'
-      + '     OR address_points.lo_num IS DISTINCT FROM EXCLUDED.lo_num\n'
-      + '     OR address_points.hi_num IS DISTINCT FROM EXCLUDED.hi_num\n'
-      + '     OR address_points.maint_stage IS DISTINCT FROM EXCLUDED.maint_stage\n'
-      + '     OR address_points.address_status IS DISTINCT FROM EXCLUDED.address_status\n'
-      + '     OR address_points.address_class_desc IS DISTINCT FROM EXCLUDED.address_class_desc\n'
-      + '     OR address_points.class_family_desc IS DISTINCT FROM EXCLUDED.class_family_desc\n'
-      + '     OR address_points.place_name IS DISTINCT FROM EXCLUDED.place_name\n'
-      + '     OR address_points.addr_num_normalized IS DISTINCT FROM EXCLUDED.addr_num_normalized\n'
-      + '     OR address_points.linear_name_normalized IS DISTINCT FROM EXCLUDED.linear_name_normalized\n'
-      + '     OR address_points.geom IS DISTINCT FROM EXCLUDED.geom\n'
-      + 'RETURNING (xmax = 0) AS is_insert;';
-    expect(addressesPlan.upsertSqlFor(1)).toBe(ADDRESSES_PINNED);
-    expect(addressesPlan.on_empty_columns).toEqual([]);
-    expect(addressesPlan.invalidated_on_change).toEqual([]);
   });
 
   it('T4 — AJV accepts both fields and rejects on_empty:"keep"; the semantic layer rejects an invalidates[] entry naming a foreign table with set_null_on_change_of', () => {
@@ -6975,8 +6950,8 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
 // runner-library seam gaps": (1) ctx.acquired.rows_read was never populated,
 // so `rows_read_floor`/`skip_rate_pct`-style checks silently measured the
 // POST-filter kept count instead of the raw row count their `why` text
-// documents; (2) ctx.acquired.attempted_address_number_rows /
-// null_address_number_rows were never populated anywhere, so
+// documents; (2) the two legacy-named ctx.acquired fields the null-address
+// checks read were never populated anywhere, so
 // `null_address_pct`/`null_address_number_pct` always short-circuited to
 // `value: null` / PASS. This commit populates the GENERIC replacement —
 // `rows_read` / `rows_shaped` / `column_nulls` over EVERY declared step
@@ -6984,7 +6959,7 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
 // (per-step, outside this shared-library commit's scope): the two computes'
 // one-line rename (`ctx.acquired.column_nulls.address_number`,
 // `ctx.acquired.rows_shaped`) is filed as the next commit on each step
-// (address_points AP-D6 fix commit; parcels ③).
+// (address_points AP-D8 fix commit; parcels ③ — already landed for parcels).
 // ---------------------------------------------------------------------------
 
 describe('INGESTOR prerequisite 0o — acquired.rows_read / rows_shaped / column_nulls', () => {

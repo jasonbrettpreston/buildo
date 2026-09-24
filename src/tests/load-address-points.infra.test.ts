@@ -184,8 +184,8 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
         log: { error() {} },
         report(id: string, obs: { violations?: number }) { reported[id] = obs; },
         acquired: {
-          null_address_number_rows: nullRows,
-          attempted_address_number_rows: attempted,
+          rows_shaped: attempted,
+          column_nulls: { address_number: nullRows },
         },
         written: null,
       };
@@ -198,6 +198,12 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     // (Spec 122 §5.5: "the pct checks report a ratio"). "limit": 10 with a 0-1 ratio
     // tripped both branches. Corrected to the ratio unit; the assertions' INTENT
     // (below-bound clean / above-bound tripping) is unchanged.
+    // AP-D8 (2026-09-24): re-pointed onto the generic 0o runner counters
+    // (`acquired.rows_shaped` / `acquired.column_nulls.address_number`) — the prior
+    // `attempted_address_number_rows` / `null_address_number_rows` fields were never
+    // populated by any runner (review_followups.md:4082). The run() helper's
+    // (nullRows, attempted) params are unchanged; only the ctx.acquired shape below
+    // moved onto the new counter names.
     await expect(run(50, 1000, 1)).resolves.toBe(0); // 0.05 < 1 ⇒ clean
     await expect(run(1000, 1000, 1)).resolves.toBe(0); // 1.00 > 1 is false — boundary is strict >
     await expect(run(500, 1000, 0.1)).resolves.toBe(1); // 0.50 > 0.10 ⇒ violation

@@ -443,9 +443,13 @@ describe('row 3.1 — the checks fire on their fixtures (Spec 124 Rule 3/5/10)',
     // compare the RATIO against the config value — the sibling's own §5.5 note:
     // "THE PCT CHECKS REPORT A RATIO". Corrected to the ratio unit; the INTENT
     // (above-bound trips / below-bound clean) is unchanged.
-    const over = driveCheck('null_address_number_pct', { acquired: { null_address_number_rows: 20, attempted_address_number_rows: 100 }, config: CFG_PCT_RATIO });
+    // AP-D8 (2026-09-24): re-pointed onto the generic 0o runner counters
+    // (`acquired.rows_shaped` / `acquired.column_nulls.address_number`) — the prior
+    // `attempted_address_number_rows` / `null_address_number_rows` fields were never
+    // populated by any runner (review_followups.md:4082).
+    const over = driveCheck('null_address_number_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 20 } }, config: CFG_PCT_RATIO });
     expect(over[0]![1].violations, '0.20 > 0.10 default ⇒ violation').toBe(1);
-    const under = driveCheck('null_address_number_pct', { acquired: { null_address_number_rows: 1, attempted_address_number_rows: 100 }, config: CFG_PCT_RATIO });
+    const under = driveCheck('null_address_number_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 1 } }, config: CFG_PCT_RATIO });
     expect(under[0]![1].violations, '0.01 < 0.10 default ⇒ clean').toBe(0);
   });
 

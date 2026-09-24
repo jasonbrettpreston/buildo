@@ -564,6 +564,101 @@ than new field names.
 
 ---
 
+## Post-conversion fix (AP-D7, AP-D8) — 2026-09-24, WF3
+
+Per Spec 121 §4.3 (a defect the CONVERSION itself introduced is fixed in its own separate
+post-conversion commit, with its own RED→GREEN lock — never inside the conversion commit). Both
+defects were caught at PLAN altitude while re-grounding the descriptor against the legacy loader
+source, not by a live-data symptom.
+
+**AP-D7 — CLOSED. Empty/NULL-value preservation restored (12 columns).** The commit-9 default
+codegen declared no `columns[].on_empty` axis, so the converted upsert's `DO UPDATE SET` rendered
+bare `col = EXCLUDED.col` for every column — silently dropping the legacy loader's
+`COALESCE(NULLIF(EXCLUDED.<col>, ''), address_points.<col>)` preservation on the 10 TEXT columns
+(address_number, linear_name_full, address_full, maint_stage, address_status, address_class_desc,
+class_family_desc, place_name, addr_num_normalized, linear_name_normalized) and the NULL-form
+`COALESCE(EXCLUDED.<col>, address_points.<col>)` on lo_num/hi_num (`git show
+120b2b99:scripts/load-address-points.js:192-243`, 12 columns total — Spec 122 RE-FREEZE #19's own
+text said "9 address columns," corrected to 12 in this commit). `latitude`/`longitude`/`geom` stay
+bare by design (legacy fence: wrapping them would suppress legitimate coordinate moves). Restored
+via the declared axis alone (`on_empty: "preserve"` / `"preserve_null"`), never per-step compute
+SQL (§11 Rule 1). Live impact measured 2026-09-24: 0 rows changed on the current CSV — every
+CSV-empty cell in the 525,667-row table is already stored NULL, so the defect was latent, firing
+only on the next upstream column strip (up to 525,667 rows per stripped column, the same failure
+class Spec 54:7 already records for `parcels`, 2026-05-20).
+
+**AP-D8 — CLOSED. `null_address_number_pct` re-pointed to live counters.** The check read
+`ctx.acquired.attempted_address_number_rows` / `null_address_number_rows`, fields no runner in
+`scripts/lib/step/{acquire,index}.js` ever populated (review_followups.md:4082) — the compute's own
+`numberOrNull(...) == null` guard short-circuited to `violations: 0, detail: null` on every run,
+converting the legacy loader's documented null-address WARN row into a silent, permanent PASS.
+Re-pointed to the generic INGESTOR prerequisite 0o counters (`acquired.rows_shaped` /
+`acquired.column_nulls.address_number`), the same precedent already landed for `parcels`'
+`null_address_pct` (`657221ea`). Severity unchanged (WARN, R-H). Current data: 0/525,436 null →
+PASS either way; the fix changes the check's REASON for passing, not the verdict.
+
+**Forced-change proof (orchestrator-run, both directions, MEASURED 2026-09-24):** scoped backup
+(200 rows, by `address_point_id`, into a scratch table — not a full-table snapshot) → perturb 100
+rows' `hi_num` (all CSV-blank, drawn from the 524,030-row NULL population) to `1` and a disjoint
+100 rows' `linear_name_normalized` (drawn from the 496-row NULL population) to `'ZZ'` → run the
+converted step (worktree `wf3/address-points-apd7` @ this commit's parent) → result:
+`records_updated: 0`, and both sets read `survived: 100/100, nulled: 0/100` (preservation fires,
+values hold at the sentinel) → restored from backup (200/200 rows), backup table dropped,
+`hi_num`/`linear_name_normalized` NULL counts confirmed back at 524,030/496.
+**Counter-proof at `b4913395`** (pre-fix, run in the main tree `C:\Users\User\Buildo`, same shared
+dev DB, verified byte-identical descriptor/compute to the worktree's pre-fix parent): the identical
+200-row perturbation → `records_updated: 200` → both sets read `survived: 0/100, nulled: 100/100`
+(no preservation — every perturbed value NULLed) → restored, verified, backup dropped.
+
+**Explained: `table_state.content_hash` moved (`690acf86…` → `2245224d…`) despite `records_updated:
+0` on every capture.** Root-caused before accepting the recapture (Spec-first, CLAUDE.md PD#10 —
+never inferred from the numbers alone): `pipeline_runs` shows NO run against `address_points`
+between run 1980 (2026-09-24 04:41Z, the commit-9 baseline that produced `690acf86…`) and this
+session's captures — 9 intervening runs (ids 1981-1989) are `assert_schema`/`parcels`/
+`load_ravines`/cron jobs, none touching this table. `xmin` forensics on the live table: 517,084
+rows share the original bulk-load xmin; 8,199 share ONE xmin matching the already-documented AP-D4
+legacy non-convergence churn (Spec 54 As-built); the remaining ~384 rows are scattered across 154
+distinct small-transaction xmins (1-63 rows each) — the signature of prior iterative manual/scripted
+testing in this shared local dev DB, not a systematic content change. No `hi_num=1` or
+`linear_name_normalized='ZZ'` sentinel remained before this session's own perturbation (checked),
+and the AP-D7-relevant NULL counts (524,030 / 496) exactly match the plan's original 2026-09-24
+measurement. Both recaptures (sources + standalone) independently hashed to the SAME
+`2245224d06f0eb58f2d4a9221240759b`, and a direct re-hash query run twice in a row is stable —
+ruling out session-level nondeterminism (`extra_float_digits=0`; `latitude`/`longitude` are
+`numeric`, not float-rendered; `geom`'s `ROW(...)::text` cast is an exact EWKB hex dump). This
+run's own `records_updated: 0` further confirms the CURRENT table content already equals what
+TODAY's live CKAN source demands — i.e. the table is correct, just not byte-identical to a golden
+captured from an earlier, since-perturbed-and-restored state. **Conclusion: real but unrelated
+pre-existing DB drift, not caused by AP-D7/AP-D8** (0 writes from this fix's own code path in every
+capture). Accepted as an additional explained diff.
+
+**RED→GREEN:** new `src/tests/steps/address_points/post-conversion-fixes.logic.test.ts` (L1-L4 for
+AP-D7, L5a-d for AP-D8); `violations.test.ts:440-450` and `src/tests/load-address-points.infra.test.ts`
+re-pointed onto the new counter shape (both broke as a direct consequence of the AP-D8 rename and
+are fixed in this commit, though only the former was in the engine's declared write scope);
+`step-library.logic.test.ts` T3 EDITED to drop the address_points half (that plan is now pinned by
+AP-D7's own lock) and retitled to cover `load_ravines` only.
+
+**Golden recapture (G8, MEASURED 2026-09-24):** `sources.json` + `standalone.json` recaptured
+(`node scripts/analysis/capture-step-golden.js --step=scripts/load-address-points.js
+--chain=sources|none --out=... --overwrite`) and diffed against the committed goldens.
+`records_updated: 0` on both arms (unchanged). Full diff list, both files: `git_head` (b4913395,
+expected); `rows_read`/download byte-count/md5 525436→525429 (live CKAN feed drift between capture
+days — external, not this fix); `null_address_number_pct` `value` null→"0.0%" (AP-D8, the intended
+delta); `sys_duration_ms`/`pipeline_runs[].{id,started_at,completed_at,duration_ms}` (declared
+nondeterminism, already in the golden's own `nondeterminism` list); `table_state.content_hash`
+`690acf86…`→`2245224d…` (explained above); `source_fingerprint` (expected — the 3 fixed files
+changed). No other field moved — no per-row text/geometry value differs in either capture's visible
+diff beyond the above.
+
+Execution: DeepSeek engine (run `20260924T205609Z-7d2eafaf`) wrote the RED test and the three Fix-1/2/3
+edits (descriptor `on_empty`, compute repoint, notes.json expr correction) before exhausting its
+40-iteration budget; the orchestrator (claude-sonnet) completed Fix 4/5 (`violations.test.ts`
+re-point, `step-library.logic.test.ts` T3 edit), the `load-address-points.infra.test.ts` ripple fix,
+this doc pass, golden recapture, the forced-change proof, and landed the commit.
+
+---
+
 ## Validation scorecard (generated)
 
 > Generated by `node scripts/analysis/step-validate.mjs --step=address_points --write` — Spec 123 §6, ruling R-R (2026-08-29).
@@ -611,15 +706,15 @@ than new field names.
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 149 · unexplained: 0
+- compare ran: true · diffs found: 150 · unexplained: 0
 
 ### Test suite (item iii)
-- 1538/1539 passed (suite success=false)
-- harvested: 26 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1546/1547 passed (suite success=false)
+- harvested: 27 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
 - failing (1):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -638,7 +733,7 @@ than new field names.
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=37809B notes=8758B checks=6 rows records_meta=1361B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=38650B notes=8765B checks=6 rows records_meta=1363B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

@@ -71,73 +71,85 @@
             "name": "address_number",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "linear_name_full",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "address_full",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "lo_num",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve_null"
           },
           {
             "name": "hi_num",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve_null"
           },
           {
             "name": "maint_stage",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "address_status",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "address_class_desc",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "class_family_desc",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "place_name",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "addr_num_normalized",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "linear_name_normalized",
             "vocabulary": "none",
             "written": "step",
-            "bind": "value"
+            "bind": "value",
+            "on_empty": "preserve"
           },
           {
             "name": "geom",
@@ -171,7 +183,7 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
           "why": {
-            "text": "Class A. The pre-conversion loader issued ONE statement shape — INSERT INTO address_points (...) VALUES ... ON CONFLICT (address_point_id) DO UPDATE SET ... WHERE <latitude, longitude, and 12 NULLIF/None-guarded source+normalized columns, plus geom> IS DISTINCT FROM — and NO DELETE anywhere in the file (0 grep matches for DELETE/TRUNCATE) [READ load-address-points.js:184-243]. The write class is therefore a guarded upsert with no retraction: a re-run of a byte-identical source updates zero rows, and no address point is ever removed by this step. The pre-conversion script wrapped each 1,000-row batch in its OWN withTransaction (:119-251, :371-383); the library wraps ALL insert batches in ONE step-scoped transaction (executeWrite, Fold B3) — declared here as the truth, with the atomicity-window widening recorded in deviations[].",
+            "text": "Class A. The pre-conversion loader issued ONE statement shape — INSERT INTO address_points (...) VALUES ... ON CONFLICT (address_point_id) DO UPDATE SET ... WHERE <latitude, longitude, and 12 NULLIF/None-guarded source+normalized columns, plus geom> IS DISTINCT FROM — and NO DELETE anywhere in the file (0 grep matches for DELETE/TRUNCATE) [READ load-address-points.js:184-243]. The write class is therefore a guarded upsert with no retraction: a re-run of a byte-identical source updates zero rows, and no address point is ever removed by this step. The pre-conversion script wrapped each 1,000-row batch in its OWN withTransaction (:119-251, :371-383); the library wraps ALL insert batches in ONE step-scoped transaction (executeWrite, Fold B3) — declared here as the truth, with the atomicity-window widening recorded in deviations[]. The legacy COALESCE/NULLIF preservation on the 12 address columns (COALESCE(NULLIF(EXCLUDED.<col>, ''), address_points.<col>) over the 10 TEXT columns and the NULL-form COALESCE(EXCLUDED.<col>, address_points.<col>) over lo_num/hi_num, `git show 120b2b99:scripts/load-address-points.js:192-243`) is now declared via `columns[].on_empty` (RE-FREEZE #19) and executed by the shared codegen — AP-D7.",
             "liveness": {
               "kind": "table",
               "ref": "address_points"

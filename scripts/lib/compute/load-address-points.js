@@ -196,10 +196,21 @@ function csv_header_drift(ctx) {
  * column upstream. WARN, never FAIL — a null address_number does not make the row
  * unloadable, it makes the address unusable downstream. The numerator/denominator are
  * what the library measured; the ROW text comes from the shared builder.
+ *
+ * AP-D8 (2026-09-24): the numerator/denominator read the GENERIC runner counters
+ * (prerequisite 0o), `acquired.rows_shaped` (post-shapeRecord survivor count) and
+ * `acquired.column_nulls.address_number` (counted on `validated.carried`, `''`/null/
+ * undefined alike) — mirroring compute/load-parcels.js's `null_address_pct`. Before
+ * this the check read two dead ctx.acquired fields that NO runner ever populated (see
+ * `git show HEAD~1:scripts/lib/compute/load-address-points.js` for the prior names),
+ * so it always short-circuited to PASS on the never-written fields and the legacy
+ * loader's documented null-address WARN silently disappeared from the converted
+ * audit_table.verdict.
  */
 function null_address_number_pct(ctx) {
-  const attempted = numberOrNull(ctx.acquired && ctx.acquired.attempted_address_number_rows);
-  const nullRows = numberOrNull(ctx.acquired && ctx.acquired.null_address_number_rows);
+  const a = ctx.acquired || {};
+  const attempted = numberOrNull(a.rows_shaped);
+  const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
     return ctx.report('null_address_number_pct', { violations: 0, detail: null });
   }
