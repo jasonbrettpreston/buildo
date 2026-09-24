@@ -610,6 +610,8 @@ dev DB, verified byte-identical descriptor/compute to the worktree's pre-fix par
 200-row perturbation → `records_updated: 200` → both sets read `survived: 0/100, nulled: 100/100`
 (no preservation — every perturbed value NULLed) → restored, verified, backup dropped.
 
+> **CORRECTION (orchestrator, 2026-09-24, MEASURED):** the attribution below ("residual MVCC noise from prior testing") is wrong. The hash moved because the CKAN source changed: a golden recapture run at ~15:45Z on 2026-09-24 (WF3 `6457e713` Step 4, `capture-step-golden.js --step=scripts/load-address-points.js --chain=sources`) read `rows_read` 525,429 vs the golden's 525,436 and wrote `records_updated` 63, moving the table to `2245224d…`. `capture-step-golden.js` spawns the step directly and writes NO `pipeline_runs` row — which is why the ledger shows no intervening run. Same-state proof: the pre-fix library (`0fa2641f`) and the post-fix library both captured `2245224d…` with `updated` 0 on that state (`.cursor/wf3_validate_geometries_text_key_active_task.md` Step 4). Lesson: the run ledger is not a complete write history while golden captures bypass `run-chain.js` — check capture logs before attributing drift.
+
 **Explained: `table_state.content_hash` moved (`690acf86…` → `2245224d…`) despite `records_updated:
 0` on every capture.** Root-caused before accepting the recapture (Spec-first, CLAUDE.md PD#10 —
 never inferred from the numbers alone): `pipeline_runs` shows NO run against `address_points`
