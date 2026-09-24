@@ -623,16 +623,23 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // NETWORK CALL. Both parsers hand back the publisher's per-feature data verbatim —
   // `parseCsv` as the row object, `parseShapefile` (since 0f) as the DBF properties on
   // `record` — and neither can know which columns the write plan binds.
-  // `compute.shapeRecord(record, { geojson })` is that mapping: the step's own pure
-  // function from ONE parsed record to the column values `write.executeWrite` binds,
-  // i.e. the `{ ...columns, geojson }` shape the plan's `bind` fields address —
-  // `geojson` is the GEOMETRY FIELD NAME every geometry-binding column reads
-  // (`columnValues(row)` spreads the record into the upsert's bound values, and
-  // `validateGeometries` regexes the `geojson` string out of it), so a step's
-  // `shapeRecord` must return `geojson` for its geometry column or the row validates as
-  // geometry-less. A shapefile's given `geojson` is handed IN so the step may return it
-  // unchanged. Returning `null` is how the step says "this row is NOT loadable" — the
-  // departure is counted (`shaped_skipped`, below), never silently dropped.
+  // `compute.shapeRecord(record, { geojson, config, run_at })` is that mapping: the
+  // step's own pure function from ONE parsed record to the column values
+  // `write.executeWrite` binds, i.e. the `{ ...columns, geojson }` shape the plan's
+  // `bind` fields address — `geojson` is the GEOMETRY FIELD NAME every geometry-binding
+  // column reads (`columnValues(row)` spreads the record into the upsert's bound
+  // values, and `validateGeometries` regexes the `geojson` string out of it), so a
+  // step's `shapeRecord` must return `geojson` for its geometry column or the row
+  // validates as geometry-less. A shapefile's given `geojson` is handed IN so the step
+  // may return it unchanged. Returning `null` is how the step says "this row is NOT
+  // loadable" — the departure is counted (`shaped_skipped`, below), never silently
+  // dropped. `config` is the step's RESOLVED config (the same `ctx.config` object the
+  // checks read, INGESTOR prerequisite 0n) — a shaping rule that legitimately depends
+  // on a Rule 3 tunable (e.g. `parcels_irregularity_threshold`) reads it from here
+  // rather than re-resolving logic variables itself. `run_at` is the runner's own clock
+  // (the SAME `Date` `columnValues` stamps into `updated_at` below) — compute may not
+  // read the wall clock directly (the compute-shape rule), so a date-relative shaping
+  // rule (an expiry filter) is handed the RUN's time, not `new Date()`.
   //
   // ⚠️ THE TWO FORMATS DIFFER ON ABSENCE, DELIBERATELY. A `csv` external with NO
   // `shapeRecord` is a HARD ERROR — the CSV arm produces no `geojson` at all, so the
@@ -783,12 +790,16 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // publisher sent. `{ geojson }` is handed IN so a shapefile's geometry (already a
   // GeoJSON string from `parseShapefile`) can be returned unchanged. NO `shapeRecord`
   // (a shapefile INGESTOR like load_ravines): every feature passes through as-is.
+  // Hoisted here (rather than declared once, later, alongside the write dispatch) so
+  // `shapeRecord` below and `columnValues`'s `updated_at` further down read the exact
+  // same `Date` — ONE run clock, not two independent reads of `clockNow`.
+  const runAt = clockNow;
   let features = result.features;
   let shapedSkipped = 0;
   if (shapeRecord) {
     const shaped = [];
     for (const f of features) {
-      const record = shapeRecord(f.record, { geojson: f.geojson });
+      const record = shapeRecord(f.record, { geojson: f.geojson, config, run_at: runAt });
       if (record == null) { shapedSkipped++; continue; }
       shaped.push({ [keyColumn]: f[keyColumn], ...record });
     }
@@ -887,7 +898,6 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     };
   }
 
-  const runAt = clockNow;
   // ── THE WRITE DISPATCH (Fold A F6). Class C is a REPLACE, not an upsert: it has no
   // `ON CONFLICT` and no per-row insert-vs-update question, so it gets its own executor.
   // Everything else — A, B, and the compute-authored A — stays on `executeWrite` unchanged.

@@ -6882,3 +6882,87 @@ describe('the pre_write gate three-way — checks[].on_warn "skip_write" (INGEST
   });
 });
 
+// ---------------------------------------------------------------------------
+// INGESTOR prerequisite 0n (batch-2 Phase 3 follow-on, 2026-09-24) —
+// runIngestPhase threads the run context into compute.shapeRecord. A shaping
+// function legitimately needs the step's RESOLVED config (Rule 3 tunables,
+// e.g. parcels_irregularity_threshold) and the RUN clock for date-relative
+// rules (expiry filters), and compute may not read the wall clock itself —
+// so the contract widens from `shapeRecord(record, { geojson })` to
+// `shapeRecord(record, { geojson, config, run_at })`, where `config` is the
+// SAME resolved `ctx.config` object the checks read (identity, not a copy)
+// and `run_at` is the SAME `Date` `columnValues` stamps into `updated_at`
+// (one run clock, not two independent reads of `clockNow`). Every existing
+// compute (load-address-points.js's `shapeRecord(record)`, arity 1) ignores
+// the extra keys and stays byte-identical — load_ravines exports no
+// shapeRecord at all.
+// ---------------------------------------------------------------------------
+
+describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to compute.shapeRecord', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real write.js lib
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+
+  it('T1 — a spy shapeRecord receives {geojson, config, run_at}: config is the EXACT resolved config '
+    + 'object runIngestPhase was called with (identity, not a copy) and run_at is a Date equal to the '
+    + "runner's own clock (RED before 0n: shapeRecord was called with {geojson} only)", async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+    const rawFeatures = [1, 2].map((n) => ({ source_id: n, record: { OBJECTID: n, NAME: `Ravine ${n}` } }));
+    const shapeRecordSpy = vi.fn((record: { NAME: string }, ctx: { geojson: unknown }) =>
+      ({ geojson: '{"type":"Point","coordinates":[0,0]}', name: record.NAME }));
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord: shapeRecordSpy,
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const resolvedConfig = { parcels_irregularity_threshold: 0.42 };
+    const runAt = new Date('2026-09-24T12:00:00Z');
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+        features: rawFeatures,
+        acquired: {
+          feature_count: 2, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+          content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+          last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+        },
+      }),
+    ];
+    try {
+      await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: resolvedConfig,
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[ingest_shape_ctx_t1]',
+        clockNow: runAt,
+        preWriteGate: null,
+      });
+      expect(shapeRecordSpy).toHaveBeenCalledTimes(2);
+      for (const call of shapeRecordSpy.mock.calls) {
+        const ctx = call[1] as { geojson: unknown; config: unknown; run_at: unknown };
+        expect(Object.keys(ctx).sort()).toEqual(['config', 'geojson', 'run_at']);
+        expect(ctx.config, 'config must be the SAME object, not a structurally-equal copy').toBe(resolvedConfig);
+        expect(ctx.run_at).toBeInstanceOf(Date);
+        expect((ctx.run_at as Date).getTime()).toBe(runAt.getTime());
+      }
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+});
+
