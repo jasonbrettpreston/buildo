@@ -6955,7 +6955,7 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
       expect(shapeRecordSpy).toHaveBeenCalledTimes(2);
       for (const call of shapeRecordSpy.mock.calls) {
         const ctx = call[1] as { geojson: unknown; config: unknown; run_at: unknown };
-        expect(Object.keys(ctx).sort()).toEqual(['config', 'geojson', 'run_at']);
+        expect(Object.keys(ctx).sort()).toEqual(['config', 'geojson', 'run_at', 'tag']); // 0p widens ctx by tag
         expect(ctx.config, 'config must be the SAME object, not a structurally-equal copy').toBe(resolvedConfig);
         expect(ctx.run_at).toBeInstanceOf(Date);
         expect((ctx.run_at as Date).getTime()).toBe(runAt.getTime());
@@ -7198,6 +7198,193 @@ describe('validateGeometries — key join (WF3 TEXT-key, Spec 122 §11)', () => 
     const src = fsSync.readFileSync(join(process.cwd(), 'scripts/lib/step/write.js'), 'utf8');
     expect(src, 'Number(<row>.source_key) is the type-assuming join this fix removed')
       .not.toMatch(/Number\(\s*\w+\.source_key\s*\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// INGESTOR prerequisite 0p (2026-09-24) — shapeRecord skip reasons + row tags.
+// Legacy load-centreline counted skips per reason; runIngestPhase counted one
+// bare `shaped_skipped`. `shapeRecord` may now return a row (kept), `null`
+// (skip, reason "unspecified") or a non-empty STRING (skip, that string as the
+// reason), and a kept row may tag itself via `ctx.tag(name)`.
+// ---------------------------------------------------------------------------
+
+describe('INGESTOR prerequisite 0p — shapeRecord skip reasons + tags', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real write.js lib
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+
+  const withStubs = (fn: () => Promise<void>) => async () => {
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      }),
+    ];
+    try {
+      await fn();
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  };
+
+  it('T1 — shapeRecord returning a skip-reason string is counted under that reason, null under '
+    + '"unspecified", and a kept row may tag itself via ctx.tag(name); Σ shaped_skipped_by_reason === '
+    + 'shaped_skipped (RED before 0p: strings carried as rows into dedupe/write; ctx.tag not a function)',
+  withStubs(async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+    const rawFeatures = [1, 2, 3, 4, 5, 6].map((n) => ({ source_id: n, record: { OBJECTID: n, NAME: `Row ${n}` } }));
+    const shapeRecord = (record: { NAME: string }, ctx: { tag: (name: string) => void }) => {
+      switch (record.NAME) {
+        case 'Row 1': return 'non_street';
+        case 'Row 2': return 'non_street';
+        case 'Row 3': return 'federal';
+        case 'Row 4': return null;
+        case 'Row 5':
+          ctx.tag('unknown_jurisdiction');
+          return { geojson: '{"type":"Point","coordinates":[0,0]}', name: record.NAME };
+        default:
+          return { geojson: '{"type":"Point","coordinates":[0,0]}', name: record.NAME };
+      }
+    };
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord,
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const acquireStub = vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+      tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+      features: rawFeatures,
+      acquired: {
+        feature_count: 6, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+        last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+      },
+    });
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[ingest_skip_reasons_t1]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.shaped_skipped).toBe(4);
+      expect(out.acquired.shaped_skipped_by_reason).toEqual({ non_street: 2, federal: 1, unspecified: 1 });
+      expect(out.acquired.shaped_tags).toEqual({ unknown_jurisdiction: 1 });
+      const sumByReason = Object.values(out.acquired.shaped_skipped_by_reason as Record<string, number>)
+        .reduce((a, b) => a + b, 0);
+      expect(sumByReason, 'Σ shaped_skipped_by_reason === shaped_skipped').toBe(out.acquired.shaped_skipped);
+      expect(dedupeSpy).toHaveBeenCalledTimes(1);
+      expect(dedupeSpy.mock.calls[0]?.[0]).toHaveLength(2);
+    } finally {
+      acquireStub.mockRestore();
+    }
+  }));
+
+  it('T2 — a compute with NO shapeRecord export leaves both counters ALWAYS {} and shaped_skipped 0 '
+    + '(RED before 0p: undefined)', withStubs(async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    const rawFeatures = [1, 2].map((n) => ({
+      source_id: n,
+      geojson: '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
+      record: { OBJECTID: n, NAME: `Ravine ${n}` },
+    }));
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      // NO shapeRecord export — load_ravines' actual shape today.
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const acquireStub = vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+      tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+      features: rawFeatures,
+      acquired: {
+        feature_count: 2, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+        last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+      },
+    });
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[ingest_skip_reasons_t2]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.shaped_skipped).toBe(0);
+      expect(out.acquired.shaped_skipped_by_reason).toEqual({});
+      expect(out.acquired.shaped_tags).toEqual({});
+    } finally {
+      acquireStub.mockRestore();
+    }
+  }));
+
+  it('T3 — a shapeRecord throw rejects runIngestPhase with that error; validateGeometries/executeWrite '
+    + 'are never reached (GREEN today — VERIFY-INT-2 pin, unaffected by the 0p counters)', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    const rawFeatures = [{ source_id: 1, record: { OBJECTID: 1, NAME: 'Row 1' } }];
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord: () => { throw new Error('F13 missing field'); },
+      dedupeBySourceId: (feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }),
+      validatorCounterDelta: () => ({}),
+    };
+    const priorStub = vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null });
+    const privilegeStub = vi.spyOn(writeLib, 'assertWritePrivileges')
+      .mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } });
+    const validateSpy = vi.spyOn(writeLib, 'validateGeometries');
+    const writeSpy = vi.spyOn(writeLib, 'executeWrite');
+    const acquireStub = vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+      tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+      features: rawFeatures,
+      acquired: {
+        feature_count: 1, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+        last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+      },
+    });
+    try {
+      await expect(stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[ingest_skip_reasons_t3]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      })).rejects.toThrow('F13 missing field');
+      expect(validateSpy, 'validateGeometries is never reached').not.toHaveBeenCalled();
+      expect(writeSpy, 'executeWrite is never reached').not.toHaveBeenCalled();
+    } finally {
+      acquireStub.mockRestore();
+      priorStub.mockRestore();
+      privilegeStub.mockRestore();
+      validateSpy.mockRestore();
+      writeSpy.mockRestore();
+    }
   });
 });
 

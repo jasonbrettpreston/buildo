@@ -796,11 +796,26 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const runAt = clockNow;
   let features = result.features;
   let shapedSkipped = 0;
+  // ── SKIP REASONS + ROW TAGS (INGESTOR prerequisite 0p, 2026-09-24) ───────────
+  // Two additive, ALWAYS-{} counters. `shapeRecord` may return a row (kept), `null`
+  // (a skip, reason `"unspecified"`) or a NON-EMPTY STRING (a skip, that string as
+  // its reason — the legacy load-centreline vocabulary, e.g. `non_street`/`federal`),
+  // and a KEPT row may tag itself through `ctx.tag(name)` (e.g. an
+  // `unknown_jurisdiction` bucket). Neither widens the descriptor schema, and
+  // `Σ shaped_skipped_by_reason === shaped_skipped` by construction.
+  const skippedByReason = {};
+  const shapedTags = {};
+  const tagRecord = (name) => { shapedTags[name] = (shapedTags[name] || 0) + 1; };
   if (shapeRecord) {
     const shaped = [];
     for (const f of features) {
-      const record = shapeRecord(f.record, { geojson: f.geojson, config, run_at: runAt });
-      if (record == null) { shapedSkipped++; continue; }
+      const record = shapeRecord(f.record, { geojson: f.geojson, config, run_at: runAt, tag: tagRecord });
+      if (record == null || typeof record === 'string') {
+        const r = typeof record === 'string' && record ? record : 'unspecified';
+        skippedByReason[r] = (skippedByReason[r] || 0) + 1;
+        shapedSkipped++;
+        continue;
+      }
       shaped.push({ [keyColumn]: f[keyColumn], ...record });
     }
     features = shaped;
@@ -857,6 +872,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     feature_count: kept.length,
     duplicate_key_count: duplicateCount,
     shaped_skipped: shapedSkipped,
+    shaped_skipped_by_reason: skippedByReason,
+    shaped_tags: shapedTags,
     invalid_geometry_repaired: validated.repaired,
     invalid_geometry_skipped: validated.skipped,
     geometry_collection_extracted: validated.collectionExtracted,
