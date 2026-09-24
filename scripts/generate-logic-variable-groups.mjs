@@ -478,7 +478,10 @@ const GROUP_ORDER = [
       "compute_parcel_cost_lock_timeout_ms",
       "compute_parcel_cost_phase_timeout_minutes",
       "compute_parcel_cost_batch_size",
-      "compute_parcel_cost_stream_batch_size"
+      "compute_parcel_cost_stream_batch_size",
+      "address_points_skip_rate_max_pct",
+      "address_points_null_address_number_max_pct",
+      "address_points_download_timeout_ms"
     ]
   },
   {

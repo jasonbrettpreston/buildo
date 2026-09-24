@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 469 declarable fields
+# The step contract — 20 categories, 470 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 27 | 6 | 0 |
-| 3 | `outputs` | 93 | 25 | 2 |
+| 3 | `outputs` | 94 | 26 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 75 | 16 | 1 |
@@ -42,7 +42,7 @@
 | Archetype | Forces |
 |---|---|
 | `ASSERT` | outputs = `none` · recovery = `none` · counters = `none` |
-| `INGESTOR` | outputs is object |
+| `INGESTOR` | outputs is object · **if outputs.writes is a predicate ⇒ outputs.writes** |
 | `LINK / MATCHER` | outputs.invalidates min 1 · counters is object |
 | `ENRICHER` | outputs is object · execution is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
 | `MATERIALIZER / BACKFILL` | outputs is object · recovery.reset != `none` |
@@ -185,7 +185,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy} | † |
+| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value} | † |
@@ -257,6 +257,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].source_key_policy.key_space_migration.why.liveness` | `none` \| object {kind, ref} | † |
 | `writes[].source_key_policy.key_space_migration.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].source_key_policy.key_space_migration.why.liveness.ref` | string | † |
+| `writes[].geometry_kind` | `polygon` · `point` | ! |
 | `cascades` | `none` \| list (min 1) of object {table, owned_by, operation, why} | † |
 | `cascades[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `cascades[].owned_by` | string `^[a-z][a-z0-9_]*$` | † |

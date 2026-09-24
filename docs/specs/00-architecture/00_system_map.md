@@ -51,7 +51,7 @@
 | 51 | `01-pipeline/51_source_coa.md` | Committee of Adjustment (CoA) Applications | `scripts/load-coa.js` | `src/tests/coa.logic.test.ts`, `src/tests/pipeline-sdk.logic.test.ts` | Done |
 | 52 | `01-pipeline/52_source_wsib.md` | Ontario WSIB Contractor Registry | `scripts/load-wsib.js` | `src/tests/wsib.logic.test.ts`, `src/tests/wsib.infra.test.ts` | Done |
 | 53 | `01-pipeline/53_source_aic_inspections.md` | AIC Inspection Portal (Scraper) | `scripts/aic-scraper-nodriver.py`, `scripts/aic-orchestrator.py` | `src/tests/inspections.logic.test.ts` | Done |
-| 54 | `01-pipeline/54_source_address_points.md` | Toronto Address Points (PRIMARY canonical address table) | `scripts/load-address-points.js`, `scripts/link-parcel-addresses.js` | — | Done |
+| 54 | `01-pipeline/54_source_address_points.md` | Toronto Address Points (PRIMARY canonical address table) | `scripts/load-address-points.js`, `scripts/load-address-points.descriptor.json`, `scripts/load-address-points.notes.json`, `scripts/lib/compute/load-address-points.js`, `scripts/lib/address-points-csv-drift.js`, `src/tests/steps/address_points/**`, `scripts/link-parcel-addresses.js` | — | Done |
 | 55 | `01-pipeline/55_source_parcels.md` | Toronto Property Parcels | `scripts/load-parcels.js`, `scripts/quality/assert-schema.js` | — | Done |
 | 56 | `01-pipeline/56_source_massing.md` | 3D Building Massing | `scripts/load-massing.js`, `scripts/link-massing.js` | — | Done |
 | 57 | `01-pipeline/57_source_neighbourhoods.md` | Toronto Neighbourhoods | `scripts/load-neighbourhoods.js`, `src/lib/leads/lead-detail-query.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/permits/[id]/route.ts` | `src/tests/neighbourhoods-fk-join.infra.test.ts`, `src/tests/db/neighbourhoods-fk-join.db.test.ts` | Done |

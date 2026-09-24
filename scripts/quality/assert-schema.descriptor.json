@@ -96,6 +96,9 @@
       "kind": "schema",
       "expect": [
         "accessory_max_coverage_pct",
+        "address_points_download_timeout_ms",
+        "address_points_null_address_number_max_pct",
+        "address_points_skip_rate_max_pct",
         "assert_schema_csv_header_bytes",
         "assert_schema_geojson_probe_bytes",
         "assert_schema_type_sample_rows",
@@ -585,6 +588,9 @@
     "hoisted_above_gate": true,
     "probe_presence": [
       "accessory_max_coverage_pct",
+      "address_points_download_timeout_ms",
+      "address_points_null_address_number_max_pct",
+      "address_points_skip_rate_max_pct",
       "assert_schema_csv_header_bytes",
       "assert_schema_geojson_probe_bytes",
       "assert_schema_type_sample_rows",

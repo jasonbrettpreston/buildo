@@ -3,20 +3,20 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-address-points.js",
   "chain": "sources",
-  "git_head": "fee87fc5915d1de49175911e5df6b0d900ebc983",
+  "git_head": "a8c1a42fb26a3dcc2db75aa6bdbf75c0bda6f34c",
   "exit_code": 0,
   "signal": null,
   "summary": {
     "records_total": null,
     "records_new": 0,
-    "records_updated": 8199,
+    "records_updated": 0,
     "records_meta": {
       "address_points_load": {
         "duration_ms": 0,
         "rows_read": 525436,
         "records_inserted": 0,
-        "records_updated": 8199,
-        "records_unchanged": 517237,
+        "records_updated": 0,
+        "records_unchanged": 525436,
         "records_skipped": 0,
         "errors": 0
       },
@@ -25,27 +25,22 @@
         "gated_skip": false
       },
       "config": {
-        "address_points_progress_bytes_window": 10485760,
-        "address_points_progress_row_modulo": 50000,
-        "address_points_expected_total_rows": 525000,
         "sources_address_points_floor": 500000,
         "address_points_skip_rate_max_pct": 5,
         "address_points_null_address_number_max_pct": 0.1,
         "address_points_download_timeout_ms": 60000
       },
-      "terminal": "failed_rows_read_floor",
+      "terminal": "loaded",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
       "pool_errors": 0,
-      "checks_failed": 1,
+      "checks_passed": "all",
+      "checks_failed": 0,
       "checks_warned": 0,
-      "errors": [
-        "rows_read_floor: 525436"
-      ],
       "audit_table": {
         "phase": 3,
         "name": "Toronto Address Points",
-        "verdict": "FAIL",
+        "verdict": "PASS",
         "rows": [
           {
             "metric": "csv_header_drift",
@@ -71,8 +66,8 @@
           {
             "metric": "rows_read_floor",
             "value": 525436,
-            "threshold": "viol == 500000",
-            "status": "FAIL",
+            "threshold": "value_min 500000",
+            "status": "PASS",
             "source": "check"
           },
           {
@@ -97,7 +92,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 106157,
+            "value": 138669,
             "threshold": null,
             "status": "INFO"
           }
@@ -135,12 +130,12 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "FAIL",
+  "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=245 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"acquired 525436 feature(s) (183503831 bytes, md5 87637531…)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":0,\"records_updated\":8199,\"records_meta\":{\"address_points_load\":{\"duration_ms\":0,\"rows_read\":525436,\"records_inserted\":0,\"records_updated\":8199,\"records_unchanged\":517237,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"address_points_progress_bytes_window\":10485760,\"address_points_progress_row_modulo\":50000,\"address_points_expected_total_rows\":525000,\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000},\"terminal\":\"failed_rows_read_floor\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":1,\"checks_warned\":0,\"errors\":[\"rows_read_floor: 525436\"],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"FAIL\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"null_address_number_pct\",\"value\":null,\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rows_read_floor\",\"value\":525436,\"threshold\":\"viol == 500000\",\"status\":\"FAIL\",\"source\":\"check\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":106157,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"address_number\",\"linear_name_full\",\"address_full\",\"lo_num\",\"hi_num\",\"maint_stage\",\"address_status\",\"address_class_desc\",\"class_family_desc\",\"place_name\",\"addr_num_normalized\",\"linear_name_normalized\",\"geom\"]},\"external\":[\"ckan:address-points-4326\"]}\n\n[address_points] completed in 106.2s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=245 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"acquired 525436 feature(s) (183503831 bytes, md5 87637531…)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"address_points_load\":{\"duration_ms\":0,\"rows_read\":525436,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525436,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"null_address_number_pct\",\"value\":null,\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rows_read_floor\",\"value\":525436,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":138669,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"address_number\",\"linear_name_full\",\"address_full\",\"lo_num\",\"hi_num\",\"maint_stage\",\"address_status\",\"address_class_desc\",\"class_family_desc\",\"place_name\",\"addr_num_normalized\",\"linear_name_normalized\",\"geom\"]},\"external\":[\"ckan:address-points-4326\"]}\n\n[address_points] completed in 138.7s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1978,
+  "pipeline_runs_max_id_before": 1979,
   "table_state": [
     {
       "table": "address_points",
@@ -174,7 +169,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "address_points": 1704
+    "address_points": 1901
   },
   "table_specs": {
     "address_points": {
@@ -225,8 +220,8 @@
           "errors": 0,
           "records_inserted": 0,
           "records_skipped": 0,
-          "records_unchanged": 517237,
-          "records_updated": 8199,
+          "records_unchanged": 525436,
+          "records_updated": 0,
           "rows_read": 525436
         },
         "audit_table": {
@@ -257,8 +252,8 @@
             {
               "metric": "rows_read_floor",
               "source": "check",
-              "status": "FAIL",
-              "threshold": "viol == 500000",
+              "status": "PASS",
+              "threshold": "value_min 500000",
               "value": 525436
             },
             {
@@ -276,33 +271,28 @@
               "value": 0
             }
           ],
-          "verdict": "FAIL"
+          "verdict": "PASS"
         },
-        "checks_failed": 1,
+        "checks_failed": 0,
+        "checks_passed": "all",
         "checks_warned": 0,
         "config": {
           "address_points_download_timeout_ms": 60000,
-          "address_points_expected_total_rows": 525000,
           "address_points_null_address_number_max_pct": 0.1,
-          "address_points_progress_bytes_window": 10485760,
-          "address_points_progress_row_modulo": 50000,
           "address_points_skip_rate_max_pct": 5,
           "sources_address_points_floor": 500000
         },
-        "errors": [
-          "rows_read_floor: 525436"
-        ],
         "gate": {
           "gated_skip": false,
           "reason": "loaded"
         },
         "ledger_row": "chain_owned",
         "pool_errors": 0,
-        "terminal": "failed_rows_read_floor"
+        "terminal": "loaded"
       },
       "records_new": 0,
       "records_total": null,
-      "records_updated": 8199
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -372,7 +362,7 @@
     ],
     "invariants": []
   },
-  "source_fingerprint": "7832689ae3085398e2759abfa16a7b8faa9006f2b230f23f47dc29c75cf2a664",
+  "source_fingerprint": "18e4d36c00e9195962aadf1bbbea2b9fc4c62e720d43252d3cdc3c59ea39cbc7",
   "fingerprint_files": [
     "scripts/lib/compute/load-address-points.js",
     "scripts/load-address-points.descriptor.json",

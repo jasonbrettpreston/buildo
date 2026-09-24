@@ -5370,5 +5370,43 @@ describe('write.js geometry_kind — the validator repair/accept arm is DECLARED
       expect((err as Error).message).toContain('geometry_kind');
     }
   });
+
+  it('T5 — the point-arm SQL collapses a single-member ST_CollectionExtract back to its Point via a CASE WHEN ST_NumGeometries(...) = 1 guard (measured 2026-09-23: a Point column rejects a MultiPoint)', () => {
+    // Locks the write.js capture-time fix landed at commit a8c1a42f (geometryFinalExpr('point')):
+    // ST_CollectionExtract always returns a MULTI geometry, so a bare extract crashes a Point
+    // column. A single-member extract must collapse to its one Point; a genuine multi-member
+    // one stays MultiPoint and falls through to the accept arm's skipped_unsupported_type status.
+    const plan = writeLib.buildWritePlan(spec('point'), LOAD_RAVINES);
+    expect(plan.geometry_kind).toBe('point');
+    expect(plan.validation_sql).toContain(
+      'CASE WHEN ST_NumGeometries(ST_CollectionExtract(repaired, 1)) = 1 '
+      + 'THEN ST_GeometryN(ST_CollectionExtract(repaired, 1), 1) '
+      + 'ELSE ST_CollectionExtract(repaired, 1) END',
+    );
+  });
+
+  it('T6 — validateGeometries carries EVERY shaped feature field, not just key + geom', async () => {
+    // Locks the write.js capture-time fix landed at commit a8c1a42f: a multi-column INGESTOR
+    // (address_points: 16 columns, measured 2026-09-23 "null value in column latitude") needs
+    // every shaped field carried through, not just the key and the validated geometry — the
+    // key and geom columns still win on collision (byte-identical for a key+geom-only feature
+    // like load_ravines).
+    const plan = writeLib.buildWritePlan(spec('point'), LOAD_RAVINES);
+    const feature = { source_id: 1, geojson: '{"type":"Point","coordinates":[1,2]}', latitude: 43.1, foo: 'bar' };
+    const noopLog = { warn: () => {}, info: () => {} };
+    const fakePool = {
+      query: async () => ({
+        rows: [{ source_key: 1, status: 'accepted', is_valid_original: true, geom_wkb: '0101000020E6100000AAAA' }],
+      }),
+    };
+    const classify = () => ({ repaired: 0, collectionExtracted: 0, skipped: 0, carry: true });
+    const result = await writeLib.validateGeometries(fakePool, plan, [feature], classify, { log: noopLog, tag: '[t6]' });
+    expect(result.carried).toHaveLength(1);
+    expect(result.carried[0].source_id).toBe(1);
+    expect(result.carried[0].latitude).toBe(43.1);
+    expect(result.carried[0].foo).toBe('bar');
+    expect(result.carried[0].geom).toBe('0101000020E6100000AAAA');
+    expect(result.skipped).toBe(0);
+  });
 });
 

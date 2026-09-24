@@ -242,10 +242,23 @@ function rows_read_floor(ctx) {
   const a = ctx.acquired || {};
   const rowsRead = numberOrNull(a.rows_read) != null ? numberOrNull(a.rows_read) : numberOrNull(a.feature_count);
   if (rowsRead == null) {
-    return ctx.report('rows_read_floor', { violations: 0, detail: null });
+    return ctx.report('rows_read_floor', { violations: 0, detail: null, value: null });
   }
+  // CORRECTED at commit 9 (a genuine defect caught while recapturing the golden after the
+  // ROW-ERROR-GATE fix): the descriptor's `limit: "viol == 0"` form makes `resolveLimit`
+  // (verdict.js) substitute the LAST number in the string with the config-resolved floor
+  // (e.g. "viol == 500000"), which then compares a 0/1 VIOLATION FLAG against ~500000 — a
+  // comparison that is FALSE on every run regardless of the true row count, so this check
+  // FAILed unconditionally (measured: 525,436 rows >> the 500,000 floor, yet the captured
+  // POST golden read verdict FAIL). `value_min <n>` (verdict.js VALUE_MIN_RE) reads
+  // `observation.value` directly instead — the form the file's own R-T addendum built for
+  // exactly this shape ("a raw measured value... needed for e.g. pb_rows sanity"). The
+  // descriptor now declares `"limit": "value_min 500000"`; `value` is reported alongside
+  // the existing `detail`/`violations` (kept for the audit row's displayed number and for
+  // any future consumer reading the pre-fix shape) so the check reads TRUE health.
   ctx.report('rows_read_floor', {
     detail: rowsRead,
+    value: rowsRead,
     violations: rowsRead < ctx.config.sources_address_points_floor ? 1 : 0,
   });
 }

@@ -787,6 +787,13 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // 2 new checks) and again here at ③ — dirty across this cutover by construction, same
       // class as geocode_permits/link_neighbourhoods above.
       'scripts/compute-parcel-cost-estimates.descriptor.json',
+      // batch-2 row 3.1 cutover (2026-09-24): address_points is a NEW converted-registry
+      // member THIS commit — its descriptor lands at the folded commit 6+7 and is touched
+      // again here at commit 9 (the ROW-ERROR-GATE severity fix, the rows_read_floor
+      // value_min fix, and the three dead-declaration config-var retirements) — dirty
+      // across this cutover by construction, same class as geocode_permits/
+      // link_neighbourhoods/compute_parcel_cost_estimates above.
+      'scripts/load-address-points.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];

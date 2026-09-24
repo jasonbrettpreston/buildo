@@ -65,11 +65,16 @@ const GUARD_COLUMNS = [
 /** The CSV_URL literal (:37-38) — inputs.reads.externals[0].url. */
 const CSV_URL_HOST = 'ckan0.cf.opendata.inter.prod-toronto.ca';
 
-/** Rule 3 literal ledger (§6 of the commit-1 report) — every declared config variable, with its seed default. */
+/**
+ * Rule 3 literal ledger (§6 of the commit-1 report) — every declared config variable, with
+ * its seed default. RETIRED at commit 9 (step-validate's §1.2a P4 conformance check caught
+ * it as a dead declaration — no consumer anywhere in the converted architecture, see the
+ * descriptor's own `deviations[]` entry): `address_points_progress_bytes_window`,
+ * `address_points_progress_row_modulo`, `address_points_expected_total_rows`. The legacy
+ * per-row streaming progress loop they governed has no analogue under the INGESTOR runner's
+ * whole-array CSV acquisition path.
+ */
 const CONFIG_VARS: Record<string, number> = {
-  address_points_progress_bytes_window: 10 * 1024 * 1024,
-  address_points_progress_row_modulo: 50000,
-  address_points_expected_total_rows: 525000,
   sources_address_points_floor: 500000,
   address_points_skip_rate_max_pct: 5,
   address_points_null_address_number_max_pct: 0.1,
@@ -77,9 +82,6 @@ const CONFIG_VARS: Record<string, number> = {
 };
 /** The config variables that are REAL seeded variables minted by this step (sources_address_points_floor pre-exists). */
 const NEW_CONFIG_VARS = [
-  'address_points_progress_bytes_window',
-  'address_points_progress_row_modulo',
-  'address_points_expected_total_rows',
   'address_points_skip_rate_max_pct',
   'address_points_null_address_number_max_pct',
   'address_points_download_timeout_ms',
@@ -547,7 +549,10 @@ describe('row 3.1 — checks[] wiring (Rule 5) and config.logic_variables (Rule 
     expect(checkById(d, 'csv_header_drift').severity).toBe('WARN');
     expect(checkById(d, 'null_address_number_pct').severity).toBe('WARN');
     expect(checkById(d, 'null_address_number_pct').limit_from_config).toBe('address_points_null_address_number_max_pct');
-    expect(checkById(d, 'skip_rate_pct').severity).toBe('WARN');
+    // CORRECTED at commit 9 (ROW-ERROR-GATE fast invariant #27 caught this): the legacy
+    // auditRows entry reads `status: skipRate >= 5 ? 'FAIL' : 'PASS'` (git show
+    // 120b2b99:scripts/load-address-points.js:418) — FAIL-severity, not WARN.
+    expect(checkById(d, 'skip_rate_pct').severity).toBe('FAIL');
     expect(checkById(d, 'skip_rate_pct').limit_from_config).toBe('address_points_skip_rate_max_pct');
     expect(checkById(d, 'rows_read_floor').severity).toBe('FAIL');
     expect(checkById(d, 'rows_read_floor').limit_from_config, 'the SHARED floor variable (Rule 3)').toBe(SHARED_FLOOR_VAR);
@@ -698,7 +703,6 @@ describe('row 3.1 — the standard batteries (Spec 122 §5.5, Spec 122 §5.1, th
   it('the compute reads every threshold through ctx.config.<name> — no bare literal bound', () => {
     const src = readText(COMPUTE_REL);
     for (const v of NEW_CONFIG_VARS) {
-      if (v === 'address_points_progress_bytes_window' || v === 'address_points_progress_row_modulo' || v === 'address_points_expected_total_rows') continue; // display-only
       expect(src.includes(`ctx.config.${v}`), `the compute must read ${v} via ctx.config`).toBe(true);
     }
     expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the floor check reads the SHARED variable via ctx.config').toBe(true);
@@ -724,9 +728,10 @@ describe('row 3.1 — the standard batteries (Spec 122 §5.5, Spec 122 §5.1, th
     expect(/Commits 7\(\+8 folded\)/i.test(report), 'the folded descriptor+compute commit is recorded').toBe(true);
   });
 
-  it('converted.json does NOT yet register address_points (commit 9 is the cutover)', () => {
-    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[] };
-    expect(converted.converted, 'registration is commit 9, not this folded commit').not.toContain(STEP_REL);
+  it('[flipped at commit 9] converted.json registers address_points, pending[] carries no leftover entry (R-K)', () => {
+    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string }> };
+    expect(converted.converted, 'registration lands at commit 9, the cutover').toContain(STEP_REL);
+    expect(converted.pending.some((p) => p.file === STEP_REL), 'R-K: the pending entry is deleted in the SAME commit as registration').toBe(false);
   });
 
   it('the frozen shell names load 96 and the descriptor names load 96 (the §5.4 lock lock)', () => {

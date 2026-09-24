@@ -351,13 +351,13 @@
       },
       "limit": "pct <= 5",
       "limit_from_config": "address_points_skip_rate_max_pct",
-      "severity": "WARN",
+      "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "A rising coordinate/ID skip rate signals CSV drift [READ load-address-points.js:413-418]. A row is skipped when ADDRESS_POINT_ID is not an int (:288-292) or when neither a parseable geometry NOR numeric lat/lng is present (:317-322). The pre-conversion script pushed this as a WARN row; the conversion declares it with the bound externalized to address_points_skip_rate_max_pct (Rule 3).",
+        "text": "A rising coordinate/ID skip rate signals CSV drift [READ load-address-points.js:413-418]. A row is skipped when ADDRESS_POINT_ID is not an int (:288-292) or when neither a parseable geometry NOR numeric lat/lng is present (:317-322). CORRECTED at commit 9 (step-validate's ROW-ERROR-GATE fast invariant #27 caught it): the pre-conversion script's own auditRows entry reads `status: skipRate >= 5 ? 'FAIL' : 'PASS'` (`git show 120b2b99:scripts/load-address-points.js:418`) — FAIL-severity, not WARN as this text previously (and wrongly) claimed. FAIL-severity but `blocking:false` (PIN, DO NOT FIX — plan D-8, same posture as `rows_read_floor`): a FAIL row today exits 0 and the chain continues. The bound is externalized to address_points_skip_rate_max_pct (Rule 3).",
         "liveness": {
           "kind": "check",
           "ref": "row 3.1 commit-1 assessment §1.3"
@@ -371,7 +371,7 @@
         "of": "rows_read",
         "direction": "min"
       },
-      "limit": "viol == 0",
+      "limit": "value_min 500000",
       "limit_from_config": "sources_address_points_floor",
       "severity": "FAIL",
       "blocking": false,
@@ -379,7 +379,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Catastrophic-load detector: the loader's own `rows_read >= 500000` (:413) DUPLICATES a fleet check — assert_data_bounds already declares the address_points ≥ 500K floor via the registered variable `sources_address_points_floor` (Spec 43 row 27; scripts/seeds/logic_variables.json, default 500000). RULING (commit-1 report §2, KEEP): this step keeps its own check but SHARES the SAME registered variable name through limit_from_config — not a second key, not retired — so there is ONE source of truth (Rule 3, one home per concern). A near-empty load must not pass silently. FAIL-severity but blocking:false (PIN, DO NOT FIX — plan D-8): a FAIL row today exits 0 and the chain continues.",
+        "text": "Catastrophic-load detector: the loader's own `rows_read >= 500000` (:413) DUPLICATES a fleet check — assert_data_bounds already declares the address_points ≥ 500K floor via the registered variable `sources_address_points_floor` (Spec 43 row 27; scripts/seeds/logic_variables.json, default 500000). RULING (commit-1 report §2, KEEP): this step keeps its own check but SHARES the SAME registered variable name through limit_from_config — not a second key, not retired — so there is ONE source of truth (Rule 3, one home per concern). A near-empty load must not pass silently. FAIL-severity but blocking:false (PIN, DO NOT FIX — plan D-8): a FAIL row today exits 0 and the chain continues. CORRECTED at commit 9: the form was `\"viol == 0\"`, which `resolveLimit` substitutes to `\"viol == 500000\"` and then compares the 0/1 violation flag against ~500000 — always false, so this check FAILed on every run regardless of the true row count (measured: 525,436 rows against the 500,000 floor still read FAIL in the pre-fix POST golden). `value_min` reads the compute's reported `value` (the raw row count) directly against the config-substituted floor — the form verdict.js's own R-T addendum built for exactly this shape.",
         "liveness": {
           "kind": "table",
           "ref": "address_points"
@@ -466,6 +466,18 @@
     }
   ],
   "deviations": [
+    {
+      "from": "three config.logic_variables[] declared for the download-progress/parse-progress console cadence (`address_points_progress_bytes_window` :66, `address_points_progress_row_modulo` :380, `address_points_expected_total_rows` :381)",
+      "why": {
+        "text": "RETIRED at commit 9 (step-validate's §1.2a P4 conformance check caught it: 'read neither as ctx.config.X in compute nor through a *_from_config field — a dead declaration'). The legacy per-row streaming loop these three cadence literals governed (console progress lines every 10 MB / every 50,000 rows, against a 525,000-row denominator) has no analogue under the INGESTOR runner's CSV acquisition path (prerequisite 0b, RE-FREEZE #13): `acquireExternal`/`parseCsv` hand off the WHOLE parsed array in one step and log a single 'acquired N feature(s)' line — there is no per-byte or per-row progress loop left to bind a cadence tunable to. Declaring them anyway (the commit 6+7 folded diff's own peel) was itself the defect: three operator-facing config knobs that do nothing. Retired rather than forced onto a fabricated consumer (Spec 122 §2 'compute is just compute' — no phantom declaration to satisfy Rule 3's letter while violating its purpose). Their seed rows are deleted in the same commit. If a future library WF reintroduces progress logging inside acquire.js's whole-array CSV path, the tunables are re-declared there, against the runner's own progress mechanism, not resurrected here.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling, commit 9 (step-validate --write P4 finding)",
+      "date": "2026-09-24"
+    },
     {
       "from": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :119-251, :371-383)",
       "why": {
@@ -612,24 +624,6 @@
   },
   "config": {
     "logic_variables": [
-      {
-        "name": "address_points_progress_bytes_window",
-        "min": 1048576,
-        "max": 67108864,
-        "on_invalid": "fail"
-      },
-      {
-        "name": "address_points_progress_row_modulo",
-        "min": 1000,
-        "max": 5000000,
-        "on_invalid": "fail"
-      },
-      {
-        "name": "address_points_expected_total_rows",
-        "min": 1,
-        "max": 5000000,
-        "on_invalid": "fail"
-      },
       {
         "name": "sources_address_points_floor",
         "min": 1,

@@ -65,10 +65,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 18-descriptor registry (batch2 row 2.4 cutover, 2026-09-21 — compute_parcel_cost_estimates) yields 11 live pairs (up from 9): this registration ADDS TWO, in both directions — it is not a zero-pair cutover like enrich_heritage/enrich_ravines\'s pure-leaf conversions', () => {
+  it('the REAL 19-descriptor registry (batch2 row 3.1 cutover, 2026-09-24 — address_points) yields 13 live pairs (up from 11): this registration ADDS TWO, both as the UPSTREAM half of already-declared edges — address_points itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema)', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
+      ['address_points', 'assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'refresh_snapshot'].sort(),
     );
     // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
     // [{step: 'load_heritage', version_pin: 'exact'}] ONLY — measured from
@@ -108,11 +108,17 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // `address_points`, which is still unconverted and therefore still resolves to nothing),
     // but its appearance as the UPSTREAM of a downstream that was already converted. A
     // cutover can add a seam pair without the step itself declaring one.
-    // ALSO KNOWN, and filed MED in review_followups.md rather than discovered later: the
-    // moment `address_points` converts (batch-2 Phase 3), `address_points -> geocode_permits`
-    // becomes a 9th pair AND starts WARNing permanently on every permits chain-end, because
-    // `load-address-points.js` is a sources-only step, `deriveSeamPairs` has no chain filter,
-    // and `chain-end-synthesis.mjs` passes the LIVE chain. Accepted and pre-announced.
+    // WAS ALSO KNOWN and filed MED in review_followups.md rather than discovered later: the
+    // moment `address_points` converts, `address_points -> geocode_permits` becomes a live
+    // pair via the UNSCOPED `deriveSeamPairs` used above, which has no chain filter — a
+    // sources-only step would then WARN permanently on every permits chain-end.
+    // SUPERSEDED before that cutover landed: prerequisite 0c (SEAM-CHAIN-1, Spec 122 §6.5,
+    // commit `08063c58`) built `deriveSeamPairsScoped`, and `runSeamChecks` (the function
+    // `chain-end-synthesis.mjs` actually calls) was wired to it directly — the chain-scoped
+    // describe block below (`seam pairs are scoped to the chain they run in`) is the live
+    // lock. The address_points cutover (batch-2 row 3.1, 2026-09-24) landed with the
+    // permanent-WARN premise already closed; see the `deriveSeamPairs` (unscoped, both
+    // chains) test above for the two pairs it DOES contribute to the fleet-wide count.
     // assert_data_bounds (batch1 I2, cut over commit 9, 2026-09-13) likewise declares
     // inputs.reads.steps: [] — measured from scripts/quality/assert-data-bounds.descriptor.json
     // on 2026-09-13: it reads 16 TABLES directly (§0 row 5 of its plan), never another
@@ -172,17 +178,37 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // sorts FIRST, ahead of the pre-existing one. 'compute_parcel_cost_estimates:enrich_parcels'
     // (downstream=compute_parcel_cost_estimates) sorts between 'assert_parcel_sanity:*' and
     // 'enrich_parcels:link_massing' ('c' < 'e' on the downstream half).
+    // batch-2 row 3.1 cutover (address_points, 2026-09-24) — 11 -> 13 PAIRS, TWO NEW,
+    // BOTH as the upstream half of an edge ALREADY declared by a converted downstream
+    // (the same class as link_neighbourhoods/geocode_permits and assert_parcel_sanity/
+    // compute_parcel_cost_estimates above — a cutover can add a seam pair without the
+    // registering step declaring one itself, purely by completing an existing edge on
+    // the other end): (a) geocode_permits declares inputs.reads.steps:
+    // [{step: 'address_points'}] (measured from scripts/geocode-permits.descriptor.json)
+    // — already declared, now resolves; (b) link_parcel_addresses declares
+    // inputs.reads.steps naming BOTH 'address_points' and its alias 'load_address_points'
+    // (measured from scripts/link-parcel-addresses.descriptor.json) — dedup keeps one
+    // pair. address_points' OWN inputs.reads.steps is [] (a leaf INGESTOR, like
+    // load_ravines/assert_schema), so its registration contributes zero pairs as a
+    // downstream.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'compute_parcel_cost_estimates' },
       { upstream: 'link_massing', downstream: 'enrich_parcels' },
       { upstream: 'load_ravines', downstream: 'enrich_ravines' },
+      // batch-2 row 3.1 (2026-09-24) — sorts here: 'geocode_permits:address_points'
+      // falls between 'enrich_ravines:load_ravines' and 'link_massing:compute_centroids'.
+      { upstream: 'address_points', downstream: 'geocode_permits' },
       { upstream: 'compute_centroids', downstream: 'link_massing' },
       // batch-2 I5 (2026-09-16) — sorts here by deriveSeamPairs's own deterministic
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
       // between 'link_massing:compute_centroids' and 'link_parcel_addresses:link_parcels'.
       { upstream: 'geocode_permits', downstream: 'link_neighbourhoods' },
+      // batch-2 row 3.1 (2026-09-24) — sorts here: 'link_parcel_addresses:address_points'
+      // falls between 'link_neighbourhoods:geocode_permits' and
+      // 'link_parcel_addresses:link_parcels' ('address_points' < 'link_parcels').
+      { upstream: 'address_points', downstream: 'link_parcel_addresses' },
       { upstream: 'link_parcel_addresses', downstream: 'link_parcels' },
       { upstream: 'link_massing', downstream: 'refresh_snapshot' },
       { upstream: 'link_parcels', downstream: 'refresh_snapshot' },
@@ -308,18 +334,26 @@ describe('runSeamChecks — one row per derived pair', () => {
   // compute_parcel_cost_estimates' sorts between the assert_parcel_sanity pair(s) and
   // 'seam_link_massing_before_enrich_parcels' (downstream 'compute_parcel_cost_estimates'
   // < 'enrich_parcels').
+  // address_points (batch2 row 3.1, cut over 2026-09-24) ADDS TWO MORE — measured 2026-09-24
+  // (`seam.runSeamChecks({chainId:'sources'})` against the real registry): geocode_permits
+  // is ITSELF a member of the 'sources' chain (Spec 43 row 4), so chain-scoping (SEAM-CHAIN-1,
+  // prerequisite 0c) does NOT filter out `address_points -> geocode_permits` — the permanent-
+  // WARN premise the I5 cutover pre-announced never materializes (see the deriveSeamPairs
+  // test above). Registry 18 -> 19 descriptors; live pairs/metrics 11 -> 13.
   const EXPECTED_SEAM_METRICS = [
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_compute_parcel_cost_estimates',
     'seam_link_massing_before_enrich_parcels',
     'seam_load_ravines_before_enrich_ravines',
+    'seam_address_points_before_geocode_permits',
     'seam_compute_centroids_before_link_massing',
     // batch-2 I5 cutover (2026-09-16) — in deriveSeamPairs's own `downstream:upstream` sort
     // position. link_neighbourhoods declared this read at ITS cutover the same day;
     // geocode_permits' registration is what resolves it to a live producer, which is why a
     // cutover can add a seam pair the converting step never declared.
     'seam_geocode_permits_before_link_neighbourhoods',
+    'seam_address_points_before_link_parcel_addresses',
     'seam_link_parcel_addresses_before_link_parcels',
     'seam_link_massing_before_refresh_snapshot',
     'seam_link_parcels_before_refresh_snapshot',

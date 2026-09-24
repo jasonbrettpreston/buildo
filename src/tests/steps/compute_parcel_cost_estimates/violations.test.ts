@@ -211,11 +211,16 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
   // Cutover-only (T9a) — commit ③ registers the slug in converted.json; deriveSeamPairs now
   // sees it, and the seam-pair registry moves 9 -> 11 (both directions — see
   // src/tests/step-seam.logic.test.ts for the full derivation). Was it.fails() before ③.
-  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11', () => {
+  // WIDENED AGAIN at the batch-2 row 3.1 cutover (2026-09-24): address_points registering
+  // adds TWO MORE pairs (address_points -> geocode_permits, address_points ->
+  // link_parcel_addresses — neither involving this step), moving the fleet-wide count
+  // 11 -> 13. See src/tests/step-seam.logic.test.ts for the full derivation; this lock only
+  // asserts the arithmetic reflects the live registry, not this step's own contribution.
+  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11 -> 13 (batch-2 row 3.1, 2026-09-24)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seam: any = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
     const registry = seam.loadConvertedDescriptors();
-    expect(seam.deriveSeamPairs(registry).length).toBe(11);
+    expect(seam.deriveSeamPairs(registry).length).toBe(13);
   });
 });
 

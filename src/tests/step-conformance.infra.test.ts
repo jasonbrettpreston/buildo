@@ -2260,7 +2260,16 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // seam pairs and its `ledgerGatedSkip` staleness gating, which is exactly why LDG-D1's
     // own WF3 pinned the identical `compute_centroids` case rather than fixing it inline.
     // Same disposition, same ledger id, filed in review_followups.md.
-    link_parcels: { missing: ['compute_centroids', 'geocode_permits'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover)
+    // WIDENED AGAIN at the batch-2 row 3.1 cutover (2026-09-24): address_points became a
+    // CONVERTED producer that day, so the ledger's column-overlap derivation can now SEE a
+    // dependency link_parcels' compute has always had — link-parcel-addresses' own bridge
+    // (parcel_address_points) is populated FROM address_points, and link_parcels reads that
+    // bridge (already declared: link_parcel_addresses); the direct address_points dependency
+    // surfaces via the SAME column-overlap mechanism LDG-D1 already documents for
+    // compute_centroids/geocode_permits. Same disposition: declaring it moves link_parcels'
+    // own seam pairs and staleness gating, out of scope for a conversion that must not touch
+    // link_parcels' behaviour. Same ledger id (LDG-D1), filed in review_followups.md.
+    link_parcels: { missing: ['address_points', 'compute_centroids', 'geocode_permits'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points became derivable at its cutover)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
     // WIDENED at the batch-2 row 2.1 cutover (2026-09-18): enrich_ravines became a CONVERTED
     // producer that day, so the ledger's column-overlap derivation can now SEE a dependency

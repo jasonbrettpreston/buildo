@@ -67,15 +67,7 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [
-    {
-      "file": "scripts/load-address-points.js",
-      "registers_at": "commit 9",
-      "reason": "Batch-2 row 3.1 (address_points, INGESTOR 2nd member, FULL nine-commit form; commits 6+7+8-peel FOLDED into one descriptor_only diff under the operator budget ruling 2026-09-23, each peel concern locked in violations.test.ts). Descriptor + compute + frozen shell + seeds + re-pointed legacy infra test + POST goldens land in this commit; converted.json registration, census flip, manifest, template-freeze refresh, drift-lib registration under Spec 54 and the spec diffs (43/54) are deferred to commit 9 (cutover), per Spec 124 R-K.",
-      "declared": "2026-09-23",
-      "stage": "shape_clean"
-    }
-  ],
+  "pending": [],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
@@ -94,6 +86,7 @@
     "scripts/quality/assert-parcel-sanity.js",
     "scripts/enrich-ravines.js",
     "scripts/enrich-heritage.js",
-    "scripts/compute-parcel-cost-estimates.js"
+    "scripts/compute-parcel-cost-estimates.js",
+    "scripts/load-address-points.js"
   ]
 }

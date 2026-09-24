@@ -5017,36 +5017,6 @@
       "group": "Sources Catastrophic-Load Floors"
     }
   },
-  "address_points_progress_bytes_window": {
-    "default": 10485760,
-    "type": "number",
-    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — download progress cadence in BYTES: how many bytes of the ~183 MB address-points CSV accumulate between progress log lines. 10485760 = the pre-externalization literal (10 * 1024 * 1024). Display-only: it shapes operator visibility, never a verdict, so the compute never spells ctx.config.<name> for it and it is exempt from the ctx.config-read lock. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
-    "min": 1048576,
-    "max": 67108864,
-    "admin": {
-      "group": "Source Ingestion"
-    }
-  },
-  "address_points_progress_row_modulo": {
-    "default": 50000,
-    "type": "number",
-    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — download progress cadence in ROWS: the record interval at which the loader logs a processed-row line. 50000 = the pre-externalization literal. Display-only, like the byte window above; never read as a verdict bound. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
-    "min": 1000,
-    "max": 5000000,
-    "admin": {
-      "group": "Source Ingestion"
-    }
-  },
-  "address_points_expected_total_rows": {
-    "default": 525000,
-    "type": "number",
-    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — the expected address_points source size, used for the human-readable progress PERCENTAGE only. 525000 = the pre-externalization literal (the live CKAN CSV is 525,436 rows). Display-only: it is NOT the catastrophic-load floor (that is the shared sources_address_points_floor, consumed by rows_read_floor); the compute never spells ctx.config.<name> for it and it is exempt from the ctx.config-read lock. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js).",
-    "min": 1,
-    "max": 5000000,
-    "admin": {
-      "group": "Source Ingestion"
-    }
-  },
   "address_points_skip_rate_max_pct": {
     "default": 5,
     "type": "number",

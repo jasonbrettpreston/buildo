@@ -496,3 +496,160 @@ Families: (1) `stdout_lines` — the legacy printed download/progress/parse line
 | 3 | A legacy loader can be non-idempotent with no test noticing (8,199 rows/run) | idempotence (run 2 = 0 updates) becomes a standing G8 assertion for INGESTORs (R-F: DEFERRED → next batch plan step) |
 
 **Addendum (17:40Z):** after an intervening LEGACY run, the converted step re-updated exactly **8,199** rows back to the CSV values (`post/sources.json` `records_updated: 8199`) and the immediate re-run updated **0** (`post/standalone.json`) — the two implementations disagree on precisely the legacy's churn set; the converted values are the CSV values (measured above), so AP-D4 stands.
+
+---
+
+## Commit 9 (2026-09-24) — cutover + two real defects caught by the gates, fixed inline
+
+Per Spec 123 §3.1 ("PIN in wrong form, never fix inside the conversion" applies to CARRIED legacy
+behaviour — it does NOT extend to a defect the CONVERSION itself introduced), two defects
+introduced by the folded commit 6+7 diff (`a8c1a42f`) were caught by `step-validate --write` and
+the golden recapture, and fixed in this cutover commit — the same posture the geocode_permits and
+compute_parcel_cost_estimates cutover precedents set ("ONE REAL DEFECT CAUGHT BY THE --write GATE
+AND FIXED HERE").
+
+**AP-D5 — ROW-ERROR-GATE #27 (fast invariant), skip_rate_pct severity was WARN, not FAIL.**
+`execution.on_row_error_why.liveness.ref` cites `skip_rate_pct`, but the folded commit declared
+that check WARN-severity while the legacy loader's own `auditRows` entry reads `status: skipRate
+>= 5 ? 'FAIL' : 'PASS'` (`git show 120b2b99:scripts/load-address-points.js:418`) — FAIL, not WARN.
+The check's `why` text even said "the pre-conversion script pushed this as a WARN row," which was
+simply wrong (unverified against the source it cited). **Fix:** `severity: "FAIL"` (matching the
+legacy code exactly); `why` corrected. Zero-diff on this run's data (skip_rate was 0%, so the row
+reads PASS either way — the severity only matters on a future degraded run).
+
+**AP-D6 — `rows_read_floor`'s `limit` form made the check FAIL unconditionally.** The folded
+commit declared `"limit": "viol == 0"` with `limit_from_config: "sources_address_points_floor"`.
+`resolveLimit` (verdict.js) substitutes the LAST number in the limit STRING with the config value,
+turning `"viol == 0"` into `"viol == 500000"` — which then compares the compute's 0/1 VIOLATION
+FLAG against ~500000, a comparison that is false on every run regardless of the true row count.
+**Measured:** the first commit-9 recapture, with 525,436 rows against the 500,000 floor (well
+above it), still read `audit_table.verdict: "FAIL"` / `terminal: "failed_rows_read_floor"` — the
+same FAIL the PRE-fix folded-commit POST golden already carried, silently. **Fix:** the descriptor
+now declares `"limit": "value_min 500000"` (verdict.js's own R-T addendum form for "a raw measured
+value, not a violation count" — built for exactly this shape); the compute additionally reports
+`value: rowsRead` alongside the existing `detail`/`violations` fields. **Recaptured POST goldens**
+(both `sources` and `standalone`) now read `audit_table.verdict: "PASS"`, `rows_read_floor.status:
+"PASS"`, `terminal: "loaded"` — table_state UNCHANGED (`690acf86…`, 525,667 rows, byte-identical to
+every prior capture), `records_updated: 0` on both arms (idempotent, consistent with the AP-D4
+convergence fix already delivered). This is a genuine PASS/FAIL flip in the step's own observable
+verdict, not a data change — the write behaviour this commit proves zero-diff on is unaffected.
+
+**Also retired at commit 9 (P4 dead-declaration, §1.2a):** three config variables the folded commit
+declared for the legacy per-row download/parse progress cadence
+(`address_points_progress_bytes_window`, `address_points_progress_row_modulo`,
+`address_points_expected_total_rows`) were never read anywhere — the INGESTOR runner's CSV
+acquisition path (prerequisite 0b) hands off the whole parsed array in one step and logs a single
+summary line, so the per-byte/per-row progress loop these three literals governed has no
+converted-side analogue. `step-validate`'s §1.2a P4 conformance check caught all three as dead
+declarations (declared, in no registry-consuming path). Retired via a `deviations[]` entry rather
+than forced onto a fabricated consumer; their seed rows deleted from `scripts/seeds/logic_variables.json`
+in the same commit. Declared config variables: 7 → 4 (the shared `sources_address_points_floor`
+plus `address_points_skip_rate_max_pct`, `address_points_null_address_number_max_pct`,
+`address_points_download_timeout_ms`).
+
+**Golden diff, this commit's own delta (PRE-fix POST vs POST-fix POST, `sources.json`):** exactly
+ONE new field, `summary.records_meta.checks_passed: undefined -> "all"` — the fleet-standard
+runner field (`scripts/lib/step/index.js:5225`, `checks_passed: 'all'` requires BOTH `errors` and
+`warnings` empty) that could never appear while `rows_read_floor` FAILed unconditionally. No other
+field moved; `table_state` is byte-identical. `audit_table.rows[3]` (`rows_read_floor`) itself
+moved `value`/`threshold`/`status` (525436/"viol == 500000"/"FAIL" → 525436/"value_min
+500000"/"PASS") and `audit_table.verdict`/`summary.records_meta.terminal`/`checks_failed`/
+`errors[]` moved with it — all within the ALREADY-explained "rows[*] metric/value/threshold/status"
+and "audit_table.verdict"/"terminal" diff buckets §11 documents, just with corrected values rather
+than new field names.
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=address_points --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=23 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=39313d9 |
+| G3 | 1 | 2 | table rows=17 vocab-hit rows=5 |
+| G4 | 0 | 2 | risk-class row with chance+impact found=false |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 4 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=52 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=52 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | address_points | PASS | min_migration=18 <= migrations count=245 |
+| 2 | address_points | PASS | 4 declared, missing from seeds: none |
+| 3 | address_points | PASS | retired=0 overlap-with-declared=none |
+| 7 | address_points | PASS | SPEC LINK header present=true |
+| 8 | address_points | PASS | G-4: 4 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | address_points | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | address_points | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 68 PRE capture(s) across 19 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 19 converted slug(s) — 11 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 44 declared counter source(s) across 15 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 3 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 149 · unexplained: 0
+
+### Test suite (item iii)
+- 1443/1459 passed (suite success=false)
+- harvested: 25 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing (16):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 4 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=37809B notes=8758B checks=6 rows records_meta=1361B (newest post/ capture) |
+
+**Enforced-green: 13/14**
+

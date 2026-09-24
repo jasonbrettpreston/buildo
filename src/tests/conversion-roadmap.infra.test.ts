@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('46 remaining files, 48 remaining slugs (excluding the 17 converted — enrich_heritage CUTOVER, batch-2 row 2.2 commit 3, 2026-09-20 — 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('44 remaining files, 46 remaining slugs (excluding the 19 converted — address_points CUTOVER, batch-2 row 3.1 commit 9, 2026-09-24 — 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -142,11 +142,21 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 46 -> 45 files and 48 -> 47 slugs: compute_parcel_cost_estimates joined `pending[]` at
     // batch-2 row 2.4 commit ② (2026-09-21, descriptor+compute+shell landed, stage
     // "shape_clean"), the same move enrich_heritage made at its own commit 1.
-    expect(remaining.length).toBe(45);
-    expect(remainingSlugCount).toBe(47);
+    // 45 -> 45 files / 47 -> 47 slugs (UNCHANGED, discovered stale at batch-2 row 3.1 commit 9,
+    // 2026-09-24): address_points joined `pending[]` at ITS OWN folded commit 6+7
+    // (a8c1a42f, before this test was last run) — its file already left `remaining` there,
+    // the same move link_neighbourhoods/geocode_permits/enrich_heritage made above at their
+    // own pending-entry commits. Its commit-9 CUTOVER (converted.json pending[] deleted,
+    // converted[] gains the file in the SAME commit, R-K) is therefore a no-op for THIS
+    // count — `remaining` excludes both `pending[]` and `converted[]` uniformly. The
+    // committed assertion had drifted to 45/47 (one commit behind reality) because nothing
+    // re-ran this specific measured-count test between the folded commit and commit 9;
+    // corrected here to the actual re-derived numbers, 44/46.
+    expect(remaining.length).toBe(44);
+    expect(remainingSlugCount).toBe(46);
   });
 
-  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=13 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
+  it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
     const census = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ slug: string; file: string; batch: string; status?: string }> };
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
@@ -196,7 +206,16 @@ describe('measured counts — independently re-derived, not transcribed from the
     // row flipped batch "C5" -> "pending", the same move.
     // 10 -> 9 at batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' own
     // census row flipped batch "C5" -> "pending", the same move.
-    expect(c5.size).toBe(9);
+    // 9 -> 8 at the batch-2 row 3.1 CUTOVER (commit 9, 2026-09-24): address_points' own
+    // census row is RETAINED with its PRE-cutover `batch: "C5"` kept VERBATIM (Spec 124
+    // R-AO — never rewritten to "pending" first, unlike the ENRICHER members above, because
+    // the FULL nine-commit form never routes this slug through converted.json's `pending[]`
+    // AND the census `batch` field at once; only `converted.json.pending[]` tracked its
+    // in-flight state, deleted in the same commit as registration per R-K) but gains
+    // `status: "converted"`, so the loop's `if (e.status === 'converted') continue;` guard
+    // drops it from the live C5 count — the same effect every other cutover above achieves
+    // via the batch-field flip, reached here by the status flag alone.
+    expect(c5.size).toBe(8);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -400,7 +419,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     }
   });
 
-  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 18 converted + 0 pending + 3 exempted + 47 remaining', async () => {
+  it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 19 converted + 0 pending + 3 exempted + 46 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
@@ -428,8 +447,15 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // batch-2 row 2.4 CUTOVER (commit 3, 2026-09-21): compute_parcel_cost_estimates moves
     // from `pending[]` into `converted[]` (17 -> 18), pending falls back to 0; remaining is
     // UNCHANGED (47) — the slug left `remaining` at commit ②, not at cutover.
+    // batch-2 row 3.1 commit 6+7 folded (a8c1a42f, 2026-09-23): address_points joined
+    // `pending[]`, so 1 slug moved from remaining (47) into pending (0 -> 1), leaving 46.
+    // batch-2 row 3.1 CUTOVER (commit 9, 2026-09-24): address_points moves from `pending[]`
+    // into `converted[]` (18 -> 19), pending falls back to 0; remaining is UNCHANGED (46) —
+    // the slug left `remaining` at the folded commit, not at cutover. This assertion had
+    // drifted to 47 (one commit behind reality, same staleness as the measured-counts test
+    // above) — corrected here to the re-derived 46.
     expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(47);
+    expect(remainingSlugs).toBe(46);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -523,7 +549,11 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     // buildRoadmap() from converted.json + the census, not retyped.
     // batch-2 row 2.4 commit ② (2026-09-21): compute_parcel_cost_estimates' census
     // row flipped batch "C5" -> "pending" (10->9), the same move.
-    expect(c5).toHaveLength(9);
+    // batch-2 row 3.1 CUTOVER (commit 9, 2026-09-24): address_points converted out of C5
+    // (9->8) — its file is now in `converted[]`, so `buildRoadmap()` no longer emits a row
+    // for it at all (converted files are excluded from every batch, per the totality test
+    // above), same effect as every prior C5-count drop in this describe block.
+    expect(c5).toHaveLength(8);
   });
 });
 
