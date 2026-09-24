@@ -1277,6 +1277,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 | 6 | The fingerprint's field split drifts | §6.3's seven per-field assertions (#52g) |
 | 7 | ⚠️ **Conversion regressions are indistinguishable from envelope failures** | §9's P1 gate. This is why a green run precedes S |
 | 8 | ⚠️ **A declared bound's cost is measured on a small local table and is 3 orders of magnitude cheaper than on the target** — the check runs unbounded on cloud against a heap the same run just bloated (EP-D17, 2026-09-10: 180-260ms local vs a 40+-minute cloud cliff) | The per-entry ceiling (defaulted from `step_post_check_statement_timeout_minutes` when undeclared) + the per-entry `duration_ms` INFO row (Spec 48 §3.5 extension) so the true cost lands on the audit table every run, never only at declaration time + the pre-dispatch bloat reading (`EP-PIN-D17`'s evidence field) |
+| 9 | ⚠️ **A key-type mismatch in a runner-side join silently drops every row** — `validateGeometries` keyed `Number(source_key)` vs a TEXT key: parcels wrote 0/495,495 and read PASS (2026-09-24) | one `String()` normalizer both sides + `ValidationKeyMissError` (a miss can never PASS); lock `step-library.logic.test.ts` 'validateGeometries — key join'. A 0-write golden on a step that should write is NOT zero-diff proof — demand a forced-change re-run with inserted/updated > 0 |
 
 ### 10b. What this architecture creates that the runner did not
 

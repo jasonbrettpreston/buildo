@@ -309,6 +309,28 @@ class InvalidGeometrySridError extends Error {
   }
 }
 
+/**
+ * A NAMED runtime backstop: the validator returned NO row for a key it was given
+ * (Spec 124 Rule 1, Spec 122 §4.3/§11). `unnest($1::<key_sql_type>[]) WITH ORDINALITY`
+ * joined to the ord-aligned GeoJSON array produces exactly ONE row per input key, so a
+ * miss is not data — it is this library's own join breaking, and it must never be
+ * counted as a `skipped` row and folded into a PASS verdict. The throw precedes
+ * `executeWrite` (the only caller is `runIngestPhase`), so NOTHING is written.
+ *
+ * The message carries the miss COUNT and the FIRST missed key only — never a sample of
+ * them (Spec 124 Rule 3): a 495,495-row miss must not render 495,495 names into an
+ * audit message.
+ */
+class ValidationKeyMissError extends Error {
+  constructor(table, missCount, firstMissedKey) {
+    super(`[write_discipline] ${table}: ${missCount} key(s) returned no validation row — the first is `
+      + `${JSON.stringify(firstMissedKey)}. The validator joins unnest($1::<key_sql_type>[]) WITH ORDINALITY `
+      + 'to the ord-aligned GeoJSON array, so it returns ONE row per input key; a miss is this runner\'s '
+      + 'key join breaking, NEVER a data condition to be counted skipped. No row was written.');
+    this.name = 'ValidationKeyMissError';
+  }
+}
+
 const geometryValidationSql = (keyType, geometryKind, geometrySrid) => {
   // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
   // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
@@ -1024,19 +1046,29 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   const keysIn = features.map((f) => f[keyColumn]);
   const geojsons = features.map((f) => f.geojson);
   const { rows } = await pool.query(plan.validation_sql, [keysIn, geojsons]);
-  const byKey = new Map(rows.map((r) => [Number(r.source_key), r]));
+  // ⚠️ BOTH SIDES GO THROUGH ONE `String()` NORMALIZER (WF3, 2026-09-24). This is the
+  // key-type-agnostic canonical form for INTEGER / BIGINT / TEXT and it deliberately does
+  // NOT branch on `plan.key_sql_type`: node-pg's defaults (this repo installs no
+  // `setTypeParser`) hand back `int4` as a NUMBER, `int8` as a STRING and `text` as a
+  // STRING, while the feature key is whatever the compute's `coerceKey` produced — so a
+  // join keyed on ONE of those three types misses the other two. Measured on `parcels`
+  // (declares `key_sql_type: "TEXT"`): the previous `Number(…)`-keyed map collapsed every
+  // row key to NaN, all 495,495 lookups missed, every row was counted `skipped`, ZERO rows
+  // were written, and the verdict read PASS.
+  const byKey = new Map(rows.map((r) => [String(r.source_key), r]));
   let repaired = 0;
   let collectionExtracted = 0;
   let skipped = 0;
   const carried = [];
   const skippedKeys = [];
+  const missedKeys = [];
   for (const f of features) {
-    const v = byKey.get(f[keyColumn]);
+    const v = byKey.get(String(f[keyColumn]));
     if (!v) {
-      // unnest WITH ORDINALITY returns a row per input key; a miss is anomalous.
-      skipped++;
-      skippedKeys.push(f[keyColumn]);
-      log.warn(tag, `key ${f[keyColumn]} missing from the validation result — counted as skipped`);
+      // unnest WITH ORDINALITY returns a row per input key; a miss is anomalous. It is
+      // NOT data and it is NOT a skip: collecting it into the counts below would let a
+      // validator that returned nothing at all still report PASS (Spec 122 §11).
+      missedKeys.push(f[keyColumn]);
       continue;
     }
     const d = classify(v.status, v.is_valid_original);
@@ -1049,6 +1081,12 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
     // key+geom-only feature (load_ravines).
     if (d.carry) carried.push({ ...f, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
     else skippedKeys.push(f[keyColumn]);
+  }
+  // AFTER the loop, and BEFORE the caller's `executeWrite`: a miss means the validator
+  // did not answer for a key it was handed, so nothing about this batch's geometry is
+  // known and nothing may be written. Count + FIRST key only (Spec 124 Rule 3).
+  if (missedKeys.length > 0) {
+    throw new ValidationKeyMissError(plan.table, missedKeys.length, missedKeys[0]);
   }
   return { carried, repaired, collectionExtracted, skipped, skippedKeys };
 }
@@ -1716,6 +1754,7 @@ module.exports = {
   MissingGeometryKindError,
   assertGeometryKind,
   InvalidGeometrySridError,
+  ValidationKeyMissError,
   WRITTEN_INSERT_ONLY,
   RLS_PROBE_SQL,
   keyColumns,

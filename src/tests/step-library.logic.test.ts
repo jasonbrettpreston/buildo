@@ -7108,3 +7108,96 @@ describe('INGESTOR prerequisite 0o — acquired.rows_read / rows_shaped / column
   });
 });
 
+// ---------------------------------------------------------------------------
+// 14. The runner-side key join — validateGeometries joins keys type-agnostically
+// ---------------------------------------------------------------------------
+// A NAMED runtime backstop (Spec 124 Rule 1, Spec 122 §4.3). `validateGeometries`
+// is the runner half of the declared geometry contract: it runs the plan's
+// `validation_sql` (`unnest($1::<key_sql_type>[]) WITH ORDINALITY JOIN unnest($2::TEXT[])`)
+// and then re-joins its rows to the parsed features IN JS. node-pg's defaults
+// (no `setTypeParser` in this repo) deliver `int4` as a number, `int8` as a STRING,
+// and `text` as a string — so a JS-side join keyed on ONE type silently misses
+// every row whose key_sql_type differs. Measured 2026-09-24: `parcels` declares
+// `key_sql_type: "TEXT"`, the `Number(r.source_key)` map missed all 495,495 rows,
+// every row was counted `skipped`, ZERO were written, and the verdict read PASS.
+describe('validateGeometries — key join (WF3 TEXT-key, Spec 122 §11)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const write = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const log = { warn() {}, info() {} };
+  const tag = '[kfm_key_join]';
+  const classify = () => ({
+    repaired: 0, collectionExtracted: 0, skipped: 0, carry: true,
+  });
+
+  /** A minimal INGESTOR write plan — a key (declared type) and one geometry column. */
+  const planFor = (keySqlType: string) => ({
+    table: 't',
+    keys: ['k'],
+    geometry_columns: ['geom'],
+    geometry_kind: 'polygon',
+    key_sql_type: keySqlType,
+    validation_sql: 'SELECT 1',
+  });
+
+  /** The validator's OWN row shape for a valid original geometry (see the SQL's `validated` CTE). */
+  const validRow = (sourceKey: unknown) => ({
+    source_key: sourceKey, status: 'valid', is_valid_original: true, geom_wkb: 'W',
+  });
+
+  const poolOf = (rows: unknown[]) => ({ query: async () => ({ rows }) });
+
+  it('T1 TEXT — string keys join to string keys (RED before the fix: 0 carried, 2 skipped)', async () => {
+    const features = [{ k: 'A1', geojson: '{}' }, { k: 'B2', geojson: '{}' }];
+    const pool = poolOf([validRow('A1'), validRow('B2')]);
+
+    const out = await write.validateGeometries(pool, planFor('TEXT'), features, classify, { log, tag });
+
+    expect(out.carried, 'BOTH TEXT-keyed rows are carried').toHaveLength(2);
+    expect(out.skipped, 'and NOTHING is counted skipped').toBe(0);
+    expect(out.carried.map((r: { k: string }) => r.k)).toEqual(['A1', 'B2']);
+    expect(out.carried.every((r: { geom: string }) => r.geom === 'W')).toBe(true);
+  });
+
+  it('T2 BIGINT — a number feature key joins to node-pg\'s STRING int8 row key', async () => {
+    const features = [{ k: 123, geojson: '{}' }];
+    const pool = poolOf([validRow('123')]);
+
+    const out = await write.validateGeometries(pool, planFor('BIGINT'), features, classify, { log, tag });
+
+    expect(out.carried).toHaveLength(1);
+    expect(out.skipped).toBe(0);
+  });
+
+  it('T3 INTEGER — a number feature key joins to node-pg\'s number int4 row key', async () => {
+    const features = [{ k: 7, geojson: '{}' }];
+    const pool = poolOf([validRow(7)]);
+
+    const out = await write.validateGeometries(pool, planFor('INTEGER'), features, classify, { log, tag });
+
+    expect(out.carried).toHaveLength(1);
+    expect(out.skipped).toBe(0);
+  });
+
+  it('T4 a miss is a NAMED invariant break, never a skip (RED before the fix: resolves with skipped 1)', async () => {
+    const features = [{ k: 'A1', geojson: '{}' }, { k: 'B2', geojson: '{}' }];
+    const pool = poolOf([validRow('A1')]);
+
+    const err = await write
+      .validateGeometries(pool, planFor('TEXT'), features, classify, { log, tag })
+      .then(() => null, (e: Error) => e);
+
+    expect(err, 'a validator result missing an input key must REJECT').toBeInstanceOf(write.ValidationKeyMissError);
+    expect(err.message, 'the message names the FIRST missed key').toContain('B2');
+    expect(err.message, 'and the miss COUNT — no sample size beyond that').toMatch(/\b1\b/);
+  });
+
+  it('T5 source lock — the join normalizes BOTH sides instead of Number()-ing the row key', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- reading the committed source
+    const fsSync = require('node:fs') as typeof import('fs');
+    const src = fsSync.readFileSync(join(process.cwd(), 'scripts/lib/step/write.js'), 'utf8');
+    expect(src, 'Number(<row>.source_key) is the type-assuming join this fix removed')
+      .not.toMatch(/Number\(\s*\w+\.source_key\s*\)/);
+  });
+});
+
