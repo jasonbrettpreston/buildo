@@ -267,6 +267,8 @@ consumer.
 **Note (Spec 54 wrong-form, zero-diff):** AP-D1 is a PINNED divergence — the conversion does NOT filter, so the golden
 proves zero-diff against the live table. Marked **"RULING OWED: operator/orchestrator"**.
 
+**AP-D1 CLOSED 2026-09-24** — operator ruled the spec wrong; Spec 54 corrected; no loader change.
+
 ---
 
 ## 6. Rule 3 literal ledger
@@ -496,6 +498,8 @@ Families: (1) `stdout_lines` — the legacy printed download/progress/parse line
 | 3 | A legacy loader can be non-idempotent with no test noticing (8,199 rows/run) | idempotence (run 2 = 0 updates) becomes a standing G8 assertion for INGESTORs (R-F: DEFERRED → next batch plan step) |
 
 **Addendum (17:40Z):** after an intervening LEGACY run, the converted step re-updated exactly **8,199** rows back to the CSV values (`post/sources.json` `records_updated: 8199`) and the immediate re-run updated **0** (`post/standalone.json`) — the two implementations disagree on precisely the legacy's churn set; the converted values are the CSV values (measured above), so AP-D4 stands.
+
+**AP-D1 CLOSED 2026-09-24** — operator ruled the spec wrong; Spec 54 corrected; no loader change.
 
 ---
 
