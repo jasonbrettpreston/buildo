@@ -687,6 +687,40 @@ function defectPrefixFor(slug) {
 }
 
 /**
+ * A single filename's eligibility for `slug` (dash-form), split out of
+ * `reportPathFor` so `selfTest()` can drive it against a SYNTHETIC file list —
+ * no real report on disk needs to exist to prove the collision fix both ways.
+ *
+ * Two conditions, both required:
+ *  (1) the whole-filename shape: `YYYY-MM-DD-<locator>-<anything>-assessment.md`,
+ *      `<locator>` one of the three accepted conventions (see `reportPathFor`'s
+ *      own doc comment).
+ *  (2) a NUMERIC TOKEN BOUNDARY immediately before the slug segment — the
+ *      filename must end in a DIGIT (the last character of the locator: the
+ *      `N` of `pilotN`, the `M` of `i<M>`, or the `<row>` of `p<M>-<row>`)
+ *      followed by `-<dash-slug>-assessment.md`. A plain `.includes()` on
+ *      `-<dash-slug>-assessment.md` (the pre-fix check) is not enough: slug
+ *      `parcels` (dash-form `parcels`) is a SUFFIX of `link-parcels`, so
+ *      `2026-08-30-pilot7-link-parcels-assessment.md` also `.includes()`s
+ *      `-parcels-assessment.md` and — sorting before the real
+ *      `…-batch2-p3-7-parcels-assessment.md` — WON, resolving `parcels` to
+ *      pilot 7's report (invariant #24 then scored pilot 7's PH-0/PH-3/PH-5
+ *      content against `parcels`'s own descriptor). The character right
+ *      before `-link-parcels-assessment.md`'s `-link` is `7` (from `pilot7`,
+ *      a digit) — so `link_parcels` (dash-form `link-parcels`) legitimately
+ *      resolves there; the character right before `-parcels-assessment.md`'s
+ *      `-parcels` is `k` (from `link`, a LETTER) — so bare `parcels` must
+ *      NOT resolve there, and now doesn't.
+ */
+function reportFileMatchesSlug(filename, dashSlug) {
+  if (!/^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/.test(filename)) {
+    return false;
+  }
+  const escapedDashSlug = dashSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\d-${escapedDashSlug}-assessment\\.md$`).test(filename);
+}
+
+/**
  * The assessment report for a slug, found by dash-form filename match — never hand-mapped.
  *
  * THREE naming conventions, all accepted: pilots 1-9 named their reports
@@ -704,13 +738,16 @@ function defectPrefixFor(slug) {
  * assessment.md` — e.g. `2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md`
  * (batch 2, phase 1, row 1). Same spurious-0 failure mode as the batch-1 fix above
  * would otherwise recur for every batch-2 row; widened here for the same reason.
+ *
+ * `files` defaults to the real `docs/reports` listing and exists as a parameter
+ * ONLY so `selfTest()` can drive `reportFileMatchesSlug` against a synthetic
+ * collision fixture without a matching file on disk (see that function's doc
+ * comment for the `parcels` vs `link_parcels` collision this guards against).
  */
-function reportPathFor(slug) {
+function reportPathFor(slug, files = readdirSync(path.join(REPO_ROOT, 'docs/reports'))) {
   const dashSlug = slug.replace(/_/g, '-');
   const dir = path.join(REPO_ROOT, 'docs/reports');
-  const hit = readdirSync(dir).find(
-    (f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/.test(f) && f.includes(`-${dashSlug}-assessment.md`),
-  );
+  const hit = files.find((f) => reportFileMatchesSlug(f, dashSlug));
   return hit ? path.join(dir, hit) : null;
 }
 
@@ -3466,6 +3503,32 @@ function selfTest() {
     const noHit = reportPathFor('__no_such_step_self_test__');
     if (noHit !== null) {
       throw new Error(`self-test FAILED: reportPathFor of a nonexistent slug must be null, not a false match (got ${JSON.stringify(noHit)})`);
+    }
+  }
+  // reportPathFor — the `parcels` vs `link_parcels` SUFFIX COLLISION (found live
+  // by the parcels ② seat, 2026-09-24): `parcels` (dash-form `parcels`) is a
+  // suffix of `link-parcels`, so the pre-fix `.includes('-parcels-assessment.md')`
+  // check also matched `…-pilot7-link-parcels-assessment.md`, and — sorting
+  // before the real `…-batch2-p3-7-parcels-assessment.md` — WON, resolving
+  // `parcels` to pilot 7's report. A SYNTHETIC file list (no matching file needs
+  // to exist on disk yet — `parcels` is still `.cursor/batch2_p3_7_parcels_active_task.md`
+  // at self-test-authoring time) proves BOTH directions at once: `parcels`
+  // resolves to the `p3-7` row's report, `link_parcels` still resolves to
+  // pilot 7's, and neither steals the other's.
+  {
+    const collisionFiles = [
+      '2026-08-30-pilot7-link-parcels-assessment.md',
+      '2026-09-24-batch2-p3-7-parcels-assessment.md',
+    ];
+    const parcelsHit = reportPathFor('parcels', collisionFiles);
+    if (!parcelsHit || !parcelsHit.endsWith('batch2-p3-7-parcels-assessment.md')) {
+      throw new Error(`self-test FAILED: reportPathFor('parcels', <collision fixture>) resolved to the WRONG report — `
+        + `expected the batch2-p3-7 row's report, got ${JSON.stringify(parcelsHit)}`);
+    }
+    const linkParcelsHit = reportPathFor('link_parcels', collisionFiles);
+    if (!linkParcelsHit || !linkParcelsHit.endsWith('pilot7-link-parcels-assessment.md')) {
+      throw new Error(`self-test FAILED: reportPathFor('link_parcels', <collision fixture>) lost its own report — `
+        + `expected pilot 7's report, got ${JSON.stringify(linkParcelsHit)}`);
     }
   }
   const g6good = { status: 'CLOSED · commit 7' };
