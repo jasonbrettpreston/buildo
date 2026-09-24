@@ -1,0 +1,134 @@
+[
+  {
+    "why": "PASS — a clean street: FEATURE36 'Local' is on the L25 INCLUDE list, JURISDI37 'CITY OF TORONTO' is not FEDERAL/UNKNOWN, LINEAR_27 whitespace-only -> linear_name_type null, FROM_IN31 '13465051' -> from_intersection_id 13465051.",
+    "record": {
+      "CENTREL2": "60078796",
+      "LINEAR_4": "Daisy Ave",
+      "LINEAR_26": "Daisy",
+      "LINEAR_27": "  ",
+      "LINEAR_28": null,
+      "FEATURE36": "Local",
+      "JURISDI37": "CITY OF TORONTO",
+      "FROM_IN31": "13465051",
+      "TO_INTE32": "13465052",
+      "LO_NUM_10": "29",
+      "HI_NUM_11": "39",
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": "O",
+      "PARITY_9": null,
+      "ONEWAY_34": "Not One-Way"
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.4,43.66],[-79.401,43.661]]}"
+  },
+  {
+    "why": "NON_STREET — FEATURE36 'Trail' is on the L25 EXCLUDE list. It is dropped BEFORE the federal test: JURISDI37 is 'FEDERAL', so a classifier that tested jurisdiction first would return 'federal' and this record pins the ORDER.",
+    "record": {
+      "CENTREL2": "60078797",
+      "LINEAR_4": "Ravine Trail",
+      "LINEAR_26": "Ravine Trail",
+      "LINEAR_27": null,
+      "LINEAR_28": null,
+      "FEATURE36": "Trail",
+      "JURISDI37": "FEDERAL",
+      "FROM_IN31": null,
+      "TO_INTE32": null,
+      "LO_NUM_10": null,
+      "HI_NUM_11": null,
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": null,
+      "PARITY_9": null,
+      "ONEWAY_34": null
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.402,43.662],[-79.403,43.663]]}"
+  },
+  {
+    "why": "FEDERAL — FEATURE36 'Local' is includable, but JURISDI37 ' federal ' (lower-cased AND whitespace-padded, F14) normalizes to 'federal' and is dropped.",
+    "record": {
+      "CENTREL2": "60078798",
+      "LINEAR_4": "Airport Rd",
+      "LINEAR_26": "Airport",
+      "LINEAR_27": "Rd",
+      "LINEAR_28": null,
+      "FEATURE36": "Local",
+      "JURISDI37": " federal ",
+      "FROM_IN31": null,
+      "TO_INTE32": null,
+      "LO_NUM_10": null,
+      "HI_NUM_11": null,
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": null,
+      "PARITY_9": null,
+      "ONEWAY_34": null
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.404,43.664],[-79.405,43.665]]}"
+  },
+  {
+    "why": "UNKNOWN FEATURE CODE — 'Mystery Road' is on neither L25 list, so feature_code_desc becomes the sentinel 'unknown_operator_review' and the row is TAGGED unknown_feature_code, never dropped. JURISDI37 is a real city so only the feature tag fires.",
+    "record": {
+      "CENTREL2": "60078799",
+      "LINEAR_4": "Mystery Road",
+      "LINEAR_26": "Mystery",
+      "LINEAR_27": "Rd",
+      "LINEAR_28": null,
+      "FEATURE36": "Mystery Road",
+      "JURISDI37": "CITY OF TORONTO",
+      "FROM_IN31": null,
+      "TO_INTE32": null,
+      "LO_NUM_10": null,
+      "HI_NUM_11": null,
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": null,
+      "PARITY_9": null,
+      "ONEWAY_34": null
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.406,43.666],[-79.407,43.667]]}"
+  },
+  {
+    "why": "UNKNOWN JURISDICTION — FEATURE36 'Collector' is includable and kept; JURISDI37 '' normalizes to '' so jurisdiction becomes 'UNKNOWN' and the row is TAGGED unknown_jurisdiction.",
+    "record": {
+      "CENTREL2": "60078800",
+      "LINEAR_4": "Nowhere Lane",
+      "LINEAR_26": "Nowhere",
+      "LINEAR_27": "Ln",
+      "LINEAR_28": null,
+      "FEATURE36": "Collector",
+      "JURISDI37": "",
+      "FROM_IN31": null,
+      "TO_INTE32": null,
+      "LO_NUM_10": null,
+      "HI_NUM_11": null,
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": null,
+      "PARITY_9": null,
+      "ONEWAY_34": null
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.408,43.668],[-79.409,43.669]]}"
+  },
+  {
+    "why": "NORMALIZED — FEATURE36 '  Major Arterial ' is on the INCLUDE list once trimmed and lower-cased, and the stored feature_code_desc is the TRIMMED raw value 'Major Arterial' (never the normalized lower-case form).",
+    "record": {
+      "CENTREL2": "60078801",
+      "LINEAR_4": "King St W",
+      "LINEAR_26": "King",
+      "LINEAR_27": "St",
+      "LINEAR_28": "W",
+      "FEATURE36": "  Major Arterial ",
+      "JURISDI37": "CITY OF TORONTO",
+      "FROM_IN31": "30000000",
+      "TO_INTE32": null,
+      "LO_NUM_10": null,
+      "HI_NUM_11": null,
+      "LO_NUM_12": null,
+      "HI_NUM_13": null,
+      "PARITY_8": null,
+      "PARITY_9": null,
+      "ONEWAY_34": null
+    },
+    "geojson": "{\"type\":\"LineString\",\"coordinates\":[[-79.41,43.67],[-79.411,43.671]]}"
+  }
+]
