@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 474 declarable fields
+# The step contract — 20 categories, 477 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,11 +15,11 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 27 | 6 | 0 |
+| 2 | `inputs` | 28 | 7 | 0 |
 | 3 | `outputs` | 97 | 27 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 75 | 16 | 1 |
+| 6 | `execution` | 77 | 16 | 1 |
 | 7 | `checks` | 32 | 7 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
@@ -161,7 +161,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, csv_options, url, license, key_property, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, format, csv_options, url, license, on_head_error, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
 | `reads.externals[].format` | `shapefile_zip` · `csv` | ! |
@@ -170,6 +170,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals[].csv_options.relax_quotes` | `true` · `false` | † |
 | `reads.externals[].url` | string | — |
 | `reads.externals[].license` | string | — |
+| `reads.externals[].on_head_error` | `fail_step` · `warn_row` | ! |
 | `reads.externals[].key_property` | string | — |
 | `reads.externals[].cache` | `none` · `revalidate` · `reuse_if_fresh` · `reuse_if_present` | † ! |
 | `reads.externals[].cache_why` | object {text, liveness} | — |
@@ -404,10 +405,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `on_degrade_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `on_degrade_why.liveness.ref` | string | † |
 | `criticality` | `required` · `best_effort` ⛔ **banned for new:** `best_effort` | † ! |
-| `network` | `none` \| object {egress, timeout, timeout_from_config, retries, redact} | † |
+| `network` | `none` \| object {egress, timeout, timeout_from_config, retries_from_config, retry_backoff_from_config, retries, redact} | † |
 | `network.egress` | list (min 1) of string | † |
 | `network.timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `network.timeout_from_config` | string `^[a-z][a-z0-9_]*$` | — |
+| `network.retries_from_config` | string `^[a-z][a-z0-9_]*$` | — |
+| `network.retry_backoff_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retries` | integer >= 0 | † |
 | `network.redact` | `none` \| list (min 1) of string | † |
 | `invocation` | `none` \| map of object {argv, env} | † |
