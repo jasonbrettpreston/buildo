@@ -3,6 +3,19 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## 2026-09-24 — engine + golden residue
+
+Source: DeepSeek execution-engine runs across today's INGESTOR-prerequisite batch (0p/0q/0r/0s) and the parcels ③ cutover golden capture — residue noticed while finishing prerequisite 0s (`coerceKey` receives geojson), not fixed here (library/tooling/data-hygiene items, out of 0s's `write_scope`).
+
+| Severity | Item | Disposition |
+|----------|------|--------------|
+| HIGH | **Engine `write_file` must refuse to shrink an existing file by >50% / over N lines.** Run `20260924T172917Z-fa2185df` clobbered the 7,203-line `step-library.logic.test.ts` down to a 30-line stub via a bare `write_file` on an existing large file. Briefs now carry a "never `write_file` an existing file over 200 lines — targeted edits only" workaround, but that is a per-brief discipline, not an engine guardrail. | **DEFER — own WF (engine hardening).** Add a shrink guard to the engine's `write_file` tool: refuse (or require an explicit override flag) when the new content is >50% smaller or drops more than N lines versus the file it is replacing, for any file that already existed pre-run. |
+| MED | **Engine budget: 4 of 6 runs today hit the 40-iteration `budget_exhausted` cap with a correct partial diff, not a wrong one.** Runs `c47630f8`, `7d2eafaf`, `900c307e` (0s — finished by hand, see this same commit's sibling) + the 0p run all exhausted the iteration budget mid-brief while the diff produced up to that point was sound. | **DEFER — own WF.** Either raise the per-run iteration cap or split briefs further (smaller `write_scope` per brief) so a correct-but-slow brief doesn't need manual completion as routine. |
+| MED | **`parcels` golden files are 59.6 MB each** (`docs/reports/golden/parcels/post/{sources,standalone}.json`, captured during the row 3.7 ③ cutover). GitHub warns above 50 MB and hard-refuses above 100 MB; these are committed as literal JSON blobs. | **DEFER — own WF.** Move large-table goldens to a hash-only capture (content hash + row count + a bounded sample) or Git LFS before the next big-table conversion (`address_points`, `massing`) produces another one this size. |
+| HIGH | **`parcels` P-D6 KNOWN-DEFECT (latent): the converted step's default geometry-repair arm differs from the legacy loader's raw write.** Legacy `scripts/load-parcels.js:294` (`8360fc32^`) wrote `ST_SetSRID(ST_GeomFromGeoJSON(...))` with no repair; the converted step runs the library's default repair arm instead. **[MEASURED 2026-09-24]** 16 invalid geometries are live in `parcels` as a result. | **DEFER — fix after 0t lands.** Either declare `geometry_repair: "none"` on the `parcels` descriptor to restore legacy behaviour byte-for-byte, or take an explicit operator ruling to keep the repair arm (and re-validate the 16 rows under it). Do not silently pick one — this is a behaviour change from the legacy producer, not a neutral refactor. |
+
+---
+
 ## 2026-09-22 — SUB-ENG-1 pilot (Phase 4) — v1 boundary + 2 LOW
 
 Source: `docs/reports/2026-09-22-sub-eng-1-pilot-record.md` §6 (exit-criteria verdicts), landed with Spec 08 §A STATUS PLANNED→live (commit 14, non-golden task class).
