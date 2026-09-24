@@ -5037,12 +5037,42 @@
       "group": "Source Ingestion"
     }
   },
+  "parcels_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 1800000,
+    "description": "Spec 124 Rule 3 (row 3.7, INGESTOR) — AbortController budget for the property-boundaries CSV download (the 224.7 MB CKAN resource). 60000 = the fleet INGESTOR default, adopted from the sibling load_ravines_download_timeout_ms / address_points_download_timeout_ms because the pre-conversion loader allowed NO timeout at all (there is no legacy literal to carry); the value therefore EXTERNALIZES a bound that did not previously exist, and the descriptor states the same 60000 as `execution.network.timeout`, the fallback for an un-seeded database (execution.network.timeout_from_config names this variable, so there is ONE source). Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL — a truncated/failed download is the step's most reachable mid-run failure. CONSUMED by load_parcels (scripts/lib/step/acquire.js download, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "parcels_skip_rate_max_pct": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.7, INGESTOR) — maximum tolerated percentage of source rows the parcels loader may skip before the run's skip_rate row reads FAIL (loader :421, `skipRate >= 10 ? 'FAIL' : 'PASS'`). A row is skipped on FEATURE_TYPE CORRIDOR/RESERVE (:487), an expired non-sentinel DATE_EXPIRY (:495) or an empty PARCELID (:500) — so a rising skip rate is CSV drift, not a healthy filter. FAIL-severity EXACTLY as the legacy reads (this row is genuinely legacy FAIL, unlike the rows-read floor which stays WARN and must NOT be promoted). block is externalized here; the check is blocking:false (PIN, DO NOT FIX) so a FAIL row still exits 0 pre-cutover. CONSUMED by scripts/lib/compute/load-parcels.js checks.skip_rate_pct via ctx.config. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "address_points_download_timeout_ms": {
     "default": 60000,
     "type": "number",
     "min": 1000,
     "max": 1800000,
     "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — AbortController budget for the address-points CSV download. 60000 = the fleet INGESTOR default, adopted from the sibling load_ravines_download_timeout_ms because the pre-conversion loader's downloadFile allowed NO timeout at all (it read none — there is no legacy literal to carry); the value therefore EXTERNALIZES a bound that did not previously exist, and the descriptor literal execution.network.timeout states the same 60000 as the fallback for an un-seeded database (execution.network.timeout_from_config names this variable, so there is ONE source). Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_address_points (scripts/lib/step/acquire.js download, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "parcels_irregularity_threshold": {
+    "default": 0.95,
+    "type": "number",
+    "min": 0.5,
+    "max": 1.0,
+    "description": "Spec 124 Rule 3 (row 3.7, INGESTOR) — the polygon-area / minimum-bounding-rectangle-area ratio BELOW which a parcel's shape is flagged is_irregular (loader :99 IRREGULARITY_THRESHOLD, consumed at :520 as `ratio < threshold`). The pre-conversion literal was a module-level constant, so promoting it to a declared variable is what makes the flag auditable rather than magic. 0.95 is the legacy value carried VERBATIM (zero-diff); raising it toward 1.0 flags more parcels irregular, lowering it toward 0.5 only egregious slivers. CONSUMED by scripts/lib/compute/load-parcels.js shapeRecord via ctx.config. Operator-tunable.",
     "admin": {
       "group": "Source Ingestion"
     }

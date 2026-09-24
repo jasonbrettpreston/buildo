@@ -73,7 +73,7 @@
       "registers_at": "commit ③",
       "reason": "Batch-2 row 3.7 (parcels, INGESTOR 3rd member, COMPRESSED per R-PACE-1). ① lands the assessment + red suite + PRE goldens; ② the descriptor/compute/shell/seeds + POST goldens (stage -> shape_clean); ③ registers, per Spec 124 R-K.",
       "declared": "2026-09-24",
-      "stage": "red_suite"
+      "stage": "shape_clean"
     }
   ],
   "converted": [

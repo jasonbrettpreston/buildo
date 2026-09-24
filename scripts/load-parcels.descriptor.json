@@ -1,0 +1,661 @@
+{
+  "identity": {
+    "name": "parcels",
+    "display_name": "Toronto Property Parcels",
+    "owner": "data",
+    "description": "Loads Toronto's Property Boundaries CSV (~498K rows, ~224 MB, GeoJSON `geometry` column) from the CKAN Open Data portal into the parcels table: a class-A guarded upsert (INSERT ... ON CONFLICT (parcel_id) DO UPDATE ... WHERE <9 IS DISTINCT FROM terms>, NO retraction anywhere) over 17 columns + geom, in one step-scoped transaction. DEFAULT codegen authors the statement (plan D1 REVISED, operator ruling 2026-09-24) via two DECLARED axes — `columns[].on_empty:\"preserve\"|\"preserve_null\"` (prerequisites 0m/0m-follow-on) and `outputs.invalidates[].set_null_on_change_of` (prerequisite 0l) — so the legacy SET text (the five COALESCE(NULLIF(...)) address preservations, the date_effective COALESCE, and the three DEC-FENCE2 CASE arms) is reproduced by the shared library, never a per-step compute-authored statement. The INGESTOR archetype's THIRD member (after load_ravines class B and address_points class A); first row converted under R-PACE-1's compressed form.",
+    "lock": 55,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of parcels across the fleet (Spec 47 §A.5 lock registry row 55) [READ scripts/load-parcels.js:218, `const ADVISORY_LOCK_ID = 55;`]. The lock is declared here and acquired by the library from descriptor.identity.lock; scripts/load-parcels.js keeps `const ADVISORY_LOCK_ID = 55;` as a §5.4 SOURCE-TEXT constant (declared, never read), and the two are asserted equal by src/tests/steps/parcels/violations.test.ts. The lock holds across the whole step — acquisition, parse, the write and the score — because the ~498K-row load must not interleave with a second writer.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "55",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "ckan:property-boundaries-4326",
+          "kind": "http_file",
+          "format": "csv",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv",
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "PARCELID",
+          "cache": "none",
+          "csv_options": {
+            "bom": false,
+            "relax_quotes": true
+          }
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": "parcel_id",
+        "key_sql_type": "TEXT",
+        "geometry_kind": "polygon",
+        "columns": [
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "feature_type", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "address_number", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
+          { "name": "linear_name_full", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
+          { "name": "addr_num_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
+          { "name": "street_name_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
+          { "name": "street_type_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
+          { "name": "stated_area_raw", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "lot_size_sqm", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "lot_size_sqft", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "frontage_m", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "frontage_ft", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "depth_m", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "depth_ft", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "geometry", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "date_effective", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
+          { "name": "is_irregular", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "lot_size_sqm",
+            "feature_type",
+            "address_number",
+            "linear_name_full",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "date_effective"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Class A, DEFAULT codegen (plan D1 REVISED, operator ruling 2026-09-24 — standardized/observable/scalable/simple: compute-authored SQL for the whole target is exactly what the ruling rejects for an INGESTOR [READ scripts/steps/_schema/step.schema.json:1054]). The pre-conversion loader issued ONE statement shape — INSERT INTO parcels (...) VALUES ... ON CONFLICT (parcel_id) DO UPDATE SET ... WHERE <9 OR-terms> IS DISTINCT FROM, NO DELETE anywhere (0 grep matches for DELETE/TRUNCATE) [READ scripts/load-parcels.js:297-378]. A byte-identical re-run updates zero rows; no parcel is ever removed by this step. Two DECLARED axes (prerequisites 0l/0m, executed by the shared codegen in scripts/lib/step/write.js) reproduce the legacy text without a line of step-specific SQL: `columns[].on_empty:\"preserve\"` on the five address columns (COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)) + `\"preserve_null\"` on date_effective (COALESCE(EXCLUDED.x, parcels.x), the non-text NULLIF-less form), and `outputs.invalidates[].set_null_on_change_of:\"geometry\"` on the three DEC-FENCE2 stamps (the CASE...THEN NULL...END arms). This `guard_columns` list is EIGHT entries — the nine-term WHERE clause's ninth term, `parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb`, is NOT declared here: it is added automatically, FIRST, by the codegen because `geometry` is the watched column of all three `invalidates[]` entries below (deduplicated against this list — `changeOfGuardColumns` in write.js). geom is NOT itself a guard predicate: it is set unconditionally beside geometry whenever the guard passes. The reproduction is PROVEN, not asserted: step-library.logic.test.ts T5/T7 clone this exact shape (five on_empty:\"preserve\" columns + one preserve_null + three set_null_on_change_of:\"geometry\" entries + these eight guard_columns) and assert `buildWritePlan(...).upsertSqlFor(1)` equals the legacy file text whitespace-normalised; this descriptor's own violations.test.ts T7-cite fence re-proves it against THIS descriptor. The legacy script wrapped each 1,000-row batch in its OWN withTransaction (:252-253, :275); the library wraps ALL batches in ONE step-scoped transaction (executeWrite) — declared here as the truth, with the atomicity-window widening recorded in deviations[].",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/step-library.logic.test.ts"
+            }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "ravine_dataset_version_when_enriched",
+        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
+        "set_null_on_change_of": "geometry"
+      },
+      {
+        "table": "parcels",
+        "column": "heritage_dataset_version_when_enriched",
+        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
+        "set_null_on_change_of": "geometry"
+      },
+      {
+        "table": "parcels",
+        "column": "centreline_dataset_version_when_enriched",
+        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
+        "set_null_on_change_of": "geometry"
+      }
+    ],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly ONE write statement reaches parcels: the guarded upsert. There is NO departure DELETE (class A, retract none) and no staging replace, so the converted step's write inventory equals the pre-conversion one's single statement (which the legacy script issued once per 1,000-row batch inside its own per-batch transaction). The three invalidates[] entries below are NOT additional statements — they are lineage stamps NULLed by CASE arms INSIDE that same DO UPDATE.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "none",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "parcels",
+        "on_missing": "fail",
+        "why": {
+          "text": "RLS default-deny on the parcels family means the guarded upsert works ONLY because the pipeline role has rolbypassrls=true; under a non-bypass role the INSERT ... ON CONFLICT affects 0 rows with NO error, so the counters read 0, the verdict reads PASS and the run is indistinguishable from an unchanged source. The write is a bare INSERT ... DO UPDATE, unconditional at the row level; the bypass is the precondition, declared fail-loud.",
+          "liveness": {
+            "kind": "table",
+            "ref": "parcels"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GiST index on parcels.geom (migration 039:21, replayed at 083:106) that every downstream spatial join in the chain plans through — link-parcels, compute-centroids, the enrich-* steps, and the DEC-FENCE2 consumers. Without it those joins degrade to sequential scans over ~486K parcels. Declared fail-loud because the write path itself populates geom and a missing index silently converts the chain's spatial work into heap scans.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/083_postgis_drift_repair.sql"
+          }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "parcels",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "30m",
+    "txn_scope": "step",
+    "txn_budget": "20m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "45m",
+    "batch": 1000,
+    "needs_disk_mb": 512,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A source row the step refuses to carry is counted and the load continues: FEATURE_TYPE CORRIDOR/RESERVE (:487), an expired non-sentinel DATE_EXPIRY (:495) and an empty PARCELID (:500) each `continue`, and a row that yields no dimensions still loads with null frontage/depth. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
+      "liveness": {
+        "kind": "check",
+        "ref": "skip_rate_pct"
+      }
+    },
+    "on_batch_error": "drop_batch",
+    "on_batch_error_why": {
+      "text": "PR-D1 (PIN, DO NOT FIX — Spec 123 §3.1, review_followups #68). A failed flushBatch() logs, `errors++`, and DROPS the batch's rows for the run [READ scripts/load-parcels.js:550-554; the same in the truncated-CSV recovery path :571-575], and records_unchanged is then inflated by the dropped count [:401's own comment]. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it; fail_step would be a behaviour change smuggled into a no-op-diff commit. The post-cutover fix, if any, is a separate commit with its own RED lock.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/load-parcels.js"
+      }
+    },
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a value the library already measured (missing CSV header columns, null-address rows, skipped rows, the rows-read total, the geometry-parse fallback count), so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-parcels.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": [
+        "ckan0.cf.opendata.inter.prod-toronto.ca"
+      ],
+      "timeout": "60000ms",
+      "timeout_from_config": "parcels_download_timeout_ms",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "csv_header_drift",
+      "kind": "invariant",
+      "expect": { "missing_required_columns": 0 },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 79 CRIT-3b (loader :470-478 + scripts/lib/parcels-csv-drift.js detectMissingColumns). The loader surfaces a REQUIRED_CSV_COLUMNS loss in its OWN audit table so an operator who runs the chain past a failing assert_schema still sees it. A header that drops `geometry` silently strips geom from every row while the counts still look healthy, so the drift is its own WARN row. Reused from the drift lib, never forked; the lib's own 0.10 literal is untouched by this conversion (it is assert-schema's fingerprint input).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/parcels-csv-drift.js"
+        }
+      }
+    },
+    {
+      "id": "null_address_pct",
+      "kind": "bound",
+      "expect": { "of": "rows with an empty ADDRESS_NUMBER over rows attempted", "direction": "max" },
+      "limit": "pct <= 0.1",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "PR-D2 (PIN, DO NOT FIX — Spec 123 §3.1; review_followups:156 stays ACT, its own WF3). buildNullAddressAuditRow (parcels-csv-drift.js:73-77) + loader :424. The row is STRUCTURALLY UNSATISFIABLE as PASS since the 2026-05-20 strip: the CSV no longer carries ADDRESS_NUMBER at all, so the fraction is ~100% and the row reads WARN on EVERY run. The conversion carries it as-is and declares the unsatisfiability in limitations[]; retiring the check would HIDE the strip from a future reader, which is the opposite of the observability the row exists to provide. No limit_from_config: the 0.10 boundary is the drift lib's own literal, and peeling it here would force an assert_schema golden recapture (that lib is assert-schema.descriptor.json's fingerprint input).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/parcels-csv-drift.js"
+        }
+      }
+    },
+    {
+      "id": "skip_rate_pct",
+      "kind": "bound",
+      "expect": { "of": "skipped rows over rows_read", "direction": "max" },
+      "limit": "pct <= 10",
+      "limit_from_config": "parcels_skip_rate_max_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A rising skip rate signals CSV drift [READ load-parcels.js:421, `{ metric: 'skip_rate', ... status: skipRate >= 10 ? 'FAIL' : 'PASS' }`]. A row is skipped on FEATURE_TYPE CORRIDOR/RESERVE (:487), an expired non-sentinel DATE_EXPIRY (:495) or an empty PARCELID (:500). FAIL-severity EXACTLY as the legacy reads — this row is genuinely legacy FAIL, unlike rows_read_floor below (which stays WARN and must NOT be promoted). blocking:false (PIN, DO NOT FIX): a FAIL row today exits 0 and the chain continues. Bound externalized to parcels_skip_rate_max_pct (Rule 3).",
+        "liveness": {
+          "kind": "check",
+          "ref": "docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md §1.5"
+        }
+      }
+    },
+    {
+      "id": "rows_read_floor",
+      "kind": "bound",
+      "expect": { "of": "rows_read", "direction": "min" },
+      "limit": "value_min 450000",
+      "limit_from_config": "sources_parcels_floor",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Catastrophic-load detector [READ load-parcels.js:416, `threshold: '>= 450000', status: processed < 450000 ? 'WARN' : 'PASS'`]. SEVERITY STAYS WARN — the address_points AP-D5 lesson is severity is NOT archetype-derived; this legacy row warns and promoting it would introduce a halt that never existed. The bound SHARES the registered variable `sources_parcels_floor` (Spec 43/44; scripts/seeds/logic_variables.json, default 460000) through limit_from_config — the SAME key assert_data_bounds declares, not a second one (Rule 3, one home per concern). PR-D5 (PINNED, §5.1): the loader's own 450000 WARN threshold and the registered 460000 FAIL floor disagree by 10,000 rows; unifying them is a DATA-POLICY ruling Spec 123 §3.1 forbids folding into a zero-diff conversion, so the delta is recorded in limitations[]. The `limit` string uses verdict.js's R-T addendum `value_min` form (a RAW MEASURED value), NOT `\"viol == 0\"` — the exact AP-D6 trap where resolveLimit substitutes the config value into the string and compares a 0/1 violation flag against ~460000, making the check FAIL unconditionally on every run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
+    },
+    {
+      "id": "records_errors",
+      "kind": "bound",
+      "expect": { "of": "errors counted during the run", "direction": "max" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Zero-tolerance invariant [READ load-parcels.js:422, `{ metric: 'records_errors', threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' }`]. `errors` is incremented only by the batch-drop path (PR-D1) and the truncated-CSV flush failure, so a nonzero reading means rows were dropped — the exact condition PR-D1 pins. FAIL-severity, blocking:false (PIN, DO NOT FIX). A raw violation count, so `viol == 0` is the correct form here (no limit_from_config).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/load-parcels.js"
+        }
+      }
+    },
+    {
+      "id": "geom_parse_failures",
+      "kind": "field_coverage",
+      "expect": { "reports": "source rows whose `geometry` value would not JSON.parse, counted not gated" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "parseGeoJSON's `try { JSON.parse } catch { return null }` (:169-176) refuses to surface an unparseable geometry, and NOTHING downstream `continue`s on it — the row IS carried with a null geometry/geojson (mirroring address_points' own AP-D2 swallow). The conversion carries the swallow VERBATIM and turns it into a counted, declared row. INFO is legal HERE ONLY because this is purely DESCRIPTIVE: it has no negative direction, it cannot reach WARN/FAIL, and it never gates. The declaration is the close — a promoted WARN would be a behaviour change.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-parcels.js"
+        }
+      }
+    },
+    {
+      "id": "shaped_skipped",
+      "kind": "field_coverage",
+      "expect": { "reports": "rows the compute's shapeRecord refused to carry (feature-type / expiry / empty key)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The runner's shaped_skipped counter (Spec 122 §5.1 ingress seam) — the number of source records the step declined to carry into rows, i.e. the legacy `skipped++` paths at :487/:495/:500. Purely descriptive (INFO, no negative direction), so a healthy run shows a counted zero where the pre-conversion `skipped++` could not: silence used to mean both 'zero' and 'nobody looked'.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": ["assert_data_bounds"],
+      "skeleton": {
+        "phase": 4,
+        "name": "Parcels Ingestion",
+        "verdict": "PASS",
+        "rows": []
+      }
+    },
+    {
+      "key": "parcels_load",
+      "type": "object",
+      "consumers": ["parcels"],
+      "skeleton": {
+        "duration_ms": 0,
+        "rows_read": 0,
+        "records_inserted": 0,
+        "records_updated": 0,
+        "records_unchanged": 0,
+        "records_skipped": 0,
+        "errors": 0
+      }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :252-253, :275)",
+      "why": {
+        "text": "Plan D1 (orchestrator-ruled). The library's executeWrite wraps ALL insert batches in ONE step-scoped withTransaction; `execution.txn_scope` therefore declares `step` (the truth). The widening is an ATOMICITY-WINDOW change: today a mid-run failure leaves the already-committed batches persisted (partial load); converted, the run is all-or-nothing. It is NOT a success-path change — a successful run writes byte-identical rows, which is what the POST golden proves. The single-txn duration + WAL for ~486K rows is MEASURED at ② capture (plan D1); if the measurement breaches the step budget, this deviation is re-adjudicated before ③. Address_points precedent: same declaration, same reason.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling, plan D1 [READ .cursor/batch2_p3_7_parcels_active_task.md]",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the `process.argv[2]` local-path override (:228) and the data/property-boundaries-4326.csv fs.existsSync download-vs-cache short-circuit (:230-236)",
+      "why": {
+        "text": "Retired per Spec 124 R-AZ (the argv-seam rule). A debug affordance let an operator run against a hand-supplied local CSV without downloading; the frozen shell reads no argv (the §5.1 shape forbids it) and the fixture tier replaces it for tests. The CACHE half is retired with it: leaving an existsSync short-circuit implicit would let a STALE local CSV silently feed a run, so `inputs.reads.externals[0].cache:\"none\"` records that the local file was never a revalidated artifact and the step re-downloads every run (the load_ravines / address_points posture).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling, Spec 124 R-AZ / plan D2",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy download/parse progress-cadence literals (`10 * 1024 * 1024` download window :181, `processed % 50000 === 0` progress modulo :556, `484000` progress denominator :557)",
+      "why": {
+        "text": "RETIRED, dead under the whole-array model (plan D3). The pre-conversion script streamed the CSV row-by-row and logged a progress line every 50,000 processed rows against a 484,000-row denominator (itself STALE vs the 498,479 actual rows); the converted INGESTOR runner's CSV acquisition path hands off the WHOLE parsed array in one step and logs a single 'acquired N feature(s)' line. There is no per-byte or per-row progress loop left for a cadence tunable to bind to, so declaring one would be a dead operator-facing knob (the address_points commit-9 P4 precedent). Retired rather than forced onto a fabricated consumer.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling, plan D3 (address_points commit-9 P4 precedent)",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "declaring `guards.requires` only for what the write/consumers need, and pinning every FAIL check as blocking:false",
+      "why": {
+        "text": "PR-D1/D2/D3/D4 posture (PIN, DO NOT FIX — Spec 123 §3.1). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the FAIL verdict and folds it into chain status completed_with_errors, and the chain CONTINUES. blocking:true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock. Likewise guards.requires declares ONLY the parcels GIST index and the RLS bypass the write path needs — not every index the table carries.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/run-chain.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling, plan D4 / address_points plan D-8",
+      "date": "2026-09-24"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "PR-D2 — the `null_address_pct` check is STRUCTURALLY UNSATISFIABLE as PASS: Toronto Open Data stripped ADDRESS_NUMBER (and LINEAR_NAME_FULL, DATE_EFFECTIVE) from the Property Boundaries CSV between 2026-05-19 and 2026-05-20, so nullAddressCount/attemptedRows is ~100% and the row reads WARN on EVERY run. Declared as a check at WARN severity and carried as-is; the check is deliberately NOT retired, because retiring it would hide the strip from a future reader. review_followups:156 stays ACT (its own WF3).",
+      "measured": "load-parcels.js:424 → buildNullAddressAuditRow(nullAddressCount, attemptedRows); parcels-csv-drift.js:73-77; the strip's Day-1 COALESCE defence is the 5-preservation block at load-parcels.js:326-330 [MEASURED 2026-09-24, report §5.1 PR-D2]",
+      "check_id": "null_address_pct"
+    },
+    {
+      "what": "PR-D5 — the load floor is declared TWICE with two different numbers. The loader WARNs below 450,000 (:416); the registered `sources_parcels_floor` seed FAILs below 460,000. A run reading 455,000 rows therefore reads PASS on the loader's own audit table and FAIL on assert_data_bounds, so the loader's check cannot see the fleet's real floor. PINNED, not unified: unifying the number is a DATA-POLICY change (which number is right?) that Spec 123 §3.1 forbids folding into a zero-diff conversion. Its own followup.",
+      "measured": "load-parcels.js:416 `>= 450000` WARN vs scripts/seeds/logic_variables.json:5050-5058 `sources_parcels_floor` default 460000 FAIL [MEASURED 2026-09-24, report §6]",
+      "check_id": "rows_read_floor"
+    },
+    {
+      "what": "PR-D3 — CKAN coordinate jitter (review_followups:3075): the published polygon vertices drift at the sub-metre level between CKAN publishes with no version/etag change, so `geometry::jsonb IS DISTINCT FROM` fires on rows whose data did not meaningfully change. Carried as-is. Consequence: the DEC-FENCE2 stamps are NULLed (and the enrich-* steps recompute) for jitter-only rows, and the golden's byte-identity claim is per-run, not per-source-publish.",
+      "measured": "review_followups:3075; the guard's first disjunct at load-parcels.js:362 [MEASURED 2026-09-24, report §5.1 PR-D3]",
+      "check_id": "none"
+    },
+    {
+      "what": "PR-D4 — centroid invalidation gap (review_followups:3114): compute-centroids' derived centroid is NOT in the DEC-FENCE2 invalidate list, so a moved parcel keeps a stale centroid until compute_centroids is forced full. Named and explicitly OUT OF SCOPE for this conversion — it is a compute_centroids defect, and compute_centroids is already converted.",
+      "measured": "compute-centroids.js has no `*_when_enriched` stamp to NULL; the three DEC-FENCE2 arms at load-parcels.js:353-361 name ravine, heritage and centreline only [MEASURED 2026-09-24, report §5.1 PR-D4]",
+      "check_id": "none"
+    },
+    {
+      "what": "Class-A non-retraction: because the loader never retracts, a `parcel_id` can only vanish from parcels via a source-side change the class-A shape cannot express. The ordering guarantee 'parcels before link-parcels / compute-centroids / enrich-*' (Spec 43 row 5) is unaffected, but a parcel deleted upstream stays in the table with its last-seen values.",
+      "measured": "grep DELETE/TRUNCATE scripts/load-parcels.js ⇒ 0 matches [MEASURED 2026-09-24, report §1.1]",
+      "check_id": "none"
+    },
+    {
+      "what": "PR-D1 residue — a failed batch's rows are logged, counted in `errors`, and DROPPED for the run, so the load can complete with fewer than the source's rows and no per-row evidence of which; `records_unchanged` is inflated by the dropped count. Declared via execution.on_batch_error:\"drop_batch\".",
+      "measured": "load-parcels.js:550-554 (catch → log.error, errors++, batch = []) and :401's own 'lost rows inflate this count' comment [MEASURED 2026-09-24, report §5.1 PR-D1]",
+      "check_id": "records_errors"
+    },
+    {
+      "what": "The PostGIS-absent arm, SUPERSEDED by plan D1 REVISED: the legacy script probed pg_extension for postgis (:239-241) and set `geomLine = ''` when absent (:293-296), so on a PostGIS-less database parcels.geometry was written while parcels.geom stayed NULL, with no audit row naming the divergence. The converted step has NO equivalent runtime branch — DEFAULT codegen's `geom` column (bind:\"wkb_geometry\") unconditionally renders `ST_GeomFromWKB`, and `guards.requires` above already declares the `idx_parcels_geom_gist` index fail-loud on_missing — a PostGIS-less database fails the guard BEFORE acquisition rather than silently degrading to a geometry-only write. This is a genuine behaviour change from silent-degrade to fail-loud, judged consistent with the guard's own stated posture (\"declared fail-loud\") rather than a new divergence to hide.",
+      "measured": "load-parcels.js:239-241 (pg_extension probe, legacy) and :293-296 (geomLine conditional, legacy) [READ 2026-09-24; report §1.2 and §R LOW-CONFIDENCE #4]; scripts/lib/step/write.js default codegen has no hasPostGIS branch [READ 2026-09-24, row 3.7 ② D1 REVISED]",
+      "check_id": "none"
+    },
+    {
+      "what": "The skip_rate_pct and rows_read_floor bounds are compared against THIS run's numbers only; there is no vs-prior-run trend check. A source that shrinks 40% but stays above the floor reads as a healthy load.",
+      "measured": "load-parcels.js:415-424 — auditRows read only this run's processed/inserted/updated/skipped/errors counters [MEASURED 2026-09-24, report §1.5]",
+      "check_id": "rows_read_floor"
+    }
+  ],
+  "interpretation": {
+    "file": "load-parcels.notes.json",
+    "entries": 11
+  },
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture. This step is class A (`guarded_upsert`, retract:\"none\"): it has NO retraction path and NO scoped delete, so a kill mid-run leaves exactly what the step-scoped transaction left — either nothing (rolled back) or the fully-committed guarded upsert. There is no half-cleared table an incremental gate could misread as complete, and no force_full_on_next_run obligation (that rule binds retract_when full_only or retract:\"all\" targets, neither of which exists here). Nothing is owed to a successor run beyond re-running the idempotent upsert, which zero-writes on a byte-identical source.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The generic before-image mechanism mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope. This step declares retract:\"none\" with write_discipline.scope:\"none\": there is no retraction for the mechanism to mirror, so there is nothing to capture. Every column is re-derived from the source on every run, so a re-run recovers identically without a before-image. Genuinely out of scope rather than silently ignored.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 11,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated",
+      "scoped_by": "parcel_id"
+    },
+    "records_new": {
+      "source": "written.inserted",
+      "scoped_by": "parcel_id"
+    },
+    "records_updated": {
+      "source": "written.updated",
+      "scoped_by": "parcel_id"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "parcels_irregularity_threshold", "min": 0.5, "max": 1.0, "on_invalid": "fail" },
+      { "name": "sources_parcels_floor", "min": 1, "max": 5000000, "on_invalid": "fail" },
+      { "name": "parcels_skip_rate_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "parcels_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 5
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "parcels_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The guarded upsert committed: rows_read parsed, inserted/updated split by RETURNING (xmax = 0), no retraction. The step has no staleness gate, so success is the NORMAL terminal every run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "parcels_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared WARN check tripped (csv_header_drift, null_address_pct or rows_read_floor) with no FAIL. PR-D2 makes this the common case today: the null-address WARN stands on every run. The load still happened because none of these makes the data unloadable.",
+        "liveness": {
+          "kind": "check",
+          "ref": "null_address_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_rows_read_floor",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "parcels_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "skip_rate_pct or records_errors reached FAIL — a rising skip rate or a dropped batch. The FAIL row is declared; blocking:false (PIN, DO NOT FIX) so the run is `failed` and the chain continues.",
+        "liveness": {
+          "kind": "check",
+          "ref": "records_errors"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The download or the CSV parse threw (a fatal parse error rethrows at :580-582, unlike address_points). The temp file is removed on this path exactly as on every other, and no write has been attempted.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "failed_empty_source",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "inputs.expect_nonempty is true: a source that parses to ZERO records fails rather than landing an empty 'success' — an empty CSV is a publisher error, not an empty load.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 55 is held by another process. Pre-conversion the step wrapped everything in pipeline.withAdvisoryLock and returned silently when the lock was not acquired; the library now emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

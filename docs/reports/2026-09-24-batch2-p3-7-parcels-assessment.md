@@ -343,9 +343,9 @@ Every non-obvious constant / fence in the 586 lines. `git log`/`git blame` prove
 | 1 | `ADVISORY_LOCK_ID = 55` (`:218`) | pre-history (fleet lock registry) | Mutual exclusion on `parcels` across specs 41/42/43 | **declared** → `identity.lock:55` + `why_lock` | Spec 47 §A.5 |
 | 2 | `CSV_URL` (`:36-37`) | pre-history | CKAN download endpoint identity (resource `23d1f792-…`) | **declared** → `inputs.reads.externals[].url` | Rule 2 / Spec 122 §5.1 |
 | 3 | `process.argv[2]` local-path override (`:228`) | pre-history | A debug affordance: run against a hand-supplied local CSV | **retired** → `deviations[]` (Spec 124 **R-AZ**); the fixture tier replaces it | **R-AZ** |
-| 4 | `COALESCE(NULLIF(EXCLUDED.x,''),x)` ×5 (`:326-330`) | `2501aa0f` (WF1 #parcel-address-bridge Phase 1 — mig 162 + Day-1 COALESCE safety) | The 2026-05-19/20 Toronto strip: a blank incoming value must not NULL-overwrite 486K rows | **preserved-in-compute** → the SQL text verbatim in `buildWriteSql`; rule in the SQL comment + `notes.json` | plan D1 |
-| 5 | DEC-FENCE2 three `CASE` arms (`:353-361`) | `92ee03b9` (#418 ravine + heritage) then `4b438c84` (*"NULL centreline stamp on geom change — DEC-FENCE2 (P11-1)"*) | Invalidate downstream enrichment lineage on geometry change | **preserved-in-compute** → verbatim; three `outputs.invalidates[]` entries | plan D1; `review_followups:2676` (#430, §2.1) |
-| 6 | the nine-term `IS DISTINCT FROM` WHERE guard (`:362-376`) | pre-history + `2501aa0f` (the five address disjuncts) | The write-guard: skip the UPDATE when nothing changed | **preserved-in-compute** → verbatim; `write_discipline.scope` | Spec 122 §1.4 |
+| 4 | `COALESCE(NULLIF(EXCLUDED.x,''),x)` ×5 (`:326-330`) | `2501aa0f` (WF1 #parcel-address-bridge Phase 1 — mig 162 + Day-1 COALESCE safety) | The 2026-05-19/20 Toronto strip: a blank incoming value must not NULL-overwrite 486K rows | **declared (D1 REVISED, supersedes the ① draft's `buildWriteSql` disposition below)** → `outputs.writes[0].columns[].on_empty:"preserve"` on the five address columns (prerequisite 0m); rule in `write_discipline.why` (`checks[]`-adjacent descriptor field) + `notes.json`; DEFAULT codegen (`scripts/lib/step/write.js`) authors the COALESCE/NULLIF text FROM the declaration — no compute-authored SQL for this step | plan D1 REVISED |
+| 5 | DEC-FENCE2 three `CASE` arms (`:353-361`) | `92ee03b9` (#418 ravine + heritage) then `4b438c84` (*"NULL centreline stamp on geom change — DEC-FENCE2 (P11-1)"*) | Invalidate downstream enrichment lineage on geometry change | **declared (D1 REVISED)** → `outputs.invalidates[].set_null_on_change_of:"geometry"` ×3 (prerequisite 0l), each with a `why` text citing #418; DEFAULT codegen renders the three `CASE...THEN NULL...END` arms FROM the declaration | plan D1 REVISED; `review_followups:2676` (#430, §2.1) |
+| 6 | the nine-term `IS DISTINCT FROM` WHERE guard (`:362-376`) | pre-history + `2501aa0f` (the five address disjuncts) | The write-guard: skip the UPDATE when nothing changed | **declared (D1 REVISED)** → `write_discipline.guard_columns` (the eight declared disjuncts, `why` text below the field); the ninth term (`geometry`) is added automatically by the codegen's `changeOfGuardColumns` because `geometry` is row 5's watched column — no term is compute-authored | Spec 122 §1.4; plan D1 REVISED |
 | 7 | `IRREGULARITY_THRESHOLD = 0.95` (`:99`; used `:149`) | pre-history | `is_irregular` classification boundary (polygon/MBR ratio) | **declared** → `parcels_irregularity_threshold` (§6) | plan D3 |
 | 8 | `SQM_TO_SQFT = 10.7639` (`:49`) | pre-history | Unit conversion (physics) | **declared in `notes.json`, NOT a logic variable** — a unit constant is not a tunable | plan D3 |
 | 9 | `M_TO_FT = 3.28084` (`:50`) | pre-history | Unit conversion (physics) | **declared in `notes.json`, NOT a logic variable** | plan D3 |
@@ -357,9 +357,9 @@ Every non-obvious constant / fence in the 586 lines. `git log`/`git blame` prove
 | 15 | feature-type skip `CORRIDOR`/`RESERVE` (`:512-516`) | pre-history | Excludes non-lot segments from `parcels` | **preserved-in-compute** → `shapeRecord` returns `null` ⇒ `shaped_skipped`; rule in `checks[].why` | plan D2 |
 | 16 | expiry skip (`:518-522`) | pre-history | Drops parcels whose `DATE_EXPIRY` is past (with a `3000-01-01` sentinel exemption) | **preserved-in-compute** → same `null` path; rule in `checks[].why` | plan D2 |
 | 17 | batch-drop catch (`:550-554`, `:571-575`) | pre-history; the `unchanged` inflation caveat at `:401` | A failed batch is logged, `errors++`, its rows DROPPED for the run | **declared** → `execution.on_batch_error:"drop_batch"` | plan D4 **PR-D1** |
-| 18 | truncated-CSV recovery (`:566-576`) | pre-history | `CSV_QUOTE_NOT_CLOSED` at EOF is recoverable: flush what parsed, emit a partial summary | **preserved-in-compute** → runner's acquisition owns the parse; the posture is declared | plan D2 |
+| 18 | truncated-CSV recovery (`:566-576`) | pre-history | `CSV_QUOTE_NOT_CLOSED` at EOF is recoverable: flush what parsed, emit a partial summary | **preserved-in-compute** → the runner's shared acquisition (`scripts/lib/step/acquire.js`) owns the parse; the rule is written in `checks[].why` on `records_errors` (descriptor `:322` — "incremented only by the batch-drop path (PR-D1) and the truncated-CSV flush failure") | plan D2 |
 | 19 | `parseDate` ISO-slice (`:160-168`) | pre-history | ISO `YYYY-MM-DD` avoids a timezone mismatch in `IS DISTINCT FROM` | **preserved-in-compute** → in `shapeRecord`; rule in `notes.json` | Spec 122 §1.4 |
-| 20 | PostGIS probe / two-arm `geom` (`:239-241`, `:293-296`) | pre-history | A PostGIS-less DB still loads, minus `geom` | **preserved-in-compute** → `geometry_kind` note + `limitations[]` | §5 note |
+| 20 | PostGIS probe / two-arm `geom` (`:239-241`, `:293-296`) | pre-history | A PostGIS-less DB still loads, minus `geom` | **retired (D1 REVISED, MEASURED — supersedes the ① draft's earlier disposition on this row)** → the converted step has NO runtime PostGIS-absent branch; `guards.requires` declares `idx_parcels_geom_gist` `on_missing:"fail"`, so a PostGIS-less DB now fails the guard BEFORE acquisition instead of silently degrading to a geometry-only write — a genuine silent-degrade → fail-loud behaviour change, named and justified in `limitations[]` (descriptor `:482-483`) | §5 note; descriptor `limitations[]` |
 
 **Count: 20 rows; 0 without a disposition.** The rows the brief names as additionally required —
 `>=450000` (row 10), `<10%` (row 11), `50000` (row 13), `484000` (row 14), `10*1024*1024` (row 12),
@@ -536,17 +536,20 @@ prerequisites 0a–0e (the INGESTOR CSV acquisition, the class-A delete gate, SE
 | # | Commit | Provider | Scope |
 |---|---|---|---|
 | **①** | `feat(55_source_parcels): batch2 row 3.7 ① — assessment + red suite + PRE goldens (parcels, INGESTOR class A, compressed)` | **deepseek ×2 briefs** (this report + fixtures/red suite) **+ claude** (PRE goldens, `converted.json.pending` `red_suite`) | **THIS REPORT** + `src/tests/steps/parcels/violations.test.ts` (RED) + fixtures + PRE goldens `docs/reports/golden/parcels/pre/{sources,standalone}.json` |
-| **②** | `feat(55_source_parcels): batch2 row 3.7 ② — descriptor + compute + frozen shell + seeds; POST goldens (zero-diff)` | **deepseek ×3 briefs + Sonnet finisher + claude** | descriptor + compute (`buildWriteSql` verbatim, `shapeRecord`, checks) + frozen shell + `notes.json` + seeds + re-pointed smoke test; POST goldens + `--compare` (data byte-identical; declared additive keys only); pending stage `shape_clean` |
+| **②** | `feat(55_source_parcels): batch2 row 3.7 ② — descriptor + compute + frozen shell + seeds; POST goldens (zero-diff, declared upsert axes)` | **deepseek ×3 briefs + Sonnet finisher + claude** | descriptor (D1 REVISED: `columns[].on_empty`/`outputs.invalidates[].set_null_on_change_of`/`guard_columns` declared axes, no `buildWriteSql`) + compute (`shapeRecord` — including the `{geojson, config, run_at}` seam from INGESTOR prerequisite 0n — checks, pure helpers) + frozen shell + `notes.json` + seeds + re-pointed smoke test; POST goldens + `--compare` (data byte-identical; declared additive keys only); pending stage `shape_clean` |
 | **③** | cutover | **claude / Sonnet** | `converted.json` register + pending delete, census flip, template-freeze refresh (+RE-FREEZE if the profile re-derives), `step-validate --step=parcels --write`, Spec 55/43 diffs + **lib registration (D6)**, system-map/backlog regen, fleet-list sync, merge + push |
 
 **Part A of ① (this document) is deliberately COMMIT-FREE.** The orchestrator lands ① as ONE commit
 carrying this report, the red suite, the PRE goldens and the `converted.json.pending` entry; part B
 lands the tests. The marker line at the head of this file is what makes ① compressed-form legal.
 
-**Panel (token-lean, per the plan):** Regression Guardian at OUTPUT on the compute's `buildWriteSql`
-vs the legacy SQL — **every deleted line fenced**: COALESCE/NULLIF ×5, the three CASE arms, the
-**nine** guard terms (§1.4 — the fence must be the tree's count, not the plan's seven),
-`ST_SetSRID`. Observability on the audit-row delta.
+**Panel (token-lean, per the plan; UPDATED for D1 REVISED — no `buildWriteSql` exists):** Regression
+Guardian at OUTPUT on `write.buildWritePlan`'s DEFAULT-codegen output (driven by the descriptor's
+declared `on_empty`/`set_null_on_change_of`/`guard_columns` axes) vs the legacy SQL fixture —
+**every deleted line fenced**: COALESCE/NULLIF ×5, the three CASE arms, the **nine** guard terms
+(§1.4 — the fence must be the tree's count, not the plan's seven), `ST_SetSRID`; `violations.test.ts`
+§2 (`write.buildWritePlan reproduces the legacy UPSERT verbatim`) already exercises this fence.
+Observability on the audit-row delta.
 
 ---
 
@@ -573,3 +576,156 @@ vs the legacy SQL — **every deleted line fenced**: COALESCE/NULLIF ×5, the th
 | 4 | **A legacy `rows_read`-class check can be WARN in one INGESTOR and FAIL in another** (`address_points`: FAIL/`value_min`; `parcels`: WARN). | severity is NOT archetype-derived — each row must be read from its own source. `address_points`' AP-D5 (severity corrected WARN→FAIL to match its legacy) is the mirror image; here the correct move is to NOT touch the WARN. |
 | 5 | **The `limit` string-grammar trap repeats**: `"viol == 0"` + `limit_from_config` silently substitutes the bound into the wrong comparison (`address_points` AP-D6) — and `parcels` has the identical shape (`rows_read` + a shared config key). | the R-T addendum `value_min` form is the standard answer for any check whose observable is a RAW MEASURED VALUE rather than a violation count; name it early, not after a `--write` catches it. |
 | 6 | **The DeepSeek engine cannot run `node`/`npm`-spawning verification inside its tool allowlist.** | every measurement that needs `node` (the memory probe, a golden capture, `vitest`) must be authored by the claude/orchestrator side at a named commit — the report must label carried numbers as carried, which §1.7 and LOW-CONFIDENCE #1 do rather than smuggling them in as this session's own. |
+
+---
+
+## Commit ② — explained golden diffs (G8; PRE = legacy loader before the descriptor existed, POST = converted step; `sources.json` 89 diff keys, `standalone.json` 65 diff keys)
+
+**INGESTOR prerequisite 0n landed between ① and ②** (`fbd839c5`, on `wf2/deep-scrapes-restore-l0`, rebased in before this commit): `runIngestPhase` now passes `{ geojson, config, run_at }` to `compute.shapeRecord` — `config.parcels_irregularity_threshold` and a `run_at: Date` (the runner's own `clockNow`) replace the ad-hoc `{ todayIso, irregularityThreshold }` seam the compute carried at ①. `shapeRecord` derives "today" from `run_at.getTime()` via `isoDateFromRunAt` (pure `civilFromEpochDay` epoch-day arithmetic, never `new Date()` — `compute-shape.yml`'s `compute-no-wall-clock` bans it unconditionally). **The legacy expiry semantics are reproduced exactly**: `git show 9b414ef7:scripts/load-parcels.js:493` compares `dateExpiry < new Date().toISOString().slice(0, 10)` — strictly before today's UTC calendar date, non-sentinel only (`3000-01-01` never expires); the boundary test added to `violations.test.ts` (`DATE_EXPIRY == run_at`'s date is NOT expired; one day later is NOT expired either) locks the strict inequality.
+
+**Table-state proof.** PRE (`①`, captured before the descriptor existed) has `tables_source: "none"` / `table_state: []` for both `sources.json` and `standalone.json` — the harness has nothing to hash without `outputs.writes[]` to read, the same structural gap `address_points`' PRE captures show (bucket 7 of that report's own diff explanation). The "byte-identical" proof is therefore NOT a `content_hash` comparison against a PRE baseline (none exists) — it is the **zero-further-write** proof: PRE's own `sources.json` run (the LEGACY loader, run first) already wrote the live-CSV state (`records_inserted: 9970`, `records_updated: 485525`); POST's converted run, hitting the same live CSV again, computes `records_inserted: 0` / `records_updated: 0` / `records_unchanged: 495495` on **both** `sources.json` and `standalone.json` — the converted step agrees with the legacy step's own guard/shape logic closely enough that NO row needed a further write. Both POST captures also hash to the **identical** `table_state[0].content_hash` (`15785c9b7abf770b76c051bac8d1d2cb`, 496,500 rows, `order_by: explicit` on `parcel_id`) regardless of chain context (`sources` vs standalone `none`) — this is the new baseline going forward, established the same way `address_points`' POST hash (`690acf86…`) was.
+
+**Families** (mirroring the `address_points` precedent's bucket structure): (1) `stdout_lines[*]` — the legacy printed `[load-parcels]`-tagged download/parse progress lines (29 of them, byte-for-byte download percentage ticks); the runner prints target/acquired/completed lines under `[parcels]` — presentation only, no data. (2) `meta[0].external` / `meta[0].reads` — the legacy `emitMeta` named the CSV as a free-text read (`"Toronto Open Data CSV": [...]`); the runner names the declared external id (`ckan:property-boundaries-4326`) and the descriptor's own `inputs.reads`. (3) `audit_table.name` / `.phase` — fleet-standard display name (`"Toronto Property Parcels"` vs the legacy's `"Parcels Ingestion"`) and chain phase index (5 vs the legacy's hard-coded 4). (4) `audit_table.rows[0..6]` `metric`/`source`/`status`/`threshold`/`value` — the SEVEN declared checks (`csv_header_drift`, `null_address_pct`, `skip_rate_pct`, `rows_read_floor`, `records_errors`, `geom_parse_failures`, `shaped_skipped`) replace the legacy's nine flattened INFO/PASS/WARN counter rows at the SAME array indices under different metric names and reordering; content is unchanged, only shape and order. (5) `audit_table.rows[7]` / `rows[8]` — POSITIONAL array-length artifact only: the legacy's `parcels_csv_schema_drift` and `parcels_null_address_pct` rows are NOT missing, they are `rows[0]`/`rows[1]` in the new (shorter, reordered) array (`csv_header_drift` / `null_address_pct`) — the comparator diffs by index, so the two extra legacy-array slots read as `undefined` even though their content survives elsewhere in the same array. (6) `audit_table.verdict` — `WARN` (legacy, carrying the structurally-unsatisfiable `parcels_null_address_pct` WARN, PR-D2, PIN) → `PASS` (converted): **MEASURED, corrected from an earlier draft of this section** — `ctx.acquired.attempted_address_number_rows` / `null_address_number_rows` are read by `null_address_pct` here AND by `address_points`' own `null_address_number_pct` (`scripts/lib/compute/load-address-points.js:201-202`), but **grep confirms zero writers anywhere in `scripts/lib/step/{acquire,index}.js`** — no INGESTOR ever populates either field, in this capture OR in a real chain run. Both checks therefore short-circuit to `violations: 0`/`value: null` on EVERY run, converting PR-D2's documented "always WARN" legacy row into a silent, permanent PASS. This is NOT a capture-harness artifact — it is a genuine, pre-existing, shared-runner-library gap two INGESTORs now inherit (the same CLASS as the `{todayIso, irregularityThreshold}` gap 0n just closed for `shapeRecord`, and the `rows_read` gap below), undiscovered by the `address_points` assessment (its own report never names it). **Not fixed here** (out of this commit's declared scope — see the `rows_read` finding below for the identical disposition); filed alongside it. (7) `checks_failed`/`checks_passed`/`checks_warned`/`config`/`gate`/`ledger_row`/`parcels_load`/`pool_errors`/`terminal` — nine new runner-standard `records_meta` fields (declared additive keys, Spec 122 §5.3's fleet contract) with no legacy analogue. (8) `errors`/`records_inserted`/`records_skipped`/`records_unchanged`/`records_updated`/`rows_read` at the top level of `records_meta` — the legacy's flattened counters, now nested one level down under `records_meta.parcels_load` (declared additive restructure, same data). (9) `records_new`/`records_total`/`records_updated` at the TOP-level `summary` — reflect the observed 0-further-writes outcome above (legit data, not a shape artifact). (10) `table_state[0]` — PRE has none (no descriptor at capture time); POST establishes the baseline (above). `standalone.json`'s own diff additionally carries (11) `pipeline_runs[0]` — a standalone run now opens its own ledger row (the legacy standalone script did not).
+
+`sources.json` — the full 89-key list:
+
+89 differences (bucket 1): meta[0].external · meta[0].reads.Toronto Open Data CSV · stdout_lines[0] · stdout_lines[1] · stdout_lines[2] · stdout_lines[3] · stdout_lines[4] · stdout_lines[5] · stdout_lines[6] · stdout_lines[7] · stdout_lines[8] · stdout_lines[9]
+
+89 differences (bucket 2): stdout_lines[10] · stdout_lines[11] · stdout_lines[12] · stdout_lines[13] · stdout_lines[14] · stdout_lines[15] · stdout_lines[16] · stdout_lines[17] · stdout_lines[18] · stdout_lines[19] · stdout_lines[20] · stdout_lines[21]
+
+89 differences (bucket 3): stdout_lines[22] · stdout_lines[23] · stdout_lines[24] · stdout_lines[25] · stdout_lines[26] · stdout_lines[27] · stdout_lines[28] · summary.records_meta.audit_table.name · summary.records_meta.audit_table.phase · summary.records_meta.audit_table.rows[0].metric · summary.records_meta.audit_table.rows[0].source · summary.records_meta.audit_table.rows[0].threshold
+
+89 differences (bucket 4): summary.records_meta.audit_table.rows[0].value · summary.records_meta.audit_table.rows[1].metric · summary.records_meta.audit_table.rows[1].source · summary.records_meta.audit_table.rows[1].status · summary.records_meta.audit_table.rows[1].threshold · summary.records_meta.audit_table.rows[1].value · summary.records_meta.audit_table.rows[2].metric · summary.records_meta.audit_table.rows[2].source · summary.records_meta.audit_table.rows[2].status · summary.records_meta.audit_table.rows[2].threshold · summary.records_meta.audit_table.rows[2].value · summary.records_meta.audit_table.rows[3].metric
+
+89 differences (bucket 5): summary.records_meta.audit_table.rows[3].source · summary.records_meta.audit_table.rows[3].status · summary.records_meta.audit_table.rows[3].threshold · summary.records_meta.audit_table.rows[3].value · summary.records_meta.audit_table.rows[4].metric · summary.records_meta.audit_table.rows[4].source · summary.records_meta.audit_table.rows[4].status · summary.records_meta.audit_table.rows[4].threshold · summary.records_meta.audit_table.rows[4].value · summary.records_meta.audit_table.rows[5].metric · summary.records_meta.audit_table.rows[5].source · summary.records_meta.audit_table.rows[5].status
+
+89 differences (bucket 6): summary.records_meta.audit_table.rows[5].threshold · summary.records_meta.audit_table.rows[5].value · summary.records_meta.audit_table.rows[6].metric · summary.records_meta.audit_table.rows[6].source · summary.records_meta.audit_table.rows[6].status · summary.records_meta.audit_table.rows[6].threshold · summary.records_meta.audit_table.rows[6].value · summary.records_meta.audit_table.rows[7] · summary.records_meta.audit_table.rows[8] · summary.records_meta.audit_table.verdict · summary.records_meta.checks_failed · summary.records_meta.checks_passed
+
+89 differences (bucket 7): summary.records_meta.checks_warned · summary.records_meta.config · summary.records_meta.errors · summary.records_meta.gate · summary.records_meta.ledger_row · summary.records_meta.parcels_load · summary.records_meta.pool_errors · summary.records_meta.records_inserted · summary.records_meta.records_skipped · summary.records_meta.records_unchanged · summary.records_meta.records_updated · summary.records_meta.rows_read
+
+89 differences (bucket 8): summary.records_meta.terminal · summary.records_new · summary.records_total · summary.records_updated · table_state[0]
+
+`standalone.json` — the full 65-key list:
+
+65 differences (bucket 1): meta[0].external · meta[0].reads.Toronto Open Data CSV · pipeline_runs[0] · stdout_lines[0] · stdout_lines[1] · stdout_lines[2] · stdout_lines[3] · stdout_lines[4] · stdout_lines[5] · stdout_lines[6] · summary.records_meta.audit_table.name · summary.records_meta.audit_table.phase · summary.records_meta.audit_table.rows[0].metric
+
+65 differences (bucket 2): summary.records_meta.audit_table.rows[0].source · summary.records_meta.audit_table.rows[0].threshold · summary.records_meta.audit_table.rows[0].value · summary.records_meta.audit_table.rows[1].metric · summary.records_meta.audit_table.rows[1].source · summary.records_meta.audit_table.rows[1].status · summary.records_meta.audit_table.rows[1].threshold · summary.records_meta.audit_table.rows[1].value · summary.records_meta.audit_table.rows[2].metric · summary.records_meta.audit_table.rows[2].source · summary.records_meta.audit_table.rows[2].status · summary.records_meta.audit_table.rows[2].threshold · summary.records_meta.audit_table.rows[2].value
+
+65 differences (bucket 3): summary.records_meta.audit_table.rows[3].metric · summary.records_meta.audit_table.rows[3].source · summary.records_meta.audit_table.rows[3].status · summary.records_meta.audit_table.rows[3].threshold · summary.records_meta.audit_table.rows[4].metric · summary.records_meta.audit_table.rows[4].source · summary.records_meta.audit_table.rows[4].status · summary.records_meta.audit_table.rows[4].threshold · summary.records_meta.audit_table.rows[4].value · summary.records_meta.audit_table.rows[5].metric · summary.records_meta.audit_table.rows[5].source · summary.records_meta.audit_table.rows[5].status · summary.records_meta.audit_table.rows[5].threshold
+
+65 differences (bucket 4): summary.records_meta.audit_table.rows[5].value · summary.records_meta.audit_table.rows[6].metric · summary.records_meta.audit_table.rows[6].source · summary.records_meta.audit_table.rows[6].status · summary.records_meta.audit_table.rows[6].threshold · summary.records_meta.audit_table.rows[6].value · summary.records_meta.audit_table.rows[7] · summary.records_meta.audit_table.rows[8] · summary.records_meta.audit_table.verdict · summary.records_meta.checks_failed · summary.records_meta.checks_passed · summary.records_meta.checks_warned · summary.records_meta.config
+
+65 differences (bucket 5): summary.records_meta.errors · summary.records_meta.gate · summary.records_meta.ledger_row · summary.records_meta.parcels_load · summary.records_meta.pool_errors · summary.records_meta.records_inserted · summary.records_meta.records_skipped · summary.records_meta.records_unchanged · summary.records_meta.records_updated · summary.records_meta.rows_read · summary.records_meta.terminal · summary.records_total · table_state[0]
+
+**Genuinely new findings, out of scope for this commit (carried, not fixed — both shared-runner-library seam gaps, not `parcels`-local defects):**
+
+1. `audit_table.rows[0]` (`rows_read_floor`, formerly the legacy's `rows_read` row) reads **495,495** in both POST captures, not the **498,479** the legacy loader's own `rows_read` counted (`PRE sources.json`) — a 2,984-row (exactly `shaped_skipped`) shortfall. Root cause: `scripts/lib/step/acquire.js`/`index.js` never populate `ctx.acquired.rows_read` for a CSV external (confirmed: zero matches for the literal `rows_read` in either file) — the compute's own fallback (`numberOrNull(a.rows_read) != null ? … : numberOrNull(a.feature_count)`, present in `skip_rate_pct`/`rows_read_floor`/`buildLoadMeta`/`buildAuditBlock`, unmodified by this commit) therefore always reads `a.feature_count` — the POST-filter, POST-dedupe KEPT count — not the raw CSV row count the check's own descriptor `why` text documents ("the loader WARNs below 450,000... its measured quantity is a RAW ROW COUNT," report §5 line 485). Numerically inert this run (495,495 still clears the 460,000 floor and `skip_rate_pct` — `shaped_skipped / feature_count` instead of `shaped_skipped / rows_read` — reads 0.602% vs the legacy's true 0.599%, both far under the 10% FAIL bound), but it is a real seam gap, the same CLASS as the `{todayIso, irregularityThreshold}` gap 0n just closed. **Not fixed here**: it is a shared-runner-library gap (every CSV-format INGESTOR inherits the same fallback), not a `parcels`-local defect, and fixing `acquire.js` is outside this commit's declared scope (descriptor + compute + frozen shell + seeds).
+
+2. `null_address_pct` (and `address_points`' `null_address_number_pct`) silently read `violations: 0` / `value: null` on every run, converting PR-D2's documented always-WARN legacy row into a permanent, silent PASS — see family (6) above for the full measurement.
+
+Both filed for `review_followups.md` / the post-cutover ledger, same posture as PR-D1–PR-D5.
+
+## Commit ② — measured
+
+**Single-transaction duration, ~495K rows (`txn_scope: "step"`, one transaction over the whole load — the declared atomicity-window widening from the legacy's per-1,000-row `withTransaction` batches, D1/D2):** `sources.json` capture — 127.4s wall (`[parcels] completed in 127.4s`, `acquired 498,479 feature(s)`, `495,495` kept after the 2,984-row shape-skip, hashing 496,500 rows including the DB's `updated_at`/system columns took a further 13.8s). `standalone.json` capture (same DB, already converged) — 130.6s wall. Both runs report `sys_duration_ms` in the audit table (127,441 ms / 130,621 ms respectively) — the metric is declared nondeterministic by the capture harness (`pattern:duration_literal`, `row:sys_duration_ms`) and excluded from `--compare`.
+
+**Peak RSS:** carried from ①'s memory probe (LOW-CONFIDENCE table #1, NOT independently re-measured this commit — the probe needs a real 224.7 MB network download outside this session's `node`-spawning allowance under the DeepSeek engine briefs; the descriptor/compute/shell work in ② was engine-authored, the goldens/typecheck/step-validate work was claude-authored, and neither leg re-ran the standalone probe): **peak RSS 511 MB, heapUsed 366 MB** against a 4,288 MB `--max-old-space-size` — well inside the whole-array model's declared budget (`needs_disk_mb: 512`, D2). This capture's own successful completion (two full 495K-row loads, no OOM, no swap) is consistent with that carried figure but does not re-derive it.
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=parcels --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=14 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=39313d9 |
+| G3 | 1 | 2 | table rows=21 vocab-hit rows=4 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=2 it-count=59 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=2 lock-it-count=59 |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | parcels | PASS | min_migration=11 <= migrations count=245 |
+| 2 | parcels | PASS | 4 declared, missing from seeds: none |
+| 3 | parcels | PASS | retired=0 overlap-with-declared=none |
+| 7 | parcels | PASS | SPEC LINK header present=true |
+| 8 | parcels | PASS | G-4: 4 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | parcels | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | parcels | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 68 PRE capture(s) across 19 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 19 converted slug(s) — 11 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 44 declared counter source(s) across 15 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 3 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 154 · unexplained: 0
+
+### Test suite (item iii)
+- 1502/1521 passed (suite success=false)
+- harvested: 26 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing (19):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 4 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 4 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=38511B notes=12911B checks=7 rows records_meta=1424B (newest post/ capture) |
+
+**Enforced-green: 13/14**
+

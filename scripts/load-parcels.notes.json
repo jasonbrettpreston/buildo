@@ -1,0 +1,129 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-parcels.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 11,",
+    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap. It",
+    "lives here because the descriptor schema's root is additionalProperties:false",
+    "and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "Every run of this step LOADS. The loader has no staleness gate — no HEAD/ETag probe, no content hash, no local-file short-circuit that survives (the argv/local-path override was retired per Spec 124 R-AZ) — so the normal audit table is the post-write counter block plus whatever WARN/INFO rows the declared checks emit, never a skip. A gate that skipped on a hash-equal source would be a behaviour change, so it is recorded as a post-cutover follow-up in descriptor.limitations[] instead of declared here.",
+      "measured": {
+        "value": { "gate_reads_in_loader": 0, "retract_statements": 0, "write_statements": 1 },
+        "date": "2026-09-24",
+        "query": "grep -nE \"HEAD|ETag|createHash|existsSync\" scripts/load-parcels.js"
+      }
+    }
+  ],
+  "constants": [
+    {
+      "what": "SQM_TO_SQFT = 10.7639 (1 square metre in square feet) and M_TO_FT = 3.28084 (1 metre in feet) are UNIT CONSTANTS, NOT logic_variables. They are the definitions of the units the source publishes in and the column names promise, not a policy knob: an operator who 'tuned' M_TO_FT to 3.0 would not change a threshold, they would make frontage_ft and depth_ft WRONG by ~9% while every count in the audit table still reads healthy. Plan D3 states this explicitly and the schema has no config.constants field (corrected in the review pass that produced the violations suite), so the reasoning lives here. `0.95` (parcels_irregularity_threshold), the rows-read floor, the skip-rate bound and the download timeout are the real tunables and ARE declared in descriptor.config.logic_variables[].",
+      "measured": {
+        "value": { "sqm_to_sqft": 10.7639, "m_to_ft": 3.28084, "unit_constants": 2, "tunable_literals": 4 },
+        "date": "2026-09-24",
+        "query": "grep -n \"SQM_TO_SQFT\\|M_TO_FT\\|IRREGULARITY_THRESHOLD\" scripts/load-parcels.js"
+      },
+      "why": "There is no admin knob for physics. A unit conversion is a fact, not a preference; a config row invites a change that silently invalidates the derived column rather than any bound."
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The write is class A: a guarded upsert keyed on parcel_id whose DO UPDATE is gated on a NINE-term `IS DISTINCT FROM` OR-chain (geometry, lot_size_sqm, feature_type, the five address columns, date_effective). A byte-identical re-run therefore updates ZERO rows and inserts ZERO rows, and — because there is NO DELETE anywhere in the loader — no parcel is ever removed by this step. A run that reports inserted=0, updated=0 is the healthy no-op case, not a failure. The guard is what makes idempotent_rerun:\\\"zero_writes\\\" true rather than aspirational.",
+      "measured": {
+        "value": { "write_class": "guarded_upsert", "guard": "is_distinct_from", "guard_terms": 9, "retract": "none", "idempotent_rerun": "zero_writes" },
+        "date": "2026-09-24",
+        "query": "grep -c \"IS DISTINCT FROM\" (guard block) scripts/load-parcels.js"
+      }
+    },
+    {
+      "what": "COALESCE(NULLIF(EXCLUDED.x, ''), parcels.x) preservation is load-bearing on FIVE columns (address_number, linear_name_full, addr_num_normalized, street_name_normalized, street_type_normalized): a source-side blank must PRESERVE the existing row value rather than overwrite it with NULL. date_effective uses the weaker COALESCE(EXCLUDED.date_effective, parcels.date_effective) — no NULLIF, so an empty string would NOT preserve there. Reading the guard as 'skip unchanged rows' alone misses the null-preservation half of its job; it is the COALESCE half that survived Toronto's 2026-05-20 ADDRESS_NUMBER strip without losing 486K rows of address data.",
+      "measured": {
+        "value": { "nullif_columns": 5, "plain_coalesce_columns": 1, "preservation_expr": "COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)" },
+        "date": "2026-09-24",
+        "query": "grep -n \"COALESCE\\|NULLIF\" scripts/load-parcels.js"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The DEC-FENCE2 fence: the three *_dataset_version_when_enriched lineage stamps (ravine, heritage, centreline) are NULLed inside the SAME DO UPDATE via `CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.<stamp> END`. The centreline arm EXISTS in the tree — review_followups #430 is stale — and the descriptor declares all three as outputs.invalidates[] because they are lineage INVALIDATIONS, not extra statements.",
+      "why": "A NULL stamp is how the enrich-* steps learn their cached enrichment no longer matches the geometry: consumers then RECOMPUTE rather than SKIP. Writing it as a separate UPDATE (the obvious refactor) would double the write inventory and open a window in which the row carries shifted geometry with a stale stamp — the exact inconsistency the fence exists to prevent. Declaring the invalidation in the descriptor, and NOT a second statement in the SQL, pins the mechanism.",
+      "adjudicated": "orchestrator ruling, plan D1 (WF2 P11-1 / #430 reconciliation), 2026-09-24"
+    },
+    {
+      "what": "Duplicate PARCELID values within one source file are resolved LAST-wins by the step itself (dedupeBySourceId), NOT by the database's ON CONFLICT.",
+      "why": "The pre-conversion loader's row loop let a later row for the same key overwrite the earlier one before the batch was built, so the surviving values are the LAST occurrence's. Letting the database arbitrate would make the winner depend on batch composition — a duplicate split across two 1,000-row batches would resolve differently from two duplicates inside one batch — a silent divergence between two runs of the same input. Declaring dedupeBySourceId last-wins pins the loader's actual semantics, and the violations suite locks it.",
+      "adjudicated": "orchestrator ruling, plan D2 / address_points precedent, 2026-09-24"
+    }
+  ],
+  "suspicious_if": [
+    {
+      "what": "The load completes with errors > 0, or with rows_read meaningfully below the source's own row count. A failed 1,000-row flush DROPS that batch's rows for the run (PR-D1 / review_followups #68), increments `errors` and inflates records_unchanged by the dropped count — so the load can 'succeed' while silently carrying fewer parcels than the CSV holds. The declared records_errors FAIL row and the skip_rate_pct FAIL row are the two places this surfaces.",
+      "measured": {
+        "value": { "drop_path": "flushBatch catch -> errors++ -> batch = []", "evidence_row": "records_errors", "pinned": "PR-D1" },
+        "date": "2026-09-24",
+        "query": "grep -n \"errors++\" scripts/load-parcels.js"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "The `null_address_pct` / null-address WARN is STRUCTURALLY UNSATISFIABLE as PASS and reads WARN on every run: Toronto Open Data stripped ADDRESS_NUMBER (with LINEAR_NAME_FULL and DATE_EFFECTIVE) from the Property Boundaries CSV between 2026-05-19 and 2026-05-20, so the null fraction is ~100% forever. A reader who 'fixes' the WARN by removing the row would HIDE the strip from the next operator — the row stays, by design (PR-D2, review_followups:156 stays ACT).",
+      "measured": {
+        "value": { "null_address_fraction": "~1.0", "strip_date": "2026-05-20", "check_retired": false },
+        "date": "2026-09-24",
+        "query": "grep -n \"nullAddress\" scripts/load-parcels.js scripts/lib/parcels-csv-drift.js"
+      }
+    },
+    {
+      "what": "The loader's own rows-read WARN threshold is 450,000 while the registered `sources_parcels_floor` seed FAILs below 460,000 — the two disagree by 10,000 rows, so a 455,000-row run reads PASS on the step's audit table and FAIL on assert_data_bounds. PINNED as PR-D5, deliberately NOT unified: which number is correct is a data-policy ruling, forbidden inside a zero-diff conversion.",
+      "measured": {
+        "value": { "loader_warn_floor": 450000, "registered_fail_floor": 460000, "delta": 10000 },
+        "date": "2026-09-24",
+        "query": "grep -n \"450000\" scripts/load-parcels.js; grep -n \"sources_parcels_floor\" scripts/seeds/logic_variables.json"
+      }
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The geometry `JSON.parse` SWALLOW: parseGeoJSON (:169-176) catches and returns null, and NOTHING downstream continues on it — the row IS carried with a null geometry/geojson and null frontage/depth (mirroring address_points' AP-D2). It is declared as the counted INFO row `geom_parse_failures` precisely so the count exists without the behaviour moving; a promoted WARN or a throw would change what the loader loads.",
+      "measured": {
+        "value": { "swallow_site": "parseGeoJSON catch -> null", "row_carried": true, "declared_check": "geom_parse_failures" },
+        "date": "2026-09-24",
+        "query": "grep -n \"JSON.parse\" scripts/load-parcels.js"
+      }
+    },
+    {
+      "what": "CKAN coordinate jitter (review_followups:3075) and the centroid invalidation gap (review_followups:3114). The first means `geometry::jsonb IS DISTINCT FROM` fires on sub-metre vertex drift between publishes, so the DEC-FENCE2 stamps are NULLed (and enrich-* recomputes) for data that did not meaningfully change — the POST golden's byte-identity claim is per-run, not per-source-publish. The second is named and explicitly OUT OF SCOPE for this conversion: compute-centroids' derived centroid is not in the invalidate list, but that is a compute_centroids defect and compute_centroids is already converted (PR-D3 / PR-D4).",
+      "measured": {
+        "value": { "jitter": "sub-metre vertex drift, no etag change", "centroid_gap": "no *_when_enriched stamp in compute-centroids.js", "scope": "PR-D3 carried; PR-D4 out of scope" },
+        "date": "2026-09-24",
+        "query": "grep -n \"jsonb IS DISTINCT FROM\" scripts/load-parcels.js"
+      }
+    }
+  ],
+  "fences": [
+    {
+      "const": "class A has NO delete_sql — shouldSkipDelete returns true unconditionally and the runner's 0a guard is a second wall behind it",
+      "value": "outputs.writes[0].write_discipline.class = guarded_upsert, retract = none, scope = none; recovery.interrupted = none",
+      "incident": "Severity MEDIUM. A class-A conversion that quietly acquires a departure DELETE (the load_ravines shape) would retract parcels the source merely reordered — and nothing in a zero-diff golden for a SUCCESSFUL run would show it, because the DELETE only fires on a key set the new run did not see. Reverting the guard is invisible in the success-path output, which is why the lock reads the compute's export and its return value rather than the emitted counters.",
+      "commit": "pending (batch-2 row 3.7 ②)",
+      "lock_test": "src/tests/steps/parcels/violations.test.ts"
+    },
+    {
+      "const": "the three DEC-FENCE2 CASE arms (ravine, heritage, centreline *_dataset_version_when_enriched) survive the conversion VERBATIM — including the centreline arm #430 wrongly calls missing",
+      "value": "outputs.invalidates[] declares all three entries with set_null_on_change_of:\"geometry\" (prerequisite 0l); the shared codegen (scripts/lib/step/write.js) EXECUTES them as the three `CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.<stamp> END` arms — declared, not compute-authored (plan D1 REVISED)",
+      "incident": "Severity MEDIUM. The fence is the ONLY thing that makes an enrich-* consumer recompute after a parcel's geometry moves. Dropping an arm (as #430's stale reading invited) leaves a row with new geometry and a stamp from the OLD geometry, so enrich-ravine / enrich-heritage / enrich-centreline SKIP a parcel that changed — a wrong value with no error and no count. The lock compares write.buildWritePlan(...).upsertSqlFor(1) against fixtures/legacy-upsert.sql.txt, both read from the ONE fixture; step-library.logic.test.ts T5/T7 prove the shared codegen reproduces it.",
+      "commit": "pending (batch-2 row 3.7 ②)",
+      "lock_test": "src/tests/steps/parcels/violations.test.ts"
+    }
+  ]
+}

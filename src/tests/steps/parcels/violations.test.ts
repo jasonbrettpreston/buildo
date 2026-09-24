@@ -61,19 +61,29 @@ const WRITE_COLUMNS = [
 ];
 const WRITE_CLASS = 'guarded_upsert';
 /**
- * The 9 guard columns from the WHERE clause :362-376 — ONE `IS DISTINCT FROM` predicate per
- * OR-term (report §1.4, corrected in the review pass that produced this suite: the report's own
- * itemised list already names 9 items — geometry, lot_size_sqm, feature_type, the 5 address
- * columns, date_effective — 1+1+1+5+1=9; `grep -c 'IS DISTINCT FROM'` over :362-376 [MEASURED
- * 2026-09-24] independently confirms 9, not the plan's "7-disjunct" estimate). `geom` (the
- * PostGIS column) is NOT itself a guard predicate — it is set unconditionally alongside
- * `geometry` whenever the guard passes, driven by the `geometry` jsonb comparison.
+ * D1 REVISED (operator ruling 2026-09-24 — no compute-authored SQL for an INGESTOR):
+ * `write_discipline.guard_columns` is the EIGHT declared entries, NOT the tree's full
+ * nine-term WHERE clause. `geometry` — the ninth OR-term, `parcels.geometry::jsonb IS
+ * DISTINCT FROM EXCLUDED.geometry::jsonb` — is never declared here: the shared codegen
+ * (scripts/lib/step/write.js `changeOfGuardColumns`) adds it automatically and FIRST,
+ * because `geometry` is the watched column of all three `outputs.invalidates[]` entries
+ * below (deduplicated against this list). This is exactly the shape
+ * `src/tests/step-library.logic.test.ts`'s T7 fixture declares (the five `on_empty:
+ * "preserve"` address columns + `date_effective` `on_empty:"preserve_null"`, i.e. this
+ * same eight-item list) and proves reproduces the legacy nine-term guard byte-for-byte.
  */
 const GUARD_COLUMNS = [
-  'geometry', 'lot_size_sqm', 'feature_type',
+  'lot_size_sqm', 'feature_type',
   'address_number', 'linear_name_full', 'addr_num_normalized',
   'street_name_normalized', 'street_type_normalized', 'date_effective',
 ];
+/** The five TEXT address columns declared `on_empty:"preserve"` (plan D1 REVISED, prerequisite 0m). */
+const PRESERVE_COLUMNS = [
+  'address_number', 'linear_name_full', 'addr_num_normalized',
+  'street_name_normalized', 'street_type_normalized',
+];
+/** The one non-text column declared `on_empty:"preserve_null"` (prerequisite 0m follow-on). */
+const PRESERVE_NULL_COLUMN = 'date_effective';
 /** The CSV_URL literal (:36-37) — inputs.reads.externals[0].url. */
 const CSV_URL_HOST = 'ckan0.cf.opendata.inter.prod-toronto.ca';
 /** The 3 DEC-FENCE2 lineage stamps (report §1.3, #418 + WF2 P11-1) — outputs.invalidates[]. */
@@ -98,13 +108,17 @@ const NEW_CONFIG_VARS = [
 ];
 /** The SHARED variable (Rule 3: reuse the existing key, do not mint a second — report §6, PR-D5 pin). */
 const SHARED_FLOOR_VAR = 'sources_parcels_floor';
-/** The declared check ids (Rule 5, report §1.5 auditRows + §2 drift/null-address rows). */
+/** The declared check ids (Rule 5, report §1.5 auditRows + §2 drift/null-address rows) — the
+ *  full seven, in descriptor order (the compute dispatch also carries the two INFO-severity
+ *  descriptive rows, geom_parse_failures + shaped_skipped, not just the five gating checks). */
 const CHECK_IDS = [
   'csv_header_drift',
   'null_address_pct',
   'skip_rate_pct',
   'rows_read_floor',
   'records_errors',
+  'geom_parse_failures',
+  'shaped_skipped',
 ];
 
 // ---------------------------------------------------------------------------
@@ -167,7 +181,6 @@ function seedDefaults(): Record<string, { default: number }> {
 interface ComputeModule {
   compute?: (ctx: unknown) => Promise<unknown>;
   checks?: Record<string, (ctx: unknown) => unknown>;
-  buildWriteSql?: (row: Record<string, unknown>, hasPostGIS: boolean) => { sql: string; params: unknown[] };
   [k: string]: unknown;
 }
 
@@ -181,6 +194,22 @@ function loadComputeModule(): ComputeModule {
 const { validateDescriptor } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
   validateDescriptor: (d: unknown) => unknown;
 };
+
+// THE SHARED CODEGEN (plan D1 REVISED, 2026-09-24) — the library that DEFAULT-codegens
+// the guarded upsert from the descriptor's declared `columns[].on_empty` +
+// `outputs.invalidates[].set_null_on_change_of` axes. No compute in this step authors
+// SQL text any more (operator ruling: compute-authored SQL is rejected for an
+// INGESTOR); the fence below drives THIS library against THIS descriptor, exactly the
+// way `src/tests/step-library.logic.test.ts` T5/T7 drive it against their own fixture.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+const writeLib = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js')) as {
+  buildWritePlan: (writeSpec: unknown, descriptor: unknown) => { upsertSqlFor: (n: number) => string; guard_columns: string[] };
+};
+
+/** Strip `-- ...` SQL line comments (the legacy fixture carries prose comments the generated SQL never emits). */
+function stripSqlComments(s: string): string {
+  return s.replace(/--[^\n]*\n/g, '\n');
+}
 
 /** Run the A2 step-shape rule over explicit paths (mirrors step-conformance.infra.test.ts). */
 function runStepShape(files: string[]): Array<{ file: string; rule: string; line: number }> {
@@ -257,7 +286,7 @@ function driveCheck(checkId: string, ctx: Record<string, unknown>): Array<[strin
 // ===========================================================================
 
 describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Spec 123 §7 row 6)', () => {
-  it.fails('descriptor exists and is AJV-valid (RED today: ENOENT — no descriptor yet) (flips at: commit ②)', () => {
+  it('descriptor exists and is AJV-valid (RED today: ENOENT — no descriptor yet)', () => {
     // RED value: MISSING ARTIFACT scripts/load-parcels.descriptor.json
     const d = loadDescriptor();
     expect(d.identity.name).toBe('parcels');
@@ -266,7 +295,7 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(d.identity.spec).toBe('55');
   });
 
-  it.fails('the descriptor declares the CSV external, csv_options, key_property PARCELID (plan D2) (flips at: commit ②)', () => {
+  it('the descriptor declares the CSV external, csv_options, key_property PARCELID (plan D2)', () => {
     const d = loadDescriptor();
     const ext = d.inputs.reads.externals[0]!;
     expect(ext.kind).toBe('http_file');
@@ -279,7 +308,7 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(csvOpts.relax_quotes).toBe(true);
   });
 
-  it.fails('outputs.writes[0] is class A guarded_upsert, set_source "compute", key parcel_id, geometry_kind polygon (plan D1) (flips at: commit ②)', () => {
+  it('outputs.writes[0] is class A guarded_upsert, DEFAULT codegen (no set_source — plan D1 REVISED), key parcel_id, geometry_kind polygon', () => {
     const d = loadDescriptor();
     const w = writes(d);
     expect(w.length, 'the INGESTOR runner drives exactly ONE write target').toBe(1);
@@ -287,33 +316,54 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(w[0]!.key).toBe('parcel_id');
     expect(w[0]!.geometry_kind, 'a polygon write, unlike address_points\' point').toBe('polygon');
     expect(w[0]!.write_discipline.class).toBe(WRITE_CLASS);
-    expect(w[0]!.write_discipline.set_source, 'plan D1 — the RECORDER pilot 8 / LG-27 seam').toBe('compute');
+    expect(
+      w[0]!.write_discipline.set_source,
+      'plan D1 REVISED (operator ruling 2026-09-24) — compute-authored SQL is rejected for an INGESTOR; the DEFAULT codegen carries no set_source',
+    ).toBeUndefined();
     expect(w[0]!.retract, 'NO DELETE anywhere in the loader = retract none').toBe('none');
     expect(w[0]!.write_discipline.txn_scope, 'plan D1 — the runner wraps ALL batches in ONE step transaction, declared deviation').toBe('step');
   });
 
-  it.fails('the 17 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps (plan D1) (flips at: commit ②)', () => {
+  it('the 17 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geometry" (plan D1 REVISED, prerequisite 0l)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
-    const outs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string }> };
+    const outs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string; set_null_on_change_of?: string }> };
     expect(outs.invalidates, 'plan D1 — three outputs.invalidates[] entries, one per DEC-FENCE2 stamp').toHaveLength(3);
     const names = outs.invalidates.map((i) => i.column).sort();
     expect(names).toEqual([...INVALIDATE_COLUMNS].sort());
     for (const inv of outs.invalidates) {
       expect(inv.table).toBe('parcels');
       expect(/geometry.*IS DISTINCT FROM|DEC-FENCE2|#418/i.test(inv.when), 'the when names the geometry-change gate').toBe(true);
+      expect(
+        inv.set_null_on_change_of,
+        'prerequisite 0l — the codegen EXECUTES this entry only when set_null_on_change_of names the watched column',
+      ).toBe('geometry');
     }
   });
 
-  it.fails('guard_columns carry the 9-term WHERE-clause set (report §1.4, tree wins over the plan\'s "7-disjunct") (flips at: commit ②)', () => {
+  it('columns[] declare on_empty:"preserve" on the five address columns and on_empty:"preserve_null" on date_effective (plan D1 REVISED, prerequisites 0m/0m-follow-on)', () => {
+    const d = loadDescriptor();
+    const cols = writes(d)[0]!.columns as Array<{ name: string; on_empty?: string }>;
+    const byName = new Map(cols.map((c) => [c.name, c.on_empty]));
+    for (const name of PRESERVE_COLUMNS) {
+      expect(byName.get(name), `${name} must declare on_empty:"preserve"`).toBe('preserve');
+    }
+    expect(byName.get(PRESERVE_NULL_COLUMN), 'date_effective has no empty-string representation — preserve_null, not preserve').toBe('preserve_null');
+    // No OTHER column declares either mode — this is a per-column axis, not a class-wide switch.
+    const declaredOnEmpty = cols.filter((c) => c.on_empty !== undefined).map((c) => c.name).sort();
+    expect(declaredOnEmpty).toEqual([...PRESERVE_COLUMNS, PRESERVE_NULL_COLUMN].sort());
+  });
+
+  it('guard_columns carry the 8-item DECLARED set (report §1.4\'s tree count of 9 OR-terms is still true at RUNTIME — `geometry` is the ninth, added automatically via invalidates[].set_null_on_change_of, never declared here)', () => {
     const d = loadDescriptor();
     const gc = writes(d)[0]!.write_discipline.guard_columns as string[] | 'all_declared';
     expect(Array.isArray(gc), 'guard_columns must be the explicit WHERE-clause set').toBe(true);
     expect((gc as string[]).sort()).toEqual([...GUARD_COLUMNS].sort());
+    expect((gc as string[]).includes('geometry'), 'geometry is NOT declared — it is auto-added, first, via invalidates[]').toBe(false);
   });
 
-  it.fails('execution.on_batch_error is drop_batch (PR-D1 pin) and network declares the shared timeout var (flips at: commit ②)', () => {
+  it('execution.on_batch_error is drop_batch (PR-D1 pin) and network declares the shared timeout var', () => {
     const d = loadDescriptor();
     expect(d.execution.on_batch_error).toBe('drop_batch');
     expect(d.execution.on_batch_error_why).toBeDefined();
@@ -321,14 +371,24 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(d.execution.network.timeout_from_config).toBe('parcels_download_timeout_ms');
   });
 
-  it.fails('override is "none" and recovery.interrupted is "none" (class A has no retraction to recover, Rule 12) (flips at: commit ②)', () => {
+  it('override declares no live hatch (force_full/force_run/dry_run all "none" — no env-var override exists for this step) and recovery.interrupted is "none" (class A has no retraction to recover, Rule 12)', () => {
     const d = loadDescriptor();
-    expect(d.override).toBe('none');
+    // The schema legally allows the bare string "none" OR the object form with all three
+    // fields "none" (address_points precedent uses the object form too, since it is the
+    // more precise declaration of "three override kinds exist, none of them are wired").
+    if (typeof d.override === 'string') {
+      expect(d.override).toBe('none');
+    } else {
+      const o = d.override as { force_full: string; force_run: string; dry_run: string };
+      expect(o.force_full).toBe('none');
+      expect(o.force_run).toBe('none');
+      expect(o.dry_run).toBe('none');
+    }
     expect(d.recovery.interrupted).toBe('none');
     expect(d.recovery.interrupted_why).toBeDefined();
   });
 
-  it.fails('the step file is the §5.1 frozen shape, ast-grep clean, no pipeline.run (RED today: 585-line legacy) (flips at: commit ②)', () => {
+  it('the step file is the §5.1 frozen shape, ast-grep clean, no pipeline.run (RED today: 585-line legacy)', () => {
     artifact(COMPUTE_REL, 'the frozen shell cannot exist without the compute');
     const src = fs.readFileSync(abs(STEP_REL), 'utf8');
     expect(src.split('\n').slice(0, 30).join('\n').includes('SPEC LINK:'), 'the frozen file keeps the SPEC LINK header').toBe(true);
@@ -344,13 +404,13 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(p.has_descriptor && p.compute_type === 'function').toBe(true);
   });
 
-  it.fails('the step file no longer carries the 585-line island (no pipeline.run, no https/http/csv-parse require) (flips at: commit ②)', () => {
+  it('the step file no longer carries the 585-line island (no pipeline.run, no https/http/csv-parse require)', () => {
     const src = stripComments(fs.readFileSync(abs(STEP_REL), 'utf8'));
     expect(/pipeline\.run\s*\(/.test(src), 'pipeline.run still in the step file').toBe(false);
     expect(/require\(['"](https|http|csv-parse)['"]\)/.test(src), 'a network/CSV require in the frozen shell').toBe(false);
   });
 
-  it.fails('compute is ast-grep clean against compute-shape.yml, exports the dispatch, and opens no pool (RED today: ENOENT) (flips at: commit ②)', () => {
+  it('compute is ast-grep clean against compute-shape.yml, exports the dispatch, and opens no pool (RED today: ENOENT)', () => {
     // RED value: MISSING ARTIFACT scripts/lib/compute/load-parcels.js
     artifact(COMPUTE_REL);
     const p = probe(COMPUTE_REL);
@@ -374,22 +434,27 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     }
   });
 
-  it.fails('compute exports coerceKey, shapeRecord, dedupeBySourceId, validatorCounterDelta, shouldSkipDelete, buildWriteSql (the runner contract + LG-27 escape hatch) (flips at: commit ②)', () => {
+  it('compute exports coerceKey, shapeRecord, dedupeBySourceId, validatorCounterDelta, shouldSkipDelete — the runner contract (plan D1 REVISED: no buildWriteSql, DEFAULT codegen authors the statement)', () => {
     const mod = loadComputeModule();
-    for (const h of ['coerceKey', 'shapeRecord', 'dedupeBySourceId', 'validatorCounterDelta', 'shouldSkipDelete', 'buildWriteSql']) {
+    for (const h of ['coerceKey', 'shapeRecord', 'dedupeBySourceId', 'validatorCounterDelta', 'shouldSkipDelete']) {
       expect(typeof mod[h], `the compute must export ${h}`).toBe('function');
     }
+    expect(mod.buildWriteSql, 'plan D1 REVISED — compute-authored SQL is rejected for an INGESTOR; no buildWriteSql export').toBeUndefined();
   });
 });
 
 // ===========================================================================
-// 2. buildWriteSql — the DEC-FENCE2 fence, verbatim against fixtures/legacy-upsert.sql.txt
-//    (report §1.1 D1, §1.3, §1.4; whitespace-normalised compare, per the c1b brief's own allowance)
+// 2. write.buildWritePlan — the DEC-FENCE2 fence, verbatim against
+//    fixtures/legacy-upsert.sql.txt, reproduced by the SHARED codegen from THIS
+//    descriptor's declared on_empty/set_null_on_change_of axes (plan D1 REVISED,
+//    2026-09-24 — compute-authored SQL is rejected for an INGESTOR). The same fence
+//    src/tests/step-library.logic.test.ts's T5/T7 prove against their OWN fixture;
+//    this describe block re-proves it against THIS descriptor + THIS legacy file.
 // ===========================================================================
 
-describe('row 3.7 — buildWriteSql reproduces the legacy UPSERT verbatim (fixtures/legacy-upsert.sql.txt)', () => {
+describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim (fixtures/legacy-upsert.sql.txt)', () => {
   /** Extract a fenced fragment from the legacy fixture and assert the SAME normalised text appears
-   *  in buildWriteSql's own output — both sides read from the ONE fixture, so there is no second,
+   *  in the generated statement — both sides read from the ONE fixture, so there is no second,
    *  independently-typed copy of the SQL to drift out of sync. */
   function fenceFragments(): string[] {
     const legacy = normalizeWs(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8'));
@@ -399,67 +464,61 @@ describe('row 3.7 — buildWriteSql reproduces the legacy UPSERT verbatim (fixtu
       'addr_num_normalized = COALESCE(NULLIF(EXCLUDED.addr_num_normalized, \'\'), parcels.addr_num_normalized)',
       'street_name_normalized = COALESCE(NULLIF(EXCLUDED.street_name_normalized, \'\'), parcels.street_name_normalized)',
       'street_type_normalized = COALESCE(NULLIF(EXCLUDED.street_type_normalized, \'\'), parcels.street_type_normalized)',
+      'date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective)',
       'ravine_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END',
       'heritage_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
       'centreline_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
       'WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb',
       'OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm',
       'OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type',
+      'OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)',
       'ON CONFLICT (parcel_id)',
       'RETURNING (xmax = 0) AS is_insert',
     ];
-    // Sanity: every fragment we are about to demand of buildWriteSql is genuinely present in the
-    // fixture itself (never assert a fragment that drifted out of the fixture's own text).
+    // Sanity: every fragment we are about to demand of the generated statement is genuinely
+    // present in the fixture itself (never assert a fragment that drifted out of the fixture's
+    // own text).
     for (const f of FRAGMENTS) {
       expect(legacy.includes(normalizeWs(f)), `fixture drift: "${f}" not found in legacy-upsert.sql.txt`).toBe(true);
     }
     return FRAGMENTS;
   }
 
-  it('the legacy fixture exists and contains the full guarded UPSERT text (RED today: ENOENT)', () => {
-    // RED value: MISSING ARTIFACT src/tests/steps/parcels/fixtures/legacy-upsert.sql.txt
+  it('the legacy fixture exists and contains the full guarded UPSERT text', () => {
     const legacy = readText(LEGACY_SQL_REL);
     expect(legacy).toContain('INSERT INTO parcels (');
     expect(legacy).toContain('ON CONFLICT (parcel_id)');
     expect(legacy).toContain('RETURNING (xmax = 0) AS is_insert');
   });
 
-  it.fails('buildWriteSql(row, hasPostGIS) generates INSERT + ON CONFLICT DO UPDATE, with ST_SetSRID when PostGIS is present (RED today: ENOENT — no compute yet) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-parcels.js
-    const mod = loadComputeModule();
-    const buildWriteSql = mod.buildWriteSql as (row: Record<string, unknown>, hasPostGIS: boolean) => { sql: string; params: unknown[] };
-    expect(typeof buildWriteSql, 'compute.js must export buildWriteSql (LG-27, set_source:"compute")').toBe('function');
-    const sampleRow = {
-      parcel_id: '9000001', feature_type: 'PARCEL',
-      address_number: '100', linear_name_full: 'Davenport Rd',
-      addr_num_normalized: '100', street_name_normalized: 'DAVENPORT', street_type_normalized: 'RD',
-      stated_area_raw: '300.00 sq.m', lot_size_sqm: 300, lot_size_sqft: 3229.17,
-      frontage_m: 14.4, frontage_ft: 47.24, depth_m: 20.84, depth_ft: 68.37,
-      geometry: { type: 'Polygon', coordinates: [[[-79.401, 43.65], [-79.4, 43.65], [-79.4, 43.6505], [-79.401, 43.6505], [-79.401, 43.65]]] },
-      date_effective: '2020-01-01', is_irregular: false,
-    };
-    const { sql, params } = buildWriteSql(sampleRow, true);
-    expect(Array.isArray(params)).toBe(true);
-    const normalized = normalizeWs(sql);
-    expect(normalized).toContain(normalizeWs('INSERT INTO parcels ('));
-    expect(normalized).toContain(normalizeWs('ON CONFLICT (parcel_id)'));
-    expect(normalized).toContain(normalizeWs('ST_SetSRID(ST_GeomFromGeoJSON'));
+  it('write.buildWritePlan(writes[0], descriptor).upsertSqlFor(1) reproduces the legacy UPSERT tail whitespace-normalised, MINUS the legacy ${geomLine} arm (out of scope for prerequisites 0l/0m, T5/T7\'s own exclusion) — the DECLARED on_empty + set_null_on_change_of axes are the ONLY source of the SET/WHERE text', () => {
+    const d = loadDescriptor();
+    const writeSpec = writes(d)[0]!;
+    const plan = writeLib.buildWritePlan(writeSpec, d);
+    const sql = plan.upsertSqlFor(1);
+    // `geom`'s own SET arm (`geom = EXCLUDED.geom,`) is the standard wkb_geometry
+    // default-codegen slot for the PostGIS column — it did not exist in the legacy
+    // statement (which set `geom` via the conditional ${geomLine} arm instead) and is
+    // orthogonal to the on_empty/set_null_on_change_of axes under test here, exactly
+    // as T5/T7 exclude the `${geomLine}` slot from their own comparison.
+    const actualTail = sql.slice(sql.indexOf('\nON CONFLICT')).replace(/;$/, '');
+    const actualNorm = normalizeWs(actualTail.replace('geom = EXCLUDED.geom,', ''));
+
+    let legacy = stripSqlComments(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8'));
+    legacy = legacy.replace(/\$\{geomLine\}\s*/, '');
+    const legacyTail = legacy.slice(legacy.indexOf('ON CONFLICT'));
+    const legacyNorm = normalizeWs(legacyTail);
+
+    expect(actualNorm, 'the shared codegen, driven ONLY by declared axes, must reproduce the legacy statement byte-for-byte (whitespace-normalised) — cite step-library.logic.test.ts T7').toBe(legacyNorm);
     for (const frag of fenceFragments()) {
-      expect(normalized, `buildWriteSql output is missing the fenced fragment: ${frag}`).toContain(normalizeWs(frag));
+      expect(actualNorm, `generated SQL is missing the fenced fragment: ${frag}`).toContain(normalizeWs(frag));
     }
   });
 
-  it.fails('buildWriteSql(row, hasPostGIS=false) omits the geom line entirely (the PostGIS-absent two-arm behaviour, report §1.2) (flips at: commit ②)', () => {
-    const mod = loadComputeModule();
-    const buildWriteSql = mod.buildWriteSql as (row: Record<string, unknown>, hasPostGIS: boolean) => { sql: string; params: unknown[] };
-    const { sql } = buildWriteSql({ parcel_id: '1', feature_type: 'PARCEL' }, false);
-    expect(normalizeWs(sql)).not.toContain('ST_SetSRID');
-  });
-
-  it.fails('the generated SQL structurally forbids DELETE/TRUNCATE (class A, retract:"none") (flips at: commit ②)', () => {
-    const mod = loadComputeModule();
-    const buildWriteSql = mod.buildWriteSql as (row: Record<string, unknown>, hasPostGIS: boolean) => { sql: string; params: unknown[] };
-    const { sql } = buildWriteSql({ parcel_id: '1', feature_type: 'PARCEL' }, true);
+  it('the generated statement structurally forbids DELETE/TRUNCATE (class A, retract:"none")', () => {
+    const d = loadDescriptor();
+    const writeSpec = writes(d)[0]!;
+    const sql = writeLib.buildWritePlan(writeSpec, d).upsertSqlFor(1);
     expect(/\bDELETE\b|\bTRUNCATE\b/i.test(sql)).toBe(false);
   });
 });
@@ -471,10 +530,24 @@ describe('row 3.7 — buildWriteSql reproduces the legacy UPSERT verbatim (fixtu
 describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns (loader :467-545)', () => {
   interface Shape { [k: string]: unknown }
 
-  function shapeRecord(): (record: Record<string, string>) => Shape | null {
+  /**
+   * The seam `shapeRecord`'s own JSDoc now documents (`{ geojson, config, run_at }`) — injected
+   * explicitly here because this describe block unit-tests `shapeRecord` as a PURE FUNCTION in
+   * isolation, not `runIngestPhase`'s own wiring. RECONCILED (the ① report's finding is now
+   * STALE-RESOLVED): INGESTOR prerequisite 0n (`fbd839c5`) landed `runIngestPhase` passing
+   * `{ geojson, config, run_at }` to `compute.shapeRecord` — the expiry filter and the
+   * `is_irregular` threshold both read live values in production; neither is dead any more.
+   * `run_at` is a `Date` (the runner's `clockNow`, never a pre-formatted ISO string) so the
+   * compute derives "today" via `isoDateFromRunAt`'s pure epoch-day arithmetic, never
+   * `new Date()` (compute-shape's wall-clock ban).
+   */
+  const SHAPE_SEAM = { config: CONFIG_VARS, run_at: new Date('2026-09-24T12:00:00.000Z') };
+
+  function shapeRecord(): (record: Record<string, string>, seam?: Record<string, unknown>) => Shape | null {
     const mod = loadComputeModule();
     expect(typeof mod.shapeRecord, 'the compute must export shapeRecord — a csv external owes a shape (runner :638)').toBe('function');
-    return mod.shapeRecord as (record: Record<string, string>) => Shape | null;
+    const fn = mod.shapeRecord as (record: Record<string, string>, seam?: Record<string, unknown>) => Shape | null;
+    return (record, seam) => fn(record, { ...SHAPE_SEAM, ...seam });
   }
 
   function coerceKey(): (raw: unknown) => string | null {
@@ -483,7 +556,7 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     return mod.coerceKey as (raw: unknown) => string | null;
   }
 
-  it.fails('row 1 — a stated-area rectangle shapes its 17 columns + geojson (frontage/depth pinned via the mirrored MBR math, NOT the unexported legacy fn) (flips at: commit ②)', () => {
+  it('row 1 — a stated-area rectangle shapes its 17 columns + geojson (frontage/depth pinned via the mirrored MBR math, NOT the unexported legacy fn)', () => {
     // Expected numbers independently computed (not required from the legacy script — its
     // helpers are unexported and requiring load-parcels.js in-process fires pipeline.run as a
     // side effect) by re-deriving the SAME documented algorithm (extractRing/minimumBoundingRect/
@@ -510,7 +583,7 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.date_effective).toBe('2020-01-01');
   });
 
-  it.fails('row 2 — a trapezoid with NO stated area: lot_size_sqm/sqft are null (NEVER derived from polygon area), frontage/depth use the polygon-derived scale, is_irregular true (flips at: commit ②)', () => {
+  it('row 2 — a trapezoid with NO stated area: lot_size_sqm/sqft are null (NEVER derived from polygon area), frontage/depth use the polygon-derived scale, is_irregular true', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const r = shapeRecord()(rows[1] as Record<string, string>) as Shape;
     expect(r, 'row 2 must shape').not.toBeNull();
@@ -525,7 +598,7 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.is_irregular, 'a trapezoid: polyArea/mbrArea ratio 0.75 < 0.95').toBe(true);
   });
 
-  it.fails('row 3 — a second stated-area-less rectangle: is_irregular false, DATE_EXPIRY blank never triggers the expiry skip (flips at: commit ②)', () => {
+  it('row 3 — a second stated-area-less rectangle: is_irregular false, DATE_EXPIRY blank never triggers the expiry skip', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const r = shapeRecord()(rows[2] as Record<string, string>) as Shape;
     expect(r, 'row 3 must shape — a blank DATE_EXPIRY is not a skip condition (loader :494, `if (dateExpiry && ...)`)').not.toBeNull();
@@ -535,19 +608,30 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.is_irregular).toBe(false);
   });
 
-  it.fails('row 4 — FEATURE_TYPE=CORRIDOR is excluded, returns null (loader :486-490, shaped_skipped) (flips at: commit ②)', () => {
+  it('row 4 — FEATURE_TYPE=CORRIDOR is excluded, returns null (loader :486-490, shaped_skipped)', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const r = shapeRecord()(rows[3] as Record<string, string>);
     expect(r, 'a CORRIDOR feature type is never loaded').toBeNull();
   });
 
-  it.fails('row 5 — an expired DATE_EXPIRY (not the 3000-01-01 sentinel) is excluded, returns null (loader :492-497) (flips at: commit ②)', () => {
+  it('row 5 — an expired DATE_EXPIRY (not the 3000-01-01 sentinel) is excluded, returns null (loader :492-497)', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const r = shapeRecord()(rows[4] as Record<string, string>);
     expect(r, 'a past, non-sentinel DATE_EXPIRY is never loaded').toBeNull();
   });
 
-  it.fails('row 6 — unparsable geometry does NOT skip the row (correction: the row-3.7 brief\'s "unparsable-geometry rows -> null" claim does not match the tree — parseGeoJSON [:169-176] catches and returns null, and NOTHING downstream `continue`s on it; the row IS shaped, with a null geometry/geojson and null frontage/depth, exactly mirroring address_points\' own AP-D2 swallow) (flips at: commit ②)', () => {
+  it('the expiry comparison is STRICTLY before the run date, at the boundary — DATE_EXPIRY == run_at\'s calendar date is NOT expired, matching the legacy `dateExpiry < new Date().toISOString().slice(0,10)` read (git show 9b414ef7:scripts/load-parcels.js:493)', () => {
+    const rows = parseCsvFixture(CSV_6ROWS_REL);
+    const onBoundary = { ...(rows[4] as Record<string, string>), DATE_EXPIRY: '2026-09-24' };
+    const r = shapeRecord()(onBoundary, { run_at: new Date('2026-09-24T12:00:00.000Z') });
+    expect(r, 'DATE_EXPIRY equal to today is NOT strictly before today — the row loads').not.toBeNull();
+
+    const dayAfter = { ...(rows[4] as Record<string, string>), DATE_EXPIRY: '2026-09-25' };
+    const r2 = shapeRecord()(dayAfter, { run_at: new Date('2026-09-24T12:00:00.000Z') });
+    expect(r2, 'DATE_EXPIRY one day in the FUTURE is not expired either').not.toBeNull();
+  });
+
+  it('row 6 — unparsable geometry does NOT skip the row (correction: the row-3.7 brief\'s "unparsable-geometry rows -> null" claim does not match the tree — parseGeoJSON [:169-176] catches and returns null, and NOTHING downstream `continue`s on it; the row IS shaped, with a null geometry/geojson and null frontage/depth, exactly mirroring address_points\' own AP-D2 swallow)', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const r = shapeRecord()(rows[5] as Record<string, string>) as Shape;
     expect(r, 'the parse swallow carries the row, it does not drop it — only feature-type/expiry/empty-PARCELID `continue` (loader :487,:495,:500)').not.toBeNull();
@@ -558,7 +642,7 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.is_irregular, 'estimateLotDimensions(null, ...) returns null -> is_irregular defaults false (loader :520)').toBe(false);
   });
 
-  it.fails('coerceKey is PARCELID trimmed, null when unusable (never empty string) — loader :499 (flips at: commit ②)', () => {
+  it('coerceKey is PARCELID trimmed, null when unusable (never empty string) — loader :499', () => {
     const coerce = coerceKey();
     expect(coerce('9000001')).toBe('9000001');
     expect(coerce('  9000002  ')).toBe('9000002');
@@ -572,7 +656,7 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
 // ===========================================================================
 
 describe('row 3.7 — the pure helpers (dedupe last-wins · shouldSkipDelete always true)', () => {
-  it.fails('dedupeBySourceId keeps LAST-wins — the loader\'s own supersede semantics (flips at: commit ②)', () => {
+  it('dedupeBySourceId keeps LAST-wins — the loader\'s own supersede semantics', () => {
     const mod = loadComputeModule();
     expect(typeof mod.dedupeBySourceId, 'dedupeBySourceId must be exported').toBe('function');
     const fn = mod.dedupeBySourceId as (features: unknown[]) => { kept: Array<Record<string, unknown>>; duplicateCount: number };
@@ -586,7 +670,7 @@ describe('row 3.7 — the pure helpers (dedupe last-wins · shouldSkipDelete alw
     expect(out.kept[0]!.lot_size_sqm, 'the LAST record for a duplicated key wins').toBe(200);
   });
 
-  it.fails('shouldSkipDelete always returns true — class A has no delete_sql, the runner also guards (prerequisite 0a) (flips at: commit ②)', () => {
+  it('shouldSkipDelete always returns true — class A has no delete_sql, the runner also guards (prerequisite 0a)', () => {
     const mod = loadComputeModule();
     expect(typeof mod.shouldSkipDelete, 'shouldSkipDelete must be exported').toBe('function');
     const fn = mod.shouldSkipDelete as (...a: unknown[]) => boolean;
@@ -603,7 +687,7 @@ describe('row 3.7 — the pure helpers (dedupe last-wins · shouldSkipDelete alw
 describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, report §1.5/§2)', () => {
   const CFG = CONFIG_VARS;
 
-  it.fails('csv_header_drift fires WARN on a header-only CSV missing `geometry` (the drift-lib reuse, report §2) (flips at: commit ②)', () => {
+  it('csv_header_drift fires WARN on a header-only CSV missing `geometry` (the drift-lib reuse, report §2)', () => {
     // RED today: no compute. GREEN: detectMissingColumns on the drift fixture's header set.
     const headerOnly = parseCsvFixture(CSV_DRIFT_REL);
     expect(headerOnly, 'the drift fixture is header-only').toHaveLength(0);
@@ -617,7 +701,7 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     expect(calls[0]![1].violations, 'a missing required column is one violation — WARN, not FAIL (drift-lib :53-65)').toBeGreaterThan(0);
   });
 
-  it.fails('csv_header_drift is SILENT (0 violations) on the real 8-column fixture (flips at: commit ②)', () => {
+  it('csv_header_drift is SILENT (0 violations) on the real 8-column fixture', () => {
     const rows = parseCsvFixture(CSV_6ROWS_REL);
     const keys = Object.keys(rows[0] as Record<string, string>);
     const missing = require(path.join(REPO_ROOT, DRIFT_LIB_REL)).detectMissingColumns(keys) as string[]; // eslint-disable-line @typescript-eslint/no-require-imports
@@ -626,28 +710,28 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     expect(calls[0]![1].violations).toBe(0);
   });
 
-  it.fails('skip_rate_pct FAILs at/above the config bound (loader :421, "< 10%", NOT WARN — this row is legacy FAIL, unlike rows_read below) (flips at: commit ②)', () => {
+  it('skip_rate_pct FAILs at/above the config bound (loader :421, "< 10%", NOT WARN — this row is legacy FAIL, unlike rows_read below)', () => {
     const over = driveCheck('skip_rate_pct', { acquired: { rows_read: 100, records_skipped: 15 }, config: CFG });
     expect(over[0]![1].violations, '15% >= 10% ⇒ violation').toBeGreaterThan(0);
     const under = driveCheck('skip_rate_pct', { acquired: { rows_read: 100, records_skipped: 1 }, config: CFG });
     expect(under[0]![1].violations, '1% < 10% ⇒ clean').toBe(0);
   });
 
-  it.fails('rows_read_floor reads sources_parcels_floor via ctx.config (SHARED key, Rule 3, report §6 PR-D5 pin — the loader\'s own WARN stays WARN, never promoted to FAIL) (flips at: commit ②)', () => {
+  it('rows_read_floor reads sources_parcels_floor via ctx.config (SHARED key, Rule 3, report §6 PR-D5 pin — the loader\'s own WARN stays WARN, never promoted to FAIL)', () => {
     const below = driveCheck('rows_read_floor', { acquired: { rows_read: 449999 }, config: CFG });
     expect(below[0]![1].violations, 'below the loader\'s legacy 450000 WARN threshold ⇒ violation').toBeGreaterThan(0);
     const at = driveCheck('rows_read_floor', { acquired: { rows_read: 498479 }, config: CFG });
     expect(at[0]![1].violations, 'at the measured live row count ⇒ clean').toBe(0);
   });
 
-  it.fails('records_errors FAILs above 0 (loader :422, "== 0") (flips at: commit ②)', () => {
+  it('records_errors FAILs above 0 (loader :422, "== 0")', () => {
     const zero = driveCheck('records_errors', { acquired: { errors: 0 }, config: CFG });
     expect(zero[0]![1].violations).toBe(0);
     const one = driveCheck('records_errors', { acquired: { errors: 1 }, config: CFG });
     expect(one[0]![1].violations).toBeGreaterThan(0);
   });
 
-  it.fails('the severities match the legacy exactly: rows_read WARN (never promoted), skip_rate FAIL, records_errors FAIL, csv_header_drift WARN (flips at: commit ②)', () => {
+  it('the severities match the legacy exactly: rows_read WARN (never promoted), skip_rate FAIL, records_errors FAIL, csv_header_drift WARN', () => {
     const d = loadDescriptor();
     expect(checkById(d, 'rows_read_floor').severity, 'report §1.5 AP-D6 trap: the legacy loader WARNs at :416, NOT FAIL — do not mirror address_points\' correction here').toBe('WARN');
     expect(checkById(d, 'skip_rate_pct').severity).toBe('FAIL');
@@ -656,7 +740,7 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     for (const c of d.checks) expect(c.blocking, 'PIN, DO NOT FIX — a FAIL row today exits 0 and the chain continues').toBe(false);
   });
 
-  it.fails('the rows_read_floor check uses the R-T addendum `value_min` form, not `"viol == 0"` (the address_points AP-D6 trap, report §6 warning) (flips at: commit ②)', () => {
+  it('the rows_read_floor check uses the R-T addendum `value_min` form, not `"viol == 0"` (the address_points AP-D6 trap, report §6 warning)', () => {
     const d = loadDescriptor();
     const c = checkById(d, 'rows_read_floor');
     expect(String(c.limit)).toMatch(/value_min/);
@@ -669,7 +753,7 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
 // ===========================================================================
 
 describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ seeds, no bare compute literals', () => {
-  it.fails('every declared config variable has a seed row; every seed default equals the report §6 ledger (flips at: commit ②)', () => {
+  it('every declared config variable has a seed row; every seed default equals the report §6 ledger', () => {
     const d = loadDescriptor();
     const cfg = d.config as { logic_variables: Array<{ name: string; min: unknown; max: unknown; on_invalid: string }>; validation: string; hoisted_above_gate: boolean };
     const names = cfg.logic_variables.map((v) => v.name).sort();
@@ -684,7 +768,7 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
     expect(cfg.hoisted_above_gate).toBe(true);
   });
 
-  it.fails('sources_parcels_floor is REUSED, never duplicated (one seed row at 460000, Rule 3) (flips at: commit ②)', () => {
+  it('sources_parcels_floor is REUSED, never duplicated (one seed row at 460000, Rule 3)', () => {
     const S = seedDefaults();
     const rows = Object.keys(S).filter((k) => k === SHARED_FLOOR_VAR);
     expect(rows).toHaveLength(1);
@@ -694,7 +778,7 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
     expect(declared.filter((n) => n === SHARED_FLOOR_VAR), 'declared exactly once').toHaveLength(1);
   });
 
-  it.fails('the compute reads every threshold through ctx.config.<name> — no bare literal bound (flips at: commit ②)', () => {
+  it('the compute reads every threshold through ctx.config.<name> — no bare literal bound', () => {
     const src = readText(COMPUTE_REL);
     for (const v of NEW_CONFIG_VARS) {
       expect(src.includes(`ctx.config.${v}`), `the compute must read ${v} via ctx.config`).toBe(true);
@@ -705,7 +789,7 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
     expect(/0\.95/.test(src.replace(/ctx\.config\.parcels_irregularity_threshold/g, '')), 'no bare 0.95 literal survives outside the config read').toBe(false);
   });
 
-  it.fails('notes.json declares SQM_TO_SQFT/M_TO_FT as unit constants, NOT logic_variables (plan D3 — no config.constants schema field, corrected in this review pass) (flips at: commit ②)', () => {
+  it('notes.json declares SQM_TO_SQFT/M_TO_FT as unit constants, NOT logic_variables (plan D3 — no config.constants schema field, corrected in this review pass)', () => {
     const notes = JSON.parse(readText(NOTES_REL)) as Record<string, unknown>;
     const blob = JSON.stringify(notes);
     expect(/SQM_TO_SQFT|10\.7639/.test(blob), 'the sq.m -> sq.ft unit constant is declared').toBe(true);
@@ -717,7 +801,7 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
     expect(cfg).not.toContain('M_TO_FT');
   });
 
-  it.fails('notes.json is a real notes file (≤12 entries) with fences[] an explicit array (flips at: commit ②)', () => {
+  it('notes.json is a real notes file (≤12 entries) with fences[] an explicit array', () => {
     const notes = JSON.parse(readText(NOTES_REL)) as { fences?: unknown[] } & Record<string, unknown>;
     const PROSE = ['expected_shape', 'read_this_way', 'suspicious_if', 'blind_spots', 'decisions', 'review_notes', 'expected', 'known_normal', 'known_bad', 'do_not_reflag', 'how_to_investigate', 'limitations', 'constants'];
     let n = 0;
@@ -735,31 +819,31 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
 // ===========================================================================
 
 describe('row 3.7 — deviations carry the plan\'s D1/D3/D4 adjudications verbatim', () => {
-  it.fails('deviations[] is an explicit array (flips at: commit ②)', () => {
+  it('deviations[] is an explicit array', () => {
     const d = loadDescriptor();
     expect(Array.isArray(d.deviations), 'deviations must be an explicit array (never "none")').toBe(true);
   });
 
-  it.fails('the per-batch → step txn atomicity-window widening is declared (plan D1) (flips at: commit ②)', () => {
+  it('the per-batch → step txn atomicity-window widening is declared (plan D1)', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations);
     expect(/txn_scope/.test(text) && /step/i.test(text), 'the widening names txn_scope').toBe(true);
   });
 
-  it.fails('process.argv[2] local-path override is retired per R-AZ (report §3 row 3) (flips at: commit ②)', () => {
+  it('process.argv[2] local-path override is retired per R-AZ (report §3 row 3)', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations);
     expect(/argv/.test(text), 'the retired argv seam is declared').toBe(true);
     expect(/R-AZ/.test(text)).toBe(true);
   });
 
-  it.fails('PR-D1 (batch drop, #68) is pinned as a KNOWN-DEFECT, carried not fixed (flips at: commit ②)', () => {
+  it('PR-D1 (batch drop, #68) is pinned as a KNOWN-DEFECT, carried not fixed', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations) + JSON.stringify(d.limitations);
     expect(/PR-D1/.test(text), 'the divergence is pinned with its ledger id').toBe(true);
   });
 
-  it.fails('PR-D2 (parcels_null_address_pct structurally-unsatisfiable WARN) is a named limitation, the check is NOT retired (flips at: commit ②)', () => {
+  it('PR-D2 (parcels_null_address_pct structurally-unsatisfiable WARN) is a named limitation, the check is NOT retired', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations) + JSON.stringify(d.limitations);
     expect(/PR-D2/.test(text)).toBe(true);
@@ -767,14 +851,14 @@ describe('row 3.7 — deviations carry the plan\'s D1/D3/D4 adjudications verbat
     expect(ids, 'the null-address check stays declared, per plan D4 — retiring it would hide the strip').toContain('null_address_pct');
   });
 
-  it.fails('PR-D3 (CKAN coordinate jitter) and PR-D4 (centroid invalidation gap, OUT of scope) are named limitations (flips at: commit ②)', () => {
+  it('PR-D3 (CKAN coordinate jitter) and PR-D4 (centroid invalidation gap, OUT of scope) are named limitations', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations) + JSON.stringify(d.limitations);
     expect(/PR-D3/.test(text)).toBe(true);
     expect(/PR-D4/.test(text)).toBe(true);
   });
 
-  it.fails('the retired progress-cadence literals (10*1024*1024, 50000, 484000) are declared retired, dead under the whole-array model (flips at: commit ②)', () => {
+  it('the retired progress-cadence literals (10*1024*1024, 50000, 484000) are declared retired, dead under the whole-array model', () => {
     const d = loadDescriptor();
     const text = JSON.stringify(d.deviations);
     expect(/progress|cadence|whole.array/i.test(text)).toBe(true);
@@ -786,7 +870,7 @@ describe('row 3.7 — deviations carry the plan\'s D1/D3/D4 adjudications verbat
 // ===========================================================================
 
 describe('row 3.7 — recovery, counters, emits, guards, database (Rule 10/12)', () => {
-  it.fails('recovery.interrupted is truthful: none — class A has no retraction, so nothing to recover (Rule 12) (flips at: commit ②)', () => {
+  it('recovery.interrupted is truthful: none — class A has no retraction, so nothing to recover (Rule 12)', () => {
     const d = loadDescriptor();
     expect(d.recovery.interrupted).toBe('none');
     expect(d.recovery.before_image).toBe('none');
@@ -794,7 +878,7 @@ describe('row 3.7 — recovery, counters, emits, guards, database (Rule 10/12)',
     expect(/class A|no retract|guarded_upsert/i.test(JSON.stringify(d.recovery.interrupted_why))).toBe(true);
   });
 
-  it.fails('counters read records_total from written.inserted+updated, records_new from inserted, records_updated from updated (flips at: commit ②)', () => {
+  it('counters read records_total from written.inserted+updated, records_new from inserted, records_updated from updated', () => {
     const d = loadDescriptor();
     expect(d.counters, 'a LOADER declares its counters').not.toBe('none');
     const c = d.counters as { records_total: { source: string }; records_new: { source: string }; records_updated: { source: string } };
@@ -802,30 +886,30 @@ describe('row 3.7 — recovery, counters, emits, guards, database (Rule 10/12)',
     expect(/updat/.test(c.records_updated.source)).toBe(true);
   });
 
-  it.fails('emits[] carries the records_meta keys the loader emits today, byte-identical (report §1.5) (flips at: commit ②)', () => {
+  it('emits[] carries the records_meta keys the loader emits today, byte-identical (report §1.5)', () => {
     const d = loadDescriptor();
     expect(d.emits, 'the loader emits records_meta').not.toBe('none');
     const keys = (d.emits as Array<{ key: string }>).map((e) => e.key);
     expect(keys.length).toBeGreaterThan(0);
   });
 
-  it.fails('guards: the geom GIST index the write validates through, srid 4326 (flips at: commit ②)', () => {
+  it('guards: the geom GIST index the write validates through, srid 4326', () => {
     const d = loadDescriptor();
     expect(d.guards.srid).toBe(4326);
     for (const r of d.guards.requires) expect(r.on_missing, `${r.kind} must fail, never degrade`).toBe('fail');
   });
 
-  it.fails('database.min_migration names the base parcels table (flips at: commit ②)', () => {
+  it('database.min_migration names the base parcels table', () => {
     const d = loadDescriptor();
     expect(typeof d.database.min_migration === 'number').toBe(true);
   });
 
-  it.fails('sharing.varies_by_chain.phase.sources is declared (chain owner = Spec 43, position 5) (flips at: commit ②)', () => {
+  it('sharing.varies_by_chain.phase.sources is declared (chain owner = Spec 43, position 5)', () => {
     const d = loadDescriptor();
     expect(d.sharing.varies_by_chain.phase.sources).toBeDefined();
   });
 
-  it.fails('terminals declare the lock-contention self-skip and a success path (flips at: commit ②)', () => {
+  it('terminals declare the lock-contention self-skip and a success path', () => {
     const d = loadDescriptor();
     expect(d.terminals.some((t) => t.kind === 'skip_lock_contention')).toBe(true);
     expect(d.terminals.some((t) => t.kind === 'success')).toBe(true);
@@ -852,15 +936,15 @@ describe('row 3.7 — legacy infra tests stay at their paths (D5, in-place re-po
   });
 });
 
-describe('row 3.7 — converted.json.pending carries the red_suite stage entry (R-K.1) — [flipped at commit ③]', () => {
-  it('a pending entry for scripts/load-parcels.js exists at stage "red_suite", registers_at commit ③', () => {
+describe('row 3.7 — converted.json.pending carries the shape_clean stage entry (R-K.1) — [flipped at commit ③]', () => {
+  it('a pending entry for scripts/load-parcels.js exists at stage "shape_clean", registers_at commit ③', () => {
     const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as {
       converted: string[];
       pending: Array<{ file: string; registers_at: string; stage: string }>;
     };
     const entry = converted.pending.find((p) => p.file === STEP_REL);
     expect(entry, 'the pending entry for scripts/load-parcels.js must exist').toBeDefined();
-    expect(entry!.stage, 'RED today — no descriptor exists yet, stage must stay red_suite').toBe('red_suite');
+    expect(entry!.stage, 'commit ② landed the descriptor/compute/shell/seeds green — stage advances to shape_clean').toBe('shape_clean');
     expect(entry!.registers_at).toMatch(/commit ③/);
     expect(converted.converted, 'not registered until commit ③').not.toContain(STEP_REL);
   });
@@ -873,7 +957,7 @@ describe('row 3.7 — converted.json.pending carries the red_suite stage entry (
 });
 
 describe('row 3.7 — the frozen shell names lock 55 and the descriptor names lock 55 (the §5.4 lock lock)', () => {
-  it.fails('the textual ADVISORY_LOCK_ID constant and the descriptor identity.lock agree (flips at: commit ②)', () => {
+  it('the textual ADVISORY_LOCK_ID constant and the descriptor identity.lock agree', () => {
     const d = loadDescriptor();
     const textual = /const ADVISORY_LOCK_ID\s*=\s*(\d+)/.exec(fs.readFileSync(abs(STEP_REL), 'utf8'));
     expect(textual, 'the §5.4 textual constant').not.toBeNull();
