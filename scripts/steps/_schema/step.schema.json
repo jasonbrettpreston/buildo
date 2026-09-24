@@ -1072,6 +1072,24 @@
             "why": "the .prj is exactly what is WRONG on the founding case; the target column's SRID says where geometry must END, not where the source STARTS. Rule 8: per write target, declared."
           }
         },
+        "geometry_repair": {
+          "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0t (2026-09-24). Whether the validator MENDS the source geometry before storing it. `make_valid` (the default, and byte-identical to the pre-0t text) runs `ST_MakeValid(geom) AS repaired` and builds every downstream expression from the repaired value; `none` renders `geom AS repaired` — the validator measures and stores the SOURCE geometry unchanged. OPTIONAL, per write target; absent = `make_valid` = today. Orthogonal to `geometry_kind`: the family selects the extract/accept shape, this selects whether the value feeding it is repaired. Requires `geometry_kind` to mean anything (only an INGESTOR runs `validateGeometries`); a write that declares no geometry column may carry it and it is simply never read. Founding case: the legacy massing loader stored the UNREPAIRED source geometry (measured 2026-09-24: 16 invalid geoms survive in `parcels` from the legacy path), and no declaration could express that — the repair was hard-wired by the family. `acquired.invalid_geometry_stored` counts the carried rows whose source geometry was invalid under `none`.",
+          "enum": [
+            "make_valid",
+            "none"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "geometry_kind (hard-wires repair)",
+              "polygon_raw kind (conflates family+repair)",
+              "check/var (cannot change SQL)",
+              "compute SQL (banned)",
+              "declared diff (behaviour change)"
+            ],
+            "why": "repair ⊥ family; only a declaration selects validator text"
+          }
+        },
         "key_sql_type": {
           "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The SQL type the scoped departure DELETE casts its key array to (`<key> <> ALL($1::<type>[])`). Only a `retract: \"departed\"` target needs it, and getting it wrong is a runtime cast error rather than a silent mis-retraction. Default: \"BIGINT\".",
           "type": "string",

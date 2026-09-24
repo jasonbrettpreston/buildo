@@ -876,6 +876,11 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     shaped_skipped_by_reason: skippedByReason,
     shaped_tags: shapedTags,
     invalid_geometry_repaired: validated.repaired,
+    // The rows this run STORES with an invalid geometry (prerequisite 0t) — structurally 0
+    // under the default `make_valid` arm, non-zero only for a write that DECLARED
+    // `geometry_repair: "none"` (legacy-source parity). Golden-neutral: a descriptor that
+    // declares nothing acquires the same value it always had.
+    invalid_geometry_stored: validated.invalidStored ?? 0,
     invalid_geometry_skipped: validated.skipped,
     geometry_collection_extracted: validated.collectionExtracted,
     skipped_keys: validated.skippedKeys,

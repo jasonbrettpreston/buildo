@@ -235,6 +235,22 @@ function targetKey(index) {
  */
 const GEOMETRY_KINDS = Object.freeze(['polygon', 'point', 'line']);
 
+/**
+ * The declared REPAIR arm (prerequisite 0t, 2026-09-24, Spec 124 Rule 1, Spec 122 §5.1).
+ *
+ * `make_valid` (default) is today: the validator's inner subquery reads
+ * `ST_IsValid(geom) AS is_valid_original, ST_MakeValid(geom) AS repaired` and every
+ * downstream expression is built from `repaired`. `none` renders `geom AS repaired` —
+ * the SOURCE geometry is what the validator measures and what lands in the target.
+ *
+ * The legacy massing loader stored the UNREPAIRED source geometry (measured 2026-09-24:
+ * 16 invalid geoms survive in `parcels` from the legacy path), and until this field the
+ * repair was hard-wired by the geometry FAMILY — no declaration could express "store what
+ * the source said". Repair is orthogonal to family: `geometry_kind` selects the
+ * extract/accept shape, `geometry_repair` selects whether the value feeding it is mended.
+ */
+const GEOMETRY_REPAIRS = Object.freeze(['make_valid', 'none']);
+
 /** The declared geometry families and the ST_CollectionExtract type code each one keeps. */
 const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1, line: 2 });
 
@@ -310,6 +326,32 @@ class InvalidGeometrySridError extends Error {
 }
 
 /**
+ * A NAMED runtime backstop: an `outputs.writes[].geometry_repair` that is neither of the
+ * two declared arms (Spec 124 Rule 1, Spec 122 §5.1, batch-2 Phase 3 prerequisite 0t).
+ * The schema types it `enum: ["make_valid","none"]`, so reaching this is a descriptor that
+ * bypassed the loader — or a caller that built the SQL from an unvalidated value. The arm
+ * decides whether statement TEXT contains `ST_MakeValid`, so an unvalidated value must stop
+ * by name rather than being interpolated into a rendered statement.
+ */
+class InvalidGeometryRepairError extends Error {
+  constructor(table, value) {
+    super(`[write_discipline] ${table}: unknown geometry_repair ${JSON.stringify(value)} `
+      + `(expected ${GEOMETRY_REPAIRS.map((r) => `'${r}'`).join(' or ')}). It selects whether the `
+      + 'validator mends the source geometry before storing it (`make_valid`, the default) or '
+      + 'stores it UNREPAIRED (`none`) — a rendered difference in statement text, so it is '
+      + 'validated by the schema (scripts/steps/_schema/step.schema.json, "geometry_repair") '
+      + 'and asserted by name here.');
+    this.name = 'InvalidGeometryRepairError';
+  }
+}
+
+/** Validate a DECLARED geometry_repair, throwing by name — never a silent make_valid default. */
+function assertGeometryRepair(repair, table) {
+  if (!GEOMETRY_REPAIRS.includes(repair)) throw new InvalidGeometryRepairError(table, repair);
+  return repair;
+}
+
+/**
  * A NAMED runtime backstop: the validator returned NO row for a key it was given
  * (Spec 124 Rule 1, Spec 122 §4.3/§11). `unnest($1::<key_sql_type>[]) WITH ORDINALITY`
  * joined to the ord-aligned GeoJSON array produces exactly ONE row per input key, so a
@@ -331,7 +373,7 @@ class ValidationKeyMissError extends Error {
   }
 }
 
-const geometryValidationSql = (keyType, geometryKind, geometrySrid) => {
+const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = 'make_valid' } = {}) => {
   // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
   // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
   // value is asserted before any text is built, so the polygon default is never silent.
@@ -352,6 +394,15 @@ const geometryValidationSql = (keyType, geometryKind, geometrySrid) => {
       geomExpr = `ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), ${geometrySrid}), 4326)`;
     }
   }
+  // `geometry_repair` (prerequisite 0t, 2026-09-24) is the THIRD declared geometry fact and
+  // the only one that changes what is STORED rather than where it came from or what shape it
+  // is. Absent = `make_valid` = the pre-0t text, byte-for-byte (pinned by T0/T2 of the
+  // step-library suite). `none` renders the source geometry under the SAME alias — so the
+  // whole `validated`/CASE block below is shared, not duplicated, and only this one
+  // expression differs: the four statuses, `is_valid_original` and `geom_wkb` keep their
+  // meanings, reporting the geometry the caller asked to store.
+  assertGeometryRepair(repair, 'geometryValidationSql');
+  const repairExpr = repair === 'none' ? 'geom' : 'ST_MakeValid(geom)';
   const finalExpr = geometryFinalExpr(geometryKind);
   const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
   return `
@@ -369,7 +420,7 @@ validated AS (
   FROM (
     SELECT source_key,
            ST_IsValid(geom)   AS is_valid_original,
-           ST_MakeValid(geom) AS repaired
+           ${repairExpr} AS repaired
       FROM input
   ) s
 )
@@ -525,6 +576,15 @@ function buildWritePlan(writeSpec, descriptor) {
   if (geometrySrid != null && (!Number.isInteger(geometrySrid) || geometrySrid < 1)) {
     throw new InvalidGeometrySridError(geometrySrid);
   }
+  // A DECLARED repair arm (prerequisite 0t, Spec 124 Rule 1, Spec 122 §5.1). Mirror of the
+  // two geometry fields above: OPTIONAL (absent ⇒ `make_valid`, the byte-identical default),
+  // CARRIED on the plan (so `validateGeometries` can count stored-invalid rows without
+  // re-parsing the SQL), and validated by the SCHEMA — with the builder asserting a bad value
+  // by name first, because the arm is a RENDERED difference (`ST_MakeValid` present or not),
+  // not just a plan field. Unlike `geometry_kind`, a repair is legal on ANY geometry write:
+  // it is orthogonal to the family, and a non-validating LINK/CASCADE plan simply never reads
+  // it (its `validation_sql` is null and `validateGeometries` is not in the call graph).
+  const geometryRepair = writeSpec.geometry_repair ?? 'make_valid';
   // ⚠️ COMPOSITE KEYS: SUPPORTED FOR THE CONFLICT TARGET, STILL REFUSED WHERE THE
   // STATEMENT GENUINELY INDEXES keys[0] (LG-2, LINK pilot 2026-08-27).
   //
@@ -951,6 +1011,11 @@ function buildWritePlan(writeSpec, descriptor) {
     // on the plan so an executor/log can read it without re-parsing the SQL. `null` means
     // "the source is 4326 / no transform" — the case for every converted step today.
     geometry_srid: geometrySrid,
+    // The DECLARED repair arm (prerequisite 0t). Threaded into `validation_sql` AND carried
+    // on the plan so the validator (which counts stored-invalid rows) and a reader/log can
+    // read it without re-parsing the SQL. `'make_valid'` when the descriptor declares
+    // nothing, which is exactly the pre-0t text.
+    geometry_repair: geometryRepair,
     // Templated from the DECLARED key type, so the cast that reads the key array agrees
     // with the cast in `delete_sql` below instead of hard-coding a second opinion.
     //
@@ -959,7 +1024,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // carries `validation_sql: null` HERE and the missing kind is diagnosed by
     // `validateGeometries` — the one caller that can reach it. LINK/CASCADE plans build and
     // execute with no validator SQL at all, exactly as they did before this field existed.
-    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid),
+    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid, { repair: geometryRepair }),
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
@@ -1061,6 +1126,15 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   let repaired = 0;
   let collectionExtracted = 0;
   let skipped = 0;
+  // The count of rows this write would STORE with an invalid geometry (prerequisite 0t,
+  // Fold PB-3). Under the default `make_valid` arm this is structurally 0 — every stored
+  // geometry has been mended — so the counter is only meaningful, and only incremented,
+  // when the write DECLARED `geometry_repair: "none"`. It is derived HERE rather than
+  // summed out of `classify`'s return because that return carries exactly three counters
+  // (repaired/collectionExtracted/skipped); routing a fourth condition through `repaired`
+  // would report the legacy-parity arm as a REPAIR, which is a false name.
+  const countStored = plan.geometry_repair === 'none';
+  let invalidStored = 0;
   const carried = [];
   const skippedKeys = [];
   const missedKeys = [];
@@ -1081,8 +1155,12 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
     // (address_points: 16 columns, measured 2026-09-23 "null value in column latitude") binds them
     // through columnValues(row); the key and geom columns win on collision. Byte-identical for a
     // key+geom-only feature (load_ravines).
-    if (d.carry) carried.push({ ...f, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
-    else skippedKeys.push(f[keyColumn]);
+    if (d.carry) {
+      // ⚠️ COUNTED FROM THE VALIDATOR'S OWN `is_valid_original`, not from the step's classify:
+      // a carried row IS stored, and under `none` it is stored exactly as the source had it.
+      if (countStored && v.is_valid_original === false) invalidStored += 1;
+      carried.push({ ...f, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
+    } else skippedKeys.push(f[keyColumn]);
   }
   // AFTER the loop, and BEFORE the caller's `executeWrite`: a miss means the validator
   // did not answer for a key it was handed, so nothing about this batch's geometry is
@@ -1090,7 +1168,7 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   if (missedKeys.length > 0) {
     throw new ValidationKeyMissError(plan.table, missedKeys.length, missedKeys[0]);
   }
-  return { carried, repaired, collectionExtracted, skipped, skippedKeys };
+  return { carried, repaired, collectionExtracted, skipped, skippedKeys, invalidStored };
 }
 
 /**
@@ -1751,9 +1829,11 @@ module.exports = {
   geometryValidationSql,
   GEOMETRY_VALIDATION_SQL,
   GEOMETRY_KINDS,
+  GEOMETRY_REPAIRS,
   GEOMETRY_KIND_EXTRACT_TYPE,
   GEOMETRY_KIND_ACCEPTED_TYPES,
   MissingGeometryKindError,
+  InvalidGeometryRepairError,
   assertGeometryKind,
   InvalidGeometrySridError,
   ValidationKeyMissError,
