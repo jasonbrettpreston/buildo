@@ -198,7 +198,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].bind` | `value` · `wkb_geometry` | ! |
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
-| `writes[].columns[].on_empty` | `preserve` | ! |
+| `writes[].columns[].on_empty` | `preserve` · `preserve_null` | ! |
 | `writes[].geometry_srid` | integer >= 1 | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
 | `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why, set_source} | † |

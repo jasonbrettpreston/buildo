@@ -6355,5 +6355,137 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     const tail = sql.slice(sql.indexOf('\nON CONFLICT'));
     expect(normalizeSql(tail.replace(/;$/, ''))).toBe(normalizeSql(LEGACY_PARCELS_UPSERT));
   });
+
+  // -------------------------------------------------------------------------
+  // 0m follow-on (2026-09-24): `columns[].on_empty` gains `"preserve_null"` — the
+  // NULL-form of `"preserve"` for a non-text column (no empty-string representation
+  // to NULLIF against). Founding case: scripts/load-parcels.js's legacy
+  // `date_effective` arm — `COALESCE(EXCLUDED.date_effective, parcels.date_effective)`
+  // + the guard `(EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS
+  // DISTINCT FROM EXCLUDED.date_effective)` — mirrored byte-for-byte, same discipline
+  // as T1/T5 for `"preserve"`.
+  // -------------------------------------------------------------------------
+
+  it('T6 — one on_empty:"preserve_null" column: SET COALESCEs the NULL-preserving form (no NULLIF — a non-text column has no empty-string representation), the guard uses the legacy IS-NOT-NULL-guarded form (byte-for-byte, mirrors scripts/load-parcels.js\'s date_effective arm)', () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    const cols = write.columns as Array<Record<string, unknown>>;
+    const versionCol = cols.find((c) => c.name === 'source_dataset_version')!;
+    versionCol.on_empty = 'preserve_null';
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+
+    expect(sql).toContain('source_dataset_version = COALESCE(EXCLUDED.source_dataset_version, ravines.source_dataset_version)');
+    expect(sql).toContain('(EXCLUDED.source_dataset_version IS NOT NULL AND ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version)');
+    // Never the "preserve" (empty-string) form — preserve_null has no NULLIF arm.
+    expect(sql).not.toContain('NULLIF');
+    // Absent for every OTHER declared column — this is a per-column axis, not a class-wide switch.
+    expect(sql).toContain('geom = EXCLUDED.geom');
+    expect(sql).toContain('ravines.geom IS DISTINCT FROM EXCLUDED.geom');
+    expect(plan.on_empty_columns).toEqual(['source_dataset_version']);
+  });
+
+  it('T7 — extending T5 with a preserve_null date_effective column reproduces the legacy parcels UPSERT in FULL (minus only the conditional ${geomLine} PostGIS axis, a separate not-yet-declared mechanic)', () => {
+    // Identical to T5's LEGACY_PARCELS_UPSERT, plus the `date_effective` SET arm
+    // (between `geometry` and `is_irregular`, matching the legacy file's own order)
+    // and its guard OR-clause (last, matching the legacy file's own order) — the ONE
+    // byte T5 deliberately left out because `preserve_null` did not exist yet.
+    const LEGACY_PARCELS_UPSERT_FULL = `
+        ON CONFLICT (parcel_id)
+        DO UPDATE SET
+          feature_type = EXCLUDED.feature_type,
+          address_number          = COALESCE(NULLIF(EXCLUDED.address_number, ''),          parcels.address_number),
+          linear_name_full        = COALESCE(NULLIF(EXCLUDED.linear_name_full, ''),        parcels.linear_name_full),
+          addr_num_normalized     = COALESCE(NULLIF(EXCLUDED.addr_num_normalized, ''),     parcels.addr_num_normalized),
+          street_name_normalized  = COALESCE(NULLIF(EXCLUDED.street_name_normalized, ''),  parcels.street_name_normalized),
+          street_type_normalized  = COALESCE(NULLIF(EXCLUDED.street_type_normalized, ''),  parcels.street_type_normalized),
+          stated_area_raw = EXCLUDED.stated_area_raw,
+          lot_size_sqm = EXCLUDED.lot_size_sqm,
+          lot_size_sqft = EXCLUDED.lot_size_sqft,
+          frontage_m = EXCLUDED.frontage_m,
+          frontage_ft = EXCLUDED.frontage_ft,
+          depth_m = EXCLUDED.depth_m,
+          depth_ft = EXCLUDED.depth_ft,
+          geometry = EXCLUDED.geometry,
+          date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective),
+          is_irregular = EXCLUDED.is_irregular,
+          ravine_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END,
+          heritage_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END,
+          centreline_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END
+        WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+          OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
+          OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
+          OR (NULLIF(EXCLUDED.address_number, '') IS NOT NULL
+              AND parcels.address_number IS DISTINCT FROM EXCLUDED.address_number)
+          OR (NULLIF(EXCLUDED.linear_name_full, '') IS NOT NULL
+              AND parcels.linear_name_full IS DISTINCT FROM EXCLUDED.linear_name_full)
+          OR (NULLIF(EXCLUDED.addr_num_normalized, '') IS NOT NULL
+              AND parcels.addr_num_normalized IS DISTINCT FROM EXCLUDED.addr_num_normalized)
+          OR (NULLIF(EXCLUDED.street_name_normalized, '') IS NOT NULL
+              AND parcels.street_name_normalized IS DISTINCT FROM EXCLUDED.street_name_normalized)
+          OR (NULLIF(EXCLUDED.street_type_normalized, '') IS NOT NULL
+              AND parcels.street_type_normalized IS DISTINCT FROM EXCLUDED.street_type_normalized)
+          OR (EXCLUDED.date_effective IS NOT NULL
+              AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)
+        RETURNING (xmax = 0) AS is_insert`;
+
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    (d.identity as Record<string, unknown>).name = 'load_parcels_t7_fixture';
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    write.table = 'parcels';
+    write.key = 'parcel_id';
+    write.key_sql_type = 'BIGINT';
+    delete write.geometry_kind; // no wkb_geometry column in this fixture
+    write.retract = 'none';
+    (write.write_discipline as Record<string, unknown>).class = 'guarded_upsert';
+    // The SEVEN T5 guard_columns plus `date_effective` (eighth) — `geometry` still
+    // reaches the guard automatically, first, as the watched column of all three
+    // invalidates entries below.
+    (write.write_discipline as Record<string, unknown>).guard_columns = [
+      'lot_size_sqm', 'feature_type', 'address_number', 'linear_name_full',
+      'addr_num_normalized', 'street_name_normalized', 'street_type_normalized',
+      'date_effective',
+    ];
+    write.columns = [
+      col('parcel_id'),
+      col('feature_type'),
+      col('address_number', { on_empty: 'preserve' }),
+      col('linear_name_full', { on_empty: 'preserve' }),
+      col('addr_num_normalized', { on_empty: 'preserve' }),
+      col('street_name_normalized', { on_empty: 'preserve' }),
+      col('street_type_normalized', { on_empty: 'preserve' }),
+      col('stated_area_raw'),
+      col('lot_size_sqm'),
+      col('lot_size_sqft'),
+      col('frontage_m'),
+      col('frontage_ft'),
+      col('depth_m'),
+      col('depth_ft'),
+      col('geometry'),
+      col('date_effective', { on_empty: 'preserve_null' }),
+      col('is_irregular'),
+    ];
+    (d.outputs as Record<string, unknown>).invalidates = [
+      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+    ];
+
+    expect(() => pipeline.step(d, noop)).not.toThrow();
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+    const tail = sql.slice(sql.indexOf('\nON CONFLICT'));
+    expect(normalizeSql(tail.replace(/;$/, ''))).toBe(normalizeSql(LEGACY_PARCELS_UPSERT_FULL));
+    expect(plan.on_empty_columns).toEqual([
+      'address_number', 'linear_name_full', 'addr_num_normalized',
+      'street_name_normalized', 'street_type_normalized', 'date_effective',
+    ]);
+  });
 });
 

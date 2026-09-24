@@ -24,6 +24,10 @@
  *   · `columns[].on_empty: "preserve"` (prerequisite 0m, 2026-09-24) — an EMPTY
  *     incoming value ('' after trim) keeps the stored value on conflict, replacing a
  *     per-step compute-authored preservation with a DECLARED one the codegen executes.
+ *     `"preserve_null"` (0m follow-on, 2026-09-24) is its NULL-form for a non-text
+ *     column (no empty-string representation to NULLIF against) — an incoming NULL
+ *     keeps the stored value instead, mirroring scripts/load-parcels.js's legacy
+ *     `date_effective` arm.
  *   · `outputs.invalidates[].set_null_on_change_of` (prerequisite 0l, 2026-09-24) — a
  *     lineage-stamp CASE arm NULLed when a watched column changes, EXECUTED against the
  *     write target its own entry names (unlike the base {table,column,when} entry, which
@@ -800,25 +804,41 @@ function buildWritePlan(writeSpec, descriptor) {
   // declared kind only selects the VALIDATOR's repair/accept arm in `validation_sql` above.
   const valuesGroup = (offset) => `(${stepColumns.map((c, i) => bindFor(c, offset + i)).join(', ')})`;
 
-  // ── columns[].on_empty:"preserve" (prerequisite 0m, 2026-09-24) ───────────
+  // ── columns[].on_empty:"preserve"|"preserve_null" (prerequisite 0m + 0m follow-on,
+  // 2026-09-24) ───────────────────────────────────────────────────────────────────
   // A per-column lookup, read once. Absent for every column (the overwhelming
   // majority of targets today) keeps `columnSetExpr`/`columnGuardExpr` byte-identical
   // to the pre-0m text — no map entries, both functions fall straight to their `else`.
-  const onEmptyPreserve = new Set(
-    writeSpec.columns.filter((c) => c.on_empty === 'preserve').map((c) => c.name),
+  const onEmptyMode = new Map(
+    writeSpec.columns
+      .filter((c) => c.on_empty === 'preserve' || c.on_empty === 'preserve_null')
+      .map((c) => [c.name, c.on_empty]),
   );
-  /** `col = EXCLUDED.col`, or the empty-preserving form for a declared column. */
-  const columnSetExpr = (c) => (onEmptyPreserve.has(c)
-    ? `${c} = COALESCE(NULLIF(EXCLUDED.${c}, ''), ${table}.${c})`
-    : `${c} = EXCLUDED.${c}`);
-  // Mirrors scripts/load-parcels.js / scripts/load-address-points.js's own NULLIF-guarded
-  // WHERE form BYTE-FOR-BYTE, rather than an algebraically-equivalent
-  // `IS DISTINCT FROM COALESCE(...)` rewrite: T5 (step-library.logic.test.ts) pins the
-  // codegen's reproduction of the legacy statement against the legacy FILE TEXT, and only
-  // this exact shape reproduces it.
-  const columnGuardExpr = (c) => (onEmptyPreserve.has(c)
-    ? `(NULLIF(EXCLUDED.${c}, '') IS NOT NULL AND ${table}.${c} IS DISTINCT FROM EXCLUDED.${c})`
-    : `${table}.${c} IS DISTINCT FROM EXCLUDED.${c}`);
+  /**
+   * `col = EXCLUDED.col`, or the empty/NULL-preserving form for a declared column.
+   * Mirrors scripts/load-parcels.js's own forms BYTE-FOR-BYTE, rather than an
+   * algebraically-equivalent rewrite: T5/T7 (step-library.logic.test.ts) pin the
+   * codegen's reproduction of the legacy statement against the legacy FILE TEXT, and
+   * only these exact shapes reproduce it.
+   */
+  const columnSetExpr = (c) => {
+    if (onEmptyMode.get(c) === 'preserve_null') {
+      return `${c} = COALESCE(EXCLUDED.${c}, ${table}.${c})`;
+    }
+    if (onEmptyMode.get(c) === 'preserve') {
+      return `${c} = COALESCE(NULLIF(EXCLUDED.${c}, ''), ${table}.${c})`;
+    }
+    return `${c} = EXCLUDED.${c}`;
+  };
+  const columnGuardExpr = (c) => {
+    if (onEmptyMode.get(c) === 'preserve_null') {
+      return `(EXCLUDED.${c} IS NOT NULL AND ${table}.${c} IS DISTINCT FROM EXCLUDED.${c})`;
+    }
+    if (onEmptyMode.get(c) === 'preserve') {
+      return `(NULLIF(EXCLUDED.${c}, '') IS NOT NULL AND ${table}.${c} IS DISTINCT FROM EXCLUDED.${c})`;
+    }
+    return `${table}.${c} IS DISTINCT FROM EXCLUDED.${c}`;
+  };
 
   // ── outputs.invalidates[].set_null_on_change_of (prerequisite 0l, 2026-09-24) ──
   // EXECUTED, unlike the base {table,column,when} entry: for every invalidates entry
@@ -885,9 +905,11 @@ function buildWritePlan(writeSpec, descriptor) {
     // than having to subtract two lists — `step_columns` minus `update_columns` is not a
     // usable signal, because the key sits in the first and not the second.
     insert_only_columns: insertOnly,
-    // The DECLARED `on_empty:"preserve"` columns (prerequisite 0m) — a plan-shape
-    // summary sees the empty-preserving set directly rather than re-reading `columns[]`.
-    on_empty_columns: [...onEmptyPreserve],
+    // The DECLARED `on_empty:"preserve"|"preserve_null"` columns (prerequisite 0m +
+    // follow-on) — a plan-shape summary sees the empty/NULL-preserving set directly
+    // rather than re-reading `columns[]`. Names only; the mode (preserve vs
+    // preserve_null) is recoverable from the descriptor's own `columns[].on_empty`.
+    on_empty_columns: [...onEmptyMode.keys()],
     // The DECLARED `invalidates[].set_null_on_change_of` entries EXECUTED against this
     // write target (prerequisite 0l) — {column, watched} pairs, in declaration order, so
     // a plan-shape summary (write_inventory) can list which stamps this UPDATE may null
