@@ -5871,3 +5871,220 @@ describe('write.js columns[].written "insert_only" — seeded on INSERT, never r
   });
 });
 
+// ---------------------------------------------------------------------------
+// batch-2 Phase 3 prerequisite 0k (2026-09-24, brief
+// .cursor/engine-briefs/b2-p3-c0k-ingest-compute-sql.md). Spec 122 §5.1 (runner
+// changes for everyone, no per-step hatch), §5.5 (compute owns the SQL text; the
+// runner owns the transaction/execution), Spec 124 Rule 1 rung (a) — an EXISTING
+// declared mechanism (`write_discipline.set_source:"compute"`, the RECORDER pilot
+// 8 / LG-27 escape hatch) is made to hold on the INGEST runner, no new field.
+//
+// Measured 2026-09-24 (row 3.7 `parcels`, engine run bf041782):
+// `compute.buildWriteSql` was called in exactly ONE place (`runRecorderPhase`);
+// `buildWritePlan` for `guarded_upsert` + `set_source:"compute"` returned
+// `upsert_sql: null` and NO `upsertSqlFor`/`bindRow`, so `runIngestPhase` →
+// `executeWrite` → `plan.upsertSqlFor(...)` was a TypeError. `parcels` needs the
+// escape hatch: its legacy UPSERT carries `COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)`
+// ×5 and three lineage-stamp `CASE WHEN ... IS DISTINCT FROM ...` arms (DEC-FENCE2,
+// #418) the default codegen cannot express.
+//
+// The default-codegen path (`load_ravines`, `address_points`) is BYTE-IDENTICAL:
+// T3 pins the current `upsertSqlFor(1)` output verbatim.
+// ---------------------------------------------------------------------------
+
+describe('runIngestPhase honours write_discipline.set_source:"compute" — compute-authored upsert SQL (batch-2 Phase 3 prerequisite 0k)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+
+  /**
+   * A `load_ravines`-shaped descriptor whose single write target declares the
+   * `guarded_upsert` + `set_source:"compute"` escape hatch. Same table/columns/keys as
+   * the default-codegen fixture, so the two paths are directly comparable.
+   */
+  const computeDescriptor = () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    const disc = write.write_discipline as Record<string, unknown>;
+    disc.class = 'guarded_upsert';
+    disc.set_source = 'compute';
+    return d;
+  };
+
+  const acquireResult = (features: Array<Record<string, unknown>>) => ({
+    tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+    features,
+    acquired: {
+      feature_count: features.length, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+      content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+      last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+    },
+  });
+
+  const twoFeatures = () => [1, 2].map((n) => ({
+    source_id: n,
+    geojson: '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
+    record: { OBJECTID: n },
+  }));
+
+  /**
+   * A compute-authored upsert, recognisable by its marker substring, laying `$n`
+   * placeholders out in the plan column order and ending in the `RETURNING (xmax = 0)`
+   * arm `executeWrite` filters on. Uses the `COALESCE(NULLIF(EXCLUDED.…))` idiom
+   * `parcels` needs — the marker T1 asserts the pool actually received.
+   */
+  const computeAuthoredSql = (columns: string[], keys: string[]) => {
+    const names = columns;
+    const valuesGroup = (offset: number, geomOrdinal: number) => `(${names.map((_, i) => (i === geomOrdinal
+      ? `ST_GeomFromWKB($${offset + i}, 4326)`
+      : `$${offset + i}`)).join(', ')})`;
+    return {
+      upsertSqlFor: (rowCount: number) => {
+        const geomOrdinal = names.indexOf('geom');
+        const head = `INSERT INTO ravines (${names.join(', ')})\nVALUES `;
+        const tail = `\nON CONFLICT (${keys.join(', ')}) DO UPDATE SET `
+          + `source_dataset_version = EXCLUDED.source_dataset_version, `
+          + `geom = COALESCE(NULLIF(EXCLUDED.geom::text,''), ravines.geom::text)::geometry, `
+          + `updated_at = EXCLUDED.updated_at\n`
+          + `  WHERE ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version\n`
+          + `RETURNING (xmax = 0) AS is_insert;`;
+        return head + Array.from({ length: rowCount }, (_, r) => valuesGroup(1 + r * names.length, geomOrdinal)).join(', ') + tail;
+      },
+      bindRow: (row: Record<string, unknown>) => names.map((n) => row[n]),
+    };
+  };
+
+  it('T1 (RED today) — a compute-authored plan sends ITS SQL text to the pool and executeWrite accounts is_insert', async () => {
+    const descriptor = computeDescriptor();
+    const features = twoFeatures();
+    // The fake pool answers the compute-authored statement with one INSERT + one UPDATE.
+    const pool = fakePool({
+      queryAnswers: [{
+        match: (text: string) => text.includes('COALESCE(NULLIF(EXCLUDED.'),
+        rows: [{ is_insert: true }, { is_insert: false }],
+      }],
+    });
+    const buildWriteSql = vi.fn(({ columns, keys }: { columns: string[]; keys: string[] }) =>
+      computeAuthoredSql(columns, keys));
+    const compute = {
+      coerceKey: intOrNull,
+      dedupeBySourceId: (feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }),
+      validatorCounterDelta: () => ({}),
+      buildWriteSql,
+    };
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue(acquireResult(features)),
+      // The geometry validation is read-only SQL; the write (and its accounting) is REAL.
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: features, repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool,
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[compute_sql_t1]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      // The compute was asked to author the statement, with the plan's own vocabulary.
+      expect(buildWriteSql).toHaveBeenCalledTimes(1);
+      const arg = buildWriteSql.mock.calls[0]?.[0] as { table: string; columns: string[]; keys: string[] };
+      expect(arg.table).toBe('ravines');
+      expect(arg.keys).toEqual(['source_id']);
+      expect(arg.columns).toEqual(['source_id', 'geom', 'source_dataset_version', 'updated_at']);
+
+      // The compute-authored SQL text is what reached the pool — the marker proves it,
+      // never the default codegen (which never emits COALESCE(NULLIF(EXCLUDED.…))).
+      const authored = pool.sql.find((s) => s.includes('COALESCE(NULLIF(EXCLUDED.'));
+      expect(authored, 'the compute-authored statement must reach the pool').toBeTruthy();
+      expect(authored).toContain('COALESCE(NULLIF(EXCLUDED.');
+      expect(authored).toContain('RETURNING (xmax = 0) AS is_insert;');
+      // ...and no default-codegen-shaped INSERT ran beside it.
+      expect(pool.sql.some((s) => s.includes('INSERT INTO ravines') && !s.includes('COALESCE(NULLIF(EXCLUDED.'))).toBe(false);
+
+      // is_insert accounting: the pool answered 2 rows (one insert, one update).
+      expect(out.written.inserted).toBe(1);
+      expect(out.written.updated).toBe(1);
+      expect(out.written.rows_scanned).toBe(2);
+      expect(out.written.rows_changed).toBe(2);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('T2 (RED today) — a set_source:"compute" plan whose compute exports NO buildWriteSql throws by name, before any network', async () => {
+    const descriptor = computeDescriptor();
+    const pool = fakePool();
+    const fetchImpl = vi.fn(async () => { throw new Error('network must not be reached'); });
+    const poolQuery = vi.spyOn(pool, 'query');
+    const poolConnect = vi.spyOn(pool, 'connect');
+    const acquireSpy = vi.spyOn(acquireLib, 'acquireExternal');
+    const compute = {
+      coerceKey: intOrNull,
+      dedupeBySourceId: (feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }),
+      validatorCounterDelta: () => ({}),
+      // NO buildWriteSql export — the mis-declared step T2 names.
+    };
+    try {
+      await expect(stepLib.runIngestPhase({
+        descriptor,
+        pool,
+        compute,
+        config: {},
+        fetchImpl,
+        chainId: null,
+        log: NO_LOG,
+        tag: '[compute_sql_t2]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      })).rejects.toThrow(/buildWriteSql/);
+      // Nothing left the process: no fetch, no pool query, no pool connect, no acquisition.
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(poolQuery).not.toHaveBeenCalled();
+      expect(poolConnect).not.toHaveBeenCalled();
+      expect(acquireSpy).not.toHaveBeenCalled();
+    } finally {
+      acquireSpy.mockRestore();
+    }
+  });
+
+  it('T3 (GREEN, stays) — the default-codegen load_ravines plan is BYTE-IDENTICAL (pinned)', () => {
+    const write = (LOAD_RAVINES.outputs.writes as Array<Record<string, unknown>>)[0]!;
+    const plan = writeLib.buildWritePlan(write, LOAD_RAVINES);
+    // Copied verbatim before the 0k edit; the default-codegen path must not move a byte.
+    const PINNED = 'INSERT INTO ravines (source_id, geom, source_dataset_version, updated_at)\n'
+      + 'VALUES ($1, ST_GeomFromWKB($2, 4326), $3, $4)\n'
+      + 'ON CONFLICT (source_id) DO UPDATE SET geom = EXCLUDED.geom, '
+      + 'source_dataset_version = EXCLUDED.source_dataset_version, updated_at = EXCLUDED.updated_at\n'
+      + '  WHERE ravines.geom IS DISTINCT FROM EXCLUDED.geom\n'
+      + '     OR ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version\n'
+      + '-- declared but never written by this step (DB default): created_at\n'
+      + 'RETURNING (xmax = 0) AS is_insert;';
+    expect(plan.upsertSqlFor(1)).toBe(PINNED);
+    expect(plan.columnsPerRow).toBe(4);
+    expect(plan.set_source).toBeUndefined();
+  });
+
+  it('T4 — a compute-authored plan reports set_source:"compute", not an inferred "generated_by"', () => {
+    const descriptor = computeDescriptor();
+    const write = (descriptor.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>;
+    const plan = writeLib.buildWritePlan(write[0], descriptor);
+    expect(plan.set_source).toBe('compute');
+    expect(plan.generated_by).toBe('compute');
+    expect(plan.upsert_sql).toBeNull();
+    // The vocabulary the runner hands the compute — in the plan's own column order.
+    expect(plan.step_columns).toEqual(['source_id', 'geom', 'source_dataset_version', 'updated_at']);
+    expect(plan.keys).toEqual(['source_id']);
+    expect(plan.geometry_columns).toEqual(['geom']);
+    expect(plan.geometry_kind).toBe('polygon');
+    expect(plan.columnsPerRow).toBe(4);
+  });
+});
+

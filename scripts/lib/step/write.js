@@ -703,15 +703,35 @@ function buildWritePlan(writeSpec, descriptor) {
   // otherwise match "guarded_upsert" and bind the key as a parameter + always
   // append an IS DISTINCT FROM guard — wrong on both counts for this target.
   if (writeSpec.write_discipline.class === GUARDED_UPSERT_COMPUTE_CLASS && writeSpec.write_discipline.set_source === 'compute') {
+    // batch-2 Phase 3 prerequisite 0k (2026-09-24) — the INGESTOR arm of the
+    // `set_source:"compute"` mechanism the RECORDER pilot already uses (LG-27). This
+    // branch stays DESCRIPTIVE-ONLY (`upsert_sql: null`, no `upsertSqlFor`/`bindRow`):
+    // the compute authors the whole INSERT...ON CONFLICT...DO UPDATE...WHERE text via
+    // `buildWriteSql`, which the ingest runner calls and attaches to the plan. What it
+    // ADDS over the RECORDER shape is the vocabulary `runIngestPhase` needs to call
+    // `compute.buildWriteSql({ table, columns, keys, geometry_column, geometry_kind })`
+    // and to keep `validateGeometries` + `executeWrite` untouched: `geometry_columns`,
+    // `geometry_kind` and `columnsPerRow` (the bind-parameter stride `executeWrite`
+    // reads to size its batches), plus `set_source` so a plan-shape summary names the
+    // SQL source honestly rather than inferring it from `generated_by` alone.
     return {
       table,
       keys,
       srid,
       mechanic: GUARDED_UPSERT_COMPUTE_CLASS,
+      set_source: 'compute',
       step_columns: stepColumnNames,
       update_columns: updateColumns,
       guard_columns: guardColumns,
       insert_only_columns: insertOnly,
+      // The columns bound as WKB (ingest's contract with `validateGeometries`, which
+      // reads `plan.geometry_columns[0]` and re-keys its output under that name). Carried
+      // on the compute branch exactly as the default codegen carries it.
+      geometry_columns: geometryColumns,
+      // The DECLARED geometry family, so the runner can hand it to `buildWriteSql` (the
+      // compute authors a kind-specific validator/SQL only when it needs to) without
+      // re-parsing anything. `null` for a compute target that binds no geometry.
+      geometry_kind: geometryKind,
       key_sql_type: keyType,
       scope,
       retract,
@@ -719,6 +739,11 @@ function buildWritePlan(writeSpec, descriptor) {
       clear_sql: null,
       upsert_sql: null,
       delete_sql: null,
+      // The INSERT/bind stride the compute-authored multi-row statement uses, so
+      // `executeWrite`'s `pipeline.maxRowsPerInsert(plan.columnsPerRow)` batching is
+      // identical to the default-codegen path (the compute must lay out `$n` placeholders
+      // in this same column order — its half of the contract).
+      columnsPerRow: stepColumns.length,
       generated_by: 'compute',
     };
   }

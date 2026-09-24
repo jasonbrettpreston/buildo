@@ -661,6 +661,60 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const plan = write.buildWritePlan(writeSpec, descriptor);
   const keyColumn = plan.keys[0];
 
+  // ── THE COMPUTE-AUTHORED UPSERT (batch-2 Phase 3 prerequisite 0k, 2026-09-24) ─────
+  // `write_discipline.set_source:"compute"` on a `guarded_upsert` target (an EXISTING
+  // declared mechanism the RECORDER pilot 8 / LG-27 uses, Spec 124 Rule 1 rung (a) — no
+  // new field) means the compute AUTHORS the whole INSERT...ON CONFLICT...DO UPDATE...
+  // WHERE text; the runner only EXECUTES it (Spec 122 §5.5). `parcels` needs this: its
+  // legacy UPSERT carries `COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)` ×5 and three
+  // `CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL
+  // ELSE … END` lineage-stamp arms the default codegen cannot express.
+  //
+  // ⚠️ RESOLVED AND ATTACHED HERE, ABOVE THE HEAD, for the same reason the `shapeRecord`
+  // guard is: a compute-authored plan whose compute exports no `buildWriteSql` is a
+  // MIS-DECLARED step and must cost no network and no pool access. The throw is named
+  // (the export, the table, what it owes) rather than a downstream `TypeError` on
+  // `plan.upsertSqlFor` inside `executeWrite`, which is what an unguarded compute plan
+  // produced before this runner change.
+  //
+  // The contract, in the RECORDER's own vocabulary: `compute.buildWriteSql({ table,
+  // columns: plan.step_columns, keys: plan.keys, geometry_column, geometry_kind })`
+  // returns `{ upsertSqlFor: (rowCount) => string, bindRow: (columnValues) => any[] }`.
+  // `columns` is the INSERT/bind list in the plan's column ORDER — `$n` placeholders run
+  // in that order, `columnsPerRow` per row — and the statement MUST end in
+  // `RETURNING (xmax = 0) AS is_insert`, which is exactly what `executeWrite` filters on
+  // for its inserted/updated accounting (D-8). Everything downstream
+  // (`validateGeometries`, `executeWrite`) is untouched: they read the same plan fields
+  // the default codegen has always carried.
+  if (plan.set_source === 'compute') {
+    if (typeof compute.buildWriteSql !== 'function') {
+      throw new Error(`${tag} outputs.writes[0] ("${writeSpec.table}") declares write_discipline.set_source "compute", `
+        + 'so the whole INSERT...ON CONFLICT...DO UPDATE statement is authored by the compute — this INGESTOR must '
+        + 'export `buildWriteSql({ table, columns, keys, geometry_column, geometry_kind })` returning '
+        + '`{ upsertSqlFor(rowCount) => string, bindRow(columnValues) => any[] }` (the statement must end in '
+        + '`RETURNING (xmax = 0) AS is_insert`). compute.buildWriteSql is '
+        + (compute.buildWriteSql === undefined ? 'undefined' : typeof compute.buildWriteSql) + '.');
+    }
+    const authored = compute.buildWriteSql({
+      table: plan.table,
+      columns: plan.step_columns,
+      keys: plan.keys,
+      geometry_column: plan.geometry_columns[0] || null,
+      geometry_kind: plan.geometry_kind ?? null,
+    });
+    if (!authored || typeof authored.upsertSqlFor !== 'function' || typeof authored.bindRow !== 'function') {
+      throw new Error(`${tag} compute.buildWriteSql for "${writeSpec.table}" returned `
+        + `${authored === null ? 'null' : typeof authored} — the set_source "compute" contract requires an object with `
+        + '`upsertSqlFor(rowCount)` and `bindRow(columnValues)` callables (the same shape write.js\'s default '
+        + 'codegen returns); the runner attaches them to the plan and calls them directly.');
+    }
+    // Attached to the SAME plan the rest of runIngestPhase already holds — nothing
+    // downstream branches on `set_source`; it only ever reads `upsertSqlFor`/`bindRow`/
+    // `columnsPerRow`, which every plan now carries whichever way the SQL was authored.
+    plan.upsertSqlFor = authored.upsertSqlFor;
+    plan.bindRow = authored.bindRow;
+  }
+
   // LR-D2 — the prior-run read is NOT swallowed, and WHAT HAPPENS when it fails is
   // DECLARED (`staleness.on_prior_run_error`) rather than decided in a catch block.
   // The pre-conversion `.catch(warn => null)` degraded every drift guard to "first run"
