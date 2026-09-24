@@ -1113,7 +1113,6 @@ describe('Pipeline SDK', () => {
       'load-parcels.js',
       'load-neighbourhoods.js',
       'load-wsib.js',
-      'load-address-points.js',
       'load-massing.js',
       'classify-permits.js',
       'classify-scope.js',
@@ -1128,6 +1127,12 @@ describe('Pipeline SDK', () => {
       // battery, which asserts the SAME properties (SDK imported, lifecycle owned
       // by the SDK, summary + meta emitted) on the new mechanism for every
       // converted step.
+      // load-address-points.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.1,
+      // commit 9, 2026-09-24) — same treatment, same successor lock. The frozen
+      // shell still `require('./lib/pipeline')` (kept for the §5.4 lock-registry
+      // text loop), so "imports the pipeline SDK" would still pass; removed
+      // wholesale anyway to match every other converted step's disposition rather
+      // than leaving one partially-checked script behind.
       'link-coa.js',
       'extract-builders.js',
       'link-similar.js',

@@ -608,8 +608,11 @@ describe('Incremental Processing Guards', () => {
   // neither `audit_table` nor `phase:` itself — scripts/lib/step/verdict.js
   // buildAuditTable is the emitter, asserted against the live descriptor in
   // src/tests/steps/compute_centroids/violations.test.ts instead.
+  // load-address-points.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.1,
+  // commit 9, 2026-09-24) — same treatment: scripts/lib/step/verdict.js
+  // buildAuditTable is the emitter now, asserted against the live descriptor in
+  // src/tests/steps/address_points/violations.test.ts instead.
   const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
-    'load-address-points.js',
     'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
@@ -628,8 +631,10 @@ describe('Incremental Processing Guards', () => {
   }
 
   // CSV loaders must have business accuracy thresholds (skip_rate, row count floor)
+  // load-address-points.js RE-HOMED (batch-2 row 3.1, commit 9, 2026-09-24) — same
+  // treatment as above; skip_rate_pct/rows_read_floor are checks[] entries in
+  // src/tests/steps/address_points/violations.test.ts now.
   const CSV_LOADERS_WITH_THRESHOLDS = [
-    'load-address-points.js',
     'load-parcels.js',
     'load-massing.js',
   ];
@@ -707,7 +712,6 @@ describe('PIPELINE_SUMMARY convention', () => {
   const SCRIPTS_WITH_COUNTS = [
     'load-permits.js',
     'load-coa.js',
-    'load-address-points.js',
     'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
@@ -724,6 +728,8 @@ describe('PIPELINE_SUMMARY convention', () => {
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
+    // load-address-points.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.1,
+    // commit 9, 2026-09-24) — same treatment, same successor lock.
   ];
 
   for (const script of SCRIPTS_WITH_COUNTS) {
@@ -923,7 +929,6 @@ describe('PIPELINE_META convention', () => {
   const SCRIPTS_WITH_META = [
     'load-permits.js',
     'load-coa.js',
-    'load-address-points.js',
     'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
@@ -948,6 +953,8 @@ describe('PIPELINE_META convention', () => {
     // emitter — the guarantee "this step emits PIPELINE_META" is unchanged.
     // assert_data_bounds RE-HOMED the same way at its own conversion (batch1 I2
     // commit 7, 2026-09-12) — the `lib/step/index.js` entry below already covers it.
+    // load-address-points.js RE-HOMED the same way at its own cutover (batch-2 row
+    // 3.1, commit 9, 2026-09-24).
     'lib/step/index.js',
   ];
 

@@ -91,7 +91,7 @@
         "disposition": "executed",
         "executor": {
           "file": "scripts/steps/_schema/step.schema.json",
-          "anchor": "{ \"const\": \"drop_batch\" }",
+          "anchor": "\"const\": \"drop_batch\"",
           "role": "the schema's OWN already-correct conditional (step.schema.json:1478, unlike on_row_error's toothless twin this WF2 fixes at C3): `on_batch_error: \"drop_batch\"` REQUIRES `on_batch_error_why` — AJV-enforced at pipeline.step() construction, not merely a convention."
         },
         "why": "POST-B1-1's own worked example (R-X row): the on_batch_error conditional already uses `required`, not `properties` (step.schema.json:1478, unlike on_row_error's own pre-fix twin, F-1). enrich_parcels' own truthing to drop_batch (fail_fast -> drop_batch, on_batch_error_why naming the over-count, Ask A1 PIN) is drafted but not yet landed as of this WF2's first commit — its golden recapture did not finish in session, deferred to a follow-up (EP-D20)."

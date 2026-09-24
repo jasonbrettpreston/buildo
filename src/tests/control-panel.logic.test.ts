@@ -486,6 +486,14 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'compute_parcel_cost_fsi_max_plausible', 'compute_parcel_cost_escalation_min_multiplier', 'compute_parcel_cost_escalation_fallback_multiplier',
   'compute_parcel_cost_premium_default', 'compute_parcel_cost_adjustment_factor_default', 'compute_parcel_cost_min_priceable_area_sqm',
   'compute_parcel_cost_menu_coverage_min_pct', 'compute_parcel_cost_empty_menu_max_pct', 'compute_parcel_cost_line_total_max_cad',
+  // batch-2 row 3.1 (2026-09-24) — address_points' own three (the shared
+  // sources_address_points_floor is already listed above, under the
+  // "Sources Catastrophic-Load Floors" group). A fourth (address_points_
+  // progress_bytes_window et al., three display-only cadence variables) was
+  // declared in the folded commit 6+7 and RETIRED at commit 9 as a dead
+  // declaration (step-validate's §1.2a P4 conformance check) — never seeded,
+  // so it never reached this list.
+  'address_points_skip_rate_max_pct', 'address_points_null_address_number_max_pct', 'address_points_download_timeout_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

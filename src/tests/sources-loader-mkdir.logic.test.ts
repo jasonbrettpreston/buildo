@@ -24,8 +24,17 @@ const path = require('path') as typeof import('path');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const os = require('os') as typeof import('os');
 
+// load-address-points.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.1,
+// commit 9, 2026-09-24): the file is now the frozen shell
+// (`module.exports = pipeline.step(descriptor, compute)`) and has no
+// `downloadFile()` function to extract — the runner's own `acquire.js`
+// (`downloadFile`/`downloadArchive`, streamed hash-through-to-disk) owns
+// destination-directory creation for every INGESTOR uniformly now. The
+// successor lock is RE-FREEZE #13's own T1-T5 battery in
+// src/tests/step-library.logic.test.ts (acquireExternal / CSV acquisition),
+// which asserts the runner's acquisition path on the real CSV-format
+// INGESTORs, address_points included.
 const LOADERS = [
-  'load-address-points.js',
   'load-parcels.js',
   'load-neighbourhoods.js',
   'load-massing.js',
