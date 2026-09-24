@@ -1948,6 +1948,22 @@
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The publisher's licence URL. It was a module constant read by exactly one audit row (`dataset_source_license`); as descriptor data the acquisition seam can hand it to the compute on the SKIP path too, where no download happened and no constant would have been reachable.",
                     "type": "string"
                   },
+                  "on_head_error": {
+                    "description": "ADDED AT THE INGESTOR PILOT (2026-09-24, INGESTOR prerequisite 0r). The DECLARED posture when a HEAD 4xx/5xx leaves the acquisition seam without the cache validators a tier-1 gate needs. Absent (or \"fail_step\") rethrows the HEAD error and kills the step — today's behaviour, byte-identical. \"warn_row\" swallows it, hands the gate null validators (the tier-1 `no_validators` arm then decides to download), records `acquired.head_error`, and emits ONE library-owned WARN audit row (`head_error`).",
+                    "enum": [
+                      "fail_step",
+                      "warn_row"
+                    ],
+                    "x-frozen": true,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "a step-declared check over acquired.head_error (a forgotten check proceeds silently)",
+                        "catch in compute (the throw precedes compute)",
+                        "reuse staleness.on_prior_run_error (a different failure)"
+                      ],
+                      "why": "only a declaration can decide whether the library throws; the WARN row is library-owned (Rule 10)"
+                    }
+                  },
                   "key_property": {
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). For a record-bearing external (shapefile .dbf, CSV, GeoJSON properties): the SOURCE-SIDE attribute that becomes `outputs.writes[].key`. Declaring it is what lets a generic parser run without knowing the domain — and it makes an upstream rename (the #426 class) a descriptor diff instead of an undeclared constant inside a loader.",
                     "type": "string"

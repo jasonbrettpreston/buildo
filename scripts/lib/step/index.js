@@ -4672,6 +4672,39 @@ function preWriteSkipRows(phaseResults) {
 }
 
 /**
+ * INGESTOR prerequisite 0r (2026-09-24, Fold IC-1) — ONE WARN row when the acquisition seam
+ * PROCEEDED past a HEAD failure by declaration.
+ *
+ * `inputs.reads.externals[].on_head_error: "warn_row"` makes the seam swallow a HEAD 4xx/5xx,
+ * hand the tier-1 gate null validators, and (usually) download — the legacy load-centreline
+ * arm (Spec 62 §3.9, `load-centreline.js:433-439`) made declared. Because that posture chose
+ * to proceed ANYWAY, the run must SAY so on the audit table: `acquired.head_error` carries the
+ * message, and this renders it as a WARN row.
+ *
+ * Exactly the `preWriteSkipRows` idiom (one WARN row, `source: 'gate'`, `errored` deliberately
+ * ABSENT — a declared posture is not an anomaly `accept_anomaly` could switch off; the
+ * row-derived cascade yields an honest WARN verdict with no new boolean and no second
+ * derivation). Rule 10: the row is LIBRARY-owned, never step-declared, because only the library
+ * that swallowed the throw can be trusted to report it. Absent entirely on the default
+ * `"fail_step"` posture and on every healthy run — a healthy audit table is byte-for-byte
+ * unchanged.
+ *
+ * @param {Array<{acquired?:{head_error?:string|null}}|null>} phaseResults - the per-shape runner results
+ * @returns {Array<object>} zero or one row
+ */
+function headErrorRows(phaseResults) {
+  const hit = (phaseResults || []).find((p) => p && p.acquired && p.acquired.head_error);
+  if (!hit) return [];
+  return [{
+    metric: 'head_error',
+    value: hit.acquired.head_error,
+    threshold: 'HEAD returns 2xx (else on_head_error "warn_row" proceeds and says so)',
+    status: 'WARN',
+    source: 'gate',
+  }];
+}
+
+/**
  * EP-PHASE-DEADLINE (Observability fold, 2026-09-15) — the phase-deadline abort, said out
  * loud ON THE AUDIT TABLE. Exactly the `preWriteAbortRows` idiom above (POST-B1-1): one
  * `errored: true` FAIL row, `source: 'gate'`, so the ROW-DERIVED cascade fails the step
@@ -5295,6 +5328,9 @@ async function runWithPool(runnable, pool, ctx) {
         // (§preWriteSkipRows). Absent on every run that did not skip-write. Placed AFTER the
         // abort rows so a legal FAIL-first run reads abort-then-nothing, never both.
         ...preWriteSkipRows([ingest]),
+        // Prerequisite 0r (Fold IC-1) — the DECLARED HEAD-failure posture, said out loud as a
+        // WARN (§headErrorRows). Absent on the default "fail_step" and on every healthy run.
+        ...headErrorRows([ingest]),
         // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the deadline abort and
         // the fail-open retirement failure, each said out loud on the audit table rather
         // than only in a log line. Both absent on every healthy run.
@@ -5641,6 +5677,7 @@ module.exports = {
   partitionFailedRows,
   preWriteAbortRows,
   preWriteSkipRows,
+  headErrorRows,
   phaseDeadlineRows,
   scopeRetireFailureRows,
   makePreWriteGate,

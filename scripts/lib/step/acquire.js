@@ -441,7 +441,28 @@ async function acquireExternal({
     pins: { spec_version: descriptor.identity.spec_version, skipped_reason: reason },
   });
   const algorithm = (triggersAt(descriptor, 'post_acquisition')[0] || {}).hash || DEFAULT_CONTENT_HASH_ALGORITHM;
-  const head = await headValidators(ctxFetch, external.url, timeoutMs);
+
+  // ── THE DECLARED HEAD-FAILURE POSTURE (INGESTOR prerequisite 0r, 2026-09-24) ──────
+  // The legacy load-centreline loader (Spec 62 §3.9, `scripts/load-centreline.js:433-439`)
+  // WARNed on a HEAD 4xx/5xx and PROCEEDED with null validators — the tier-1 gate's own
+  // `no_validators` arm then decided to download. That posture was never declared, only
+  // observed; here it is `external.on_head_error`, reusing `staleness.on_prior_run_error`'s
+  // vocabulary. ABSENT (and `"fail_step"`) rethrows the HEAD error — byte-identical to
+  // today, where the throw escapes `acquireExternal`. `"warn_row"` swallows it, records
+  // `head_error`, logs a WARN, and hands the gate null validators so the DECIDED-by-gate
+  // path runs. Only a DECLARATION can decide this (Rule 10): the library owns the WARN row
+  // (`§headErrorRows`), and a step-declared check over `acquired.head_error` could not —
+  // a forgotten check would proceed silently.
+  let head;
+  let headError = null;
+  try {
+    head = await headValidators(ctxFetch, external.url, timeoutMs);
+  } catch (err) {
+    if (external.on_head_error !== 'warn_row') throw err;
+    headError = err.message;
+    log.warn(tag, `HEAD failed, proceeding without validators (on_head_error "warn_row"): ${err.message}`);
+    head = { lastModified: null, etag: null };
+  }
 
   // The base block exists BEFORE the tier-1 decision on purpose: the `when: "pre"`
   // checks (licence, cache validators, dataset age, standing overrides) are reported
@@ -450,6 +471,7 @@ async function acquireExternal({
     last_modified: head.lastModified,
     last_modified_ms: head.lastModified ? Date.parse(head.lastModified) : null,
     etag: head.etag,
+    head_error: headError,
     content_hash: null,
     source_dataset_version: null,
     bytes_downloaded: 0,
