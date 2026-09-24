@@ -747,6 +747,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     slug: descriptor.identity.name,
     external,
     descriptor,
+    config,
     prior,
     timeoutMs,
     keyProperty: external.key_property,

@@ -101,6 +101,55 @@ function resolveTimeoutMs(descriptor, config) {
 }
 
 /**
+ * THE DOWNLOAD RETRY POLICY, FROM ONE SOURCE (peel 0q, INGESTOR prerequisite 0q, 2026-09-24).
+ *
+ * `execution.network.retries` has been a FROZEN schema field since S1 with NO reader
+ * anywhere in `scripts/lib/` (measured 2026-09-24), and the seam's one download call
+ * made exactly ONE attempt. The legacy loaders (`scripts/load-neighbourhoods.js`'s
+ * `downloadFile`, copy-pasted into load-address-points/load-parcels/load-massing) retried
+ * THREE times with no backoff; cloud run 34769829628 (2026-09-13) died on a single
+ * `HTTP 502` at step 17/28 and 11 downstream steps never ran.
+ *
+ * This is `resolveTimeoutMs`'s own shape generalized to the retry family (ruling A-4): a
+ * `*_from_config` name derives from a REGISTERED logic variable (Rule 3 — a hard-coded
+ * knob is a hidden variable), and the `retries` literal is the STATED fallback for a
+ * database that has not been seeded. `config` may be null/undefined (no DB, a unit call):
+ * a named variable wins iff its resolved value is a non-negative integer; otherwise the
+ * literal, otherwise 0. `backoffMs` comes only from `retry_backoff_from_config` (a
+ * finite ≥ 0 value), defaulting to 0 — a step that declares no `*_from_config` behaves
+ * exactly as before.
+ *
+ * @param {object} descriptor
+ * @param {Record<string, number>|null|undefined} config - `ctx.config`
+ * @returns {{retries: number, backoffMs: number}}
+ */
+function resolveRetryPolicy(descriptor, config) {
+  const net = descriptor.execution && descriptor.execution.network;
+  if (!net || net === 'none') return { retries: 0, backoffMs: 0 };
+  const cfg = config || {};
+  let retries;
+  const retryName = net.retries_from_config;
+  if (retryName === 'none') {
+    // The literal "none" disables retries OUTRIGHT — it is not "no named variable, so
+    // fall back to the descriptor literal" (that is the `retryName` undefined/absent
+    // case, two lines below). A step that declares `retries_from_config: "none"` means
+    // it, even if `execution.network.retries` still carries a non-zero literal.
+    retries = 0;
+  } else {
+    const retryValue = retryName ? cfg[retryName] : undefined;
+    if (Number.isInteger(retryValue) && retryValue >= 0) retries = retryValue;
+    else if (Number.isInteger(net.retries) && net.retries >= 0) retries = net.retries;
+    else retries = 0;
+  }
+  let backoffMs;
+  const backoffName = net.retry_backoff_from_config;
+  const backoffValue = backoffName && backoffName !== 'none' ? cfg[backoffName] : undefined;
+  if (typeof backoffValue === 'number' && Number.isFinite(backoffValue) && backoffValue >= 0) backoffMs = backoffValue;
+  else backoffMs = 0;
+  return { retries, backoffMs };
+}
+
+/**
  * ⚠️ THE NULL TIMEOUT IS "NO DEADLINE", NOT "ZERO MILLISECONDS".
  *
  * `resolveTimeoutMs` returns null for `network: "none"` and for an unparseable
@@ -170,6 +219,50 @@ async function downloadArchive(ctxFetch, url, destPath, timeoutMs, algorithm) {
   } finally {
     if (t) clearTimeout(t);
   }
+}
+
+/**
+ * DOWNLOAD WITH RETRIES (INGESTOR prerequisite 0q, 2026-09-24) — the retry loop the
+ * legacy loaders ran by hand, promoted into the seam.
+ *
+ * `downloadArchive`'s own body is UNTOUCHED (FENCE 0b230472, measured byte-identical):
+ * this function CALLS it, once per attempt. The contract is DOWNLOAD-ONLY — `headValidators`
+ * is never retried (a HEAD is cheap and 502-prone for different reasons; the legacy loop
+ * did not retry it either).
+ *
+ * `attempts = retries + 1` (so `retries: 0` — the default, and the pre-0q behaviour — is
+ * EXACTLY one attempt, no WARN). On any attempt's failure: WARN once (tag + attempt/total
+ * + the error message), remove the partial `destPath` (`force: true` — an attempt that
+ * errored mid-stream must never leave truncated bytes behind for the next attempt to see
+ * or for a later gate to parse), and sleep `backoffMs` — but NEVER after the last attempt
+ * (no point sleeping before a rethrow). The LAST error is rethrown, never swallowed. The
+ * successful return is `downloadArchive`'s own object plus `attempts`.
+ *
+ * `sleep` is injectable for tests (default: a real `setTimeout` promise); `backoffMs === 0`
+ * never sleeps at all.
+ *
+ * @returns {Promise<object>} `downloadArchive`'s `{archivePath, contentHash, bytesDownloaded,
+ *   lastModified, etag}` plus `attempts`.
+ */
+async function downloadWithRetries(ctxFetch, url, destPath, timeoutMs, algorithm, { retries = 0, backoffMs = 0, log, tag, sleep } = {}) {
+  const attempts = (Number.isInteger(retries) && retries >= 0 ? retries : 0) + 1;
+  const doSleep = sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const dl = await downloadArchive(ctxFetch, url, destPath, timeoutMs, algorithm);
+      return { ...dl, attempts: i };
+    } catch (err) {
+      lastErr = err;
+      // WARN only when there is a NEXT attempt to explain — a `retries: 0` single
+      // attempt that fails is not a "retry" (it never had a budget), so it rethrows
+      // silently through this same catch with no WARN, exactly as before 0q.
+      if (log && i < attempts) log.warn(tag, `download attempt ${i}/${attempts} failed: ${err.message}`);
+      fs.rmSync(destPath, { force: true });
+      if (backoffMs > 0 && i < attempts) await doSleep(backoffMs);
+    }
+  }
+  throw lastErr;
 }
 
 /** Extract cross-platform (never a shell) and return the entry names. */
@@ -336,7 +429,7 @@ function buildSkipReEmitMeta({ skeleton, prior, pins }) {
  * @returns {Promise<{acquired: object, tier2: {skip: boolean, reason: string}}>}
  */
 async function acquireExternal({
-  ctxFetch, log, tag, slug, external, descriptor, prior, timeoutMs,
+  ctxFetch, log, tag, slug, external, descriptor, config, prior, timeoutMs,
   keyProperty, keyColumn, coerceKey, forced, preAcquisitionGate, emitSkeleton,
 }) {
   // The DS4 contract, built HERE because this is where a gate can fire: a skipped run
@@ -386,7 +479,9 @@ async function acquireExternal({
     // Path only — `downloadArchive` is byte-identical for both, and the bytes are
     // hashed as they land on either branch (FENCE 0b230472).
     const destPath = path.join(tmpRoot, external.format === 'csv' ? 'source.csv' : 'source.zip');
-    const dl = await downloadArchive(ctxFetch, external.url, destPath, timeoutMs, algorithm);
+    const dl = await downloadWithRetries(ctxFetch, external.url, destPath, timeoutMs, algorithm, {
+      ...resolveRetryPolicy(descriptor, config), log, tag,
+    });
     const acquired = {
       ...base,
       last_modified: dl.lastModified || head.lastModified,
@@ -395,6 +490,7 @@ async function acquireExternal({
       content_hash: dl.contentHash,
       source_dataset_version: dl.contentHash,
       bytes_downloaded: dl.bytesDownloaded,
+      download_attempts: dl.attempts,
     };
     const tier2 = forced
       ? { skip: false, reason: 'force_run' }
@@ -457,9 +553,11 @@ module.exports = {
   TMP_PREFIX,
   parseDuration,
   resolveTimeoutMs,
+  resolveRetryPolicy,
   abortTimer,
   headValidators,
   downloadArchive,
+  downloadWithRetries,
   extractArchive,
   locateShapefile,
   parseShapefile,

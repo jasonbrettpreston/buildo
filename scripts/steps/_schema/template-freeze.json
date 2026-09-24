@@ -13,9 +13,9 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "1414cb73421426c68c7c0bc3b0d34cd2544ef336",
+  "frozen_at": "701310223eb7e37c403c5169a53596d8ee9b55d3",
   "frozen_after_pilot": 9,
-  "schema_sha256": "6c4c81e3f1b37c2bb93995cb6028d260e66b69680db89ad9d8de9fe2ab6ae061",
+  "schema_sha256": "33028b5789344265da39d65cbd92e3c041c562593dcbb37d9ecc75d093d949eb",
   "categories": [
     "identity",
     "inputs",

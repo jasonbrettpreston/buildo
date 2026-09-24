@@ -3232,6 +3232,30 @@
                   "type": "string",
                   "pattern": "^[a-z][a-z0-9_]*$"
                 },
+                "retries_from_config": {
+                  "description": "Ruling A-4 generalized (INGESTOR prerequisite 0q, 2026-09-24). `retries` is simultaneously DESCRIPTOR DATA (P1.1 — a reader must see the retry bound without a database) and an OPERATOR KNOB (P4). This names the logic variable whose RESOLVED value the acquisition seam uses INSTEAD of the `retries` literal; the literal is the stated fallback for a database that has not been seeded. `\"none\"` disables retries outright. A resolved value that is not a non-negative integer is NOT honoured — the literal is the fallback.",
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "x-ruling": {
+                    "rungs_tried": [
+                      "<slug>_download_retries naming convention (hidden)",
+                      "retries literal alone (Rule 3)"
+                    ],
+                    "why": "timeout_from_config precedent; literal = unseeded fallback"
+                  }
+                },
+                "retry_backoff_from_config": {
+                  "description": "The backoff half of `retries_from_config` (INGESTOR prerequisite 0q, 2026-09-24). Names the logic variable whose RESOLVED value (milliseconds, finite ≥ 0) is the constant sleep between download attempts; absent or unresolved means NO backoff (0), which is the pre-0q behaviour. `\"none\"` means 0.",
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "x-ruling": {
+                    "rungs_tried": [
+                      "<slug>_download_retry_backoff_ms naming convention (hidden)",
+                      "retry_backoff_ms literal alone (Rule 3)"
+                    ],
+                    "why": "timeout_from_config precedent; literal = unseeded fallback"
+                  }
+                },
                 "retries": {
                   "type": "integer",
                   "minimum": 0

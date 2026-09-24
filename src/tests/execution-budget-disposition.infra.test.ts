@@ -21,9 +21,17 @@
 // step ran 300 minutes and was killed by the GitHub Actions wall clock, the only live rung
 // of the entire declared ladder.
 //
+// UPDATED 2026-09-24 (INGESTOR prerequisite 0q): the registry gained its first
+// NON-duration row, `network.retries` (a COUNT — R-X's disposition menu never named
+// "duration" as a constraint, only "frozen declaration with no live executor"). It is
+// deliberately kept OUT of `DURATION_KEYS`/assertion (1)'s loop and given its own
+// declared-iff lock, (1b), rather than widening what "duration key" means.
+//
 // Assertions, both directions:
 //  (0) every row's `disposition` is one of EXACTLY the registry's own closed 2-value menu;
 //  (1) every duration key a LIVE descriptor declares has a row, and no row is an orphan;
+//  (1b) execution.network.retries (the first non-duration row) is declared iff a live
+//       descriptor declares it, and is not an orphan;
 //  (2) every `executed` row's cited executor anchor is GREPPED out of its cited file,
 //      never trusted from the registry's own prose;
 //  (3) `step_timeout` drift, both ways — every `wired[]` slug's descriptor duration and
@@ -47,6 +55,14 @@ const LOGIC_VARS_PATH = path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json
 
 /** The four `execution.*` fields whose value is a `duration` in step.schema.json. */
 const DURATION_KEYS = ['budget', 'txn_budget', 'statement_timeout', 'step_timeout'] as const;
+
+/**
+ * The registry's first NON-duration row (INGESTOR prerequisite 0q, 2026-09-24):
+ * `execution.network.retries` is a COUNT, not a duration, so it lives outside
+ * `DURATION_KEYS` and test (1)'s generic duration-orphan loop — it gets its own
+ * declared-iff lock, (1b) below, rather than bending that loop's semantics.
+ */
+const NETWORK_RETRIES_KEY = 'network.retries';
 
 interface ExecutorRow { file: string; anchor: string; role?: string }
 interface DispositionRow {
@@ -125,8 +141,22 @@ describe('execution-budget-disposition (Spec 124 R-X) — every execution.* dura
       expect(Object.keys(registry.declarations), `execution.${k} is declared live but carries no R-X disposition row`).toContain(k);
     }
     for (const k of Object.keys(registry.declarations)) {
+      if (k === NETWORK_RETRIES_KEY) continue; // non-duration row — locked by (1b), not this duration-keyed loop
       expect(declared, `orphan registry row: execution.${k} is dispositioned but no live descriptor declares it`).toContain(k);
     }
+  });
+
+  it('(1b) execution.network.retries — the registry\'s first NON-duration row: declared iff any live '
+    + 'descriptor\'s execution.network?.retries !== undefined, and not an orphan otherwise', () => {
+    const anyDeclaresRetries = liveDescriptors().some((d) => {
+      const net = d.execution.network as { retries?: unknown } | string | undefined;
+      return typeof net === 'object' && net !== null && net.retries !== undefined;
+    });
+    expect(anyDeclaresRetries, 'at least one live descriptor must declare execution.network.retries, or this lock is vacuous').toBe(true);
+    expect(
+      Object.keys(registry.declarations),
+      'execution.network.retries is declared live (assert_schema, load_ravines, address_points all carry a retries literal) but carries no R-X disposition row',
+    ).toContain(NETWORK_RETRIES_KEY);
   });
 
   it('(2) every `executed` row\'s cited executor anchor is GREPPED out of its cited file — never trusted from the registry\'s own prose', () => {
