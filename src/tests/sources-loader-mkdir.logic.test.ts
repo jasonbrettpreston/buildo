@@ -34,8 +34,9 @@ const os = require('os') as typeof import('os');
 // src/tests/step-library.logic.test.ts (acquireExternal / CSV acquisition),
 // which asserts the runner's acquisition path on the real CSV-format
 // INGESTORs, address_points included.
+// load-parcels.js RE-HOMED the same way at its own cutover (batch-2 row 3.7,
+// compressed commit ③, 2026-09-24) — same successor lock, parcels included.
 const LOADERS = [
-  'load-parcels.js',
   'load-neighbourhoods.js',
   'load-massing.js',
 ];

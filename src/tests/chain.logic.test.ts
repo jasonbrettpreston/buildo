@@ -612,8 +612,10 @@ describe('Incremental Processing Guards', () => {
   // commit 9, 2026-09-24) — same treatment: scripts/lib/step/verdict.js
   // buildAuditTable is the emitter now, asserted against the live descriptor in
   // src/tests/steps/address_points/violations.test.ts instead.
+  // load-parcels.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.7, compressed
+  // commit ③, 2026-09-24) — same treatment, asserted in
+  // src/tests/steps/parcels/violations.test.ts instead.
   const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
-    'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
     'load-wsib.js',
@@ -634,8 +636,10 @@ describe('Incremental Processing Guards', () => {
   // load-address-points.js RE-HOMED (batch-2 row 3.1, commit 9, 2026-09-24) — same
   // treatment as above; skip_rate_pct/rows_read_floor are checks[] entries in
   // src/tests/steps/address_points/violations.test.ts now.
+  // load-parcels.js RE-HOMED (batch-2 row 3.7, compressed commit ③, 2026-09-24) —
+  // same treatment; skip_rate_pct/rows_read_floor are checks[] entries in
+  // src/tests/steps/parcels/violations.test.ts now.
   const CSV_LOADERS_WITH_THRESHOLDS = [
-    'load-parcels.js',
     'load-massing.js',
   ];
 
@@ -712,7 +716,6 @@ describe('PIPELINE_SUMMARY convention', () => {
   const SCRIPTS_WITH_COUNTS = [
     'load-permits.js',
     'load-coa.js',
-    'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
     'extract-builders.js',
@@ -725,6 +728,9 @@ describe('PIPELINE_SUMMARY convention', () => {
     // + 8) — same treatment as assert_schema at pilot 1: a converted step spells
     // neither emit itself, and the `lib/step/index.js` entry already in the
     // PIPELINE_META list below IS the emitter for all of them.
+    // load-address-points.js RE-HOMED (batch-2 row 3.1, commit 9, 2026-09-24) and
+    // load-parcels.js RE-HOMED (batch-2 row 3.7, compressed commit ③, 2026-09-24) —
+    // same treatment.
     'link-similar.js',
     'link-coa.js',
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired.
@@ -929,7 +935,6 @@ describe('PIPELINE_META convention', () => {
   const SCRIPTS_WITH_META = [
     'load-permits.js',
     'load-coa.js',
-    'load-parcels.js',
     'load-massing.js',
     'load-neighbourhoods.js',
     'load-wsib.js',
@@ -954,7 +959,8 @@ describe('PIPELINE_META convention', () => {
     // assert_data_bounds RE-HOMED the same way at its own conversion (batch1 I2
     // commit 7, 2026-09-12) — the `lib/step/index.js` entry below already covers it.
     // load-address-points.js RE-HOMED the same way at its own cutover (batch-2 row
-    // 3.1, commit 9, 2026-09-24).
+    // 3.1, commit 9, 2026-09-24). load-parcels.js RE-HOMED the same way at its own
+    // cutover (batch-2 row 3.7, compressed commit ③, 2026-09-24).
     'lib/step/index.js',
   ];
 

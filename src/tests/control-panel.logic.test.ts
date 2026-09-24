@@ -494,6 +494,12 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // declaration (step-validate's §1.2a P4 conformance check) — never seeded,
   // so it never reached this list.
   'address_points_skip_rate_max_pct', 'address_points_null_address_number_max_pct', 'address_points_download_timeout_ms',
+  // batch-2 row 3.7 (2026-09-24) — parcels' own three (the shared
+  // sources_parcels_floor is already listed above, under the "Sources
+  // Catastrophic-Load Floors" group). SQM_TO_SQFT/M_TO_FT are unit-conversion
+  // physical constants, declared in notes.json, deliberately NOT logic
+  // variables (no admin knob for physics) — never reach this list.
+  'parcels_irregularity_threshold', 'parcels_skip_rate_max_pct', 'parcels_download_timeout_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

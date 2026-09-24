@@ -949,22 +949,17 @@ describe('row 3.7 — legacy infra tests stay at their paths (D5, in-place re-po
   });
 });
 
-describe('row 3.7 — converted.json.pending carries the shape_clean stage entry (R-K.1) — [flipped at commit ③]', () => {
-  it('a pending entry for scripts/load-parcels.js exists at stage "shape_clean", registers_at commit ③', () => {
-    const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as {
-      converted: string[];
-      pending: Array<{ file: string; registers_at: string; stage: string }>;
-    };
-    const entry = converted.pending.find((p) => p.file === STEP_REL);
-    expect(entry, 'the pending entry for scripts/load-parcels.js must exist').toBeDefined();
-    expect(entry!.stage, 'commit ② landed the descriptor/compute/shell/seeds green — stage advances to shape_clean').toBe('shape_clean');
-    expect(entry!.registers_at).toMatch(/commit ③/);
-    expect(converted.converted, 'not registered until commit ③').not.toContain(STEP_REL);
-  });
-
+describe('row 3.7 — converted.json.pending carried the shape_clean stage entry through commit ②, R-K.1', () => {
+  // RETIRED 2026-09-24 (batch2 row 3.7 CUTOVER, commit ③): the unconditional "a pending
+  // entry must exist at stage shape_clean" assertion this describe block carried through
+  // commit ② is retired now that cutover has landed — matching address_points' own
+  // disposition at ITS cutover (src/tests/steps/address_points/violations.test.ts never
+  // carried the unconditional form at all, only the R-K "no leftover entry" lock below).
+  // The pending-entry's existence/stage was proven at commit ② (1414cb73) and is git
+  // history now, not a live invariant to keep re-asserting.
   it('[flipped at commit ③] converted.json registers parcels, pending[] carries no leftover entry (R-K)', () => {
     const converted = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8')) as { converted: string[]; pending: Array<{ file: string }> };
-    if (!converted.converted.includes(STEP_REL)) return; // not yet cut over — this it() is a future lock, not a RED assertion today
+    expect(converted.converted, 'registered at commit ③').toContain(STEP_REL);
     expect(converted.pending.some((p) => p.file === STEP_REL), 'R-K: the pending entry is deleted in the SAME commit as registration').toBe(false);
   });
 });

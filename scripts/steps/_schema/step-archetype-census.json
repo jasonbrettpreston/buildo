@@ -344,7 +344,9 @@
       "file": "scripts/load-parcels.js",
       "archetype": "INGESTOR",
       "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "reason": "RETAINED at cutover per Spec 124 R-AO. Archetype and batch are the census's OWN pre-cutover values, kept verbatim (`archetype: \"INGESTOR\"`, `batch: \"C5\"` from the original Spec 122 §1.10 declaration) and never re-derived from the descriptor — a copy of the descriptor would make fast invariant #25 compare a value to itself. Batch-2 row 3.7 COMPRESSED ①②③ form (INGESTOR 3rd member); commit ③ registers the file in converted.json's converted[] and deletes the pending[] entry in the same commit (R-K).",
+      "status": "converted",
+      "converted_at": "commit-3"
     },
     {
       "slug": "permits",

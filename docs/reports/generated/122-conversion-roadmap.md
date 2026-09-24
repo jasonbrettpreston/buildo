@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **44** (+ **0** pending) · remaining slugs: **46** (+ **0** pending)
+Remaining files: **43** (+ **0** pending) · remaining slugs: **45** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 8 | 8 |
+| C5 | 7 | 7 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -35,7 +35,6 @@ Remaining files: **44** (+ **0** pending) · remaining slugs: **46** (+ **0** pe
 | INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-massing.js` | massing | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-neighbourhoods.js` | neighbourhoods | sources (1) | top-right | — | — |
-| INGESTOR | `scripts/load-parcels.js` | parcels | sources (1) | top-right | — | — |
 | INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
@@ -45,7 +44,6 @@ Remaining files: **44** (+ **0** pending) · remaining slugs: **46** (+ **0** pe
 - `scripts/load-heritage.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-massing.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-neighbourhoods.js` (INGESTOR): Spec 122 §1.10 declared
-- `scripts/load-parcels.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-wsib.js` (INGESTOR): Spec 122 §1.10 declared
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
 
@@ -104,4 +102,4 @@ Remaining files: **44** (+ **0** pending) · remaining slugs: **46** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **19** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **46** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **20** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **45** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

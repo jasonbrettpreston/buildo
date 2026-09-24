@@ -420,7 +420,10 @@
       "compute_parcel_cost_stream_batch_size",
       "address_points_skip_rate_max_pct",
       "address_points_null_address_number_max_pct",
-      "address_points_download_timeout_ms"
+      "address_points_download_timeout_ms",
+      "parcels_irregularity_threshold",
+      "parcels_skip_rate_max_pct",
+      "parcels_download_timeout_ms"
     ]
   },
   {

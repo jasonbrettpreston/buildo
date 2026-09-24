@@ -1110,7 +1110,6 @@ describe('Pipeline SDK', () => {
     const PIPELINE_SCRIPTS = [
       'load-permits.js',
       'load-coa.js',
-      'load-parcels.js',
       'load-neighbourhoods.js',
       'load-wsib.js',
       'load-massing.js',
@@ -1133,6 +1132,8 @@ describe('Pipeline SDK', () => {
       // text loop), so "imports the pipeline SDK" would still pass; removed
       // wholesale anyway to match every other converted step's disposition rather
       // than leaving one partially-checked script behind.
+      // load-parcels.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.7,
+      // compressed commit ③, 2026-09-24) — same treatment, same successor lock.
       'link-coa.js',
       'extract-builders.js',
       'link-similar.js',
@@ -1283,10 +1284,25 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
     });
 
-    // §9.3 — load-parcels.js upsert must guard against no-op updates
-    it('load-parcels.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'load-parcels.js'), 'utf-8');
-      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    // §9.3 — RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.7, compressed commit ③,
+    // 2026-09-24). The hand-written ON CONFLICT text left the shell (585 lines → a require +
+    // `pipeline.step()`); the guard is now DECLARED (`write_discipline.guard_columns`, 8 of the
+    // WHERE clause's 9 terms — the 9th, `geometry`, is added automatically by the codegen as the
+    // watched column of all three `invalidates[].set_null_on_change_of` DEC-FENCE2 entries, so it
+    // is deliberately absent from this list, not missing) and PROVEN equal to the legacy SQL
+    // text by step-library.logic.test.ts's T5/T7 (`buildWritePlan(...).upsertSqlFor(1)` vs the
+    // legacy file text whitespace-normalised) — this test reads the same declaration, not the SQL.
+    it('load-parcels.js declares the IS DISTINCT FROM guard on the 8 non-geometry columns, plus geometry via invalidates[] (re-homed onto the descriptor at conversion)', () => {
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'load-parcels.descriptor.json'), 'utf-8'));
+      const write = d.outputs.writes[0].write_discipline;
+      expect(write.guard).toBe('is_distinct_from');
+      expect(write.guard_columns).toEqual([
+        'lot_size_sqm', 'feature_type', 'address_number', 'linear_name_full',
+        'addr_num_normalized', 'street_name_normalized', 'street_type_normalized', 'date_effective',
+      ]);
+      expect(write.guard_columns).not.toContain('geometry');
+      const invalidates = d.outputs.invalidates as Array<{ set_null_on_change_of: string }>;
+      expect(invalidates.every((inv) => inv.set_null_on_change_of === 'geometry')).toBe(true);
     });
 
     // §9.3 — load-massing.js upsert must guard against no-op updates

@@ -33,7 +33,7 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 | 2 | `assert_schema` | `quality/assert-schema.js` | Validate CSV headers, GeoJSON keys, shapefile URLs | pipeline_runs |
 | 3 | `address_points` | `load-address-points.js` | Ingest Toronto master address point geometries (~525K rows) — converted 2026-09-24 (19th step, INGESTOR 2/9; Spec 54 "As-built" carries the descriptor/compute/deviation detail) | address_points |
 | 4 | `geocode_permits` | `geocode-permits.js` | Re-join EVERY permit with a numeric `geo_id` to `address_points` (guarded, not narrowed to missing coordinates) + clear coordinates whose `geo_id` vanished upstream | permits |
-| 5 | `parcels` | `load-parcels.js` | Ingest property lot polygons from city GIS (~486K rows) | parcels |
+| 5 | `parcels` | `load-parcels.js` | Ingest property lot polygons from city GIS (~486K rows) — converted 2026-09-24 (20th step, INGESTOR 3/9; Spec 55 "As-built" carries the descriptor/compute/deviation detail) | parcels |
 | 6 | `load_ravines` | `load-ravines.js` | Ingest Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) — zipped shapefile (854 polygons), advisory lock 59 (Spec 59 §8c) | ravines |
 | 7 | `load_heritage` | `load-heritage.js` | Ingest Toronto Heritage Register (≈8,803 Part IV/V address points) + Heritage Conservation Districts (29 polygons) — two zipped shapefiles, Ontario Heritage Act Parts IV/V, advisory lock 61 (Spec 61 §8c) | heritage_properties, heritage_districts |
 | 8 | `load_centreline` | `load-centreline.js` | Ingest Toronto Centreline (TCL) street-network LineStrings — zipped shapefile (~47K street-class segments after L25 filter), staging-table full-replace, advisory lock 63 (Spec 62 §8c) | toronto_centreline |

@@ -999,14 +999,53 @@ const GROUP_KEYS = groupKeys();
 
 /** Registry keys whose seeded description TAGS them to this step (the `CONSUMED by` annotation). */
 function taggedToStep(slug: string, computeRel: string | null): string[] {
-  const needles = [slug, path.basename(computeRel ?? ''), `${slug.replace(/_/g, '-')}.js`].filter(Boolean);
+  // `load_${slug}` is a DOCUMENTED alias convention for INGESTOR steps whose slug
+  // has no `load_` prefix but whose file does (`address_points` -> `load-address-
+  // points.js` — see src/tests/step-seam.logic.test.ts's own "declared BOTH
+  // 'address_points' and its alias 'load_address_points'" note); some seed prose
+  // uses it too (`sources_address_points_floor`'s "CONSUMED by load_address_points").
+  // Included as its own needle rather than widened boundary rules, so it stays an
+  // explicit, auditable alias rather than a new substring-matching surface.
+  const needles = [slug, path.basename(computeRel ?? ''), `${slug.replace(/_/g, '-')}.js`, `load_${slug}`].filter(Boolean);
+  // FIXED 2026-09-24 (batch2 row 3.7, parcels cutover) — TWO compounding false-
+  // positive mechanisms, both first exposed now that bare `parcels` is a real,
+  // distinct converted step (the identical substring-collision CLASS as the
+  // `reportPathFor` fix above, two more instances of it):
+  // (1) plain `tail.includes(n)` matched `parcels` inside a DIFFERENT step's own
+  //     name — `enrich-parcels.js`/`enrich_parcels`/`link-parcels.js`/
+  //     `link_parcels` all contain `parcels` as a substring — so a seed genuinely
+  //     tagged "CONSUMED by enrich-parcels.js" (never parcels' own
+  //     load-parcels.js) still matched. Fixed with a word-boundary guard: a
+  //     needle only matches when neither adjacent character (if any) is an
+  //     identifier character.
+  // (2) `tail = d.slice(i)` (everything from "CONSUMED by" to the END of the
+  //     description) still let `parcels` match FURTHER INTO THE FREEFORM PROSE,
+  //     past the actual consumer-name clause — `parcels` is both the slug AND
+  //     the domain's central noun, so it legitimately reappears later in
+  //     unrelated explanatory text (`ST_DWithin(parcels.geom::geography, ...)`,
+  //     "21.3% of linked parcels carry..."). No OTHER slug in the fleet is also
+  //     a common English/column-name word, so this never fired before. Fixed by
+  //     bounding the tail to the CONSUMER-NAME CLAUSE ONLY: everything from
+  //     "CONSUMED by" up to the first " (" (an explanatory aside starts) or
+  //     ". " / end-of-string (the clause's own sentence ends) — a
+  //     comma-separated consumer list ("CONSUMED by X, Y, Z (...)") stays
+  //     intact because only " (" and ". " end the clause, not ",".
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matchesTail = (tail: string, needle: string) => new RegExp(`(?<![A-Za-z0-9_-])${escapeRe(needle)}(?![A-Za-z0-9_-])`).test(tail);
+  const consumerClause = (fullTail: string): string => {
+    const parenIdx = fullTail.indexOf(' (');
+    const periodIdx = fullTail.search(/\. |\.$/);
+    const candidates = [parenIdx, periodIdx].filter((n) => n !== -1);
+    const end = candidates.length > 0 ? Math.min(...candidates) : fullTail.length;
+    return fullTail.slice(0, end);
+  };
   return Object.entries(SEED)
     .filter(([, v]) => {
       const d = v.description ?? '';
       const i = d.indexOf('CONSUMED by');
       if (i === -1) return false;
-      const tail = d.slice(i);
-      return needles.some((n) => tail.includes(n));
+      const tail = consumerClause(d.slice(i));
+      return needles.some((n) => matchesTail(tail, n));
     })
     .map(([k]) => k);
 }
@@ -2269,7 +2308,14 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // compute_centroids/geocode_permits. Same disposition: declaring it moves link_parcels'
     // own seam pairs and staleness gating, out of scope for a conversion that must not touch
     // link_parcels' behaviour. Same ledger id (LDG-D1), filed in review_followups.md.
-    link_parcels: { missing: ['address_points', 'compute_centroids', 'geocode_permits'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points became derivable at its cutover)
+    // WIDENED AGAIN at the batch-2 row 3.7 cutover (2026-09-24): parcels became a CONVERTED
+    // producer that day, so the ledger's column-overlap derivation can now SEE the dependency
+    // link_parcels' compute has always had on the `parcels` table itself (Strategy 1b/2/3
+    // legacy exact/name-only/spatial matching all read `parcels` columns directly). Same
+    // disposition: declaring it moves link_parcels' own seam pairs and staleness gating, out
+    // of scope for a conversion that must not touch link_parcels' behaviour. Same ledger id
+    // (LDG-D1), filed in review_followups.md.
+    link_parcels: { missing: ['address_points', 'compute_centroids', 'geocode_permits', 'parcels'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points and parcels became derivable at their own cutovers)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
     // WIDENED at the batch-2 row 2.1 cutover (2026-09-18): enrich_ravines became a CONVERTED
     // producer that day, so the ledger's column-overlap derivation can now SEE a dependency
@@ -2285,7 +2331,28 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // COALESCE(...,false) gate and the ravine∧¬heritage envelope branch). Same disposition,
     // same reasoning as RV-D5 — allowlisted, not fixed, out of scope for THIS conversion.
     // Filed EH-D4 in defect-ledger.md.
-    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines'], extra: [] }, // RV-D5, EH-D4
+    // WIDENED AGAIN at the batch-2 row 3.7 cutover (2026-09-24): parcels became a CONVERTED
+    // producer, so the ledger can now see the identical class of pre-existing dependency:
+    // enrich-parcels.js reads the `parcels` table's own base columns (geometry, lot_size_sqm,
+    // etc.) throughout every pass. Same disposition as RV-D5/EH-D4 — allowlisted, not fixed,
+    // out of scope for THIS conversion. Filed alongside RV-D5/EH-D4 in defect-ledger.md.
+    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 row 3.7
+    // NEW at the batch-2 row 3.7 cutover (2026-09-24): parcels becoming a CONVERTED producer
+    // makes the ledger's column-overlap derivation newly VISIBLE for every OTHER converted
+    // step whose compute reads the `parcels` table directly but has never declared a
+    // `inputs.reads.steps` entry for it (there was no converted producer to declare against
+    // before today) — the identical, now-familiar LDG-4 class as link_parcels/enrich_parcels
+    // above, same disposition (allowlisted, not fixed — declaring it moves each step's own
+    // seam pairs and staleness gating, out of scope for a conversion that must not touch
+    // THEIR behaviour). link_neighbourhoods reads `permits`-joined `parcels` rows via its own
+    // spatial/name matching; assert_parcel_sanity reads `parcels` directly for its zone-aware
+    // bounds/invariants; enrich_ravines and enrich_heritage each UPDATE `parcels` columns,
+    // which the same column-overlap derivation also treats as a read dependency.
+    link_neighbourhoods: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
+    assert_parcel_sanity: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
+    enrich_ravines: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
+    enrich_heritage: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
+    link_massing: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7 — link-massing.js reads parcels directly (building-centroid-in-parcel predicate)
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {
@@ -2443,9 +2510,27 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
     // scripts/analysis/step-validate.mjs's own reportPathFor() widening — kept as a
     // literal duplicate here (test-file isolation), not an import, so BOTH copies
     // must be updated together when a new report-naming convention lands.
+    // FIXED 2026-09-24 (batch2 row 3.7, parcels cutover — the identical collision
+    // scripts/analysis/step-validate.mjs's own reportPathFor() was fixed against,
+    // c15a1719, never mirrored into THIS duplicate): a plain `.includes()` on
+    // `-<dash-slug>-assessment.md` lets `parcels` (a SUFFIX of `link-parcels`) match
+    // `2026-08-30-pilot7-link-parcels-assessment.md` — and that file sorts before
+    // the real `…-batch2-p3-7-parcels-assessment.md` in `readdirSync`'s order, so
+    // `.find()` picked it first, scoring `parcels` against `link_parcels`' own
+    // committed report. `parcels` becoming the first slug converted alphabetically/
+    // lexically adjacent to an already-converted `link_parcels` is what first
+    // exercises this — the same "first TEXT-keyed step" class of latent bug as the
+    // validateGeometries fix earlier this session. Now requires a NUMERIC TOKEN
+    // BOUNDARY immediately before the slug segment (see step-validate.mjs's own
+    // doc comment on its `reportFileMatchesSlug` for the full both-directions proof).
+    const escapedDashSlug = dashSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const hit = fs
       .readdirSync(dir)
-      .find((f) => /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/i.test(f) && f.includes(`-${dashSlug}-assessment.md`));
+      .find(
+        (f) =>
+          /^\d{4}-\d{2}-\d{2}-(pilot\d+|batch\d+-i\d+|batch\d+-p\d+-\d+)-.*-assessment\.md$/i.test(f) &&
+          new RegExp(`\\d-${escapedDashSlug}-assessment\\.md$`).test(f),
+      );
     return hit ? path.join(dir, hit) : null;
   }
 
