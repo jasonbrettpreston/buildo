@@ -1078,10 +1078,11 @@
           "$ref": "#/definitions/sourceKeyPolicy"
         },
         "geometry_kind": {
-          "description": "REQUIRED when any columns[].bind is \"wkb_geometry\" (the item's own allOf below): the geometry family the target column stores, which selects the validator's repair/accept path (polygon: ST_CollectionExtract(…,3)+ST_Multi, accept Polygon/MultiPolygon; point: ST_CollectionExtract(…,1), no ST_Multi, accept Point). Declared, never sniffed from the payload — a polygon step receiving a point must still count it skipped_unsupported_type.",
+          "description": "REQUIRED when any columns[].bind is \"wkb_geometry\" (the item's own allOf below): the geometry family the target column stores, which selects the validator's repair/accept path (polygon: ST_CollectionExtract(…,3)+ST_Multi, accept Polygon/MultiPolygon; point: ST_CollectionExtract(…,1), no ST_Multi, accept Point; line: ST_CollectionExtract(…,2), no ST_Multi, accept LineString). Declared, never sniffed from the payload — a polygon step receiving a point must still count it skipped_unsupported_type.",
           "enum": [
             "polygon",
-            "point"
+            "point",
+            "line"
           ],
           "x-frozen": true,
           "x-ruling": {
@@ -1089,7 +1090,7 @@
               "rung (a) derive from ST_Dimension of each input geometry at runtime",
               "rung (a′) read geometry_columns for the target column"
             ],
-            "why": "runtime derivation silently widens load_ravines' guard (a stray Point would become accepted instead of skipped_unsupported_type — a behaviour change on a converted step with a golden); the catalog read hides the contract in the DB. A per-target declaration keeps Rule 8's per-write-target discipline and makes the accept list reviewable."
+            "why": "runtime derivation silently widens load_ravines' guard (a stray Point would become accepted instead of skipped_unsupported_type — a behaviour change on a converted step with a golden); the catalog read hides the contract in the DB. A per-target declaration keeps Rule 8's per-write-target discipline and makes the accept list reviewable. line added 2026-09-24 for the LineString INGESTORs: toronto_centreline's consumer enrich-centreline.js requires a true LineString."
           }
         }
       },
@@ -4189,7 +4190,8 @@
                           "geometry_kind": {
                             "enum": [
                               "polygon",
-                              "point"
+                              "point",
+                              "line"
                             ]
                           }
                         }

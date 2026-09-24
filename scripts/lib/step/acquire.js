@@ -203,12 +203,19 @@ function locateShapefile(extractDir) {
 }
 
 /**
- * Parse a shapefile into `[{ key, geojson }]`, tallying the two loss modes the
- * audit table has to see: a property that will not coerce to a positive key, and a
- * null geometry. Neither is fabricated into a row.
+ * Parse a shapefile into `[{ key, geojson, record }]`, tallying the two loss modes
+ * the audit table has to see: a property that will not coerce to a positive key, and
+ * a null geometry. Neither is fabricated into a row.
+ *
+ * ⚠️ `record` IS THE DBF PROPERTIES OBJECT — the SAME field `parseCsv` carries. A
+ * shapefile INGESTOR with attribute columns (load_centreline: 15 DBF columns; massing:
+ * footprint attributes) binds them through `compute.shapeRecord(record, { geojson })`
+ * exactly as a CSV step does. Before this the shapefile arm kept ONLY `{key, geojson}`,
+ * so a per-feature attribute filter could not be expressed at all.
  *
  * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion,
  *   handed in from the compute module so the parse stays domain-free.
+ * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number}>}
  */
 async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColumn) {
   const source = await shapefile.open(shpPath, dbfPath);
@@ -223,8 +230,9 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
     if (key == null) { badKey++; continue; }
     if (r.value.geometry == null) { nullGeometry++; continue; }
     // Keyed by the DECLARED key column (`outputs.writes[].key`), so the step's own
-    // pure dedupe helper reads the same field name its descriptor declares.
-    features.push({ [keyColumn]: key, geojson: JSON.stringify(r.value.geometry) });
+    // pure dedupe helper reads the same field name its descriptor declares. `record`
+    // carries the DBF properties verbatim — the ONE seam `compute.shapeRecord` reads.
+    features.push({ [keyColumn]: key, geojson: JSON.stringify(r.value.geometry), record: props });
   }
   return { features, badKey, nullGeometry };
 }
@@ -233,13 +241,14 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
  * Parse a CSV into the SAME feature shape `parseShapefile` returns — one parsed record
  * per feature, keyed by the DECLARED key column, `record` carrying the parsed row.
  *
- * ⚠️ `record` IS NOT `geojson`. A shapefile hands the seam a geometry object, so
+ * ⚠️ `record` IS NOT `geojson`. A shapefile hands the seam a geometry object and
  * `parseShapefile` stringifies it into the `geojson` field the write plan's
- * `bind: "wkb_geometry"` column validates. A CSV row's geometry is whatever the
+ * `bind: "wkb_geometry"` column validates (and, since 0f, ALSO onto `record`). A CSV
+ * row's geometry is whatever
  * publisher put in a column, and only the STEP knows which column that is — so the
- * whole record travels through and `compute.shapeRecord` (the INGESTOR runner's CSV
- * arm, see `runIngestPhase`) maps it to the columns the write plan binds. Parsing
- * stays domain-free here for the same reason `coerceKey` is handed in.
+ * whole record travels through and `compute.shapeRecord` (the INGESTOR runner's
+ * shape-mapping seam, see `runIngestPhase`) maps it to the columns the write plan
+ * binds. Parsing stays domain-free here for the same reason `coerceKey` is handed in.
  *
  * The three options every loader agrees on are hard-wired (`columns` so the header is
  * read once and each row arrives as an object; `skip_empty_lines`; `relax_column_count`

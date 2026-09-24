@@ -5342,7 +5342,9 @@ describe('write.js geometry_kind — the validator repair/accept arm is DECLARED
     // An UNRECOGNISED kind is refused by name too, never a silent polygon default. The
     // refusal comes from the SQL builder (which `buildWritePlan` invokes for a known-shaped
     // kind), so an unknown kind still throws at PLAN time — only a MISSING kind is carried.
-    expect(() => writeLib.buildWritePlan(spec('line'), LOAD_RAVINES)).toThrow(/unknown geometry_kind/);
+    // 'curve', not 'line': 0g (2026-09-24) made 'line' a real kind, so the placeholder for
+    // "unrecognised" moved to a name that stays unrecognised.
+    expect(() => writeLib.buildWritePlan(spec('curve'), LOAD_RAVINES)).toThrow(/unknown geometry_kind/);
     expect(plan.geometry_kind).toBeNull();
     // And the validator SQL builder itself refuses an absent kind rather than defaulting.
     expect(() => writeLib.geometryValidationSql('BIGINT')).toThrow(writeLib.MissingGeometryKindError);
@@ -5407,6 +5409,256 @@ describe('write.js geometry_kind — the validator repair/accept arm is DECLARED
     expect(result.carried[0].foo).toBe('bar');
     expect(result.carried[0].geom).toBe('0101000020E6100000AAAA');
     expect(result.skipped).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// batch-2 Phase 3 prerequisites 0f + 0g (2026-09-24, brief
+// .cursor/engine-briefs/b2-p3-c0f-shapefile-record.md). Spec 122 §5.1 (runner
+// changes for everyone, no per-step hatch), §5.5 (compute is just compute —
+// domain mapping handed IN), Spec 124 Rule 1 (schema enum widening under
+// x-frozen carries an x-ruling).
+//
+// 0f: parseShapefile carries `record` (the DBF properties) beside key+geojson
+// and runIngestPhase resolves compute.shapeRecord(record, {geojson}) for
+// EVERY external format — the one hook for attribute columns and a per-feature
+// classify/refuse (shaped_skipped). A shapefile compute WITHOUT the export
+// (load_ravines today) passes through unchanged. 0g: outputs.writes[].
+// geometry_kind gains "line" (extract dimension 2, accept ST_LineString,
+// single-member collapse, never ST_Multi — enrich-centreline.js requires a
+// true LineString).
+//
+// Fixture: src/tests/steps/load_ravines/fixtures/missing-prj/ravines.shp +
+// ravines.dbf — an EXISTING real 1-polygon shapefile the repo already ships,
+// whose .dbf carries two DBF attributes (OBJECTID=9914257, NAME="Ravine
+// North"), per src/tests/fixtures/shapefile-acquire/README.mjs (the
+// `shapefile` package ships no writer, so a freshly-generated fixture is not
+// committed — the README documents the faithful generator for a future
+// writable toolchain).
+// ---------------------------------------------------------------------------
+
+describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind "line" (batch-2 Phase 3 prerequisites 0f+0g)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real write.js lib
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const SHAPEFILE_FIXTURES = join(process.cwd(), 'src/tests/steps/load_ravines/fixtures/missing-prj');
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+
+  const withStubs = (fn: () => Promise<void>) => async () => {
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      }),
+    ];
+    try {
+      await fn();
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  };
+
+  it('T1 — parseShapefile carries the DBF properties on `record` beside key+geojson '
+    + '(RED before 0f: the shapefile arm kept only {key, geojson})', async () => {
+    const { features, badKey, nullGeometry } = await acquireLib.parseShapefile(
+      join(SHAPEFILE_FIXTURES, 'ravines.shp'),
+      join(SHAPEFILE_FIXTURES, 'ravines.dbf'),
+      'OBJECTID',
+      intOrNull,
+      'source_id',
+    );
+    expect(features).toHaveLength(1);
+    const feature = (features as Array<{ source_id: number; geojson: string; record: Record<string, unknown> }>)[0];
+    if (!feature) throw new Error('expected one feature');
+    expect(feature.source_id).toBe(9914257);
+    expect(typeof feature.geojson).toBe('string');
+    expect(JSON.parse(feature.geojson).type).toBe('Polygon');
+    expect(feature.record).toEqual({ OBJECTID: 9914257, NAME: 'Ravine North' });
+    expect(badKey).toBe(0);
+    expect(nullGeometry).toBe(0);
+  });
+
+  it('T2 — runIngestPhase: a shapefile_zip compute exporting shapeRecord shapes 2 of 3 features '
+    + 'with the extra column, and acquired.shaped_skipped counts the 1 refused '
+    + '(RED before 0f: shapeRecord was resolved for csv only; mock acquireExternal per the '
+    + 'INGESTOR CSV acquisition T5 precedent)', withStubs(async () => {
+    const descriptor = clone(LOAD_RAVINES); // format stays 'shapefile_zip' (the descriptor default)
+    const rawFeatures = [1, 2, 3].map((n) => ({
+      source_id: n,
+      geojson: '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
+      record: { OBJECTID: n, NAME: n === 2 ? 'refuse-me' : `Ravine ${n}` },
+    }));
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord: (record: { NAME: string }, ctx: { geojson: string }) =>
+        (record.NAME === 'refuse-me' ? null : { geojson: ctx.geojson, class: 'x', name: record.NAME }),
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const acquireStub = vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+      tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+      features: rawFeatures,
+      acquired: {
+        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+        last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+      },
+    });
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[shp_acquire_t2]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.shaped_skipped).toBe(1);
+      expect(dedupeSpy).toHaveBeenCalledTimes(1);
+      const shaped = dedupeSpy.mock.calls[0]?.[0] as Array<{ class: string }>;
+      expect(shaped).toHaveLength(2);
+      for (const row of shaped) expect(row.class).toBe('x');
+    } finally {
+      acquireStub.mockRestore();
+    }
+  }));
+
+  it('T3 — runIngestPhase: a shapefile_zip compute with NO shapeRecord export (load_ravines-shaped) '
+    + 'passes every feature through UNCHANGED — no throw, acquired.shaped_skipped stays 0', withStubs(async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    const rawFeatures = [1, 2, 3].map((n) => ({
+      source_id: n,
+      geojson: '{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,0]]]}',
+      record: { OBJECTID: n, NAME: `Ravine ${n}` },
+    }));
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      // NO shapeRecord export — load_ravines' actual shape today.
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const acquireStub = vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+      tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+      features: rawFeatures,
+      acquired: {
+        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+        last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+      },
+    });
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[shp_acquire_t3]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.shaped_skipped).toBe(0);
+      expect(dedupeSpy).toHaveBeenCalledTimes(1);
+      const passed = dedupeSpy.mock.calls[0]?.[0];
+      expect(passed).toHaveLength(3);
+      expect(passed).toEqual(rawFeatures);
+    } finally {
+      acquireStub.mockRestore();
+    }
+  }));
+
+  it('T4 — runIngestPhase: a csv external whose compute lacks shapeRecord still rejects with the '
+    + 'named Error before any download — 0f left the csv hard-error arm untouched (GREEN, stays)', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+    const compute = { coerceKey: intOrNull }; // no shapeRecord export
+    const pool = { query: async () => { throw new Error('the guard must fire before any pool access'); } };
+    await expect(stepLib.runIngestPhase({
+      descriptor,
+      pool,
+      compute,
+      config: {},
+      fetchImpl: async () => { throw new Error('the guard must fire before any network call'); },
+      chainId: null,
+      log: NO_LOG,
+      tag: '[shp_acquire_t4]',
+      clockNow: new Date('2026-09-24T00:00:00Z'),
+      preWriteGate: null,
+    })).rejects.toThrow(/shapeRecord/);
+  });
+
+  it('T5 — geometryValidationSql(\'line\'): ST_CollectionExtract(repaired, 2) + the single-member '
+    + 'collapse, accepts ST_LineString only, never ST_Multi; assertGeometryKind(\'line\') passes, '
+    + '\'curve\' throws by name; polygon/point SQL stays byte-identical', () => {
+    expect(writeLib.GEOMETRY_KINDS).toEqual(['polygon', 'point', 'line']);
+    expect(writeLib.GEOMETRY_KIND_EXTRACT_TYPE.line).toBe(2);
+    expect(writeLib.GEOMETRY_KIND_ACCEPTED_TYPES.line).toBe("('ST_LineString')");
+
+    expect(writeLib.assertGeometryKind('line', 't')).toBe('line');
+    expect(() => writeLib.assertGeometryKind('curve', 't')).toThrow(/unknown geometry_kind 'curve'/);
+
+    const lineSql = writeLib.geometryValidationSql('BIGINT', 'line');
+    expect(lineSql).toContain(
+      'CASE WHEN ST_NumGeometries(ST_CollectionExtract(repaired, 2)) = 1 '
+      + 'THEN ST_GeometryN(ST_CollectionExtract(repaired, 2), 1) '
+      + 'ELSE ST_CollectionExtract(repaired, 2) END',
+    );
+    expect(lineSql).toContain("ST_GeometryType(geom_final) IN ('ST_LineString')");
+    expect(lineSql).not.toContain('ST_Multi(');
+    for (const status of ['collection_extracted', 'accepted', 'skipped_null', 'skipped_unsupported_type']) {
+      expect(lineSql, `${status} must survive`).toContain(status);
+    }
+
+    // polygon/point pinned byte-identical to the pre-0g text (same constructs the
+    // "write.js geometry_kind" describe above locks for 0e).
+    const PREVIOUS_VALIDATED_BLOCK = [
+      'validated AS (',
+      '  SELECT',
+      '    source_key,',
+      '    ST_GeometryType(repaired) AS repaired_type,',
+      '    ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired)) AS geom_final,',
+      '    is_valid_original',
+      '  FROM (',
+      '    SELECT source_key,',
+      '           ST_IsValid(geom)   AS is_valid_original,',
+      '           ST_MakeValid(geom) AS repaired',
+      '      FROM input',
+      '  ) s',
+      ')',
+    ].join('\n');
+    const polygonSql = writeLib.geometryValidationSql('BIGINT', 'polygon');
+    expect(polygonSql).toContain(PREVIOUS_VALIDATED_BLOCK);
+    expect(polygonSql).toContain("ST_GeometryType(geom_final) IN ('ST_Polygon','ST_MultiPolygon')");
+
+    const pointSql = writeLib.geometryValidationSql('BIGINT', 'point');
+    expect(pointSql).toContain(
+      'CASE WHEN ST_NumGeometries(ST_CollectionExtract(repaired, 1)) = 1 '
+      + 'THEN ST_GeometryN(ST_CollectionExtract(repaired, 1), 1) '
+      + 'ELSE ST_CollectionExtract(repaired, 1) END',
+    );
+    expect(pointSql).toContain("ST_GeometryType(geom_final) IN ('ST_Point')");
+  });
+
+  it('T6 — AJV: outputs.writes[].geometry_kind accepts "line" on an INGESTOR descriptor, still rejects "curve"', () => {
+    const lineDescriptor = clone(LOAD_RAVINES);
+    lineDescriptor.outputs.writes[0].geometry_kind = 'line';
+    expect(() => pipeline.step(lineDescriptor, noop)).not.toThrow();
+
+    const curveDescriptor = clone(LOAD_RAVINES);
+    curveDescriptor.outputs.writes[0].geometry_kind = 'curve';
+    expect(() => pipeline.step(curveDescriptor, noop)).toThrow(/does not satisfy step\.schema\.json/);
   });
 });
 

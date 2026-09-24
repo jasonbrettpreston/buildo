@@ -187,22 +187,35 @@ function targetKey(index) {
  * and accepts only `ST_Point`. The four statuses are UNCHANGED — a polygon write receiving a
  * stray Point still scores it `skipped_unsupported_type`, and a MultiPoint a point write
  * cannot land scores the same way, never a silent coercion.
+ *
+ * ⚠️ `line` (0g, 2026-09-24) is the THIRD such family — extracts type 2 with the same
+ * single-member-collapse shape as `point`, accepts only `ST_LineString`. Added for
+ * `toronto_centreline.geom` (`GEOMETRY(LineString, 4326)`), whose consumer
+ * `enrich-centreline.js` requires a true LineString and never a Multi.
  */
-const GEOMETRY_KINDS = Object.freeze(['polygon', 'point']);
+const GEOMETRY_KINDS = Object.freeze(['polygon', 'point', 'line']);
 
 /** The declared geometry families and the ST_CollectionExtract type code each one keeps. */
-const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1 });
+const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1, line: 2 });
 
 /** The accepted ST_GeometryType() set per kind — a polygon target refuses a Point, and vice versa. */
 const GEOMETRY_KIND_ACCEPTED_TYPES = Object.freeze({
   polygon: "('ST_Polygon','ST_MultiPolygon')",
   point: "('ST_Point')",
+  line: "('ST_LineString')",
 });
 
 /** The repair/normalise expression per kind. Polygon = today's byte-identical text; point keeps 1. */
 function geometryFinalExpr(geometryKind) {
   if (geometryKind === 'polygon') {
     return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))';
+  }
+  if (geometryKind === 'line') {
+    // LineString: same single-member-collapse shape as point, over extract type 2. A
+    // MultiLineString extract stays multi and is counted skipped_unsupported_type by the
+    // accept arm — never silently merged into one LineString. toronto_centreline's
+    // consumer (enrich-centreline.js) requires a true LineString, never a Multi.
+    return "CASE WHEN ST_NumGeometries(ST_CollectionExtract(repaired, 2)) = 1 THEN ST_GeometryN(ST_CollectionExtract(repaired, 2), 1) ELSE ST_CollectionExtract(repaired, 2) END";
   }
   // Point: ST_CollectionExtract always returns a MULTI geometry, and a Point column rejects a
   // MultiPoint (measured 2026-09-23: "Geometry type (MultiPoint) does not match column type (Point)").
@@ -221,8 +234,8 @@ class MissingGeometryKindError extends Error {
   constructor(table) {
     super(`[write_discipline] ${table}: a column declares bind "wkb_geometry" but the write `
       + 'declares no geometry_kind. The geometry family selects the validator repair/accept '
-      + 'path (polygon vs point) and is DECLARED, never sniffed from the payload — declare '
-      + '"geometry_kind": "polygon" | "point" on the write (scripts/steps/_schema/step.schema.json).');
+      + 'path (polygon vs point vs line) and is DECLARED, never sniffed from the payload — declare '
+      + '"geometry_kind": "polygon" | "point" | "line" on the write (scripts/steps/_schema/step.schema.json).');
     this.name = 'MissingGeometryKindError';
   }
 }
@@ -677,7 +690,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // reads them — the alternative is a hand-maintained rename between two phases,
     // which is a NOT NULL violation waiting for the first forced reload.
     geometry_columns: geometryColumns,
-    // The DECLARED geometry family (polygon|point, Spec 124 Rule 1). Threaded into
+    // The DECLARED geometry family (polygon|point|line, Spec 124 Rule 1). Threaded into
     // validateGeometries via validation_sql AND carried on the plan so an executor can
     // read it without re-parsing the SQL. `null` on a non-validating plan (a LINK/CASCADE
     // target binds geometry from a server-side SELECT and never runs the validator).

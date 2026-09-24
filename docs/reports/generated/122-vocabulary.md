@@ -257,7 +257,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].source_key_policy.key_space_migration.why.liveness` | `none` \| object {kind, ref} | † |
 | `writes[].source_key_policy.key_space_migration.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].source_key_policy.key_space_migration.why.liveness.ref` | string | † |
-| `writes[].geometry_kind` | `polygon` · `point` | ! |
+| `writes[].geometry_kind` | `polygon` · `point` · `line` | ! |
 | `cascades` | `none` \| list (min 1) of object {table, owned_by, operation, why} | † |
 | `cascades[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `cascades[].owned_by` | string `^[a-z][a-z0-9_]*$` | † |

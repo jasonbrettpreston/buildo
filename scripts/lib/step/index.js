@@ -619,27 +619,38 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const emitKey = emit ? emit.key : null;
   const skeleton = emit && emit.skeleton && emit.skeleton !== 'none' ? { ...emit.skeleton } : {};
   const external = descriptor.inputs.reads.externals.find((e) => typeof e.url === 'string' && e.url.length > 0);
-  // ⚠️ A `csv` EXTERNAL OWES A SHAPE, DECLARED BEFORE THE FIRST NETWORK CALL.
-  // `parseCsv` (the acquisition seam) hands back the PUBLISHER'S row verbatim — it
-  // cannot know which columns the write plan binds. `compute.shapeRecord(record)` is
-  // that mapping: the step's own pure function from ONE parsed CSV row to the column
-  // values `write.executeWrite` binds, i.e. the `{ ...columns, geojson }` shape the
-  // plan's `bind` fields address — `geojson` is the GEOMETRY FIELD NAME every
-  // geometry-binding column reads (`columnValues(row)` spreads the record into the
-  // upsert's bound values, and `validateGeometries` regexes the `geojson` string out of
-  // it), so a CSV step's `shapeRecord` must return `geojson` for its geometry column or
-  // the row validates as geometry-less. Returning `null` is how the step says "this row
-  // is NOT loadable" — the departure is counted (`shaped_skipped`, below), never
-  // silently dropped. Refused here, above the HEAD, for the same reason the
-  // `writes.length !== 1` guard is: a mis-declared step must cost no network and no
-  // download before it fails. The shapefile arm is untouched — it produces its own
-  // `geojson` and never calls this.
-  const shapeRecord = external.format === 'csv' ? compute.shapeRecord : null;
+  // ⚠️ EVERY EXTERNAL THAT CARRIES A RECORD OWES A SHAPE, DECLARED BEFORE THE FIRST
+  // NETWORK CALL. Both parsers hand back the publisher's per-feature data verbatim —
+  // `parseCsv` as the row object, `parseShapefile` (since 0f) as the DBF properties on
+  // `record` — and neither can know which columns the write plan binds.
+  // `compute.shapeRecord(record, { geojson })` is that mapping: the step's own pure
+  // function from ONE parsed record to the column values `write.executeWrite` binds,
+  // i.e. the `{ ...columns, geojson }` shape the plan's `bind` fields address —
+  // `geojson` is the GEOMETRY FIELD NAME every geometry-binding column reads
+  // (`columnValues(row)` spreads the record into the upsert's bound values, and
+  // `validateGeometries` regexes the `geojson` string out of it), so a step's
+  // `shapeRecord` must return `geojson` for its geometry column or the row validates as
+  // geometry-less. A shapefile's given `geojson` is handed IN so the step may return it
+  // unchanged. Returning `null` is how the step says "this row is NOT loadable" — the
+  // departure is counted (`shaped_skipped`, below), never silently dropped.
+  //
+  // ⚠️ THE TWO FORMATS DIFFER ON ABSENCE, DELIBERATELY. A `csv` external with NO
+  // `shapeRecord` is a HARD ERROR — the CSV arm produces no `geojson` at all, so the
+  // step would write geometry-less rows. A `shapefile_zip` external with no
+  // `shapeRecord` is LEGAL and keeps today's behaviour exactly: `parseShapefile`
+  // already emits `{[keyColumn], geojson, record}` and the feature passes straight
+  // through (`load_ravines` is this arm — it binds only key + geom and exports no
+  // `shapeRecord`). What replaced the old "the shapefile arm is untouched" sentence:
+  // the shapefile arm now RESOLVES `shapeRecord` too (so an attribute-carrying
+  // INGESTOR like load_centreline/massing can bind DBF columns), and merely tolerates
+  // its absence. Refused here, above the HEAD, for the same reason the
+  // `writes.length !== 1` guard is: a mis-declared step must cost no network.
+  const shapeRecord = typeof compute.shapeRecord === 'function' ? compute.shapeRecord : null;
   if (external.format === 'csv' && typeof shapeRecord !== 'function') {
     throw new Error(`${tag} the external "${external.id}" declares format "csv", so this INGESTOR must export `
       + '`shapeRecord(record)` — the pure mapping from ONE parsed CSV row to the column values '
       + `outputs.writes[0] ("${writeSpec.table}") binds, \`null\` for a row the step refuses to load. `
-      + 'compute.shapeRecord is ' + (shapeRecord === undefined ? 'undefined' : typeof shapeRecord) + '.');
+      + 'compute.shapeRecord is ' + (compute.shapeRecord === undefined ? 'undefined' : typeof compute.shapeRecord) + '.');
   }
   // ONE source for the timeout (peel 8c): `execution.network.timeout_from_config` names
   // the logic variable, the resolved value wins, and the `timeout` literal is the stated
@@ -708,20 +719,22 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     };
   }
 
-  // ── THE CSV SHAPE MAPPING, BEFORE THE DEDUPE ─────────────────────────────────
-  // Order is the guarantee: `parseCsv` yields `{[keyColumn]: key, record}`, and only a
-  // SHAPED record has the column values the write plan binds (`geojson` included). A
-  // `null` from `shapeRecord` is a row the step refuses to load — counted on the
-  // acquired block as `shaped_skipped` and dropped BEFORE the dedupe, so the dedupe
-  // and every counter below describe the rows actually going to the write rather than
-  // the rows the publisher sent. The shapefile arm is byte-identical to before: its
-  // features are already shaped (`parseShapefile` emits `{[keyColumn], geojson}`).
+  // ── THE SHAPE MAPPING, BEFORE THE DEDUPE ─────────────────────────────────────
+  // Order is the guarantee: both parsers yield `{[keyColumn]: key, record}` (a
+  // shapefile also carries a pre-stringified `geojson`), and only a SHAPED record has
+  // the column values the write plan binds (`geojson` included). A `null` from
+  // `shapeRecord` is a row the step refuses to load — counted on the acquired block as
+  // `shaped_skipped` and dropped BEFORE the dedupe, so the dedupe and every counter
+  // below describe the rows actually going to the write rather than the rows the
+  // publisher sent. `{ geojson }` is handed IN so a shapefile's geometry (already a
+  // GeoJSON string from `parseShapefile`) can be returned unchanged. NO `shapeRecord`
+  // (a shapefile INGESTOR like load_ravines): every feature passes through as-is.
   let features = result.features;
   let shapedSkipped = 0;
   if (shapeRecord) {
     const shaped = [];
     for (const f of features) {
-      const record = shapeRecord(f.record);
+      const record = shapeRecord(f.record, { geojson: f.geojson });
       if (record == null) { shapedSkipped++; continue; }
       shaped.push({ [keyColumn]: f[keyColumn], ...record });
     }
