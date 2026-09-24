@@ -1050,11 +1050,13 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   // key-type-agnostic canonical form for INTEGER / BIGINT / TEXT and it deliberately does
   // NOT branch on `plan.key_sql_type`: node-pg's defaults (this repo installs no
   // `setTypeParser`) hand back `int4` as a NUMBER, `int8` as a STRING and `text` as a
-  // STRING, while the feature key is whatever the compute's `coerceKey` produced — so a
-  // join keyed on ONE of those three types misses the other two. Measured on `parcels`
-  // (declares `key_sql_type: "TEXT"`): the previous `Number(…)`-keyed map collapsed every
-  // row key to NaN, all 495,495 lookups missed, every row was counted `skipped`, ZERO rows
-  // were written, and the verdict read PASS.
+  // STRING, while the feature key is whatever the compute's `coerceKey` produced. The
+  // previous `Number(…)`-keyed map matched only when `coerceKey` returned a NUMBER
+  // (address_points INTEGER, load_ravines BIGINT — the latter by coincidence of its
+  // coerceKey, not by contract). Measured on `parcels` (declares `key_sql_type: "TEXT"`,
+  // coerceKey returns a string; every parcel_id is a clean digit string): the map held
+  // numbers, the lookups were strings, SameValueZero never matched, all 495,495 lookups
+  // missed, every row was counted `skipped`, ZERO rows were written, verdict PASS.
   const byKey = new Map(rows.map((r) => [String(r.source_key), r]));
   let repaired = 0;
   let collectionExtracted = 0;

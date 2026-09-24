@@ -4062,3 +4062,12 @@ Engine runs: `20260923T003332Z-afa733d5` (budget_exhausted, 30 it, 17 blocked �
 | MED | Descriptor revisits owed by R-AV: all five converted ENRICHERs still declare `override.dry_run: "none"`; each owner spec (65/60/59/61/88) decides whether to declare an argv arm now that the runner honours it (descriptor edits move goldens ⇒ recapture per step). | per-step WF2, orchestrator |
 | LOW | Test harness `deepseek-exec-harness.ts` hard-codes `C:\Users\User\buildo-engine` in `FORBIDDEN_REPO_ROOTS`; the guard now tolerates a missing path (`64ab7233`) but the list should be derived (REPO_ROOT + `git worktree list`), not literal. | SUB-ENG-1 v1.1 |
 | LOW | `src/tests/deepseek-exec-fences.infra.test.ts` "timeout_ms:500 … sleep process is no longer running" flaked once under pre-commit load (passed in isolation) — a liveness poll with a short grace window would remove the flake. | SUB-ENG-1 v1.1 |
+
+## 2026-09-24 — WF3 validateGeometries TEXT-key fix (`6457e713`) — output panel residue
+
+| Sev | Finding | Fix owner |
+|---|---|---|
+| MED | **Spec 55 §4 Target Files is stale** — lists `scripts/load-parcels.js` + `scripts/quality/assert-schema.js` only; omits `scripts/load-parcels.descriptor.json` and `scripts/lib/compute/load-parcels.js`, both implicated in the TEXT-key bug (Integration seat, 2026-09-24). | parcels ③ cutover (Spec 55 as-built) |
+| MED | **`parcels_lineage_mismatch` = 495,495 (was 0)** on the `load_ravines` POST recapture 2026-09-24 — `ravines` table hash unchanged, so the drift is on `parcels.ravine_dataset_version_when_enriched` (downstream, WARN, self-retires when `enrich_ravines` re-runs). Attribute before parcels ③ (candidate: a parcels load run on the local DB). | parcels forced-change proof |
+| LOW | `validateGeometries` keeps a now-unused `log` in its `{ log, tag }` destructure (the removed `log.warn` was its only use); consistent with `assertWritePrivileges`' shape, lint-clean. | next write.js touch |
+| LOW | `6457e713` commit message says pre-fix T4 "resolves with skipped 1" — measured skipped=2 (both TEXT keys miss pre-fix), and "held only for INTEGER" overstates (BIGINT matched by coerceKey coincidence). Code comment + lessons corrected in the follow-up commit; the message is history. | — (recorded) |
