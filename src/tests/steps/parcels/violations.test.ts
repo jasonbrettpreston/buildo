@@ -724,6 +724,19 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     expect(at[0]![1].violations, 'at the measured live row count ⇒ clean').toBe(0);
   });
 
+  it('null_address_pct reads the GENERIC runner counters (prerequisite 0o rename, commit ③) — rows_shaped / column_nulls.address_number, WARN at >= 10%', () => {
+    const over = driveCheck('null_address_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 20 } }, config: CFG });
+    expect(over[0]![1].violations, '20/100 = 20% >= 10% ⇒ violation').toBeGreaterThan(0);
+    const under = driveCheck('null_address_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 1 } }, config: CFG });
+    expect(under[0]![1].violations, '1/100 = 1% < 10% ⇒ clean').toBe(0);
+  });
+
+  it('null_address_pct is silent (0 violations, no throw) when the runner counters are absent — the pre-0o short-circuit stays a safe no-op, never a crash', () => {
+    const empty = driveCheck('null_address_pct', { acquired: {}, config: CFG });
+    expect(empty[0]![1].violations).toBe(0);
+    expect(empty[0]![1].detail).toBeNull();
+  });
+
   it('records_errors FAILs above 0 (loader :422, "== 0")', () => {
     const zero = driveCheck('records_errors', { acquired: { errors: 0 }, config: CFG });
     expect(zero[0]![1].violations).toBe(0);

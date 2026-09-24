@@ -480,10 +480,16 @@ function csv_header_drift(ctx) {
  * descriptor.limitations[]; retiring it would HIDE the strip from the next reader.
  * WARN, never FAIL — a null address does not make the row unloadable. The ROW text is
  * the shared builder's; the 0.10 boundary is that library's own literal (plan D4).
+ * Denominator/numerator now read the GENERIC runner counters (prerequisite 0o,
+ * 2026-09-24 commit ③ rename): `acquired.rows_shaped` (post-shapeRecord survivor
+ * count) and `acquired.column_nulls.address_number` (counted on `validated.carried`,
+ * `''`/null/undefined alike) — this WARN can genuinely fire now instead of always
+ * short-circuiting to PASS on the never-populated legacy-named fields.
  */
 function null_address_pct(ctx) {
-  const attempted = numberOrNull(ctx.acquired && ctx.acquired.attempted_address_number_rows);
-  const nullRows = numberOrNull(ctx.acquired && ctx.acquired.null_address_number_rows);
+  const a = ctx.acquired || {};
+  const attempted = numberOrNull(a.rows_shaped);
+  const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
     return ctx.report('null_address_pct', { violations: 0, detail: null });
   }

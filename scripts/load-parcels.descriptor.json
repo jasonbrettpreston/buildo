@@ -469,8 +469,8 @@
       "check_id": "none"
     },
     {
-      "what": "Class-A non-retraction: because the loader never retracts, a `parcel_id` can only vanish from parcels via a source-side change the class-A shape cannot express. The ordering guarantee 'parcels before link-parcels / compute-centroids / enrich-*' (Spec 43 row 5) is unaffected, but a parcel deleted upstream stays in the table with its last-seen values.",
-      "measured": "grep DELETE/TRUNCATE scripts/load-parcels.js ⇒ 0 matches [MEASURED 2026-09-24, report §1.1]",
+      "what": "Class-A non-retraction: because the loader never retracts, a `parcel_id` can only vanish from parcels via a source-side change the class-A shape cannot express. The ordering guarantee 'parcels before link-parcels / compute-centroids / enrich-*' (Spec 43 row 5) is unaffected, but a parcel deleted upstream stays in the table with its last-seen values. This is a KNOWN limitation, not a defect: the WF3 forced-change differential (Step 5, below) directly measured the population — 64 residual `parcel_id`s appear in BOTH arms (converted and legacy) after a real perturb/reload cycle, confirming `retract:\"none\"` behaves identically to the pre-conversion loader for this population, not a conversion-introduced regression. No observability check exists for this population (declared here as a limitation rather than a check, consistent with the `none` `check_id`) — a `departed_parcels_retained` count check is a candidate for a future WF2 on the shared library if this ever needs to be surfaced in `audit_table` rather than only in this descriptor.",
+      "measured": "grep DELETE/TRUNCATE scripts/load-parcels.js ⇒ 0 matches [MEASURED 2026-09-24, report §1.1]; forced-change differential (perturb K=1000, 3 re-selections) [MEASURED 2026-09-24, `.cursor/wf3_validate_geometries_text_key_active_task.md` Step 5 RESULT]: 64 residual sentinel `parcel_id`s present in BOTH the converted arm and the legacy arm after reload — parcels whose CSV row is gone (departed) and whose last-seen values are retained by design",
       "check_id": "none"
     },
     {
