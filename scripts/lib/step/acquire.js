@@ -306,8 +306,11 @@ function locateShapefile(extractDir) {
  * exactly as a CSV step does. Before this the shapefile arm kept ONLY `{key, geojson}`,
  * so a per-feature attribute filter could not be expressed at all.
  *
- * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion,
- *   handed in from the compute module so the parse stays domain-free.
+ * @param {(raw: unknown, ctx: {geojson: string|null}) => number|string|null} coerceKey - the
+ *   step's own pure coercion, handed in from the compute module so the parse stays
+ *   domain-free. The 2nd argument is DATA ONLY (`{ geojson }` — the string built once from
+ *   the feature's geometry, reused by the push; Rule 2), which is what makes a
+ *   geometry-derived key (massing's `hash_`) expressible without `crypto` reaching this file.
  * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}>}
  *   `rowsParsed` (INGESTOR prerequisite 0o, 2026-09-24) is EVERY feature the source
  *   handed back, counted BEFORE the `badKey`/`nullGeometry` filters below drop a row —
@@ -325,13 +328,24 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
     if (r.done) break;
     rowsParsed++;
     const props = r.value.properties || {};
-    const key = coerceKey(props[keyProperty]);
+    // ── 0s: A GEOMETRY-DERIVED KEY IS REACHABLE (2026-09-24) ────────────────────
+    // The founding case is row 3.6 `massing`: its shapefile carries NO id column, so the
+    // legacy loader derives the primary key FROM the geometry (`scripts/load-massing.js`:
+    // `'hash_' + crypto.createHash('md5').update(JSON.stringify(feature.geometry))
+    // .digest('hex').substring(0, 12)`). Calling `coerceKey(props[keyProperty])` alone made
+    // that rule inexpressible — it returned null for every feature, which is dropped as a
+    // bad key BEFORE the geometry is ever visible. The context is `{ geojson }` and nothing
+    // else (Rule 2): DATA, not a service — so the parse stays domain-free and `crypto` is
+    // never imported here. Built ONCE, reused by the push below (one stringify per feature),
+    // and every existing 1-arg `coerceKey` ignores the extra argument, byte-identically.
+    const geojson = r.value.geometry == null ? null : JSON.stringify(r.value.geometry);
+    const key = coerceKey(props[keyProperty], { geojson });
     if (key == null) { badKey++; continue; }
     if (r.value.geometry == null) { nullGeometry++; continue; }
     // Keyed by the DECLARED key column (`outputs.writes[].key`), so the step's own
     // pure dedupe helper reads the same field name its descriptor declares. `record`
     // carries the DBF properties verbatim — the ONE seam `compute.shapeRecord` reads.
-    features.push({ [keyColumn]: key, geojson: JSON.stringify(r.value.geometry), record: props });
+    features.push({ [keyColumn]: key, geojson, record: props });
   }
   return { features, badKey, nullGeometry, rowsParsed };
 }
