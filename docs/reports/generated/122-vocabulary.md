@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 470 declarable fields
+# The step contract — 20 categories, 471 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 27 | 6 | 0 |
-| 3 | `outputs` | 94 | 26 | 2 |
+| 3 | `outputs` | 95 | 26 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 75 | 16 | 1 |
@@ -185,7 +185,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
+| `writes` | list (min 1) of object {table, key, columns, geometry_srid, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value} | † |
@@ -194,10 +194,11 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
 | `writes[].columns[].vocabulary.on_unknown` | `fail` · `quarantine` · `warn` | † ! |
 | `writes[].columns[].vocabulary.source` | string | — |
-| `writes[].columns[].written` | `step` · `db_default` | ! |
+| `writes[].columns[].written` | `step` · `insert_only` · `db_default` | ! |
 | `writes[].columns[].bind` | `value` · `wkb_geometry` | ! |
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
+| `writes[].geometry_srid` | integer >= 1 | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
 | `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why, set_source} | † |
 | `writes[].write_discipline.class` | `guarded_upsert` · `upsert_scoped_departure_delete` · `staging_full_replace` · `insert_only_no_retraction` · `write_once_backfill` · `link_full_retraction` · `set_based_scoped` · `set_based_unscoped` · `temp_materialize` · `multi_pass_defer` · `derived_recompute` · `verdict_only` · `snapshot_append` · `set_based_join_update` · `set_based_null_retract` | † ! |

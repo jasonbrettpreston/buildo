@@ -1001,12 +1001,21 @@
                 "$ref": "#/definitions/vocabulary"
               },
               "written": {
-                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. Default: \"step\".",
+                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. THREE values since prerequisite 0j (2026-09-24): `step` (the default — inserted AND updated), `insert_only` (inserted and bound, NEVER rewritten by the conflict UPDATE SET or its guard — the column a DB-side pass recomputes after load), and `db_default` (neither — a DDL default the step never writes).",
                 "enum": [
                   "step",
+                  "insert_only",
                   "db_default"
                 ],
-                "x-frozen": true
+                "x-frozen": true,
+                "x-ruling": {
+                  "rungs_tried": [
+                    "rung (a) reuse `defaulted` (`db_default`): it does NOT work and was rejected on measurement — `defaulted` drops the column from the INSERT list too, so the seed value would be lost",
+                    "rung (b) keep `step` and special-case the column name inside the generator — a domain literal in scripts/lib/step/write.js, exactly the step-specific runner path Gate 0 (claim #149) bans",
+                    "rung (c) a validator rule or a check cannot change which columns the generated `DO UPDATE SET` writes, so it cannot express the exclusion"
+                  ],
+                  "why": "The column model in `buildWritePlan` was BINARY — `step` went into BOTH the INSERT list and the `DO UPDATE SET`, `db_default` into NEITHER — so no value expressed \"the step seeds this on INSERT and must never rewrite it\". insert_only added 2026-09-24: a column the step seeds on INSERT but must never rewrite on conflict (a DB-side-computed value — massing's footprint_area_*); rung (a) `defaulted` was tried: it drops the column from the INSERT too, so the seed value would be lost. Measured 2026-09-24 (WF2 batch-2 row 3.6 `massing`): `footprint_area_sqm`/`footprint_area_sqft` are DB-side-computed after load and are INTENTIONALLY OMITTED from the legacy UPDATE SET (scripts/load-massing.js, comment near that omission), so under the binary model a reload would NULL them on every conflict."
+                }
               },
               "bind": {
                 "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). How the generated statement binds this column's parameter. \"value\" is a plain `$n`; \"wkb_geometry\" wraps it as `ST_GeomFromWKB($n, <guards.srid>)`, which is the only reason a class-B generator would need to know a column is spatial. Default: \"value\".",
@@ -1034,6 +1043,18 @@
                 ]
               }
             }
+          }
+        },
+        "geometry_srid": {
+          "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0i (2026-09-24). The SRID the SOURCE geometry is actually in; the validator transforms to 4326 when it differs. OPTIONAL — absent means the source is 4326 (no transform), the case for every converted step today. Declared, never sniffed from a filename (massing's shapefile is named _wgs84 and is 3857).",
+          "type": "integer",
+          "minimum": 1,
+          "x-ruling": {
+            "rungs_tried": [
+              "derive from the shapefile .prj",
+              "read the target column's SRID from geometry_columns"
+            ],
+            "why": "the .prj is exactly what is WRONG on the founding case; the target column's SRID says where geometry must END, not where the source STARTS. Rule 8: per write target, declared."
           }
         },
         "key_sql_type": {

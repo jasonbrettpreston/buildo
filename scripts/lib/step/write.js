@@ -31,7 +31,8 @@
  *
  * Nothing here names a step, a table or a column: the table comes from
  * `outputs.writes[].table`, the key from `.key`, the written columns from
- * `.columns[].written`, the SRID from `guards.srid`.
+ * `.columns[].written` (`step` | `insert_only` | `db_default`), the SRID from
+ * `guards.srid`.
  *
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.4, §8.2
  * SPEC LINK: docs/specs/01-pipeline/47_pipeline_script_protocol.md §R9
@@ -46,6 +47,28 @@ const path = require('path');
 
 /** Columns whose value the STEP supplies; anything else is declared-but-not-written. */
 const WRITTEN_BY_STEP = 'step';
+
+/**
+ * Columns the step supplies on INSERT and that the DB-side recomputes afterwards, so
+ * the conflict arm must NEVER rewrite them (Spec 122 §5.1, Spec 124 Rule 1, WF2 batch-2
+ * prerequisite 0j, 2026-09-24).
+ *
+ * The pre-0j column model was BINARY: `step` went into BOTH the INSERT list and the
+ * `DO UPDATE SET`, `db_default` into neither. That leaves no way to express a column the
+ * step SEEDS and then ceases to own. Measured 2026-09-24 (WF2 batch-2 row 3.6 `massing`):
+ * `footprint_area_sqm` / `footprint_area_sqft` are computed DB-side after load and are
+ * INTENTIONALLY OMITTED from the legacy UPDATE SET (`scripts/load-massing.js`), so under
+ * the binary model the only rungs were `step` (a reload NULLs them — or silently reverts
+ * them to the raw source value — on every conflict) or `db_default` (the column leaves the
+ * INSERT list too, so the seed value is never written at all). `insert_only` is the
+ * third value.
+ *
+ * Semantics, byte-for-byte for the other two values: an `insert_only` column IS in the
+ * `INSERT INTO (...)`, IS in the VALUES group and IS in `bindRow` — exactly like `step`
+ * — and is absent from `update_columns` (the `DO UPDATE SET` clause) and from the
+ * `IS DISTINCT FROM` guard (the guard compares only what the update can change).
+ */
+const WRITTEN_INSERT_ONLY = 'insert_only';
 
 /** Default SQL type for the departure DELETE's key array cast. */
 const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
@@ -250,16 +273,51 @@ function assertGeometryKind(geometryKind, table) {
   return geometryKind;
 }
 
-const geometryValidationSql = (keyType, geometryKind) => {
+/**
+ * A NAMED runtime backstop: an `outputs.writes[].geometry_srid` that is not a usable
+ * SRID (Spec 124 Rule 1, Spec 122 §5.1, batch-2 Phase 3 prerequisite 0i). The schema
+ * types it `integer, minimum 1`, so reaching this is a descriptor that bypassed the
+ * loader — or, more to the point, a caller that built the SQL from an unvalidated
+ * value. The SRID is interpolated into the statement TEXT (PostGIS will not take it as
+ * a bind for `ST_SetSRID`'s argument in a way the planner keeps), so the builder refuses
+ * anything but a positive integer and never renders a string.
+ */
+class InvalidGeometrySridError extends Error {
+  constructor(value) {
+    super(`[write_discipline] geometry_srid must be a positive integer (got ${JSON.stringify(value)}). `
+      + 'It is the SRID the SOURCE geometry is actually in and is interpolated into '
+      + '`ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), <srid>)`, so it must be a number validated by the '
+      + 'schema (scripts/steps/_schema/step.schema.json, "geometry_srid").');
+    this.name = 'InvalidGeometrySridError';
+  }
+}
+
+const geometryValidationSql = (keyType, geometryKind, geometrySrid) => {
   // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
   // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
   // value is asserted before any text is built, so the polygon default is never silent.
   assertGeometryKind(geometryKind, 'geometryValidationSql');
+  // `geometry_srid` (prerequisite 0i, 2026-09-24) is the FOURTH such parameter and the
+  // second declared geometry fact. Absent or 4326 keeps the `input` CTE BYTE-IDENTICAL to
+  // the pre-SRID text (pinned by T1): the source already IS 4326, so there is nothing to
+  // do. A number != 4326 rebuilds the geom expression as
+  // `ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), <srid>), 4326)` — the exact
+  // shape the legacy loader used for the founding case (massing's CKAN shapefile is
+  // labelled `_wgs84` and carries Web Mercator EPSG:3857 coordinates; measured
+  // 2026-09-24, row 3.6 `massing` grounding). Validated as a positive integer and
+  // interpolated numerically, never as a string.
+  let geomExpr = 'ST_GeomFromGeoJSON(g.geojson)';
+  if (geometrySrid != null) {
+    if (!Number.isInteger(geometrySrid) || geometrySrid < 1) throw new InvalidGeometrySridError(geometrySrid);
+    if (geometrySrid !== 4326) {
+      geomExpr = `ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), ${geometrySrid}), 4326)`;
+    }
+  }
   const finalExpr = geometryFinalExpr(geometryKind);
   const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
   return `
 WITH input AS (
-  SELECT s.source_key, ST_GeomFromGeoJSON(g.geojson) AS geom
+  SELECT s.source_key, ${geomExpr} AS geom
     FROM unnest($1::${keyType}[]) WITH ORDINALITY AS s(source_key, ord)
     JOIN unnest($2::TEXT[])   WITH ORDINALITY AS g(geojson, ord)   ON s.ord = g.ord
 ),
@@ -368,11 +426,34 @@ function buildWritePlan(writeSpec, descriptor) {
   // behaviour every pre-LINK descriptor already had.
   const retractWhen = writeSpec.retract_when || RETRACT_ALWAYS;
   const srid = descriptor.guards && descriptor.guards.srid !== 'none' ? descriptor.guards.srid : null;
-  const stepColumns = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_BY_STEP);
-  const defaulted = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) !== WRITTEN_BY_STEP);
+  // ── THE THREE-VALUED COLUMN MODEL (`columns[].written`, prerequisite 0j) ────
+  //   step         → INSERT list + bindRow + UPDATE SET + guard   (unchanged)
+  //   insert_only  → INSERT list + bindRow, NEVER in the UPDATE SET or the guard
+  //   db_default   → none of the four                              (unchanged)
+  // `stepColumns` keeps its name and its meaning as "the columns the step BINDS", which
+  // is exactly the INSERT column list and what `bindRow`/`valuesGroup` read — so an
+  // `insert_only` column joins it without changing a byte of the INSERT text.
+  // `updateColumns` is the NARROWER list the conflict arm may rewrite, and it is what
+  // the `DO UPDATE SET` clause, the guard and any plan-shape summary are built from.
+  const stepColumns = writeSpec.columns.filter(
+    (c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_BY_STEP
+      || (c.written || WRITTEN_BY_STEP) === WRITTEN_INSERT_ONLY,
+  );
+  const defaulted = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) !== WRITTEN_BY_STEP
+    && (c.written || WRITTEN_BY_STEP) !== WRITTEN_INSERT_ONLY);
+  // Declared `insert_only` — seeded on INSERT, excluded from the SET/guard below.
+  const insertOnly = writeSpec.columns.filter(
+    (c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_INSERT_ONLY,
+  ).map((c) => c.name);
+  const insertOnlySet = new Set(insertOnly);
   const stepColumnNames = stepColumns.map((c) => c.name);
-  const guardColumns = resolveGuardColumns(writeSpec, stepColumnNames);
-  const updateColumns = stepColumnNames.filter((c) => !keys.includes(c));
+  // The guard's default expansion is over the columns the update can CHANGE, so an
+  // `insert_only` column can never be dragged into the WHERE by `all_declared` — the
+  // D-5-shaped trap (a guard over a column the step does not own) becomes structurally
+  // unreachable rather than a validator finding.
+  const changeableStepColumnNames = stepColumnNames.filter((c) => !insertOnlySet.has(c));
+  const guardColumns = resolveGuardColumns(writeSpec, changeableStepColumnNames);
+  const updateColumns = changeableStepColumnNames.filter((c) => !keys.includes(c));
   const keyType = writeSpec.key_sql_type || DEFAULT_KEY_SQL_TYPE;
   const scope = writeSpec.write_discipline.scope !== 'none' ? writeSpec.write_discipline.scope : null;
   const geometryColumns = stepColumns.filter((c) => c.bind === 'wkb_geometry').map((c) => c.name);
@@ -395,6 +476,16 @@ function buildWritePlan(writeSpec, descriptor) {
   // requires the field at descriptor load, so reaching the validator's throw is a descriptor
   // that bypassed the loader, not a user error.
   const geometryKind = geometryColumns.length > 0 ? (writeSpec.geometry_kind ?? null) : null;
+  // A DECLARED source SRID (prerequisite 0i, Spec 124 Rule 1, Spec 122 §5.1). Mirror of
+  // `geometryKind` in every respect that matters here: OPTIONAL (absent ⇒ 4326, no
+  // transform), CARRIED on the plan (a non-validating LINK/CASCADE plan never reads it),
+  // and validated by the SCHEMA — but the builder asserts a bad value by name before it is
+  // interpolated into statement text, because here an unvalidated value is a rendered
+  // statement, not just a plan field.
+  const geometrySrid = writeSpec.geometry_srid ?? null;
+  if (geometrySrid != null && (!Number.isInteger(geometrySrid) || geometrySrid < 1)) {
+    throw new InvalidGeometrySridError(geometrySrid);
+  }
   // ⚠️ COMPOSITE KEYS: SUPPORTED FOR THE CONFLICT TARGET, STILL REFUSED WHERE THE
   // STATEMENT GENUINELY INDEXES keys[0] (LG-2, LINK pilot 2026-08-27).
   //
@@ -467,6 +558,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: updateColumns,
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -519,6 +611,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: updateColumns,
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -547,6 +640,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: [],
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -588,6 +682,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: [],
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -616,6 +711,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: updateColumns,
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -644,6 +740,7 @@ function buildWritePlan(writeSpec, descriptor) {
       step_columns: stepColumnNames,
       update_columns: updateColumns,
       guard_columns: guardColumns,
+      insert_only_columns: insertOnly,
       key_sql_type: keyType,
       scope,
       retract,
@@ -672,6 +769,13 @@ function buildWritePlan(writeSpec, descriptor) {
     + (defaulted.length > 0
       ? `-- declared but never written by this step (DB default): ${defaulted.map((c) => c.name).join(', ')}\n`
       : '')
+    + (insertOnly.length > 0
+      // The 0j exclusion, rendered INTO the statement so a reader of the SQL — or a
+      // diff of it — sees WHY the column is missing from the SET above. Never a silent
+      // absence: `footprint_area_*` vanishing from a reload's UPDATE SET is exactly the
+      // shape that must be visible (Spec 122 §5.1, measurement 2026-09-24).
+      ? `-- seeded on INSERT, never rewritten by the conflict UPDATE (DB-recomputed): ${insertOnly.join(', ')}\n`
+      : '')
     + `RETURNING (xmax = 0) AS is_insert;`;
 
   return {
@@ -685,6 +789,12 @@ function buildWritePlan(writeSpec, descriptor) {
     step_columns: stepColumnNames,
     update_columns: updateColumns,
     guard_columns: guardColumns,
+    // The DECLARED `insert_only` columns (prerequisite 0j): in the INSERT list and
+    // `bindRow`, EXCLUDED from `update_columns` and `guard_columns`. Carried explicitly
+    // so a reader (or a plan-shape summary) sees the exclusion as a DECLARED set rather
+    // than having to subtract two lists — `step_columns` minus `update_columns` is not a
+    // usable signal, because the key sits in the first and not the second.
+    insert_only_columns: insertOnly,
     // The columns bound as WKB. The validation phase writes its output under THESE
     // names, so the row objects it produces are already keyed the way `bindRow`
     // reads them — the alternative is a hand-maintained rename between two phases,
@@ -695,6 +805,10 @@ function buildWritePlan(writeSpec, descriptor) {
     // read it without re-parsing the SQL. `null` on a non-validating plan (a LINK/CASCADE
     // target binds geometry from a server-side SELECT and never runs the validator).
     geometry_kind: geometryKind,
+    // The DECLARED source SRID (prerequisite 0i). Threaded into `validation_sql` AND carried
+    // on the plan so an executor/log can read it without re-parsing the SQL. `null` means
+    // "the source is 4326 / no transform" — the case for every converted step today.
+    geometry_srid: geometrySrid,
     // Templated from the DECLARED key type, so the cast that reads the key array agrees
     // with the cast in `delete_sql` below instead of hard-coding a second opinion.
     //
@@ -703,7 +817,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // carries `validation_sql: null` HERE and the missing kind is diagnosed by
     // `validateGeometries` — the one caller that can reach it. LINK/CASCADE plans build and
     // execute with no validator SQL at all, exactly as they did before this field existed.
-    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind),
+    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid),
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
@@ -780,6 +894,13 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
   // an absent kind must stop rather than silently defaulting to the polygon arm. `buildWritePlan`
   // deliberately does NOT throw — a LINK/CASCADE plan binds geometry and never gets here.
   assertGeometryKind(plan.geometry_kind, plan.table);
+  // The plan's DECLARED source SRID (prerequisite 0i). `validation_sql` was already built
+  // with it (or without it, when absent/4326) — this re-assert is the validator's own
+  // backstop for a plan whose SQL was built by a caller that bypassed `buildWritePlan`,
+  // so a bad value stops here by name rather than being interpolated.
+  if (plan.geometry_srid != null && (!Number.isInteger(plan.geometry_srid) || plan.geometry_srid < 1)) {
+    throw new InvalidGeometrySridError(plan.geometry_srid);
+  }
   const keysIn = features.map((f) => f[keyColumn]);
   const geojsons = features.map((f) => f.geojson);
   const { rows } = await pool.query(plan.validation_sql, [keysIn, geojsons]);
@@ -1312,6 +1433,8 @@ module.exports = {
   GEOMETRY_KIND_ACCEPTED_TYPES,
   MissingGeometryKindError,
   assertGeometryKind,
+  InvalidGeometrySridError,
+  WRITTEN_INSERT_ONLY,
   RLS_PROBE_SQL,
   keyColumns,
   resolveGuardColumns,

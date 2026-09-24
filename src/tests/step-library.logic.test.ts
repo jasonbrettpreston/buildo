@@ -5662,3 +5662,212 @@ describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind
   });
 });
 
+// ---------------------------------------------------------------------------
+// batch-2 Phase 3 prerequisite 0i — outputs.writes[].geometry_srid, a DECLARED
+// source CRS the validator transforms to 4326 (Spec 124 Rule 1: the new field
+// carries an x-ruling; Spec 122 §5.1: a runner-wide change, never a per-step
+// hatch). Measured 2026-09-24 (row 3.6 `massing` grounding): its CKAN shapefile
+// is NAMED `_wgs84` but its coordinates are Web Mercator (EPSG:3857), and the
+// legacy loader did
+//   ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)
+// The pre-0i validator ran `ST_GeomFromGeoJSON(g.geojson)` with NO SRID at all,
+// so a mislabelled source would be mis-located SILENTLY. Absent/4326 must keep
+// the text BYTE-IDENTICAL so every converted step's golden is untouched.
+// ---------------------------------------------------------------------------
+
+describe('write.js geometry_srid — a DECLARED source CRS transformed to 4326 (batch-2 Phase 3 prerequisite 0i)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const spec = (geometrySrid?: unknown) => {
+    const s = clone(LOAD_RAVINES.outputs.writes[0]) as Record<string, unknown>;
+    if (geometrySrid === undefined) delete s.geometry_srid;
+    else s.geometry_srid = geometrySrid;
+    return s;
+  };
+
+  it('T1 — the ABSENT/4326 `input` CTE is BYTE-IDENTICAL to the pre-geometry_srid text', () => {
+    // The exact block as it read BEFORE this prerequisite, copied from write.js first.
+    const PINNED_INPUT_BLOCK = [
+      'WITH input AS (',
+      '  SELECT s.source_key, ST_GeomFromGeoJSON(g.geojson) AS geom',
+      '    FROM unnest($1::BIGINT[]) WITH ORDINALITY AS s(source_key, ord)',
+      '    JOIN unnest($2::TEXT[])   WITH ORDINALITY AS g(geojson, ord)   ON s.ord = g.ord',
+      '),',
+    ].join('\n');
+
+    // Absent.
+    const absent = writeLib.buildWritePlan(spec(), LOAD_RAVINES);
+    expect(absent.geometry_srid).toBeNull();
+    expect(absent.validation_sql).toContain(PINNED_INPUT_BLOCK);
+    expect(absent.validation_sql).not.toContain('ST_Transform');
+    expect(absent.validation_sql).not.toContain('ST_SetSRID');
+
+    // Explicitly 4326 — the no-op arm, documented as "absent means 4326".
+    const at4326 = writeLib.buildWritePlan(spec(4326), LOAD_RAVINES);
+    expect(at4326.geometry_srid).toBe(4326);
+    expect(at4326.validation_sql).toContain(PINNED_INPUT_BLOCK);
+    expect(at4326.validation_sql).not.toContain('ST_Transform');
+
+    // And the default-keyed module constant (no SRID arg at all) is the same text.
+    expect(writeLib.GEOMETRY_VALIDATION_SQL).toContain(PINNED_INPUT_BLOCK);
+    expect(writeLib.GEOMETRY_VALIDATION_SQL).not.toContain('ST_Transform');
+    expect(writeLib.geometryValidationSql('BIGINT', 'polygon')).toContain(PINNED_INPUT_BLOCK);
+  });
+
+  it('T2 — srid 3857 produces the declared transform, interpolated numerically (never a string)', () => {
+    const plan = writeLib.buildWritePlan(spec(3857), LOAD_RAVINES);
+    expect(plan.geometry_srid).toBe(3857);
+    expect(plan.validation_sql).toContain(
+      'ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), 3857), 4326) AS geom',
+    );
+    // The legacy loader's exact shape — SetSRID to the DECLARED source, then Transform to 4326.
+    expect(plan.validation_sql).toContain('ST_GeomFromGeoJSON(g.geojson), 3857), 4326)');
+    // The geometry_kind arm is orthogonal and unchanged: this is still the polygon text.
+    expect(plan.validation_sql).toContain('ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))');
+    // No stray quoting of the number.
+    expect(plan.validation_sql).not.toContain("'3857'");
+    // A second, non-default SRID renders ITS own number.
+    expect(writeLib.geometryValidationSql('BIGINT', 'point', 26917))
+      .toContain('ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g.geojson), 26917), 4326)');
+  });
+
+  it('T3 — AJV: geometry_srid 3857 is accepted on an INGESTOR write; "3857" and 0 are rejected', () => {
+    const withSrid = clone(LOAD_RAVINES);
+    withSrid.outputs.writes[0].geometry_srid = 3857;
+    expect(() => pipeline.step(withSrid, noop)).not.toThrow();
+
+    // A STRING is never accepted — the whole point of declaring an integer is that the
+    // builder interpolates it into statement text.
+    const asString = clone(LOAD_RAVINES);
+    asString.outputs.writes[0].geometry_srid = '3857';
+    expect(() => pipeline.step(asString, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    // SRID 0 is "unknown" in PostGIS, not a coordinate system, and `minimum: 1` refuses it.
+    const zero = clone(LOAD_RAVINES);
+    zero.outputs.writes[0].geometry_srid = 0;
+    expect(() => pipeline.step(zero, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    // ABSENT is legal — the case for every converted step today.
+    const without = clone(LOAD_RAVINES);
+    delete without.outputs.writes[0].geometry_srid;
+    expect(() => pipeline.step(without, noop)).not.toThrow();
+  });
+
+  it('T4 — a non-integer plan value THROWS by name in buildWritePlan', () => {
+    // The plan builder's own backstop: a descriptor that bypassed the loader must not
+    // reach SQL text. Named, never a silent coercion or a rendered statement.
+    expect(() => writeLib.buildWritePlan(spec('3857'), LOAD_RAVINES)).toThrow(writeLib.InvalidGeometrySridError);
+    expect(() => writeLib.buildWritePlan(spec(0), LOAD_RAVINES)).toThrow(writeLib.InvalidGeometrySridError);
+    expect(() => writeLib.buildWritePlan(spec(3857.5), LOAD_RAVINES)).toThrow(writeLib.InvalidGeometrySridError);
+    expect(() => writeLib.buildWritePlan(spec(-1), LOAD_RAVINES)).toThrow(writeLib.InvalidGeometrySridError);
+    try {
+      writeLib.buildWritePlan(spec('3857'), LOAD_RAVINES);
+    } catch (err) {
+      expect((err as Error).name).toBe('InvalidGeometrySridError');
+      expect((err as Error).message).toContain('geometry_srid');
+    }
+    // The SQL builder refuses the same values when called directly.
+    expect(() => writeLib.geometryValidationSql('BIGINT', 'polygon', '3857')).toThrow(writeLib.InvalidGeometrySridError);
+    expect(() => writeLib.geometryValidationSql('BIGINT', 'polygon', 0)).toThrow(writeLib.InvalidGeometrySridError);
+    // And a legal one still builds.
+    expect(() => writeLib.buildWritePlan(spec(3857), LOAD_RAVINES)).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// batch-2 Phase 3 prerequisite 0j — columns[].written "insert_only", a column
+// the step seeds on INSERT and the conflict UPDATE must NEVER rewrite (Spec 124
+// Rule 1: the widened enum carries an x-ruling; Spec 122 §5.1: a runner-wide
+// change). Measured 2026-09-24 (row 3.6 `massing` grounding): `footprint_area_sqm`
+// / `footprint_area_sqft` are DB-side-computed after load and are INTENTIONALLY
+// OMITTED from the legacy UPDATE SET (scripts/load-massing.js) — the pre-0j
+// column model was BINARY (`step` in both the INSERT list and the SET, `db_default`
+// in neither), so a reload would NULL them on every conflict.
+// ---------------------------------------------------------------------------
+
+describe('write.js columns[].written "insert_only" — seeded on INSERT, never rewritten on conflict (batch-2 Phase 3 prerequisite 0j)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  /**
+   * A clone of LOAD_RAVINES's single write target with `guard_columns` widened to
+   * `all_declared` (so the exclusion under test — an insert_only column never being
+   * dragged into the guard by the default expansion — is exercised, not just the
+   * explicit list LOAD_RAVINES itself declares) and `source_dataset_version`'s
+   * `written` set to the given value.
+   */
+  const descriptorWith = (written: string) => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    (write.write_discipline as Record<string, unknown>).guard_columns = 'all_declared';
+    const cols = write.columns as Array<Record<string, unknown>>;
+    const col = cols.find((c) => c.name === 'source_dataset_version')!;
+    col.written = written;
+    return d;
+  };
+
+  it('T1 — an insert_only column is in the INSERT list, NOT in DO UPDATE SET, NOT in the WHERE guard', () => {
+    const d = descriptorWith('insert_only');
+    const write = (d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>;
+    const plan = writeLib.buildWritePlan(write[0], d);
+
+    // Plan-shape fields: the declared exclusion, directly.
+    expect(plan.insert_only_columns).toEqual(['source_dataset_version']);
+    expect(plan.update_columns).not.toContain('source_dataset_version');
+    expect(plan.guard_columns).not.toContain('source_dataset_version');
+    // Still a step-bound column: in step_columns (the INSERT/bindRow list).
+    expect(plan.step_columns).toContain('source_dataset_version');
+
+    // The rendered SQL text: in the INSERT column list, absent from the SET and the guard.
+    const sql = plan.upsertSqlFor(1) as string;
+    expect(sql).toContain('INSERT INTO ravines (source_id, geom, source_dataset_version, updated_at)');
+    expect(sql).not.toMatch(/DO UPDATE SET[^;]*source_dataset_version = EXCLUDED\.source_dataset_version/);
+    expect(sql).not.toContain('ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version');
+    // Rendered as a visible comment, not a silent absence.
+    expect(sql).toContain('-- seeded on INSERT, never rewritten by the conflict UPDATE (DB-recomputed): source_dataset_version');
+    // Guard still fires on the remaining changeable columns (never empty by this exclusion alone).
+    expect(plan.guard_columns).toEqual(['geom', 'updated_at']);
+    expect(plan.update_columns).toEqual(['geom', 'updated_at']);
+  });
+
+  it('T2 — a `step` column (pinned) is in the INSERT list, the SET and the guard', () => {
+    const d = descriptorWith('step'); // no-op: source_dataset_version already defaults to "step"
+    const write = (d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>;
+    const plan = writeLib.buildWritePlan(write[0], d);
+
+    expect(plan.insert_only_columns).toEqual([]);
+    expect(plan.step_columns).toContain('source_dataset_version');
+    expect(plan.update_columns).toContain('source_dataset_version');
+    expect(plan.guard_columns).toContain('source_dataset_version');
+
+    const sql = plan.upsertSqlFor(1) as string;
+    expect(sql).toContain('source_dataset_version = EXCLUDED.source_dataset_version');
+    expect(sql).toContain('ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version');
+  });
+
+  it('T3 — a `db_default` column (pinned) is in none of the three: not INSERT, not SET, not guard', () => {
+    const d = descriptorWith('db_default');
+    const write = (d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>;
+    const plan = writeLib.buildWritePlan(write[0], d);
+
+    expect(plan.insert_only_columns).toEqual([]);
+    expect(plan.step_columns).not.toContain('source_dataset_version');
+    expect(plan.update_columns).not.toContain('source_dataset_version');
+    expect(plan.guard_columns).not.toContain('source_dataset_version');
+
+    const sql = plan.upsertSqlFor(1) as string;
+    expect(sql).toContain('INSERT INTO ravines (source_id, geom, updated_at)');
+    expect(sql).not.toMatch(/DO UPDATE SET[^;]*source_dataset_version = EXCLUDED\.source_dataset_version/);
+    expect(sql).not.toContain('ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version');
+  });
+
+  it('T4 — AJV accepts `written: "insert_only"` and rejects the hyphenated spelling', () => {
+    const accepted = descriptorWith('insert_only');
+    expect(() => pipeline.step(accepted, noop)).not.toThrow();
+
+    const rejected = descriptorWith('insert-only');
+    expect(() => pipeline.step(rejected, noop)).toThrow(/does not satisfy step\.schema\.json/);
+  });
+});
+

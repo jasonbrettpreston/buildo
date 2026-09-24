@@ -4,9 +4,9 @@
     "122": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 1283,
-        "bytes": 159946,
-        "commit": "1a1cf7c3"
+        "lines": 1297,
+        "bytes": 177542,
+        "commit": "46071eb1"
       }
     },
     "123": {
