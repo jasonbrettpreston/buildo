@@ -820,7 +820,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // preserved exactly as the pre-conversion `return { failed: true }` preserved it.
   const gateDecision = preWriteGate
     ? await preWriteGate({ acquired, prior, overrides, written: null })
-    : { abort: false, failed: [] };
+    : { abort: false, skipWrite: false, failed: [] };
   if (gateDecision.abort) {
     log.error(tag, `pre_write check(s) FAILED with no standing override, the write is SKIPPED — `
       + `${plan.table} is untouched: ${gateDecision.failed.join(', ')}`);
@@ -851,9 +851,47 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       emitBlock: null,
     };
   }
+  // ── THE THIRD ARM (prerequisite 0h, Fold A F1): a WARN-severity pre_write check that
+  // DECLARED `on_warn: "skip_write"`. This is the legacy load-centreline F-C1 "warn and
+  // preserve" arm, made declared and observable: NO transaction is opened, the target table
+  // is untouched, and every write counter stays zero — but the run COMPLETES (verdict WARN
+  // from the row that caused it, not FAIL from a gate abort), so `post` checks still score.
+  // `write_skipped_pre_write_warn` is carried for the audit row (§preWriteSkipRows) and the
+  // `failedPreWrite` field is deliberately ABSENT: an abort it is not.
+  if (gateDecision.skipWrite) {
+    const skipWriteChecks = gateDecision.skipWriteChecks || [];
+    log.warn(tag, `pre_write WARN on a check declaring on_warn "skip_write" — the write is SKIPPED, `
+      + `${plan.table} is untouched and the run completes: ${skipWriteChecks.join(', ') || 'floor not met'}`);
+    return {
+      skipped: false,
+      writeSkipped: true,
+      reason: 'pre_write_warn_skip_write',
+      writeSkippedPreWriteWarn: true,
+      failedPreWriteWarn: skipWriteChecks,
+      acquired,
+      written: {
+        inserted: 0,
+        updated: 0,
+        deleted: 0,
+        rows_scanned: 0,
+        rows_changed: 0,
+        delete_skipped_empty_guard: false,
+        write_skipped_pre_write_warn: true,
+        privilege: privilege[writeSpec.table] || null,
+      },
+      prior,
+      priorError,
+      overrides,
+      emitKey,
+      emitBlock: null,
+    };
+  }
 
   const runAt = clockNow;
-  const written = await write.executeWrite(pool, {
+  // ── THE WRITE DISPATCH (Fold A F6). Class C is a REPLACE, not an upsert: it has no
+  // `ON CONFLICT` and no per-row insert-vs-update question, so it gets its own executor.
+  // Everything else — A, B, and the compute-authored A — stays on `executeWrite` unchanged.
+  const writeArgs = {
     plan,
     writeSpec,
     carried: validated.carried,
@@ -862,10 +900,12 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       source_dataset_version: result.acquired.source_dataset_version,
       updated_at: runAt,
     }),
-    shouldSkipDelete: compute.shouldSkipDelete,
     log,
     tag,
-  });
+  };
+  const written = writeSpec.write_discipline.class === write.STAGING_FULL_REPLACE_CLASS
+    ? await write.executeStagingReplace(pool, { ...writeArgs, prior })
+    : await write.executeWrite(pool, { ...writeArgs, shouldSkipDelete: compute.shouldSkipDelete });
 
   return {
     skipped: false,
@@ -4312,8 +4352,22 @@ async function executeOrderedWrites(pool, plans, rows, runAt, written, specs) {
  * Acceptance (ruling A-5) is applied to the DECISION only, never to the row: an
  * accepted FAIL proceeds to the write and still lands its FAIL row downstream.
  *
- * @returns {null|((phase: {acquired: object, prior: object|null, overrides: object}) =>
- *   Promise<{abort: boolean, failed: string[]}>)}
+ * @returns {null|(function({acquired: object, prior: object|null, overrides: object}):
+ *   Promise<{abort: boolean, failed: string[], skipWrite?: true, skipWriteChecks?: string[]}>)}
+ *
+ * THE THREE-WAY DECISION (INGESTOR prerequisite 0h, 2026-09-24, Fold A F1). Before this the
+ * gate was BINARY — `abort` on an unaccepted FAIL, else write — and `checks[].on_warn:
+ * "skip_write"` adds a THIRD arm. It exists because a declared WARN that must ALSO refuse
+ * the write had no honest way to say so: raising the severity to FAIL would change a legacy
+ * verdict (load-centreline's F-C1 later-run arm is a WARN and the run must stay WARN), and
+ * an early `return` from compute would put the refusal in the step, where the ONE place a
+ * write is refused — this gate — cannot see it. So the check DECLARES the arm and the gate
+ * honours it. Precedence is FAIL-first (`abort` wins if both fire — a standing hard FAIL may
+ * not be turned write-free by a second arm), then `skipWrite`, then the write. `skipWrite`/
+ * `skipWriteChecks` are OMITTED from the object entirely (not `false`/`[]`) when the arm
+ * does not fire, so the pre-0h `{abort, failed}` shape stays byte-identical for every caller
+ * and lock (LR-D9) that predates it. The caller decides what `skipWrite` means for its own
+ * shape; only `runIngestPhase` acts on it today.
  */
 function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
   const preWriteIds = selectChecks(descriptor, chainId)
@@ -4353,7 +4407,28 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
     // accepted here either, or the gate would let a write proceed on the strength of
     // a check that measured nothing.
     const { unaccepted: failed } = partitionFailedRows(built.rows, accepted);
-    return { abort: failed.length > 0, failed };
+    // ── THE THIRD ARM (prerequisite 0h): a WARN row from a check that DECLARED
+    // `on_warn: "skip_write"`. Read from the DESCRIPTOR (the declared axis), never inferred
+    // from the row's severity — a WARN without the declaration proceeds exactly as it always
+    // has (pinned by T5b), and a FAIL is never rescued by it (FAIL-first precedence above).
+    const skipWriteIds = selectChecks(descriptor, chainId)
+      .filter((c) => c.on_warn === 'skip_write')
+      .map((c) => c.id);
+    const skipWriteCheckIds = built.rows
+      .filter((r) => skipWriteIds.includes(String(r.metric).split(':')[0]) && r.status === 'WARN')
+      .map((r) => String(r.metric).split(':')[0]);
+    // The decision is BYTE-FOR-BYTE the pre-0h shape ({abort, failed}) on every descriptor
+    // that never triggers the third arm — the LR-D9 locks pin that exact shape with
+    // `toEqual` and must keep passing unchanged. `skipWrite`/`skipWriteChecks` are added to
+    // the object ONLY when the arm actually fires (never as an always-present `false`/`[]`),
+    // so a descriptor with no `on_warn:"skip_write"` check — or one that has it but did not
+    // WARN — is invisible to every caller that predates this arm.
+    const decision = { abort: failed.length > 0, failed };
+    if (!decision.abort && skipWriteCheckIds.length > 0) {
+      decision.skipWrite = true;
+      decision.skipWriteChecks = skipWriteCheckIds;
+    }
+    return decision;
   };
 }
 
@@ -4494,6 +4569,38 @@ function preWriteAbortRows(phaseResults) {
     status: 'FAIL',
     source: 'gate',
     errored: true,
+  }];
+}
+
+/**
+ * INGESTOR prerequisite 0h (2026-09-24, Fold A F1) — ONE WARN row for a `skip_write` gate stop.
+ *
+ * The exact `preWriteAbortRows` idiom (POST-B1-1) with the arms swapped: the gate refused the
+ * write because a `pre_write` check DECLARED `on_warn: "skip_write"` and reported WARN, and
+ * the run must SAY so on the audit table while STILL COMPLETING — this is the legacy
+ * load-centreline F-C1 "warn and preserve" arm, not a failure. So the row is WARN (the
+ * row-derived cascade yields a WARN verdict with no new boolean and no second derivation),
+ * `source: 'gate'` marks where it came from, and `errored` is deliberately ABSENT: a gate
+ * that skipped measured a DECLARED refusal, not an anomaly, and there is nothing for an
+ * operator to accept — `override.accept_anomaly` must not be able to turn it off
+ * (contrast `preWriteAbortRows`, whose FAIL carries `errored: true` for the same reason).
+ *
+ * Absent entirely when no gate skip-wrote — a healthy run's audit table is unchanged, byte
+ * for byte.
+ *
+ * @param {Array<{writeSkippedPreWriteWarn?:boolean, failedPreWriteWarn?:string[]}|null>} phaseResults - the per-shape runner results
+ * @returns {Array<object>} zero or one row
+ */
+function preWriteSkipRows(phaseResults) {
+  const skipped = (phaseResults || []).find((p) => p && p.writeSkippedPreWriteWarn === true);
+  if (!skipped) return [];
+  const ids = Array.isArray(skipped.failedPreWriteWarn) ? skipped.failedPreWriteWarn : [];
+  return [{
+    metric: 'write_skipped_pre_write_warn',
+    value: `skipped: ${ids.join(', ')}`,
+    threshold: 'zero WARN rows among the when:"pre_write" checks declaring on_warn "skip_write"',
+    status: 'WARN',
+    source: 'gate',
   }];
 }
 
@@ -5117,6 +5224,10 @@ async function runWithPool(runnable, pool, ctx) {
         // POST-B1-1 Observability fold — the pre_write gate's abort, said out loud
         // (§preWriteAbortRows). Absent on every run that did not abort.
         ...preWriteAbortRows([ingest, link, linkKeyed, linkColumn, cascade, materialize, backfill, recorder, enrich]),
+        // Prerequisite 0h (Fold A F1) — the DECLARED skip-write stop, said out loud as a WARN
+        // (§preWriteSkipRows). Absent on every run that did not skip-write. Placed AFTER the
+        // abort rows so a legal FAIL-first run reads abort-then-nothing, never both.
+        ...preWriteSkipRows([ingest]),
         // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the deadline abort and
         // the fail-open retirement failure, each said out loud on the audit table rather
         // than only in a log line. Both absent on every healthy run.
@@ -5462,6 +5573,7 @@ module.exports = {
   acceptedCheckIds,
   partitionFailedRows,
   preWriteAbortRows,
+  preWriteSkipRows,
   phaseDeadlineRows,
   scopeRetireFailureRows,
   makePreWriteGate,

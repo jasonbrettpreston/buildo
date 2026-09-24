@@ -1512,6 +1512,165 @@ async function executeRecorderUpsert(client, sql, params) {
   return result.rows[0] || null;
 }
 
+/**
+ * `write_discipline.class` value for LG-26 / INGESTOR prerequisite 0h (2026-09-24) — Spec
+ * 122 §1.4's frozen enum letter C, "full staging replace", named for `load_centreline`
+ * (Spec 62 L26) and therefore `banned_for_new` in `write-class-disposition.json` until the
+ * orchestrator's own registry flip lands. Genuinely UNIMPLEMENTED before this prerequisite
+ * (Fold A B-1): before `executeStagingReplace` there was no branch anywhere in
+ * `scripts/lib/`, so a descriptor declaring this class fell through to the DEFAULT
+ * (unnamed) codegen — a plain row-by-row guarded upsert — while the descriptor's own
+ * `write_discipline.why` promised a `TEMP table → DELETE → INSERT...SELECT` replace. The
+ * label was a lie the moment it was declared; that is the whole reason the registry
+ * dispositions a class with no executor `banned_for_new` rather than merely unimplemented.
+ */
+const STAGING_FULL_REPLACE_CLASS = 'staging_full_replace';
+
+/** SQL text a `staging_full_replace` target's staging INSERT must never contain. */
+const STAGING_REPLACE_FORBIDDEN_RE = /\bON\s+CONFLICT\b|\bUPDATE\b/i;
+
+/**
+ * LG-26 / INGESTOR prerequisite 0h (2026-09-24) — the class-C `staging_full_replace`
+ * executor (Spec 122 §1.4 "the class is not decoration — it SELECTS the generated SQL";
+ * Spec 124 Rules 9 and 12).
+ *
+ * THE MECHANIC, and why it is a replace rather than an upsert: `load-centreline.js` L26
+ * stages the validated parse into `CREATE TEMP TABLE temp_centreline (LIKE
+ * toronto_centreline INCLUDING DEFAULTS INCLUDING CONSTRAINTS)` in batches, then — in ONE
+ * transaction — `DELETE FROM toronto_centreline` followed by `INSERT INTO toronto_centreline
+ * (…) SELECT … FROM temp_centreline` [:588-625]. The target row set after the run is
+ * EXACTLY the source's; a source key that disappeared is gone because the DELETE took it,
+ * not because a scoped departure DELETE enumerated it. A `guarded_upsert` (class A) cannot
+ * express that at all, and a `retract: "departed"` class-B delete cannot either without
+ * enumerating every retired key (47K rows' worth of keys).
+ *
+ * ⚠️ ONE TRANSACTION, OR NONE OF IT. `pipeline.withTransaction` opens the client, `BEGIN`s,
+ * runs the whole replace and `COMMIT`s; ANY throw — a failed staged INSERT, the DELETE, the
+ * final INSERT...SELECT — rolls the whole thing back and the OLD TABLE IS INTACT. The
+ * staging table is server-side and session-local (`CREATE TEMP TABLE ... ON COMMIT DROP`),
+ * so the interim state is never visible to a reader on another connection: `enrich-centreline.js`
+ * reads `toronto_centreline` between chain steps and must never see an empty table (Fold A
+ * F6: `withTransaction` = one client, advisory lock spans the whole step, and the temp table
+ * drops at COMMIT for free). This is what makes `recovery.interrupted: "none"` truthful on
+ * the class's descriptor: there is no half-replaced table to recover.
+ *
+ * ⚠️ DEFENSE IN DEPTH: THE EMPTY-SET GUARD IS STRUCTURAL, NOT DECLARED (Fold A F1). The
+ * F-C1 floor is DECLARED by the step as two `pre_write` checks (`staged_rows_floor_first_run`
+ * FAIL on a null `prior`, `staged_rows_floor` WARN on later runs) and enforced by the gate —
+ * the library does not decide the floor. But the DELETE here is UNCONDITIONAL over the whole
+ * table, which is precisely the shape class B's empty-set guard exists to prevent
+ * (`<> ALL('{}')` matches every row). So `carried.length === 0` NEVER issues the DELETE: the
+ * function returns `replace_skipped_empty_guard: true` and the target is untouched. A step
+ * whose guard is mis-declared therefore still cannot destroy the table by accident.
+ *
+ * ⚠️ NO `ON CONFLICT`. The staging INSERT is a plain INSERT with a column list — the staging
+ * table is empty by construction (it was created in this same transaction), so a conflict is
+ * impossible and an `ON CONFLICT` would be a second, contradicting opinion about the write's
+ * semantics. `STAGING_REPLACE_FORBIDDEN_RE` refuses the tokens rather than trusting the
+ * builder; the final `INSERT ... SELECT` is a copy between two tables this function owns.
+ *
+ * Counters (Fold A D1/F6): `rows_before` is the DELETE's own `rowCount` (what the replace
+ * removed), `rows_staged` is what the source carried in, `rows_after` is the INSERT...SELECT's
+ * `rowCount` (the target's row count after the replace — what `records_total` reads, by
+ * dot-path), and `deleted`/`inserted` mirror `rows_before`/`rows_after`. `records_new` /
+ * `records_updated` / `records_unchanged` are NOT derivable for a replace — there is no
+ * per-row insert-vs-update question to answer, every surviving row is a copy of a staged one
+ * — and the descriptor declares them `"none"` with a why rather than inventing a number.
+ *
+ * @param {import('pg').Pool} pool
+ * @param {object} args
+ * @param {object} args.plan - `buildWritePlan`'s output for the declared target
+ * @param {object} args.writeSpec - the same `outputs.writes[]` entry the plan was built from
+ * @param {object[]} args.carried - the validated rows (one object per row, keyed by column name)
+ * @param {(row: object) => object} args.columnValues - the step's row → bound-values mapping
+ * @param {object|null} args.prior - the prior emit block (READ by the DECLARED floor checks,
+ *   never by this executor — carried in the signature for call-site symmetry with `executeWrite`)
+ * @param {{info: Function, warn: Function, error: Function}} args.log
+ * @param {string} args.tag
+ * @returns {Promise<object>} the `ctx.written` block for a replaced target
+ */
+async function executeStagingReplace(pool, {
+  plan, writeSpec, carried, columnValues, prior, log, tag,
+}) {
+  const table = plan.table;
+  const staging = `${table}_staging`;
+  const stepColumns = plan.step_columns;
+  const batchSize = pipeline.maxRowsPerInsert(plan.columnsPerRow);
+  const insertColumns = stepColumns.join(', ');
+  // A plain INSERT into the (empty by construction) staging table. No `ON CONFLICT`: see the
+  // docstring above. Built once — the column list is a declared fact, not a per-batch one.
+  const stagedInsertSql = (rowCount) => `INSERT INTO ${staging} (${insertColumns})\nVALUES `
+    + Array.from({ length: rowCount }, (_, r) => `(${stepColumns.map((_, i) => `$${1 + r * stepColumns.length + i}`).join(', ')})`).join(', ')
+    + ';';
+  if (STAGING_REPLACE_FORBIDDEN_RE.test(stagedInsertSql(1))) {
+    throw new Error(`[${tag}] executeStagingReplace (staging_full_replace / LG-26): the staged INSERT text for `
+      + `"${table}" contains an ON CONFLICT or UPDATE token, which this executor structurally refuses — the `
+      + 'staging table is created empty inside this same transaction, so there is nothing to conflict with and '
+      + 'nothing to update.');
+  }
+
+  let rowsBefore = null;
+  let rowsStaged = 0;
+  let rowsAfter = null;
+
+  await pipeline.withTransaction(pool, async (client) => {
+    // 1. The staging table: session-local, CONSTRAINTS-INCLUDING (so a NOT NULL or CHECK the
+    //    real table enforces fails HERE, inside the transaction, rather than mid-INSERT...SELECT),
+    //    and dropped at COMMIT by the server.
+    await client.query(
+      `CREATE TEMP TABLE ${staging} (LIKE ${table} INCLUDING DEFAULTS INCLUDING CONSTRAINTS) ON COMMIT DROP;`,
+    );
+
+    // 2. Batched INSERTs into the staging table — the same `bindRow`/`columnsPerRow` contract
+    //    (and the same `maxRowsPerInsert` stride) class A/B use, so a step's `columnValues` is
+    //    written once and works under either class.
+    for (let i = 0; i < carried.length; i += batchSize) {
+      const slice = carried.slice(i, i + batchSize);
+      const values = [];
+      for (const row of slice) values.push(...plan.bindRow(columnValues(row)));
+      await client.query(stagedInsertSql(slice.length), values);
+    }
+    rowsStaged = carried.length;
+
+    // 3. THE EMPTY-SET GUARD (F1 defense in depth). Zero carried rows means there is nothing
+    //    to replace WITH, and `DELETE FROM <table>` here would be a whole-table truncation.
+    //    The declared pre_write floor is what refuses such a run; this is the second lock.
+    if (carried.length === 0) {
+      log.warn(tag, `empty-set guard: staging_full_replace of ${table} was skipped — zero carried rows, the target is untouched`);
+      return;
+    }
+
+    // 4. The replace proper: every row goes, then exactly the staged rows come back.
+    const del = await client.query(`DELETE FROM ${table};`);
+    rowsBefore = del.rowCount == null ? null : del.rowCount;
+    const ins = await client.query(
+      `INSERT INTO ${table} (${insertColumns}) SELECT ${insertColumns} FROM ${staging};`,
+    );
+    rowsAfter = ins.rowCount == null ? null : ins.rowCount;
+  });
+
+  if (carried.length === 0) {
+    return {
+      replace_skipped_empty_guard: true,
+      rows_before: null,
+      rows_staged: 0,
+      rows_after: null,
+      deleted: 0,
+      inserted: 0,
+    };
+  }
+  void prior; // read by the DECLARED pre_write floor checks; never by this executor.
+  void writeSpec; // the class/why live on the descriptor and are checked at construction.
+  return {
+    replace_skipped_empty_guard: false,
+    rows_before: rowsBefore,
+    rows_staged: rowsStaged,
+    rows_after: rowsAfter,
+    deleted: rowsBefore,
+    inserted: rowsAfter,
+  };
+}
+
 module.exports = {
   buildWritePlan,
   generateWriteSql,
@@ -1530,6 +1689,9 @@ module.exports = {
   executeGuardedUpdate,
   executeGuardedDeleteByKey,
   executeRecorderUpsert,
+  executeStagingReplace,
+  STAGING_FULL_REPLACE_CLASS,
+  STAGING_REPLACE_FORBIDDEN_RE,
   GUARDED_UPDATE_FORBIDDEN_RE,
   GUARDED_DELETE_BY_KEY_FORBIDDEN_RE,
   RECORDER_UPSERT_FORBIDDEN_RE,

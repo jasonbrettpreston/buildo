@@ -371,7 +371,11 @@ describe('write-class-disposition — WD-1 both-directions lock (Spec 122 §1.4/
     try {
       const findings = checkNoBannedClassDeclared(registry, [...liveDescriptorPaths(), BANNED_CLASS_FIXTURE]);
       expect(findings.length).toBeGreaterThan(0);
-      const hit = findings.find((f) => f.includes('staging_full_replace'));
+      // Repointed at INGESTOR prerequisite 0h (2026-09-24, Fold A F4): the fixture now
+      // declares "set_based_unscoped" (still banned_for_new) — "staging_full_replace"
+      // stopped being banned the moment it gained a real executor + registry flip, so a
+      // fixture still declaring it would have stopped proving anything.
+      const hit = findings.find((f) => f.includes('set_based_unscoped'));
       expect(hit).toBeTruthy();
       expect(hit).toContain('fixture_banned_class_declared');
       expect(hit).toContain('banned-class-declared.descriptor.json');

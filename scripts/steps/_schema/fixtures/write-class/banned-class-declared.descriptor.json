@@ -3,7 +3,7 @@
     "name": "fixture_banned_class_declared",
     "display_name": "Fixture - Banned Write Class Declared",
     "owner": "data",
-    "description": "Synthetic RECORDER fixture, schema-VALID but disposition-INVALID: it declares outputs.writes[0].write_discipline.class = \"staging_full_replace\", a class the WD-1 registry (scripts/steps/_schema/write-class-disposition.json) dispositions banned_for_new (zero executor in scripts/lib/, would silently fall to the DEFAULT codegen path — a lie). step.schema.json's AJV validation permits this (the schema only requires a `why` field for staging_full_replace, it does not forbid the class), which is exactly the enforcement gap this fixture proves the registry lock must catch that AJV cannot.",
+    "description": "Synthetic RECORDER fixture, schema-VALID but disposition-INVALID: it declares outputs.writes[0].write_discipline.class = \"set_based_unscoped\", a class the WD-1 registry (scripts/steps/_schema/write-class-disposition.json) dispositions banned_for_new (codegen-capable but declared by ZERO descriptors — implemented-unexercised). step.schema.json's AJV validation permits this, which is exactly the enforcement gap this fixture proves the registry lock must catch that AJV cannot. REPOINTED at INGESTOR prerequisite 0h (2026-09-24, Fold A F4): it previously declared \"staging_full_replace\", which stopped being banned the moment that class gained a real executor (write.js executeStagingReplace) and the orchestrator's registry flip landed — a fixture that declared it would have stopped proving anything. \"set_based_unscoped\" is still banned_for_new and is declared by no live descriptor, so the lock keeps testing what it exists to test.",
     "lock": 9905,
     "why_lock": {
       "text": "Deliberately outside the real registry range: this is a schema fixture, never a runnable step, so its lock must be unable to collide with manifest, one-time/ or backfill/ (ruling V2, same posture as the other 9902-9904 fixture locks).",
@@ -51,9 +51,9 @@
           }
         ],
         "write_discipline": {
-          "class": "staging_full_replace",
+          "class": "set_based_unscoped",
           "why": {
-            "text": "FIXTURE ONLY — this class has zero live executor (WD-1 audit, scripts/steps/_schema/write-class-disposition.json write_classes.staging_full_replace). Declared here purely to prove the registry lock catches a banned class that AJV alone permits (the schema's own allOf rule only requires this `why` field for staging_full_replace, it does not forbid the value).",
+            "text": "FIXTURE ONLY — this class is dispositioned banned_for_new in the WD-1 registry (scripts/steps/_schema/write-class-disposition.json write_classes.set_based_unscoped: codegen-capable but declared by ZERO descriptors). Declared here purely to prove the registry lock catches a banned class that AJV alone permits (the schema's own allOf only requires a `why` field for staging_full_replace, so it neither requires one here nor forbids this value).",
             "liveness": {
               "kind": "file",
               "ref": "src/tests/write-class-disposition.infra.test.ts"

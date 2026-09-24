@@ -80,12 +80,20 @@
     },
     "staging_full_replace": {
       "letter": "C",
-      "disposition": "banned_for_new",
-      "executor": null,
+      "disposition": "implemented",
+      "executor": {
+        "branch": "write_discipline.class === \"staging_full_replace\" dispatch in runIngestPhase's write call site, ahead of the default write.executeWrite call (write.STAGING_FULL_REPLACE_CLASS, index.js)",
+        "executor_fn": [
+          "executeStagingReplace"
+        ],
+        "runners": [
+          "runIngestPhase"
+        ]
+      },
       "declared_by": [],
-      "why": "ZERO mention in scripts/lib/ — no codegen branch, no executor. A descriptor declaring it would silently fall to the DEFAULT codegen path (a plain guarded upsert), NOT the promised temp->DELETE->INSERT...SELECT shape, so the label would be a lie if it were ever declared. The one suspected site (load_zoning) is already recorded as REFUTED in x-menu-completeness. No live descriptor declares it.",
-      "adjudicated_by": "WD-1 WF5 audit",
-      "date": "2026-09-09"
+      "why": "INGESTOR prerequisite 0h (2026-09-24, batch-2 Phase 3, Fold A F1-F6): write.js#executeStagingReplace runs ONE pipeline.withTransaction — CREATE TEMP TABLE <t>_staging (LIKE <t> INCLUDING DEFAULTS INCLUDING CONSTRAINTS) ON COMMIT DROP, batched staging INSERTs, DELETE FROM <t>, INSERT INTO <t> ... SELECT ... FROM <t>_staging; carried.length===0 short-circuits before the DELETE (replace_skipped_empty_guard, defense in depth alongside the step's own DECLARED pre_write floor checks). runIngestPhase dispatches on write_discipline.class at the same site executeWrite is selected from. Locked by step-library.logic.test.ts T1-T4 (INGESTOR prerequisite 0h). declared_by stays empty until load_centreline declares this class at 3.2 ② — its own guard:\"none\" grandfathering (Spec 62 L26, link_parcels precedent) lands with that descriptor, not with this executor.",
+      "adjudicated_by": "INGESTOR prerequisite 0h landing (orchestrator, WF2 class_c_staging_replace)",
+      "date": "2026-09-24"
     },
     "insert_only_no_retraction": {
       "letter": "D",

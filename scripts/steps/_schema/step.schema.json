@@ -1352,6 +1352,20 @@
             ],
             "why": "why.liveness.kind:\"spec\" is single-valued and every one of the 4 live pre_write checks already spends it on the file/table liveness THAT check needs (row 9 of the WF2 grounding table) — reusing it for order-guarantee citation would silently overload one field with two unrelated purposes, with no way for a reader (or a checker) to tell which reading applies on a given check. A plain checks[].why mention is unstructured prose — exactly the 'a spec scan is simultaneously false-positive and false-negative' failure mode this rule's own design note rejects. A new, structured field naming the spec + a verifiable literal anchor is the last-resort rung, per G-1."
           }
+        },
+        "on_warn": {
+          "description": "INGESTOR prerequisite 0h (2026-09-24, Fold A F1) — what a WARN-severity row from a `when:\"pre_write\"` check MEANS to the runner, declared rather than encoded. `\"skip_write\"` = a WARN row from this check makes the pre_write gate SKIP the write (no transaction is opened, the target is untouched, every write counter stays zero) while the run COMPLETES with its row-derived verdict (WARN) — the legacy load-centreline F-C1 'warn and preserve' arm, declared and observable. The gate lands ONE `write_skipped_pre_write_warn` audit row (`source: \"gate\"`). Absent (every check today) = the old behaviour byte-for-byte: a WARN is reported and the write proceeds. FAIL severity is unaffected and FAIL-FIRST: an abort always wins over this arm.",
+          "enum": [
+            "skip_write"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "severity FAIL on the later-run floor (aborts the run — a verdict change vs the legacy WARN)",
+              "a compute-side early return (behaviour in code)"
+            ],
+            "why": "the gate is the ONE place a write is refused; a WARN that must also refuse the write needs a declared, observable arm there — never a severity lie and never compute-side control flow"
+          }
         }
       },
       "allOf": [
@@ -1409,6 +1423,29 @@
                 "warn_limit"
               ]
             }
+          }
+        },
+        {
+          "x-rule": "INGESTOR prerequisite 0h (2026-09-24, Fold A F1) — `on_warn` is an arm of the pre_write GATE; declared anywhere else it could never fire, so it is refused rather than silently inert. The converse is deliberately NOT required: a `pre_write` check may declare no `on_warn`, in which case its WARN is reported and the write proceeds exactly as before.",
+          "if": {
+            "properties": {
+              "on_warn": {
+                "const": "skip_write"
+              }
+            },
+            "required": [
+              "on_warn"
+            ]
+          },
+          "then": {
+            "properties": {
+              "when": {
+                "const": "pre_write"
+              }
+            },
+            "required": [
+              "when"
+            ]
           }
         }
       ]

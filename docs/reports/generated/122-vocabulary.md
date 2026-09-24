@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 473 declarable fields
+# The step contract — 20 categories, 474 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -20,7 +20,7 @@
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 75 | 16 | 1 |
-| 7 | `checks` | 31 | 6 | 0 |
+| 7 | `checks` | 32 | 7 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
 | 10 | `override` | 11 | 1 | 0 |
@@ -458,6 +458,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].order_guarantee.guarantee` | string | † |
 | `[].order_guarantee.spec_ref` | string `^docs/specs/.+\.md$` | † |
 | `[].order_guarantee.anchor` | string | † |
+| `[].on_warn` | `skip_write` | ! |
 
 ### invariants
 

@@ -6489,3 +6489,396 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
   });
 });
 
+// ---------------------------------------------------------------------------
+// INGESTOR prerequisite 0h (2026-09-24, batch-2 Phase 3, brief
+// .cursor/engine-briefs/b2-p3-c0h-staging-replace.md; plan of record
+// .cursor/wf2_class_c_staging_replace_active_task.md D1-D5 + Fold A F1-F6). Class C
+// `staging_full_replace`'s executor (T1-T3), the runIngestPhase dispatch (T4), and the
+// pre_write gate's third arm `checks[].on_warn:"skip_write"` (T5-T6). The registry
+// (write-class-disposition.json) still dispositions this class banned_for_new until the
+// orchestrator's own registry flip lands, so every lock here drives the executor/gate
+// DIRECTLY against a fake pool — never through `pipeline.step()` — exactly as
+// `write-class-disposition.infra.test.ts`'s WD-1 lock still proves for a live descriptor.
+// ---------------------------------------------------------------------------
+describe('write.executeStagingReplace — class C staging_full_replace executor (INGESTOR prerequisite 0h)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const write = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+
+  const classCSpec = () => {
+    const s = clone(LOAD_RAVINES.outputs.writes[0]) as {
+      write_discipline: { class: string; [k: string]: unknown };
+      [k: string]: unknown;
+    };
+    s.write_discipline.class = write.STAGING_FULL_REPLACE_CLASS;
+    return s;
+  };
+
+  const carried = [
+    { source_id: 101, geom: '\\\\x00' },
+    { source_id: 102, geom: '\\\\x00' },
+    { source_id: 103, geom: '\\\\x00' },
+  ];
+  const columnValues = (row: Record<string, unknown>) => ({ ...row, source_dataset_version: 3, updated_at: 'now' });
+  const log = () => ({ warn: vi.fn(), info: vi.fn(), error: vi.fn() });
+
+  /** Classify one recorded statement by SHAPE, so statement order is asserted on
+   * meaning; the exact CREATE TEMP text is asserted separately (T1). */
+  const kindOf = (sql: string): string => {
+    const s = sql.trim();
+    if (/^BEGIN$/i.test(s)) return 'BEGIN';
+    if (/^COMMIT$/i.test(s)) return 'COMMIT';
+    if (/^ROLLBACK$/i.test(s)) return 'ROLLBACK';
+    if (/^CREATE TEMP TABLE ravines_staging/i.test(s)) return 'CREATE_TEMP';
+    if (/^INSERT INTO ravines_staging/i.test(s)) return 'INSERT_STAGING';
+    if (/^DELETE FROM ravines\b/i.test(s)) return 'DELETE';
+    if (/^INSERT INTO ravines \(/i.test(s)) return 'INSERT_SELECT';
+    return `UNKNOWN: ${s.slice(0, 40)}`;
+  };
+
+  /**
+   * A fake pool matching `pipeline.withTransaction`'s contract (`pool.connect()` →
+   * `{query, release}`), recording every statement/params pair. Only ONE attempt is
+   * ever taken here (none of these are pg code 40P01), so `connect()` need not vary
+   * per call.
+   */
+  function stagingPool({ deleteRowCount = 0, insertSelectRowCount = 0, failStagingInsert = false } = {}) {
+    const sql: string[] = [];
+    const params: unknown[][] = [];
+    const statement = async (text: string, values?: unknown[]) => {
+      sql.push(text);
+      params.push(values ?? []);
+      if (failStagingInsert && /^INSERT INTO ravines_staging/i.test(text)) {
+        throw new Error('staged insert boom');
+      }
+      if (/^DELETE FROM ravines\b/i.test(text)) return { rows: [], rowCount: deleteRowCount };
+      if (/^INSERT INTO ravines \(/i.test(text)) return { rows: [], rowCount: insertSelectRowCount };
+      return { rows: [], rowCount: 0 };
+    };
+    return { sql, params, connect: async () => ({ query: statement, release: () => {} }) };
+  }
+
+  it('T1 — statement ORDER for a 3-row carried set (BEGIN, CREATE TEMP … ON COMMIT DROP, staged INSERT, DELETE, INSERT…SELECT, COMMIT) and the returned counters', async () => {
+    const spec = classCSpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    const pool = stagingPool({ deleteRowCount: 2, insertSelectRowCount: 3 });
+    const written = await write.executeStagingReplace(pool, {
+      plan, writeSpec: spec, carried, columnValues, prior: null, log: log(), tag: 'load_centreline',
+    });
+
+    expect(pool.sql.map(kindOf)).toEqual([
+      'BEGIN', 'CREATE_TEMP', 'INSERT_STAGING', 'DELETE', 'INSERT_SELECT', 'COMMIT',
+    ]);
+    expect(pool.sql[1]).toContain('LIKE ravines INCLUDING DEFAULTS INCLUDING CONSTRAINTS');
+    expect(pool.sql[1]).toContain('ON COMMIT DROP');
+    // rows_before from the DELETE's own rowCount, rows_after from INSERT...SELECT's.
+    expect(written).toEqual({
+      replace_skipped_empty_guard: false,
+      rows_before: 2,
+      rows_staged: 3,
+      rows_after: 3,
+      deleted: 2,
+      inserted: 3,
+    });
+  });
+
+  it('T2 — an empty carried set issues NO DELETE (and no INSERT…SELECT); replace_skipped_empty_guard is reported', async () => {
+    const spec = classCSpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    // Absurd row counts the executor must never surface — proving the empty-set guard
+    // short-circuits before either statement, not merely that the counters get zeroed.
+    const pool = stagingPool({ deleteRowCount: 999, insertSelectRowCount: 999 });
+    const l = log();
+    const written = await write.executeStagingReplace(pool, {
+      plan, writeSpec: spec, carried: [], columnValues, prior: null, log: l, tag: 'load_centreline',
+    });
+    expect(pool.sql.map(kindOf)).toEqual(['BEGIN', 'CREATE_TEMP', 'COMMIT']);
+    expect(written).toEqual({
+      replace_skipped_empty_guard: true,
+      rows_before: null,
+      rows_staged: 0,
+      rows_after: null,
+      deleted: 0,
+      inserted: 0,
+    });
+    expect(l.warn).toHaveBeenCalledTimes(1);
+    expect(l.warn).toHaveBeenCalledWith(
+      'load_centreline',
+      expect.stringMatching(/empty-set guard: staging_full_replace of ravines was skipped/),
+    );
+  });
+
+  it('T3 — a staged-insert failure ROLLBACKs, issues no DELETE, and rejects with the underlying error', async () => {
+    const spec = classCSpec();
+    const plan = write.buildWritePlan(spec, LOAD_RAVINES);
+    const pool = stagingPool({ deleteRowCount: 5, insertSelectRowCount: 5, failStagingInsert: true });
+    await expect(write.executeStagingReplace(pool, {
+      plan, writeSpec: spec, carried, columnValues, prior: null, log: log(), tag: 'load_centreline',
+    })).rejects.toThrow(/staged insert boom/);
+    expect(pool.sql.map(kindOf)).toEqual(['BEGIN', 'CREATE_TEMP', 'INSERT_STAGING', 'ROLLBACK']);
+    expect(pool.sql.some((s: string) => /^DELETE/i.test(s.trim())), 'the old table must survive untouched').toBe(false);
+  });
+});
+
+describe('runIngestPhase — write_discipline.class dispatch (INGESTOR prerequisite 0h, Fold A F6)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const write = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real INGESTOR compute
+  const ravineCompute = require(join(process.cwd(), 'scripts/lib/compute/load-ravines.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+
+  const classCDescriptor = () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const w = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    (w.write_discipline as Record<string, unknown>).class = write.STAGING_FULL_REPLACE_CLASS;
+    return d;
+  };
+
+  const feature = { source_id: 1, geom: Buffer.from('') };
+  const acquireResult = (features: Array<Record<string, unknown>>) => ({
+    tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+    features,
+    acquired: {
+      feature_count: features.length, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
+      geometry_collection_extracted: 0, skipped_keys: [],
+      content_hash: 'aa', source_dataset_version: 'aa', last_modified: null, last_modified_ms: null,
+      etag: null, license_url: null,
+    },
+  });
+
+  it('T4a — write_discipline.class "staging_full_replace" dispatches to write.executeStagingReplace, with `prior` threaded (F6), and NEVER calls executeWrite', async () => {
+    const descriptor = classCDescriptor();
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(write, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: false, bypassrls: false, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue(acquireResult([feature])),
+      vi.spyOn(write, 'validateGeometries').mockResolvedValue({ carried: [feature], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(write, 'executeStagingReplace').mockResolvedValue({
+        replace_skipped_empty_guard: false, rows_before: 0, rows_staged: 1, rows_after: 1, deleted: 0, inserted: 1,
+      }),
+      vi.spyOn(write, 'executeWrite'),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor, pool: fakePool(), compute: ravineCompute, config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null, log: NO_LOG, tag: '[class_c_dispatch]', clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(write.executeStagingReplace).toHaveBeenCalledTimes(1);
+      expect(write.executeWrite, 'the class-A/B executor must never be reached for a class-C target').not.toHaveBeenCalled();
+      const call = (write.executeStagingReplace as ReturnType<typeof vi.fn>).mock.calls[0]![1] as { prior: unknown };
+      expect(call.prior, 'F6: prior is threaded to the class-C executor call').toBeNull();
+      expect(out.written.rows_after).toBe(1);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('T4b — class B (unchanged) still dispatches to write.executeWrite, never executeStagingReplace', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(write, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: false, bypassrls: false, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue(acquireResult([feature])),
+      vi.spyOn(write, 'validateGeometries').mockResolvedValue({ carried: [feature], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(write, 'executeWrite').mockResolvedValue({
+        inserted: 1, updated: 0, deleted: 0, rows_scanned: 1, rows_changed: 1, delete_skipped_empty_guard: false,
+      }),
+      vi.spyOn(write, 'executeStagingReplace'),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor, pool: fakePool(), compute: ravineCompute, config: {},
+        fetchImpl: async () => { throw new Error('unused'); },
+        chainId: null, log: NO_LOG, tag: '[class_b_dispatch]', clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(write.executeWrite).toHaveBeenCalledTimes(1);
+      expect(write.executeStagingReplace, 'a class-B target must never reach the replace executor').not.toHaveBeenCalled();
+      expect(out.reason).toBe('loaded');
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+});
+
+describe('the pre_write gate three-way — checks[].on_warn "skip_write" (INGESTOR prerequisite 0h, Fold A F1)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const write = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real INGESTOR compute
+  const ravineCompute = require(join(process.cwd(), 'scripts/lib/compute/load-ravines.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+
+  /** A minimal, gate-only descriptor: `makePreWriteGate` reads nothing from it beyond
+   * `identity`, `checks`, `sharing` (absent ⇒ shared everywhere) and `override`
+   * (absent ⇒ no standing acceptance). */
+  const gateDescriptor = (opts: { onWarn?: boolean } = {}) => ({
+    identity: { name: 'fixture_gate_three_way', display_name: 'Fixture Gate Three-Way' },
+    checks: [
+      {
+        id: 'staged_rows_floor',
+        when: 'pre_write',
+        severity: 'WARN',
+        limit: 'viol <= 0',
+        chains: 'all',
+        ...(opts.onWarn === false ? {} : { on_warn: 'skip_write' }),
+      },
+    ],
+  });
+
+  const stepCtxFor = (descriptor: Record<string, unknown>) => ({
+    pool: null, chainId: null, runId: 1, descriptor,
+    checks: (descriptor.checks as Array<{ id: string }>).map((c) => c.id),
+    log: NO_LOG, clock: () => Date.parse('2026-09-24T00:00:00Z'),
+    config: {}, acquired: null, written: null, prior: null, overrides: null, gate: null, report: () => {},
+  });
+
+  /**
+   * Reports NOTHING for every gated check. An unreported check reads at its DECLARED
+   * severity (verdict.js's "never PASS when unevaluated", Spec 121 §12b.6) — the
+   * cheapest legal way to manufacture a real WARN row without a numeric observation.
+   */
+  const silentCompute = async () => {};
+
+  const gateFor = (descriptor: Record<string, unknown>) => stepLib.makePreWriteGate({
+    descriptor, chainId: null, stepCtx: stepCtxFor(descriptor), compute: silentCompute, config: {},
+  });
+
+  it('T5a — a WARN row from a check declaring on_warn:"skip_write" ⇒ {abort:false, skipWrite:true, skipWriteChecks:[id]}', async () => {
+    const gate = gateFor(gateDescriptor());
+    expect(gate, 'the descriptor declares one pre_write check, so a gate must exist').not.toBeNull();
+    const decision = await gate!({ acquired: {}, prior: null, overrides: {} });
+    expect(decision).toEqual({ abort: false, failed: [], skipWrite: true, skipWriteChecks: ['staged_rows_floor'] });
+  });
+
+  it('T5b — the SAME WARN row WITHOUT on_warn declared proceeds exactly as before: the pre-0h shape ({abort,failed}) is byte-identical, no skipWrite key at all', async () => {
+    const gate = gateFor(gateDescriptor({ onWarn: false }));
+    const decision = await gate!({ acquired: {}, prior: null, overrides: {} });
+    expect(decision).toEqual({ abort: false, failed: [] });
+    expect(Object.prototype.hasOwnProperty.call(decision, 'skipWrite'), 'never an always-present false').toBe(false);
+  });
+
+  /**
+   * A `load_ravines` clone whose L7 (`ravine_count_drift_pct`) is repointed to
+   * WARN + `on_warn:"skip_write"`, and whose L8 (`ravine_geometry_skipped_pct`) is
+   * moved OFF `pre_write` (`when: "post"`) so it cannot also gate — this fixture
+   * isolates the third arm from the OTHER pre_write check's real (unrelated) FAIL
+   * semantics, already locked separately by LR-D9 above.
+   */
+  const preWriteWarnDescriptor = (opts: { onWarn?: boolean } = {}) => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const checks = d.checks as Array<Record<string, unknown>>;
+    const target = checks.find((c) => c.id === 'ravine_count_drift_pct')!;
+    target.severity = 'WARN';
+    if (opts.onWarn !== false) target.on_warn = 'skip_write';
+    else delete target.on_warn;
+    const other = checks.find((c) => c.id === 'ravine_geometry_skipped_pct')!;
+    other.when = 'post';
+    return d;
+  };
+
+  const acquireResult = () => ({
+    tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+    features: [{ source_id: 1, geom: Buffer.from('') }],
+    acquired: {
+      feature_count: 1, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
+      geometry_collection_extracted: 0, skipped_keys: [],
+      content_hash: 'aa', source_dataset_version: 'aa', last_modified: null, last_modified_ms: null,
+      etag: null, license_url: null,
+    },
+  });
+
+  it('T5c — via runIngestPhase: no write executor is ever called, the run reports pre_write_warn_skip_write, and preWriteSkipRows lands ONE WARN audit row naming the check', async () => {
+    const descriptor = preWriteWarnDescriptor();
+    const gate = gateFor(descriptor);
+    expect(gate).not.toBeNull();
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(write, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: false, bypassrls: false, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue(acquireResult()),
+      vi.spyOn(write, 'validateGeometries').mockResolvedValue({ carried: [{ source_id: 1, geom: Buffer.from('') }], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(write, 'executeWrite'),
+      vi.spyOn(write, 'executeStagingReplace'),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor, pool: fakePool(), compute: ravineCompute, config: {},
+        fetchImpl: async () => { throw new Error('the skip-write arm must not fetch'); },
+        chainId: null, log: NO_LOG, tag: '[gate_skip_write]', clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: gate,
+      });
+      expect(write.executeWrite, 'no write executor at all — this arm never opens a transaction').not.toHaveBeenCalled();
+      expect(write.executeStagingReplace).not.toHaveBeenCalled();
+      expect(out.writeSkipped).toBe(true);
+      expect(out.reason).toBe('pre_write_warn_skip_write');
+      expect(out.writeSkippedPreWriteWarn).toBe(true);
+      expect(out.failedPreWriteWarn).toEqual(['ravine_count_drift_pct']);
+      expect(out.written).toMatchObject({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, write_skipped_pre_write_warn: true,
+      });
+
+      // preWriteSkipRows — the §preWriteAbortRows idiom with the arms swapped, exported
+      // (mirroring preWriteAbortRows's own export-for-testing rationale) for a direct lock.
+      expect(stepLib.preWriteSkipRows([out])).toEqual([{
+        metric: 'write_skipped_pre_write_warn',
+        value: 'skipped: ravine_count_drift_pct',
+        threshold: 'zero WARN rows among the when:"pre_write" checks declaring on_warn "skip_write"',
+        status: 'WARN',
+        source: 'gate',
+      }]);
+      expect(stepLib.preWriteSkipRows([{ writeSkippedPreWriteWarn: false }]), 'absent on a healthy run').toEqual([]);
+      expect(stepLib.preWriteSkipRows([null]), 'tolerates a null phase result').toEqual([]);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('T5d — a pre_write WARN check WITHOUT on_warn still lets the write proceed (pinned current behaviour)', async () => {
+    const descriptor = preWriteWarnDescriptor({ onWarn: false });
+    const gate = gateFor(descriptor);
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(write, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: false, bypassrls: false, policies: 0 } }),
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue(acquireResult()),
+      vi.spyOn(write, 'validateGeometries').mockResolvedValue({ carried: [{ source_id: 1, geom: Buffer.from('') }], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
+      vi.spyOn(write, 'executeWrite').mockResolvedValue({
+        inserted: 1, updated: 0, deleted: 0, rows_scanned: 1, rows_changed: 1, delete_skipped_empty_guard: false,
+      }),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor, pool: fakePool(), compute: ravineCompute, config: {},
+        fetchImpl: async () => { throw new Error('unused'); },
+        chainId: null, log: NO_LOG, tag: '[gate_warn_proceeds]', clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: gate,
+      });
+      expect(write.executeWrite).toHaveBeenCalledTimes(1);
+      expect(out.writeSkipped).toBe(false);
+      expect(out.reason).toBe('loaded');
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('T6 — AJV: on_warn "skip_write" is accepted only on a when:"pre_write" check', () => {
+    const onPreWrite = clone(LOAD_RAVINES);
+    const preWriteCheck = (onPreWrite.checks as Array<{ id: string; when: string; on_warn?: string }>)
+      .find((c) => c.when === 'pre_write')!;
+    preWriteCheck.on_warn = 'skip_write';
+    expect(() => pipeline.step(onPreWrite, noop)).not.toThrow();
+
+    const onPost = clone(LOAD_RAVINES);
+    const postCheck = (onPost.checks as Array<{ id: string; when: string; on_warn?: string }>)
+      .find((c) => c.id === 'ravine_bad_objectid_count')!;
+    expect(postCheck.when).toBe('post');
+    postCheck.on_warn = 'skip_write';
+    expect(() => pipeline.step(onPost, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    const badEnum = clone(LOAD_RAVINES);
+    const check3 = (badEnum.checks as Array<{ id: string; when: string; on_warn?: string }>)
+      .find((c) => c.when === 'pre_write')!;
+    (check3 as { on_warn?: string }).on_warn = 'abort_instead';
+    expect(() => pipeline.step(badEnum, noop)).toThrow(/does not satisfy step\.schema\.json/);
+  });
+});
+
