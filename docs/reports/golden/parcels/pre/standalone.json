@@ -1,0 +1,286 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/load-parcels.js",
+  "chain": "none",
+  "git_head": "f122bca7cd522cdd1f7ffa8e335e1bbe1e22d9e1",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 107445,
+      "rows_read": 498479,
+      "records_inserted": 0,
+      "records_updated": 0,
+      "records_unchanged": 495495,
+      "records_skipped": 2984,
+      "errors": 0,
+      "audit_table": {
+        "phase": 4,
+        "name": "Parcels Ingestion",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "rows_read",
+            "value": 498479,
+            "threshold": ">= 450000",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_inserted",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_unchanged",
+            "value": 495495,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_skipped",
+            "value": 2984,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "skip_rate",
+            "value": "0.6%",
+            "threshold": "< 10%",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_csv_schema_drift",
+            "value": "none",
+            "threshold": "no missing required columns",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_null_address_pct",
+            "value": "100.0%",
+            "threshold": "< 10%",
+            "status": "WARN"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 107538,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "Toronto Open Data CSV": [
+          "PARCELID",
+          "FEATURE_TYPE",
+          "STATEDAREA",
+          "geometry",
+          "DATE_EXPIRY"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "parcel_id",
+          "feature_type",
+          "address_number",
+          "linear_name_full",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "street_type_normalized",
+          "stated_area_raw",
+          "lot_size_sqm",
+          "lot_size_sqft",
+          "frontage_m",
+          "frontage_ft",
+          "depth_m",
+          "depth_ft",
+          "geometry",
+          "date_effective",
+          "is_irregular",
+          "geom"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"=== Buildo Property Boundaries Loader ===\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Using cached CSV: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Load complete\",\"context\":{\"rows_read\":498479,\"inserted\":0,\"updated\":0,\"skipped\":2984,\"errors\":0,\"duration\":\"107.4s\"}}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":107445,\"rows_read\":498479,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495495,\"records_skipped\":2984,\"errors\":0,\"audit_table\":{\"phase\":4,\"name\":\"Parcels Ingestion\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"rows_read\",\"value\":498479,\"threshold\":\">= 450000\",\"status\":\"PASS\"},{\"metric\":\"records_inserted\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unchanged\",\"value\":495495,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":2984,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"skip_rate\",\"value\":\"0.6%\",\"threshold\":\"< 10%\",\"status\":\"PASS\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_csv_schema_drift\",\"value\":\"none\",\"threshold\":\"no missing required columns\",\"status\":\"PASS\"},{\"metric\":\"parcels_null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"< 10%\",\"status\":\"WARN\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":107538,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"Toronto Open Data CSV\":[\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"geometry\",\"DATE_EXPIRY\"]},\"writes\":{\"parcels\":[\"parcel_id\",\"feature_type\",\"address_number\",\"linear_name_full\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"stated_area_raw\",\"lot_size_sqm\",\"lot_size_sqft\",\"frontage_m\",\"frontage_ft\",\"depth_m\",\"depth_ft\",\"geometry\",\"date_effective\",\"is_irregular\",\"geom\"]}}\n\n[load-parcels] completed in 107.5s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1983,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/load-parcels.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcels Ingestion",
+          "phase": 4,
+          "rows": [
+            {
+              "metric": "rows_read",
+              "status": "PASS",
+              "threshold": ">= 450000",
+              "value": 498479
+            },
+            {
+              "metric": "records_inserted",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_unchanged",
+              "status": "INFO",
+              "threshold": null,
+              "value": 495495
+            },
+            {
+              "metric": "records_skipped",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2984
+            },
+            {
+              "metric": "skip_rate",
+              "status": "PASS",
+              "threshold": "< 10%",
+              "value": "0.6%"
+            },
+            {
+              "metric": "records_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_csv_schema_drift",
+              "status": "PASS",
+              "threshold": "no missing required columns",
+              "value": "none"
+            },
+            {
+              "metric": "parcels_null_address_pct",
+              "status": "WARN",
+              "threshold": "< 10%",
+              "value": "100.0%"
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "errors": 0,
+        "records_inserted": 0,
+        "records_skipped": 2984,
+        "records_unchanged": 495495,
+        "records_updated": 0,
+        "rows_read": 498479
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "Toronto Open Data CSV": [
+            "PARCELID",
+            "FEATURE_TYPE",
+            "STATEDAREA",
+            "geometry",
+            "DATE_EXPIRY"
+          ]
+        },
+        "writes": {
+          "parcels": [
+            "parcel_id",
+            "feature_type",
+            "address_number",
+            "linear_name_full",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "stated_area_raw",
+            "lot_size_sqm",
+            "lot_size_sqft",
+            "frontage_m",
+            "frontage_ft",
+            "depth_m",
+            "depth_ft",
+            "geometry",
+            "date_effective",
+            "is_irregular",
+            "geom"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"=== Buildo Property Boundaries Loader ===\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Using cached CSV: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-parcels]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"errors\":0,\"inserted\":0,\"rows_read\":498479,\"skipped\":2984,\"updated\":0},\"level\":\"INFO\",\"msg\":\"Load complete\",\"tag\":\"[load-parcels]\"}",
+      "[load-parcels] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}

@@ -1,0 +1,308 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/load-parcels.js",
+  "chain": "sources",
+  "git_head": "f122bca7cd522cdd1f7ffa8e335e1bbe1e22d9e1",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 495495,
+    "records_new": 9970,
+    "records_updated": 485525,
+    "records_meta": {
+      "duration_ms": 465727,
+      "rows_read": 498479,
+      "records_inserted": 9970,
+      "records_updated": 485525,
+      "records_unchanged": 0,
+      "records_skipped": 2984,
+      "errors": 0,
+      "audit_table": {
+        "phase": 4,
+        "name": "Parcels Ingestion",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "rows_read",
+            "value": 498479,
+            "threshold": ">= 450000",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_inserted",
+            "value": 9970,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated",
+            "value": 485525,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_unchanged",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_skipped",
+            "value": 2984,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "skip_rate",
+            "value": "0.6%",
+            "threshold": "< 10%",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_errors",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_csv_schema_drift",
+            "value": "none",
+            "threshold": "no missing required columns",
+            "status": "PASS"
+          },
+          {
+            "metric": "parcels_null_address_pct",
+            "value": "100.0%",
+            "threshold": "< 10%",
+            "status": "WARN"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 1019.01,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 486253,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "Toronto Open Data CSV": [
+          "PARCELID",
+          "FEATURE_TYPE",
+          "STATEDAREA",
+          "geometry",
+          "DATE_EXPIRY"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "parcel_id",
+          "feature_type",
+          "address_number",
+          "linear_name_full",
+          "addr_num_normalized",
+          "street_name_normalized",
+          "street_type_normalized",
+          "stated_area_raw",
+          "lot_size_sqm",
+          "lot_size_sqft",
+          "frontage_m",
+          "frontage_ft",
+          "depth_m",
+          "depth_ft",
+          "geometry",
+          "date_effective",
+          "is_irregular",
+          "geom"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"=== Buildo Property Boundaries Loader ===\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Downloading Property Boundaries CSV (~327 MB)...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 10 MB / 214 MB (4.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 20 MB / 214 MB (9.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 30 MB / 214 MB (14.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 40 MB / 214 MB (18.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 50 MB / 214 MB (23.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 60 MB / 214 MB (28.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 70 MB / 214 MB (32.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 80 MB / 214 MB (37.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 90 MB / 214 MB (42.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 100 MB / 214 MB (46.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 110 MB / 214 MB (51.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 120 MB / 214 MB (56.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 130 MB / 214 MB (60.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 140 MB / 214 MB (65.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 150 MB / 214 MB (70.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 160 MB / 214 MB (74.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 170 MB / 214 MB (79.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 180 MB / 214 MB (84.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 190 MB / 214 MB (88.7%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 200 MB / 214 MB (93.3%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download: 210 MB / 214 MB (98.0%)\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Download complete.\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-parcels]\",\"msg\":\"Load complete\",\"context\":{\"rows_read\":498479,\"inserted\":9970,\"updated\":485525,\"skipped\":2984,\"errors\":0,\"duration\":\"465.7s\"}}\nPIPELINE_SUMMARY:{\"records_total\":495495,\"records_new\":9970,\"records_updated\":485525,\"records_meta\":{\"duration_ms\":465727,\"rows_read\":498479,\"records_inserted\":9970,\"records_updated\":485525,\"records_unchanged\":0,\"records_skipped\":2984,\"errors\":0,\"audit_table\":{\"phase\":4,\"name\":\"Parcels Ingestion\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"rows_read\",\"value\":498479,\"threshold\":\">= 450000\",\"status\":\"PASS\"},{\"metric\":\"records_inserted\",\"value\":9970,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":485525,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unchanged\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":2984,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"skip_rate\",\"value\":\"0.6%\",\"threshold\":\"< 10%\",\"status\":\"PASS\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"parcels_csv_schema_drift\",\"value\":\"none\",\"threshold\":\"no missing required columns\",\"status\":\"PASS\"},{\"metric\":\"parcels_null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"< 10%\",\"status\":\"WARN\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1019.01,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":486253,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"Toronto Open Data CSV\":[\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"geometry\",\"DATE_EXPIRY\"]},\"writes\":{\"parcels\":[\"parcel_id\",\"feature_type\",\"address_number\",\"linear_name_full\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"stated_area_raw\",\"lot_size_sqm\",\"lot_size_sqft\",\"frontage_m\",\"frontage_ft\",\"depth_m\",\"depth_ft\",\"geometry\",\"date_effective\",\"is_irregular\",\"geom\"]}}\n\n[load-parcels] completed in 486.3s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 1983,
+  "table_state": [],
+  "tables_source": "none",
+  "table_row_ceiling": 100000,
+  "table_timing": {},
+  "table_specs": {},
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/load-parcels.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcels Ingestion",
+          "phase": 4,
+          "rows": [
+            {
+              "metric": "rows_read",
+              "status": "PASS",
+              "threshold": ">= 450000",
+              "value": 498479
+            },
+            {
+              "metric": "records_inserted",
+              "status": "INFO",
+              "threshold": null,
+              "value": 9970
+            },
+            {
+              "metric": "records_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 485525
+            },
+            {
+              "metric": "records_unchanged",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_skipped",
+              "status": "INFO",
+              "threshold": null,
+              "value": 2984
+            },
+            {
+              "metric": "skip_rate",
+              "status": "PASS",
+              "threshold": "< 10%",
+              "value": "0.6%"
+            },
+            {
+              "metric": "records_errors",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "parcels_csv_schema_drift",
+              "status": "PASS",
+              "threshold": "no missing required columns",
+              "value": "none"
+            },
+            {
+              "metric": "parcels_null_address_pct",
+              "status": "WARN",
+              "threshold": "< 10%",
+              "value": "100.0%"
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "errors": 0,
+        "records_inserted": 9970,
+        "records_skipped": 2984,
+        "records_unchanged": 0,
+        "records_updated": 485525,
+        "rows_read": 498479
+      },
+      "records_new": 9970,
+      "records_total": 495495,
+      "records_updated": 485525
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "Toronto Open Data CSV": [
+            "PARCELID",
+            "FEATURE_TYPE",
+            "STATEDAREA",
+            "geometry",
+            "DATE_EXPIRY"
+          ]
+        },
+        "writes": {
+          "parcels": [
+            "parcel_id",
+            "feature_type",
+            "address_number",
+            "linear_name_full",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "stated_area_raw",
+            "lot_size_sqm",
+            "lot_size_sqft",
+            "frontage_m",
+            "frontage_ft",
+            "depth_m",
+            "depth_ft",
+            "geometry",
+            "date_effective",
+            "is_irregular",
+            "geom"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"=== Buildo Property Boundaries Loader ===\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Downloading Property Boundaries CSV (~327 MB)...\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 10 MB / 214 MB (4.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 20 MB / 214 MB (9.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 30 MB / 214 MB (14.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 40 MB / 214 MB (18.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 50 MB / 214 MB (23.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 60 MB / 214 MB (28.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 70 MB / 214 MB (32.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 80 MB / 214 MB (37.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 90 MB / 214 MB (42.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 100 MB / 214 MB (46.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 110 MB / 214 MB (51.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 120 MB / 214 MB (56.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 130 MB / 214 MB (60.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 140 MB / 214 MB (65.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 150 MB / 214 MB (70.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 160 MB / 214 MB (74.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 170 MB / 214 MB (79.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 180 MB / 214 MB (84.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 190 MB / 214 MB (88.7%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 200 MB / 214 MB (93.3%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download: 210 MB / 214 MB (98.0%)\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Download complete.\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Parsing: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\property-boundaries-4326.csv\",\"tag\":\"[load-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-parcels]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"errors\":0,\"inserted\":9970,\"rows_read\":498479,\"skipped\":2984,\"updated\":485525},\"level\":\"INFO\",\"msg\":\"Load complete\",\"tag\":\"[load-parcels]\"}",
+      "[load-parcels] completed in <DUR>"
+    ],
+    "table_state": [],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet"
+}
