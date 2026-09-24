@@ -6088,3 +6088,272 @@ describe('runIngestPhase honours write_discipline.set_source:"compute" — compu
   });
 });
 
+// ---------------------------------------------------------------------------
+// batch-2 Phase 3 prerequisites 0l + 0m (2026-09-24, brief
+// .cursor/engine-briefs/b2-p3-c0lm-declared-upsert-axes.md). Operator ruling
+// 2026-09-24 (standardized/observable/scalable/simple): two DECLARED upsert axes,
+// executed by the shared codegen, replace per-step compute-authored SQL
+// (write_discipline.set_source:"compute", prerequisite 0k) for an INGESTOR's two
+// most common escape-hatch reasons:
+//   · columns[].on_empty:"preserve" — an EMPTY incoming value ('' after trim) keeps
+//     the stored value (SET + guard).
+//   · outputs.invalidates[].set_null_on_change_of — a lineage-stamp CASE arm NULLed
+//     when a watched column changes, EXECUTED against the write target its own entry
+//     names (the base {table,column,when} entry stays declarative-only).
+//
+// Founding case, measured 2026-09-24: scripts/load-parcels.js's legacy UPSERT — five
+// COALESCE(NULLIF(EXCLUDED.<col>, ''), parcels.<col>) preservations (mig 162 Day-1
+// critical-safety fix, WF1 #parcel-address-bridge) and three
+// <stamp> = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+// THEN NULL ELSE parcels.<stamp> END arms (DEC-FENCE2, #418). T5 reproduces it from
+// the two declared axes alone.
+//
+// The default-codegen path for BOTH already-converted INGESTORs (load_ravines,
+// address_points) is BYTE-IDENTICAL when neither axis is declared: T3 pins both
+// current `upsertSqlFor(1)` outputs verbatim.
+// ---------------------------------------------------------------------------
+
+describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outputs.invalidates[].set_null_on_change_of (batch-2 Phase 3 prerequisites 0l+0m)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write module
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS validate module
+  const validateLib = require(join(process.cwd(), 'scripts/lib/step/validate.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real converted descriptor
+  const ADDRESS_POINTS = require(join(process.cwd(), 'scripts/load-address-points.descriptor.json'));
+
+  /** A whitespace-insensitive comparison — collapses all runs of whitespace to one space. */
+  const normalizeSql = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+  const col = (name: string, extra: Record<string, unknown> = {}) => ({
+    name, vocabulary: 'none', written: 'step', bind: 'value', ...extra,
+  });
+
+  it('T1 — one on_empty:"preserve" column: SET COALESCEs the empty-preserving form, the guard uses the legacy NULLIF-guarded form (byte-for-byte, not an algebraic rewrite)', () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    const cols = write.columns as Array<Record<string, unknown>>;
+    const versionCol = cols.find((c) => c.name === 'source_dataset_version')!;
+    versionCol.on_empty = 'preserve';
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+
+    expect(sql).toContain("source_dataset_version = COALESCE(NULLIF(EXCLUDED.source_dataset_version, ''), ravines.source_dataset_version)");
+    expect(sql).toContain("(NULLIF(EXCLUDED.source_dataset_version, '') IS NOT NULL AND ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version)");
+    // Absent for every OTHER declared column — this is a per-column axis, not a class-wide switch.
+    expect(sql).toContain('geom = EXCLUDED.geom');
+    expect(sql).toContain('ravines.geom IS DISTINCT FROM EXCLUDED.geom');
+    expect(plan.on_empty_columns).toEqual(['source_dataset_version']);
+  });
+
+  it('T2 — an invalidates[] entry with set_null_on_change_of:"geom" appends the CASE arm text and folds the watched column into the guard (deduplicated, placed first)', () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    // Retarget the write to a table it also invalidates a stamp on, so the entry's own
+    // table equals the write target's table (the validated shape prerequisite 0l requires).
+    write.table = 'ravines';
+    (d.outputs as Record<string, unknown>).invalidates = [{
+      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom',
+    }];
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+
+    // geom is bind:"wkb_geometry" — a real PostGIS value, so the comparison is PLAIN,
+    // never ::jsonb (that cast would fail against a genuine geometry column).
+    expect(sql).toContain('source_dataset_version = CASE WHEN ravines.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE ravines.source_dataset_version END');
+    // The watched column (geom) is already an explicit guard_columns entry on LOAD_RAVINES —
+    // deduplicated WITHIN THE WHERE CLAUSE, so its own guard clause appears exactly once
+    // there (a second, textually-identical occurrence legitimately lives in the CASE arm's
+    // own WHEN comparison above — a different clause, not a guard duplicate).
+    const whereClause = sql.slice(sql.indexOf('\n  WHERE'));
+    expect(whereClause.match(/ravines\.geom IS DISTINCT FROM EXCLUDED\.geom/g)).toHaveLength(1);
+    expect(plan.invalidated_on_change).toEqual([{ column: 'source_dataset_version', watched: 'geom' }]);
+  });
+
+  it('T2b — a JSON-text watched column (bind:"value") compares structurally via ::jsonb, and a foreign-table entry is excluded from the plan entirely', () => {
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    (d.outputs as Record<string, unknown>).invalidates = [
+      // The pre-existing declarative-only entry: table "parcels" != write target "ravines" —
+      // must be silently excluded from the RENDERED plan (never a foreign-table CASE arm).
+      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'source_dataset_version changes — declarative only' },
+      // A matching-table entry watching a bind:"value" column.
+      { table: 'ravines', column: 'source_dataset_version', when: 'source_dataset_version changes', set_null_on_change_of: 'source_dataset_version' },
+    ];
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+    expect(sql).toContain('source_dataset_version = CASE WHEN ravines.source_dataset_version::jsonb IS DISTINCT FROM EXCLUDED.source_dataset_version::jsonb THEN NULL ELSE ravines.source_dataset_version END');
+    expect(plan.invalidated_on_change).toEqual([{ column: 'source_dataset_version', watched: 'source_dataset_version' }]);
+  });
+
+  it('T3 (GREEN, stays) — load_ravines and address_points default-codegen plans are BYTE-IDENTICAL (pinned) with neither axis declared', () => {
+    const ravinesWrite = (LOAD_RAVINES.outputs.writes as Array<Record<string, unknown>>)[0]!;
+    const ravinesPlan = writeLib.buildWritePlan(ravinesWrite, LOAD_RAVINES);
+    const RAVINES_PINNED = 'INSERT INTO ravines (source_id, geom, source_dataset_version, updated_at)\n'
+      + 'VALUES ($1, ST_GeomFromWKB($2, 4326), $3, $4)\n'
+      + 'ON CONFLICT (source_id) DO UPDATE SET geom = EXCLUDED.geom, '
+      + 'source_dataset_version = EXCLUDED.source_dataset_version, updated_at = EXCLUDED.updated_at\n'
+      + '  WHERE ravines.geom IS DISTINCT FROM EXCLUDED.geom\n'
+      + '     OR ravines.source_dataset_version IS DISTINCT FROM EXCLUDED.source_dataset_version\n'
+      + '-- declared but never written by this step (DB default): created_at\n'
+      + 'RETURNING (xmax = 0) AS is_insert;';
+    expect(ravinesPlan.upsertSqlFor(1)).toBe(RAVINES_PINNED);
+    expect(ravinesPlan.on_empty_columns).toEqual([]);
+    expect(ravinesPlan.invalidated_on_change).toEqual([]);
+
+    const addressesWrite = (ADDRESS_POINTS.outputs.writes as Array<Record<string, unknown>>)[0]!;
+    const addressesPlan = writeLib.buildWritePlan(addressesWrite, ADDRESS_POINTS);
+    const ADDRESSES_PINNED = 'INSERT INTO address_points (address_point_id, latitude, longitude, address_number, linear_name_full, address_full, lo_num, hi_num, maint_stage, address_status, address_class_desc, class_family_desc, place_name, addr_num_normalized, linear_name_normalized, geom)\n'
+      + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, ST_GeomFromWKB($16, 4326))\n'
+      + 'ON CONFLICT (address_point_id) DO UPDATE SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, '
+      + 'address_number = EXCLUDED.address_number, linear_name_full = EXCLUDED.linear_name_full, address_full = EXCLUDED.address_full, '
+      + 'lo_num = EXCLUDED.lo_num, hi_num = EXCLUDED.hi_num, maint_stage = EXCLUDED.maint_stage, address_status = EXCLUDED.address_status, '
+      + 'address_class_desc = EXCLUDED.address_class_desc, class_family_desc = EXCLUDED.class_family_desc, place_name = EXCLUDED.place_name, '
+      + 'addr_num_normalized = EXCLUDED.addr_num_normalized, linear_name_normalized = EXCLUDED.linear_name_normalized, geom = EXCLUDED.geom\n'
+      + '  WHERE address_points.latitude IS DISTINCT FROM EXCLUDED.latitude\n'
+      + '     OR address_points.longitude IS DISTINCT FROM EXCLUDED.longitude\n'
+      + '     OR address_points.address_number IS DISTINCT FROM EXCLUDED.address_number\n'
+      + '     OR address_points.linear_name_full IS DISTINCT FROM EXCLUDED.linear_name_full\n'
+      + '     OR address_points.address_full IS DISTINCT FROM EXCLUDED.address_full\n'
+      + '     OR address_points.lo_num IS DISTINCT FROM EXCLUDED.lo_num\n'
+      + '     OR address_points.hi_num IS DISTINCT FROM EXCLUDED.hi_num\n'
+      + '     OR address_points.maint_stage IS DISTINCT FROM EXCLUDED.maint_stage\n'
+      + '     OR address_points.address_status IS DISTINCT FROM EXCLUDED.address_status\n'
+      + '     OR address_points.address_class_desc IS DISTINCT FROM EXCLUDED.address_class_desc\n'
+      + '     OR address_points.class_family_desc IS DISTINCT FROM EXCLUDED.class_family_desc\n'
+      + '     OR address_points.place_name IS DISTINCT FROM EXCLUDED.place_name\n'
+      + '     OR address_points.addr_num_normalized IS DISTINCT FROM EXCLUDED.addr_num_normalized\n'
+      + '     OR address_points.linear_name_normalized IS DISTINCT FROM EXCLUDED.linear_name_normalized\n'
+      + '     OR address_points.geom IS DISTINCT FROM EXCLUDED.geom\n'
+      + 'RETURNING (xmax = 0) AS is_insert;';
+    expect(addressesPlan.upsertSqlFor(1)).toBe(ADDRESSES_PINNED);
+    expect(addressesPlan.on_empty_columns).toEqual([]);
+    expect(addressesPlan.invalidated_on_change).toEqual([]);
+  });
+
+  it('T4 — AJV accepts both fields and rejects on_empty:"keep"; the semantic layer rejects an invalidates[] entry naming a foreign table with set_null_on_change_of', () => {
+    // Accepted: a valid on_empty:"preserve" column + a matching-table invalidates entry.
+    const accepted = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const acceptedWrite = ((accepted.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    acceptedWrite.table = 'ravines';
+    const acceptedCols = acceptedWrite.columns as Array<Record<string, unknown>>;
+    (acceptedCols.find((c) => c.name === 'source_dataset_version')!).on_empty = 'preserve';
+    (accepted.outputs as Record<string, unknown>).invalidates = [{
+      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom',
+    }];
+    expect(() => pipeline.step(accepted, noop)).not.toThrow();
+
+    // Rejected by AJV: the enum is frozen to exactly "preserve".
+    const badEnum = clone(LOAD_RAVINES) as Record<string, unknown>;
+    const badEnumWrite = ((badEnum.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    const badEnumCols = badEnumWrite.columns as Array<Record<string, unknown>>;
+    (badEnumCols.find((c) => c.name === 'source_dataset_version')!).on_empty = 'keep';
+    expect(() => pipeline.step(badEnum, noop)).toThrow(/does not satisfy step\.schema\.json/);
+
+    // Schema-valid but semantically wrong: the entry names a table no outputs.writes[]
+    // declares — AJV cannot catch a cross-array reference, so validate.js does.
+    const foreignTable = clone(LOAD_RAVINES) as Record<string, unknown>;
+    (foreignTable.outputs as Record<string, unknown>).invalidates = [{
+      table: 'parcel_buildings', column: 'some_stamp', when: 'geom changes', set_null_on_change_of: 'geom',
+    }];
+    expect(() => pipeline.step(foreignTable, noop)).toThrow(/violates a semantic rule/);
+    const findings = validateLib.semanticFindings(foreignTable);
+    expect(findings.some((f: string) => f.includes('set_null_on_change_of') && f.includes('parcel_buildings'))).toBe(true);
+  });
+
+  it('T5 — the legacy parcels UPSERT (scripts/load-parcels.js) is reproduced whitespace-normalised by a plan declaring the five on_empty columns + three invalidates entries + the seven guard columns', () => {
+    // Copied verbatim from scripts/load-parcels.js's ON CONFLICT (parcel_id) DO UPDATE SET
+    // block, MINUS the conditional `${geomLine}` (a separate, not-yet-declared PostGIS
+    // ST_SetSRID/ST_GeomFromGeoJSON axis orthogonal to on_empty/set_null_on_change_of) and
+    // MINUS `date_effective` (a COALESCE-if-NOT-NULL variant — dates have no empty-string
+    // representation, so it is a DIFFERENT semantic than on_empty:"preserve" and out of
+    // scope for these two prerequisites). Every remaining byte is the legacy text.
+    const LEGACY_PARCELS_UPSERT = `
+        ON CONFLICT (parcel_id)
+        DO UPDATE SET
+          feature_type = EXCLUDED.feature_type,
+          address_number          = COALESCE(NULLIF(EXCLUDED.address_number, ''),          parcels.address_number),
+          linear_name_full        = COALESCE(NULLIF(EXCLUDED.linear_name_full, ''),        parcels.linear_name_full),
+          addr_num_normalized     = COALESCE(NULLIF(EXCLUDED.addr_num_normalized, ''),     parcels.addr_num_normalized),
+          street_name_normalized  = COALESCE(NULLIF(EXCLUDED.street_name_normalized, ''),  parcels.street_name_normalized),
+          street_type_normalized  = COALESCE(NULLIF(EXCLUDED.street_type_normalized, ''),  parcels.street_type_normalized),
+          stated_area_raw = EXCLUDED.stated_area_raw,
+          lot_size_sqm = EXCLUDED.lot_size_sqm,
+          lot_size_sqft = EXCLUDED.lot_size_sqft,
+          frontage_m = EXCLUDED.frontage_m,
+          frontage_ft = EXCLUDED.frontage_ft,
+          depth_m = EXCLUDED.depth_m,
+          depth_ft = EXCLUDED.depth_ft,
+          geometry = EXCLUDED.geometry,
+          is_irregular = EXCLUDED.is_irregular,
+          ravine_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END,
+          heritage_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END,
+          centreline_dataset_version_when_enriched = CASE
+            WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+            THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END
+        WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+          OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm
+          OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type
+          OR (NULLIF(EXCLUDED.address_number, '') IS NOT NULL
+              AND parcels.address_number IS DISTINCT FROM EXCLUDED.address_number)
+          OR (NULLIF(EXCLUDED.linear_name_full, '') IS NOT NULL
+              AND parcels.linear_name_full IS DISTINCT FROM EXCLUDED.linear_name_full)
+          OR (NULLIF(EXCLUDED.addr_num_normalized, '') IS NOT NULL
+              AND parcels.addr_num_normalized IS DISTINCT FROM EXCLUDED.addr_num_normalized)
+          OR (NULLIF(EXCLUDED.street_name_normalized, '') IS NOT NULL
+              AND parcels.street_name_normalized IS DISTINCT FROM EXCLUDED.street_name_normalized)
+          OR (NULLIF(EXCLUDED.street_type_normalized, '') IS NOT NULL
+              AND parcels.street_type_normalized IS DISTINCT FROM EXCLUDED.street_type_normalized)
+        RETURNING (xmax = 0) AS is_insert`;
+
+    const d = clone(LOAD_RAVINES) as Record<string, unknown>;
+    (d.identity as Record<string, unknown>).name = 'load_parcels_t5_fixture';
+    const write = ((d.outputs as Record<string, unknown>).writes as Array<Record<string, unknown>>)[0]!;
+    write.table = 'parcels';
+    write.key = 'parcel_id';
+    write.key_sql_type = 'BIGINT';
+    delete write.geometry_kind; // no wkb_geometry column in this fixture
+    write.retract = 'none';
+    (write.write_discipline as Record<string, unknown>).class = 'guarded_upsert';
+    // The SEVEN declared guard_columns; `geometry` is NOT among them — it reaches the
+    // guard automatically, FIRST, because it is the watched column of all three
+    // invalidates entries below (the founding case's own WHERE clause opens on it).
+    (write.write_discipline as Record<string, unknown>).guard_columns = [
+      'lot_size_sqm', 'feature_type', 'address_number', 'linear_name_full',
+      'addr_num_normalized', 'street_name_normalized', 'street_type_normalized',
+    ];
+    write.columns = [
+      col('parcel_id'),
+      col('feature_type'),
+      col('address_number', { on_empty: 'preserve' }),
+      col('linear_name_full', { on_empty: 'preserve' }),
+      col('addr_num_normalized', { on_empty: 'preserve' }),
+      col('street_name_normalized', { on_empty: 'preserve' }),
+      col('street_type_normalized', { on_empty: 'preserve' }),
+      col('stated_area_raw'),
+      col('lot_size_sqm'),
+      col('lot_size_sqft'),
+      col('frontage_m'),
+      col('frontage_ft'),
+      col('depth_m'),
+      col('depth_ft'),
+      col('geometry'),
+      col('is_irregular'),
+    ];
+    (d.outputs as Record<string, unknown>).invalidates = [
+      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+    ];
+
+    expect(() => pipeline.step(d, noop)).not.toThrow();
+    const plan = writeLib.buildWritePlan(write, d);
+    const sql = plan.upsertSqlFor(1) as string;
+    const tail = sql.slice(sql.indexOf('\nON CONFLICT'));
+    expect(normalizeSql(tail.replace(/;$/, ''))).toBe(normalizeSql(LEGACY_PARCELS_UPSERT));
+  });
+});
+

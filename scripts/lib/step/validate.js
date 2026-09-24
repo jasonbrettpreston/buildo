@@ -275,6 +275,39 @@ function assertBannedScalarFields(descriptor, findings) {
 }
 
 /**
+ * THE `invalidates[].set_null_on_change_of` TARGET ENFORCER (prerequisite 0l,
+ * 2026-09-24). AJV cannot cross-reference one array (`outputs.invalidates[]`) against
+ * another (`outputs.writes[]`) on the same descriptor, so the check lives here.
+ *
+ * `write.js buildWritePlan` EXECUTES an entry's CASE arm against the write target whose
+ * `table` the entry names (filtering `outputs.invalidates` by `e.table === table` for
+ * each declared write). An entry naming a table with NO matching `outputs.writes[].table`
+ * would therefore silently NEVER render its CASE arm — no error, no SQL, no stamp ever
+ * nulled — the same "declared but the generator never reads it" shape LG-9 closes for
+ * a run-clock guard column. The BASE `{table, column, when}` entry (no
+ * `set_null_on_change_of`) is unaffected: it stays declarative-only and may legitimately
+ * name a DIFFERENT step's consumer table (load_ravines' own entry names `parcels` while
+ * its write target is `ravines` — exactly the shape this check must NOT flag).
+ */
+function assertInvalidatesTargetMatchesWrite(descriptor, findings) {
+  const outputs = descriptor.outputs;
+  if (!outputs || outputs === 'none') return;
+  const invalidates = Array.isArray(outputs.invalidates) ? outputs.invalidates : [];
+  const writeTables = new Set((Array.isArray(outputs.writes) ? outputs.writes : []).map((w) => w.table));
+  invalidates.forEach((entry, i) => {
+    if (!entry.set_null_on_change_of) return; // declarative-only — no cross-reference to enforce
+    if (writeTables.has(entry.table)) return;
+    findings.push(
+      `  /outputs/invalidates/${i}: set_null_on_change_of "${entry.set_null_on_change_of}" is declared but `
+      + `table "${entry.table}" names no outputs.writes[].table on this descriptor `
+      + `(${[...writeTables].join(', ') || '(no writes declared)'}) — the codegen executes this entry against `
+      + 'the write target whose table it names (prerequisite 0l), so a mismatched table would silently never '
+      + 'fire: no CASE arm, no error, the stamp never nulled.',
+    );
+  });
+}
+
+/**
  * The SEMANTIC rules — everything true of a descriptor that JSON Schema cannot say
  * because it needs a cross-reference between two fields, or a shorthand expanded first.
  * Run AFTER AJV, so a structurally broken descriptor reports its shape errors rather
@@ -286,6 +319,7 @@ function semanticFindings(descriptor) {
   assertGrandfathered(descriptor, findings);
   assertNoRetraction(descriptor, findings);
   assertBannedScalarFields(descriptor, findings);
+  assertInvalidatesTargetMatchesWrite(descriptor, findings);
   return findings;
 }
 
@@ -332,6 +366,7 @@ module.exports = {
   effectiveGuardColumns,
   assertNoRetraction,
   assertBannedScalarFields,
+  assertInvalidatesTargetMatchesWrite,
   semanticFindings,
   validateDescriptor,
 };

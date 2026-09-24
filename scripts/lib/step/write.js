@@ -21,6 +21,19 @@
  *     `rows_scanned` / `rows_changed` are counted from `RETURNING (xmax = 0)` and
  *     checked against the declared bound, so `idempotent_rerun: "zero_writes"`
  *     becomes a number a differential can read rather than a claim in a comment.
+ *   · `columns[].on_empty: "preserve"` (prerequisite 0m, 2026-09-24) — an EMPTY
+ *     incoming value ('' after trim) keeps the stored value on conflict, replacing a
+ *     per-step compute-authored preservation with a DECLARED one the codegen executes.
+ *   · `outputs.invalidates[].set_null_on_change_of` (prerequisite 0l, 2026-09-24) — a
+ *     lineage-stamp CASE arm NULLed when a watched column changes, EXECUTED against the
+ *     write target its own entry names (unlike the base {table,column,when} entry, which
+ *     stays declarative-only for a DIFFERENT step's consumer to read).
+ *
+ * Both axes' founding case is `scripts/load-parcels.js`'s legacy UPSERT: five
+ * `COALESCE(NULLIF(EXCLUDED.<col>, ''), parcels.<col>)` preservations and three
+ * `<stamp> = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb
+ * THEN NULL ELSE parcels.<stamp> END` arms (DEC-FENCE2, #418) — reproduced from these two
+ * declared axes alone (`src/tests/step-library.logic.test.ts` T5).
  *
  * ⚠️ THE RLS PREFLIGHT IS NOT OPTIONAL, and it is why `guards.requires[].kind`
  * grew `rls_bypass_or_policy`. A class-B target with RLS ENABLED and ZERO policies
@@ -787,10 +800,62 @@ function buildWritePlan(writeSpec, descriptor) {
   // declared kind only selects the VALIDATOR's repair/accept arm in `validation_sql` above.
   const valuesGroup = (offset) => `(${stepColumns.map((c, i) => bindFor(c, offset + i)).join(', ')})`;
 
+  // ── columns[].on_empty:"preserve" (prerequisite 0m, 2026-09-24) ───────────
+  // A per-column lookup, read once. Absent for every column (the overwhelming
+  // majority of targets today) keeps `columnSetExpr`/`columnGuardExpr` byte-identical
+  // to the pre-0m text — no map entries, both functions fall straight to their `else`.
+  const onEmptyPreserve = new Set(
+    writeSpec.columns.filter((c) => c.on_empty === 'preserve').map((c) => c.name),
+  );
+  /** `col = EXCLUDED.col`, or the empty-preserving form for a declared column. */
+  const columnSetExpr = (c) => (onEmptyPreserve.has(c)
+    ? `${c} = COALESCE(NULLIF(EXCLUDED.${c}, ''), ${table}.${c})`
+    : `${c} = EXCLUDED.${c}`);
+  // Mirrors scripts/load-parcels.js / scripts/load-address-points.js's own NULLIF-guarded
+  // WHERE form BYTE-FOR-BYTE, rather than an algebraically-equivalent
+  // `IS DISTINCT FROM COALESCE(...)` rewrite: T5 (step-library.logic.test.ts) pins the
+  // codegen's reproduction of the legacy statement against the legacy FILE TEXT, and only
+  // this exact shape reproduces it.
+  const columnGuardExpr = (c) => (onEmptyPreserve.has(c)
+    ? `(NULLIF(EXCLUDED.${c}, '') IS NOT NULL AND ${table}.${c} IS DISTINCT FROM EXCLUDED.${c})`
+    : `${table}.${c} IS DISTINCT FROM EXCLUDED.${c}`);
+
+  // ── outputs.invalidates[].set_null_on_change_of (prerequisite 0l, 2026-09-24) ──
+  // EXECUTED, unlike the base {table,column,when} entry: for every invalidates entry
+  // naming THIS write target's table, append a lineage-stamp CASE arm. Validated by
+  // scripts/lib/step/validate.js (an entry's table must equal a declared write target's
+  // table); filtered here too so a caller that built a plan without validateDescriptor
+  // (a unit test, e.g.) never renders a CASE arm for a foreign table's entry.
+  const invalidatesHere = (descriptor.outputs && Array.isArray(descriptor.outputs.invalidates)
+    ? descriptor.outputs.invalidates : [])
+    .filter((e) => e.table === table && e.set_null_on_change_of);
+  // A `wkb_geometry`-bound watched column is a REAL PostGIS geometry value and cannot
+  // cast to jsonb; every other bind (the default "value" — the shape the founding case's
+  // GeoJSON-text `geometry` column uses) is compared STRUCTURALLY via `::jsonb`, exactly
+  // as load-parcels.js's own DEC-FENCE2 (#418) arms do — two syntactically different but
+  // semantically identical JSON strings must not re-trigger the invalidation.
+  const watchedCastsToJsonb = (name) => {
+    const col = writeSpec.columns.find((c) => c.name === name);
+    return !(col && col.bind === 'wkb_geometry');
+  };
+  const changeOfComparison = (watched) => (watchedCastsToJsonb(watched)
+    ? `${table}.${watched}::jsonb IS DISTINCT FROM EXCLUDED.${watched}::jsonb`
+    : `${table}.${watched} IS DISTINCT FROM EXCLUDED.${watched}`);
+  const invalidatesSetArms = invalidatesHere.map(
+    (e) => `${e.column} = CASE WHEN ${changeOfComparison(e.set_null_on_change_of)} THEN NULL ELSE ${table}.${e.column} END`,
+  );
+  // A watched column must be LIVE in the change-detection guard for its own CASE arm to
+  // ever run on a conflict — folded in here, deduplicated against the declared
+  // `guard_columns` (never double-clause a column declared both ways), placed FIRST
+  // (the founding case's own WHERE clause opens on `geometry`, the watched column, ahead
+  // of every explicitly declared guard column).
+  const changeOfGuardColumns = [...new Set(invalidatesHere.map((e) => e.set_null_on_change_of))]
+    .filter((w) => !guardColumns.includes(w));
+
   const head = `INSERT INTO ${table} (${stepColumnNames.join(', ')})\nVALUES `;
   const tail = `\nON CONFLICT (${keys.join(', ')}) DO UPDATE SET `
-    + `${updateColumns.map((c) => `${c} = EXCLUDED.${c}`).join(', ')}\n`
-    + `  WHERE ${guardColumns.map((c) => `${table}.${c} IS DISTINCT FROM EXCLUDED.${c}`).join('\n     OR ')}\n`
+    + `${[...updateColumns.map(columnSetExpr), ...invalidatesSetArms].join(', ')}\n`
+    + `  WHERE ${[...changeOfGuardColumns.map(changeOfComparison), ...guardColumns.map(columnGuardExpr)].join('\n     OR ')}\n`
     + (defaulted.length > 0
       ? `-- declared but never written by this step (DB default): ${defaulted.map((c) => c.name).join(', ')}\n`
       : '')
@@ -820,6 +885,14 @@ function buildWritePlan(writeSpec, descriptor) {
     // than having to subtract two lists — `step_columns` minus `update_columns` is not a
     // usable signal, because the key sits in the first and not the second.
     insert_only_columns: insertOnly,
+    // The DECLARED `on_empty:"preserve"` columns (prerequisite 0m) — a plan-shape
+    // summary sees the empty-preserving set directly rather than re-reading `columns[]`.
+    on_empty_columns: [...onEmptyPreserve],
+    // The DECLARED `invalidates[].set_null_on_change_of` entries EXECUTED against this
+    // write target (prerequisite 0l) — {column, watched} pairs, in declaration order, so
+    // a plan-shape summary (write_inventory) can list which stamps this UPDATE may null
+    // and which column change fires each one, without re-deriving it from the SQL text.
+    invalidated_on_change: invalidatesHere.map((e) => ({ column: e.column, watched: e.set_null_on_change_of })),
     // The columns bound as WKB. The validation phase writes its output under THESE
     // names, so the row objects it produces are already keyed the way `bindRow`
     // reads them — the alternative is a hand-maintained rename between two phases,

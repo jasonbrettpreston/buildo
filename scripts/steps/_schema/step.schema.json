@@ -1041,6 +1041,20 @@
                   "string",
                   "null"
                 ]
+              },
+              "on_empty": {
+                "description": "BATCH-2 PHASE 3 PREREQUISITE 0m (2026-09-24, operator ruling 2026-09-24 — standardized/observable/scalable/simple). On conflict, an EMPTY incoming value ('' after trim) keeps the stored value: the codegen emits `col = COALESCE(NULLIF(EXCLUDED.col, ''), <table>.col)` in the DO UPDATE SET, and the same column's change-detection guard clause becomes `(NULLIF(EXCLUDED.col, '') IS NOT NULL AND <table>.col IS DISTINCT FROM EXCLUDED.col)` — the legacy loaders' own NULLIF-guarded WHERE form (scripts/load-parcels.js, scripts/load-address-points.js), mirrored byte-for-byte rather than an algebraically-equivalent rewrite, so a converted step's generated SQL can be pinned against the pre-conversion file. Declared per column; absent = the plain `col = EXCLUDED.col` (today's codegen, byte-identical when no column declares this). Only meaningful for a TEXT-typed column — the schema carries no per-column SQL type, so declaring it on a non-text column is a runtime NULLIF cast error, not something the validator can catch; the declaration site documents the column's real type.",
+                "enum": [
+                  "preserve"
+                ],
+                "x-frozen": true,
+                "x-ruling": {
+                  "rungs_tried": [
+                    "compute-authored SQL (write_discipline.set_source: \"compute\") for the whole target — behaviour in code, a per-step variation invisible to the descriptor, exactly what the operator ruling rejects for an INGESTOR",
+                    "a second, post-write UPDATE repair statement — doubles the write-statement count Spec 122 §12.3's write_inventory counts, for a first-statement concern"
+                  ],
+                  "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the empty-string-preserves-prior-value pattern recurs across every converted INGESTOR that carries address/name text columns (scripts/load-parcels.js ×5, scripts/load-address-points.js ×9 at git show 120b2b99), so it is a DECLARED axis the shared codegen executes rather than a per-step escape hatch. Founding case: load-parcels.js's mig-162 Day-1 critical-safety fix (WF1 #parcel-address-bridge) — a CKAN column-drop would otherwise NULL-overwrite 486K rows of pre-drift address data."
+                }
               }
             }
           }
@@ -2090,6 +2104,17 @@
                   "when": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "set_null_on_change_of": {
+                    "description": "BATCH-2 PHASE 3 PREREQUISITE 0l (2026-09-24, operator ruling 2026-09-24 — standardized/observable/scalable/simple). EXECUTED, unlike the base {table,column,when} entry above (which stays declarative-only): the codegen appends `<column> = CASE WHEN <table>.<watched>::jsonb IS DISTINCT FROM EXCLUDED.<watched>::jsonb THEN NULL ELSE <table>.<column> END` to the write target's DO UPDATE SET, and folds the watched column into that write's change-detection guard (deduplicated against write_discipline.guard_columns) so the CASE arm's own comparison is live on every run that reaches the UPDATE. A non-jsonb watched column (one whose columns[].bind is \"wkb_geometry\" — a real PostGIS geometry value cannot cast to jsonb) compares with a plain IS DISTINCT FROM instead. VALIDATED (scripts/lib/step/validate.js, AJV cannot cross-reference two array entries): this entry's own `table` must equal one of `outputs.writes[].table` on the SAME descriptor — the codegen executes this entry against the write target whose table it names, so a mismatched table would silently never fire. Founding case: scripts/load-parcels.js's three DEC-FENCE2 (#418) lineage-stamp arms (ravine/heritage/centreline `_dataset_version_when_enriched`), all gated on `geometry` alone.",
+                    "type": "string",
+                    "pattern": "^[a-z_][a-z0-9_]*$",
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "leave it declarative-only (the pre-existing {table,column,when} shape) and let each step hand-write the CASE arm in a compute — exactly the per-step compute-authored SQL the operator ruling rejects for an INGESTOR"
+                      ],
+                      "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the lineage-stamp-invalidation-on-geometry-change pattern (parcels' three ravine/heritage/centreline stamps, DEC-FENCE2 #418, a Day-1 critical-safety fix) is common enough to be a DECLARED, codegen-executed axis rather than a per-step escape hatch."
+                    }
                   }
                 }
               }

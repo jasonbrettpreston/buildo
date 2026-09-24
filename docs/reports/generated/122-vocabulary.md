@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 471 declarable fields
+# The step contract — 20 categories, 473 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 27 | 6 | 0 |
-| 3 | `outputs` | 95 | 26 | 2 |
+| 3 | `outputs` | 97 | 27 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 75 | 16 | 1 |
@@ -188,7 +188,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes` | list (min 1) of object {table, key, columns, geometry_srid, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
-| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value} | † |
+| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty} | † |
 | `writes[].columns[].name` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns[].vocabulary` | `none` \| object {values, on_unknown, source} | † |
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
@@ -198,6 +198,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].bind` | `value` · `wkb_geometry` | ! |
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
+| `writes[].columns[].on_empty` | `preserve` | ! |
 | `writes[].geometry_srid` | integer >= 1 | — |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |
 | `writes[].write_discipline` | object {class, guard, guard_why, scope, guard_columns, guard_columns_why, declared_drift, expected_change_ratio, idempotent_rerun, idempotent_rerun_why, txn_scope, why, set_source} | † |
@@ -268,10 +269,11 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `cascades[].why.liveness` | `none` \| object {kind, ref} | † |
 | `cascades[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `cascades[].why.liveness.ref` | string | † |
-| `invalidates` | list of object {table, column, when} | † |
+| `invalidates` | list of object {table, column, when, set_null_on_change_of} | † |
 | `invalidates[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `invalidates[].column` | string `^[a-z_][a-z0-9_]*$` | † |
 | `invalidates[].when` | string | † |
+| `invalidates[].set_null_on_change_of` | string `^[a-z_][a-z0-9_]*$` | — |
 | `publish` | `direct` · `pointer` · `none` | † ! |
 | `write_inventory` | object {statements, why} | † |
 | `write_inventory.statements` | integer >= 0 | † |
