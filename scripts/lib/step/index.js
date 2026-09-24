@@ -805,6 +805,12 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     }
     features = shaped;
   }
+  // `rows_shaped` (INGESTOR prerequisite 0o, 2026-09-24) — the count of features that
+  // SURVIVED `shapeRecord` (or every parsed feature, for a step with none), taken here,
+  // BEFORE the dedupe below can remove any of them. Distinct from `feature_count`
+  // (post-dedupe, below) and from `rows_read` (pre-shapeRecord, raw): three different
+  // denominators, three different questions, none of them collapsed into one number.
+  const rowsShaped = features.length;
 
   // Dedupe BEFORE the upsert: `ON CONFLICT` cannot affect the same row twice in one
   // statement, so a duplicated source key is a hard error, not a warning, unguarded.
@@ -813,8 +819,41 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // (`pool.query(VALIDATION_SQL)` at 33786d1a:scripts/load-ravines.js:422). Its counters
   // are what L8 measures, which is why the pre_write gate sits immediately below it.
   const validated = await write.validateGeometries(pool, plan, kept, compute.validatorCounterDelta, { log, tag });
+
+  // ── COLUMN-NULL COUNTERS (INGESTOR prerequisite 0o, filed
+  // docs/reports/review_followups.md "2026-09-24 — batch-2 row 3.7 ... commit ②")
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Generic over EVERY declared step column (`plan.step_columns`), never a per-step
+  // name — a check reading a specific column (e.g. `null_address_number_pct`) reads
+  // `acquired.column_nulls.<column>` instead of a dedicated, ungeneralizable counter.
+  // Counted on `validated.carried` — the EXACT shape `columnValues` binds into the
+  // write, so every column name here (including the geometry column, which only
+  // carries its TRUE name — `plan.geometry_columns[0]` — after `validateGeometries`;
+  // a pre-validation shaped row still carries it as the seam name `geojson`) lines up
+  // with `plan.step_columns` byte for byte. `''` counts alongside `null`/`undefined`:
+  // a CSV loader hands back an empty string for a blank cell, never SQL NULL, at parse
+  // time (`load-parcels.js`'s pre-conversion `nullAddressCount` counted the same way).
+  const columnNulls = {};
+  for (const col of plan.step_columns) {
+    let n = 0;
+    for (const row of validated.carried) {
+      const v = row[col];
+      if (v === null || v === undefined || v === '') n++;
+    }
+    columnNulls[col] = n;
+  }
+
   const acquired = {
     ...result.acquired,
+    // Two names for two different counts, BOTH real: `result.acquired.rows_parsed` is
+    // the raw feature count `parseCsv`/`parseShapefile` produced, unrenamed here so the
+    // acquisition seam's own vocabulary survives; `rows_read` is the SAME number under
+    // the name the two legacy-loader computes' `rows_read_floor`/`skip_rate_pct` checks
+    // already read (`numberOrNull(a.rows_read) ?? numberOrNull(a.feature_count)`), which
+    // before this line always fell through to the POST-filter `feature_count`.
+    rows_read: result.acquired.rows_parsed,
+    rows_shaped: rowsShaped,
+    column_nulls: columnNulls,
     feature_count: kept.length,
     duplicate_key_count: duplicateCount,
     shaped_skipped: shapedSkipped,

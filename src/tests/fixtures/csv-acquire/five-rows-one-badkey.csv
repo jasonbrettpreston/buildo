@@ -1,0 +1,6 @@
+ID,NAME,geometry
+1,Alpha,"{""type"":""Point"",""coordinates"":[1,2]}"
+2,Beta,"{""type"":""Point"",""coordinates"":[3,4]}"
+not-a-number,Gamma,"{""type"":""Point"",""coordinates"":[5,6]}"
+4,Delta,"{""type"":""Point"",""coordinates"":[7,8]}"
+5,Epsilon,"{""type"":""Point"",""coordinates"":[9,10]}"

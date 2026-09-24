@@ -6966,3 +6966,145 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
   });
 });
 
+// ---------------------------------------------------------------------------
+// INGESTOR prerequisite 0o (2026-09-24) — runIngestPhase populates
+// acquired.rows_read (the RAW parsed-row count, distinct from the post-filter
+// feature_count), acquired.rows_shaped and acquired.column_nulls, closing the
+// two shared-runner-library gaps filed in docs/reports/review_followups.md
+// "2026-09-24 — batch-2 row 3.7 (`parcels`, INGESTOR) commit ② — two shared-
+// runner-library seam gaps": (1) ctx.acquired.rows_read was never populated,
+// so `rows_read_floor`/`skip_rate_pct`-style checks silently measured the
+// POST-filter kept count instead of the raw row count their `why` text
+// documents; (2) ctx.acquired.attempted_address_number_rows /
+// null_address_number_rows were never populated anywhere, so
+// `null_address_pct`/`null_address_number_pct` always short-circuited to
+// `value: null` / PASS. This commit populates the GENERIC replacement —
+// `rows_read` / `rows_shaped` / `column_nulls` over EVERY declared step
+// column — and deliberately does NOT populate the two legacy-named fields
+// (per-step, outside this shared-library commit's scope): the two computes'
+// one-line rename (`ctx.acquired.column_nulls.address_number`,
+// `ctx.acquired.rows_shaped`) is filed as the next commit on each step
+// (address_points AP-D6 fix commit; parcels ③).
+// ---------------------------------------------------------------------------
+
+describe('INGESTOR prerequisite 0o — acquired.rows_read / rows_shaped / column_nulls', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real write.js lib
+  const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
+  const NO_LOG = { info: () => {}, warn: () => {}, error: () => {} };
+  const intOrNull = (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; };
+  const CSV_FIXTURES = join(process.cwd(), 'src/tests/fixtures/csv-acquire');
+  const SHAPEFILE_FIXTURES = join(process.cwd(), 'src/tests/steps/load_ravines/fixtures/missing-prj');
+
+  it('T1 — parseCsv returns rows_parsed equal to the fixture\'s full row count (5), unreduced by the '
+    + 'badKey filter that drops one of them from `features` (bad_key_count 1, features.length 4) — '
+    + 'rows_parsed is the RAW count, the same relationship a later shapeRecord refusal has to it', async () => {
+    const { features, badKey, rowsParsed } = await acquireLib.parseCsv(
+      join(CSV_FIXTURES, 'five-rows-one-badkey.csv'),
+      { bom: false, relax_quotes: true },
+      'ID',
+      intOrNull,
+      'source_id',
+    );
+    expect(rowsParsed).toBe(5);
+    expect(badKey).toBe(1);
+    expect(features).toHaveLength(4);
+  });
+
+  it('T2 — runIngestPhase sets acquired.rows_read === (the raw acquisition count), acquired.rows_shaped '
+    + '(post-shapeRecord, pre-dedupe survivors) and acquired.column_nulls counting BOTH null and \'\' for a '
+    + 'declared step column, over rows validateGeometries actually carries to the write', async () => {
+    const descriptor = clone(LOAD_RAVINES);
+    descriptor.inputs.reads.externals[0].format = 'csv';
+    descriptor.inputs.reads.externals[0].csv_options = { bom: false, relax_quotes: true };
+    // A declared column beyond the base load_ravines set, exactly the shape a real
+    // INGESTOR (parcels, address_points) declares for its address-number column —
+    // proving column_nulls generalizes to ANY declared step column, not a hard-coded one.
+    descriptor.outputs.writes[0].columns.push({
+      name: 'address_number', vocabulary: 'none', written: 'step', bind: 'value',
+    });
+
+    const rawFeatures = [1, 2, 3, 4].map((n) => ({ source_id: n, record: { OBJECTID: n, NAME: `Row ${n}` } }));
+    const shapeRecord = (record: { NAME: string }, _ctx: { geojson: unknown }) => {
+      const addressNumberByRow: Record<string, string | null> = {
+        'Row 1': '100', 'Row 2': '', 'Row 3': null as unknown as string, 'Row 4': '400',
+      };
+      return { geojson: '{"type":"Point","coordinates":[0,0]}', address_number: addressNumberByRow[record.NAME] };
+    };
+    const dedupeSpy = vi.fn((feats: unknown[]) => ({ kept: feats, duplicateCount: 0 }));
+    const compute = {
+      coerceKey: intOrNull,
+      shapeRecord,
+      dedupeBySourceId: dedupeSpy,
+      validatorCounterDelta: () => ({}),
+    };
+    const stubs = [
+      vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
+      vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
+      // A pool-free stand-in for the real SQL validator: carries every shaped field
+      // through unchanged and stamps the plan's OWN geometry column name onto it,
+      // the exact contract `validateGeometries` documents ("Carry EVERY shaped
+      // field of the feature... the key and geom columns win on collision").
+      vi.spyOn(writeLib, 'validateGeometries').mockImplementation(async (...args: unknown[]) => {
+        const plan = args[1] as { geometry_columns: string[] };
+        const feats = args[2] as Array<Record<string, unknown>>;
+        const geomColumn = plan.geometry_columns[0] as string;
+        return {
+          carried: feats.map((f) => ({ ...f, [geomColumn]: 'GEOM_WKB_STUB' })),
+          repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [],
+        };
+      }),
+      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
+        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      }),
+      // rows_parsed (7) is deliberately UNEQUAL to feature_count (4) — 3 rows were
+      // dropped upstream (bad key / null geometry) before ever reaching this mock,
+      // so a rows_read that merely echoed feature_count would not be caught by this test.
+      vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
+        tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
+        features: rawFeatures,
+        acquired: {
+          feature_count: 4, bad_key_count: 2, null_geometry_count: 1, rows_parsed: 7, bytes_downloaded: 100,
+          content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
+          last_modified: null, last_modified_ms: null, etag: null, license_url: null,
+        },
+      }),
+    ];
+    try {
+      const out = await stepLib.runIngestPhase({
+        descriptor,
+        pool: fakePool(),
+        compute,
+        config: {},
+        fetchImpl: async () => { throw new Error('unused — acquireExternal is mocked'); },
+        chainId: null,
+        log: NO_LOG,
+        tag: '[ingest_col_nulls_t2]',
+        clockNow: new Date('2026-09-24T00:00:00Z'),
+        preWriteGate: null,
+      });
+      expect(out.acquired.rows_read).toBe(7);
+      expect(out.acquired.rows_shaped).toBe(4);
+      expect((out.acquired.column_nulls as Record<string, number>).address_number).toBe(2);
+      // Every OTHER declared step column is also reported, including the geometry
+      // column under its TRUE name (never the shaping seam's 'geojson' alias).
+      expect(Object.keys(out.acquired.column_nulls as Record<string, number>).sort())
+        .toEqual(['address_number', 'geom', 'source_dataset_version', 'source_id', 'updated_at'].sort());
+      expect((out.acquired.column_nulls as Record<string, number>).geom).toBe(0);
+    } finally {
+      for (const s of stubs) s.mockRestore();
+    }
+  });
+
+  it('T3 — parseShapefile returns rows_parsed equal to the fixture\'s 1 feature (badKey 0, nullGeometry 0)', async () => {
+    const { features, rowsParsed } = await acquireLib.parseShapefile(
+      join(SHAPEFILE_FIXTURES, 'ravines.shp'),
+      join(SHAPEFILE_FIXTURES, 'ravines.dbf'),
+      'OBJECTID',
+      intOrNull,
+      'source_id',
+    );
+    expect(features).toHaveLength(1);
+    expect(rowsParsed).toBe(1);
+  });
+});
+

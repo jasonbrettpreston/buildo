@@ -215,16 +215,22 @@ function locateShapefile(extractDir) {
  *
  * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion,
  *   handed in from the compute module so the parse stays domain-free.
- * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number}>}
+ * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}>}
+ *   `rowsParsed` (INGESTOR prerequisite 0o, 2026-09-24) is EVERY feature the source
+ *   handed back, counted BEFORE the `badKey`/`nullGeometry` filters below drop a row —
+ *   the raw count `ctx.acquired.rows_read` reports, as distinct from `features.length`
+ *   (the post-filter kept count `feature_count` already reports).
  */
 async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColumn) {
   const source = await shapefile.open(shpPath, dbfPath);
   const features = [];
   let badKey = 0;
   let nullGeometry = 0;
+  let rowsParsed = 0;
   for (;;) {
     const r = await source.read();
     if (r.done) break;
+    rowsParsed++;
     const props = r.value.properties || {};
     const key = coerceKey(props[keyProperty]);
     if (key == null) { badKey++; continue; }
@@ -234,7 +240,7 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
     // carries the DBF properties verbatim — the ONE seam `compute.shapeRecord` reads.
     features.push({ [keyColumn]: key, geojson: JSON.stringify(r.value.geometry), record: props });
   }
-  return { features, badKey, nullGeometry };
+  return { features, badKey, nullGeometry, rowsParsed };
 }
 
 /**
@@ -263,10 +269,14 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
  * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion
  * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper
  *   reads the same field name its descriptor declares
- * @returns {Promise<{features: Array<{record: object}>, badKey: number, nullGeometry: number}>}
+ * @returns {Promise<{features: Array<{record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}>}
  *   `nullGeometry` is structurally 0 here — a CSV has no geometry-less rows at PARSE
  *   time; a blank geometry cell is the step's `shapeRecord` problem, not the parser's,
  *   and the field is carried so `acquired.null_geometry_count` keeps its meaning.
+ *   `rowsParsed` (INGESTOR prerequisite 0o, 2026-09-24) is EVERY row the stream handed
+ *   back, counted BEFORE the `badKey` filter below drops one — the raw row count
+ *   `ctx.acquired.rows_read` reports, as distinct from `features.length` (the
+ *   post-filter kept count `feature_count` already reports).
  */
 async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn) {
   const stream = fs.createReadStream(filePath).pipe(parse({
@@ -278,14 +288,16 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
   }));
   const features = [];
   let badKey = 0;
+  let rowsParsed = 0;
   // `for await` over the piped parser — the same backpressure-shaped loop the
   // pre-conversion CSV loaders used, so a 200 MB source never buffers whole (§9.5).
   for await (const record of stream) {
+    rowsParsed++;
     const key = coerceKey(record[keyProperty]);
     if (key == null) { badKey++; continue; }
     features.push({ [keyColumn]: key, record });
   }
-  return { features, badKey, nullGeometry: 0 };
+  return { features, badKey, nullGeometry: 0, rowsParsed };
 }
 
 /**
@@ -352,6 +364,7 @@ async function acquireExternal({
     feature_count: 0,
     bad_key_count: 0,
     null_geometry_count: 0,
+    rows_parsed: 0,
   };
 
   const tier1 = preAcquisitionGate(head);
@@ -424,6 +437,7 @@ async function acquireExternal({
         feature_count: parsed.features.length,
         bad_key_count: parsed.badKey,
         null_geometry_count: parsed.nullGeometry,
+        rows_parsed: parsed.rowsParsed,
       },
       tier1,
       tier2,
