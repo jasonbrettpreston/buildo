@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 478 declarable fields
+# The step contract — 20 categories, 482 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 28 | 7 | 0 |
-| 3 | `outputs` | 98 | 28 | 2 |
+| 3 | `outputs` | 102 | 30 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 77 | 16 | 1 |
@@ -189,7 +189,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
-| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty} | † |
+| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty, derived_from_geometry} | † |
 | `writes[].columns[].name` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns[].vocabulary` | `none` \| object {values, on_unknown, source} | † |
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
@@ -200,6 +200,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
 | `writes[].columns[].on_empty` | `preserve` · `preserve_null` | ! |
+| `writes[].columns[].derived_from_geometry` | object {measure, unit, scale} | — |
+| `writes[].columns[].derived_from_geometry.measure` | `geodesic_area` | † ! |
+| `writes[].columns[].derived_from_geometry.unit` | `m2` · `ft2` | † ! |
+| `writes[].columns[].derived_from_geometry.scale` | integer >= 0, <= 6 | † |
 | `writes[].geometry_srid` | integer >= 1 | — |
 | `writes[].geometry_repair` | `make_valid` · `none` | ! |
 | `writes[].key_sql_type` | string `^[A-Z][A-Z0-9 ]*$` | — |

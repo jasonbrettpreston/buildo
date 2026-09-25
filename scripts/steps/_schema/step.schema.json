@@ -1056,10 +1056,54 @@
                   ],
                   "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the empty-string-preserves-prior-value pattern recurs across every converted INGESTOR that carries address/name text columns (scripts/load-parcels.js ×5, scripts/load-address-points.js ×9 at git show 120b2b99), so it is a DECLARED axis the shared codegen executes rather than a per-step escape hatch. Founding case: load-parcels.js's mig-162 Day-1 critical-safety fix (WF1 #parcel-address-bridge) — a CKAN column-drop would otherwise NULL-overwrite 486K rows of pre-drift address data. preserve_null added 2026-09-24: the NULL-form of preserve for non-text columns — parcels.date_effective."
                 }
+              },
+              "derived_from_geometry": {
+                  "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0u (2026-09-24). This column's value is a MEASURE OF THE SOURCE GEOMETRY, computed DB-side by the geometry validator from the PRE-repair `geom` and bound on the SAME INSERT — no second statement and no compute-authored SQL. `measure` selects the PostGIS function (`geodesic_area` = `ST_Area(<geom>::geography)`), `unit` selects the unit the value is expressed in (`m2` = the measure's own unit, `ft2` = multiplied by the international-foot factor `10.7639104167`, a UNIT CONSTANT in scripts/lib/step/write.js, not a tunable), and `scale` is the `ROUND(…::numeric, <scale>)` precision. The rendered expression reproduces the legacy post-INSERT UPDATE in scripts/load-massing.js BYTE-FOR-BYTE once whitespace is normalised, because that statement's input expression is exactly the validator's `input.geom` at `geometry_srid: 3857` — which is why a declaring write must ALSO declare `geometry_srid` for the two to agree. Requires the write to bind exactly one `wkb_geometry` column (the measure reads it) and the column to be `step` or `insert_only` (`db_default` is never bound, so the computed value would be dropped); both are enforced by write.js#DerivedMeasureError. Pair it with `written` `insert_only` to reproduce the legacy semantics exactly — measured ONCE after the INSERT, never rewritten by the conflict UPDATE.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "measure",
+                    "unit",
+                    "scale"
+                  ],
+                  "properties": {
+                    "measure": {
+                      "description": "WHAT is measured. `geodesic_area` is the only measure today; a new one must be added here AND to `derivedMeasureExpr` in write.js together, so the codegen never silently falls back to a default function.",
+                      "enum": [
+                        "geodesic_area"
+                      ],
+                      "x-frozen": true
+                    },
+                    "unit": {
+                      "description": "The unit the measure is expressed in — `m2` (the measure's own unit, no factor) or `ft2` (the measure multiplied by 10.7639104167, the international foot). A DECLARED unit rather than a free-text suffix, because only a closed enum can select a conversion the codegen is allowed to render.",
+                      "enum": [
+                        "m2",
+                        "ft2"
+                      ],
+                      "x-frozen": true
+                    },
+                    "scale": {
+                      "description": "The `ROUND(…::numeric, <scale>)` precision, 0-6. Bounded because it is interpolated into the statement text as ROUND's precision argument and because the founding target columns are `numeric(12,2)`.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 6
+                    }
+                  },
+                  "x-ruling": {
+                    "rungs_tried": [
+                      "insert_only alone (no value)",
+                      "GENERATED column (rewrites 427K rows, drift)",
+                      "trigger (step SQL in DDL)",
+                      "set_value",
+                      "JS area (inexact)",
+                      "class E step"
+                    ],
+                    "why": "only the validator holds pre-repair geom in the INSERT txn"
+                  }
+                }
               }
             }
-          }
-        },
+          },
         "geometry_srid": {
           "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0i (2026-09-24). The SRID the SOURCE geometry is actually in; the validator transforms to 4326 when it differs. OPTIONAL — absent means the source is 4326 (no transform), the case for every converted step today. Declared, never sniffed from a filename (massing's shapefile is named _wgs84 and is 3857).",
           "type": "integer",

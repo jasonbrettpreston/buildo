@@ -80,6 +80,15 @@ const WRITTEN_BY_STEP = 'step';
  * INSERT list too, so the seed value is never written at all). `insert_only` is the
  * third value.
  *
+ * ⚠️ SINCE PREREQUISITE 0u (2026-09-24) "DB-side" NO LONGER MEANS "IN A LATER STATEMENT". A
+ * column that ALSO declares `derived_from_geometry` has its value computed by the geometry
+ * validator's own inner subquery over the PRE-repair `geom` and bound on THIS insert — the
+ * legacy post-INSERT `UPDATE ... SET footprint_area_sqm = ROUND((ST_Area(<3857>::geography))::numeric, 2)`
+ * (`scripts/load-massing.js`) reproduced as a DECLARATION rather than a second round-trip.
+ * `insert_only` is still what keeps the value out of the `DO UPDATE SET`, which is exactly the
+ * legacy semantics: the area pass ran ONCE, after the INSERT, and the UPSERT never mentioned the
+ * column.
+ *
  * Semantics, byte-for-byte for the other two values: an `insert_only` column IS in the
  * `INSERT INTO (...)`, IS in the VALUES group and IS in `bindRow` — exactly like `step`
  * — and is absent from `update_columns` (the `DO UPDATE SET` clause) and from the
@@ -261,6 +270,82 @@ const GEOMETRY_KIND_ACCEPTED_TYPES = Object.freeze({
   line: "('ST_LineString')",
 });
 
+/**
+ * The derived-measure unit constant (prerequisite 0u, 2026-09-24, Spec 124 Rule 3).
+ *
+ * `null` = the measure's own unit (m², no factor). A non-null value is the multiplicative
+ * factor rendered INTO the SQL, so the conversion happens server-side over the same
+ * `geography` value — never in JS, where the two roundings would be able to disagree.
+ *
+ * `10.7639104167` is the SAME literal `scripts/load-massing.js` uses (`ft² = m² × 10.7639104167`,
+ * the international foot) and the same one `building-footprints-area.db.test.ts` pins. It is a
+ * UNIT CONSTANT, not a tunable (Rule 3): a per-`foot²`-definition knob has no measured use, and
+ * a second one would silently disagree with the legacy loader's own number.
+ */
+const DERIVED_UNIT_FACTOR = Object.freeze({ m2: null, ft2: '10.7639104167' });
+
+/**
+ * A NAMED runtime backstop for a `columns[].derived_from_geometry` that cannot be rendered
+ * (Spec 124 Rule 1, Spec 122 §5.1, batch-2 Phase 3 prerequisite 0u).
+ *
+ * Two conditions reach it, and both are DECLARATION defects rather than data conditions:
+ *   · the write declares no `wkb_geometry` column — the derived expression measures `geom`, the
+ *     PRE-repair geometry the validator's inner subquery holds, so there is nothing to measure;
+ *   · the derived column is neither `step` nor `insert_only` — a `db_default` column is not in the
+ *     INSERT list or `bindRow`, so the value the expression computed would be carried nowhere and
+ *     silently dropped.
+ *
+ * The schema types the field and its members, so reaching this is a descriptor that bypassed the
+ * loader — but the check belongs here as well as in the schema, because the alternative to a named
+ * throw is a rendered statement with a measure missing, i.e. a column that reads as populated and is
+ * not.
+ */
+class DerivedMeasureError extends Error {
+  constructor(table, column, reason) {
+    super(`[write_discipline] ${table}: column ${JSON.stringify(column)} declares `
+      + `"derived_from_geometry" but ${reason}. The measure is rendered by the geometry validator's `
+      + 'own inner subquery over the PRE-repair `geom` and carried to the INSERT on the column\'s '
+      + 'name, so the write must bind exactly one `wkb_geometry` column and the derived column must '
+      + 'be `step` or `insert_only` (scripts/steps/_schema/step.schema.json, '
+      + '"derived_from_geometry").');
+    this.name = 'DerivedMeasureError';
+  }
+}
+
+/**
+ * One derived column's SQL expression, over the validator's `geom` (Spec 122 §5.1, prerequisite 0u).
+ *
+ * Reproduces the legacy post-INSERT UPDATE in `scripts/load-massing.js` BYTE-FOR-BYTE once
+ * whitespace is normalised: `ROUND((ST_Area(<geom>::geography))::numeric, <scale>)` and, for a
+ * non-null unit factor, `ROUND((ST_Area(<geom>::geography) * <factor>)::numeric, <scale>)`. The
+ * legacy statement's input expression was `ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text),
+ * 3857), 4326)` — i.e. exactly the validator's `input.geom` at `geometry_srid: 3857`, so with that
+ * axis declared the two statements compute the same number from the same bytes.
+ *
+ * `measure` selects the function; today there is one (`geodesic_area`, `ST_Area(…::geography)`),
+ * and the switch is exhaustive rather than defaulting, so a future measure added to the schema
+ * without codegen fails here by name instead of rendering `ST_Area`.
+ */
+function derivedMeasureExpr(entry) {
+  if (entry.measure !== 'geodesic_area') {
+    throw new Error(`[write_discipline] unknown derived measure ${JSON.stringify(entry.measure)} `
+      + "(expected 'geodesic_area'). The measure selects the PostGIS function the expression calls; "
+      + 'a new value must be added to scripts/steps/_schema/step.schema.json AND to '
+      + 'derivedMeasureExpr in this file together.');
+  }
+  const factor = DERIVED_UNIT_FACTOR[entry.unit];
+  if (factor === undefined) {
+    throw new Error(`[write_discipline] unknown derived unit ${JSON.stringify(entry.unit)} `
+      + `(expected ${Object.keys(DERIVED_UNIT_FACTOR).map((u) => `'${u}'`).join(' or ')}).`);
+  }
+  const area = factor === null
+    ? 'ST_Area(geom::geography)'
+    : `ST_Area(geom::geography) * ${factor}`;
+  // The same `ROUND((…)::numeric, <scale>)` shape the legacy UPDATE uses — ROUND's second
+  // argument is a precision, so it is interpolated after the schema bounded it to 0-6.
+  return `ROUND((${area})::numeric, ${entry.scale})`;
+}
+
 /** The repair/normalise expression per kind. Polygon = today's byte-identical text; point keeps 1. */
 function geometryFinalExpr(geometryKind) {
   if (geometryKind === 'polygon') {
@@ -373,7 +458,7 @@ class ValidationKeyMissError extends Error {
   }
 }
 
-const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = 'make_valid' } = {}) => {
+const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = 'make_valid', derived = [] } = {}) => {
   // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
   // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
   // value is asserted before any text is built, so the polygon default is never silent.
@@ -405,6 +490,23 @@ const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = '
   const repairExpr = repair === 'none' ? 'geom' : 'ST_MakeValid(geom)';
   const finalExpr = geometryFinalExpr(geometryKind);
   const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
+  // `columns[].derived_from_geometry` (prerequisite 0u, 2026-09-24) — a measure of the PRE-repair
+  // `geom` computed DB-side and carried to the INSERT under the column's own name.
+  //
+  // ⚠️ `derived` defaults to `[]`, and an EMPTY list renders NOTHING: every line below is
+  // appended only when there is an entry, so the text is byte-identical for every descriptor that
+  // never declares the axis (pinned by T0 and the two pre-existing byte-identity locks).
+  //
+  // Each entry contributes exactly three lines, in three places, and the indentation of the
+  // surrounding statement is what makes placement mechanical:
+  //   · inner subquery — `, <expr> AS <name>` on its own line after `${repairExpr} AS repaired`,
+  //     which is what puts the measurement on the PRE-repair geometry;
+  //   · `validated`     — `, <name>` after `is_valid_original`, re-exporting the value;
+  //   · final SELECT    — `, <name>` after `is_valid_original`, so it arrives on the row the
+  //     validator returns and `validateGeometries` can carry it (no second round-trip).
+  const derivedExprs = derived.map((e) => `,\n           ${derivedMeasureExpr(e)} AS ${e.name}`);
+  const derivedNames = derived.map((e) => `,\n    ${e.name}`);
+  const derivedSelect = derived.map((e) => `,\n       ${e.name}`);
   return `
 WITH input AS (
   SELECT s.source_key, ${geomExpr} AS geom
@@ -416,11 +518,11 @@ validated AS (
     source_key,
     ST_GeometryType(repaired) AS repaired_type,
     ${finalExpr} AS geom_final,
-    is_valid_original
+    is_valid_original${derivedNames.join('')}
   FROM (
     SELECT source_key,
            ST_IsValid(geom)   AS is_valid_original,
-           ${repairExpr} AS repaired
+           ${repairExpr} AS repaired${derivedExprs.join('')}
       FROM input
   ) s
 )
@@ -435,7 +537,7 @@ SELECT source_key,
          ELSE 'skipped_unsupported_type'
        END AS status,
        ST_AsBinary(geom_final) AS geom_wkb,
-       is_valid_original
+       is_valid_original${derivedSelect.join('')}
   FROM validated;`;
 };
 
@@ -585,6 +687,43 @@ function buildWritePlan(writeSpec, descriptor) {
   // it is orthogonal to the family, and a non-validating LINK/CASCADE plan simply never reads
   // it (its `validation_sql` is null and `validateGeometries` is not in the call graph).
   const geometryRepair = writeSpec.geometry_repair ?? 'make_valid';
+  // A DECLARED measure of the geometry (prerequisite 0u, Spec 124 Rule 1, Spec 122 §5.1).
+  //
+  // `columns[].derived_from_geometry` says "this column's value is a measure of the source
+  // geometry, computed DB-side in the INSERT transaction". The founding case is massing's
+  // `footprint_area_sqm`/`_sqft`, whose legacy values came from a SECOND statement — a
+  // post-INSERT `UPDATE ... SET footprint_area_sqm = ROUND((ST_Area(<3857 transform>::geography))::numeric, 2)`
+  // (`scripts/load-massing.js`). Rendering the same expression into the validator's own inner
+  // subquery computes it from the PRE-repair `geom` and returns it on the row it already returns,
+  // so a converted step needs no second statement and no `set_source:"compute"` escape hatch.
+  //
+  // Declared order is preserved, and the shape is copied to plain data (`{name, measure, unit,
+  // scale}`) so a plan-shape summary can read it without the descriptor. The two named guards
+  // below are the whole reason `DerivedMeasureError` exists: a derived column with no geometry to
+  // measure, or one the step does not bind, would render a value nothing could carry.
+  const derivedColumns = writeSpec.columns
+    .filter((c) => c.derived_from_geometry)
+    .map((c) => ({
+      name: c.name,
+      measure: c.derived_from_geometry.measure,
+      unit: c.derived_from_geometry.unit,
+      scale: c.derived_from_geometry.scale,
+    }));
+  if (derivedColumns.length > 0) {
+    if (geometryColumns.length === 0) {
+      throw new DerivedMeasureError(table, derivedColumns[0].name,
+        'the write declares no column with bind "wkb_geometry" for the measure to read');
+    }
+    const unbound = derivedColumns.find((d) => {
+      const written = writeSpec.columns.find((c) => c.name === d.name).written || WRITTEN_BY_STEP;
+      return written !== WRITTEN_BY_STEP && written !== WRITTEN_INSERT_ONLY;
+    });
+    if (unbound) {
+      throw new DerivedMeasureError(table, unbound.name,
+        `it is declared written "${writeSpec.columns.find((c) => c.name === unbound.name).written}", `
+        + 'so the step never binds it and the computed value would be dropped');
+    }
+  }
   // ⚠️ COMPOSITE KEYS: SUPPORTED FOR THE CONFLICT TARGET, STILL REFUSED WHERE THE
   // STATEMENT GENUINELY INDEXES keys[0] (LG-2, LINK pilot 2026-08-27).
   //
@@ -1016,6 +1155,11 @@ function buildWritePlan(writeSpec, descriptor) {
     // read it without re-parsing the SQL. `'make_valid'` when the descriptor declares
     // nothing, which is exactly the pre-0t text.
     geometry_repair: geometryRepair,
+    // The DECLARED derived measures (prerequisite 0u) — `{name, measure, unit, scale}` in
+    // declaration order, EMPTY for every descriptor that declares none. Carried on the plan so
+    // `validateGeometries` (which carries each returned value onto the row) and a plan-shape
+    // summary read the declared set rather than re-deriving it from `columns[]`.
+    derived_columns: derivedColumns,
     // Templated from the DECLARED key type, so the cast that reads the key array agrees
     // with the cast in `delete_sql` below instead of hard-coding a second opinion.
     //
@@ -1024,7 +1168,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // carries `validation_sql: null` HERE and the missing kind is diagnosed by
     // `validateGeometries` — the one caller that can reach it. LINK/CASCADE plans build and
     // execute with no validator SQL at all, exactly as they did before this field existed.
-    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid, { repair: geometryRepair }),
+    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid, { repair: geometryRepair, derived: derivedColumns }),
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
@@ -1159,7 +1303,27 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
       // ⚠️ COUNTED FROM THE VALIDATOR'S OWN `is_valid_original`, not from the step's classify:
       // a carried row IS stored, and under `none` it is stored exactly as the source had it.
       if (countStored && v.is_valid_original === false) invalidStored += 1;
-      carried.push({ ...f, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb });
+      // The validator's own value for each DECLARED derived measure (prerequisite 0u), taken
+      // from the row under the column's own name — the SQL aliases it there, so no rename table
+      // exists between the two phases. ⚠️ PASSED THROUGH AS RETURNED: node-pg hands a `numeric`
+      // over as a STRING, and the legacy loader bound that same string back; a `Number()` hop
+      // here would be a precision the pre-conversion statement never had.
+      const derivedValues = {};
+      for (const dc of plan.derived_columns || []) derivedValues[dc.name] = v[dc.name];
+      // ⚠️ KEY ORDER: a feature may already carry a key with a derived column's own name (the
+      // row builder's own guess, or — in the T4 lock — a deliberately stale value under test).
+      // Object spread does NOT move an already-present key when its value is reassigned, so
+      // without this the derived value would land wherever the FEATURE happened to put it —
+      // possibly BEFORE `geom`. Deleting it from the base object first forces it to be
+      // (re-)inserted fresh, after `geom`, so the carried row's key order is deterministic:
+      // geom column, then every derived column, in declaration order, regardless of what the
+      // feature itself carried under those names.
+      const base = { ...f };
+      delete base[geomColumn];
+      for (const dc of plan.derived_columns || []) delete base[dc.name];
+      carried.push({
+        ...base, [keyColumn]: f[keyColumn], [geomColumn]: v.geom_wkb, ...derivedValues,
+      });
     } else skippedKeys.push(f[keyColumn]);
   }
   // AFTER the loop, and BEFORE the caller's `executeWrite`: a miss means the validator
@@ -1834,6 +1998,8 @@ module.exports = {
   GEOMETRY_KIND_ACCEPTED_TYPES,
   MissingGeometryKindError,
   InvalidGeometryRepairError,
+  DerivedMeasureError,
+  DERIVED_UNIT_FACTOR,
   assertGeometryKind,
   InvalidGeometrySridError,
   ValidationKeyMissError,
