@@ -1,0 +1,40 @@
+        INSERT INTO building_footprints (
+          source_id, geometry,
+          footprint_area_sqm, footprint_area_sqft,
+          max_height_m, min_height_m, elev_z,
+          estimated_stories,
+          centroid_lat, centroid_lng
+        ) VALUES ${placeholders.join(', ')}
+        ON CONFLICT (source_id) DO UPDATE SET
+          geometry = EXCLUDED.geometry,
+          -- WF2 #C 2026-05-09: footprint_area_sqm/sqft INTENTIONALLY OMITTED
+          -- from the SET clause. EXCLUDED carries NULL (the JS-side area was
+          -- removed); without this omission, every existing row's computed
+          -- area would get NULL-overwritten on every quarterly re-load,
+          -- creating a window where compute-cost-estimates.js (advisory
+          -- lock 83 — independent of this lock 56) could read NULL and
+          -- silently fall back to the lot-size GFA path. The post-INSERT
+          -- UPDATE pass below is the SOLE authority for these columns.
+          max_height_m = EXCLUDED.max_height_m,
+          min_height_m = EXCLUDED.min_height_m,
+          elev_z = EXCLUDED.elev_z,
+          estimated_stories = EXCLUDED.estimated_stories,
+          centroid_lat = EXCLUDED.centroid_lat,
+          centroid_lng = EXCLUDED.centroid_lng
+        WHERE building_footprints.geometry IS DISTINCT FROM EXCLUDED.geometry
+          OR building_footprints.max_height_m IS DISTINCT FROM EXCLUDED.max_height_m
+          OR building_footprints.min_height_m IS DISTINCT FROM EXCLUDED.min_height_m
+          OR building_footprints.centroid_lat IS DISTINCT FROM EXCLUDED.centroid_lat
+          OR building_footprints.centroid_lng IS DISTINCT FROM EXCLUDED.centroid_lng
+        RETURNING (xmax = 0) AS is_insert
+
+    UPDATE building_footprints
+    SET
+      footprint_area_sqm = ROUND((ST_Area(
+        ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
+      ))::numeric, 2),
+      footprint_area_sqft = ROUND((ST_Area(
+        ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)::geography
+      ) * 10.7639104167)::numeric, 2)
+    WHERE footprint_area_sqm IS NULL
+      AND geometry IS NOT NULL

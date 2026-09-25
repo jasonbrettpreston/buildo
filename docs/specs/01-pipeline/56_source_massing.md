@@ -86,6 +86,8 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
 ### Target Files
 - `scripts/load-massing.js` — this spec defines the massing loader's contract (§2/§3).
 - `scripts/link-massing.js` — this spec defines the `--full` gate's DATA/CODE signals, decision logic and empty-source guard (§3).
+- `scripts/analysis/probe-shapefile-acquire.mjs` — batch-2 row 3.6 P-M memory/key probe: measures the massing shapefile through the runner's own `acquire.js` acquisition seam (read-only; opt-in one SELECT under `--db`) ahead of the `load-massing.js` conversion (Fold SF-7, WF2 row 3.6).
+- `scripts/analysis/massing-cohort-differential.js` — batch-2 row 3.6 R-AS forced-change cohort differential (Spec 124 R-AS): derives + commits the D/U/E forced-change cohort and runs the pre/post proof through `capture-step-golden.js`, restore-always (Fold SF-7, Fold SF-5).
 
 ### Cross-Spec Dependencies
 - `scripts/load-permits.js` — the `permits`-chain run (no `--full`) is referenced only as context for the gate decision (§3); this spec does not define its contract.

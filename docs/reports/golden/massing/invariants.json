@@ -1,0 +1,9 @@
+[
+  { "name": "row_count", "sql": "SELECT count(*) FROM building_footprints" },
+  { "name": "non_hash_keys", "sql": "SELECT count(*) FROM building_footprints WHERE source_id NOT LIKE 'hash_%'" },
+  { "name": "geom_null", "sql": "SELECT count(*) FROM building_footprints WHERE geom IS NULL" },
+  { "name": "area_null", "sql": "SELECT count(*) FROM building_footprints WHERE footprint_area_sqm IS NULL" },
+  { "name": "invalid_geom", "sql": "SELECT count(*) FROM building_footprints WHERE NOT ST_IsValid(geom)" },
+  { "name": "geom_types", "sql": "SELECT string_agg(k||'='||n, ',' ORDER BY k) FROM (SELECT GeometryType(geom) k, count(*) n FROM building_footprints GROUP BY 1) s" },
+  { "name": "stories_null", "sql": "SELECT count(*) FROM building_footprints WHERE estimated_stories IS NULL" }
+]
