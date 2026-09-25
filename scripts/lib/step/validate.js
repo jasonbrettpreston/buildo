@@ -34,6 +34,17 @@ const GRANDFATHERED_PATH = path.join(__dirname, '..', '..', 'steps', '_schema', 
 
 /** The descriptor path `x-banned-for-new` names for the guard axis. */
 const GUARD_PATH = 'outputs.writes[].write_discipline.guard';
+/**
+ * WF3 (2026-09-24, class-C anti-bypass hardening) — the descriptor path
+ * `x-banned-for-new` names for the write MECHANIC axis. `staging_full_replace`
+ * (class C) skips `buildWritePlan`'s retract-all/no-scope throw as of this same
+ * WF3, so declaring it needs its OWN Rule 9 adjudication — the schema's existing
+ * `why` requirement (the `allOf` x-rule at `writeDiscipline.class === "staging_full_replace"`)
+ * is a descriptor-authored justification, never a reviewed allowlist entry, and is
+ * not a substitute for one (same reasoning `assertGrandfathered` already applies
+ * to `GUARD_PATH`).
+ */
+const CLASS_PATH = 'outputs.writes[].write_discipline.class';
 /** `columns[].source` value marking a column bound to the run clock (Spec 47 §R3.5). */
 const RUN_CLOCK_SOURCE = 'run_at';
 /** `guard_columns` shorthand the generator expands to every step-written non-key column. */
@@ -162,27 +173,47 @@ function assertNoRunClockGuard(descriptor, findings) {
  * ship. Two things are required now, and the second one is the point — a `why` is written
  * by whoever wants the exception, an allowlist entry is a reviewed diff naming a SHA.
  */
+/**
+ * WF3 (2026-09-24) — the two `x-banned-for-new.values` PATHS this function actually
+ * enforces, each keyed to the descriptor field it reads the declared value from and
+ * the sibling `why` field AJV already requires once that value is declared (so a
+ * missing why is AJV's finding, not this function's — see the `return` on a falsy
+ * why below). `outputs.writes[].replay` (`append_unsafe`) and `execution.criticality`
+ * (`best_effort`) are ALSO named in `x-banned-for-new.values` but have NO entry here —
+ * narrowly scoped per the WF3 plan (`.cursor/wf3_class_c_retract_all_guard_active_task.md`
+ * Commit 2 item B): measure which descriptors actually carry them before generalizing
+ * this enforcer to every `values` key (filed as a followup, `docs/reports/review_followups.md`).
+ */
+const GRANDFATHERED_VALUE_PATHS = [
+  { path: GUARD_PATH, field: 'guard', whyField: 'guard_why' },
+  { path: CLASS_PATH, field: 'class', whyField: 'why' },
+];
+
 function assertGrandfathered(descriptor, findings) {
   const outputs = descriptor.outputs;
   if (!outputs || outputs === 'none' || !Array.isArray(outputs.writes)) return;
-  const banned = ((loadSchema()['x-banned-for-new'] || {}).values || {})[GUARD_PATH] || [];
-  if (banned.length === 0) return;
+  const schema = loadSchema();
+  const values = (schema['x-banned-for-new'] || {}).values || {};
   const slug = descriptor.identity && descriptor.identity.name;
   const entry = (loadGrandfathered().steps || {})[slug];
-  const allowed = entry && entry.paths && banned.includes(entry.paths[GUARD_PATH]);
-  outputs.writes.forEach((w, i) => {
-    const wd = w.write_discipline || {};
-    if (!banned.includes(wd.guard)) return;
-    if (!wd.guard_why) return; // AJV already reports the missing why at this path
-    if (allowed) return;
-    findings.push(
-      `  /outputs/writes/${i}/write_discipline/guard: "${wd.guard}" is x-banned-for-new at `
-      + `${GUARD_PATH}, and "${slug}" has no entry in scripts/steps/_schema/grandfathered.json. `
-      + 'A guard_why alone does not grandfather a banned value — the allowlist entry (step, path, value, '
-      + 'why, commit) is the adjudication, and it is a reviewed diff rather than something a descriptor '
-      + 'can grant itself.',
-    );
-  });
+  for (const { path: bannedPath, field, whyField } of GRANDFATHERED_VALUE_PATHS) {
+    const banned = values[bannedPath] || [];
+    if (banned.length === 0) continue;
+    const allowed = entry && entry.paths && banned.includes(entry.paths[bannedPath]);
+    outputs.writes.forEach((w, i) => {
+      const wd = w.write_discipline || {};
+      if (!banned.includes(wd[field])) return;
+      if (!wd[whyField]) return; // AJV already reports the missing why at this path
+      if (allowed) return;
+      findings.push(
+        `  /outputs/writes/${i}/write_discipline/${field}: "${wd[field]}" is x-banned-for-new at `
+        + `${bannedPath}, and "${slug}" has no entry in scripts/steps/_schema/grandfathered.json. `
+        + `A ${whyField} alone does not grandfather a banned value — the allowlist entry (step, path, value, `
+        + 'why, commit) is the adjudication, and it is a reviewed diff rather than something a descriptor '
+        + 'can grant itself.',
+      );
+    });
+  }
 }
 
 /**

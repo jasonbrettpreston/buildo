@@ -241,6 +241,7 @@ describe('buildWritePlan — the retract-all/no-scope guard EXEMPTS class C only
 
   it('T5 — AJV: the class-C declaration with retract "all" + scope "none" is schema-VALID (the guard, not the schema, was the blocker)', () => {
     const d = clone(LOAD_RAVINES) as {
+      identity: { name: string; [k: string]: unknown };
       outputs: { writes: Array<Record<string, unknown>> };
       recovery?: Record<string, unknown>;
     };
@@ -249,6 +250,31 @@ describe('buildWritePlan — the retract-all/no-scope guard EXEMPTS class C only
     (w.write_discipline as Record<string, unknown>).scope = 'none';
     w.retract = 'all';
     d.recovery = { ...(d.recovery ?? {}), interrupted: 'force_full_on_next_run' };
+    // WF3 Commit 2 (anti-bypass hardening, 2026-09-24) made class C itself
+    // x-banned-for-new: constructing this descriptor now ALSO needs a
+    // grandfathered.json entry naming write_discipline.class, not just a
+    // schema-valid `why`. `load_centreline` is the one entry that names this
+    // exact path+value (scripts/steps/_schema/grandfathered.json) — renamed
+    // from the borrowed `load_ravines` identity so this test still proves what
+    // its title says: the SCHEMA (and, as of Commit 2, the real adjudicated
+    // slug) accept the shape; T5b below proves an un-adjudicated slug does not.
+    d.identity.name = 'load_centreline';
     expect(() => pipeline.step(d, async () => {})).not.toThrow();
+  });
+
+  it('T5b — the SAME shape under an un-grandfathered slug is REFUSED at construction (Commit 2\'s class-path gate is real, not just declared)', () => {
+    const d = clone(LOAD_RAVINES) as {
+      identity: { name: string; [k: string]: unknown };
+      outputs: { writes: Array<Record<string, unknown>> };
+      recovery?: Record<string, unknown>;
+    };
+    const w = d.outputs.writes[0]!;
+    (w.write_discipline as Record<string, unknown>).class = writeLib.STAGING_FULL_REPLACE_CLASS;
+    (w.write_discipline as Record<string, unknown>).scope = 'none';
+    w.retract = 'all';
+    d.recovery = { ...(d.recovery ?? {}), interrupted: 'force_full_on_next_run' };
+    // Left as "load_ravines" — a real slug, but with NO grandfathered.json
+    // entry naming outputs.writes[].write_discipline.class.
+    expect(() => pipeline.step(d, async () => {})).toThrow(/x-banned-for-new/);
   });
 });

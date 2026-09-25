@@ -124,6 +124,16 @@
       "adjudicated_by": "Fold A/B/E/G (2026-09-04) + operator ruling G1 (pin-then-fix, Spec 123 §3.1)",
       "date": "2026-09-04",
       "lock_test": "src/tests/steps/enrich_parcels/violations.test.ts"
+    },
+    "load_centreline": {
+      "paths": {
+        "outputs.writes[].write_discipline.class": "staging_full_replace"
+      },
+      "why": "outputs.writes[0] is the class-C (staging_full_replace) whole-table replace of toronto_centreline — the ONLY step step.schema.json's own x-rule sanctions (`full_replace must be declared, never silent`, Spec 62 L26): a TEMP table staged in batches, then in ONE transaction DELETE FROM toronto_centreline followed by INSERT ... SELECT, behind a structural empty-set guard (write.js executeStagingReplace, RE-FREEZE #20). WF3 (2026-09-24) exempted this class from buildWritePlan's retract-all/no-scope throw and, in the SAME hardening pass, added `outputs.writes[].write_discipline.class` to x-banned-for-new so no OTHER step can self-declare it without its own reviewed adjudication (Spec 124 Rule 9). This entry covers the CLASS path only — the guard-path entry (`outputs.writes[].write_discipline.guard`: \"none\") for this same target belongs to load_centreline's own descriptor-authoring commit (batch-2 Phase 3, 3.2 ②), per Spec 122 §8's RE-FREEZE #20 record, and is added there, not here.",
+      "commit": "d8773d22 (WF3 class-C retract-all guard, 2026-09-24) + this same commit (anti-bypass hardening)",
+      "adjudicated_by": "operator ruling 2026-09-24 (\"option A, if compliant with Spec 124/122: standardization, observability, accuracy, scalability, simple\"), plan .cursor/wf3_class_c_retract_all_guard_active_task.md Commit 2 item C",
+      "date": "2026-09-24",
+      "lock_test": "src/tests/wf3-class-c-antibypass.infra.test.ts; src/tests/wf3-class-c-retract-all.logic.test.ts"
     }
   }
 }

@@ -55,6 +55,9 @@
       "outputs.writes[].write_discipline.guard": [
         "none"
       ],
+      "outputs.writes[].write_discipline.class": [
+        "staging_full_replace"
+      ],
       "execution.criticality": [
         "best_effort"
       ]

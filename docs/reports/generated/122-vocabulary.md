@@ -67,6 +67,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 |---|---|
 | `outputs.writes[].replay` | `append_unsafe` |
 | `outputs.writes[].write_discipline.guard` | `none` |
+| `outputs.writes[].write_discipline.class` | `staging_full_replace` |
 | `execution.criticality` | `best_effort` |
 
 **Rules, not fused class identities (V7).** A ban evaluated over the decoupled axes says what is actually wrong; a ban carried inside a class name says only what the label was.
