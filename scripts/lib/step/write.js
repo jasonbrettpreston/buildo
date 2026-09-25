@@ -114,6 +114,26 @@ const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
 const SET_BASED_CLASSES = new Set(['set_based_scoped', 'set_based_unscoped', 'set_based_null_retract']);
 
 /**
+ * Class C — `staging_full_replace` (Spec 122 §1.4, LG-26 / INGESTOR prerequisite 0h),
+ * frozen enum letter C, "full staging replace", named for `load_centreline` (Spec 62
+ * L26). Genuinely UNIMPLEMENTED before that prerequisite (Fold A B-1): before
+ * `executeStagingReplace` there was no branch anywhere in `scripts/lib/`, so a
+ * descriptor declaring this class fell through to the DEFAULT (unnamed) codegen — a
+ * plain row-by-row guarded upsert — while the descriptor's own `write_discipline.why`
+ * promised a `TEMP table → DELETE → INSERT...SELECT` replace. The label was a lie the
+ * moment it was declared; that is the whole reason the registry dispositions a class
+ * with no executor `banned_for_new` in `write-class-disposition.json` rather than
+ * merely unimplemented.
+ *
+ * HOISTED to the top of this file (WF3, class-C retract-all guard, 2026-09-24) because
+ * `buildWritePlan`'s `retract: "all"`/no-scope guard must READ it, while the executor
+ * that owns the mechanic (`executeStagingReplace`) sits >1,900 lines below it. Same
+ * string, ONE binding — a second literal in the guard would be a second source of
+ * truth. The full mechanic docstring stays at `executeStagingReplace`'s own JSDoc.
+ */
+const STAGING_FULL_REPLACE_CLASS = 'staging_full_replace';
+
+/**
  * `write_discipline.class` value for LG-11 (MATCHER pilot 2026-08-28) — a scoped
  * `UPDATE ... FROM (<matched CTE>) m WHERE <table>.<key> = m.<key>`, where the CTE and
  * the SET clause's right-hand sides are AUTHORED BY THE COMPUTE (the domain join is not
@@ -749,7 +769,14 @@ function buildWritePlan(writeSpec, descriptor) {
       + `(${keys.join(', ')}) is not supported — validateGeometries joins its result back on ONE key column, `
       + 'so half the key would be dropped and every row would miss its own validation row.');
   }
-  if (retract === 'all' && !scope) {
+  // ⚠️ CLASS C IS EXEMPT, AND ONLY CLASS C (WF3, 2026-09-24, Spec 122 §1.4 + RE-FREEZE
+  // #20; Spec 124 Rules 8/9/12). `staging_full_replace` is the DECLARED whole-table
+  // replace (step.schema.json's class-C x-rule, Spec 62 L26, `grandfathered.json`'s
+  // `load_centreline` entry, `recovery.interrupted:\"force_full_on_next_run\"`): its
+  // executor performs the wipe itself, in one txn behind the empty-set guard, so
+  // `retract:\"all\"` + `scope:\"none\"` is the truthful declaration, not the accident
+  // this throw exists to catch. Every OTHER class keeps the throw unchanged.
+  if (retract === 'all' && !scope && writeSpec.write_discipline.class !== STAGING_FULL_REPLACE_CLASS) {
     throw new Error(`[write_discipline] ${table}: retract "all" with write_discipline.scope "none" would `
       + 'DELETE THE WHOLE TABLE. The scope is what makes a full retraction bounded to the rows this run '
       + 'rebuilds; declare it, or declare retract "none".');
@@ -1180,7 +1207,16 @@ function buildWritePlan(writeSpec, descriptor) {
     // rather than a statement the runner remembers not to call.
     delete_sql: retract === 'departed'
       ? `DELETE FROM ${table} WHERE ${keys[0]} <> ALL($1::${keyType}[]);`
-      : (retract === 'all' ? `DELETE FROM ${table} WHERE ${scope};` : null),
+      : (retract === 'all'
+        // The ONE `retract:"all"` + no-scope shape that reaches here is class C, whose
+        // wipe is the whole table by DECLARATION (Spec 122 §1.4 + RE-FREEZE #20) — every
+        // other class was refused above. The statement is unconditional and truthful
+        // (it is what `executeStagingReplace` itself issues inside its own txn); the
+        // ingest path never executes it. `null` for every other retract value.
+        ? (writeSpec.write_discipline.class === STAGING_FULL_REPLACE_CLASS
+          ? `DELETE FROM ${table};`
+          : `DELETE FROM ${table} WHERE ${scope};`)
+        : null),
     // Not a string, so it is never mistaken for a statement: the batched builder.
     upsertSqlFor: (rowCount) => head
       + Array.from({ length: rowCount }, (_, r) => valuesGroup(1 + r * stepColumns.length)).join(', ')
@@ -1794,20 +1830,6 @@ async function executeRecorderUpsert(client, sql, params) {
   return result.rows[0] || null;
 }
 
-/**
- * `write_discipline.class` value for LG-26 / INGESTOR prerequisite 0h (2026-09-24) — Spec
- * 122 §1.4's frozen enum letter C, "full staging replace", named for `load_centreline`
- * (Spec 62 L26) and therefore `banned_for_new` in `write-class-disposition.json` until the
- * orchestrator's own registry flip lands. Genuinely UNIMPLEMENTED before this prerequisite
- * (Fold A B-1): before `executeStagingReplace` there was no branch anywhere in
- * `scripts/lib/`, so a descriptor declaring this class fell through to the DEFAULT
- * (unnamed) codegen — a plain row-by-row guarded upsert — while the descriptor's own
- * `write_discipline.why` promised a `TEMP table → DELETE → INSERT...SELECT` replace. The
- * label was a lie the moment it was declared; that is the whole reason the registry
- * dispositions a class with no executor `banned_for_new` rather than merely unimplemented.
- */
-const STAGING_FULL_REPLACE_CLASS = 'staging_full_replace';
-
 /** SQL text a `staging_full_replace` target's staging INSERT must never contain. */
 const STAGING_REPLACE_FORBIDDEN_RE = /\bON\s+CONFLICT\b|\bUPDATE\b/i;
 
@@ -1858,6 +1880,14 @@ const STAGING_REPLACE_FORBIDDEN_RE = /\bON\s+CONFLICT\b|\bUPDATE\b/i;
  * `records_updated` / `records_unchanged` are NOT derivable for a replace — there is no
  * per-row insert-vs-update question to answer, every surviving row is a copy of a staged one
  * — and the descriptor declares them `"none"` with a why rather than inventing a number.
+ *
+ * ⚠️ BINDING MOVED TO THE TOP OF THIS FILE (WF3, class-C retract-all guard, 2026-09-24):
+ * `const STAGING_FULL_REPLACE_CLASS = 'staging_full_replace';` is now declared in this
+ * file's OWN constants block (beside `SET_BASED_CLASSES`), because `buildWritePlan`'s
+ * `retract === 'all' && !scope` guard must read it and this docstring sits below that
+ * guard. This comment previously carried the declaration in place; it is MOVED, never
+ * duplicated — one `const`, one string, two readers (`buildWritePlan` and everything
+ * below).
  *
  * @param {import('pg').Pool} pool
  * @param {object} args
