@@ -139,7 +139,12 @@ const SELF_CONSUMER_SLUG = 'link_massing';
 /** D-4 — the INFO metric ids that must survive as declared INFO checks (chain.logic.test.ts asserts the last by name). */
 const INFO_METRIC_IDS = ['parcels_processed', 'run_matched', 'match_centroid_in_parcel', 'match_nearest_fallback', 'no_match', 'parcel_buildings_written'];
 
-/** P4 — T1–T6 by the plan's names. T4 is the verdict bound (`limit_from_config`). T7 (`link_massing_grid_degrees`, the retired JS-path grid literal) was declared-but-never-consumed through peel 8c and its DECLARATION was retired at commit 9 once the armed §1.2a P4 gate caught it as a dead declaration (LM-D7). */
+/** P4 — T1–T6 by the plan's names. T4 is the verdict bound (`limit_from_config`). The original T7
+ *  (`link_massing_grid_degrees`, the retired JS-path grid literal) was declared-but-never-consumed
+ *  through peel 8c and its DECLARATION was retired at commit 9 once the armed §1.2a P4 gate caught
+ *  it as a dead declaration (LM-D7) — T7 is reused below for a genuinely new variable.
+ *  T7/T8 added WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes the D-20
+ *  mass_retraction_ratio FAIL bound and the D-5 rows_changed_ratio WARN bound. */
 const CONFIG_VARS = {
   T1: 'massing_shed_threshold_sqm',
   T2: 'massing_garage_max_sqm',
@@ -147,8 +152,10 @@ const CONFIG_VARS = {
   T4: 'link_massing_link_rate_fail_pct',
   T5: 'link_massing_centroid_confidence',
   T6: 'link_massing_nearest_confidence',
+  T7: 'link_massing_mass_retraction_ratio_fail_pct',
+  T8: 'link_massing_rows_changed_ratio_warn_pct',
 } as const;
-const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T4];
+const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T4, CONFIG_VARS.T7, CONFIG_VARS.T8];
 
 /** A-2 option 2 — the pure exports of the compute. */
 const PURE_HELPERS = ['buildMatchSql', 'classifyStructure'];
@@ -1727,6 +1734,8 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(byName[CONFIG_VARS.T4]?.on_invalid, 'T4 verdict bound: fail').toBe('fail');
     expect(byName[CONFIG_VARS.T5]?.on_invalid, 'T5 written confidence: fail').toBe('fail');
     expect(byName[CONFIG_VARS.T6]?.on_invalid, 'T6 written confidence: fail').toBe('fail');
+    expect(byName[CONFIG_VARS.T7]?.on_invalid, 'T7 mass_retraction_ratio FAIL bound: fail').toBe('fail');
+    expect(byName[CONFIG_VARS.T8]?.on_invalid, 'T8 rows_changed_ratio WARN bound: fail').toBe('fail');
     for (const v of [CONFIG_VARS.T5, CONFIG_VARS.T6]) expect(byName[v]?.min === 0 && byName[v]?.max === 1, `${v}: bounds [0,1] — confidence is numeric(3,2), the column will not reject a 5 (A-7)`).toBe(true);
     for (const v of Object.values(CONFIG_VARS)) expect(byName[v]?.min !== 'none' && byName[v]?.max !== 'none', `${v} declares both bounds`).toBe(true);
     expect(cfg.hoisted_above_gate, 'A-5 / B-13: config validation ABOVE the gate — the opposite of today, declared as a diff').toBe(true);

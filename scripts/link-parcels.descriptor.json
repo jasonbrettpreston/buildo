@@ -391,6 +391,7 @@
       "kind": "bound",
       "expect": { "of": "permit_parcels rows retracted by W1's FULL-mode mass retraction (writes[0], scope match_type='spatial') and NOT rebuilt by the same run's batch-loop upsert, over rows retracted" },
       "limit": "pct <= 0.05",
+      "limit_from_config": "link_parcels_retraction_ratio_fail_pct",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
@@ -637,7 +638,8 @@
       { "name": "link_parcels_confidence_exact_address", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "link_parcels_confidence_spatial_polygon", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "link_parcels_confidence_name_only", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_link_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" }
+      { "name": "link_parcels_link_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_parcels_retraction_ratio_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

@@ -61,9 +61,19 @@ const {
 const SOURCE_CRS = 4326;
 
 /**
+ * Spec 124 Rule 3 (McDonald's Airtight L1) — the null-address WARN bound, externalized.
+ * The comparison lives in `null_address_pct` below and reads this key via `ctx.config`
+ * directly on the RAW FRACTION (0–1 scale): do NOT divide by 100, unlike its sibling
+ * `parcels_skip_rate_max_pct` (which IS on a 0–100 scale). Default 0.1 preserves the
+ * former `fraction >= 0.1` literal byte-for-byte.
+ */
+const NULL_ADDRESS_PCT_VAR = 'parcels_null_address_pct_max';
+
+/**
  * The two rows-with-a-null-address readers. The `parcels_null_address_pct` audit row is
- * built by the shared drift lib, never forked here (its 0.10 boundary is that library's
- * own literal and is assert-schema's fingerprint input — plan D4 / PR-D2).
+ * built by the shared drift lib, never forked here — only its ROW TEXT comes from that
+ * library; the 0.1 WARN boundary itself now reads `parcels_null_address_pct_max` through
+ * `ctx.config` (Spec 124 Rule 3, McDonald's Airtight L1).
  */
 function numberOrNull(value) {
   return Number.isFinite(value) ? value : null;
@@ -479,7 +489,9 @@ function csv_header_drift(ctx) {
  * ~100% forever and this row reads WARN on EVERY run. Carried as-is and declared in
  * descriptor.limitations[]; retiring it would HIDE the strip from the next reader.
  * WARN, never FAIL — a null address does not make the row unloadable. The ROW text is
- * the shared builder's; the 0.10 boundary is that library's own literal (plan D4).
+ * the shared builder's; the 0.10 WARN boundary now comes from `ctx.config` via
+ * `parcels_null_address_pct_max` (Spec 124 Rule 3, McDonald's Airtight L1), read on the
+ * RAW FRACTION scale (0–1) — no `/100`.
  * Denominator/numerator now read the GENERIC runner counters (prerequisite 0o,
  * 2026-09-24 commit ③ rename): `acquired.rows_shaped` (post-shapeRecord survivor
  * count) and `acquired.column_nulls.address_number` (counted on `validated.carried`,
@@ -496,7 +508,7 @@ function null_address_pct(ctx) {
   const fraction = nullRows / attempted;
   ctx.report('null_address_pct', {
     detail: buildNullAddressAuditRow(nullRows, attempted).value,
-    violations: fraction >= 0.1 ? 1 : 0,
+    violations: fraction >= ctx.config[NULL_ADDRESS_PCT_VAR] ? 1 : 0,
   });
 }
 

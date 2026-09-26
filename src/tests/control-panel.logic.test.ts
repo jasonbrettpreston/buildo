@@ -81,9 +81,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_scope_recovery_batch_size', // WF3 EP-D14 (2026-09-10) — pass-5 D4' recovery batch size (incremental mode; --full stamps set-based)
   'enrich_parcels_pending_scope_warn_max', // WF3 EP-D14 (2026-09-10) — pre_write WARN bound on pending pass-3 scope parcels before pass 5
   'enrich_parcels_scope_retire_after_hours', // WF3 EP-PASS3-BACKLOG (2026-09-15) — retention window for a PRIOR run's unconsumed pass-3 scope rows, retired at step start
-  // Batch-2 row 2.1 `enrich_ravines` (2026-09-18, commit 1) — 7 vars, seeded at commit 1 ahead of
+  // Batch-2 row 2.1 `enrich_ravines` (2026-09-18, commit 1) — 8 vars, seeded at commit 1 ahead of
   // the compute/shell landing at commit 2b (Rule 3 externalization; RV-L3 removed an 8th proposed
-  // var — the invalid-geometry ratio stays a pinned literal, no contract_read hook can read config).
+  // var — the invalid-geometry ratio stays a pinned literal, no contract_read hook can read config;
+  // WF2 L1b, McDonald's Airtight, 2026-09-26, deferred it again pending a heavy DB run).
   'enrich_ravines_distance_coverage_pass_pct',
   'enrich_ravines_distance_coverage_warn_pct',
   'enrich_ravines_heartbeat_minutes',
@@ -232,6 +233,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_parcels_confidence_spatial_polygon',      // T3, pilot 7
   'link_parcels_confidence_name_only',            // T4, pilot 7
   'link_parcels_link_rate_warn_pct',              // T5, pilot 7
+  'link_parcels_retraction_ratio_fail_pct',       // WF2 L1 (McDonald's Airtight, 2026-09-26) — LP-D12, Rule 3
   'coa_unmatched_threshold_pct',   // WF2 R5.2 — day-1 unmatched threshold for link-coa-to-parcels
   'coa_parcel_conf_tier1a',        // WF2 R5.2 — Tier 1a parcel match confidence
   'coa_parcel_conf_tier1b',        // WF2 R5.2 — Tier 1b parcel match confidence
@@ -253,6 +255,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_massing_link_rate_fail_pct',
   'link_massing_centroid_confidence',
   'link_massing_nearest_confidence',
+  'link_massing_mass_retraction_ratio_fail_pct', // WF2 L1 (McDonald's Airtight, 2026-09-26) — D-20, Rule 3
+  'link_massing_rows_changed_ratio_warn_pct',    // WF2 L1 (McDonald's Airtight, 2026-09-26) — D-5, Rule 3
   // batch-2 I4 (link_neighbourhoods, LINK 3/3, 2026-09-16) — the same P4-externalization
   // class again: pre-conversion the WARN floor (95) and the FAIL floor (50) were bare
   // literals at scripts/link-neighbourhoods.js:346, each spelled TWICE (the comparison and
@@ -412,6 +416,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'load_ravines_geometry_update_warn_pct',
   'load_ravines_invalid_geometry_fail_pct',
   'load_ravines_mass_delete_fail_pct',
+  'load_ravines_rows_changed_ratio_warn_pct', // WF2 L1 (McDonald's Airtight, 2026-09-26) — D-13, Rule 3
   'load_ravines_download_timeout_ms',
   // WF2 "Step Validator, Data-First" (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) —
   // the every_run/validate_only frequency-default budget for invariants[]/plausibility[]
@@ -500,6 +505,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // physical constants, declared in notes.json, deliberately NOT logic
   // variables (no admin knob for physics) — never reach this list.
   'parcels_irregularity_threshold', 'parcels_skip_rate_max_pct', 'parcels_download_timeout_ms',
+  // WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes parcels' own
+  // null-address WARN (enrich_parcels' ambiguous-zone WARN deferred pending a heavy DB run).
+  'parcels_null_address_pct_max',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

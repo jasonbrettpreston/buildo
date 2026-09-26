@@ -1019,6 +1019,16 @@
       "group": "Parcel Linking"
     }
   },
+  "link_parcels_retraction_ratio_fail_pct": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — LP-D12: permit_parcels rows retracted by W1's FULL-mode mass retraction and NOT rebuilt by the same run's batch-loop upsert, over rows retracted, above this FAILs — mirrors link_massing's own mass_retraction_ratio_fail_pct verbatim. 0.05 is the pre-externalization literal, unchanged. CONSUMED by link_parcels (scripts/lib/compute/link-parcels.js parcel_retraction_ratio, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Parcel Linking"
+    }
+  },
   "coa_unmatched_threshold_pct": {
     "default": 10,
     "type": "number",
@@ -1175,6 +1185,26 @@
     "description": "Maximum haversine distance (metres) for the nearest-building fallback in link-massing when no polygon match is found. CONSUMED by link_massing (scripts/lib/compute/link-massing.js match_nearest_fallback, buildMatchSql).",
     "min": 1,
     "max": 500,
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "link_massing_mass_retraction_ratio_fail_pct": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — the post-write half of the D-20 guard: rows retracted and NOT rebuilt, over rows retracted, above this FAILs. 0.05 is the pre-externalization literal, unchanged. CONSUMED by link_massing (scripts/lib/compute/link-massing.js mass_retraction_ratio, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "link_massing_rows_changed_ratio_warn_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — the live D-5 canary: rows the upsert changed, over rows it scanned, above this WARNs. 0.5 is the pre-externalization literal, unchanged. CONSUMED by link_massing (scripts/lib/compute/link-massing.js rows_changed_ratio, via checks[].limit_from_config).",
     "admin": {
       "group": "Spatial & Massing"
     }
@@ -4727,6 +4757,16 @@
       "group": "Source Ingestion"
     }
   },
+  "parcels_null_address_pct_max": {
+    "default": 0.1,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — WARN bound on the fraction of attempted parcels rows whose ADDRESS_NUMBER is empty, externalized from the former `fraction >= 0.1` literal in scripts/lib/compute/load-parcels.js null_address_pct with an identical default (byte-for-byte behaviour preserved). Scale is the RAW FRACTION (0–1): unlike its sibling parcels_skip_rate_max_pct (0–100, divided by 100 in the compute), this value is compared directly against nullRows/attempted with NO /100. PR-D2 note: since Toronto's 2026-05-20 column strip the fraction is ~100% and this row reads WARN on every run by design — retiring it would hide the strip. CONSUMED by parcels (scripts/lib/compute/load-parcels.js null_address_pct, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "assert_schema_type_sample_rows": {
     "default": 20,
     "type": "number",
@@ -4793,6 +4833,16 @@
     "min": 0,
     "max": 1,
     "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — L8 invalid-geometry bound: skipped / feature_count above this FAILs the run BEFORE the transaction opens, so no partial polygon set is ever committed. 0.05 = the pre-externalization literal (ravineInvalidGeometryFailPct) and the same 5% the downstream consumer enrich-ravines.js re-checks at :57 — move both together or producer and consumer disagree. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js ravine_geometry_skipped_pct, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_ravines_rows_changed_ratio_warn_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — the D-13 live canary bound: rows_changed / rows_scanned above this WARNs (idempotent_rerun: zero_writes made a number). 0.5 is the pre-externalization literal, unchanged, and must AGREE with write_discipline.expected_change_ratio (the two are the same number declared twice). CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js reports value only; the comparison is resolved by the generic runner from checks[].limit_from_config, no compute literal to swap).",
     "admin": {
       "group": "Source Ingestion"
     }

@@ -257,13 +257,14 @@
       "kind": "bound",
       "expect": { "of": "rows with an empty ADDRESS_NUMBER over rows attempted", "direction": "max" },
       "limit": "pct <= 0.1",
+      "limit_from_config": "parcels_null_address_pct_max",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "PR-D2 (PIN, DO NOT FIX — Spec 123 §3.1; review_followups:156 stays ACT, its own WF3). buildNullAddressAuditRow (parcels-csv-drift.js:73-77) + loader :424. The row is STRUCTURALLY UNSATISFIABLE as PASS since the 2026-05-20 strip: the CSV no longer carries ADDRESS_NUMBER at all, so the fraction is ~100% and the row reads WARN on EVERY run. The conversion carries it as-is and declares the unsatisfiability in limitations[]; retiring the check would HIDE the strip from a future reader, which is the opposite of the observability the row exists to provide. No limit_from_config: the 0.10 boundary is the drift lib's own literal, and peeling it here would force an assert_schema golden recapture (that lib is assert-schema.descriptor.json's fingerprint input).",
+        "text": "PR-D2 (PIN, DO NOT FIX — Spec 123 §3.1; review_followups:156 stays ACT, its own WF3). buildNullAddressAuditRow (parcels-csv-drift.js:73-77) + loader :424. The row is STRUCTURALLY UNSATISFIABLE as PASS since the 2026-05-20 strip: the CSV no longer carries ADDRESS_NUMBER at all, so the fraction is ~100% and the row reads WARN on EVERY run. The conversion carries it as-is and declares the unsatisfiability in limitations[]; retiring the check would HIDE the strip from a future reader, which is the opposite of the observability the row exists to provide. No limit_from_config was ruled in the conversion because the 0.10 boundary was the drift lib's own literal; McDonald's Airtight L1 (Spec 124 Rule 3, 2026-09-26) reverses that: the comparison now reads parcels_null_address_pct_max via ctx.config (compute :499), and this check declares limit_from_config so the runner's bound and the compute's agree.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/parcels-csv-drift.js"
@@ -536,6 +537,7 @@
   "config": {
     "logic_variables": [
       { "name": "parcels_irregularity_threshold", "min": 0.5, "max": 1.0, "on_invalid": "fail" },
+      { "name": "parcels_null_address_pct_max", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "sources_parcels_floor", "min": 1, "max": 5000000, "on_invalid": "fail" },
       { "name": "parcels_skip_rate_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "parcels_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" }

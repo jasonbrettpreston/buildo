@@ -248,6 +248,8 @@ const GROUP_ORDER = [
       "link_massing_link_rate_fail_pct",
       "link_massing_centroid_confidence",
       "link_massing_nearest_confidence",
+      "link_massing_mass_retraction_ratio_fail_pct",
+      "link_massing_rows_changed_ratio_warn_pct",
       "max_build_lot_min_sqm",
       "max_build_lot_max_sqm",
       "product_scope_max_existing_gfa_sqm",
@@ -305,7 +307,8 @@ const GROUP_ORDER = [
       "link_parcels_confidence_exact_address",
       "link_parcels_confidence_spatial_polygon",
       "link_parcels_confidence_name_only",
-      "link_parcels_link_rate_warn_pct"
+      "link_parcels_link_rate_warn_pct",
+      "link_parcels_retraction_ratio_fail_pct"
     ]
   },
   {
@@ -358,6 +361,7 @@ const GROUP_ORDER = [
       "enrich_parcels_zone_class_pct_warn_floor",
       "enrich_parcels_pending_scope_warn_max",
       "parcels_dead_tuple_ratio_warn_max",
+      "parcels_null_address_pct_max",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",
       "coa_bylaw_max_coverage_null_warn_pct",
@@ -441,6 +445,7 @@ const GROUP_ORDER = [
       "load_ravines_geometry_update_warn_pct",
       "load_ravines_invalid_geometry_fail_pct",
       "load_ravines_mass_delete_fail_pct",
+      "load_ravines_rows_changed_ratio_warn_pct",
       "load_ravines_download_timeout_ms",
       "road_overlay_distance_m",
       "geocode_permits_coverage_warn_pct",

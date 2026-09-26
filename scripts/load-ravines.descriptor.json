@@ -430,6 +430,7 @@
       "kind": "bound",
       "expect": { "of": "rows_changed over rows_scanned, against write_discipline.expected_change_ratio" },
       "limit": "pct <= 0.5",
+      "limit_from_config": "load_ravines_rows_changed_ratio_warn_pct",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
@@ -697,6 +698,7 @@
       { "name": "load_ravines_geometry_update_warn_pct", "min": 0, "max": 1, "on_invalid": "default" },
       { "name": "load_ravines_invalid_geometry_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_ravines_mass_delete_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_ravines_rows_changed_ratio_warn_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_ravines_download_timeout_ms", "min": 1000, "max": 600000, "on_invalid": "clamp" }
     ],
     "validation": "strict",

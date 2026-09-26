@@ -110,7 +110,9 @@ const CONSUMED_FIELDS = [
 const EMIT_KEY = 'ravine_load';
 const CONSUMER_SLUG = 'enrich_ravines';
 
-/** P4 — the six tunables (T1–T6), by the plan's proposed names. T2–T5 are verdict bounds (`limit_from_config`). */
+/** P4 — the seven tunables (T1–T7), by the plan's proposed names. T2–T5, T7 are verdict bounds (`limit_from_config`).
+ *  T7 added WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes the D-13
+ *  ravine_rows_changed_ratio bound, previously the ONE deliberate non-knob literal. */
 const CONFIG_VARS = {
   T1: 'load_ravines_dataset_age_warn_years',
   T2: 'load_ravines_count_drift_fail_pct',
@@ -118,8 +120,9 @@ const CONFIG_VARS = {
   T4: 'load_ravines_invalid_geometry_fail_pct',
   T5: 'load_ravines_mass_delete_fail_pct',
   T6: 'load_ravines_download_timeout_ms',
+  T7: 'load_ravines_rows_changed_ratio_warn_pct',
 } as const;
-const LIMIT_FROM_CONFIG_VARS = [CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5];
+const LIMIT_FROM_CONFIG_VARS = [CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5, CONFIG_VARS.T7];
 
 /** A-1(b) — the pure domain functions that stay as named exports of the compute. */
 const PURE_HELPERS = [
@@ -1947,11 +1950,11 @@ describe('8c — thresholds: one source, no literal a knob duplicates', () => {
     }
   });
 
-  it('the ONE deliberate non-knob bound agrees with the write discipline it mirrors (two places, locked)', () => {
+  it('the D-13 bound is now externalized (WF2 L1, McDonald\'s Airtight, 2026-09-26 — was the ONE deliberate non-knob) and still agrees with the write discipline it mirrors (two places, locked)', () => {
     const d = loadDescriptor();
     const check = (d.checks as LimitCheck[]).find((c) => c.id === 'ravine_rows_changed_ratio');
     expect(check, 'ravine_rows_changed_ratio must be declared').toBeDefined();
-    expect(check?.limit_from_config, 'it is descriptor data, NOT an operator knob').toBeUndefined();
+    expect(check?.limit_from_config, 'Spec 124 Rule 3 — this literal was explicitly named for conversion; it is now an operator knob').toBe(CONFIG_VARS.T7);
     const wd = (d.outputs as { writes: Array<{ write_discipline: { expected_change_ratio: string } }> }).writes[0]!.write_discipline;
     expect(
       literalOf(check!.limit as string),

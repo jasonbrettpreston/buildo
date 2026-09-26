@@ -99,6 +99,13 @@ const CONFIG_VARS: Record<string, number> = {
   sources_parcels_floor: 460000,
   parcels_skip_rate_max_pct: 10,
   parcels_download_timeout_ms: 60000,
+  // Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — externalizes the null_address_pct
+  // WARN bound (compute/load-parcels.js null_address_pct, `ctx.config[NULL_ADDRESS_PCT_VAR]`,
+  // raw-fraction scale). NOT added to NEW_CONFIG_VARS below: unlike its siblings this var is
+  // read via a bracket-notation VAR-const indirection, not a literal `ctx.config.<name>` in
+  // source text, so the generic dot-notation grep at "the compute reads every threshold..."
+  // does not apply to it (its own bracket-form read is exercised directly by the checks below).
+  parcels_null_address_pct_max: 0.1,
 };
 /** New variables this step mints (sources_parcels_floor is SHARED, pre-existing). */
 const NEW_CONFIG_VARS = [
