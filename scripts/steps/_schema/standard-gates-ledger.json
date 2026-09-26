@@ -3,10 +3,11 @@
     "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
     "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open.",
     "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
-    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ).",
+    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). A 4th score row (link_massing, 10/17) was added by the FIXER pass that landed gate K (below): commit 7d807c0b's own gate-K checks (G7 scoreG7 tightening) knocked link_massing from 14/17 to 10/17 same-day, after this comment was first authored — `scripts/analysis/gates/score-floor.mjs --list` reproduces the exact row.",
     "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X).",
     "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture.",
-    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment, permanently absent from step-archetype-census.json by the file's own documented design) + 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them."
+    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment, permanently absent from step-archetype-census.json by the file's own documented design) + 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them.",
+    "Gate K rows (2026-09-26, FIXER pass) — commit 7d807c0b's own gate-K rows covered only 18 of the 20 converted steps; `link_massing` and `link_neighbourhoods` were left unledgered, which is a SLUG-SCOPE mistake, not a sanctioned exemption: they are PREVIOUSLY CONVERTED steps (both in converted.json), never the genuinely in-development INGESTOR slugs `load_centreline`/`massing`/`neighbourhoods` (not yet converted, never appear in this ledger or in a live `--all` run) that the 2026-09-26 OPERATOR DIRECTION forward-hard-enforces with NO ledger rows permitted (§1). The 2 rows below close that gap under scope item 3 (deferred, dated, MED/LOW — same disposition as every other gate-K row), and `src/tests/gate-score-floor.infra.test.ts`'s own `RBA_NO_LEDGER_EXEMPT` test-level bypass (which had hard-coded these SAME two slugs as an unsanctioned exception, conflating them with the in-development ingestor names) is removed in the same commit — Spec 124 §5 R-BA: ledger rows are the ONLY sanctioned exception."
   ],
   "contract_version": 1,
   "rows": [
@@ -2576,6 +2577,36 @@
       "item": "red-evidence",
       "disposition": "pending_remediation",
       "why": "no docs/reports/red-evidence/parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "link_massing",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/link_massing/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26); a PREVIOUSLY CONVERTED step, not the in-development `massing` ingestor slug",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "link_neighbourhoods",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/link_neighbourhoods/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26); a PREVIOUSLY CONVERTED step, not the in-development `neighbourhoods` ingestor slug",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "link_massing",
+      "item": "score",
+      "disposition": "pending_remediation",
+      "why": "score floor 10/17 < 14 — knock-on of gate K's scoreG7 tightening (commit 7d807c0b) landing the same day the score was last measured at 14/17",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"

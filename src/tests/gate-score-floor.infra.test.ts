@@ -104,14 +104,22 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
   // has a gate-F score ledger row, and there are zero orphans.
   // -------------------------------------------------------------------------
   // R-BA's own scope note (Spec 124 §5, operator 2026-09-26): every gate is a
-  // HARD STOP — no ledger row permitted — for steps "in development now"
-  // (`load_centreline`, `massing`, `neighbourhoods`). `link_massing` genuinely
-  // sits below the floor as a knock-on of gate K's scoreG7 tightening and MUST
-  // stay unledgered by design; this suite honours that sanctioned exception
-  // rather than asserting a fully-green fleet gate F never intended.
-  const RBA_NO_LEDGER_EXEMPT = ['link_massing', 'link_neighbourhoods'];
-
-  it('T6: live — every converted step scores >= 14/17 or has a gate-F score row; 0 orphans (outside the R-BA no-ledger exemption)', () => {
+  // HARD STOP — no ledger row permitted — for steps "in development now":
+  // the INGESTOR slugs `load_centreline`, `massing`, `neighbourhoods` (not
+  // yet in converted.json, so they never appear in a live `--all` run's
+  // scores at all). `link_massing` and `link_neighbourhoods` are PREVIOUSLY
+  // CONVERTED steps (both in converted.json) — a same-named-suffix
+  // coincidence, not the same slug. A prior revision of this test hard-coded
+  // those two AS a "no-ledger exemption" (`RBA_NO_LEDGER_EXEMPT`), which
+  // conflated them with the in-development ingestor names and became an
+  // unsanctioned bypass: Spec 124 §5 R-BA is explicit that a dated ledger row
+  // is the ONLY sanctioned exception, "in-development steps get none" refers
+  // to slugs with no descriptor yet, never to a converted step whose report
+  // score later dipped. `link_massing`'s genuine 10/17 (a knock-on of gate
+  // K's scoreG7 tightening, commit 7d807c0b) now carries its own dated
+  // `{gate:'F', step:'link_massing', item:'score'}` ledger row instead — this
+  // suite asserts a fully clean fleet, no exemption needed.
+  it('T6: live — every converted step scores >= 14/17 or has a gate-F score row; 0 orphans', () => {
     const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
       cwd: REPO_ROOT, encoding: 'utf8', timeout: 180_000,
     });
@@ -124,8 +132,29 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
     const { rows } = ledger.loadLedger(REPO_ROOT);
     const out = gateF.checkScoreFloor(scores, rows);
     expect(out.orphans).toEqual([]);
-    expect(out.violations.filter((v) => !RBA_NO_LEDGER_EXEMPT.includes(v.step))).toEqual([]);
-    expect(out.violations.every((v) => RBA_NO_LEDGER_EXEMPT.includes(v.step))).toBe(true);
+    expect(out.violations).toEqual([]);
+  });
+
+  // -------------------------------------------------------------------------
+  // T6b — REGRESSION: a converted step named `link_x` must never be treated
+  // as the in-development ingestor slug `x` just because its name contains
+  // `x` as a suffix (the exact confusion T6's removed `RBA_NO_LEDGER_EXEMPT`
+  // made). `checkScoreFloor` takes slugs as opaque, case-sensitive exact
+  // strings — never a substring/`.includes()` match — so a below-floor
+  // `link_massing` row must not silently cover a different, in-development
+  // `massing` slug, and vice versa.
+  // -------------------------------------------------------------------------
+  it('T6b: a gate-F row for "link_massing" does not allow a below-floor "massing" (exact-match only, no substring confusion)', () => {
+    const row = {
+      gate: 'F', step: 'link_massing', item: gateF.SCORE_ITEM, disposition: 'pending_remediation',
+      why: 'w', closing_brief: 'b', filed: '2026-09-26', adjudicated_by: 'operator',
+    };
+    const out = gateF.checkScoreFloor(
+      [{ slug: 'massing', total: 10, maxTotal: 17 }, { slug: 'link_massing', total: 10, maxTotal: 17 }],
+      [row],
+    );
+    expect(out.violations.map((v) => v.step)).toEqual(['massing']);
+    expect(out.allowed.map((a) => a.violation.step)).toEqual(['link_massing']);
   });
 
   // -------------------------------------------------------------------------
