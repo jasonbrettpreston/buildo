@@ -141,6 +141,14 @@
       "kind": "records_meta",
       "key": "wsib_registry_count",
       "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "wsib_registry_count",
+      "value": "any",
       "source": "trigger"
     },
     {

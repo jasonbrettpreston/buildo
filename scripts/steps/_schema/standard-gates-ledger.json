@@ -12,46 +12,6 @@
   "rows": [
     {
       "gate": "A",
-      "step": "load_ravines",
-      "item": "checks.ravine_rows_changed_ratio.limit",
-      "disposition": "pending_remediation",
-      "why": "limit \"pct <= 0.5\" is neither limit_from_config nor exactly \"viol == 0\"",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "A",
-      "step": "link_massing",
-      "item": "checks.mass_retraction_ratio.limit",
-      "disposition": "pending_remediation",
-      "why": "limit \"pct <= 0.05\" is neither limit_from_config nor exactly \"viol == 0\"",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "A",
-      "step": "link_massing",
-      "item": "checks.rows_changed_ratio.limit",
-      "disposition": "pending_remediation",
-      "why": "limit \"pct <= 0.5\" is neither limit_from_config nor exactly \"viol == 0\"",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "A",
-      "step": "link_parcels",
-      "item": "checks.parcel_retraction_ratio.limit",
-      "disposition": "pending_remediation",
-      "why": "limit \"pct <= 0.05\" is neither limit_from_config nor exactly \"viol == 0\"",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "A",
       "step": "enrich_parcels",
       "item": "checks.parcels_ambiguous_zone_count.limit",
       "disposition": "pending_remediation",
@@ -126,16 +86,6 @@
       "item": "checks.stranded_cost_rows_retracted.limit",
       "disposition": "pending_remediation",
       "why": "limit \"value_min 0\" is neither limit_from_config nor exactly \"viol == 0\"",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "A",
-      "step": "parcels",
-      "item": "checks.null_address_pct.limit",
-      "disposition": "pending_remediation",
-      "why": "limit \"pct <= 0.1\" is neither limit_from_config nor exactly \"viol == 0\"",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -336,16 +286,6 @@
       "item": "emits.is_wsib_registered_corrected",
       "disposition": "pending_remediation",
       "why": "golden POST records_meta carries \"is_wsib_registered_corrected\" but emits[] never declares it (emitted-not-declared)",
-      "closing_brief": "wf2-remediate-link-wsib",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "C",
-      "step": "link_wsib",
-      "item": "staleness.trigger.wsib_registry_count",
-      "disposition": "pending_remediation",
-      "why": "staleness.trigger[].emit_key \"wsib_registry_count\" is self-consumed but no golden POST records_meta persists it — the baseline reads \"unchanged\" forever (trigger-baseline-missing)",
       "closing_brief": "wf2-remediate-link-wsib",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -852,16 +792,6 @@
     },
     {
       "gate": "D",
-      "step": "link_wsib",
-      "item": "link_wsib->link_wsib.wsib_registry_count",
-      "disposition": "pending_remediation",
-      "why": "records_meta.wsib_registry_count absent from every POST golden of \"link_wsib\"",
-      "closing_brief": "wf2-remediate-link-wsib",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "D",
       "step": "(registry)",
       "item": "scan.scripts/analysis/step-validate.mjs.tables_checked",
       "disposition": "pending_remediation",
@@ -1126,16 +1056,6 @@
       "item": "compute-no-upper-numeric-const@const M_TO_FT = 3.28084;",
       "disposition": "pending_remediation",
       "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "load-parcels",
-      "item": "compute-no-literal-violation-compare@violations: fraction >= 0.1 ? 1 : 0,",
-      "disposition": "pending_remediation",
-      "why": "compute-no-literal-violation-compare — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
