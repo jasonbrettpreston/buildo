@@ -1836,6 +1836,79 @@ claim now measured rather than only argued.
 
 ---
 
+## §16. LP-D16 — `code_version` staleness baseline never persisted (WF3, 2026-09-26)
+
+The descriptor's own `staleness.trigger[0]` (`{signal:"code_version", position:"pre_compute", emit_key:"code_version"}`)
+and `emits[{key:"code_version"}]` declare a self-consumed producer contract identical to `link_massing` and
+`link_neighbourhoods` — but `buildLinkMeta(ctx)` never returned a `code_version` field. `staleness.js selectMode`
+reads `prior.code_version`; absent ⇒ `baseline=null` ⇒ `changed=false` ("an ABSENT baseline is not a change"),
+so the baseline could never be created and the already-bumped `staleness.logic_version` (`v1-knn-boundary-distance`,
+set `b37087f3`, 2026-08-30) could never force a FULL relink. Measured before the fix: 0/9 completed runs carried
+`code_version`; 12 consecutive completed runs since `b37087f3` were all `linked_incremental[_with_warnings]`, zero
+`linked_full`.
+
+**THE FIX.** One line, `scripts/lib/compute/link-parcels.js` `buildLinkMeta`:
+`code_version: ctx.descriptor.staleness.logic_version,` — mirrors `link-massing.js`/`link-neighbourhoods.js` byte
+for byte. No descriptor, runner, staleness-library, or golden-shape change.
+
+**RED→GREEN, both directions (`src/tests/link-parcels-code-version.logic.test.ts`, 4 tests).** T1: the emitted
+value equals `descriptor.staleness.logic_version` (RED before the fix: `undefined`). T2: every declared
+`pre_compute` trigger `emit_key` is a key of `buildLinkMeta`'s return (RED before). T3 (consumer side, GREEN both
+sides): a differing prior baseline (`code_version: 'v0-old'`) + the descriptor's own `sources` chain `--full` argv
+resolves `mode:"full"`, `reason` containing `code_version_changed(v0-old->v1-knn-boundary-distance)`. T4 (fence
+pin, GREEN both sides): an absent prior baseline still resolves `changed:false` — the fix only makes the baseline
+EXIST, it does not change the documented "absent is not a change" disposition.
+
+**GC-12 — the forced FULL (`.cursor/wf2_conversion_standard_gates_active_task.md`).** The fix alone cannot
+retroactively rebuild data whose baseline was never stamped: the very first post-fix run's OWN prior baseline is
+still absent, so it resolves incremental regardless of `--full`. Measured: no completed `link_parcels` run had
+`terminal:"linked_full"` since the logic_version bump, so the live corpus was never rebuilt under the current
+spatial-matching logic. The first post-fix run was therefore `LINK_PARCELS_FORCE_FULL=1` (live dev DB, 2026-09-26,
+`pipeline_runs.id=1997`):
+
+| metric | value |
+|---|---|
+| mode gate | `forced=true changed=false → FULL (force_full_env)` |
+| `parcel_retraction_ratio` | `{retracted:12697, rebuilt:12770, unrestored_ratio:0}` — PASS, nothing silently dropped |
+| `records_total` / `records_new` / `records_updated` | 239,920 / 12,770 / 77 |
+| `permit_parcels_deleted_count` | 11 |
+| `records_meta.code_version` | `v1-knn-boundary-distance` — written to both the summary AND the `pipeline_runs` row |
+| verdict / terminal | WARN / `linked_incremental_with_warnings` — driven by the pre-existing, standing `spatial_null_coordinate_permits` count (LP-D13: expected non-zero, not a regression) |
+
+This is a REAL, measured correction, not a no-op: `permit_parcels` grew from 239,858 to 239,920 rows. The raw
+`table_state[0].content_hash` DIFFERS before vs. after (`cd780f19…` → `ea1c0ee4…`) — **this is the correct result,
+not a defect**: the FULL-mode retraction (`retract:"all"`, scoped `match_type='spatial'`) deletes and reinserts
+every spatial-tier row, refreshing `linked_at` (a `source:"run_at"` column, deliberately excluded from the
+write-discipline's `guard_columns`) for all 12,770 rebuilt rows regardless of whether their `parcel_id`/
+`match_type`/`confidence` changed — and a genuine month of incremental-only drift (new permits ingested since the
+logic_version bump, never covered by a FULL rebuild because this very bug prevented one) means many of those rows
+really are new or corrected. A byte-identical hash would have meant the bug had zero practical consequence, which
+is false. A follow-up NORMAL run (no force) confirmed the new baseline is stable: `mode gate:
+explicit_full=false forced=false changed=false → INCREMENTAL (incremental:no_full_arg)`, `records_total:0`, and
+`table_state[0]` hash (`ea1c0ee4…`, 239,920 rows) unchanged run-over-run — a genuine fixed point.
+
+**Golden recapture (G8).** All three POST invocations (`permits`, `sources`, `standalone`) recaptured after the
+forced FULL. `--compare` against the previously-committed goldens shows the diff set beyond
+`records_meta.code_version` is fully accounted for by (a) the forced-FULL backfill above (`link_rate_pct`
+94.4→94.43, `linked` 239,858→239,920, `unlinked_pct` 5.6→5.57, both tables' `content_hash`/`row_count`) and (b)
+unrelated fleet-wide drift already present independent of this fix: `schema_migrations` count in the startup log
+line (242→245, environmental — more migrations have landed on this dev DB since the golden was last captured) and
+`records_meta.pool_errors` (a field `scripts/lib/step/index.js` now attaches to every step's `records_meta` via
+`pool.__buildoPoolErrorCount`, added fleet-wide since this report's goldens were last captured — orthogonal to
+`link_parcels` and not part of this fix). `chain_run_id` appearing as `null` in the old capture vs. absent
+(stripped) in the new one is the same pre-existing golden-staleness artifact already on record in
+`capture-step-golden.js`'s own `VOLATILE_KEYS` history (an older capture predates the key being deleted rather
+than nulled by the normaliser).
+
+### G-verdict, LP-D16
+
+**CLOSED.** `LP-D16` closed in `defect-ledger.md`. Lesson routed to `tasks/lessons.md`: a declared self-consumed
+trigger whose `emit_key` is never actually emitted by the compute is a dead fence — the descriptor lies about a
+capability the runtime does not have, and the class is only caught by cross-checking `records_meta` against the
+descriptor's own `staleness.trigger[].emit_key`, never by reading the descriptor alone.
+
+---
+
 ## §R Reflection (FULL — promoted at commit 9, per Spec 123 §7/Spec 124 R-F)
 
 > Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit 9) — this is that
@@ -2184,7 +2257,7 @@ above).*
 | G3 | 1 | 2 | table rows=19 vocab-hit rows=18 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 15 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 16 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=1 it-count=14 RED-evidence=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -2216,15 +2289,18 @@ above).*
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 249 · unexplained: 0
+- compare ran: true · diffs found: 252 · unexplained: 0
 
 ### Test suite (item iii)
-- 1538/1539 passed (suite success=false)
-- harvested: 26 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1543/1547 passed (suite success=false)
+- harvested: 27 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (4):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/steps/load_ravines/violations.test.ts > the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold B library growth > acquire.js — the ONE home for the content-hash gate (Fold B item 3) and the acquisition seam (A-2)
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — present in the converted step (acquire.js + descriptor): tier-2 content-hash gate — contentHashDecision over the streamed hash-through-to-disk (never Buffer.from(await res.arrayBuffer()), never readFileSync), tier2.skip re-emits the prior meta via buildSkipReEmitMeta
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — reversion is detectable: the patch applied to the current subject makes the lock fire (arrayBuffer()/readFileSync)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -2243,7 +2319,7 @@ above).*
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link_keyed runner=runLinkKeyedPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=49493B notes=8682B checks=15 rows records_meta=3108B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=49493B notes=8682B checks=15 rows records_meta=3582B (newest post/ capture) |
 
 **Enforced-green: 13/14**
 

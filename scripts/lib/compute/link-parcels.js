@@ -445,6 +445,10 @@ function buildLinkMeta(ctx) {
   const w3 = ctx.written && ctx.written.e3;
   return {
     duration_ms: ctx.elapsed_ms,
+    // ⚠️ SELF-CONSUMED PRODUCER FIELD (same contract as link_massing / link_neighbourhoods):
+    // the NEXT run's staleness.selectMode reads prior.code_version against
+    // descriptor.staleness.logic_version. Absent ⇒ "unchanged" forever (WF3 2026-09-25).
+    code_version: ctx.descriptor.staleness.logic_version,
     permits_processed: m.permits_processed,
     matches_tier_1_exact: m.address_points_exact + m.exact_legacy,
     matches_tier_1_via_bridge: m.address_points_exact,

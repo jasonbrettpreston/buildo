@@ -59,6 +59,21 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 
 **Testing:** `parcels.logic.test.ts`
 
+> **As-built addendum (WF3, LP-D16, 2026-09-26):** the section above pre-dates the Spec 122 conversion and
+> undersells the current implementation (a 4-tier address/spatial cascade in `scripts/lib/compute/link-parcels.js`,
+> not merely bbox+polygon — see `scripts/link-parcels.descriptor.json` for the authoritative contract; a full
+> section rewrite is out of scope for this WF3). This addendum documents ONE fixed staleness gap: the descriptor
+> declares a self-consumed `staleness.trigger` (`{signal:"code_version", position:"pre_compute",
+> emit_key:"code_version"}`) so that a `staleness.logic_version` bump forces a FULL relink on its first post-bump
+> run — but `buildLinkMeta` never emitted `code_version`, so `scripts/lib/step/staleness.js`'s `selectMode` always
+> read an absent prior baseline (`changed:false` by design) and the trigger could never fire. Fixed by emitting
+> `code_version: ctx.descriptor.staleness.logic_version` from `buildLinkMeta` (mirrors `link-massing.js`/
+> `link-neighbourhoods.js`). Because the baseline had never been stamped, the fix alone could not retroactively
+> rebuild the corpus — one explicit `LINK_PARCELS_FORCE_FULL=1` run was required (2026-09-26) to stamp a truthful
+> first baseline, which also caught up 12,770 new + 77 corrected links accumulated during the outage. See
+> [pilot 7 assessment](../../reports/2026-08-30-pilot7-link-parcels-assessment.md) §16 and `defect-ledger.md`
+> `LP-D16` for the full measurement.
+
 ---
 
 ### Link Neighbourhoods (`link-neighbourhoods.js`)
