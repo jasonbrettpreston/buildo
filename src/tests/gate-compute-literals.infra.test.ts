@@ -3,13 +3,16 @@
 //
 // WF2 gate E — `scripts/analysis/gates/compute-literals.mjs`, fast invariant #32.
 //
-// The five-word standard's gate E draws every SQL INTERVAL/date literal,
-// UPPER_SNAKE_CASE numeric constant, `violations:` non-zero comparison, and
-// literal numeric SQL bound inside `scripts/lib/compute/**` from a CLOSED
-// answer set: none at all, OR a `{gate:'E'}` ledger row keyed on
-// `<rule-id>@<trimmed source line text>`. `scripts/hooks/check-step-shape.mjs`
-// applies the SAME allowlist at commit time — only these 5 rule ids are ever
-// filterable by a ledger row; every pre-existing compute-shape rule is not.
+// The five-word standard's gate E draws every SQL INTERVAL/date literal, a
+// module-level numeric constant of ANY identifier case (STANDARDIZED
+// 2026-09-26 — renaming an UPPER_SNAKE_CASE constant to camelCase used to
+// bypass this gate; case no longer decides whether a literal is a tunable),
+// `violations:` non-zero comparison, and literal numeric SQL bound inside
+// `scripts/lib/compute/**` from a CLOSED answer set: none at all, OR a
+// `{gate:'E'}` ledger row keyed on `<rule-id>@<trimmed source line text>`.
+// `scripts/hooks/check-step-shape.mjs` applies the SAME allowlist at commit
+// time — only these 5 rule ids are ever filterable by a ledger row; every
+// pre-existing compute-shape rule is not.
 //
 // T1/T2 re-run the module's own selfTest() both as a whole and via its direct
 // assertions (Spec 121 §12b.6: a checker never proven to fire is not a check).
@@ -22,7 +25,7 @@ import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
 
 const REPO_ROOT = process.cwd();
 
-describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, UPPER const, violations-compare, SQL bound)', () => {
+describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-level numeric const of any case, violations-compare, SQL bound)', () => {
   // -------------------------------------------------------------------------
   // T1 — the module's own self-test runs, and it throws on failure.
   // -------------------------------------------------------------------------
@@ -49,15 +52,24 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, UPPER co
     });
 
     it('T2c: a finding with a matching ledger row is filtered (allowed), not reported', () => {
+      // The fixture carries THREE compute-no-module-numeric-const findings
+      // (UPPER_SNAKE_CASE + two camelCase) so a case-blind rule is proven —
+      // a row matching ONLY the UPPER_SNAKE_CASE finding's exact text must
+      // filter that one finding and leave the other two (camelCase) findings
+      // reported, not swallow the whole rule id.
       const row = {
         gate: 'E', step: 'bad-compute-literals',
-        item: 'compute-no-upper-numeric-const@const MAX_RETRY_COUNT = 5;',
+        item: 'compute-no-module-numeric-const@const MAX_RETRY_COUNT = 5;',
         disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
         filed: '2026-09-26', adjudicated_by: 'operator',
       };
       const out = gateE.checkComputeLiterals([gateE.FIXTURE_FILE], [row]);
-      const stillReported = out.unallowed.filter((v: { item: string }) => v.item.startsWith('compute-no-upper-numeric-const@'));
+      const stillReported = out.unallowed.filter((v: { item: string }) => v.item === row.item);
       expect(stillReported).toEqual([]);
+      const camelCaseFindings = out.unallowed.filter(
+        (v: { item: string }) => v.item.startsWith('compute-no-module-numeric-const@') && v.item !== row.item,
+      );
+      expect(camelCaseFindings.length).toBeGreaterThan(0);
     });
 
     it('T2d: the fixture RED-fails with no ledger rows at all', () => {
@@ -69,13 +81,27 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, UPPER co
     it('T2e: a ledger row with no matching finding is an ORPHAN (R-X closing-row posture)', () => {
       const row = {
         gate: 'E', step: 'bad-compute-literals',
-        item: 'compute-no-upper-numeric-const@no such line exists anywhere',
+        item: 'compute-no-module-numeric-const@no such line exists anywhere',
         disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
         filed: '2026-09-26', adjudicated_by: 'operator',
       };
       const out = gateE.checkComputeLiterals([gateE.FIXTURE_FILE], [row]);
       expect(out.pass).toBe(false);
       expect(out.orphans.length).toBeGreaterThan(0);
+    });
+
+    it('T2g: a camelCase module-level numeric const fires (the McDonald\'s Airtight bug) — UPPER_SNAKE_CASE still fires too', () => {
+      const findings = gateE.scanGateE([gateE.FIXTURE_FILE]);
+      const moduleConstFindings = findings.filter((f: { ruleId: string | undefined }) => f.ruleId === 'compute-no-module-numeric-const');
+      expect(moduleConstFindings.some((f: { lineText: string }) => /const\s+roundScale\s*=/.test(f.lineText))).toBe(true);
+      expect(moduleConstFindings.some((f: { lineText: string }) => /const\s+msPerHour\s*=/.test(f.lineText))).toBe(true);
+      expect(moduleConstFindings.some((f: { lineText: string }) => /const\s+MAX_RETRY_COUNT\s*=/.test(f.lineText))).toBe(true);
+    });
+
+    it('T2h: a function-local numeric const does not fire this rule', () => {
+      const findings = gateE.scanGateE([gateE.FIXTURE_FILE]);
+      const moduleConstFindings = findings.filter((f: { ruleId: string | undefined }) => f.ruleId === 'compute-no-module-numeric-const');
+      expect(moduleConstFindings.some((f: { lineText: string }) => /const\s+n\s*=\s*5/.test(f.lineText))).toBe(false);
     });
 
     it('T2f: old (pre-existing) rule ids are never filtered by a ledger row', () => {

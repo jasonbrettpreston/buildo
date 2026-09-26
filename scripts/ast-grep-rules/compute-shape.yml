@@ -353,32 +353,51 @@ rule:
 
 ---
 
-id: compute-no-upper-numeric-const
+id: compute-no-module-numeric-const
 language: JavaScript
 severity: error
 message: |
-  An UPPER_SNAKE_CASE numeric constant declared inside a compute module
-  (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2 "standardized gates",
-  2026-09-26).
+  A module-level numeric constant declared inside a compute module, of ANY
+  identifier case (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2 "standardized
+  gates", 2026-09-26; STANDARDIZED 2026-09-26 — a seat renamed
+  `MS_PER_DAY`/`ROUND_SCALE`/`MAX_DETAIL_KEYS` to camelCase and this gate
+  passed; the identifier's case must not decide whether a literal is a
+  tunable).
 
-  A `const FOO_BAR = <number>` reads as configuration but is not declared,
-  seeded, or admin-visible — a second, invisible copy of a tunable, or a
-  genuine physical/unit/CRS constant that belongs in a dated gate-E ledger row
-  with a spec citation rather than a bare literal. FIX: register it as a
-  `config.logic_variables[]` entry, or file the ledger row naming which of
-  `physical_constant` / `unit_conversion` / `coordinate_reference` it is.
+  A top-level `const`/`let` (declared directly in the program body, not
+  inside a function) whose initializer is a numeric literal — including a
+  unary-minus literal (`-1`) — or a simple arithmetic expression of numeric
+  literals (`24 * 60 * 60 * 1000`) reads as configuration but is not
+  declared, seeded, or admin-visible — a second, invisible copy of a
+  tunable, or a genuine physical/unit/CRS constant that belongs in a dated
+  gate-E ledger row with a spec citation rather than a bare literal. A
+  numeric literal INSIDE A FUNCTION BODY is not this rule's concern (other
+  rules cover comparisons). FIX: register it as a `config.logic_variables[]`
+  entry, or file the ledger row naming which of `physical_constant` /
+  `unit_conversion` / `coordinate_reference` it is.
 
   SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
 files:
   - 'scripts/lib/compute/**/*.js'
   - 'scripts/steps/_schema/fixtures/compute/**/*.js'
 rule:
-  pattern: const $N = $V;
+  any:
+    - pattern: const $N = $V;
+    - pattern: let $N = $V;
+  inside:
+    kind: program
 constraints:
-  N:
-    regex: '^[A-Z][A-Z0-9_]+$'
   V:
-    kind: number
+    any:
+      - kind: number
+      - all:
+          - kind: unary_expression
+          - has: { field: operator, regex: '^-$' }
+          - has: { field: argument, kind: number }
+      - all:
+          - kind: binary_expression
+          - not: { has: { kind: identifier, stopBy: end } }
+          - not: { has: { kind: string, stopBy: end } }
 
 ---
 

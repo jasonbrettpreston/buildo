@@ -3,8 +3,10 @@
 //
 // GATE E — SCALABLE. Five ast-grep rules appended to
 // `scripts/ast-grep-rules/compute-shape.yml` (fast invariant #32) ban a
-// hard-coded SQL INTERVAL/date literal, an UPPER_SNAKE_CASE numeric constant, a
-// `violations:` key compared against a non-zero literal, and a literal numeric
+// hard-coded SQL INTERVAL/date literal, a module-level numeric constant of ANY
+// identifier case (STANDARDIZED 2026-09-26 — a camelCase rename used to evade
+// the original UPPER_SNAKE_CASE-only match), a `violations:` key compared
+// against a non-zero literal, and a literal numeric
 // SQL bound inside `scripts/lib/compute/**` — the class of invisible, no-audit-
 // row, no-deploy-free-to-move tunable Rule 3 bans. `check-step-shape.mjs`
 // (the blocking driver) filters a finding for ONE of these 5 rule ids when a
@@ -31,7 +33,7 @@ export const FIXTURE_FILE = 'scripts/steps/_schema/fixtures/compute/bad-compute-
 export const GATE_E_RULE_IDS = [
   'compute-no-sql-interval-literal',
   'compute-no-sql-date-literal',
-  'compute-no-upper-numeric-const',
+  'compute-no-module-numeric-const',
   'compute-no-literal-violation-compare',
   'compute-no-sql-numeric-bound',
 ];
@@ -159,12 +161,16 @@ export function selfTest() {
   // is reported (unallowed). Old rule ids (e.g. compute-no-console) are never
   // filterable by a ledger row — matchLedger only ever sees GATE_E_RULE_IDS
   // findings because scanGateE already drops everything else.
+  // The fixture now carries THREE compute-no-module-numeric-const violations
+  // (UPPER_SNAKE_CASE + two camelCase, one arithmetic) so a case-blind rule is
+  // proven — a single matching ledger row must filter ONLY its own finding,
+  // leaving the other two unledgered findings unallowed (still RED).
   const row = {
-    gate: 'E', step: 'bad-compute-literals', item: 'compute-no-upper-numeric-const@const MAX_RETRY_COUNT = 5;',
+    gate: 'E', step: 'bad-compute-literals', item: 'compute-no-module-numeric-const@const MAX_RETRY_COUNT = 5;',
     disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture', filed: '2026-09-26', adjudicated_by: 'operator',
   };
   const allowed = checkComputeLiterals([FIXTURE_FILE], [row]);
-  const stillUnallowed = allowed.unallowed.filter((v) => v.item.startsWith('compute-no-upper-numeric-const@'));
+  const stillUnallowed = allowed.unallowed.filter((v) => v.item === row.item);
   if (stillUnallowed.length !== 0) {
     throw new Error(`self-test FAILED (gate E): a matching ledger row must filter its finding (${JSON.stringify(stillUnallowed)})`);
   }
@@ -173,7 +179,7 @@ export function selfTest() {
     throw new Error('self-test FAILED (gate E): the fixture must RED with no ledger rows at all');
   }
   // An orphan row (no matching finding) is RED.
-  const orphanRow = { ...row, item: 'compute-no-upper-numeric-const@no such line exists' };
+  const orphanRow = { ...row, item: 'compute-no-module-numeric-const@no such line exists' };
   const orphaned = checkComputeLiterals([FIXTURE_FILE], [orphanRow]);
   if (orphaned.orphans.length === 0) {
     throw new Error('self-test FAILED (gate E): a ledger row with no matching finding must be an orphan');
@@ -191,7 +197,11 @@ function main(argv) {
     const { rows } = loadLedger(REPO_ROOT);
     const result = checkComputeLiterals(loadComputeFiles(REPO_ROOT), rows);
     const out = result.unallowed.map((v) => {
-      const name = v.item.split('@')[0] === 'compute-no-upper-numeric-const' ? (v.item.split('@')[1] || '').match(/const\s+([A-Z0-9_]+)/)?.[1] : null;
+      // The closed allowlist (PROPOSED_UNIT_CONVERSION/COORDINATE_REFERENCE/
+      // PHYSICAL_CONSTANT) only ever names UPPER_SNAKE_CASE identifiers — a
+      // camelCase module const legitimately never matches and falls through
+      // to pending_remediation, same as any other un-allowlisted name.
+      const name = v.item.split('@')[0] === 'compute-no-module-numeric-const' ? (v.item.split('@')[1] || '').match(/(?:const|let)\s+([A-Za-z0-9_]+)/)?.[1] : null;
       let disposition = 'pending_remediation';
       if (name && PROPOSED_UNIT_CONVERSION.test(name)) disposition = 'unit_conversion';
       else if (name && PROPOSED_COORDINATE_REFERENCE.test(name)) disposition = 'coordinate_reference';

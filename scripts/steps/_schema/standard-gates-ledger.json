@@ -2,7 +2,7 @@
   "$comment": [
     "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
     "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open.",
-    "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
+    "Gate E rows (2026-09-26) — 31 hard-coded compute literals (12 module-level numeric consts [rule renamed 2026-09-26 from compute-no-upper-numeric-const to compute-no-module-numeric-const, WF3 fix-gate-e-any-case-const: a camelCase rename used to bypass the old case-only match; enrich-ravines MAX_INVALID_GEOM_RATIO's row was DELETED as an orphan in that same fix — the constant is function-local, out of the corrected rule's module-level scope, never a bypass], 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
     "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). FIXER-pass note (same day): commit 7d807c0b's gate-K checks (G7 scoreG7 tightening) knocked link_massing from 14/17 to 10/17 same-day, briefly requiring a 4th score row here (`scripts/analysis/gates/score-floor.mjs --list` reproduced it) — but the SAME FIXER commit also closed link_massing's genuine G8 unexplained-diffs finding (a DB-restore `row_count` shift, §7c of its assessment report), which alone raised the score to 16/17 — at/above the floor again. That 4th row was therefore added AND immediately deleted (R-X: never leave an orphan) in the same commit; only the original 3 rows below remain.",
     "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X). NOTE (FIXER pass, same day): `link_massing` genuinely needed only ONE new diff explained (a fresh G8 `table_state[].row_count` finding, DB-restore centroid regain) while its OTHER 469 diffs still rely on THIS blanket row's report-substring fallback — authoring `explained-diffs.json` with only that one key and deleting this row (as fast invariant #40 demands the moment the file exists at all) would have broken those 469 unrelated, already-explained diffs. Measured live: it did (469 unexplained after the row was removed). Fixed via the legacy report-citation channel instead (the assessment report now names `row_count` with the measured why) — this row stays until a FULL `explained-diffs.json` covering every one of link_massing's diff keys lands, which is its own, larger remediation commit, not this one.",
     "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture.",
@@ -803,16 +803,6 @@
     },
     {
       "gate": "E",
-      "step": "enrich-ravines",
-      "item": "compute-no-upper-numeric-const@const MAX_INVALID_GEOM_RATIO = 0.05;",
-      "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
       "step": "assert-global-coverage",
       "item": "compute-no-sql-interval-literal@const { rows: [cmRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
@@ -844,9 +834,9 @@
     {
       "gate": "E",
       "step": "link-massing",
-      "item": "compute-no-upper-numeric-const@const DEGREES_PER_METRE_DIVISOR = 78000.0;",
+      "item": "compute-no-module-numeric-const@const DEGREES_PER_METRE_DIVISOR = 78000.0;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -854,9 +844,9 @@
     {
       "gate": "E",
       "step": "link-massing",
-      "item": "compute-no-upper-numeric-const@const ROUND_SCALE = 10000;",
+      "item": "compute-no-module-numeric-const@const ROUND_SCALE = 10000;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -864,9 +854,9 @@
     {
       "gate": "E",
       "step": "load-ravines",
-      "item": "compute-no-upper-numeric-const@const DAYS_PER_JULIAN_YEAR = 365.25;",
+      "item": "compute-no-module-numeric-const@const DAYS_PER_JULIAN_YEAR = 365.25;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -874,9 +864,9 @@
     {
       "gate": "E",
       "step": "load-ravines",
-      "item": "compute-no-upper-numeric-const@const MS_PER_DAY = 86400000;",
+      "item": "compute-no-module-numeric-const@const MS_PER_DAY = 86400000;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -884,9 +874,9 @@
     {
       "gate": "E",
       "step": "load-ravines",
-      "item": "compute-no-upper-numeric-const@const ROUND_SCALE = 1000;",
+      "item": "compute-no-module-numeric-const@const ROUND_SCALE = 1000;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -894,9 +884,9 @@
     {
       "gate": "E",
       "step": "load-ravines",
-      "item": "compute-no-upper-numeric-const@const MAX_DETAIL_KEYS = 50;",
+      "item": "compute-no-module-numeric-const@const MAX_DETAIL_KEYS = 50;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1004,9 +994,9 @@
     {
       "gate": "E",
       "step": "link-wsib",
-      "item": "compute-no-upper-numeric-const@const EXACT_LENGTH_FLOOR = 3;",
+      "item": "compute-no-module-numeric-const@const EXACT_LENGTH_FLOOR = 3;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1014,9 +1004,9 @@
     {
       "gate": "E",
       "step": "link-wsib",
-      "item": "compute-no-upper-numeric-const@const FUZZY_LENGTH_FLOOR = 5;",
+      "item": "compute-no-module-numeric-const@const FUZZY_LENGTH_FLOOR = 5;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1024,9 +1014,9 @@
     {
       "gate": "E",
       "step": "link-wsib",
-      "item": "compute-no-upper-numeric-const@const TIER3_LIMIT = 1000;",
+      "item": "compute-no-module-numeric-const@const TIER3_LIMIT = 1000;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1034,9 +1024,9 @@
     {
       "gate": "E",
       "step": "load-parcels",
-      "item": "compute-no-upper-numeric-const@const SOURCE_CRS = 4326;",
+      "item": "compute-no-module-numeric-const@const SOURCE_CRS = 4326;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1044,9 +1034,9 @@
     {
       "gate": "E",
       "step": "load-parcels",
-      "item": "compute-no-upper-numeric-const@const SQM_TO_SQFT = 10.7639;",
+      "item": "compute-no-module-numeric-const@const SQM_TO_SQFT = 10.7639;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
@@ -1054,9 +1044,9 @@
     {
       "gate": "E",
       "step": "load-parcels",
-      "item": "compute-no-upper-numeric-const@const M_TO_FT = 3.28084;",
+      "item": "compute-no-module-numeric-const@const M_TO_FT = 3.28084;",
       "disposition": "pending_remediation",
-      "why": "compute-no-upper-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
