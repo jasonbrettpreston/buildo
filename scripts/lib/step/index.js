@@ -121,6 +121,35 @@ const STEP_CTX_KEYS = Object.freeze([
  */
 const LEDGER_ROW_VALUES = Object.freeze(['owned', 'chain_owned']);
 
+/**
+ * GATE C (Spec 124 §5 R-BA, WF2 "standardized gates", 2026-09-27) — the CLOSED
+ * set of `records_meta` keys the RUNNER itself writes into every run's record,
+ * independent of any per-step `emits[]` declaration. Declared ONCE here so
+ * `scripts/analysis/gates/emits-equiv.mjs` can subtract it: `emits[]` describes
+ * "records_meta keys BEYOND runner defaults" (step.schema.json's own `emits`
+ * description), so a runner-stamped key may legitimately be absent from the
+ * descriptor's `emits[]` (and from a golden `summary.records_meta`) without that
+ * being a drift — while any OTHER key present in one and not the other is real
+ * drift (Rule 1 "nothing hidden"). Enumerated from the `recordsMeta = {`
+ * assembly in this file (the two assignment sites) — this list is the
+ * machine-readable half of that comment, kept beside LEDGER_ROW_VALUES.
+ */
+const RUNNER_META_KEYS = Object.freeze([
+  'gate',
+  'config',
+  'terminal',
+  'ledger_row',
+  'chain_run_id',
+  'pool_errors',
+  'dry_run',
+  'checks_passed',
+  'checks_failed',
+  'checks_warned',
+  'errors',
+  'warnings',
+  'audit_table',
+]);
+
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
   const reads = {};
@@ -5634,6 +5663,7 @@ module.exports = {
   step,
   STEP_CTX_KEYS,
   LEDGER_ROW_VALUES,
+  RUNNER_META_KEYS,
   deriveMeta,
   deriveCounters,
   resolveCounterSource,

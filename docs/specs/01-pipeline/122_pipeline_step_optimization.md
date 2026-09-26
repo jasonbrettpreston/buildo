@@ -939,6 +939,8 @@ Regression-locked at `load-ravines.infra.test.ts:102`, `load-heritage.infra.test
 
 > **The distinguishing signal, and it is the ledger's definition of an edge:** a key is a CONTRACT only when code — not a test, not a comment — reads it from a *different* script, route or component and **branches on its value**. Everything else lands in an audit row for a human to eyeball.
 
+**Enforced (2026-09-27, Spec 124 §5 R-BA gate C):** a converted step's declared `emits[]` is now machine-checked EQUAL to the `records_meta` keys its own golden POST captures actually emit (`scripts/analysis/gates/emits-equiv.mjs`, `step-validate.mjs` fast invariant #30) — a contract this section could previously only describe is now enforced both directions, dated-ledger-row escape only.
+
 ### 6.3 Watermarks — and the tier-0 surface that must retire
 
 Eight stamp columns drive incremental scope `[READ 2026-08-23]`. Six are **self-consumed** (the step reads its own stamp to re-scope). Two are genuine cross-step edges: `parcel_buildings.linked_at` (step 15) → `enrich-parcels.js:365-367`, and `coa_applications.parcel_linked_at` (**a different chain**) → `enrich-parcels.js:380-388`.
