@@ -628,7 +628,7 @@ function ledgerPipelineName(descriptor, chainId) {
  *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate }) {
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
   // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
   // departure DELETE. A second declared target would be acquired for, gated over and then
@@ -693,7 +693,24 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // fallback for an un-seeded database rather than a second source of truth.
   const timeoutMs = acquire.resolveTimeoutMs(descriptor, config);
   const overrides = staleness.resolveOverrides(descriptor);
-  const forced = overrides.force_run === true;
+  // R-B reachability (Rule 12, load_centreline row 3.2 ② — the first INGESTOR to
+  // declare `recovery.interrupted: "force_full_on_next_run"`). A no-op for every
+  // OTHER INGESTOR: `detectInterruptedRetraction` short-circuits to
+  // `{interrupted:false}` whenever the descriptor's own `recovery.interrupted` is
+  // not exactly that string (load_ravines/address_points/parcels all declare
+  // "none"), so this costs one always-false check for them and changes nothing.
+  // For a step that DOES declare it, a crashed/stuck-running prior run (this
+  // run's own not-yet-completed ledger row excluded via `ownRunId`, the same
+  // exclusion `runLinkPhase`/`runCascadePhase`/`runEnrichPhase` already apply)
+  // must force a genuine acquisition rather than let the tier-1/tier-2 staleness
+  // gate skip on a stale-or-absent baseline — mirrors `forced` from
+  // `override.force_run`, which already bypasses the same gate the same way.
+  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
+  const forced = overrides.force_run === true || interruptedRetraction.interrupted === true;
+  if (interruptedRetraction.interrupted) {
+    log.warn(tag, `interrupted prior run detected (id ${interruptedRetraction.row.id}, status `
+      + `${interruptedRetraction.row.status}) — forcing a full acquisition rather than trusting the staleness gate`);
+  }
   const plan = write.buildWritePlan(writeSpec, descriptor);
   const keyColumn = plan.keys[0];
 
@@ -5063,6 +5080,7 @@ async function runWithPool(runnable, pool, ctx) {
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          ownRunId: runId,
         });
         stepCtx.acquired = ingest.acquired;
         stepCtx.written = ingest.written;

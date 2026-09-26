@@ -3404,7 +3404,21 @@ function runnerReachability(body) {
   if (/detectInterruptedRetraction\s*\(/.test(body) && /\bfull\s*=[^;\n]*interruptedRetraction/.test(body)) {
     return { reachable: true, reason: 'no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER\'s own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs' };
   }
-  return { reachable: false, reason: 'reaches neither staleness.ledgerGatedSkip, staleness.selectMode, nor an interruptedRetraction fold into `full` — no interrupted-retraction check exists on this runner\'s path' };
+  // INGESTOR (row 3.2 ②, runIngestPhase) — a FOURTH reachable shape, added when
+  // load_centreline became the first INGESTOR to declare
+  // recovery.interrupted:"force_full_on_next_run" truthfully. INGEST has neither
+  // a ledger-gated skip nor a full/incremental mode selector nor a scope-defer —
+  // its own staleness mechanism is the tier-1/tier-2 HTTP-cache-validator skip
+  // gate, bypassed by `override.force_run` folded into a local `forced` flag.
+  // Reachable iff the runner calls staleness.detectInterruptedRetraction directly
+  // AND folds interruptedRetraction.interrupted into that SAME `forced` decision
+  // — the same structural guarantee CASCADE's `bypassed` / ENRICHER's `full` folds
+  // give, under INGEST's own vocabulary (a crashed run forces a genuine
+  // acquisition exactly as an explicit force_run env does).
+  if (/detectInterruptedRetraction\s*\(/.test(body) && /\bforced\s*=[^;\n]*interruptedRetraction/.test(body)) {
+    return { reachable: true, reason: 'no staleness.ledgerGatedSkip/selectMode/ENRICHER full-fold on this path (INGESTOR\'s own tier-1/tier-2 staleness gate); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the forced decision that bypasses the same gate override.force_run bypasses' };
+  }
+  return { reachable: false, reason: 'reaches neither staleness.ledgerGatedSkip, staleness.selectMode, an interruptedRetraction fold into `full`, nor one into `forced` — no interrupted-retraction check exists on this runner\'s path' };
 }
 
 function checkInterruptedPostureTruthful(descriptor, indexSourceOverride = null) {
