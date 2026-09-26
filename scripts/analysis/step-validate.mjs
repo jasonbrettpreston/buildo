@@ -252,7 +252,15 @@ import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './g
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, LIB_FINGERPRINT_ITEM, EXPLAINED_REPORT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
-import { loadLedger } from './gates/ledger.mjs';
+import {
+  bannedCoverage, checkStalenessDisposition, censusParity, checkDefectIdUniqueness,
+  loadConvertedSlugs as loadRegistrySlugs,
+  SCHEMA_REL_PATH as REGISTRIES_SCHEMA_REL_PATH,
+  VALIDATE_REL_PATH as REGISTRIES_VALIDATE_REL_PATH,
+  CENSUS_REL_PATH as REGISTRIES_CENSUS_REL_PATH,
+  selfTest as registriesSelfTest,
+} from './gates/registries.mjs';
+import { loadLedger, matchLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
 // backfill context calls it directly for BOTH frequencies (every_run AND validate_only —
@@ -1973,6 +1981,109 @@ function fastInvariants(rows, converted, pending) {
       pass: eol.pass,
       blockedSlugs: eol.blockedSlugs,
       detail: eol.detail,
+    });
+  }
+
+  // 33. BANNED-COVERAGE (Spec 124 §5 R-BA gate I, Rule 9, WF2 "standardized
+  // gates", 2026-09-26) — every `step.schema.json` `x-banned-for-new.values` key
+  // must be ENFORCED by `scripts/lib/step/validate.js` (a declared ban with no
+  // enforcer is metadata nobody checks). Fixed live 2026-09-26: `GRANDFATHERED_VALUE_PATHS`
+  // now covers all 4 keys (guard, class, replay, criticality — the last via its
+  // own scalar-value enforcer, `assertBannedScalarValue`). Registry-scoped, no
+  // ledger escape (a missing enforcer is a code gap, not a per-step exception).
+  // `scripts/analysis/gates/registries.mjs` owns the answer set.
+  {
+    const banned = bannedCoverage({
+      schema: JSON.parse(readFileSync(path.join(REPO_ROOT, REGISTRIES_SCHEMA_REL_PATH), 'utf8')),
+      validateSource: readFileSync(path.join(REPO_ROOT, REGISTRIES_VALIDATE_REL_PATH), 'utf8'),
+    });
+    results.push({
+      id: 33,
+      slug: '(registry)',
+      pass: banned.pass,
+      blockedSlugs: [],
+      detail: banned.pass
+        ? `BANNED-COVERAGE (gate I): all ${banned.bannedPaths.length} x-banned-for-new path(s) enforced`
+        : `BANNED-COVERAGE (gate I): ${banned.violations.length} unenforced path(s) [${banned.violations.map((v) => v.path).join('; ')}]`,
+    });
+  }
+
+  // 34. STALENESS-DISPOSITION (Spec 124 §5 R-BA gate I, §5 R-X, WF2
+  // "standardized gates", 2026-09-26) — every `staleness.fingerprint_inputs`
+  // entry a converted descriptor declares needs an adjudicated row in
+  // `scripts/steps/_schema/staleness-disposition.json` (`executed` | `descriptive`
+  // | `retire`); an ABSENT registry is RED, never vacuous, and an `executed` row's
+  // `executor.symbol` must resolve in its own file (R-X). Registry-scoped, no
+  // ledger escape (an unadjudicated declaration is exactly what R-X bans landing
+  // silently). `scripts/analysis/gates/registries.mjs` owns the answer set.
+  {
+    const staleness = checkStalenessDisposition(REPO_ROOT);
+    results.push({
+      id: 34,
+      slug: '(registry)',
+      pass: staleness.pass,
+      blockedSlugs: [],
+      detail: staleness.pass
+        ? `STALENESS-DISPOSITION (gate I): ${staleness.declared} declared fingerprint_inputs entries, all adjudicated (registry present=${staleness.registryPresent})`
+        : `STALENESS-DISPOSITION (gate I): ${staleness.violations.length} unadjudicated [${staleness.violations.map((v) => v.item).join('; ')}]`,
+    });
+  }
+
+  // 35. CENSUS-PARITY (Spec 124 §5 R-BA gate I, R-AO, WF2 "standardized gates",
+  // 2026-09-26) — every `converted.json.converted` slug has a
+  // `step-archetype-census.json` `entries[]` row or an `exemptions[]` row —
+  // #25 ARCHETYPE-PARITY's missing-row arm (#25 asks "does the row agree", this
+  // asks "does a row exist to agree with"). Measured 2026-09-26: 8 slugs
+  // converted before the 2026-09-15 R-AO retention amendment have NEITHER — the
+  // census file's own header comment documents this as a MEASURED LIMIT
+  // (inventing an entries[] row would fabricate a second copy of
+  // descriptor.identity.archetype; an exemptions[] row doesn't fit either, since
+  // the generator's R-AP invariant reserves a real-JS-file exemption for
+  // `runner_owned` only). Allowed only by a `{gate:'I', item:'census:<slug>'}`
+  // ledger row; an ORPHAN row (its row since landed) is RED too (R-X).
+  // `scripts/analysis/gates/registries.mjs` owns the answer set.
+  {
+    const census = JSON.parse(readFileSync(path.join(REPO_ROOT, REGISTRIES_CENSUS_REL_PATH), 'utf8'));
+    const cp = censusParity(loadRegistrySlugs(REPO_ROOT), census);
+    const findings35 = cp.violations.map((v) => ({ step: v.slug, item: `census:${v.slug}` }));
+    const { unallowed, orphans } = matchLedger('I', findings35, loadLedger(REPO_ROOT).rows.filter((r) => r.gate === 'I' && r.item.startsWith('census:')));
+    const blockedSlugs35 = [...new Set(unallowed.map((v) => v.step))];
+    results.push({
+      id: 35,
+      slug: '(registry)',
+      pass: unallowed.length === 0 && orphans.length === 0,
+      blockedSlugs: blockedSlugs35,
+      detail: (unallowed.length || orphans.length)
+        ? `CENSUS-PARITY (gate I): ${unallowed.length} slug(s) with no census row [${unallowed.map((v) => v.step).join('; ')}]; ${orphans.length} orphan ledger row(s)`
+        : `CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap`,
+    });
+  }
+
+  // 36. DEFECT-ID-UNIQUENESS (Spec 124 §5 R-BA gate I, Spec 123 §3.1, WF2
+  // "standardized gates", 2026-09-26) — a KNOWN-DEFECT id is DEFINED by a table
+  // row whose FIRST cell is exactly that id (a prose mention is a citation, not
+  // a definition); an id defined in >1 row with DISAGREEING status cells is RED,
+  // naming both. Measured 2026-09-26: 57 ids across the pilot-era assessment
+  // reports — each report carries a terse "known defects" index table (empty/no
+  // status cell) ALONGSIDE its detailed findings table (a real status), which
+  // this checker (correctly) treats as two definitions of the same id; the
+  // defect-ledger.md mirror adds a third. A cross-file/cross-table mirror is
+  // legal only with an IDENTICAL status cell (measured: 0 of the 57 are). Each
+  // is allowed only by a `{gate:'I', item:'defect:<id>'}` ledger row; an ORPHAN
+  // row is RED too (R-X). `scripts/analysis/gates/registries.mjs` owns the
+  // answer set.
+  {
+    const defects = checkDefectIdUniqueness(REPO_ROOT);
+    const findings36 = defects.violations.map((v) => ({ step: '(registry)', item: `defect:${v.id}` }));
+    const { unallowed, orphans } = matchLedger('I', findings36, loadLedger(REPO_ROOT).rows.filter((r) => r.gate === 'I' && r.item.startsWith('defect:')));
+    results.push({
+      id: 36,
+      slug: '(registry)',
+      pass: unallowed.length === 0 && orphans.length === 0,
+      blockedSlugs: [],
+      detail: (unallowed.length || orphans.length)
+        ? `DEFECT-ID-UNIQUENESS (gate I): ${unallowed.length} id(s) with disagreeing definitions [${unallowed.map((v) => v.item.replace(/^defect:/, '')).join('; ')}]; ${orphans.length} orphan ledger row(s)`
+        : `DEFECT-ID-UNIQUENESS (gate I): ${defects.definitions} definition row(s) checked, ${defects.mirrored} legal mirror(s), 0 disagreements`,
     });
   }
 
@@ -4595,6 +4706,13 @@ function selfTest() {
   // entirely in scripts/analysis/gates/captures.mjs (its own selfTest, run
   // here so this file's single `selfTest()` entry point covers it too).
   capturesSelfTest();
+  // BANNED-COVERAGE/STALENESS-DISPOSITION/CENSUS-PARITY/DEFECT-ID-UNIQUENESS
+  // (fast invariants #33-#36, Spec 124 §5 R-BA gate I, Rule 9, §5 R-X, R-AO,
+  // Spec 123 §3.1, WF2 "standardized gates", 2026-09-26) — the four closed
+  // answer sets live entirely in scripts/analysis/gates/registries.mjs (its
+  // own selfTest, run here so this file's single `selfTest()` entry point
+  // covers it too).
+  registriesSelfTest();
   // GATE G2 (Fold GC-4) — libStagedSelectsAll both directions.
   if (!libStagedSelectsAll(['scripts/lib/step/verdict.js'])) {
     throw new Error('self-test FAILED (gate G2): a staged scripts/lib/step/** path must select the whole registry');

@@ -5,7 +5,8 @@
     "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
     "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ).",
     "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X).",
-    "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture."
+    "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture.",
+    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment, permanently absent from step-archetype-census.json by the file's own documented design) + 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them."
   ],
   "contract_version": 1,
   "rows": [
@@ -1825,6 +1826,656 @@
       "item": "lib_fingerprint",
       "disposition": "pending_recapture",
       "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "assert_schema",
+      "item": "census:assert_schema",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "load_ravines",
+      "item": "census:load_ravines",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "link_massing",
+      "item": "census:link_massing",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "link_wsib",
+      "item": "census:link_wsib",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "link_parcel_addresses",
+      "item": "census:link_parcel_addresses",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "compute_centroids",
+      "item": "census:compute_centroids",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "link_parcels",
+      "item": "census:link_parcels",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "refresh_snapshot",
+      "item": "census:refresh_snapshot",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D1b",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D7",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D8",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D9",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AS-D10",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D7",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D8",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LR-D9",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D7",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D8",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D9",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D10",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D11",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D12",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D13",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D14",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:LM-D15",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AGC-D7",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:ADB-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D4",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D5",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AEH-D6",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AP-D1",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AP-D2",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "I",
+      "step": "(registry)",
+      "item": "defect:AP-D3",
+      "disposition": "pending_remediation",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"

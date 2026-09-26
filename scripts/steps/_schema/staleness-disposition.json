@@ -1,0 +1,127 @@
+{
+  "contract_version": 1,
+  "menu": [
+    "executed",
+    "descriptive",
+    "retire"
+  ],
+  "$comment": "Spec 124 §5 R-BA gate I #34 (R-X) — every staleness.fingerprint_inputs entry declared by a converted step needs an adjudicated disposition row here: \"executed\" (a named executor.{file,symbol} genuinely reads it), \"descriptive\" (declared, documents intent, 0 readers today), or \"retire\" (dead, should be removed from the descriptor). Measured 2026-09-26: all 29 distinct entries across the 20 converted steps are 0-reader — every row below is \"descriptive\". A future step that wires a real executor over one of these entries must flip its row to \"executed\" with executor.{file,symbol} in the SAME commit (R-X: an unexecuted \"executed\" claim is a rotted citation, checked live by dispositionRowFindings).",
+  "declarations": {
+    "address_points:count": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "parcels:centroid_lat_null_count": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "parcels:count": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/address-points-csv-drift.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/assert-data-bounds-fields.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/assert-global-coverage-fields.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/assert-parcel-sanity-fields.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/build-norms.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/assert-engine-health.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/compute-centroids.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/compute-parcel-cost-estimates.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/enrich-heritage.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/enrich-parcels.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/enrich-ravines.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/geocode-permits.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/link-massing.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/link-neighbourhoods.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/link-parcel-addresses.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/link-parcels.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/link-wsib.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/compute/refresh-snapshot.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/massing-full-gate.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/max-build.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/optimal-config.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/parcel-cost.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/source-version.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/step/acquire.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "scripts/lib/zoning-precedence.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
+    "wsib_registry:count": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    }
+  }
+}
