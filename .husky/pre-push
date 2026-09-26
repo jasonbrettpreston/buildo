@@ -20,4 +20,12 @@
 # with ZERO test failures — 4 pre-commit attempts and then this push, deterministic;
 # at one fork it passes. Matches the pre-commit `vitest related` cap and the
 # hook-history lesson (a 4-fork run was OS-killed for low memory, tasks/lessons.md).
-node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npm run test
+#
+# Fold GC-4 (2026-09-25, gate G Ask 2 ruling) — `--staged --fast` alone never
+# catches a `scripts/lib/step/**` change whose ripple lands on a step NOT
+# touched by this push's own commits: a golden capture's `lib_fingerprint`
+# `mismatch` state (gate G #39) is RED under `--all` with or without a ledger
+# row, so it must be caught here, fleet-wide, before the push completes —
+# `--staged`'s job is scoping what commit-time gates apply to; it is not a
+# substitute for the fleet-wide freshness sweep. Measured 2026-09-26: ~19s.
+node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npm run test

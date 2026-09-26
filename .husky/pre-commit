@@ -15,6 +15,9 @@
 node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/steps/_schema/generate-template-freeze.mjs --check && \
   node scripts/analysis/spec-split-check.mjs --check && \
+  node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md && \
+  npx vitest src/tests/system-map.infra.test.ts --run && \
+  node scripts/analysis/gates/generated-docs.mjs && \
   node scripts/analysis/step-validate.mjs --staged --fast && \
   npx lint-staged --allow-empty && \
   bash scripts/hooks/validate-migrations.sh && \
@@ -23,6 +26,17 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
   npm run typecheck && \
   npm run lint && \
   RELATED_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^(src|scripts)/.*\.(ts|tsx|js|mjs)$' || true)" && \
+  STAGED_LIB="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^scripts/lib/(step|compute)/' || true)" && \
+  if [ -n "$STAGED_LIB" ]; then
+    # Gate J2 (Spec 124 §5 R-BA, WF2 "standardized gates", 2026-09-26) — a
+    # scripts/lib/step/** or scripts/lib/compute/** change can break a
+    # text-reading lock `vitest related`'s import-graph analysis cannot see
+    # (lesson 2026-09-23: cb21b6f3 broke load_ravines' F2 fence and the
+    # lander's `vitest related` run never caught it — it surfaced only at a
+    # later full run). Run every converted step's violation suite too.
+    echo "pre-commit: scripts/lib/step|compute staged — running the full src/tests/steps/ suite (gate J2)" && \
+    VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src/tests/steps/ --run || exit 1
+  fi && \
   if [ -z "$RELATED_FILES" ]; then
     # Code Reviewer 2026-09-14: `vitest related` on a non-source file (package.json, a
     # .md report, a JSON registry) falls back to a WIDE run of unrelated suites, not a

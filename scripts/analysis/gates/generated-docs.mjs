@@ -38,8 +38,6 @@ export const GENERATED_DIR_REL = 'docs/reports/generated';
 // ---------------------------------------------------------------------------
 export const GENERATED_DOCS = [
   // --- generated + checkable today -----------------------------------------
-  { file: '122-category-coverage.md', generator: 'scripts/violations/map-categories.mjs', has_check: false,
-    proposed: 'retire', note: 'map-categories.mjs is the retired pre-R2 mapper; no --check arm (Regenerate header names the file arg only).' },
   { file: '122-churn-complexity.md', generator: 'scripts/analysis/step-churn-complexity.mjs', has_check: true,
     proposed: 'keep', note: '--check re-derives every column at the committed window_end.' },
   { file: '122-conversion-roadmap.md', generator: 'scripts/violations/generate-conversion-roadmap.mjs', has_check: true,
@@ -52,16 +50,21 @@ export const GENERATED_DOCS = [
     proposed: 'keep', note: '--check exits 1 on drift.' },
   { file: '127-surface-review-queue.md', generator: 'scripts/violations/generate-surface-registry.mjs', has_check: true,
     proposed: 'keep', note: 'same generator + --check arm as the registry; written together.' },
-  // --- generator present, but no drift-check arm ----------------------------
-  { file: '123-claim-plan.md', generator: 'scripts/violations/plan-claims.mjs', has_check: false,
-    proposed: 'retire', note: 'plan-claims.mjs prints/writes but declares no --check arm (Spec 121 Appendix A is the retired source).' },
-  { file: '123-per-step-checklist.md', generator: 'scripts/violations/plan-claims.mjs', has_check: false,
-    proposed: 'retire', note: 'same generator + no --check arm; the checklist is a one-shot template render.' },
-  { file: '122-claim-classification.md', generator: 'scripts/violations/extract-claims.mjs', has_check: false,
-    proposed: 'retire', note: 'extract-claims.mjs is the retired Appendix-A catalogue; no --check arm.' },
-  { file: '122-claim-classification-js-export.md', generator: 'scripts/violations/extract-claims.mjs', has_check: false,
-    proposed: 'retire', note: 'same generator + no --check arm; a stale duplicate of the classification table.' },
-  // --- explicitly retired (no live generator) -------------------------------
+  // --- explicitly retired 2026-09-26 (orchestrator ruling, gate J closing
+  // commit): each had a `generator` with NO --check arm — a doc that can rot
+  // silently, which is exactly the class Rule 13 bans. The FILE stays on disk
+  // (R-X: a retired declaration is a declaration, never a silent deletion);
+  // only the "someone actively drift-checks this" claim is retracted. ------
+  { file: '122-category-coverage.md', retired: true,
+    why: 'generator scripts/violations/map-categories.mjs is the retired pre-R2 mapper with no --check arm (Regenerate header names only the file arg). Retired 2026-09-26 (gate J closing commit) rather than built a check — the pre-R2 category set it maps against is itself superseded.' },
+  { file: '123-claim-plan.md', generator: 'scripts/violations/plan-claims.mjs', has_check: false, retired: true,
+    why: 'plan-claims.mjs prints/writes but declares no --check arm; Spec 121 Appendix A (the source this doc classifies) is itself the retired artifact. Retired 2026-09-26 (gate J closing commit).' },
+  { file: '123-per-step-checklist.md', generator: 'scripts/violations/plan-claims.mjs', has_check: false, retired: true,
+    why: 'same generator, no --check arm; a one-shot template render with nothing left to drift-check against. Retired 2026-09-26 (gate J closing commit).' },
+  { file: '122-claim-classification.md', generator: 'scripts/violations/extract-claims.mjs', has_check: false, retired: true,
+    why: 'extract-claims.mjs is the retired Appendix-A catalogue generator; no --check arm. Retired 2026-09-26 (gate J closing commit).' },
+  { file: '122-claim-classification-js-export.md', generator: 'scripts/violations/extract-claims.mjs', has_check: false, retired: true,
+    why: 'same generator, no --check arm; a stale duplicate export of the classification table above. Retired 2026-09-26 (gate J closing commit).' },
   { file: '122-concern-homes.md', retired: true,
     why: 'map-concerns.mjs resolves Spec 122 concerns against the pre-R2 category set; the concern index now lives in Spec 122 §1.8 prose and no CI step regenerates this doc. Retired 2026-09-26 (gate J ask J2-2).' },
 ];

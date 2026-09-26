@@ -18,9 +18,11 @@ import path from 'node:path';
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
 const PRE_PUSH_PATH = path.join(REPO_ROOT, '.husky/pre-push');
+const COMMIT_MSG_PATH = path.join(REPO_ROOT, '.husky/commit-msg');
 
 const PRE_COMMIT = fs.readFileSync(PRE_COMMIT_PATH, 'utf8');
 const PRE_PUSH = fs.readFileSync(PRE_PUSH_PATH, 'utf8');
+const COMMIT_MSG = fs.readFileSync(COMMIT_MSG_PATH, 'utf8');
 
 /** Strips `#`-comment lines (and shebang) so a prose mention inside a comment
  * never trips a predicate meant to catch a real, executable invocation. */
@@ -132,5 +134,81 @@ describe('hooks-composition (R-AG) — pre-push', () => {
   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
     const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=1 npm run test\b/, 'true');
     expect(invokesFullSuite(tampered)).toBe(false);
+  });
+
+  // -------------------------------------------------------------------------
+  // Gate J2b (Fold GC-4, Spec 124 §5 R-BA gate G Ask 2 ruling, WF2
+  // "standardized gates", 2026-09-26) — pre-push also runs the FLEET-WIDE
+  // `step-validate.mjs --all --fast`, not just `--staged --fast`: a
+  // `scripts/lib/step/**` change can mismatch a golden capture's
+  // `lib_fingerprint` on a step this push's own commits never touched (gate
+  // G #39), and `--staged` alone cannot see that.
+  // -------------------------------------------------------------------------
+  it('GREEN — also re-runs step-validate --all --fast (Fold GC-4, fleet-wide freshness sweep)', () => {
+    expect(stripComments(PRE_PUSH)).toMatch(/step-validate\.mjs --all --fast/);
+  });
+
+  it('RED — a tampered pre-push with the --all --fast sweep stripped is caught', () => {
+    const tampered = PRE_PUSH.replace(/&& node scripts\/analysis\/step-validate\.mjs --all --fast/, '');
+    expect(stripComments(tampered)).not.toMatch(/step-validate\.mjs --all --fast/);
+  });
+});
+
+describe('hooks-composition (R-AG gate J) — commit-msg', () => {
+  it('runs the pre-existing commit-msg + lesson-routing checks, unchanged', () => {
+    expect(COMMIT_MSG).toContain('validate-commit-msg.sh');
+    expect(COMMIT_MSG).toContain('check-lesson-routing.sh');
+  });
+
+  // -------------------------------------------------------------------------
+  // Gate J1 (Spec 124 §5 R-BA gate J, Rule 13, WF2 "standardized gates",
+  // 2026-09-26) — a commit touching the step contract must stage a spec or
+  // declare `Spec-diff: N-A <why>`; check-spec-diff.mjs is the enforcer.
+  // -------------------------------------------------------------------------
+  it('GREEN — invokes check-spec-diff.mjs with the commit-msg file argument', () => {
+    expect(stripComments(COMMIT_MSG)).toMatch(/check-spec-diff\.mjs "\$1"/);
+  });
+
+  it('RED — a tampered commit-msg with the spec-diff check stripped is caught', () => {
+    const tampered = COMMIT_MSG.replace(/&& \\\nnode scripts\/hooks\/check-spec-diff\.mjs "\$1"/, '');
+    expect(stripComments(tampered)).not.toMatch(/check-spec-diff\.mjs/);
+  });
+});
+
+describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-map + J2 lib-suite gates', () => {
+  // -------------------------------------------------------------------------
+  // Gate J (half 2): every committed docs/reports/generated/*.md is either
+  // regenerated-and-drift-checked or explicitly retired — generated-docs.mjs
+  // enforces it at commit time. system-map.infra.test.ts + schema-to-vocab.mjs
+  // are the pre-existing generated-doc drift checks gate J now sits beside.
+  // -------------------------------------------------------------------------
+  it('GREEN — runs schema-to-vocab --check, the system-map test, and generated-docs.mjs', () => {
+    const code = stripComments(PRE_COMMIT);
+    expect(code).toMatch(/schema-to-vocab\.mjs --check docs\/reports\/generated\/122-vocabulary\.md/);
+    expect(code).toMatch(/system-map\.infra\.test\.ts/);
+    expect(code).toMatch(/gates\/generated-docs\.mjs/);
+  });
+
+  it('GREEN — the system-map test invocation is SCOPED (--run after the path), never a bare `vitest run` (would trip invokesFullSuite)', () => {
+    expect(invokesFullSuite(PRE_COMMIT)).toBe(false);
+    expect(stripComments(PRE_COMMIT)).toMatch(/vitest src\/tests\/system-map\.infra\.test\.ts --run/);
+  });
+
+  // -------------------------------------------------------------------------
+  // Gate J2 (Spec 124 §5 R-BA gate G Ask 2 ruling, WF2 "standardized gates",
+  // 2026-09-26) — a staged scripts/lib/step/** or scripts/lib/compute/**
+  // path runs the full src/tests/steps/ suite too, not just `vitest related`
+  // (lesson 2026-09-23: `related`'s import-graph analysis cannot see a
+  // text-reading lock a library change breaks).
+  // -------------------------------------------------------------------------
+  it('GREEN — a staged scripts/lib/step|compute path triggers the full src/tests/steps/ suite', () => {
+    const code = stripComments(PRE_COMMIT);
+    expect(code).toMatch(/STAGED_LIB=.*scripts\/lib\/\(step\|compute\)\//);
+    expect(code).toMatch(/vitest src\/tests\/steps\/ --run/);
+  });
+
+  it('RED — a tampered pre-commit with the J2 lib-suite invocation stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src\/tests\/steps\/ --run \|\| exit 1/, 'true');
+    expect(stripComments(tampered)).not.toMatch(/vitest src\/tests\/steps\/ --run/);
   });
 });

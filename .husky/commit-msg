@@ -1,3 +1,4 @@
 #!/bin/sh
 bash scripts/hooks/validate-commit-msg.sh "$1" && \
-bash scripts/hooks/check-lesson-routing.sh "$1"
+bash scripts/hooks/check-lesson-routing.sh "$1" && \
+node scripts/hooks/check-spec-diff.mjs "$1"
