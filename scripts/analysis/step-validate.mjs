@@ -129,6 +129,14 @@
  *      ORPHAN row is RED too (R-X). `scripts/analysis/gates/compute-literals.mjs`
  *      owns the answer set; `scripts/hooks/check-step-shape.mjs` applies the
  *      same allowlist at commit time (only these 5 rule ids are filterable)
+ *   37. LF-ONLY (Spec 124 §5 R-BA gate F, WF2 "standardized gates", 2026-09-26):
+ *      every file a converted step owns is committed LF (the git INDEX blob,
+ *      never the working tree); `i/crlf`/`i/mixed`/`i/-text`-on-text is RED
+ *      unless ledger-allowed. The 14/17 scorecard floor (gate F1) is wired
+ *      separately, inside `computeScorecard(`'s per-step hard-stop (not a
+ *      fast invariant — the score is only known once that step's own report
+ *      is computed). `scripts/analysis/gates/score-floor.mjs` owns both
+ *      answer sets
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -231,6 +239,7 @@ import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -1895,6 +1904,32 @@ function fastInvariants(rows, converted, pending) {
     });
   }
 
+  // 37. LF-ONLY (Spec 124 §5 R-BA gate F, WF2 "standardized gates", 2026-09-26)
+  // — every file a converted step owns (shell, `.descriptor.json`, `.notes.json`,
+  // its compute module, `src/tests/steps/<slug>/**`) must be committed LF: the
+  // INDEX blob (`git ls-files --eol`) is the artifact under review, and an
+  // `i/crlf`/`i/mixed`/`i/-text`-on-a-text-path entry is a diff nobody can
+  // review. Allowed only by a `{gate:'F', item:'eol:<path>'}` ledger row; an
+  // ORPHAN row (its file since renormalised) is RED too (R-X). Registry-scoped,
+  // fleet DERIVED from converted.json (R-AN). `scripts/analysis/gates/score-floor.mjs`
+  // owns the answer set.
+  {
+    const slugsFleet = loadScoreFloorSlugs(REPO_ROOT);
+    const candidatePaths = [...new Set(
+      loadConvertedDescriptors(REPO_ROOT).flatMap((d) => stepFileCandidates(REPO_ROOT, d)),
+    )];
+    const testDirPaths = slugsFleet.map((slug) => `src/tests/steps/${slug}`);
+    const eolText = lsFilesEol(REPO_ROOT, [...candidatePaths, ...testDirPaths]);
+    const eol = checkEol(eolText, loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 37,
+      slug: '(registry)',
+      pass: eol.pass,
+      blockedSlugs: eol.blockedSlugs,
+      detail: eol.detail,
+    });
+  }
+
   // 32. COMPUTE-LITERALS (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2
   // "standardized gates", 2026-09-26) — 5 ast-grep rules appended to
   // `scripts/ast-grep-rules/compute-shape.yml` ban a hard-coded SQL
@@ -2531,6 +2566,24 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const matrixHardStop = computeMatrixHardStop(matrix, excl.rules);
   const agg = aggregateHardStop(g, g9raw, invariantsFail, matrixHardStop, excl, row.pendingStage);
   const annotatedMatrix = annotateStageGatedMatrix(matrix, excl.rules, row.pendingStage);
+  // Gate F1 (Spec 124 §5 R-BA, Spec 123 §6, WF2 "standardized gates",
+  // 2026-09-26) — a scorecard below SCORE_FLOOR (14/17) is a HARD STOP unless
+  // a `{gate:'F', step, item:'score'}` ledger row allows it; a row for a step
+  // now AT/ABOVE the floor is an ORPHAN and hard-stops too (R-X closing-row
+  // posture — the remediation commit must delete its own row). A stage-gated
+  // step (`row.pendingStage` declared) is EXCLUDED — same posture as
+  // `stageExclusions`: the artifact being scored does not exist yet, so its
+  // low score is undecidable-not-unmet, not a floor violation.
+  if (row.pendingStage === undefined || row.pendingStage === null) {
+    const floor = floorDecision({ slug: row.slug, total, maxTotal }, loadLedger(REPO_ROOT).rows);
+    if (floor.hardStop) {
+      agg.hardStop = true;
+      agg.hardStopReasons = [...agg.hardStopReasons, `F(score-floor): ${floor.reason}`];
+    } else if (floor.orphan) {
+      agg.hardStop = true;
+      agg.hardStopReasons = [...agg.hardStopReasons, `F(score-floor): orphan ledger row — ${row.slug} now scores ${total}/${maxTotal}, at/above the floor; delete the row in the remediation commit`];
+    }
+  }
   return {
     g: agg.g,
     total,
@@ -4237,6 +4290,12 @@ function selfTest() {
   // scripts/analysis/gates/compute-literals.mjs (its own selfTest, run here so
   // this file's single `selfTest()` entry point covers it too).
   computeLiteralsSelfTest();
+  // SCORE-FLOOR + LF-ONLY (fast invariant #37, Spec 124 §5 R-BA gate F, Spec
+  // 123 §6, WF2 "standardized gates", 2026-09-26) — the 14/17 hard-stop
+  // decision, the LF-only answer set, and both orphan directions live entirely
+  // in scripts/analysis/gates/score-floor.mjs (its own selfTest, run here so
+  // this file's single `selfTest()` entry point covers it too).
+  scoreFloorSelfTest();
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked

@@ -2,7 +2,8 @@
   "$comment": [
     "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
     "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open.",
-    "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation."
+    "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
+    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ)."
   ],
   "contract_version": 1,
   "rows": [
@@ -1182,6 +1183,86 @@
       "item": "compute-no-sql-interval-literal@`WITH victims AS (",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "enrich_ravines",
+      "item": "score",
+      "disposition": "pending_remediation",
+      "why": "score floor 12/17 < 14 — measured 2026-09-26 (WF2 gate F, scorecard hard stop)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "enrich_heritage",
+      "item": "score",
+      "disposition": "pending_remediation",
+      "why": "score floor 10/17 < 14 — measured 2026-09-26 (WF2 gate F, scorecard hard stop)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "compute_parcel_cost_estimates",
+      "item": "score",
+      "disposition": "pending_remediation",
+      "why": "score floor 10/17 < 14 — measured 2026-09-26 (WF2 gate F, scorecard hard stop)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "(registry)",
+      "item": "eol:scripts/geocode-permits.descriptor.json",
+      "disposition": "pending_remediation",
+      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "(registry)",
+      "item": "eol:scripts/geocode-permits.notes.json",
+      "disposition": "pending_remediation",
+      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "(registry)",
+      "item": "eol:scripts/link-massing.descriptor.json",
+      "disposition": "pending_remediation",
+      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "(registry)",
+      "item": "eol:src/tests/steps/geocode_permits/violations.test.ts",
+      "disposition": "pending_remediation",
+      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "F",
+      "step": "(registry)",
+      "item": "eol:src/tests/steps/link_neighbourhoods/violations.test.ts",
+      "disposition": "pending_remediation",
+      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
