@@ -4714,6 +4714,39 @@ function selfTest() {
       deadSource,
     );
     if (deadRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED a runner reaching neither ledgerGatedSkip nor selectMode (${JSON.stringify(deadRed)})`);
+
+    // RED: the exact PRE-fix runIngestPhase shape — the INGESTOR fourth branch
+    // (row 3.2 ②). `const forced = overrides.force_run === true;` with NO
+    // detectInterruptedRetraction call and no `interruptedRetraction` token at
+    // all: the tier-1/tier-2 staleness gate cannot see a crashed prior run
+    // (the LW-D20 recurrence shape, under INGEST's own `forced` vocabulary).
+    const preFixIngestSource =
+      'async function runIngestPhase({ descriptor, pool, overrides, ownRunId }) {\n' +
+      '  const forced = overrides.force_run === true;\n' +
+      '  const plan = write.buildWritePlan(writeSpec, descriptor);\n' +
+      '  return plan;\n' +
+      '}\n';
+    const preFixIngestRed = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'ingest' } },
+      preFixIngestSource,
+    );
+    if (preFixIngestRed.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not RED the pre-fix runIngestPhase shape (forced omits interruptedRetraction) (${JSON.stringify(preFixIngestRed)})`);
+
+    // GREEN: the real, POST-fix INGEST shape — detectInterruptedRetraction is
+    // called and its `.interrupted` is folded into the SAME `forced` decision
+    // that bypasses the tier-1/tier-2 gate `overrides.force_run` bypasses.
+    const postFixIngestSource =
+      'async function runIngestPhase({ descriptor, pool, overrides, ownRunId }) {\n' +
+      '  const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });\n' +
+      '  const forced = overrides.force_run === true || interruptedRetraction.interrupted === true;\n' +
+      '  const plan = write.buildWritePlan(writeSpec, descriptor);\n' +
+      '  return plan;\n' +
+      '}\n';
+    const postFixIngestGreen = checkInterruptedPostureTruthful(
+      { outputs: { writes: [{ table: 't', retract: 'all' }] }, recovery: { interrupted: 'force_full_on_next_run' }, execution: { shape: 'ingest' } },
+      postFixIngestSource,
+    );
+    if (!postFixIngestGreen.pass) throw new Error(`self-test FAILED: checkInterruptedPostureTruthful did not pass the post-fix runIngestPhase shape (forced folds interruptedRetraction) (${JSON.stringify(postFixIngestGreen)})`);
   }
   // HB-1 (Spec 124 §2 Rule 12, WF1 "conversion roadmap" commit 3, 2026-09-10)
   // — checkHeartbeatWholeStep + heartbeatReachability, in-memory via a
