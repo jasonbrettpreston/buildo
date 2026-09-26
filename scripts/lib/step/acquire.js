@@ -105,10 +105,12 @@ function resolveTimeoutMs(descriptor, config) {
  *
  * `execution.network.retries` has been a FROZEN schema field since S1 with NO reader
  * anywhere in `scripts/lib/` (measured 2026-09-24), and the seam's one download call
- * made exactly ONE attempt. The legacy loaders (`scripts/load-neighbourhoods.js`'s
- * `downloadFile`, copy-pasted into load-address-points/load-parcels/load-massing) retried
- * THREE times with no backoff; cloud run 34769829628 (2026-09-13) died on a single
- * `HTTP 502` at step 17/28 and 11 downstream steps never ran.
+ * made exactly ONE attempt. The legacy loaders did NOT retry: `load-neighbourhoods.js`'s
+ * `downloadFile` — and its copies in load-address-points / load-parcels / load-massing —
+ * made ONE attempt (Fold G-4, 2026-09-25, MEASURED: no retry loop in any of them); only
+ * `load-centreline.js`'s `downloadZipWithRetry` retried, THREE times with no backoff.
+ * Cloud run 34769829628 (2026-09-13) died on a single `HTTP 502` at step 17/28 and 11
+ * downstream steps never ran.
  *
  * This is `resolveTimeoutMs`'s own shape generalized to the retry family (ruling A-4): a
  * `*_from_config` name derives from a REGISTERED logic variable (Rule 3 — a hard-coded
@@ -408,6 +410,83 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
 }
 
 /**
+ * Parse a GeoJSON FeatureCollection into the SAME feature shape `parseShapefile`
+ * returns, with the SAME tallies and the SAME drop ORDER
+ * (INGESTOR prerequisite 0v, 2026-09-25, Spec 122 §8 RE-FREEZE #25).
+ *
+ * The founding source is row 3.8 `neighbourhoods`: one bare 2.1 MB FeatureCollection
+ * (158 MultiPolygons, CRS84, `AREA_SHORT_CODE` a string on every feature), which the
+ * legacy loader parsed in-module (`scripts/load-neighbourhoods.js`: `JSON.parse`,
+ * `JSON.stringify(feature.geometry)`). Before 0v the format axis had exactly two arms
+ * (`shapefile_zip`, `csv`), so the payload had no home and the seam threw
+ * `… which no parser … handles`. This arm is generic: it knows nothing about
+ * neighbourhoods — `keyProperty`/`keyColumn`/`coerceKey` are handed in exactly as they
+ * are for the shapefile and CSV arms.
+ *
+ * ⚠️ ORDER IS THE CONTRACT (parseShapefile parity). `rowsParsed` counts EVERY feature
+ * first; then a key that will not coerce is a `badKey`; ONLY THEN is a null geometry a
+ * `nullGeometry`. So a feature that is BOTH keyless and geometry-less is counted ONCE,
+ * as a bad key — never as both, never as zero. A null `properties` degrades to `{}`
+ * (the `parseShapefile` fallback), which then misses `keyProperty` and counts as a bad
+ * key rather than crashing the run.
+ *
+ * The whole file is read here rather than streamed: the bytes already landed on disk
+ * through the streamed hash-through (FENCE 0b230472 — a download is never buffered
+ * whole), and `JSON.parse` has no streaming form. The read is therefore of the TEMP
+ * file after acquisition, which is a bounded, already-validated payload; the download
+ * path's §9.5 streaming guarantee is untouched.
+ *
+ * @param {string} filePath - the downloaded `source.geojson`
+ * @param {string} keyProperty - the source-side attribute, `external.key_property`
+ * @param {(raw: unknown, ctx: {geojson: string|null}) => number|string|null} coerceKey - the
+ *   step's own pure coercion; the 2nd argument is DATA ONLY (`{ geojson }`, the string
+ *   built once from the feature's geometry and reused by the push — Rule 2), the same
+ *   contract `parseShapefile` carries.
+ * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper reads
+ *   the same field name its descriptor declares.
+ * @returns {{features: Array<{[keyColumn]: number|string, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}}
+ * @throws {Error} on malformed JSON (the legacy loader's own message form, file + first
+ *   100 chars) or on a document whose `features` is not an array — refused BY NAME, since
+ *   a `{type:"FeatureCollection"}` with no features would otherwise silently parse to zero
+ *   rows and a green verdict over an empty load.
+ */
+async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  let doc;
+  try {
+    doc = JSON.parse(raw);
+  } catch (err) {
+    // The legacy anchor: `Failed to parse GeoJSON file ${path}: ${err.message}
+    // (first 100 chars: ${raw.slice(0,100)})` — scripts/load-neighbourhoods.js:115-121.
+    // The first 100 characters are the DIAGNOSTIC: a CKAN error page, a truncated
+    // download and a schema change all look the same from the exception alone.
+    throw new Error(`Failed to parse GeoJSON file ${filePath}: ${err.message} (first 100 chars: ${raw.slice(0, 100)})`);
+  }
+  if (!doc || !Array.isArray(doc.features)) {
+    throw new Error(`${filePath} is not a GeoJSON FeatureCollection — expected an object with a `
+      + `"features" array, got ${doc === null ? 'null' : typeof doc}`
+      + `${doc && doc.type ? ` (type "${String(doc.type)}")` : ''}.`);
+  }
+  const features = [];
+  let badKey = 0;
+  let nullGeometry = 0;
+  let rowsParsed = 0;
+  for (const f of doc.features) {
+    rowsParsed++;
+    const props = (f && f.properties) || {};
+    const geometry = f ? f.geometry : null;
+    // Built ONCE, reused by the push AND handed to `coerceKey` (0s) — one stringify per
+    // feature, and the same string the write plan's `wkb_geometry` column receives.
+    const geojson = geometry == null ? null : JSON.stringify(geometry);
+    const key = coerceKey(props[keyProperty], { geojson });
+    if (key == null) { badKey++; continue; }
+    if (geometry == null) { nullGeometry++; continue; }
+    features.push({ [keyColumn]: key, geojson, record: props });
+  }
+  return { features, badKey, nullGeometry, rowsParsed };
+}
+
+/**
  * The `post_acquisition` gate (header item 3). Kept in this file and NOWHERE else:
  * `./staleness.js` owns the pre-acquisition position only, so there is exactly one
  * place the content-hash decision can be reverted from.
@@ -511,10 +590,11 @@ async function acquireExternal({
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), `${TMP_PREFIX}${slug}-`));
   try {
     // The downloaded file's NAME is derived from the DECLARED format, so nothing
-    // downstream has to sniff it: `.zip` for the archive, `.csv` for the flat file.
-    // Path only — `downloadArchive` is byte-identical for both, and the bytes are
-    // hashed as they land on either branch (FENCE 0b230472).
-    const destPath = path.join(tmpRoot, external.format === 'csv' ? 'source.csv' : 'source.zip');
+    // downstream has to sniff it: `.zip` for the archive, `.csv`/`.geojson` for the
+    // flat files (`geojson` added at INGESTOR prerequisite 0v, 2026-09-25). Path only —
+    // `downloadArchive` is byte-identical for all three, and the bytes are hashed as
+    // they land on either branch (FENCE 0b230472).
+    const destPath = path.join(tmpRoot, ({ csv: 'source.csv', geojson: 'source.geojson' })[external.format] || 'source.zip');
     const dl = await downloadWithRetries(ctxFetch, external.url, destPath, timeoutMs, algorithm, {
       ...resolveRetryPolicy(descriptor, config), log, tag,
     });
@@ -556,9 +636,15 @@ async function acquireExternal({
       parsed = await parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColumn);
     } else if (external.format === 'csv') {
       parsed = await parseCsv(dl.archivePath, external.csv_options, keyProperty, coerceKey, keyColumn);
+    } else if (external.format === 'geojson') {
+      // ── 0v: THE THIRD ARM (2026-09-25) ────────────────────────────────────────
+      // A bare FeatureCollection — no unzip, no locate. Tally/order parity with the
+      // shapefile arm is `parseGeoJson`'s own contract (see its JSDoc); this branch
+      // only names the parser.
+      parsed = await parseGeoJson(dl.archivePath, keyProperty, coerceKey, keyColumn);
     } else {
       throw new Error(`${tag} external "${external.id}" declares format "${String(external.format)}", which no parser `
-        + 'in the acquisition seam handles. Declare "shapefile_zip" or "csv" (step.schema.json '
+        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv" or "geojson" (step.schema.json '
         + 'inputs.reads.externals[].format), or teach acquire.js the new payload format — an '
         + 'unrecognised value must never fall through to the shapefile parser.');
     }
@@ -598,6 +684,7 @@ module.exports = {
   locateShapefile,
   parseShapefile,
   parseCsv,
+  parseGeoJson,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,

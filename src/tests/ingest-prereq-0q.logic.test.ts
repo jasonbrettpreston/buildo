@@ -6,10 +6,12 @@
 // RETRIES. `execution.network.retries` has been a FROZEN schema field since S1 with
 // NO READER anywhere in `scripts/lib/` (measured 2026-09-24), and the acquisition
 // seam's one download call (`downloadArchive`) makes exactly ONE attempt. The legacy
-// loaders (`scripts/load-neighbourhoods.js:52` `downloadFile`, copy-pasted into
-// load-address-points/load-parcels/load-massing) retried THREE times with no backoff,
-// WARNed on each, removed the partial file, and did NOT retry the HEAD. The founding
-// measurement is cloud `chain-sources` run 34769829628 (2026-09-13): a single `HTTP
+// loaders made ONE attempt too — `scripts/load-neighbourhoods.js:52` `downloadFile` and
+// its copies in load-address-points/load-parcels/load-massing have NO retry loop (Fold
+// G-4, 2026-09-25, MEASURED); only centreline's `downloadZipWithRetry` retried (THREE
+// times, no backoff, WARN per failure, partial file removed, HEAD never retried). This
+// prerequisite gives EVERY loader that posture, declared. The founding measurement is
+// cloud `chain-sources` run 34769829628 (2026-09-13): a single `HTTP
 // 502` at step 17/28 killed the run and 11 downstream steps never ran.
 //
 // This file carries the RED locks for the executor — `downloadWithRetries` and the

@@ -165,7 +165,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals` | list of object {id, kind, format, csv_options, url, license, on_head_error, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
-| `reads.externals[].format` | `shapefile_zip` · `csv` | ! |
+| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` | ! |
 | `reads.externals[].csv_options` | object {bom, relax_quotes} | — |
 | `reads.externals[].csv_options.bom` | `true` · `false` | † |
 | `reads.externals[].csv_options.relax_quotes` | `true` · `false` | † |

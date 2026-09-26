@@ -1967,17 +1967,19 @@
                     "x-frozen": true
                   },
                   "format": {
-                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. exactly the external `runIngestPhase` will actually acquire (`externals.find(e => typeof e.url === 'string' && e.url.length > 0)`). A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser.",
+                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. exactly the external `runIngestPhase` will actually acquire (`externals.find(e => typeof e.url === 'string' && e.url.length > 0)`). A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser.",
                     "enum": [
                       "shapefile_zip",
-                      "csv"
+                      "csv",
+                      "geojson"
                     ],
                     "x-frozen": true,
                     "x-ruling": {
                       "rungs_tried": [
                         "rung (a) reuse `kind` — a TRANSPORT enum (http_file/s3/…), x-frozen, and `http_file` says nothing about payload shape",
                         "rung (a′) sniff the URL extension — behaviour inferred from a name (CLAUDE.md PD#10's exact anti-pattern; a .zip can hold a CSV)",
-                        "rung (b)/(c) a check or shape rule cannot select a parser"
+                        "rung (b)/(c) a check or shape rule cannot select a parser",
+                        "0v: csv/shapefile arms wrong payload; sniff = PD#10; compute I/O banned"
                       ],
                       "why": "acquire.js was dispatch-free (downloadArchive → extractArchive → locateShapefile → parseShapefile, unconditionally); three of the eight INGESTORs (address_points, parcels, load_wsib) are bare CSVs. A declared, required payload format is the only rung that makes the parser selection descriptor data."
                     }
