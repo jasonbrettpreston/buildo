@@ -39,10 +39,17 @@ async function bad_check(ctx) {
   // of its own; that is scripts/lib/step/verdict.js's deriveVerdict's one job.
   const verdict = violations > 3 ? 'FAIL' : 'PASS';
   if (ctx.hasPostGIS) {
-    ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
+    // NOTE: the report key is `violationCount`, not `violations` — a key
+    // literally named `violations` here would ALSO trip gate E's
+    // compute-no-literal-violation-compare (Spec 124 §5 R-BA), which is
+    // this fixture's neighbour `bad-compute-literals.js`'s job to prove, not
+    // this file's (§5.5's original 10 step-shape-only rules, listed above).
+    // The bare `violations > 3` comparison on line 40 already trips
+    // compute-no-literal-threshold — this object key does not need to.
+    ctx.report('bad_check', { violationCount: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
     return;
   }
-  ctx.report('bad_check', { violations: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
+  ctx.report('bad_check', { violationCount: violations > 3 ? violations : 0, detail: `${started}:${verdict}` });
 }
 
 const CHECKS = { bad_check };

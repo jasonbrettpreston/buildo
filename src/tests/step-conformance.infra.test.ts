@@ -38,6 +38,8 @@ import os from 'os';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { stripComments } from './script-source-scan';
+import { filterGateELedgerFindings } from '../../scripts/analysis/gates/compute-literals.mjs';
+import { loadLedger } from '../../scripts/analysis/gates/ledger.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts/manifest.json');
@@ -691,7 +693,22 @@ describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
     });
 
     it(`${pair.compute} — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)`, () => {
-      expect(runShapeRule([pair.compute], COMPUTE_RULE)).toEqual([]);
+      // Ledger-aware (Spec 124 §5 R-BA gate E): a raw, unfiltered ast-grep scan
+      // would RED every dated `{gate:'E'}` finding this suite's own sibling
+      // (fast invariant #32 / gate-compute-literals.infra.test.ts) already
+      // proved is ledger-allowed — `check-step-shape.mjs`, the real blocking
+      // driver, filters through the SAME `filterGateELedgerFindings` before
+      // gating, so this per-file unit test must apply the identical filter
+      // rather than assert a raw scan is empty (that would just re-introduce
+      // the gap gate E was built to close, one file at a time). Only the 5
+      // gate-E rule ids in GATE_E_RULE_IDS are filterable this way; every
+      // other compute-shape rule (console/fetch/clock/env/require/…) is
+      // NOT touched and still hard-stops on the first hit — no weakening.
+      const violations = runShapeRule([pair.compute], COMPUTE_RULE);
+      const byFile = new Map([[pair.compute, violations]]);
+      const { rows } = loadLedger(REPO_ROOT);
+      filterGateELedgerFindings(byFile, REPO_ROOT, rows);
+      expect(byFile.get(pair.compute)).toEqual([]);
     });
   }
 
@@ -2503,6 +2520,57 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
     return idx === -1 ? block : block.slice(0, idx);
   }
 
+  // FIXER pass (2026-09-26) — a "(registry)"-scoped Fast Invariant row (ids 4,
+  // 5, 9, 22-41 per this file's own docblocks) is FLEET/LEDGER state, never
+  // specific to the step whose report it is printed in: it is rendered
+  // byte-identical into every one of the 20 converted steps' scorecards. Its
+  // own correctness is independently locked elsewhere (gate-*.infra.test.ts's
+  // live "--all --fast" assertions, hooks-composition's pre-push exit-code
+  // check) — Rule 13 ("a step validates itself") is about THIS step's own
+  // G0-G8/G-shape/step-scoped-invariant sections, not a frozen copy of shared
+  // ledger state that goes stale the instant ANY step's ledger row changes.
+  // MEASURED: adding 2 gate-K ledger rows (Spec 124 §5 R-BA, link_massing +
+  // link_neighbourhoods) flipped fast invariant #41's printed line in ALL 18
+  // OTHER already-clean committed reports too, with zero other drift — the
+  // exact "written by a full run, compared against a --fast slice" false
+  // positive this fold closes. Stripped from BOTH sides before the deep-equal
+  // comparison below, so a genuinely stale STEP-scoped line still REDs.
+  function stripRegistryRows(block: string): string {
+    return block
+      .split('\n')
+      .filter((l) => !/^\|\s*\d+\s*\|\s*\(registry\)\s*\|/.test(l))
+      .join('\n');
+  }
+
+  // FIXER pass (2026-09-26) — the SAME "vitest-independent slice is not
+  // actually vitest-independent" class as stripRegistryRows above, on a
+  // DIFFERENT field: the `**Score: N/17** ... **Hard stop: YES (...)**`
+  // header line's hard-stop reason can include a policy-MATRIX-derived
+  // reason (`Rule ${n} (unpinned enforced-red)`, aggregateHardStop's
+  // `matrixHardStop.reasons` — step-validate.mjs:2709), which is exactly as
+  // vitest-dependent as the Test-suite/Policy-matrix sections this slice
+  // already excludes (computeMatrixHardStop needs a REAL vitestResult to
+  // know whether Rule 2/3/11/12 is enforced-red at all; `--fast` always
+  // reads "not-run", which can never hard-stop this way). MEASURED live:
+  // link_wsib's committed report (a genuine FULL run) reads "Hard stop: YES
+  // (Rule 2 (unpinned enforced-red))"; a fresh `--fast` run reads "Hard
+  // stop: no" — same false-positive staleness, not a real drift in this
+  // step's own G0-G8/fast-invariant state (every other line matches).
+  // Stripped from BOTH sides; a genuinely G6/G7/G8/G9/fast-invariant/
+  // F(score-floor) hard-stop (all vitest-INDEPENDENT) still compares exactly
+  // and still REDs on real drift.
+  function stripVitestDependentHardStopReasons(block: string): string {
+    return block.replace(
+      /\*\*Hard stop: YES \((.*)\)\*\*/,
+      (full: string, reasonsJoined: string) => {
+        const kept = reasonsJoined
+          .split(', ')
+          .filter((r) => !/^Rule \d+ \(unpinned enforced-red\)$/.test(r));
+        return kept.length ? `**Hard stop: YES (${kept.join(', ')})**` : '**Hard stop: no**';
+      },
+    );
+  }
+
   function reportPathFor(slug: string): string | null {
     const dashSlug = slug.replace(/_/g, '-');
     const dir = path.join(REPO_ROOT, 'docs/reports');
@@ -2574,12 +2642,15 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
         expect(freshIdx, `${slug}: step:validate --fast produced no scorecard block; stderr=${run.stderr}`).toBeGreaterThanOrEqual(0);
         const freshBlock = stdout.slice(freshIdx);
 
+        const normalise = (b: string) => stripVitestDependentHardStopReasons(stripRegistryRows(vitestIndependentSlice(b))).trim();
         expect(
-          vitestIndependentSlice(freshBlock).trim(),
-          `${slug}: the committed scorecard's vitest-independent sections (score, G0-G8, G9/G4d/G-shape, ` +
-            `fast invariants, captures) drifted from a fresh --fast run — regenerate with ` +
-            `\`node scripts/analysis/step-validate.mjs --step=${slug} --write\``,
-        ).toBe(vitestIndependentSlice(committedBlock).trim());
+          normalise(freshBlock),
+          `${slug}: the committed scorecard's vitest-independent, STEP-scoped sections (score, G0-G8, ` +
+            `G9/G4d/G-shape, this step's own fast invariants, captures) drifted from a fresh --fast run — ` +
+            `regenerate with \`node scripts/analysis/step-validate.mjs --step=${slug} --write\` ` +
+            `("(registry)"-scoped rows and a matrix-derived "Rule N (unpinned enforced-red)" hard-stop reason ` +
+            `are excluded from this comparison — see stripRegistryRows / stripVitestDependentHardStopReasons above)`,
+        ).toBe(normalise(committedBlock));
       });
 
       it('the committed block also carries a Test-suite line and a 14-row Policy coverage matrix (presence only — content is `--all --write`\'s job, not this lock\'s)', () => {
@@ -2892,12 +2963,23 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
     expect(run.stdout).toContain('self-test PASSED');
   });
 
-  it('a step with NO when:"pre_write" checks reports Rule 11 enforced-green, vacuously', () => {
+  // FIXER pass (2026-09-26) — commit b5dcfeeb ("R-BA gate H — policy matrix
+  // statuses not-run/vacuous", same day, landed BEFORE this FIXER task)
+  // deliberately retired the OLD binary enforced-green/enforced-red vocabulary
+  // for a 0-`when:"pre_write"`-checks descriptor: "a checker never proven to
+  // fire is not a check" (Spec 121 §12b.6), so the status is now the more
+  // precise `vacuous` (Rule 13's own H matrix: enforced-green · enforced-red ·
+  // not-run · vacuous · prose-only — "only enforced-green counts green"),
+  // never `enforced-green`. This test still asserted the pre-gate-H text and
+  // never re-ran after that commit landed — updated to the CURRENT, intended
+  // vocabulary; assert_schema genuinely has 0 pre_write checks either way.
+  it('a step with NO when:"pre_write" checks reports Rule 11 vacuous (not enforced-green — Spec 121 §12b.6)', () => {
     const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
-    expect(row).toContain('enforced-green');
+    expect(row).toContain('vacuous');
+    expect(row).not.toContain('enforced-green');
     expect(row).toContain('vacuously nothing to cite');
   });
 
