@@ -30,7 +30,7 @@ Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or ma
 ---
 
 **1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
-- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute.
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung.
 - **Archetype variance:** none.
 - **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code.
 - **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
@@ -256,7 +256,7 @@ text and evidence. This table is live for anything estate-wide from here on.
 
 | Word | Gates | Status |
 |---|---|---|
-| STANDARDIZED | A closed bounds (#28) · I registries | not built |
+| STANDARDIZED | A closed bounds (#28) · I registries | A **BUILT** (`gates/closed-bounds.mjs`, 36/36 tests, 13 dated pending rows landed) · I not built |
 | OBSERVABLE | C emits-equiv · D consumer registry | not built |
 | SCALABLE | B `on_invalid` · E compute literals | not built |
 | UNDERSTANDABLE | F score floor+LF · J spec-staged hook | not built |

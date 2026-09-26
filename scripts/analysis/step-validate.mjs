@@ -32,10 +32,11 @@
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 15 invariants, ids 1-5,7-9,20-26 (the
+ * comes first in the output). Currently 16 invariants, ids 1-5,7-9,20-28 (the
  * count read "13"/"14" while the id list already said 1-5,7-9,20-24/26 — an
- * off-by-one that predates this line's last two edits; corrected 2026-09-17
- * against an actual `--fast` run, which renders 15 rows):
+ * off-by-one that predates this line's last edits; corrected 2026-09-17
+ * against an actual `--fast` run, which renders 15 rows; the +1 is id 28,
+ * CLOSED-BOUND, WF2 §5 R-BA gate A, 2026-09-25):
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -94,6 +95,15 @@
  *      `{matched, written}` and the block lives at `matched.compute.*` — so all
  *      three of its counters emitted NULL on every run for 13 days, with the
  *      real numbers sitting in `records_meta` and nothing testing it either way
+ *   28. CLOSED-BOUND (Spec 124 §5 R-BA gate A, Rule 1, Rule 3; WF2 "standardized
+ *      gates", 2026-09-25): every `checks[].limit` (and `checks[].warn_limit`
+ *      when present) is drawn from the closed answer set — `limit_from_config` /
+ *      `warn_limit_from_config` naming a DECLARED `config.logic_variables[].name`
+ *      in the SAME descriptor, the exact string `viol == 0` (limit only — no
+ *      number to tune), or a `{gate:'A'}` ledger row; anything else is RED, and
+ *      an ORPHAN row (its violation since fixed) is RED too (R-X). Fleet DERIVED
+ *      from converted.json (R-AN). `scripts/analysis/gates/closed-bounds.mjs`
+ *      owns the answer set; `gates/ledger.mjs` owns the row shape + the match
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -188,6 +198,11 @@ const TEMPLATE_FREEZE_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/templat
 
 const validateLib = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'));
+// WF2 §5 R-BA (gate A) — the closed-bound registry + the ONE shared ledger
+// lookup. Imported, never re-implemented: the row shape and the match live in
+// ledger.mjs so every gate in the standard shares them.
+import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
 // backfill context calls it directly for BOTH frequencies (every_run AND validate_only —
@@ -1742,6 +1757,27 @@ function fastInvariants(rows, converted, pending) {
       pass: gate.pass,
       blockedSlugs: gate.blockedSlugs,
       detail: gate.detail,
+    });
+  }
+
+  // 28. CLOSED-BOUND (Spec 124 §5 R-BA gate A, Rule 1, Rule 3, WF2 "standardized
+  // gates", 2026-09-25) — every `checks[].limit` (and `checks[].warn_limit` when
+  // declared) must be drawn from the CLOSED answer set: `limit_from_config` naming
+  // a DECLARED `config.logic_variables[].name` in the same descriptor, the exact
+  // string `viol == 0` (zero tolerance — no number to tune), or a gate-A ledger
+  // row. A bare number (or a `limit_from_config` naming an UNDECLARED variable)
+  // is RED; a ledger row whose violation has since been fixed is an ORPHAN and is
+  // RED too (R-X closing-row posture — the remediation commit deletes its own row).
+  // Registry-scoped with `blockedSlugs` (the id-9/22/25/26/27 shape). The fleet is
+  // DERIVED from converted.json (R-AN), never a retyped list.
+  {
+    const bounds = checkClosedBounds(loadConvertedDescriptors(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 28,
+      slug: '(registry)',
+      pass: bounds.pass,
+      blockedSlugs: bounds.blockedSlugs,
+      detail: bounds.detail,
     });
   }
 
@@ -4033,6 +4069,11 @@ function selfTest() {
       throw new Error(`self-test FAILED: checkRowErrorGate must be vacuous (PASS, "not applicable") on a fail_fast declaration, never demand a why it does not need (${JSON.stringify(notApplicable)})`);
     }
   }
+  // CLOSED-BOUND (fast invariant #28, Spec 124 §5 R-BA gate A, WF2 "standardized
+  // gates", 2026-09-25) — the closed-bound answer set + the orphan direction live
+  // entirely in scripts/analysis/gates/closed-bounds.mjs (its own selfTest, run
+  // here so this file's single `selfTest()` entry point covers it too).
+  closedBoundsSelfTest();
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked

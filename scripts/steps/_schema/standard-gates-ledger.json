@@ -1,7 +1,139 @@
 {
   "$comment": [
-    "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved)."
+    "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
+    "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open."
   ],
   "contract_version": 1,
-  "rows": []
+  "rows": [
+    {
+      "gate": "A",
+      "step": "load_ravines",
+      "item": "checks.ravine_rows_changed_ratio.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 0.5\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "link_massing",
+      "item": "checks.mass_retraction_ratio.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 0.05\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "link_massing",
+      "item": "checks.rows_changed_ratio.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 0.5\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "link_parcels",
+      "item": "checks.parcel_retraction_ratio.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 0.05\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "enrich_parcels",
+      "item": "checks.parcels_ambiguous_zone_count.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 5\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "assert_global_coverage",
+      "item": "checks.coa_step7_estimated_cost.warn_limit",
+      "disposition": "pending_remediation",
+      "why": "warn_limit \"pct >= 0\" is hard-coded with no warn_limit_from_config (the zero-tolerance answer does not apply to a WARN tier)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "link_neighbourhoods",
+      "item": "checks.neighbourhoods_loaded.warn_limit",
+      "disposition": "pending_remediation",
+      "why": "warn_limit \"value_min 1\" is hard-coded with no warn_limit_from_config (the zero-tolerance answer does not apply to a WARN tier)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "compute_parcel_cost_estimates",
+      "item": "checks.fsi_implausible_count.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"value_min 0\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "compute_parcel_cost_estimates",
+      "item": "checks.new_build_fallback_count.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"value_min 0\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "compute_parcel_cost_estimates",
+      "item": "checks.cost_rates_stale.limit",
+      "disposition": "pending_remediation",
+      "why": "limit {\"warn\":1,\"fail\":2} is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "compute_parcel_cost_estimates",
+      "item": "checks.cost_index_stale.limit",
+      "disposition": "pending_remediation",
+      "why": "limit {\"warn\":1,\"fail\":999} is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "compute_parcel_cost_estimates",
+      "item": "checks.stranded_cost_rows_retracted.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"value_min 0\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "A",
+      "step": "parcels",
+      "item": "checks.null_address_pct.limit",
+      "disposition": "pending_remediation",
+      "why": "limit \"pct <= 0.1\" is neither limit_from_config nor exactly \"viol == 0\"",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    }
+  ]
 }
