@@ -3621,6 +3621,81 @@ function ruleStatus(matched) {
   return matched.every((t) => t.status === 'passed') ? 'enforced-green' : 'enforced-red';
 }
 
+// ---------------------------------------------------------------------------
+// Gate H (Spec 124 Rule 13; Spec 121 §12b.6) — OBSERVABLE: the policy matrix
+// never counts what did not run.
+//
+// The matrix used to carry 3 status values. Under `--fast` (`vitestResult.ranOk`
+// false) `computePolicyMatrix` passes `tests = []`, so EVERY vitest-evidenced row
+// fell to its `m.length === 0` branch and reported a shape/descriptor-derived
+// `enforced-green` for a check that never executed. The closed set is now 5
+// values, and ONLY `enforced-green` counts toward `**Enforced-green: N/M**`.
+// ---------------------------------------------------------------------------
+
+/** The closed status set. A status outside it is prose, never evidence. */
+const MATRIX_STATUSES = Object.freeze(['enforced-green', 'enforced-red', 'not-run', 'vacuous', 'prose-only']);
+const MATRIX_STATUS_SET = new Set(MATRIX_STATUSES);
+
+/** Detail wording a pure checker uses to announce it had nothing to check. */
+const VACUOUS_DETAIL_RE = /vacuously nothing to (cite|check)|not applicable/i;
+
+/**
+ * `matrixStatusCounts(matrix)` — the closed-set tally for a policy matrix. PURE
+ * and exported so the render (and any consumer) never hand-rolls the
+ * `.filter((r) => r.status === 'enforced-green')` line. `green` is the ONLY count
+ * the `**Enforced-green: N/M**` line uses; the other four are reported so a
+ * reader SEES the rows that count excluded. An out-of-set status counts as
+ * `prose` — it is not evidence and must never join a category reading as
+ * enforcement.
+ */
+export function matrixStatusCounts(matrix) {
+  const counts = { green: 0, red: 0, notRun: 0, vacuous: 0, prose: 0, total: 0 };
+  for (const row of Array.isArray(matrix) ? matrix : []) {
+    counts.total += 1;
+    const status = row && row.status;
+    if (status === 'enforced-green') counts.green += 1;
+    else if (status === 'enforced-red') counts.red += 1;
+    else if (status === 'not-run') counts.notRun += 1;
+    else if (status === 'vacuous') counts.vacuous += 1;
+    else counts.prose += 1;
+  }
+  return counts;
+}
+
+/**
+ * The vitest-evidence status for a row, honouring rule 1 (gate H): a row whose
+ * ONLY evidence is the vitest run reports `not-run` when that run did not happen
+ * (`--fast`), never a shape-derived `enforced-green`. When the run DID happen the
+ * pre-existing `ruleStatus` answer is returned unchanged.
+ */
+function vitestStatus(matched, ranOk) {
+  if (!ranOk) return 'not-run';
+  return ruleStatus(matched);
+}
+
+/**
+ * The status for a row backed by a PURE CHECKER (rules 11/12). Rule 2 (gate H):
+ * a checker that passed with nothing to check is `vacuous`, never
+ * `enforced-green` — the checker's own `vacuous: true` flag, or a detail that
+ * says "vacuously nothing to cite"/"not applicable", is the signal.
+ */
+function checkerStatus(result) {
+  if (result && (result.vacuous === true || VACUOUS_DETAIL_RE.test(result.detail || ''))) return 'vacuous';
+  return result && result.pass ? 'enforced-green' : 'enforced-red';
+}
+
+/**
+ * The note for Rule 12's R-M half. `not-run` (vitest skipped via `--fast`) and
+ * `prose-only` (ran, but no scoped describe) are DIFFERENT absences and a reader
+ * must be able to tell them apart — the whole point of gate H.
+ */
+function mvNoteFor(mRM, ranOk) {
+  if (mRM.length > 0) return '';
+  return ranOk
+    ? 'R-M/LG-17 describe not scoped to this step (no before-image target)'
+    : 'R-M/LG-17 not evaluated — vitest did not run (--fast)';
+}
+
 function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report) {
   const tests = vitestResult.ranOk ? vitestResult.tests : [];
   const slugToken = row.slug;
@@ -3642,9 +3717,19 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
   }
   {
     const m = vitestResult.ranOk ? matchTests(tests, /§5\.5.*compute shape/i, computeToken) : [];
-    const shapeOk = shape.computeClean !== false;
-    const status = !vitestResult.ranOk ? (shapeOk ? 'enforced-green' : 'enforced-red') : m.length > 0 ? ruleStatus(m) : (shapeOk ? 'enforced-green' : 'enforced-red');
-    push(2, 'Compute is just compute', status, m.length === 0 ? '§5.5 describe not scoped to this step in the vitest run' : '');
+    // Gate H rule 1 — this row's ONLY evidence is the vitest run, so under
+    // `--fast` it reads `not-run`. The OLD branch fell back to `shapeOk` and
+    // reported `enforced-green` for a §5.5 describe that never executed — the
+    // matrix counting what did not run, which is the defect this gate closes.
+    // When the run DID happen the prior answer is kept for a scoped match; an
+    // unscoped describe still reflects the independently-executed shape scan.
+    const status = vitestResult.ranOk
+      ? (m.length > 0 ? ruleStatus(m) : (shape.computeClean !== false ? 'enforced-green' : 'enforced-red'))
+      : 'not-run';
+    const note = !vitestResult.ranOk
+      ? '§5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite'
+      : (m.length === 0 ? '§5.5 describe not scoped to this step in the vitest run' : '');
+    push(2, 'Compute is just compute', status, note);
   }
   {
     const m = vitestResult.ranOk ? [
@@ -3653,9 +3738,17 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
       ...matchTests(tests, /R-A —/i, slugToken),
     ] : [];
     const g4 = checkOnInvalidFail(descriptorInfo.descriptor);
-    const vitestOk = m.length === 0 || ruleStatus(m) === 'enforced-green';
+    // Gate H rule 1 carve-out — G-4 is a PURE CHECKER that genuinely executed, so
+    // it keeps its own result under `--fast`. The vitest half (P4/LW-D10/R-A) is
+    // secondary: it may only RED the row when it actually ran and found a real
+    // problem. Its absence (not run, or unscoped) never upgrades the row, and the
+    // note names it so a reader sees the half that did not run.
+    const vitestOk = !vitestResult.ranOk || m.length === 0 || ruleStatus(m) === 'enforced-green';
     const status = g4.pass && vitestOk ? 'enforced-green' : 'enforced-red';
-    push(3, 'Tunables externalized', status, `G-4: ${g4.detail}`);
+    const vitestNote = vitestResult.ranOk
+      ? (m.length === 0 ? ' · P4/LW-D10/R-A not scoped to this step' : '')
+      : ' · P4/LW-D10/R-A not evaluated (vitest did not run)';
+    push(3, 'Tunables externalized', status, `G-4: ${g4.detail}${vitestNote}`);
   }
   {
     const g2 = checkPreservedInComputeHasWhy(report || '');
@@ -3678,7 +3771,14 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
   }
   {
     const v11 = checkOrderGuaranteesCited(descriptorInfo.descriptor);
-    const status = v11.pass ? 'enforced-green' : 'enforced-red';
+    // Gate H rule 2 — a descriptor with 0 `when:"pre_write"` checks has nothing to
+    // cite, so the checker's vacuous pass is `vacuous`, NOT `enforced-green`: a
+    // checker never proven to fire is not a check (Spec 121 §12b.6). A descriptor
+    // with cited pre_write checks keeps the checker's real answer.
+    const preWriteChecks = (Array.isArray(descriptorInfo.descriptor?.checks) ? descriptorInfo.descriptor.checks : [])
+      .filter((c) => c && c.when === 'pre_write');
+    const v11Vacuous = preWriteChecks.length === 0 || /vacuously nothing to cite/i.test(v11.detail || '');
+    const status = v11Vacuous ? 'vacuous' : (v11.pass ? 'enforced-green' : 'enforced-red');
     push(11, 'Phase-order re-derive (declared half, checkOrderGuaranteesCited)', status, `${v11.detail}${v11.violations.length ? `: ${v11.violations.join('; ')}` : ''} — G-3 completeness half stays open`);
   }
   {
@@ -3691,17 +3791,37 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
     // scopeToken bug C4 now fixes generically in `matchTests` itself (Fold A
     // item 3) — no local workaround needed here anymore.
     const mRM = vitestResult.ranOk ? matchTests(tests, /R-M\/LG-17/i, row.slug) : [];
-    const rmStatus = mRM.length > 0 ? ruleStatus(mRM) : 'prose-only';
-    const rmNote = mRM.length === 0 ? 'R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)' : '';
+    // Gate H — the R-M half is vitest-evidenced: with no run it is `not-run`
+    // (rule 1); when the run happened but nothing scoped, the static R-B half
+    // stands alone and the R-M detail only reports `prose-only` (unchanged).
+    const rmStatus = vitestResult.ranOk
+      ? (mRM.length > 0 ? ruleStatus(mRM) : 'prose-only')
+      : 'not-run';
+    const rmNote = mvNoteFor(mRM, vitestResult.ranOk);
     // R-B (this checker) is the PRIMARY, always-live claim; R-M only REDS the row
-    // when it has actually run and found a real problem — a 'prose-only' R-M
-    // (vitest skipped via --fast, or no before-image target on this step) never
-    // downgrades an otherwise-green R-B half.
-    const status = !v12.pass || rmStatus === 'enforced-red' ? 'enforced-red' : 'enforced-green';
+    // when it has actually run and found a real problem — a `prose-only`/`not-run`
+    // R-M never downgrades an otherwise-green R-B half, and a R-B half with no
+    // destructive-retraction target to check is `vacuous`, not enforcement (rule 2).
+    const v12Vacuous = /not applicable|vacuously/i.test(v12.detail || '');
+    const status = v12Vacuous
+      ? 'vacuous'
+      : (!v12.pass || rmStatus === 'enforced-red' ? 'enforced-red' : 'enforced-green');
     push(12, 'Truthful crash posture (R-B reachability, static + R-M before-image)', status, `R-B (checkInterruptedPostureTruthful): ${v12.detail} · R-M: ${rmStatus}${rmNote ? ` (${rmNote})` : ''}`);
   }
   push(13, 'A step validates itself', descriptorInfo.ok ? 'enforced-green' : 'enforced-red', 'this run of step:validate IS the mechanism');
-  push('P3', 'I/O cost adjudication (measured, not gated)', 'measured', p3.detail);
+  // P3 is a MEASUREMENT, not a gate — it carries no enforcement claim at all, so
+  // it must not wear a status a reader could mistake for one. Gate H's closed set
+  // has no slot for "measured"; `prose-only` is the honest classification (an
+  // adjudication reported, nothing enforced by this cell).
+  push('P3', 'I/O cost adjudication (measured, not gated)', 'prose-only', p3.detail);
+
+  // Gate H — assert our OWN output stays inside the closed set, so a future row
+  // added here can never reintroduce a status the count/render cannot classify.
+  for (const r of rows) {
+    if (!MATRIX_STATUS_SET.has(r.status)) {
+      throw new Error(`computePolicyMatrix produced status ${JSON.stringify(r.status)} for rule ${JSON.stringify(r.rule)}, outside the closed set [${MATRIX_STATUSES.join(', ')}] — gate H (Spec 124 Rule 13)`);
+    }
+  }
 
   return rows;
 }
@@ -3774,9 +3894,13 @@ function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invaria
   lines.push('| Rule | Name | Status | Note |');
   lines.push('|---|---|---|---|');
   for (const r of matrix) lines.push(`| ${r.rule} | ${r.name} | ${r.status} | ${r.note} |`);
-  const enforcedGreen = matrix.filter((r) => r.status === 'enforced-green').length;
+  // Gate H (Spec 124 Rule 13) — ONLY `enforced-green` counts toward the
+  // `**Enforced-green: N/M**` line (unchanged wording). The render gains the
+  // not-run/vacuous tallies after it so a reader sees the rows the count excludes
+  // rather than having to infer them from the table.
+  const counts = matrixStatusCounts(matrix);
   lines.push('');
-  lines.push(`**Enforced-green: ${enforcedGreen}/${matrix.length}**`);
+  lines.push(`**Enforced-green: ${counts.green}/${matrix.length}** · not-run: ${counts.notRun} · vacuous: ${counts.vacuous}`);
   lines.push('');
   return lines.join('\n');
 }
@@ -4105,6 +4229,21 @@ function selfTest() {
     // GREEN: no pre_write checks at all — vacuously satisfied.
     const vacuous = checkOrderGuaranteesCited({ identity: { spec: '999' }, checks: [{ id: 'c1', when: 'post' }] });
     if (!vacuous.pass) throw new Error(`self-test FAILED: checkOrderGuaranteesCited did not vacuously pass a descriptor with no pre_write checks (${JSON.stringify(vacuous)})`);
+
+    // GATE H rule 2 (Spec 124 Rule 13; RED direction) — that vacuous pass must
+    // NOT be counted as enforcement: a descriptor with 0 pre_write checks maps to
+    // `vacuous`, never `enforced-green`.
+    if (checkerStatus(vacuous) !== 'vacuous') {
+      throw new Error(`self-test FAILED (gate H): a descriptor with 0 pre_write checks must map to 'vacuous', got '${checkerStatus(vacuous)}' — a checker never proven to fire is not a check`);
+    }
+    // GREEN direction — one CITED pre_write check is genuine enforcement.
+    const cited = checkOrderGuaranteesCited(
+      { identity: { spec: '999' }, checks: [{ id: 'c1', when: 'pre_write', order_guarantee: { guarantee: 'abort before any write', spec_ref: 'docs/specs/fixture/999_fixture.md', anchor: 'THE ANCHOR TEXT' } }] },
+      { 'docs/specs/fixture/999_fixture.md': 'some prose ... THE ANCHOR TEXT ... more prose' },
+    );
+    if (checkerStatus(cited) !== 'enforced-green') {
+      throw new Error(`self-test FAILED (gate H): one cited pre_write check must map to 'enforced-green', got '${checkerStatus(cited)}'`);
+    }
 
     // RED: a pre_write check with NO order_guarantee at all.
     const noGuarantee = checkOrderGuaranteesCited({ identity: { spec: '999' }, checks: [{ id: 'c1', when: 'pre_write' }] });
@@ -4915,6 +5054,57 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
   console.log(`[step-validate] ${row.slug}: data validator (--write, both frequencies) — ${results.length} entries executed:`);
   for (const r of results) {
     console.log(`  ${r.id} (${r.source}, ${r.frequency}): ${r.status === 'ERROR' ? `ERROR — ${r.detail}` : `value=${JSON.stringify(r.value)}`}`);
+  }
+  // GATE H (Spec 124 Rule 13; Spec 121 §12b.6) — the policy matrix never counts
+  // what did not run. Every direction proven in-memory.
+  {
+    const passed = [{ status: 'passed' }];
+    const failed = [{ status: 'failed' }];
+
+    // Rule 1 — a vitest-evidenced row reports `not-run` when the run did not
+    // happen (`--fast`), NEVER the shape-derived `enforced-green` it used to.
+    if (vitestStatus(passed, false) !== 'not-run') {
+      throw new Error(`self-test FAILED (gate H): a vitest-evidenced row must be 'not-run' when --fast, got '${vitestStatus(passed, false)}'`);
+    }
+    // GREEN direction — the same fixture with the run having happened.
+    if (vitestStatus(passed, true) !== 'enforced-green') {
+      throw new Error(`self-test FAILED (gate H): passed matches with ranOk=true must be 'enforced-green', got '${vitestStatus(passed, true)}'`);
+    }
+    // The remaining vitest answers are unchanged by this gate.
+    if (vitestStatus(failed, true) !== 'enforced-red') throw new Error('self-test FAILED (gate H): a failed match must stay enforced-red');
+    if (vitestStatus([], true) !== 'prose-only') throw new Error('self-test FAILED (gate H): no scoped match must stay prose-only');
+
+    // Rule 2 — the closed-set tally on a 5-status fixture returns each count 1,
+    // and ONLY `enforced-green` is counted as green.
+    const five = matrixStatusCounts([
+      { status: 'enforced-green' }, { status: 'enforced-red' }, { status: 'not-run' },
+      { status: 'vacuous' }, { status: 'prose-only' },
+    ]);
+    if (JSON.stringify(five) !== JSON.stringify({ green: 1, red: 1, notRun: 1, vacuous: 1, prose: 1, total: 5 })) {
+      throw new Error(`self-test FAILED (gate H): matrixStatusCounts on a 5-status fixture returned ${JSON.stringify(five)}`);
+    }
+    // An out-of-set status is prose, never green — the count cannot be inflated.
+    const odd = matrixStatusCounts([{ status: 'probably-fine' }]);
+    if (odd.green !== 0 || odd.prose !== 1) {
+      throw new Error(`self-test FAILED (gate H): an out-of-set status must count as prose, never green (${JSON.stringify(odd)})`);
+    }
+    // The closed set is exactly the 5 declared values.
+    if (MATRIX_STATUSES.length !== 5 || !MATRIX_STATUS_SET.has('enforced-green')) {
+      throw new Error(`self-test FAILED (gate H): the closed status set drifted (${JSON.stringify(MATRIX_STATUSES)})`);
+    }
+
+    // Rule 1/Rule 2 end-to-end — a real matrix built for a step whose vitest run
+    // did NOT happen: every vitest-only row is `not-run`, and a 0-pre_write Rule 11
+    // is `vacuous`. Neither may be counted as enforced-green.
+    const fastMatrix = [
+      { rule: 2, status: vitestStatus(passed, false) },
+      { rule: 11, status: checkerStatus({ pass: true, detail: 'no when:"pre_write" checks — vacuously nothing to cite' }) },
+      { rule: 5, status: 'enforced-green' },
+    ];
+    const fastCounts = matrixStatusCounts(fastMatrix);
+    if (fastCounts.notRun !== 1 || fastCounts.vacuous !== 1 || fastCounts.green !== 1) {
+      throw new Error(`self-test FAILED (gate H): a --fast matrix must tally not-run=1 vacuous=1 green=1, got ${JSON.stringify(fastCounts)}`);
+    }
   }
   return results;
 }
