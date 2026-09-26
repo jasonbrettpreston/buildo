@@ -43,6 +43,8 @@ import { execFileSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { filterGateELedgerFindings } from '../../../../scripts/analysis/gates/compute-literals.mjs';
+import { loadLedger } from '../../../../scripts/analysis/gates/ledger.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 
@@ -542,11 +544,33 @@ describe('assert_global_coverage — descriptor/compute claims, all flipped plai
     ];
     const bin = binCandidates.find((c) => fs.existsSync(c));
     expect(bin, 'ast-grep binary not found — run npm ci').toBeDefined();
-    const res = execFileSync(bin as string, ['scan', '--rule', ruleAbs, '--report-style=short', '--color=never', COMPUTE_REL], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-    });
-    expect(res.trim(), `compute-shape violations:\n${res}`).toBe('');
+    // Ledger-aware (Spec 124 §5 R-BA gate E, FIXER pass 2026-09-26): a raw,
+    // unfiltered scan REDs every dated `{gate:'E'}` finding this step already
+    // carries (fast invariant #32 / gate-compute-literals.infra.test.ts already
+    // proved these are ledger-allowed) — filter through the SAME
+    // filterGateELedgerFindings the real blocking driver (check-step-shape.mjs)
+    // uses, mirroring step-conformance.infra.test.ts's §5.5 fix. Only the 5
+    // gate-E rule ids are filterable; every other compute-shape rule still
+    // hard-stops on the first hit — no weakening.
+    let res = '';
+    try {
+      res = execFileSync(bin as string, ['scan', '--rule', ruleAbs, '--report-style=short', '--color=never', COMPUTE_REL], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+      });
+    } catch (err) {
+      res = (err as { stdout?: string }).stdout ?? '';
+    }
+    const LINE_RE = /^(.+?):(\d+):(\d+): (?:error|warning|note|info)\[([\w-]+)\]:/;
+    const violations: Array<{ rule: string; line: number }> = [];
+    for (const line of res.split(/\r?\n/)) {
+      const m = LINE_RE.exec(line);
+      if (m) violations.push({ rule: m[4]!, line: Number(m[2]) });
+    }
+    const byFile = new Map<string, Array<{ rule: string; line: number }>>([[COMPUTE_REL, violations]]);
+    const { rows } = loadLedger(REPO_ROOT);
+    filterGateELedgerFindings(byFile, REPO_ROOT, rows);
+    expect(byFile.get(COMPUTE_REL), `unledgered compute-shape violations:\n${res}`).toEqual([]);
   });
 
   it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-111 constant (thin shell)', () => { // flipped at: commit 7 (the frozen shell already lands here, not deferred to commit 9)
