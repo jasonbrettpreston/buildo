@@ -37,8 +37,6 @@ const ravines = require('../../scripts/lib/step/staleness.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const heritage = require('../../scripts/load-heritage.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const centreline = require('../../scripts/load-centreline.js');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const zoning = require('../../scripts/load-zoning.js');
 
 const LIB_SOURCE = fs.readFileSync(
@@ -48,13 +46,14 @@ const LIB_SOURCE = fs.readFileSync(
 /**
  * The file that OWNS each loader's adoption of the shared gate semantics.
  *
- * ⚠️ `load-ravines.js` points at `scripts/lib/step/acquire.js`, not at the step file.
- * At the pilot-2 conversion (Spec 122 §5.1) `scripts/load-ravines.js` became the
- * frozen three-line shape and the tier-2 content-hash gate, the streamed
- * hash-through-to-disk and the DS4 re-emit moved INTO the library's acquisition seam
- * — one home, shared by every converted loader. Re-pointing the lock is mandatory:
- * left aimed at the step file it would go green on an empty file, which is exactly
- * how fence 0b230472 (Severity HIGH) would be silently unlocked.
+ * ⚠️ `load-ravines.js` and (as of row 3.2 ②) `load-centreline.js` both point at
+ * `scripts/lib/step/{staleness,acquire}.js`, not at the step file. At each pilot's
+ * conversion (Spec 122 §5.1) the step file became the frozen three-line shape and
+ * the tier-2 content-hash gate, the streamed hash-through-to-disk and the DS4
+ * re-emit moved INTO the library's acquisition seam — one home, shared by every
+ * converted loader. Re-pointing the lock is mandatory: left aimed at the step file
+ * it would go green on an empty file, which is exactly how fence 0b230472
+ * (Severity HIGH) would be silently unlocked.
  */
 const ADOPTION_SUBJECT: Record<string, string[]> = {
   // The acquisition seam owns the download, the streamed hash and the tier-2 gate;
@@ -63,7 +62,10 @@ const ADOPTION_SUBJECT: Record<string, string[]> = {
   // were ONE file before the conversion and are two now.
   'load-ravines.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
   'load-heritage.js': ['load-heritage.js'],
-  'load-centreline.js': ['load-centreline.js'],
+  // RE-HOMED at row 3.2 ② (INGESTOR class C): the frozen shell carries no
+  // skipCheckDecision/contentHashDecision/readPriorRunMeta of its own any more —
+  // same two library files as load-ravines.js.
+  'load-centreline.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
   'load-zoning.js': ['load-zoning.js'],
 };
 const LOADER_SOURCES: Record<string, string> = Object.fromEntries(
@@ -170,12 +172,24 @@ describe('skipCheckDecision — centreline-style (contentHash IS in the no-valid
     expect(sv.skipCheckDecision({ lastModified: null, etag: null, contentHash: null, priorMeta: pm }, opts))
       .toEqual({ skip: false, reason: 'no_validators' });
   });
-  it('load-centreline.js wrapper preserves its exact prior signature + decisions', () => {
-    const prior = { centreline_load: pm };
-    expect(centreline.skipCheckDecision({ lastModified: 'x', etag: 'y', prior: null })).toEqual({ skip: false, reason: 'no_prior_run' });
-    expect(centreline.skipCheckDecision({ lastModified: 'Mon, 25 May 2026 00:00:00 GMT', prior })).toEqual({ skip: true, reason: 'unchanged_last_modified' });
-    expect(centreline.skipCheckDecision({ lastModified: null, etag: null, contentHash: 'ch1', prior })).toEqual({ skip: true, reason: 'unchanged_content_hash' });
-    expect(centreline.skipCheckDecision({ lastModified: null, etag: null, contentHash: null, prior })).toEqual({ skip: false, reason: 'no_validators' });
+  // RE-HOMED at row 3.2 ② (c2e): load-centreline.js is now the frozen three-line
+  // shape and exports no skipCheckDecision of its own. The pre-acquisition gate is
+  // the SAME shared `scripts/lib/step/staleness.js` load_ravines uses (`ravines`
+  // above) — `staleness.skipCheckDecision` hardcodes `contentHashInNoValidatorsBail:
+  // false` (the ravines style), so the legacy centreline-only "no HTTP validators
+  // but a matching contentHash → SKIP" branch is KNOWINGLY RETIRED here: legacy
+  // called `skipCheckDecision` WITHOUT a contentHash argument at all (plan §2 row 4),
+  // so the option was inert on every real run — the tier-2 `contentHashDecision`
+  // call in acquire.js (asserted separately below) is what actually carries the
+  // hash-based skip, post-download. `prior` is the BLOCK (`centreline_load`
+  // unwrapped), matching the library's own call shape, not `{ centreline_load: … }`.
+  it('the re-homed staleness.skipCheckDecision (scripts/lib/step/staleness.js) preserves load-centreline.js\'s prior decisions', () => {
+    const prior = pm;
+    expect(ravines.skipCheckDecision({ lastModified: 'x', etag: 'y', prior: null })).toEqual({ skip: false, reason: 'no_prior_run' });
+    expect(ravines.skipCheckDecision({ lastModified: 'Mon, 25 May 2026 00:00:00 GMT', prior })).toEqual({ skip: true, reason: 'unchanged_last_modified' });
+    // Tier-1 has no HTTP validators; even a matching contentHash cannot skip HERE.
+    expect(ravines.skipCheckDecision({ lastModified: null, etag: null, contentHash: 'ch1', prior })).toEqual({ skip: false, reason: 'no_validators' });
+    expect(ravines.skipCheckDecision({ lastModified: null, etag: null, contentHash: null, prior })).toEqual({ skip: false, reason: 'no_validators' });
   });
 });
 

@@ -1,0 +1,866 @@
+{
+  "identity": {
+    "name": "load_centreline",
+    "display_name": "Toronto Centreline",
+    "owner": "data",
+    "description": "Loads Toronto's centreline street network (LineString, 4326) from the CKAN zipped shapefile into toronto_centreline by a staged full replace: one transaction creates a LIKE-INCLUDING-CONSTRAINTS temp table, inserts the validated rows, deletes the whole table and re-inserts from the staging table.",
+    "lock": 63,
+    "why_lock": {
+      "text": "Spec 47 §A.5 row 63. The spec's 65 collided with enrich-parcels; 63 is the next free gap and the shell keeps `ADVISORY_LOCK_ID = 63` textually (§5.4), so descriptor and shell cannot drift.",
+      "liveness": { "kind": "file", "ref": "scripts/load-centreline.js" }
+    },
+    "spec": "62",
+    "spec_version": "1.1",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "ckan:toronto-centreline-tcl-shp",
+          "kind": "http_file",
+          "format": "shapefile_zip",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip",
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "CENTREL2",
+          "cache": "revalidate",
+          "cache_ttl": "none",
+          "on_head_error": "warn_row"
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "toronto_centreline",
+        "key": "source_id",
+        "key_sql_type": "BIGINT",
+        "geometry_kind": "line",
+        "columns": [
+          { "name": "source_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" },
+          { "name": "linear_name_full", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "linear_name", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "linear_name_type", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "linear_name_dir", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "feature_code_desc", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "jurisdiction", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "from_intersection_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "to_intersection_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "lo_num_l", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "hi_num_l", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "lo_num_r", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "hi_num_r", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "parity_l", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "parity_r", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "oneway_dir_code_desc", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "source_dataset_version", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "updated_at", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "created_at", "vocabulary": "none", "written": "db_default", "bind": "value" }
+        ],
+        "write_discipline": {
+          "class": "staging_full_replace",
+          "guard": "none",
+          "guard_columns": "all_declared",
+          "guard_why": {
+            "text": "A whole-table replace has no per-row predicate to guard on; class-C plan Fold F3 makes `guard: none` the honest declaration, and its `grandfathered.json` entry (Rule 9) is orchestrator-added.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "none",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "not_idempotent",
+          "idempotent_rerun_why": {
+            "text": "Every run DELETEs and re-inserts every staged row, so a byte-identical re-run still rewrites all ~47K rows (and their serial ids) — `zero_writes` is unachievable by construction under a full replace.",
+            "liveness": { "kind": "table", "ref": "toronto_centreline" }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "One pipeline.withTransaction carries all four statements — CREATE TEMP ... INCLUDING CONSTRAINTS (F-S11), staged INSERT, DELETE, INSERT...SELECT. They must commit together: a committed DELETE with a rolled-back re-insert empties the network enrich-centreline reads.",
+            "liveness": { "kind": "table", "ref": "toronto_centreline" }
+          }
+        },
+        "retract": "all",
+        "replay": "full_replace",
+        "replay_why": {
+          "text": "Every run is an UNCONDITIONAL whole-table replace: the DELETE removes all ~47K rows and the INSERT…SELECT re-stages them from the temp table, so the source must be replayed in full and the prior contents carry no per-row reuse. This is the natural replay mode for class-C staging_full_replace with retract:\"all\" on a source the loader owns end-to-end (toronto_centreline is written by this step alone), and it is why the crash posture is force_full_on_next_run (LC-D5).",
+          "liveness": { "kind": "table", "ref": "toronto_centreline" }
+        },
+        "source_key_policy": { "unique": true, "on_collision": "dedupe_upstream", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 4,
+      "why": {
+        "text": "Four statements reach the database: CREATE TEMP TABLE, the batched staged INSERT, the DELETE, and the INSERT...SELECT back. The batched geometry validation is a pure SELECT and writes nothing.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "none",
+    "trigger": [
+      { "signal": "source_validator", "position": "pre_acquisition", "external": "ckan:toronto-centreline-tcl-shp" },
+      { "signal": "content_hash", "position": "post_acquisition", "external": "ckan:toronto-centreline-tcl-shp" }
+    ],
+    "mode_select": "skip",
+    "checkpoint": "none",
+    "interval": "none",
+    "logic_version": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/source-version.js", "scripts/lib/step/acquire.js"],
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "warn_row",
+    "on_prior_run_error_why": {
+      "text": "LC-D4 PIN. Legacy `.catch((err) => { pipeline.log.warn` degrades a failed prior read to \"first run\", so every drift ratio reads by definition. warn_row carries that non-failing posture (additive row on the error path only); it flips to fail_step at ④a.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+    }
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "toronto_centreline",
+        "on_missing": "fail",
+        "why": {
+          "text": "Live catalog 2026-09-24: relrowsecurity=true with ZERO policies (migration 227 class-B default-deny) and the write works only via rolbypassrls. Under a non-bypass role the DELETE and INSERT...SELECT affect 0 rows with no error, so the verdict reads PASS.",
+          "liveness": { "kind": "file", "ref": "migrations/227_rls_class_b_default_deny.sql" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_toronto_centreline_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The planar geometry GIST index the proximity joins read through; without it a centreline lookup degrades to a sequential scan over the whole street network.",
+          "liveness": { "kind": "file", "ref": "migrations/173_create_toronto_centreline.sql" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_toronto_centreline_geog_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The geography GIST index enrich-centreline joins through (its ST_DWithin over geom::geography); the planar index cannot serve that predicate.",
+          "liveness": { "kind": "file", "ref": "migrations/175_toronto_centreline_geog_gist.sql" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "10m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "40m",
+    "batch": 3449,
+    "needs_disk_mb": 400,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A street whose geometry the validation cannot reduce to a valid LineString is dropped and counted, and the load continues — the tolerance is bounded by the declared FAIL-severity check `centreline_geometry_skipped_pct` (LC-D8: a single-member MultiLineString residue is a pinned DEFECT, so the dropped count is the liveness evidence, never a silent pass). The row is a counted loss, not a run-stopper: the source is 47K streets and one unrepairable line must not empty the network enrich-centreline joins.",
+      "liveness": { "kind": "check", "ref": "centreline_geometry_skipped_pct" }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a value the library already measured (acquired.*, prior.centreline_load.*), so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row. The one class-C exception is deliberate: `centreline_count_drift_pct` is scored at `when: \"pre_write\"` so its FAIL (or a WARN on the F-C1 arm via `on_warn: \"skip_write\"`) skips the write entirely rather than failing a transaction already opened.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
+      "timeout": "600000ms",
+      "timeout_from_config": "load_centreline_download_timeout_ms",
+      "retries": 2,
+      "retries_from_config": "load_centreline_download_retries",
+      "retry_backoff_from_config": "load_centreline_download_retry_backoff_ms",
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "dataset_source_license",
+      "kind": "invariant",
+      "expect": { "license_url_present": true },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy `push('dataset_source_license', LICENSE_URL, 'INFO')` [READ load-centreline.js:410] freezes the licence in force at acquisition into the audit table: the centreline is redistributed open data and the licence is part of the provenance record. Legacy pushed it unconditionally on every path, so the row is the push's own successor.",
+        "liveness": { "kind": "external", "ref": "https://open.toronto.ca/open-data-license/" }
+      }
+    },
+    {
+      "id": "centreline_load_skipped",
+      "kind": "freshness",
+      "expect": { "reports": "the gate decision that ended the run, or null on a full load" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The tier-1 (last-modified/etag) and tier-2 (content-hash) skip reasons travel in THIS row's detail, matching the legacy `push('centreline_load_skipped', …)` at BOTH :448 and :498. DS4: a skip and a no-op load must be distinguishable in the audit table — the consumer gate reads completed rows and needs the reason a run did nothing, so the skip is reported, never inferred from silence.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_override_feature_count_drift_present",
+      "kind": "invariant",
+      "expect": { "standing_override": false },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LC-D7. A standing `CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT` silently disarms the FAIL bound on every future run, so the row fires whenever the env is set — including runs that never needed rescuing [READ load-centreline.js:412-413]. The legacy pushed this only when the env was '1'; a declared check emits PASS at 0 (the ravines Fold D precedent) so silence can no longer mean both 'not set' and 'nobody looked'.",
+        "liveness": { "kind": "check", "ref": "centreline_count_drift_pct" }
+      }
+    },
+    {
+      "id": "centreline_no_cache_validators",
+      "kind": "freshness",
+      "expect": { "one_of": ["last-modified", "etag"] },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A CDN that strips both HTTP cache validators disables the pre-acquisition gate entirely: every run then downloads the 117 MB archive and leans on the content hash alone [READ load-centreline.js:441]. That is safe but not free, and it must be visible rather than inferred from a bandwidth bill. The legacy pushed this WARN only when the HEAD succeeded with no validator; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "centreline_dataset_age_days",
+      "kind": "freshness",
+      "expect": { "age_days_at_most": { "logic_variable": "load_centreline_dataset_age_warn_days" } },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "never — the centreline is re-published daily and an age leg above 7 days is a legitimate publisher cadence, not a defect; this row is a standing WARN (R-H) and retires only if the source's cadence is proven static",
+      "why": {
+        "text": "LC-D13 / R-H standing-WARN posture. The threshold is read in compute via `datasetAgeStatus(headAgeDays, config.centrelineSkipCheckThresholdDays)`'s successor — `load_centreline_dataset_age_warn_days` (seed 7, the daily-publish cadence knob) — never a bare literal [READ load-centreline.js:444, :52]. The legacy pushed INFO below the bound and WARN above it; this row carries the WARN so the age of a daily-published source that legitimately exceeds 7d reads as a STANDING WARN, never as a conversion defect.",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "centreline_feature_count_raw",
+      "kind": "field_coverage",
+      "expect": { "reports": "every parsed DBF record, before filtering" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The denominator of the L25 filter ratios: `acquired.rows_read` is every parsed record [READ load-centreline.js:508]. Legacy pushed it INFO on every path, so a declared check's PASS at 0 is the additive successor (the landing compare names these additive PASS rows) — measured 64385 on the last audited load.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_bad_centreline_id_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "source features whose CENTREL2 would not coerce to a positive integer key" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LC-D2 / LC-D9. `acquired.bad_key_count`: a feature whose CENTREL2 is absent, non-numeric or <= 0 is dropped by the parse and never fabricated into a row, so it is a street that silently stops being in the network [READ load-centreline.js:509]. WARN, NEVER FAIL — the legacy WARNs, and LC-D9 records that the library coerces the key BEFORE shapeRecord so a renamed-key terminal is `failed_acquisition` (the staged-rows floor's `fail_check`), not this row. Legacy pushed only when > 0; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_null_geometry_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "source features carrying no geometry at all" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LC-D17 attribution order. `acquired.null_geometry_count`: the LIBRARY counts null geometry BEFORE shapeRecord runs, whereas the legacy counted it AFTER the L25 classify [READ load-centreline.js:510]. Same WARN posture, the ordering is the documented divergence — a null-geometry record is invisible to `centreline_geometry_skipped_pct`, which measures only what ST_MakeValid could not repair over features that HAD a geometry, so without this row a source shipping empty records reads as a smaller dataset rather than a lossy one. Legacy pushed only when > 0; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "check", "ref": "centreline_geometry_skipped_pct" }
+      }
+    },
+    {
+      "id": "centreline_unknown_feature_code_count",
+      "kind": "invariant",
+      "expect": { "reports": "included features whose FEATURE_CODE is outside both the include and exclude sets, loaded with feature_code_desc_normalized = 'unknown_operator_review'" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "never while the publisher still ships an unclassified street class — measured 1 on run 1471 and 1 in the PRE capture, so the population is standing, not zero; this WARN retires only once the publisher fixes the code and the count holds 0 across two consecutive loads (R-H)",
+      "why": {
+        "text": "LC / L25 unknown-code arm [READ load-centreline.js:552-557; docs/specs/01-pipeline/62_source_centreline.md:301-305]. `acquired.shaped_tags.unknown_feature_code` counts features the L25 classifier could neither include nor exclude; the loader keeps them with the sentinel `feature_code_desc_normalized = 'unknown_operator_review'` and WARNs [READ load-centreline.js]. This is a STANDING WARN (R-H): measured 1 on run 1471 and 1 in the PRE capture, so a non-zero row is the expected steady state, not a regression — the retighten condition is the publisher classifying the code, not a code change here. Legacy pushed only when > 0; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_unknown_jurisdiction_count",
+      "kind": "invariant",
+      "expect": { "reports": "included features whose JURISDICTION is 'unknown' (federal segments are dropped, not counted here)" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "never while the publisher leaves segments with JURISDICTION 'unknown' — measured 94 on run 1471 and 97 in the PRE capture, so the population is standing; retires only once the publisher populates the field and the count holds 0 across two consecutive loads (R-H)",
+      "why": {
+        "text": "L25 jurisdiction arm [READ load-centreline.js:559-563; docs/specs/01-pipeline/62_source_centreline.md:307-308]. `acquired.shaped_tags.unknown_jurisdiction` counts included features whose jurisdiction is the literal 'unknown' — they are LOADED (unlike 'federal', which the classifier drops) and flagged for operator review. STANDING WARN (R-H): measured 94 on run 1471 and 97 in the PRE capture, so this is the expected steady state, never a conversion defect; the retighten condition is the publisher populating the field, not a change here. Legacy pushed only when > 0; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_duplicate_centreline_id_count",
+      "kind": "invariant",
+      "expect": { "reports": "source features whose CENTREL2 key repeats a key already seen; the dedupe keeps the FIRST occurrence and drops the rest" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "LC-D2 / Spec 62 corrected to the code at c2f [READ specs/01-pipeline/62_source_centreline.md edge-case table :358 'FAIL with clear error (D2 routed for JS-side pre-check enhancement)']. `acquired.duplicate_key_count` counts repeated CENTREL2 keys in one acquisition. WARN, NEVER FAIL: the SPEC's edge-case table words it 'FAIL', but the CODE dedupes — it keeps the first occurrence and drops the rest without raising — so the declared severity follows the CODE, not the spec prose (this is the Spec 62 correction recorded at c2f). Legacy pushed only when > 0; a declared check emits PASS at 0 (ravines Fold D precedent).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_feature_count_filtered",
+      "kind": "invariant",
+      "expect": { "reports": "features that survived the L25 classify AND the duplicate-key dedupe — the row count the write stages" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "`acquired.feature_count` is the post-L25, post-dedupe count — the legacy `kept.length` [READ load-centreline.js; docs/specs/01-pipeline/62_source_centreline.md:1195]. INFO: it is the numerator of the geometry-skip ratio and the count the drift check 13 diffs against the prior run, but it is a purely DESCRIPTIVE counter here (no negative direction, cannot reach WARN/FAIL — Rule 5), so the declaration is the close of the legacy INFO push, whose silence used to mean both 'zero' and 'nobody looked'.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "centreline_count_drift_pct",
+      "kind": "trend",
+      "expect": { "of": "this run's feature_count_filtered vs the prior run's centreline_load.feature_count_filtered", "direction": "max" },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_centreline_count_drift_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads.",
+        "spec_ref": "docs/specs/01-pipeline/62_source_centreline.md",
+        "anchor": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT"
+      },
+      "why": {
+        "text": "L7 count-delta [READ load-centreline.js; docs/specs/01-pipeline/62_source_centreline.md:323]. `load_centreline_count_drift_fail_pct` (seed 0.5) is the operator knob; `limit` carries the seed default and `limit_from_config` the runtime override (Rule 3). The string grammar 'pct <= X' is `definitions.bound` — PASS at <= X is EXACTLY the legacy `countDeltaPct > config...` FAIL inversion, so PASS/FAIL is byte-identical to the legacy arm. Computable from `ctx.acquired` + `ctx.prior` alone (when:pre_write contract). The override entry is `override.feature_count_drift` — it enables execution on a flagged run, it never rewrites this row's status. blocking:false (PIN, DO NOT FIX — plan D-8): the FAIL row exits 0 today, matching the legacy posture.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
+      }
+    },
+    {
+      "id": "centreline_geometry_skipped_pct",
+      "kind": "bound",
+      "expect": { "of": "features the ST_IsValid + ST_MakeValid pass could not reduce to a LineString, over feature_count_filtered", "direction": "max" },
+      "limit": "pct <= 0.05",
+      "limit_from_config": "load_centreline_invalid_geometry_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened).",
+        "spec_ref": "docs/specs/01-pipeline/62_source_centreline.md",
+        "anchor": "L8 abort-before-DELETE if invalid >5%"
+      },
+      "why": {
+        "text": "L8 / LC-D15 [READ specs/01-pipeline/62_source_centreline.md:318 'L8 abort-before-DELETE: ... return without entering withTransaction'; LC-D8 PIN, the single-member MultiLineString residue]. `load_centreline_invalid_geometry_fail_pct` (seed 0.05) is the operator knob (Rule 3). NO override: legacy has none — a > 5% skip rate is always fatal. The row's detail carries the capped dropped centreline ids (the ravines LR-D1 shape), so the dropped set is inspectable without a second query. blocking:false (PIN, DO NOT FIX — plan D-8): the FAIL is verdict-bearing, the run still exits 0 as today.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
+      }
+    },
+    {
+      "id": "f_c1_empty_temp_guard_fired_first_run",
+      "kind": "invariant",
+      "expect": { "violation_when": "zero carried rows AND ctx.prior is null" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched.",
+        "spec_ref": "docs/specs/01-pipeline/62_source_centreline.md",
+        "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run"
+      },
+      "why": {
+        "text": "Spec 62 §3.7 F-C1 dual-mode FIRST-RUN arm [READ specs/01-pipeline/62_source_centreline.md:339; legacy load-centreline.js:567-571 `if (!hasPriorRun) { push('f_c1_empty_temp_guard_fired', true, 'FAIL') }`]. A NEW id here (the legacy used one metric name for two arms — declared deviation, c2a4): the bound is EMPTINESS (carried rows == 0), NEVER `sources_centreline_floor` — plan §2 row 17 / §11 note records that the legacy fires this only at 0, and assert_data_bounds owns the floor. The conjunct on `ctx.prior == null` is what separates this from check 16's later-run arm. blocking:false (PIN, DO NOT FIX — plan D-8).",
+        "liveness": { "kind": "file", "ref": "scripts/load-centreline.js" }
+      }
+    },
+    {
+      "id": "f_c1_empty_temp_guard_fired",
+      "kind": "invariant",
+      "expect": { "violation_when": "zero carried rows AND a prior run exists" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre_write",
+      "on_warn": "skip_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage.",
+        "spec_ref": "docs/specs/01-pipeline/62_source_centreline.md",
+        "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run"
+      },
+      "why": {
+        "text": "Spec 62 §3.7 F-C1 subsequent-run arm (LC-D14) [READ specs/01-pipeline/62_source_centreline.md:339; legacy load-centreline.js:573-579 WARN + `delete_skipped_empty_guard: true` and a preserved table]. INGESTOR prerequisite 0h third arm: `on_warn: \"skip_write\"` makes this WARN row refuse the write at the pre_write gate (no transaction opened, target untouched, write counters 0) while the run COMPLETES with the WARN — the observable 'warn and preserve' the legacy encoded in compute. The `features_inserted: 0` emit is PINNED and flips at ④b. blocking:false (PIN, DO NOT FIX — plan D-8).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+      }
+    },
+    {
+      "id": "centreline_geometry_collection_extracted",
+      "kind": "invariant",
+      "expect": { "reports": "features whose geometry the validator unwrapped out of a GeometryCollection to reach a LineString member" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "any non-zero value — the counter is 0 in 8/8 measured runs (LC-D8 PIN), so the first non-zero is a real source-shape change and must be looked at, not absorbed by an INFO row (R-H)",
+      "why": {
+        "text": "`acquired.geometry_collection_extracted` (LC-D8 PIN; 0 in 8/8 runs) [READ load-centreline.js]. Operator ruling Q2: this is a DECLARED CHECK over the runner's own counter, not a library option — the extraction happens as the validator walks a GeometryCollection for a LineString member, so the count is read from the runner, never re-derived. INFO keeps the verdict IDENTICAL to legacy: a GeometryCollection that yielded a member already counts as SKIPPED by validatorCounterDelta in the legacy arm, so promoting this row would double-count and change the verdict. Purely descriptive (Rule 5).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "centreline_delete_skipped_empty_guard",
+      "kind": "invariant",
+      "expect": { "reports": "true when the F-C1 preserve path refused the write — either the pre_write WARN gate or the executor's own empty-temp guard" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO row on the F-C1 preserve path (`delete_skipped_empty_guard`) [READ load-centreline.js:579; docs/specs/01-pipeline/62_source_centreline.md:614]. Reads `written.write_skipped_pre_write_warn === true || written.replace_skipped_empty_guard === true`: the first is the pre_write gate's own row (check 16's `on_warn: skip_write` arm, INGESTOR prerequisite 0h), the second is the executor's independent empty-temp guard — defense in depth. INFO: descriptive only, it records WHICH guard fired, it does not gate.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    {
+      "id": "centreline_features_inserted",
+      "kind": "invariant",
+      "expect": { "reports": "rows the write path inserted — equals the staged row count on a full replace, 0 when a guard skipped the write" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "`written.inserted` [READ load-centreline.js — the legacy `features_inserted` emit]. INFO: on this class-C staging_full_replace the INSERT...SELECT re-inserts every staged row after the DELETE, so the count is the load's own size — descriptive, no negative direction (Rule 5). It is PINNED at 0 on the F-C1 preserve path (check 16) and flips at ④b.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    {
+      "id": "centreline_features_deleted",
+      "kind": "invariant",
+      "expect": { "reports": "rows the full-replace DELETE removed — the table's PRE-state size on a committed run" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "`written.deleted` — the DELETE rowCount, which on a full replace equals the PRE-state table size [READ load-centreline.js; assessment §7 'inter-run coupling']. INFO: it is the evidence that the replace is complete, and its inter-run coupling (this run's deleted ↔ prior run's inserted) is exactly what the PIN records — the number is descriptive, it gates nothing (Rule 5).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+
+  "override": {
+    "force_full": "none",
+    "force_run": "CENTRELINE_FORCE_RELOAD",
+    "dry_run": "none",
+    "accept_anomaly": [
+      {
+        "env": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT",
+        "check_id": "centreline_count_drift_pct",
+        "why": {
+          "text": "LC-D7. When the city genuinely re-publishes the network at a different size, an operator must be able to accept the drift for ONE run. The acceptance enables execution and NEVER suppresses the FAIL row — the FAIL verdict is still recorded on `centreline_count_drift_pct`, so the rescue is auditable rather than erased (operator ruling A-5). Legacy read the env as the literal `=== '1'` [READ load-centreline.js:412]; the runner's declaration is the legacy read's successor, and the standing-override WARN row `centreline_override_feature_count_drift_present` fires whenever the env is set, including runs it never rescued.",
+          "liveness": { "kind": "check", "ref": "centreline_count_drift_pct" }
+        }
+      }
+    ]
+  },
+
+  "emits": [
+    {
+      "key": "centreline_load",
+      "type": "object",
+      "consumers": ["enrich_centreline"],
+      "skeleton": {
+        "spec_version": "1.1",
+        "source_dataset_version": null,
+        "last_modified": null,
+        "etag": null,
+        "content_hash": null,
+        "feature_count_raw": 0,
+        "feature_count_filtered": 0,
+        "filtered_out_non_street": 0,
+        "filtered_out_federal": 0,
+        "unknown_feature_code_count": 0,
+        "unknown_jurisdiction_count": 0,
+        "features_inserted": 0,
+        "features_updated": 0,
+        "features_deleted": 0,
+        "invalid_geometry_skipped": 0,
+        "delete_skipped_empty_guard": false,
+        "f_c1_empty_temp_guard_fired": false,
+        "drift_check_passed": true
+      }
+    }
+  ],
+
+  "deviations": [
+    {
+      "from": "the `CENTRELINE_LOCAL_ZIP` local-file override (load-centreline.js:298, :422-431)",
+      "why": {
+        "text": "RETIRED per Spec 124 R-AZ (the argv-seam rule) / LC-D6 + LC-D11, on the address_points precedent. A debug affordance let an operator run the full parse→filter→validate→staging pipeline against a manually-fetched local zip when the CKAN large-resource endpoint was unservable, skipping the HEAD + download entirely. The frozen shell acquires through `inputs.reads.externals[]` and the fixture tier replaces the local seam for tests. The retirement is declared, not silent: with it goes the only fs/argv seam the step had, and the `centreline_local_zip_override` WARN row it used to push.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "operator ruling, Spec 124 R-AZ / LC-D6, LC-D11",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy `push('centreline_head_error', …, 'WARN')` on the HEAD-failure path (load-centreline.js:437)",
+      "why": {
+        "text": "The HEAD 4xx/5xx path (§3.9: WARN + proceed to download, do NOT skip on failure) is now the library's zero-row HEAD-error WARN row, driven by the declared `inputs.reads.externals[0].on_head_error: \"warn_row\"`. LC-D: the row keeps the legacy posture (a failed HEAD never halts, the download still runs and the content hash still gates) — the runner emits it, so the metric name `centreline_head_error` is retired into the library row rather than re-pushed by the step.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "plan LC-D / INGESTOR prerequisite 0c (on_head_error seam)",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy `push('centreline_acquisition_error', …, 'FAIL')` terminal (load-centreline.js:486)",
+      "why": {
+        "text": "LC-D9 / LC-D10. The legacy download/zip/parse failure pushed a FAIL row and returned `{ failed: true }`; under the archetype that path is the library's `failed_acquisition` fail-error terminal (no write attempted, temp root cleaned). The metric name `centreline_acquisition_error` is retired into the terminal. The RENAMED-KEY case (CENTREL2 absent/renamed) does NOT land here: LC-D9 records that the library coerces the key BEFORE shapeRecord, so a renamed key ends at the staged-rows floor's `fail_check`, not at `failed_acquisition`.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "plan LC-D9 / LC-D10",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy one-WARN-row-per-dropped-feature `push('centreline_geometry_skipped_source_id', f.source_id, 'WARN')` (load-centreline.js:549)",
+      "why": {
+        "text": "LC-D15, on the ravines LR-D1 precedent. The per-feature WARN rows made the audit table's row count bounded only by the feature count (47K streets). The dropped ids now travel as CAPPED detail on the `centreline_geometry_skipped_pct` row (with the exact dropped count and a truncation flag beside them), so the dropped set is inspectable without one row per dropped feature and the reader is never misled about how much was lost.",
+        "liveness": { "kind": "check", "ref": "centreline_geometry_skipped_pct" }
+      },
+      "adjudicated_by": "plan LC-D15 / ravines LR-D1 precedent",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy `VALIDATION_CHUNK = 5000` batched validator loop (load-centreline.js:536-539)",
+      "why": {
+        "text": "RETIRED per LC-D12 (the address_points 525K-row precedent): the runner issues ONE validator call over the whole validated set rather than 5K-row chunks. The chunking was a pre-conversion planner-memory workaround; the converted library sizes its own validator input and the counter semantics (`geometry_collection_extracted`, `invalid_geometry_skipped`) are unchanged, so the drop is a mechanism retirement, not a behaviour change.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "adjudicated_by": "plan LC-D12 / address_points one-call precedent",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "one legacy metric name (`f_c1_empty_temp_guard_fired`) reused for BOTH F-C1 arms (load-centreline.js:567 FAIL and :573 WARN)",
+      "why": {
+        "text": "The F-C1 dual-mode guard's FIRST-RUN arm (no prior run, zero carried rows) now carries its own id `f_c1_empty_temp_guard_fired_first_run` (FAIL), separate from the subsequent-run arm `f_c1_empty_temp_guard_fired` (WARN + on_warn:skip_write). The legacy reused one metric name for two arms with different severities, so the audit table could not tell a build-blocking empty source from a preserved-table no-op; the split is additive and the ordering/liveness are unchanged.",
+        "liveness": { "kind": "check", "ref": "f_c1_empty_temp_guard_fired_first_run" }
+      },
+      "adjudicated_by": "plan LC-D14 / c2a4 declaration",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy conditional-only WARN pushes (bad id, null geometry, unknown code, unknown jurisdiction, duplicate, override)",
+      "why": {
+        "text": "The ravines Fold D precedent: every legacy `if (x > 0) push(...)` WARN is declared as a CHECK that also emits PASS at 0, so silence can no longer mean both 'zero' and 'nobody looked'. Applies to `centreline_bad_centreline_id_count`, `centreline_null_geometry_count`, `centreline_unknown_feature_code_count`, `centreline_unknown_jurisdiction_count`, `centreline_duplicate_centreline_id_count` and the standing-override row. Severity and bound are unchanged; only the observable-at-zero posture is added.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
+      },
+      "adjudicated_by": "ravines Fold D precedent (operator ruling)",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy ad-hoc `CENTRELINE_LOCAL_ZIP`-era override set (no force-reload hatch)",
+      "why": {
+        "text": "`CENTRELINE_FORCE_RELOAD` is ADDED as `override.force_run`: the retired local-zip seam was the only way an operator could bypass the staleness gates, so with it gone a deliberate full reload (a source the tier-1/tier-2 gates keep skipping) needs a declared force env. It is named in this descriptor and mirrored in `recovery.force` at c2a5, matching the ravines `RAVINE_FORCE_RELOAD` shape the conversion added there (declared deviation on that step).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+      },
+      "adjudicated_by": "plan LC-D6 (force hatch) / ravines conversion precedent",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy phase order, where L8 geometry validation ran only on the write path after the drift gate",
+      "why": {
+        "text": "The geometry validation now runs BEFORE the drift gate (read-only, on the ravines Fold C / LR-D9 precedent): both `centreline_geometry_skipped_pct` and `centreline_count_drift_pct` are scored at `when: \"pre_write\"` between the read-only validation and the first write statement. The observable consequence is that a drift-FAIL run ALSO measures the skipped geometry — the validation is a pure SELECT, so this adds observability and moves no write. No spec guarantee is retired by this ordering (the legacy abort-before-withTransaction for L8 is preserved).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "ravines Fold C / LR-D9 precedent",
+      "date": "2026-09-24"
+    },
+    {
+      "from": "the legacy config source `loadMarketplaceConfigs(pool, MARKETPLACE_KEY)` + `validateConfig(logicVars)` (load-centreline.js:402-403, MARKETPLACE_KEY 'source-centreline')",
+      "why": {
+        "text": "LC-D3: the six knobs are now `config.logic_variables[]` registered logic variables resolved through `ctx.config`, not a marketplace-config read inside the step body. `centrelineMinFeatureCount` is KNOWINGLY RETIRED rather than declared — it was never read (the L7 count-delta is a ratio check, and the F-C1 guard's bound is the staged-row count, not a floor); declaring it would be a phantom consumer (Rule 3's purpose, not its letter). The other five keep their seed defaults byte-equal to the pre-externalization literals.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      },
+      "adjudicated_by": "plan LC-D3 / Spec 122 §1.2a",
+      "date": "2026-09-24"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "Null-geometry source records are counted by the LIBRARY before `shapeRecord` runs, whereas the legacy counted them AFTER the L25 classify — so the `centreline_null_geometry_count` number is measured at a different point in the pipeline than the pre-conversion counter. Same WARN posture, different ordering (LC-D17).",
+      "measured": "LC-D17; 0 on run 1471 and 0 in the PRE capture, so the ordering divergence is currently invisible in the numbers — a null-geometry record that the L25 classify would have dropped is now visible to the count",
+      "check_id": "centreline_null_geometry_count"
+    },
+    {
+      "what": "source_id is coerced through the key path and re-keyed as a JS number in the validation join, so a BIGINT above 2^53 would lose precision and miss its own validation row — counted as skipped rather than loaded. load_ravines carries the same class of limitation.",
+      "measured": "live max source_id = 60,078,796 (2026-09-24); Number.MAX_SAFE_INTEGER = 9007199254740991 — ~150× headroom",
+      "check_id": "centreline_geometry_skipped_pct"
+    },
+    {
+      "what": "LC-D8 single-member MultiLineString residue: a feature the validator can only recover as a single-member MultiLineString (not reduced to a plain LineString) is a pinned DEFECT, not a silent pass — the extraction of a LineString member is counted at `centreline_geometry_collection_extracted` and the dropped remainder by the geometry-skipped counter.",
+      "measured": "LC-D8 PIN; `centreline_geometry_collection_extracted` = 0 in 8/8 measured runs, so the residue has never been observed live",
+      "check_id": "centreline_geometry_collection_extracted"
+    },
+    {
+      "what": "LC-D16 CORRECTED at c2e (VERIFY-INT-4, measured against the real `ledgerPipelineName`): there is NO divergence. `ledgerPipelineName(descriptor, chainId)` falls back to `Object.keys(descriptor.execution.invocation)[0]` (\"sources\") whenever `chainId` is falsy — which is exactly the standalone case (`chainId = process.env.PIPELINE_CHAIN || null`) — so a standalone run reads/writes under the SAME `sources:load_centreline` ledger name as an in-chain run, byte-identical to the legacy hard-coded `PIPELINE_NAME = 'sources:load_centreline'` (load-centreline.js:44). The original LC-D16 text (\"reads the un-prefixed ledger name `load_centreline`\") was never measured against the real function and is retracted; a standalone/in-chain prior read never diverges for this step.",
+      "measured": "`ledgerPipelineName(descriptor, null)` → 'sources:load_centreline' (2026-09-24), matching `ledgerPipelineName(descriptor, 'sources')` exactly",
+      "check_id": "none"
+    },
+    {
+      "what": "LC-D18 (found at ② POST capture, 2026-09-25) — `scripts/lib/step/index.js`'s generic `verdict === 'WARN'` terminal-selection branch calls `selectTerminal({kind:'success', status:'completed_with_warnings'})` with NO discriminator, so it picks the FIRST/only declared success terminal at that status regardless of WHICH check(s) actually warned. This descriptor declares only ONE such terminal (`loaded_preserved_empty_guard`), so a genuine full load whose only WARN rows are the standing `centreline_unknown_feature_code_count`/`centreline_unknown_jurisdiction_count` (or any other non-F-C1 WARN) is ALSO labelled `loaded_preserved_empty_guard` in `records_meta.terminal` — a misleading STRING (implies the F-C1 preserve/empty-guard path fired when it did not). Does NOT affect correctness: `records_meta.centreline_load` (the 18-key frozen contract `enrich_centreline` actually reads), the audit_table rows, the verdict, and every write/counter are all correct and unaffected — `terminal` is a summary label outside that frozen contract. The proper fix is a LIBRARY change (the WARN branch needs its own discriminator, the same shape the FAIL branch already gets via `unaccepted[0]`) that benefits every converted INGESTOR with more than one `completed_with_warnings` success terminal — out of scope for this conversion's zero-behaviour-change mandate (Spec 121 §4.3) and filed as a Spec 124 §7 rung (d) library-prerequisite candidate, not a per-step hatch.",
+      "measured": "POST sources capture 2026-09-25: records_new=47320>0, features_inserted=47320>0, `centreline_delete_skipped_empty_guard`=false, `f_c1_empty_temp_guard_fired`=false (the guard genuinely did NOT fire) — yet `terminal`=\"loaded_preserved_empty_guard\" (WARN verdict from 2 unrelated standing-WARN checks: centreline_unknown_feature_code_count=1, centreline_unknown_jurisdiction_count=97)",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "load-centreline.notes.json", "entries": 10 },
+
+  "recovery": {
+    "reset": "TRUNCATE is never correct here — every run IS a full replace inside ONE transaction, so re-run with CENTRELINE_FORCE_RELOAD=1 to bypass both staleness triggers and rewrite toronto_centreline through the same staged DELETE + INSERT…SELECT.",
+    "resume": "none",
+    "force": "CENTRELINE_FORCE_RELOAD",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "LC-D5 truthful posture, and this is NOT the usual retract:\"all\" argument. Every load_centreline run IS a full replace executed inside ONE step-scoped transaction (write_discipline.txn_scope \"step\": CREATE TEMP … INCLUDING CONSTRAINTS, the staged INSERT, the DELETE, then INSERT…SELECT). A kill mid-run therefore cannot leave a hole — the transaction either fully rolls back (prior table byte-intact) or fully commits — but the NEXT run's staleness gate cannot see that either way: a crash is not a completed run, so the tier-1/tier-2 gates and the L7 prior-read would resolve against a stale-or-absent baseline and read \"unchanged\" or \"first run\", silently retiring the count-drift bound. Claiming resume would be a lie (there is no checkpoint), and claiming none would let the gate under-read a killed run. force_full_on_next_run is the honest posture: the successor run replaces the whole table again, unconditionally. Class-C plan F2; LC-D5 / the ① ledger's truthful-posture row.",
+      "liveness": { "kind": "table", "ref": "toronto_centreline" }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "OPERATOR RULING R-M / LG-17 (2026-08-28). The generic before-image mechanism (scripts/lib/step/write.js writeBeforeImage) mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope. load_centreline's only target is class C staging_full_replace with write_discipline.scope \"none\": the retraction is an UNCONDITIONAL whole-table DELETE, not a scoped predicate, so there is no WHERE-clause for the generic mechanism to mirror and nothing to capture as a row-level before-image. The prior table's contents are recoverable the way a full replace is always recoverable — by re-running against the prior source version via CENTRELINE_FORCE_RELOAD — and the retraction's SIZE is already the evidence row `centreline_features_deleted` (written.deleted). Genuinely out of this conversion's scope, declared rather than silently ignored.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 175,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "acquired.feature_count", "scoped_by": "source_id" },
+    "records_new": { "source": "written.inserted", "scoped_by": "source_id" },
+    "records_updated": {
+      "source": "records_meta.centreline_load.features_updated",
+      "scoped_by": "source_id",
+      "why": {
+        "text": "A full replace has NO per-row update: the write is DELETE-the-table-then-INSERT…SELECT, so `written.updated` does not exist and the frozen producer block pins `features_updated: 0` forever (LC-D14 / the legacy literal `records_updated: 0` in skeletonLoadMeta, load-centreline.js:687). The truthful source is therefore the emit's own field, read back from `records_meta.centreline_load.features_updated` — the value enrich_centreline already consumes — rather than a counter the write path never produces. `written.updated` would be a phantom; this is the load counting its OWN per-row updates as the zero it declares.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
+      }
+    }
+  },
+
+  "config": {
+    "logic_variables": [
+      { "name": "load_centreline_dataset_age_warn_days", "min": 0, "max": 365, "on_invalid": "clamp" },
+      { "name": "load_centreline_count_drift_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_centreline_invalid_geometry_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
+      { "name": "load_centreline_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "clamp" },
+      { "name": "load_centreline_download_retries", "min": 0, "max": 10, "on_invalid": "clamp" },
+      { "name": "load_centreline_download_retry_backoff_ms", "min": 0, "max": 60000, "on_invalid": "clamp" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "sources": 63 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "skipped_source_validator",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "Tier 1. The HEAD's last-modified or etag equals the prior completed run's, so the 117 MB archive is never downloaded [READ load-centreline.js:441-448]. This is a COMPLETED row, not a no-op: the consumer gate reads completed rows and the prior centreline_load block is re-emitted, so a skip and a no-op load stay distinguishable (DS4).",
+        "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
+      }
+    },
+    {
+      "id": "skipped_content_hash",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "Tier 2. The HTTP validators said changed but the content hash matches the prior run's — CKAN re-stamps last-modified on bytes that never moved [READ load-centreline.js:498]. Skipping avoids an extract, a parse and a 47K-row delete/re-insert; the prior block is re-emitted so the completed-row contract still holds.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The staged full replace committed: every validated street row was deleted and re-inserted inside the one step-scoped transaction, and every declared check is PASS or INFO. This is the happy-path terminal for the first converted class-C staging_full_replace step.",
+        "liveness": { "kind": "table", "ref": "toronto_centreline" }
+      }
+    },
+    {
+      "id": "loaded_anomaly_accepted",
+      "kind": "success",
+      "status": "completed_with_errors",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "A declared FAIL check tripped (only centreline_count_drift_pct has an accept_anomaly hatch) and the matching CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT env was standing, so the run COMPLETES. The FAIL row is still in the audit table and the status still says errors — the acceptance is recorded, never erased (operator ruling A-5 / LC-D7).",
+        "liveness": { "kind": "check", "ref": "centreline_count_drift_pct" }
+      }
+    },
+    {
+      "id": "failed_count_drift",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "centreline_count_drift_pct tripped with no standing CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT. The write was SKIPPED — the check is scored at `when: \"pre_write\"` — so toronto_centreline still holds the prior load byte for byte and no transaction was opened. blocking:false (PIN, DO NOT FIX — plan D-8): the run is `failed` and the chain continues.",
+        "liveness": { "kind": "check", "ref": "centreline_count_drift_pct" }
+      }
+    },
+    {
+      "id": "failed_geometry_skipped",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "centreline_geometry_skipped_pct tripped: more than load_centreline_invalid_geometry_fail_pct of the source's features could not be reduced to a LineString, so the loaded network would under-state the streets enrich_centreline joins against. There is NO accept_anomaly hatch (legacy has none), and `when: \"pre_write\"` means the write was SKIPPED with toronto_centreline untouched.",
+        "liveness": { "kind": "check", "ref": "centreline_geometry_skipped_pct" }
+      }
+    },
+    {
+      "id": "failed_empty_first_run",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "F-C1 FIRST-RUN arm (f_c1_empty_temp_guard_fired_first_run): zero rows were carried AND there is no prior run, so the DELETE would empty the network for a publisher-side empty archive. Scored at `when: \"pre_write\"`, so the abort lands before the transaction and toronto_centreline is untouched. A later-run empty carry lands the WARN preserve arm below, not here (the conjunct is `ctx.prior == null`).",
+        "liveness": { "kind": "check", "ref": "f_c1_empty_temp_guard_fired_first_run" }
+      }
+    },
+    {
+      "id": "loaded_preserved_empty_guard",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "centreline_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "F-C1 PRESERVE arm (f_c1_empty_temp_guard_fired): zero rows were carried AND a prior run exists, so the check declares `on_warn: \"skip_write\"` — the INGESTOR prerequisite 0h third gate arm (src/tests/step-library.logic.test.ts, the `skip_write` anchor). The pre_write gate refuses the write (no transaction opened, toronto_centreline preserved exactly as the prior run left it, write counters 0) while the run COMPLETES with the WARN: kind `success` / status `completed_with_warnings` is the schema-enum pair a WARN-bearing completed run selects (LC-D14; the legacy WARN + `delete_skipped_empty_guard: true` + preserved table). The `features_inserted: 0` pin flips at ④b.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The download, the unzip, the single-.shp scan or the shapefile parse threw (LC-D10, the legacy `centreline_acquisition_error` FAIL, load-centreline.js:486). The temp root is removed on this path exactly as on every other and no write has been attempted. A renamed/absent CENTREL2 does NOT land here: LC-D9 records the library coerces the key BEFORE shapeRecord, so that case ends at the staged-rows floor's fail_check.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 63 is held by another process. Pre-conversion this was a bare `return;` with no step-level emit, so the SDK's built-in SKIP carried no audit_table and contention read as verdict UNKNOWN; the library now emits a row-derived SKIP summary.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  ]
+}

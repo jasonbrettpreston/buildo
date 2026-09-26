@@ -90,14 +90,18 @@ describe('WF3 class-C anti-bypass hardening (Commit 2, 2026-09-24)', () => {
       expect(() => pipeline.step(d, async () => {})).not.toThrow();
     });
 
-    it('the guard axis (GUARD_PATH) stays independently enforced — a class-C descriptor that ALSO declares guard:"none" with no grandfathered guard-path entry is still refused, even under the adjudicated class-C slug', () => {
-      // load_centreline's grandfathered.json entry (Commit 2 item C) covers
-      // ONLY the class path — the guard-path entry is explicitly deferred to
-      // load_centreline's own descriptor-authoring commit (Spec 122 §8
-      // RE-FREEZE #20 record). Declaring guard:"none" under this slug today
-      // must still be refused on the GUARD_PATH, proving the two axes are
-      // adjudicated independently, not as one blanket allowance per slug.
-      const d = classCDescriptor('load_centreline');
+    it('the guard axis (GUARD_PATH) stays independently enforced — a class-C descriptor that ALSO declares guard:"none" with no grandfathered guard-path entry is still refused, even under a slug adjudicated on the class axis', () => {
+      // As of row 3.2 ② (2026-09-24), load_centreline's OWN grandfathered.json
+      // entry was widened to cover BOTH the class path and the guard path (Spec
+      // 122 §8 RE-FREEZE #20: the two paths are adjudicated together at the
+      // descriptor-authoring commit), so it can no longer serve as the
+      // "class-only" exemplar this lock needs. `fixture_class_c_class_only_grandfathered`
+      // is the schema's own class-only exemplar (added at ② for exactly this
+      // lock, mirroring fixture_grandfathered_snapshot / fixture_no_retraction_allowed)
+      // — its entry covers ONLY the class path. Declaring guard:"none" under
+      // this slug must still be refused on the GUARD_PATH, proving the two
+      // axes are adjudicated independently, not as one blanket allowance per slug.
+      const d = classCDescriptor('fixture_class_c_class_only_grandfathered');
       const w = d.outputs.writes[0]!;
       (w.write_discipline as Record<string, unknown>).guard = 'none';
       (w.write_discipline as Record<string, unknown>).guard_why = { text: 'test-only', liveness: { kind: 'table', ref: 'toronto_centreline' } };
@@ -107,7 +111,7 @@ describe('WF3 class-C anti-bypass hardening (Commit 2, 2026-09-24)', () => {
       } catch (err) {
         thrown = err as Error;
       }
-      expect(thrown, 'load_centreline has no guard-path grandfathered entry yet').toBeDefined();
+      expect(thrown, 'fixture_class_c_class_only_grandfathered has no guard-path grandfathered entry').toBeDefined();
       expect(thrown!.message).toContain(GUARD_PATH);
     });
   });

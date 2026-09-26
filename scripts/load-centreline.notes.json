@@ -1,0 +1,147 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-centreline.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations. This file carries 10, and",
+    "descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` and `counts` are RECORD blocks, not prose — they are not counted against",
+    "the cap. `fences` lives here because the descriptor schema's root is",
+    "additionalProperties:false and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "A healthy run of this step arrives at the tier-2 content-hash gate, not at a load. CKAN regenerates the centreline zip DAILY, so the tier-1 HTTP validators (last-modified/etag) report 'changed' on nearly every run while the bytes are identical; the normal audit table is the pre rows plus `centreline_load_skipped` with a `content_hash_unchanged`-class reason and no write counters at all. A full 47K-row staged replace is the exception, and CENTRELINE_FORCE_RELOAD=1 is how you ask for one."
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "`centreline_features_deleted` is the PRE-state row count of toronto_centreline, NOT churn. Every load is an unconditional whole-table DELETE followed by an INSERT…SELECT from the temp stage, so this run's `deleted` equals the PRIOR run's `inserted` whenever both were full replaces. A reader who takes the number as 'rows removed because the source changed' has inverted it — the replace removes everything it is about to put back."
+    },
+    {
+      "what": "Every drift ratio is measured against the PRIOR completed run's `centreline_load.feature_count_filtered` (47363 on the last audited load), and on a first run — or any run whose prior-run read failed — the prior is null and the drift is 0 BY DEFINITION, not by measurement. `staleness.on_prior_run_error: \"warn_row\"` (LC-D4) makes the failed-read case VISIBLE as an additive row, so a 0 with a warning beside it is 'no baseline', never 'nothing moved'."
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "A run reports `features_inserted: 0` alongside `centreline_delete_skipped_empty_guard: true` and the table still holds rows — this is the F-C1 preserve path (LC-D14), where a later run carried zero rows, the pre_write WARN gate refused the write (on_warn: skip_write) and toronto_centreline was left exactly as the prior run left it. If you see inserted 0 WITHOUT that guard flag, the write silently did nothing and the load is a lie."
+    },
+    {
+      "signal": "`centreline_dataset_age_days` reads WARN. The centreline is republished daily, so an age above `load_centreline_dataset_age_warn_days` (seed 7) is a STANDING WARN (LC-D13 / R-H): a publisher cadence that paused, not a conversion defect. It retires only if the source's cadence is proven static, and it must never be 'fixed' by moving the threshold."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Geometry is validated for TYPE and validity, never for PLACE. A publisher that shipped the same ~47K well-formed LineStrings translated by a kilometre would pass every check here: the count is unchanged, nothing needs repair, nothing departs. Only the downstream proximity joins enrich_centreline runs would move, and nothing in this step reads them.",
+      "detected_by": "none"
+    },
+    {
+      "what": "A single-member MultiLineString residue is a pinned DEFECT (LC-D8), not a silent pass: the extraction of a LineString member is counted at `centreline_geometry_collection_extracted` and the dropped remainder by `centreline_geometry_skipped_pct`. But because the counter is 0 in 8/8 measured runs, the residue has never been observed live — nothing here has actually exercised that arm.",
+      "detected_by": "centreline_geometry_collection_extracted"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The L25 INCLUDE/EXCLUDE feature-code sets, the `unknown_operator_review` sentinel and the FEDERAL drop are domain vocabulary kept in compute — NOT Rule 3 tunables.",
+      "why": "They are code structure: which street classes exist is a fact about Toronto's data, not an operator knob, and an operator who could re-point the include set could silently redefine what a street is. The Rule 3 ledger externalizes only the six numeric thresholds it declares (LC-D3); promoting the sets to config would be declaring a phantom knob. Same disposition as the ravines classification sets."
+    },
+    {
+      "what": "`centrelineMinFeatureCount` (legacy literal 40000) is KNOWINGLY RETIRED rather than externalized.",
+      "why": "LC-D3. It was never read: the L7 count check is a RATIO against the prior run, and the F-C1 empty-guard's bound is the staged-row count (zero), not a floor. The floor that actually exists is `sources_centreline_floor`, owned by assert_data_bounds — declaring 40000 here would be a phantom consumer, which is Rule 3's purpose, not its letter."
+    },
+    {
+      "what": "`spec_version` stays the pinned '1.1' even though the consumer and the header may read otherwise.",
+      "why": "enrich-centreline.js pins the producer contract version EXACTLY, and the sources chain HALTs on anything else. The pin is the contract; the document's number is documentation. Bumping it to match a header would look like tidying and would stop the chain — never bump it without a coordinated enrich_centreline change."
+    },
+    {
+      "what": "Retries are declared as `retries: 2` with `retry_backoff_ms: 0`, never as the legacy `attempts = 3`.",
+      "why": "Fold IC-8 (superseding the plan's single-attempt wording): the legacy loop's `attempts = 3` SPLITS into retries 2 (attempts = retries + 1 = 3) plus a zero backoff, so the descriptor is byte-equal to the legacy behaviour. Verifying `attempts === 3` here is a misread of the split, not a finding."
+    }
+  ],
+  "known_normal": [
+    {
+      "check_id": "centreline_unknown_feature_code_count",
+      "what": "A non-zero count is the expected steady state, not a regression: measured 1 on run 1471 and 1 in the PRE capture. The publisher ships one street class outside both the include and the exclude set; the loader keeps it with the sentinel `feature_code_desc = 'unknown_operator_review'` and WARNs. Retires only once the publisher classifies the code and the count holds 0 across two consecutive loads (R-H)."
+    },
+    {
+      "check_id": "centreline_unknown_jurisdiction_count",
+      "what": "A non-zero count is the expected steady state, not a regression: measured 94 on run 1471 and 97 in the PRE capture. Included features whose JURISDICTION is the literal 'unknown' are LOADED and flagged for operator review (unlike 'federal', which the classifier DROPS and never counts here). Retires only once the publisher populates the field (R-H) — the retighten condition is publisher data, never a code change."
+    }
+  ],
+  "known_bad": [
+    {
+      "what": "LC-D14: the F-C1 preserve path emits `features_inserted: 0` while a prior load's ~47K rows remain in toronto_centreline, and enrich_centreline's assertCentrelineEnriched reads that field and will HALT. This is a known_bad until ④b flips the pin — the preserve is correct, the observable is not."
+    }
+  ],
+  "do_not_reflag": [
+    {
+      "what": "`centreline_count_drift_pct` and `centreline_geometry_skipped_pct` are declared `blocking: false`, so a FAIL verdict still exits 0.",
+      "why": "Both are PINs, DO NOT FIX (plan D-8). The FAIL row is verdict-bearing and the write is genuinely skipped (both are scored at `when: \"pre_write\"`, so no transaction opens and toronto_centreline survives untouched) — but the run leaves `failed` with exit code 0, matching the legacy posture. Do not 'fix' this by making either check block: that is ④b's call, not a conversion defect."
+    },
+    {
+      "what": "`centreline_features_deleted` reads like churn and `features_updated` is pinned 0 forever.",
+      "why": "On a class-C staging_full_replace, `deleted` is the PRE-state table size (inter-run coupled to the prior run's `inserted`, assessment §7) and `written.updated` does not exist at all — the write is DELETE-then-INSERT…SELECT. Both are declared descriptively in the descriptor's `counters` block. Do not reflag the deleted/inserted asymmetry as an anomaly; it is the shape of the replace."
+    }
+  ],
+  "how_to_investigate": [
+    {
+      "what": "A skip you did not expect: read `centreline_load_skipped` — the detail names WHICH gate ended the run. `content_hash` in the reason means the ZIP bytes are identical to the prior load and CKAN merely re-stamped last-modified (the daily-regen tier-2 case, the normal outcome). A validator reason (`unchanged_last_modified` / `unchanged_etag`) means the tier-1 HEAD gate fired and the 117 MB archive was never downloaded. Only CENTRELINE_FORCE_RELOAD=1 bypasses both.",
+      "check_id": "centreline_load_skipped"
+    },
+    {
+      "what": "A short table: walk the counters in order — `centreline_feature_count_raw` (every parsed record, measured 64385), then the L25 drops (`filtered_out_non_street` naming each `non_street` reason, `filtered_out_federal`), then `centreline_feature_count_filtered` (post-classify, post-dedupe: 47363). A gap between raw and filtered with `filtered_out_non_street: 0` is where a bad CENTREL2 or a null geometry landed — check `centreline_bad_centreline_id_count` and `centreline_null_geometry_count`.",
+      "check_id": "centreline_feature_count_raw"
+    },
+    {
+      "what": "A changed geometry population: `centreline_geometry_skipped_pct`'s detail carries the flagged geometry_collection_extracted count beside itself — a non-zero `centreline_geometry_collection_extracted` is the LC-D8 residue (a line the validator could only recover as a single-member MultiLineString) and, because it is 0 in 8/8 measured runs, the FIRST non-zero is a real source-shape change that must be looked at rather than absorbed by an INFO row.",
+      "check_id": "centreline_geometry_collection_extracted"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "LC-D16 CORRECTED at c2e (VERIFY-INT-4, measured against the real `ledgerPipelineName`): there is NO divergence. `ledgerPipelineName(descriptor, chainId)` falls back to `Object.keys(descriptor.execution.invocation)[0]` (\"sources\") whenever `chainId` is falsy — which is exactly the standalone case (`chainId = process.env.PIPELINE_CHAIN || null`) — so a standalone run reads/writes under the SAME `sources:load_centreline` ledger name as an in-chain run, byte-identical to the legacy hard-coded `PIPELINE_NAME = 'sources:load_centreline'` (load-centreline.js:44). The original LC-D16 text (\"reads the un-prefixed ledger name `load_centreline`\") was never measured against the real function and is retracted; a standalone/in-chain prior read never diverges for this step.",
+      "measured": "`node -e \"console.log(require('./scripts/lib/step/index.js').ledgerPipelineName(require('./scripts/load-centreline.descriptor.json'), null))\"` → 'sources:load_centreline' (2026-09-24), matching `ledgerPipelineName(descriptor, 'sources')` exactly",
+      "check_id": "none"
+    },
+    {
+      "what": "LC-D17: null-geometry source records are counted by the LIBRARY before `shapeRecord` runs, whereas the legacy counted them AFTER the L25 classify — so `centreline_null_geometry_count` is measured at a different point in the pipeline than the pre-conversion counter. Same WARN posture, different ordering; 0 on run 1471 and 0 in the PRE capture, so the divergence is currently invisible in the numbers.",
+      "measured": "LC-D17; a null-geometry record the L25 classify would have dropped is now visible to the count",
+      "check_id": "centreline_null_geometry_count"
+    }
+  ],
+  "fences": [
+    {
+      "const": "the F-C1 dual-mode empty-temp guard — first run + zero carried rows is a FAIL that aborts BEFORE any write; a later run + zero carried rows is a WARN with `on_warn: \"skip_write\"` that preserves toronto_centreline exactly as the prior run left it",
+      "value": "checks f_c1_empty_temp_guard_fired_first_run (FAIL, when:pre_write, conjunct ctx.prior == null) + f_c1_empty_temp_guard_fired (WARN, when:pre_write, on_warn:skip_write); the legacy reused ONE metric name for both arms, which is why the ids were split",
+      "incident": "Severity HIGH. On the later-run arm a WARN alone is not enough: the DELETE would open and empty the street network enrich_centreline joins against, so the check must REFUSE the write (skip_write), not merely flag it. The emit's `features_inserted: 0` on this path is the LC-D14 known_bad that HALTs enrich_centreline until ④b.",
+      "lock_test": "src/tests/steps/load_centreline/violations.test.ts"
+    },
+    {
+      "const": "the legacy ORDER guarantees: L7 count-drift and L8 geometry-skip are both scored at when:pre_write so their FAILs abort BEFORE the DELETE opens a transaction",
+      "value": "centreline_count_drift_pct (limit_from_config load_centreline_count_drift_fail_pct, default 0.5) + centreline_geometry_skipped_pct (limit_from_config load_centreline_invalid_geometry_fail_pct, default 0.05); order_guarantee blocks on both name Spec 62 §3.5's abort-before-withTransaction",
+      "incident": "Severity HIGH. Moving either check to a post_write seat would let a publisher error — half as many streets, or >5% unrepairable geometry — commit a DELETE-and-replace first and only then redden. The prior table would already be gone. The drift override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 enables execution and NEVER suppresses the FAIL row, so the abort still has to land pre-write.",
+      "lock_test": "src/tests/steps/load_centreline/violations.test.ts"
+    },
+    {
+      "const": "the tier-2 content-hash gate over a STREAMED md5 hash-through-to-disk — contentHashDecision + the re-emit of the prior block, and never a whole-buffer download or a whole-file read",
+      "value": "staleness.trigger[content_hash @ post_acquisition]; md5; the tier-2 skip still lands a COMPLETED row carrying the prior centreline_load block (DS4), and it is the gate CKAN's DAILY regeneration makes the normal outcome",
+      "incident": "Severity HIGH (commit 0b230472). Two failures in one commit: the 117 MB archive was buffered entirely into memory before hashing (Spec 43 §9.5 bans it — the same pattern on a 327 MB CSV is an OOM), and every metadata re-stamp by CKAN forced a full re-parse and ~47K no-op rows because nothing compared the bytes. Reverting either is invisible in the outputs, which is why the lock reads the code.",
+      "commit": "0b230472",
+      "lock_test": "src/tests/steps/load_centreline/violations.test.ts"
+    },
+    {
+      "const": "the 3-attempt download — `attempts = 3` SPLITS into retries 2 (+1) with a zero backoff, and a genuine block fails all three",
+      "value": "execution.network.retries 2 (retries_from_config load_centreline_download_retries), retry_backoff_from_config load_centreline_download_retry_backoff_ms (0 = legacy: the loop sleeps never); the partial file is dropped between attempts",
+      "incident": "Severity MEDIUM. Fold IC-8 supersedes the plan's single-attempt wording: reading the descriptor for `attempts: 3` and calling the split a regression is the misread to avoid — CKAN/CDN drops large-file connections intermittently and the retry is what absorbs it. The legacy literal is `attempts = 3` (load-centreline.js:306-315); the seed defaults are byte-equal to it.",
+      "lock_test": "src/tests/steps/load_centreline/violations.test.ts"
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 2,
+    "unpromoted_suspicious_if": 0
+  }
+}

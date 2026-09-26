@@ -489,7 +489,13 @@ const GROUP_ORDER = [
       "address_points_download_timeout_ms",
       "parcels_irregularity_threshold",
       "parcels_skip_rate_max_pct",
-      "parcels_download_timeout_ms"
+      "parcels_download_timeout_ms",
+      "load_centreline_dataset_age_warn_days",
+      "load_centreline_count_drift_fail_pct",
+      "load_centreline_invalid_geometry_fail_pct",
+      "load_centreline_download_timeout_ms",
+      "load_centreline_download_retries",
+      "load_centreline_download_retry_backoff_ms"
     ]
   },
   {

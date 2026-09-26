@@ -508,6 +508,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes parcels' own
   // null-address WARN (enrich_parcels' ambiguous-zone WARN deferred pending a heavy DB run).
   'parcels_null_address_pct_max',
+  // batch-2 row 3.2 (2026-09-24) — load_centreline's own six (LC-D3); the shared
+  // sources_centreline_floor is already listed above, and centrelineMinFeatureCount
+  // is knowingly RETIRED, never seeded (assert_data_bounds owns the floor).
+  'load_centreline_dataset_age_warn_days', 'load_centreline_count_drift_fail_pct', 'load_centreline_invalid_geometry_fail_pct',
+  'load_centreline_download_timeout_ms', 'load_centreline_download_retries', 'load_centreline_download_retry_backoff_ms',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

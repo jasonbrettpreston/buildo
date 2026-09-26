@@ -90,8 +90,10 @@
           "runIngestPhase"
         ]
       },
-      "declared_by": [],
-      "why": "INGESTOR prerequisite 0h (2026-09-24, batch-2 Phase 3, Fold A F1-F6): write.js#executeStagingReplace runs ONE pipeline.withTransaction — CREATE TEMP TABLE <t>_staging (LIKE <t> INCLUDING DEFAULTS INCLUDING CONSTRAINTS) ON COMMIT DROP, batched staging INSERTs, DELETE FROM <t>, INSERT INTO <t> ... SELECT ... FROM <t>_staging; carried.length===0 short-circuits before the DELETE (replace_skipped_empty_guard, defense in depth alongside the step's own DECLARED pre_write floor checks). runIngestPhase dispatches on write_discipline.class at the same site executeWrite is selected from. Locked by step-library.logic.test.ts T1-T4 (INGESTOR prerequisite 0h). declared_by stays empty until load_centreline declares this class at 3.2 ② — its own guard:\"none\" grandfathering (Spec 62 L26, link_parcels precedent) lands with that descriptor, not with this executor.",
+      "declared_by": [
+        { "step": "load_centreline", "target": "toronto_centreline" }
+      ],
+      "why": "INGESTOR prerequisite 0h (2026-09-24, batch-2 Phase 3, Fold A F1-F6): write.js#executeStagingReplace runs ONE pipeline.withTransaction — CREATE TEMP TABLE <t>_staging (LIKE <t> INCLUDING DEFAULTS INCLUDING CONSTRAINTS) ON COMMIT DROP, batched staging INSERTs, DELETE FROM <t>, INSERT INTO <t> ... SELECT ... FROM <t>_staging; carried.length===0 short-circuits before the DELETE (replace_skipped_empty_guard, defense in depth alongside the step's own DECLARED pre_write floor checks). runIngestPhase dispatches on write_discipline.class at the same site executeWrite is selected from. Locked by step-library.logic.test.ts T1-T4 (INGESTOR prerequisite 0h). declared_by now names load_centreline (batch-2 Phase 3, 3.2 ②, first class-C descriptor) — its own guard:\"none\" grandfathering (Spec 62 L26, link_parcels precedent) lands with that same descriptor, per scripts/steps/_schema/grandfathered.json.",
       "adjudicated_by": "INGESTOR prerequisite 0h landing (orchestrator, WF2 class_c_staging_replace)",
       "date": "2026-09-24"
     },

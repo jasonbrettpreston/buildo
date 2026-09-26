@@ -5097,6 +5097,66 @@
       "group": "Source Ingestion"
     }
   },
+  "load_centreline_dataset_age_warn_days": {
+    "default": 7,
+    "type": "number",
+    "min": 0,
+    "max": 365,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — WARN ceiling on the age of the CKAN centreline resource (days between the HEAD/GET Last-Modified and the run's DB clock). 7 = the pre-externalization literal `centrelineSkipCheckThresholdDays` (legacy load-centreline.js:52), the daily-publish cadence knob. The centreline is regenerated DAILY, so an age above the bound is a STANDING WARN (LC-D13 / R-H): a publisher cadence that paused, not a conversion defect — do not 'fix' it by moving the threshold. CONSUMED by load_centreline (scripts/lib/compute/load-centreline.js datasetAgeStatus, via checks[].expect.age_days_at_most.logic_variable and ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_count_drift_fail_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — FAIL bound on the L7 feature-count drift: |this run's feature_count_filtered - the PRIOR completed run's| / prior. 0.5 = the pre-externalization literal `centrelineAcceptFeatureCountDriftPct` (legacy load-centreline.js:53). The legacy comparator is STRICTLY greater (`countDeltaPct > config…`), so the declared `limit` gramar is `pct > 0.5` — PASS at <= 0.5 is byte-identical to the legacy arm. Scored at when:pre_write: a source that suddenly carries half as many streets is a publisher error, and letting the DELETE open first would empty the network enrich_centreline joins. The operator hatch CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row (LC-D7). FAIL severity; this row is blocking:false (PIN, plan D-8) so it still exits 0 pre-cutover. CONSUMED by load_centreline (scripts/lib/compute/load-centreline.js, via checks[].limit_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_invalid_geometry_fail_pct": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — FAIL bound on the L8 geometry-skip ratio: features the ST_IsValid + ST_MakeValid pass could not reduce to a LineString, over feature_count_filtered. 0.05 = the pre-externalization literal `centrelineInvalidGeometryFailPct` (legacy load-centreline.js:54). The legacy guards `featureCount > 0 ? … : 0`, so an empty carry divides to 0 rather than NaN. Scored at when:pre_write — Spec 62 §3.5 makes >5% unrepairable geometry an ABORT that returns BEFORE pipeline.withTransaction opens, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. There is NO override hatch (legacy has none): a >5% skip rate is always fatal. FAIL severity; blocking:false (PIN, plan D-8). CONSUMED by load_centreline (scripts/lib/compute/load-centreline.js, via checks[].limit_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_download_timeout_ms": {
+    "default": 600000,
+    "type": "number",
+    "min": 1000,
+    "max": 1800000,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — AbortController budget for ONE attempt at the CKAN centreline zip (the 117 MB `centreline-version-2-4326.zip` shapefile resource). 600000 = the pre-externalization literal `centrelineDownloadTimeoutMs` (legacy load-centreline.js:55), raised from the 60000 fleet default because the live smoke 2026-06-06 showed a 120s budget aborting mid-download. The descriptor states the same 600000 as `execution.network.timeout`, the fallback for an un-seeded database (execution.network.timeout_from_config names this variable, so there is ONE source). Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL — the 117 MB transfer is this step's most reachable mid-run failure. CONSUMED by load_centreline (scripts/lib/step/acquire.js download, via ctx.config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_download_retries": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 10,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — number of RETRIES after the first download attempt, so total attempts = retries + 1. 2 = the split of the legacy literal `downloadZipWithRetry(…, attempts = 3)` (legacy load-centreline.js:306-315): Fold IC-8 supersedes the plan's single-attempt wording, and 2 + 1 = 3 is byte-equal to the legacy loop. The retry absorbs the intermittent CKAN/CDN large-file connection drops (\"terminated\" / ECONNRESET) — a genuine block still fails all three attempts and lands `failed_acquisition`. CONSUMED by load_centreline (scripts/lib/step/acquire.js download, via execution.network.retries_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_download_retry_backoff_ms": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 60000,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) — sleep between download retries, in milliseconds. 0 = the LEGACY behaviour: the pre-conversion retry loop re-attempted immediately and never slept (legacy load-centreline.js:309-315), so 0 is a faithful literal, not a placeholder. Raise it only if the CKAN edge shows a rate-limit-shaped refusal (repeated immediate failures that succeed after a pause); a backoff on a plain socket reset just lengthens the run. CONSUMED by load_centreline (scripts/lib/step/acquire.js download, via execution.network.retry_backoff_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "parcels_skip_rate_max_pct": {
     "default": 10,
     "type": "number",

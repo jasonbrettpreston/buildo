@@ -330,19 +330,19 @@ the orchestrator ruling (transcribed).
 | 8 | `centrelineInvalidGeometryFailPct` `0.05` (L8) [READ `:59`] | `f6047e89` | Invalid-geometry FAIL boundary (abort pre-txn) | **encoded-as-descriptor-field** → `load_centreline_invalid_geometry_fail_pct` default 0.05 | plan §2 |
 | 9 | `centrelineMinFeatureCount` `40000` (L21) [READ `:60`] | `f6047e89` | "the loader's own reference" — **NEVER READ** (dead) | **knowingly-retired** — the registered `sources_centreline_floor` is the one truth | plan §2; Spec 62 L21 |
 | 10 | `centrelineDownloadTimeoutMs` `600000` [READ `:61`] | `3bf05d2b` | 117 MB zip — 10 min (live smoke 2026-06-06 aborted at 120s) | **encoded-as-descriptor-field** → `load_centreline_download_timeout_ms` default 600000, `on_invalid:"clamp"` | plan §2 |
-| 11 | `STREET_CLASS_INCLUDE` (12 values) [READ `:71-75`] | `f6047e89` | L25 street-class allow-list | **preserved-in-compute** → `shapeRecord`'s classify rule | Spec 62 L25 |
-| 12 | `STREET_CLASS_EXCLUDE` (13 values) [READ `:76-81`] | `f6047e89` | L25 non-street deny-list | **preserved-in-compute** | Spec 62 L25 |
-| 13 | `UNKNOWN_FEATURE_SENTINEL = 'unknown_operator_review'` [READ `:82`] | `f6047e89` | Unknown FEATURE_CODE_DESC → sentinel + WARN, never dropped | **preserved-in-compute** + audit WARN | Spec 62 L25 |
+| 11 | `STREET_CLASS_INCLUDE` (12 values) [READ `:71-75`] | `f6047e89` | L25 street-class allow-list | **preserved-in-compute** (why: compute JSDoc) → `shapeRecord`'s classify rule | Spec 62 L25 |
+| 12 | `STREET_CLASS_EXCLUDE` (13 values) [READ `:76-81`] | `f6047e89` | L25 non-street deny-list | **preserved-in-compute** (why: compute JSDoc) | Spec 62 L25 |
+| 13 | `UNKNOWN_FEATURE_SENTINEL = 'unknown_operator_review'` [READ `:82`] | `f6047e89` | Unknown FEATURE_CODE_DESC → sentinel + WARN, never dropped | **preserved-in-compute** (why: compute JSDoc) + audit WARN | Spec 62 L25 |
 | 14 | `DBF` map (15 fields) [READ `:86-102`] | `f6047e89` | CKAN 10-char-truncated column names → app field names | **encoded-as-descriptor-field** → `inputs.reads.externals[].key_property:"CENTREL2"` + the DBF map in `notes.json` | Spec 62; #426 lesson |
 | 15 | `REQUIRED_DBF_FIELDS` (13) + `validateShapefileColumns` (F13) [READ `:104-113`, `:183-194`] | `f6047e89` | Assert expected DBF attrs exist post-parse (the #426 CKAN-rename lesson) | **preserved-in-validator** — the F13 throw inside `shapeRecord` propagates | plan §2; §LC-D10 below |
 | 16 | `VALIDATION_SQL` inline LineString validator + `VALIDATION_CHUNK = 5000` (L16) [READ `:117-138`, `:534`] | `f6047e89` | Batched `VALUES+UNNEST` `ST_MakeValid`/`ST_IsValid`; NOT the shared `geometry-validator.js` (it cannot emit `invalid_geometry_skipped`) | **preserved-in-validator** — the runner's `validateGeometries` seam, `geometry_kind:"line"` | Spec 62 L16; `wf2_ingestor_runner_completion_active_task.md:12` |
-| 17 | `coerceSourceId` positive-int-or-skip [READ `:141-146`] | `f6047e89` | `CENTREL2` → BIGINT source_id, else counted skip | **preserved-in-compute** (the runner's `coerceKey` variant) | plan §2 |
-| 18 | `coerceNodeId` NULL-legal [READ `:149-152`] | `f6047e89` | Intersection node ids nullable per schema | **preserved-in-compute** | plan §2 |
-| 19 | `normCode` trim+lowercase (F14) [READ `:155-157`] | `f6047e89` | F14 CKAN-whitespace/case hardening for Set membership | **preserved-in-compute** | Spec 62 L25 (F-S10/F14) |
-| 20 | `classifyFeature` jurisdiction INCLUDE/EXCLUDE (FEDERAL) [READ `:165-188`] | `f6047e89` | L25 jurisdiction filter; FEDERAL dropped | **preserved-in-compute** | Spec 62 L25 |
-| 21 | `computeCountDeltaPct` first-run→0 [READ `:197-201`] | `f6047e89` | L7 drift; no prior ⇒ no drift | **preserved-in-compute** | Spec 62 L7 |
-| 22 | `dedupeBySourceId` keep-first [READ `:204-215`] | `f6047e89` | `UNIQUE(source_id)` duplicate guard | **preserved-in-compute** | Spec 62 L26 |
-| 23 | `validatorCounterDelta` accepted→carry [READ `:218-220`] | `f6047e89` | Status → `{skipped, carry}` | **preserved-in-compute** | Spec 62 §3.5 |
+| 17 | `coerceSourceId` positive-int-or-skip [READ `:141-146`] | `f6047e89` | `CENTREL2` → BIGINT source_id, else counted skip | **preserved-in-compute** (why: compute JSDoc) (the runner's `coerceKey` variant) | plan §2 |
+| 18 | `coerceNodeId` NULL-legal [READ `:149-152`] | `f6047e89` | Intersection node ids nullable per schema | **preserved-in-compute** (why: compute JSDoc) | plan §2 |
+| 19 | `normCode` trim+lowercase (F14) [READ `:155-157`] | `f6047e89` | F14 CKAN-whitespace/case hardening for Set membership | **preserved-in-compute** (why: compute JSDoc) | Spec 62 L25 (F-S10/F14) |
+| 20 | `classifyFeature` jurisdiction INCLUDE/EXCLUDE (FEDERAL) [READ `:165-188`] | `f6047e89` | L25 jurisdiction filter; FEDERAL dropped | **preserved-in-compute** (why: compute JSDoc) | Spec 62 L25 |
+| 21 | `computeCountDeltaPct` first-run→0 [READ `:197-201`] | `f6047e89` | L7 drift; no prior ⇒ no drift | **preserved-in-compute** (why: compute JSDoc) | Spec 62 L7 |
+| 22 | `dedupeBySourceId` keep-first [READ `:204-215`] | `f6047e89` | `UNIQUE(source_id)` duplicate guard | **preserved-in-compute** (why: compute JSDoc) | Spec 62 L26 |
+| 23 | `validatorCounterDelta` accepted→carry [READ `:218-220`] | `f6047e89` | Status → `{skipped, carry}` | **preserved-in-compute** (why: compute JSDoc) | Spec 62 §3.5 |
 | 24 | `verdictCascade` FAIL>WARN>PASS [READ `:214-218`] | `f6047e89` | Row-derived verdict (Spec 47 §8.2) | **preserved-in-runner** (the shared gate derives it) | Spec 124 Rule 10 |
 | 25 | L15 F-C1 dual-mode guard (`hasPriorRun`; first-run FAIL / later-run WARN+PRESERVE) [READ `:563-581`] | `f6047e89` | Block deploy on empty source; preserve on later empty | **encoded-as-descriptor-field** → two declared `pre_write` checks (`staged_rows_floor_first_run` FAIL, `staged_rows_floor` WARN) + `checks[].on_warn:"skip_write"` + `executeStagingReplace`'s own empty-refusal | Spec 62 L15/L26; `wf2_class_c_staging_replace_active_task.md` §F1 |
 
@@ -566,4 +566,103 @@ uncommitted** per the brief.
 | 4 | **The F-C1 bound is an EMPTINESS invariant, not the floor variable.** F-C1's dual mode (first-run FAIL / later-run WARN+PRESERVE, `:563-581`) does NOT read `centrelineMinFeatureCount` or `sources_centreline_floor` — it asserts the temp table is non-empty. | **do NOT conflate the two floors**: `sources_centreline_floor` (the `assert_data_bounds` FAIL floor) and F-C1 (the emptiness gate) are DIFFERENT mechanisms at DIFFERENT layers. A future reader tuning the floor must not expect F-C1 to move. This mirrors the `parcels` P-D5 lesson (two different numbers for "the floor"). |
 | 5 | **The FIRST converted class C discovers the class's declaration gaps** (LC-D4 `staleness.on_prior_run_error`, LC-D5 `recovery.interrupted`). | exactly as the `parcels` §R noted "the hardest member discovers the hatches": a class's FIRST member discovers the descriptor fields the class needs. LC-D4/LC-D5 are the class-C hatches; they become STANDARD for every later class-C row. |
 | 6 | **Doc-rot is a conversion deliverable, not noise.** `PIPELINE_NAME`'s in-file comment records that Spec 62 §9 froze the WRONG string (§1.4); Spec 62's L7b/L7c/dup-id wording does not match the code (LC-D1/LC-D2). | the conversion is where the spec is reconciled to the shipped code (Q1's ruling: **correct the spec, file the variance as a separate feature**). This is the AP-D1 precedent generalizing: **spec fidelity is a first-class output of a zero-diff conversion, carried in the same commit's §3.** |
+
+
+---
+
+## 9. Landing ② — POST capture compare (2026-09-25)
+
+Hash precondition held (no recapture needed): HEAD `Last-Modified: Thu, 24 Sep 2026 18:14:56 GMT` at both the PRE and POST capture times (2026-09-24 and 2026-09-25) — same CKAN bytes, same `content_hash` `f9a9adfc0ca5ddaa726b622635927197` on both PRE and POST.
+
+POST sources (`CENTRELINE_FORCE_RELOAD=1 --chain=sources`): `records_new=47320`, `records_total=47320`, `centreline_load.features_inserted=47320` (row 9, Spec 122 §11: a 0-write POST is void — this is not one). Duration 39.8s, single-txn, 512 MB heap cap held. `table_state` data hash `b5ccf0ee`, `invariants` (row_count 47320, by_feature_code/by_jurisdiction breakdown, non_linestring 0, distinct_source_dataset_version 1), `records_total`/`records_new`, `records_updated`, and the verdict are ALL byte-identical to PRE.
+
+POST standalone (`CENTRELINE_FORCE_RELOAD=1 --chain=none`): same, `records_new=47320`, `features_inserted=47320`, ledger status `completed_with_warnings` (a prior run — id 1471, `sources:load_centreline` — exists, so this was NOT a first-run capture; LC-D16 corrected below confirms this is the right pipeline name to query, not the bare `load_centreline`).
+
+`--compare` (both pairs) reported 66 differences each (3 `stdout_lines` diffs + 11 additive `rows` diffs each, per pair — see (b)/(d) immediately below), ALL within the landing plan's allowed classes:
+- **(a) `features_deleted` — pre-state count (inter-run coupling):** `centreline_load.features_deleted` reads 47363 in PRE (the table size the ① PRE run itself replaced) and 47320 in POST (the table size PRE's own run left, i.e. the row count the DELETE removed) — exactly the documented inter-run coupling (assessment §7), not a genuine drift.
+- **(b) additive PASS rows for declared checks legacy pushed only when >0:** `summary.records_meta.audit_table.rows[9]` through `rows[19]` (11 additional rows) are the declared-check PASS/INFO rows the legacy only pushed conditionally (`centreline_duplicate_centreline_id_count`, `centreline_feature_count_filtered`, `centreline_count_drift_pct`, `centreline_geometry_skipped_pct`, both `f_c1_empty_temp_guard_fired*` arms, `centreline_geometry_collection_extracted`, `centreline_delete_skipped_empty_guard`, `centreline_features_inserted`, `centreline_features_deleted`) — the ravines Fold D precedent (declared checks emit PASS at 0/false, closing the "silence means both zero and nobody looked" gap). `rows[0]`-`rows[8]` reorder for the same reason (legacy pushed a subset in a different sequence).
+- **(c) library rows (`pre_write_gate`, `sys_*`) + `terminal` key:** `summary.records_meta.checks_failed`, `checks_warned`, `ledger_row`, `pool_errors`, `warnings`, `gate`, `config`, and `terminal` are all NEW library-derived keys the runner adds to every converted step's summary — none existed on the legacy `pipeline.run()` shape. `terminal` = `"loaded_preserved_empty_guard"` on this WARN-verdict run is itself LC-D18 (pinned above): the generic library terminal-selection branch has no discriminator for "which check(s) warned," so it fell back to the descriptor's only `completed_with_warnings`-status success terminal even though the F-C1 preserve path did not fire (`f_c1_empty_temp_guard_fired=false`, `features_inserted=47320>0`) — observability-only, no correctness impact (a library gap, filed, not fixed here).
+- **(d) stdout (config-loader lines gone):** `stdout_lines[0]`/`[1]`/`[2]` — the legacy's `"Loaded 35 trade configs from control panel"` / `"Loaded 608 logic variables from control panel"` lines are gone (LC-D3: `config-loader.js`'s `loadMarketplaceConfigs` is retired, config now resolves through `ctx.config`/`logic_variables[]`), and the completion line's tag changed from `[load-centreline]` to `[load_centreline]` (the runner's own tag, not the legacy step's).
+- **(e) PIPELINE_META library-derived — same 20 write columns, reads key, CKAN:** `meta[0].external[0]` reads `"ckan:toronto-centreline-tcl-shp"` (the descriptor's own external id) instead of the legacy's generic literal `"CKAN"`; `meta[0].reads` is now `{}` (empty) rather than `{"ckan:toronto-centreline-tcl-shp": []}` (an external is not also a "read"); `meta[0].writes.toronto_centreline[18]`/`[19]` swap `created_at`/`updated_at` order (the descriptor lists the `db_default` column `created_at` last, `deriveMeta` iterates declaration order) — same 20 columns, same set, different declared order. All three are `deriveMeta`'s own library-derived rendering of the SAME descriptor facts the legacy hard-coded by hand.
+
+No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `records_updated` diff in EITHER pair — the projected write is byte-identical PRE→POST. Every one of the 18 `centreline_load` keys except `features_deleted` is byte-identical PRE→POST on both pairs.
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=load_centreline --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 15/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=39313d9 |
+| G3 | 1 | 2 | table rows=31 vocab-hit rows=25 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 0 | 1 | db=false clock=true network=false argv/env=false |
+| G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=4 it-count=37 RED-evidence=true |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=37 |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | load_centreline | PASS | min_migration=175 <= migrations count=245 |
+| 2 | load_centreline | PASS | 6 declared, missing from seeds: none |
+| 3 | load_centreline | PASS | retired=0 overlap-with-declared=none |
+| 7 | load_centreline | PASS | SPEC LINK header present=true |
+| 8 | load_centreline | PASS | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | load_centreline | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | load_centreline | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 70 PRE capture(s) across 20 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 20 converted slug(s) — 12 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 47 declared counter source(s) across 16 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 4 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 132 · unexplained: 0
+
+### Test suite (item iii)
+- 1587/1587 passed (suite success=true)
+- harvested: 28 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing: none
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 6 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 10 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 4 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=ingest runner=runIngestPhase: no staleness.ledgerGatedSkip/selectMode/ENRICHER full-fold on this path (INGESTOR's own tier-1/tier-2 staleness gate); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the forced decision that bypasses the same gate override.force_run bypasses · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=61511B notes=16005B checks=20 rows records_meta=5653B (newest post/ capture) |
+
+**Enforced-green: 13/14**
 

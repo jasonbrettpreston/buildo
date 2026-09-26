@@ -206,6 +206,22 @@ ALTER TABLE coa_applications
 
 ## 3. Behavioral Contract (`load-centreline.js`)
 
+**[as-built 2026-09-24, row 3.2 ②]** `scripts/load-centreline.js` is now the Spec 122
+§5.1 frozen three-line shell (`pipeline.step(descriptor, compute)`) — it declares no
+domain logic of its own. Behaviour lives in two places: `scripts/load-centreline.descriptor.json`
+(what the step IS, declared as data — write target, checks, terminals, config,
+deviations) and `scripts/lib/compute/load-centreline.js` (the pure domain logic:
+the L25 classifier, F13 column guard, drift math, the frozen §9 producer block).
+Acquisition, geometry validation and the class-C `staging_full_replace` write are
+LIBRARY, shared by every converted step (`scripts/lib/step/{acquire,write,staleness}.js`
+— acquire.js downloads/unzips/parses and runs the tier-1/tier-2 staleness gates,
+write.js's `executeStagingReplace` is the class-C executor: one transaction that
+stages the validated rows into a temp table, deletes the whole target, and
+re-inserts from staging). The subsections below describe the PRE-CONVERSION
+behaviour the conversion preserved byte-for-byte (Spec 121 §4.3 zero-behaviour-change);
+each place where the converted shape diverges is called out inline with its `LC-D<n>`
+id, and §12.3a below carries the as-built seed table.
+
 ### 3.1 Spec 47 §R1-R12 skeleton (mandatory)
 
 ```js
@@ -221,7 +237,7 @@ const { loadMarketplaceConfigs } = require('./lib/config-loader');
 const { z } = require('zod');
 
 const ADVISORY_LOCK_ID = 63;   // L4 — §5.2 exception per §A.5 footnote
-const SPEC_VERSION = '1.1';    // L10
+const SPEC_VERSION = '1.1';    // L10 — [as-built 2026-09-24, row 3.2 ②] the as-built spec_version is likewise 1.1 (`descriptor.identity.spec_version`, frozen producer contract, never touched by the conversion)
 
 const ConfigSchema = z.object({
   centrelineSkipCheckThresholdDays:          z.number().default(7),      // L9
@@ -319,10 +335,27 @@ L8 abort-before-DELETE: if invalid_geometry_skipped / total > 5%, FAIL audit row
 
 ### 3.6 Step 3 — L7/L7b/L7c drift signals
 
-Per Spec 59 pattern:
-- L7 count-delta vs prior run: > 50% → FAIL (operator override flag `CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1`)
-- L7b geometry-update %: > 50% → FAIL (override flag)
-- L7c mass-deletion %: > 50% → FAIL (override flag)
+**[as-built 2026-09-24, row 3.2 ②] LC-D1 — the loader implements ONLY L7.** The code
+(verified against `scripts/load-centreline.js` at every ledger commit through
+fff52b7a, and now the converted `centreline_count_drift_pct` declared check) carries
+a single `pct <= load_centreline_count_drift_fail_pct` bound, scored `pre_write`,
+both directions (a rise or a drop trips it the same way); the operator override
+`CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT` never suppresses the FAIL row, it only
+enables the write to proceed. L7b/L7c below are struck as **not implemented** —
+operator ruling Q1 (2026-09-24, AP-D1 precedent) corrects this spec TO the code
+rather than adding the checks in a conversion, since neither has a natural
+per-row comparison under a full replace: L7c (mass-deletion) is indistinguishable
+from L7 itself once every run deletes-and-reinserts the whole table, and L7b
+(geometry-update %) has no per-row UPDATE to measure against in a staging-CTE
+full-replace. Implementing either would be a BEHAVIOUR CHANGE inside a
+zero-behaviour-change conversion (Spec 121 §4.3); if a genuine need for the finer
+signal is identified, it is filed as a separate post-conversion feature, not folded
+into this row's commit.
+
+~~Per Spec 59 pattern:~~ *(superseded text, kept for record — never implemented for this step)*
+- ~~L7 count-delta vs prior run: > 50% → FAIL (operator override flag `CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1`)~~ — implemented, see above (the 50% default is now the registered logic variable `load_centreline_count_drift_fail_pct`, seed 0.5).
+- ~~L7b geometry-update %: > 50% → FAIL (override flag)~~ — **not implemented; struck, LC-D1.**
+- ~~L7c mass-deletion %: > 50% → FAIL (override flag)~~ — **not implemented; struck, LC-D1.**
 
 ### 3.7 Step 4 — Staging-table CTE pattern (L26)
 
@@ -349,17 +382,22 @@ Single `pipeline.emitSummary` call at the END of the successful path (per Spec 4
 
 ### 3.9 Edge cases
 
+**[as-built 2026-09-24, row 3.2 ②]** LC-D2: neither a bad `CENTRELINE_ID` nor a
+duplicate is FAIL in the code — both are declared WARN checks that emit PASS at 0
+(the ravines Fold D precedent). The as-built table below replaces the superseded
+rows in place (struck, kept for record).
+
 | Case | Behavior |
 |---|---|
-| HEAD returns 4xx/5xx | WARN + proceed to download |
-| Download fails network | FAIL; pipeline_run rollback |
-| Zip malformed | FAIL; abort before transaction |
-| `CENTRELINE_ID` non-integer / NULL | WARN; skip feature; counted toward `invalid_geometry_skipped` (L8 threshold applies) |
-| `CENTRELINE_ID` duplicate (within batch) | FAIL with clear error (D2 routed for JS-side pre-check enhancement) |
-| All features dropped by L25 filter | L8 threshold fires; abort before transaction |
-| F-C1: temp empty on first run | FAIL with `f_c1_empty_temp_guard_fired` audit row |
-| F-C1: temp empty on subsequent run | WARN + preserve target (L15 dual-mode) |
-| Concurrent run attempt | Advisory lock 63 blocks |
+| HEAD returns 4xx/5xx | Library `on_head_error: "warn_row"` — one WARN row + proceed to download with null validators (`scripts/lib/step/acquire.js`) |
+| Download fails network | `failed_acquisition` terminal (`fail_error`); no write attempted, temp root cleaned |
+| Zip malformed | `failed_acquisition` terminal, same as above |
+| `CENTRELINE_ID` non-integer / NULL | **[as-built]** WARN `centreline_bad_centreline_id_count`; skipped; NOT counted toward L8 (`invalid_geometry_skipped` is a geometry-validity count, not a key-coercion count) — ~~WARN; skip feature; counted toward `invalid_geometry_skipped` (L8 threshold applies)~~ *(superseded, LC-D2)* |
+| `CENTRELINE_ID` duplicate (within batch) | **[as-built]** WARN `centreline_duplicate_centreline_id_count`; keep-first dedupe, NOT a FAIL — ~~FAIL with clear error (D2 routed for JS-side pre-check enhancement)~~ *(superseded, LC-D2; Q1 corrects the spec to the code)* |
+| All features dropped by L25 filter | L7 drift FAIL fires when a prior run exists (feature_count_filtered collapses to 0); F-C1 first-run FAIL (`f_c1_empty_temp_guard_fired_first_run`) fires on a first run with no prior — **not** the L8 geometry-skip threshold (L8 measures validity among the features that survived L25, and an empty post-L25 set has nothing for L8 to measure) |
+| F-C1: temp empty on first run | FAIL with `f_c1_empty_temp_guard_fired_first_run` audit row (own id since c2a4, LC-D14 — separated from the subsequent-run arm below) |
+| F-C1: temp empty on subsequent run | WARN `on_warn: "skip_write"` + preserve target (L15 dual-mode); `records_meta.centreline_load.features_inserted` pins `0` in that emitted row (LC-D14/LC-D5, fix ④b) |
+| Concurrent run attempt | Advisory lock 63 blocks; `lock_held_elsewhere` terminal, row-derived SKIP summary |
 | `parcels.geom` SRID mismatch | runtime assertion `Find_SRID('public','parcels','geom') = 4326`; FAIL if false |
 | `toronto_centreline` table empty at enrich time | L23 enrich-side guard FAILs (3-tier check) |
 
@@ -442,7 +480,14 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 
 ### Target Files
 
-- `scripts/load-centreline.js` (NEW; Spec 47 R1-R12 skeleton; advisory lock 63)
+- `scripts/load-centreline.js` (**[as-built 2026-09-24, row 3.2 ②]** frozen shell, Spec 122 §5.1 — `pipeline.step(descriptor, compute)`; advisory lock 63; ~~NEW; Spec 47 R1-R12 skeleton~~ *(superseded — the R1-R12 skeleton is now library-owned, §3.1 as-built note)*)
+- `scripts/load-centreline.descriptor.json` (**[as-built ②]** new — the step declared as data: write target, checks, terminals, config, deviations, limitations)
+- `scripts/load-centreline.notes.json` (**[as-built ②]** new — the interpretation entries a reader walks to make sense of an audit table row)
+- `scripts/lib/compute/load-centreline.js` (**[as-built ②]** new — the pure domain logic: L25 classifier, F13 column guard, drift math, dedupe, dataset-age staleness, the frozen §9 `buildLoadMeta` producer block)
+- `scripts/lib/source-version.js` (**[as-built ②]** the tier-1/tier-2 skip-check gate + skip re-emit, called via the library's `scripts/lib/step/{staleness,acquire}.js`, not from the step body)
+- `scripts/lib/config-loader.js` (**[as-built ②]** fleet lib; no longer used by load_centreline — config is `config.logic_variables` resolved through `ctx.config`, LC-D3)
+- `scripts/lib/geometry-validator.js` (**[as-built ②]** not used by load_centreline — the library validator `write.validateGeometries` with `geometry_kind: "line"` performs the same ST_MakeValid/ST_CollectionExtract repair)
+- `src/tests/steps/load_centreline/violations.test.ts` (**[as-built ②]** new)
 - `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 64)
 - `scripts/enrich-permits.js` (extended per L28; Spec 61 creates the file; Spec 62 appends `applyCentrelineEnrichment` function)
 - `migrations/NNN_create_toronto_centreline.sql` (M-1: table + GIST index + `normalize_address_number()` + `address_match_status()`)
@@ -459,7 +504,7 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - `scripts/quality/assert-entity-tracing.js` (centreline_* fields to coverage grid)
 - `scripts/quality/assert-global-coverage.js` (`parcels.is_corner_lot` coverage threshold)
 - `scripts/manifest.json` (chain arrays updated)
-- `scripts/seeds/logic_variables.json` (5 keys per §12.3a)
+- `scripts/seeds/logic_variables.json` (**[as-built ②]** 6 `load_centreline_*` keys per §12.3a — ~~5 keys~~ *(superseded, LC-D3)*)
 - `src/tests/load-centreline.{logic,infra}.test.ts`, `src/tests/enrich-centreline.{logic,infra}.test.ts`, `src/tests/db/migration-N-centreline.db.test.ts`
 - `docs/runbook/source_centreline_first_deploy_validation.md` (NOT §3.7 ledger-writer spike per L21; 7-day post-deploy convergence pattern)
 
@@ -660,7 +705,14 @@ This frozen block enables `enrich-permits.js` L24 startup check (b) to verify th
 
 ### Consumer read protocol (`enrich-centreline.js` — L14 + L23)
 
-1. `SELECT records_meta FROM pipeline_runs WHERE pipeline='source-centreline' AND status='completed' ORDER BY completed_at DESC LIMIT 1` — FAIL if no prior run
+**[as-built 2026-09-24, row 3.2 ②]** `pipeline='source-centreline'` below is doc-rot:
+the as-built ledger name is `sources:load_centreline` when running in-chain (the
+`load_centreline` slug, `Spec 122 §4.1`) and — measured at c2e, LC-D16 corrected —
+the SAME `sources:load_centreline` for a standalone run too (`ledgerPipelineName`
+falls back to the declared `execution.invocation` chain even when `chainId` is
+null, so there is no un-prefixed `load_centreline`-only ledger row to read).
+
+1. `SELECT records_meta FROM pipeline_runs WHERE pipeline='source-centreline' AND status='completed' ORDER BY completed_at DESC LIMIT 1` — FAIL if no prior run *(superseded name; as-built: `pipeline='sources:load_centreline'`)*
 2. `records_meta.centreline_load.spec_version` — FAIL if != "1.1"
 3. `records_meta.centreline_load.features_inserted > 0` — FAIL if zero (no rows ingested means no data to enrich against)
 4. `SELECT COUNT(*) FROM toronto_centreline > 0` — FAIL (data inconsistency from external truncation)
@@ -1142,7 +1194,34 @@ DROP FUNCTION IF EXISTS normalize_address_number(TEXT);
 
 ### §12.3a `logic_variables.json` seed entries (Spec 47 §4.1)
 
+**[as-built 2026-09-24, row 3.2 ②] LC-D3 — corrected to the six REAL seeded names.**
+None of the five keys in the table below (superseded, kept for record) was ever
+seeded under these names — `centrelineMinFeatureCount` was never read by the loader
+at all (MEASURED grep, zero call sites) and is KNOWINGLY RETIRED, not renamed: the
+floor it would have carried already lives in `sources_centreline_floor`
+(`assert-data-bounds.js`). `centrelineSkipCheckThresholdDays` is renamed
+`load_centreline_dataset_age_warn_days` (same 7-day default). The as-built loader's
+six knobs, all registered `logic_variables[]` under `scripts/load-centreline.descriptor.json`
+`config.logic_variables` and seeded in `scripts/seeds/logic_variables.json`:
+
 ```json
+{
+  "load_centreline_dataset_age_warn_days":       7,
+  "load_centreline_count_drift_fail_pct":        0.5,
+  "load_centreline_invalid_geometry_fail_pct":   0.05,
+  "load_centreline_download_timeout_ms":         600000,
+  "load_centreline_download_retries":            2,
+  "load_centreline_download_retry_backoff_ms":   0
+}
+```
+
+`load_centreline_download_retries`/`_backoff_ms` are NEW knobs (0q, INGESTOR
+prerequisite): the legacy loader retried downloads 3 times with no configurable
+backoff (`attempts = 3`, load-centreline.js:307) — 2 retries + 1 first attempt = 3,
+byte-equal; backoff defaults to 0 (immediate retry), matching the legacy's own
+unconditional immediate re-attempt.
+
+~~```json
 {
   "centreline_min_feature_count":                40000,
   "centreline_unlinked_parcel_warn_pct":         10,
@@ -1150,7 +1229,11 @@ DROP FUNCTION IF EXISTS normalize_address_number(TEXT);
   "centreline_parallel_azimuth_threshold_degrees": 15,
   "centreline_skip_check_threshold_days":        7
 }
-```
+```~~ *(superseded — none of these five names was ever seeded; see LC-D3 above. The
+three `centreline_unlinked_parcel_{warn,fail}_pct` / `centreline_parallel_azimuth_threshold_degrees`
+keys belong to the ENRICH-side step (`enrich-centreline.js` §11), not load_centreline
+— MEASURED `grep scripts/seeds/logic_variables.json`: still unseeded under any name
+as of 2026-09-24; out of scope for this conversion, which touches only the loader.)*
 
 (`centreline_address_levenshtein_threshold` REMOVED per H-v1.3.6 — Spec 62 doesn't use Levenshtein.)
 

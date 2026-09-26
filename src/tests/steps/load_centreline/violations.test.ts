@@ -17,10 +17,15 @@
 // plan-of-record's original LC-D5 — the F-C1 empty-guard `features_inserted:0` finding, which is
 // restored under LC-D14 below, since the plan file was absent from this worktree when the engine ran.)
 //
-// ⚠️ EVERY `it` BELOW IS `it.fails(...)` AND RED FOR THE RIGHT REASON. Each opens by asserting the
-// FUTURE artifact it reads exists (`artifact()` → `expect(existsSync).toBe(true)` with the path in the
-// message), so the failure names the missing artifact rather than surfacing as a TS or import error.
-// The RED value is in the TITLE per the `parcels` ① (`8360fc32`) convention.
+// ✅ EVERY `it` BELOW IS GREEN AT ② (the descriptor + compute + frozen shell landed). The suite was
+// authored RED at ① as `it.fails(...)`; commit ② flipped every one. Each asserted at ① by first
+// asserting the FUTURE artifact it reads exists (`artifact()` → `expect(existsSync).toBe(true)` with
+// the path in the message), so a ① failure named the missing artifact rather than surfacing as a TS
+// or import error — those `// was RED at ①: MISSING ARTIFACT …` comments are kept below as trace.
+//
+// ⚠️ TWO ASSERTIONS STILL PIN TODAY'S WRONG FORM and flip at ④a/④b, NOT here: LC-D4
+// (`staleness.on_prior_run_error: "warn_row"`, describe 1) and LC-D14 (`features_inserted: 0` on the
+// F-C1 preserve arm, describe 6). They are declared POSTURES, asserted as the current truth.
 //
 // ⚠️ THE LEGACY LOADER IS NEVER `require`d — it is the ORACLE (`scripts/load-centreline.js`, 726 lines)
 // and it becomes a shell at ②. Every expected value below is derived from the oracle's TEXT (read, not
@@ -191,8 +196,8 @@ export type { Descriptor, Check, WriteSpec };
 // ===========================================================================
 
 describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123 §7 row 6)', () => {
-  it.fails('descriptor exists and is AJV-valid (RED today: ENOENT — no descriptor yet) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('descriptor exists and is AJV-valid', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(d.identity.name).toBe('load_centreline');
     expect(d.identity.archetype).toBe('INGESTOR');
@@ -201,8 +206,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(d.identity.spec_version, 'L10 — the producer contract version pin; the spec §3.1 code block\'s "1.0" is stale').toBe('1.1');
   });
 
-  it.fails('externals[0] is a CKAN shapefile_zip keyed on CENTREL2 with on_head_error "warn_row" (0r rung, the ingest-prereq-0r precedent names THIS loader) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('externals[0] is a CKAN shapefile_zip keyed on CENTREL2 with on_head_error "warn_row" (0r rung, the ingest-prereq-0r precedent names THIS loader)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const ext = d.inputs.reads.externals[0]!;
     expect(ext.kind).toBe('http_file');
@@ -213,8 +218,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(ext.on_head_error, 'HEAD 4xx/5xx -> WARN + proceed, never skip [READ load-centreline.js:433-439]').toBe('warn_row');
   });
 
-  it.fails('writes[0] is class C staging_full_replace, retract "all", key source_id BIGINT, geometry_kind line (the FIRST converted class C) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('writes[0] is class C staging_full_replace, retract "all", key source_id BIGINT, geometry_kind line (the FIRST converted class C)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const w = writes(d);
     expect(w.length, 'the INGESTOR runner drives exactly ONE write target').toBe(1);
@@ -227,8 +232,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(w[0]!.write_discipline.txn_scope, 'the staged INSERT, DELETE and INSERT…SELECT commit together [READ load-centreline.js:588]').toBe('step');
   });
 
-  it.fails('columns[] declare the 19 written columns + created_at as db_default — and NOT id (the serial PK) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('columns[] declare the 19 written columns + created_at as db_default — and NOT id (the serial PK)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns as Array<{ name: string; written?: string }>;
     expect(cols.map((c) => c.name).sort()).toEqual([...DECLARED_COLUMNS_20].sort());
@@ -240,8 +245,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(cols.some((c) => c.name === 'id'), 'id is the BIGSERIAL PK — declared nowhere [READ migrations/173_create_toronto_centreline.sql:75]').toBe(false);
   });
 
-  it.fails('emits[0] is centreline_load -> ["enrich_centreline"], network retries 2 (Fold IC-8: attempts = retries + 1 = 3), recovery and staleness declare the two class-C hatches (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('emits[0] is centreline_load -> ["enrich_centreline"], network retries 2 (Fold IC-8: attempts = retries + 1 = 3), recovery and staleness declare the two class-C hatches', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(d.emits, 'the loader emits records_meta.centreline_load').not.toBe('none');
     const e = (d.emits as Array<{ key: string; type: string; consumers: string[] }>)[0]!;
@@ -256,8 +261,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(d.staleness.on_prior_run_error_why, 'LC-D4 is a PIN — the posture is justified, not asserted').toBeDefined();
   });
 
-  it.fails('the step file has become the §5.1 frozen shape: pipeline.step, module.exports, no pipeline.run (RED today: the 726-line legacy) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('the step file has become the §5.1 frozen shape: pipeline.step, module.exports, no pipeline.run', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     artifact(COMPUTE_REL, 'the frozen shell cannot exist without the compute');
     const src = fs.readFileSync(abs(STEP_REL), 'utf8');
     expect(src.split('\n').slice(0, 40).join('\n').includes('SPEC LINK:'), 'the frozen file keeps its SPEC LINK header').toBe(true);
@@ -266,8 +271,8 @@ describe('row 3.2 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(/pipeline\.run\s*\(/.test(src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')), 'pipeline.run must be gone — the library owns exit semantics').toBe(false);
   });
 
-  it.fails('the compute exports coerceKey shapeRecord dedupeBySourceId validatorCounterDelta buildLoadMeta checks (RED today: ENOENT) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('the compute exports coerceKey shapeRecord dedupeBySourceId validatorCounterDelta buildLoadMeta checks', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const mod = loadComputeModule();
     for (const h of ['coerceKey', 'shapeRecord', 'dedupeBySourceId', 'validatorCounterDelta', 'buildLoadMeta']) {
       expect(typeof mod[h], `the compute must export ${h}`).toBe('function');
@@ -303,8 +308,8 @@ describe('row 3.2 — compute.shapeRecord classifies and normalizes a DBF record
     return { row, tags };
   }
 
-  it.fails('record 1 — a "Local"/CITY OF TORONTO street shapes: feature_code_desc "Local", linear_name_type null, from_intersection_id 13465051, geojson === ctx.geojson (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 1 — a "Local"/CITY OF TORONTO street shapes: feature_code_desc "Local", linear_name_type null, from_intersection_id 13465051, geojson === ctx.geojson', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row } = shape(0);
     expect(row, 'a clean street is never skipped').not.toBeNull();
     const r = row as Shape;
@@ -316,42 +321,42 @@ describe('row 3.2 — compute.shapeRecord classifies and normalizes a DBF record
     expect(r.source_id ?? r.centreline_id, 'the key survives the shape call (the runner re-keys on plan.keys[0])').toBe(60078796);
   });
 
-  it.fails('record 2 — "Trail" + "FEDERAL" returns the STRING "non_street": the EXCLUDE test runs BEFORE the federal test (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 2 — "Trail" + "FEDERAL" returns the STRING "non_street": the EXCLUDE test runs BEFORE the federal test', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row } = shape(1);
     expect(row, 'an EXCLUDE-listed class is dropped by reason, never by null [READ scripts/lib/step/index.js:815-821]').toBe('non_street');
   });
 
-  it.fails('record 3 — "Local" + " federal " (padded, lower-case) returns the STRING "federal" (F14 normalization) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 3 — "Local" + " federal " (padded, lower-case) returns the STRING "federal" (F14 normalization)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row } = shape(2);
     expect(row).toBe('federal');
   });
 
-  it.fails('record 4 — "Mystery Road" is KEPT with feature_code_desc "unknown_operator_review" and TAGS unknown_feature_code (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 4 — "Mystery Road" is KEPT with feature_code_desc "unknown_operator_review" and TAGS unknown_feature_code', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row, tags } = shape(3);
     expect(row, 'an unknown class is never dropped — it is sentinelled and counted [READ load-centreline.js:82, :176-179]').not.toBeNull();
     expect((row as Shape).feature_code_desc).toBe('unknown_operator_review');
     expect(tags, 'the tag is the observability half of the sentinel').toContain('unknown_feature_code');
   });
 
-  it.fails('record 5 — "Collector" + "" is KEPT with jurisdiction "UNKNOWN" and TAGS unknown_jurisdiction (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 5 — "Collector" + "" is KEPT with jurisdiction "UNKNOWN" and TAGS unknown_jurisdiction', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row, tags } = shape(4);
     expect(row).not.toBeNull();
     expect((row as Shape).jurisdiction).toBe('UNKNOWN');
     expect(tags).toContain('unknown_jurisdiction');
   });
 
-  it.fails('record 6 — "  Major Arterial " is KEPT with the trimmed feature_code_desc "Major Arterial" (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('record 6 — "  Major Arterial " is KEPT with the trimmed feature_code_desc "Major Arterial"', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const { row } = shape(5);
     expect((row as Shape).feature_code_desc, 'the Set membership is normalized (F14); the STORED value is the trimmed raw').toBe('Major Arterial');
   });
 
-  it.fails('a record missing FEATURE36 THROWS /missing expected attribute field/ (F13) — LC-D10: a missing CENTREL2 never reaches shapeRecord at all (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('a record missing FEATURE36 THROWS /missing expected attribute field/ (F13) — LC-D10: a missing CENTREL2 never reaches shapeRecord at all', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const mod = loadComputeModule();
     const fn = mod.shapeRecord as (record: Record<string, unknown>, seam: Record<string, unknown>) => unknown;
     const { FEATURE36: _dropped, ...withoutFeatureCode } = records()[5]!.record;
@@ -379,8 +384,8 @@ describe('row 3.2 — coerceKey and the BIGINT key join (loader :141-146; write.
     return mod.coerceKey as (raw: unknown) => number | null;
   }
 
-  it.fails('coerceKey is a POSITIVE integer or null — "123" -> 123; "0", "-5", "abc", null -> null (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('coerceKey is a POSITIVE integer or null — "123" -> 123; "0", "-5", "abc", null -> null', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const coerce = coerceKey();
     expect(coerce('123')).toBe(123);
     expect(coerce('0'), 'source_id is the UNIQUE PK and the delete-cast key: 0 is never a centreline id').toBeNull();
@@ -390,8 +395,8 @@ describe('row 3.2 — coerceKey and the BIGINT key join (loader :141-146; write.
     expect(coerce('  60078796  '), 'the DBF arrives from a CKAN zip — padding tolerance is part of the coercion').toBe(60078796);
   });
 
-  it.fails('write.validateGeometries carries 3/3 BIGINT-keyed rows when the stub returns node-pg\'s STRING int8 keys (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('write.validateGeometries carries 3/3 BIGINT-keyed rows when the stub returns node-pg\'s STRING int8 keys', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write lib
     const writeLib = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js')) as {
@@ -434,27 +439,31 @@ describe('row 3.2 — coerceKey and the BIGINT key join (loader :141-146; write.
 // ===========================================================================
 
 describe('row 3.2 — validatorCounterDelta maps a validator status to the counter delta (loader :218-220; LC-D8)', () => {
-  function delta(): (status: string, isValidOriginal: boolean) => { skipped: number; carry: boolean; collectionExtracted?: number } {
+  type Delta = { repaired: number; skipped: number; carry: boolean; collectionExtracted?: number };
+  function delta(): (status: string, isValidOriginal: boolean) => Delta {
     const mod = loadComputeModule();
     expect(typeof mod.validatorCounterDelta, 'the runner hands THIS function to write.validateGeometries [READ scripts/lib/step/index.js:837]').toBe('function');
-    return mod.validatorCounterDelta as (s: string, v: boolean) => { skipped: number; carry: boolean; collectionExtracted?: number };
+    return mod.validatorCounterDelta as (s: string, v: boolean) => Delta;
   }
 
-  it.fails('accepted ⇒ carry, 0 skipped (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
-    expect(delta()('accepted', true)).toEqual({ skipped: 0, carry: true });
+  it('accepted ⇒ carry, 0 skipped', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+    // ANCHOR scripts/lib/step/write.js `const d = classify(v.status, v.is_valid_original)` sums
+    // repaired + collectionExtracted + skipped — a MISSING key is NaN, so all four are asserted.
+    expect(delta()('accepted', true)).toEqual({ repaired: 0, collectionExtracted: 0, skipped: 0, carry: true });
   });
 
-  it.fails('collection_extracted ⇒ {carry:false, skipped:1, collectionExtracted:1} — LC-D8: the LEGACY skipped any non-LineString repair, so a single-member MultiLineString residue is a pinned DEFECT, not a carry (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('collection_extracted ⇒ {carry:false, skipped:1, collectionExtracted:1} — LC-D8: the LEGACY skipped any non-LineString repair, so a single-member MultiLineString residue is a pinned DEFECT, not a carry', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const d = delta()('collection_extracted', true);
+    expect(d.repaired, 'ANCHOR scripts/lib/step/write.js `repaired += d.repaired` — the key is summed, so it must exist and be 0 here').toBe(0);
     expect(d.carry, 'carrying a Multi into a GEOMETRY(LineString) column is a write error, and the target rejects it anyway').toBe(false);
     expect(d.skipped).toBe(1);
     expect(d.collectionExtracted, 'the counter is DECLARED so the LC-D8 residue is observable — no library option can carry the row instead').toBe(1);
   });
 
-  it.fails('skipped_null and skipped_unsupported_type ⇒ skipped 1, no carry (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('skipped_null and skipped_unsupported_type ⇒ skipped 1, no carry', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     for (const status of ['skipped_null', 'skipped_unsupported_type']) {
       const d = delta()(status, false);
       expect(d.skipped, `${status} is a loss`).toBe(1);
@@ -472,59 +481,74 @@ describe('row 3.2 — the checks fire on their inputs (report §1.3/§6)', () =>
   /** The prior run's `centreline_load` block — the baseline every drift ratio is taken against. */
   const PRIOR = { feature_count_filtered: 47363 };
 
-  it.fails('centreline_count_drift_pct reports 0.578 for 20000 filtered vs the prior run\'s 47363, and 0 with no prior (loader :197-201, :523) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
-    const withPrior = driveCheck('centreline_count_drift_pct', { acquired: { feature_count_filtered: 20000 }, prior: PRIOR, config: CFG });
+  it('centreline_count_drift_pct reports 0.578 for 20000 filtered vs the prior run\'s 47363, and 0 with no prior (loader :197-201, :523)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+    // ANCHOR scripts/lib/step/index.js `feature_count: kept.length` — the runner exposes the
+    // post-filter count as `acquired.feature_count` (the legacy `kept.length`), not `feature_count_filtered`.
+    const withPrior = driveCheck('centreline_count_drift_pct', { acquired: { feature_count: 20000 }, prior: PRIOR, config: CFG });
     expect(withPrior).toHaveLength(1);
     expect(withPrior[0]![0]).toBe('centreline_count_drift_pct');
     expect(withPrior[0]![1].value, '|20000 - 47363| / 47363 = 0.5777…').toBeCloseTo(0.578, 3);
-    const firstRun = driveCheck('centreline_count_drift_pct', { acquired: { feature_count_filtered: 20000 }, prior: null, config: CFG });
+    const firstRun = driveCheck('centreline_count_drift_pct', { acquired: { feature_count: 20000 }, prior: null, config: CFG });
     expect(firstRun[0]![1].value, 'no baselined prior run IS no drift, BY DEFINITION rather than by measurement').toBe(0);
   });
 
-  it.fails('centreline_count_drift_pct is a pre_write FAIL reading load_centreline_count_drift_fail_pct with a STRICT > limit (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('centreline_count_drift_pct is a pre_write FAIL reading load_centreline_count_drift_fail_pct with a STRICT > limit', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const c = checkById(loadDescriptor(), 'centreline_count_drift_pct');
     expect(c.when, 'the FAIL must abort BEFORE the DELETE — the write is skipped entirely, the prior load survives').toBe('pre_write');
     expect(c.severity).toBe('FAIL');
     expect(c.limit_from_config).toBe('load_centreline_count_drift_fail_pct');
-    expect(String(c.limit), 'legacy `countDeltaPct > config…` — strictly greater, NOT `pct <= 0.5`').toMatch(/>\s*0\.5/);
+    expect(String(c.limit), 'ANCHOR descriptor `definitions.bound` — `pct <= 0.5` IS the legacy `countDeltaPct > config…` FAIL inversion; there is no `>` grammar, so PASS at <= 0.5 is byte-identical').toBe('pct <= 0.5');
   });
 
-  it.fails('centreline_geometry_skipped_pct reports 3/47 = 0.0638, and 0 at 0 features (no division by zero) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
-    const over = driveCheck('centreline_geometry_skipped_pct', { acquired: { feature_count_filtered: 47, invalid_geometry_skipped: 3 }, config: CFG });
+  it('centreline_geometry_skipped_pct reports 3/47 = 0.0638, and 0 at 0 features (no division by zero)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+    // ANCHOR scripts/lib/step/index.js `feature_count: kept.length`.
+    const over = driveCheck('centreline_geometry_skipped_pct', { acquired: { feature_count: 47, invalid_geometry_skipped: 3 }, config: CFG });
     expect(over[0]![1].value).toBeCloseTo(0.0638, 3);
-    const empty = driveCheck('centreline_geometry_skipped_pct', { acquired: { feature_count_filtered: 0, invalid_geometry_skipped: 0 }, config: CFG });
+    const empty = driveCheck('centreline_geometry_skipped_pct', { acquired: { feature_count: 0, invalid_geometry_skipped: 0 }, config: CFG });
     expect(empty[0]![1].value, 'the legacy guards `featureCount > 0 ? … : 0` [READ load-centreline.js:553]').toBe(0);
   });
 
-  it.fails('F-C1 fires f_c1_empty_temp_guard_fired_first_run as FAIL when 0 rows were carried and there is NO prior run (loader :563-573) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('centreline_geometry_skipped_pct is a pre_write FAIL reading load_centreline_invalid_geometry_fail_pct with the bound grammar', () => {
+    const c = checkById(loadDescriptor(), 'centreline_geometry_skipped_pct');
+    expect(c.when, 'before any DB write — no transaction state may dangle').toBe('pre_write');
+    expect(c.severity).toBe('FAIL');
+    expect(c.limit_from_config).toBe('load_centreline_invalid_geometry_fail_pct');
+    expect(String(c.limit), 'ANCHOR descriptor `definitions.bound` — the seed default 0.05').toBe('pct <= 0.05');
+  });
+
+  it('F-C1 fires f_c1_empty_temp_guard_fired_first_run as FAIL when 0 rows were carried and there is NO prior run (loader :563-573)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+    // ANCHOR scripts/lib/step/index.js `feature_count: kept.length` — the runner exposes NO
+    // `carried_count`; carried = feature_count - invalid_geometry_skipped.
     const mod = loadComputeModule();
     const ids = Object.keys((mod.checks ?? {})).filter((id) => /f_c1/.test(id));
     expect(ids.length, 'the F-C1 guard is declared — its dual mode is the load-bearing defence against an empty table').toBeGreaterThan(0);
-    const firstRun = driveCheck('f_c1_empty_temp_guard_fired_first_run', { acquired: { carried_count: 0 }, written: null, prior: null, config: CFG });
+    const firstRun = driveCheck('f_c1_empty_temp_guard_fired_first_run', { acquired: { feature_count: 0, invalid_geometry_skipped: 0 }, written: null, prior: null, config: CFG });
     expect(firstRun[0]![1].violations, 'an empty source on the FIRST run must block the deploy').toBeGreaterThan(0);
-    const notFirstRun = driveCheck('f_c1_empty_temp_guard_fired_first_run', { acquired: { carried_count: 5 }, written: null, prior: null, config: CFG });
+    const notFirstRun = driveCheck('f_c1_empty_temp_guard_fired_first_run', { acquired: { feature_count: 5, invalid_geometry_skipped: 0 }, written: null, prior: null, config: CFG });
     expect(notFirstRun[0]![1].violations, 'a non-empty carry never trips the first-run floor').toBe(0);
+    const allSkipped = driveCheck('f_c1_empty_temp_guard_fired_first_run', { acquired: { feature_count: 3, invalid_geometry_skipped: 3 }, written: null, prior: null, config: CFG });
+    expect(allSkipped[0]![1].violations, 'every shaped row was dropped as invalid geometry — carried is feature_count - invalid_geometry_skipped = 0').toBeGreaterThan(0);
   });
 
-  it.fails('F-C1 fires f_c1_empty_temp_guard_fired as WARN with on_warn:"skip_write" when 0 rows were carried and a prior run exists (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('F-C1 fires f_c1_empty_temp_guard_fired as WARN with on_warn:"skip_write" when 0 rows were carried and a prior run exists', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const c = checkById(d, 'f_c1_empty_temp_guard_fired');
     expect(c.when).toBe('pre_write');
     expect(c.severity, 'a LATER empty run PRESERVES the table — it warns, it does not fail [READ load-centreline.js:575-581]').toBe('WARN');
     expect(c.on_warn, 'the write must be SKIPPED, not merely flagged: the DELETE would empty the table').toBe('skip_write');
-    const withPrior = driveCheck('f_c1_empty_temp_guard_fired', { acquired: { carried_count: 0 }, written: null, prior: PRIOR, config: CFG });
+    const withPrior = driveCheck('f_c1_empty_temp_guard_fired', { acquired: { feature_count: 0, invalid_geometry_skipped: 0 }, written: null, prior: PRIOR, config: CFG });
     expect(withPrior[0]![1].violations).toBeGreaterThan(0);
-    const carried = driveCheck('f_c1_empty_temp_guard_fired', { acquired: { carried_count: 5 }, written: { replace_skipped_empty_guard: false }, prior: PRIOR, config: CFG });
+    const carried = driveCheck('f_c1_empty_temp_guard_fired', { acquired: { feature_count: 5, invalid_geometry_skipped: 0 }, written: { replace_skipped_empty_guard: false }, prior: PRIOR, config: CFG });
     expect(carried[0]![1].violations, 'a normal run trips NEITHER F-C1 arm').toBe(0);
   });
 
-  it.fails('override.accept_anomaly carries CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT on the drift check (LC-D7 — the operator escape hatch is NOT dropped) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('override.accept_anomaly carries CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT on the drift check (LC-D7 — the operator escape hatch is NOT dropped)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(d.override, 'an INGESTOR with a FAIL check must not declare override:"none"').not.toBe('none');
     const o = d.override as { accept_anomaly?: Array<{ env: string; check_id: string }> };
@@ -540,18 +564,16 @@ describe('row 3.2 — the checks fire on their inputs (report §1.3/§6)', () =>
 // ===========================================================================
 
 describe('row 3.2 — buildLoadMeta reproduces the frozen §9 producer block (loader :630-683)', () => {
-  /** A minimal shaped COMPLETED run: the three seams a load meta is built from. */
+  /** A minimal shaped COMPLETED run — the runner's own acquisition seam vocabulary (index.js). */
   const ACQUIRED = {
     source_dataset_version: '80496e679ef7a2ae8b2e87eb986142a0',
     last_modified: '2026-07-08T04:12:00.000Z',
     etag: null,
     content_hash: '80496e679ef7a2ae8b2e87eb986142a0',
-    feature_count_raw: 64388,
-    feature_count_filtered: 47363,
-    filtered_out_non_street: 17025,
-    filtered_out_federal: 0,
-    unknown_feature_code_count: 1,
-    unknown_jurisdiction_count: 94,
+    rows_read: 64388,
+    feature_count: 47363,
+    shaped_skipped_by_reason: { non_street: 17025 },
+    shaped_tags: { unknown_feature_code: 1, unknown_jurisdiction: 94 },
     invalid_geometry_skipped: 0,
   };
   const WRITTEN = { inserted: 47363, updated: 0, deleted: 47368, replace_skipped_empty_guard: false };
@@ -567,32 +589,68 @@ describe('row 3.2 — buildLoadMeta reproduces the frozen §9 producer block (lo
     }) as Record<string, unknown>;
   }
 
-  it.fails('keys are EXACTLY the 18 of `function skeletonLoadMeta()` — no more, no fewer (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('keys are EXACTLY the 18 of `function skeletonLoadMeta()` — no more, no fewer', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     expect(Object.keys(build({})).sort()).toEqual([...LOAD_META_KEYS_18].sort());
   });
 
-  it.fails('spec_version is the pinned "1.1", features_updated is 0 (a full replace never UPDATEs), source_dataset_version is the content hash (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('spec_version is the pinned "1.1", features_updated is 0 (a full replace never UPDATEs), source_dataset_version is the content hash', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const m = build({});
     expect(m.spec_version, 'set LAST, the BUG-2 rule — a prior spread must never overwrite the pin').toBe('1.1');
     expect(m.features_updated).toBe(0);
     expect(m.source_dataset_version, 'contentHash || etag || sha1(lastModified) || String(runAt) — the hash wins when present [READ load-centreline.js:585]').toBe(ACQUIRED.content_hash);
-    expect(m.feature_count_filtered).toBe(47363);
+    expect(m.feature_count_raw, 'ANCHOR index.js `rows_read: result.acquired.rows_parsed` — raw = rows_read').toBe(64388);
+    expect(m.feature_count_filtered, 'ANCHOR index.js `feature_count: kept.length`').toBe(47363);
+    expect(m.filtered_out_non_street, 'ANCHOR index.js `shaped_skipped_by_reason` — the runner carries the drop reasons by name').toBe(17025);
+    expect(m.filtered_out_federal, 'an ABSENT reason is 0, never undefined — the frozen block has no hole').toBe(0);
+    expect(m.unknown_feature_code_count, 'ANCHOR index.js `shaped_tags`').toBe(1);
+    expect(m.unknown_jurisdiction_count, 'ANCHOR index.js `shaped_tags`').toBe(94);
+    expect(m.drift_check_passed, 'no prior and no override — the count-delta is 0 <= 0.5').toBe(true);
     expect(m.features_deleted, 'the DELETE rowCount is the PRE-state table size — an inter-run coupling, declared not masked (assessment §7 #4)').toBe(47368);
   });
 
-  it.fails('the F-C1 WARN path spreads the PRIOR block and pins features_inserted 0 + delete_skipped_empty_guard true (LC-D14 PIN, flips ④b) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('the F-C1 WARN path spreads the PRIOR block and pins features_inserted 0 + delete_skipped_empty_guard true (LC-D14 PIN — flips ④b)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+    // The executor's own empty-temp guard arm.
     const m = build({
       written: { inserted: 0, updated: 0, deleted: 0, replace_skipped_empty_guard: true },
       prior: { feature_count_filtered: 47363, content_hash: 'priorhash', features_inserted: 47363, delete_skipped_empty_guard: false, spec_version: '1.1' },
     });
     expect(m.delete_skipped_empty_guard, 'the executor refused the DELETE — the flag is how the suppression reaches the audit row and the consumer').toBe(true);
-    expect(m.features_inserted).toBe(0);
+    expect(m.features_inserted, 'LC-D14 PIN (flips ④b): TODAY the preserve path pins 0, not the prior 47363').toBe(0);
     expect(m.content_hash, 'the prior lineage survives the preserve — the table still holds the PRIOR load byte for byte').toBe('priorhash');
     expect(m.spec_version, 'the pin is applied AFTER the prior spread (BUG-2)').toBe('1.1');
     expect(Object.keys(m).length, 'a spread must not grow the frozen block').toBe(18);
+  });
+
+  it('the F-C1 WARN path ALSO accepts the runner\'s real pre_write skip_write arm (index.js `write_skipped_pre_write_warn: true`)', () => {
+    // ANCHOR scripts/lib/step/index.js:946-947 — the third arm's `written` carries
+    // `write_skipped_pre_write_warn: true` (never `replace_skipped_empty_guard`).
+    const m = build({
+      written: { inserted: 0, updated: 0, deleted: 0, delete_skipped_empty_guard: false, write_skipped_pre_write_warn: true },
+      prior: { feature_count_filtered: 47363, content_hash: 'priorhash', features_inserted: 47363, delete_skipped_empty_guard: false, spec_version: '1.1' },
+    });
+    expect(m.delete_skipped_empty_guard, 'the warn-skip suppression reaches the audit row the same way the executor guard does').toBe(true);
+    expect(m.features_inserted).toBe(0);
+    expect(m.content_hash).toBe('priorhash');
+    expect(m.spec_version).toBe('1.1');
+    expect(Object.keys(m).length, 'the warn arm must not grow the frozen block either').toBe(18);
+  });
+
+  it('a pre-write FAIL with drift over the limit and no override is the legacy early-return skeleton (features_inserted 0, drift_check_passed false)', () => {
+    // ANCHOR scripts/lib/compute/load-centreline.js — the `drift_check_passed: false });`
+    // early return: the skeleton with raw/filtered only, every write counter left at 0.
+    // A 20000 carry against the prior's 47363 is 0.578 drift, over the 0.5 FAIL bound.
+    const m = build({
+      acquired: { ...ACQUIRED, feature_count: 20000 },
+      prior: { feature_count_filtered: 47363, content_hash: 'priorhash', spec_version: '1.1' },
+      written: { write_skipped_pre_write_fail: true },
+      overrides: { accept_feature_count_drift: false },
+    });
+    expect(m.drift_check_passed, 'the FAIL is the FIELD the consumer gates on').toBe(false);
+    expect(m.features_inserted, 'nothing was written — the pre-write abort opens no transaction').toBe(0);
+    expect(Object.keys(m).length, 'the legacy early-return emits the 18-key skeleton, not a spread').toBe(18);
   });
 });
 
@@ -601,8 +659,8 @@ describe('row 3.2 — buildLoadMeta reproduces the frozen §9 producer block (lo
 // ===========================================================================
 
 describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ the six, no bare compute literals', () => {
-  it.fails('the descriptor declares all SIX variables with the report §6 bounds and on_invalid postures (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('the descriptor declares all SIX variables with the report §6 bounds and on_invalid postures', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(d.config, 'a step with externalized literals may not declare config:"none"').not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string; min: unknown; max: unknown; on_invalid: string }>; validation: string; hoisted_above_gate: boolean };
@@ -619,8 +677,8 @@ describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ th
     expect(cfg.hoisted_above_gate).toBe(true);
   });
 
-  it.fails('every declared variable has a seed row whose default equals the report §6 ledger (LC-D3 seals at ②) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('every declared variable has a seed row whose default equals the report §6 ledger (LC-D3 seals at ②)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const cfg = d.config as { logic_variables: Array<{ name: string }> };
     const S = seedDefaults();
@@ -630,8 +688,8 @@ describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ th
     }
   });
 
-  it.fails('the compute carries NO bare 40000 / 5000 / 0.05 / 0.5 literal outside a ctx.config read (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
+  it('the compute carries NO bare 40000 / 5000 / 0.05 / 0.5 literal outside a ctx.config read', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/lib/compute/load-centreline.js
     const src = readText(COMPUTE_REL);
     const stripped = src.replace(/ctx\.config\.\w+/g, 'CONFIG_READ');
     for (const literal of ['40000', '5000', '0.05', '0.5']) {
@@ -645,15 +703,15 @@ describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ th
 // ===========================================================================
 
 describe('row 3.2 — LC-D1/LC-D2: no geometry_update / mass_delete check, and the dup/bad-id rows WARN only', () => {
-  it.fails('no declared check id matches /geometry_update|mass_delete/ (LC-D1 — the code has no such arms; Spec 62 is corrected at ②) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('no declared check id matches /geometry_update|mass_delete/ (LC-D1 — the code has no such arms; Spec 62 is corrected at ②)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     const offenders = d.checks.map((c) => c.id).filter((id) => /geometry_update|mass_delete/.test(id));
     expect(offenders, 'load_ravines carries these because ITS legacy script aborts on them; load-centreline\'s does not [READ load-centreline.js:523-529]').toEqual([]);
   });
 
-  it.fails('centreline_duplicate_centreline_id_count and centreline_bad_centreline_id_count are WARN, never FAIL (LC-D2) (flips at: commit ②)', () => {
-    // RED value: MISSING ARTIFACT scripts/load-centreline.descriptor.json
+  it('centreline_duplicate_centreline_id_count and centreline_bad_centreline_id_count are WARN, never FAIL (LC-D2)', () => {
+    // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(checkById(d, 'centreline_duplicate_centreline_id_count').severity, 'the loader WARNS and dedupeBySourceId keeps the FIRST [READ load-centreline.js:204-215, :516]').toBe('WARN');
     expect(checkById(d, 'centreline_bad_centreline_id_count').severity, 'a bad CENTREL2 is a counted loss, not a run-stopper [READ load-centreline.js:509]').toBe('WARN');

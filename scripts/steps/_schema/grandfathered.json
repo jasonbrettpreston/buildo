@@ -127,13 +127,24 @@
     },
     "load_centreline": {
       "paths": {
+        "outputs.writes[].write_discipline.class": "staging_full_replace",
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] is the class-C (staging_full_replace) whole-table replace of toronto_centreline — the ONLY step step.schema.json's own x-rule sanctions (`full_replace must be declared, never silent`, Spec 62 L26): a TEMP table staged in batches, then in ONE transaction DELETE FROM toronto_centreline followed by INSERT ... SELECT, behind a structural empty-set guard (write.js executeStagingReplace, RE-FREEZE #20). WF3 (2026-09-24, d8773d22 + 173ca49f) exempted this class from buildWritePlan's retract-all/no-scope throw and, in the SAME hardening pass, added `outputs.writes[].write_discipline.class` to x-banned-for-new so no OTHER step can self-declare it without its own reviewed adjudication (Spec 124 Rule 9). This ONE entry now covers BOTH banned paths for the same write target: the CLASS path (`outputs.writes[].write_discipline.class`: \"staging_full_replace\", adjudicated in 173ca49f) and the GUARD path (`outputs.writes[].write_discipline.guard`: \"none\") — one transaction truncates-and-reloads the whole table from the staged CKAN features, so there is no per-row predicate for an IS DISTINCT FROM guard to skip; every row is replaced by construction. The replace is itself gated upstream by the pre-acquisition source-version skip and the empty-source guard; guard:\"none\" here names the absence of a row-level guard, not an unguarded write. Both paths are adjudicated together at load_centreline's own descriptor-authoring commit (batch-2 Phase 3, 3.2 ②), per Spec 122 §8's RE-FREEZE #20 record — closing the deferral 173ca49f's own why-text named ('is added there, not here').",
+      "commit": "d8773d22 (WF3 class-C retract-all guard) + 173ca49f (anti-bypass hardening, class path, 2026-09-24) + batch2 row 3.2 ② (this descriptor's own introducing commit, guard path, 2026-09-24)",
+      "adjudicated_by": "operator ruling 2026-09-24 (\"option A, if compliant with Spec 124/122: standardization, observability, accuracy, scalability, simple\"), plan .cursor/wf3_class_c_retract_all_guard_active_task.md Commit 2 item C (class path); operator authorization of the row 3.2 plan 2026-09-24 (compliance-gated, Spec 124 Rule 9) + class-C plan F3 (guard path)",
+      "date": "2026-09-24",
+      "lock_test": "src/tests/wf3-class-c-antibypass.infra.test.ts; src/tests/wf3-class-c-retract-all.logic.test.ts; src/tests/steps/load_centreline/violations.test.ts"
+    },
+    "fixture_class_c_class_only_grandfathered": {
+      "paths": {
         "outputs.writes[].write_discipline.class": "staging_full_replace"
       },
-      "why": "outputs.writes[0] is the class-C (staging_full_replace) whole-table replace of toronto_centreline — the ONLY step step.schema.json's own x-rule sanctions (`full_replace must be declared, never silent`, Spec 62 L26): a TEMP table staged in batches, then in ONE transaction DELETE FROM toronto_centreline followed by INSERT ... SELECT, behind a structural empty-set guard (write.js executeStagingReplace, RE-FREEZE #20). WF3 (2026-09-24) exempted this class from buildWritePlan's retract-all/no-scope throw and, in the SAME hardening pass, added `outputs.writes[].write_discipline.class` to x-banned-for-new so no OTHER step can self-declare it without its own reviewed adjudication (Spec 124 Rule 9). This entry covers the CLASS path only — the guard-path entry (`outputs.writes[].write_discipline.guard`: \"none\") for this same target belongs to load_centreline's own descriptor-authoring commit (batch-2 Phase 3, 3.2 ②), per Spec 122 §8's RE-FREEZE #20 record, and is added there, not here.",
-      "commit": "d8773d22 (WF3 class-C retract-all guard, 2026-09-24) + this same commit (anti-bypass hardening)",
-      "adjudicated_by": "operator ruling 2026-09-24 (\"option A, if compliant with Spec 124/122: standardization, observability, accuracy, scalability, simple\"), plan .cursor/wf3_class_c_retract_all_guard_active_task.md Commit 2 item C",
+      "why": "The schema's own exemplar for the WF3 anti-bypass CLASS-only adjudication shape — a FIXTURE, never a runnable step. Before row 3.2 ②, load_centreline itself served this role (class path adjudicated, guard path deliberately deferred); ② adjudicated BOTH paths for load_centreline in one entry (Spec 122 §8 RE-FREEZE #20), so the two-axes-are-independent proof in src/tests/wf3-class-c-antibypass.infra.test.ts needed its own class-only subject that never gains a guard-path entry. Exists so that test can keep proving assertGrandfathered enforces the GUARD_PATH and CLASS_PATH independently — a class-C descriptor adjudicated on ONE axis is still refused on the other — mirroring fixture_grandfathered_snapshot's/fixture_no_retraction_allowed's role for their own enforcers.",
+      "commit": "batch2 row 3.2 ② (2026-09-24) — added when load_centreline's own entry stopped being class-only",
+      "adjudicated_by": "orchestrator landing of row 3.2 ② (test-staleness repoint, WF3 Commit 2 precedent preserved)",
       "date": "2026-09-24",
-      "lock_test": "src/tests/wf3-class-c-antibypass.infra.test.ts; src/tests/wf3-class-c-retract-all.logic.test.ts"
+      "lock_test": "src/tests/wf3-class-c-antibypass.infra.test.ts"
     }
   }
 }
