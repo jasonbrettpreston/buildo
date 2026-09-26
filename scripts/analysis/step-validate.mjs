@@ -32,11 +32,12 @@
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 16 invariants, ids 1-5,7-9,20-28 (the
+ * comes first in the output). Currently 17 invariants, ids 1-5,7-9,20-29 (the
  * count read "13"/"14" while the id list already said 1-5,7-9,20-24/26 — an
  * off-by-one that predates this line's last edits; corrected 2026-09-17
  * against an actual `--fast` run, which renders 15 rows; the +1 is id 28,
- * CLOSED-BOUND, WF2 §5 R-BA gate A, 2026-09-25):
+ * CLOSED-BOUND, WF2 §5 R-BA gate A, 2026-09-25, and +1 more is id 29,
+ * ON-INVALID-CLOSED, WF2 §5 R-BA gate B, 2026-09-26):
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -104,6 +105,15 @@
  *      an ORPHAN row (its violation since fixed) is RED too (R-X). Fleet DERIVED
  *      from converted.json (R-AN). `scripts/analysis/gates/closed-bounds.mjs`
  *      owns the answer set; `gates/ledger.mjs` owns the row shape + the match
+ *   29. ON-INVALID-CLOSED (Spec 124 §5 R-BA gate B, Rule 3, §5 R-G; WF2
+ *      "standardized gates", 2026-09-26): every `config.logic_variables[].on_invalid`
+ *      is drawn from the closed answer set — `fail`, or `default`/`clamp` WITH a
+ *      `deviations[]` entry that names that exact variable and is dated a valid
+ *      ISO date, or a `{gate:'B'}` ledger row; a BLANKET deviation naming no
+ *      variable is RED, and an ORPHAN row is RED too (R-X). Closes §5 R-G's G-4
+ *      WRITE-affecting half (ANY non-`fail` needs a dated, named why — stricter
+ *      than the verdict-half #8). Fleet DERIVED from converted.json (R-AN).
+ *      `scripts/analysis/gates/on-invalid.mjs` owns the answer set
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -202,6 +212,7 @@ const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-gold
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
 import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -1778,6 +1789,29 @@ function fastInvariants(rows, converted, pending) {
       pass: bounds.pass,
       blockedSlugs: bounds.blockedSlugs,
       detail: bounds.detail,
+    });
+  }
+
+  // 29. ON-INVALID-CLOSED (Spec 124 §5 R-BA gate B, Rule 3, §5 R-G, WF2
+  // "standardized gates", 2026-09-26) — every `config.logic_variables[].on_invalid`
+  // must be drawn from the CLOSED answer set: `fail` (the standard posture), or
+  // `default`/`clamp` BACKED BY a `deviations[]` entry that carries `/on_invalid/i`
+  // in its `from`, NAMES that exact variable (in `from` or `why.text`) and is dated
+  // a valid ISO date, or a gate-B ledger row. A BLANKET deviation naming no variable
+  // does NOT count (assert_schema/load_ravines/link_massing carry only blanket ones
+  // and stay RED); an ORPHAN row (its violation since fixed) is RED too (R-X). This
+  // closes §5 R-G's G-4 WRITE-affecting half — ANY non-`fail` needs a dated, named
+  // why, stricter than the pre-existing verdict-half `checkOnInvalidFail`. Registry-
+  // scoped with `blockedSlugs` (the id-9/22/25/26/27/28 shape); fleet DERIVED from
+  // converted.json (R-AN). `scripts/analysis/gates/on-invalid.mjs` owns the answer set.
+  {
+    const onInvalid = checkOnInvalidClosed(loadConvertedDescriptors(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 29,
+      slug: '(registry)',
+      pass: onInvalid.pass,
+      blockedSlugs: onInvalid.blockedSlugs,
+      detail: onInvalid.detail,
     });
   }
 
@@ -4074,6 +4108,12 @@ function selfTest() {
   // entirely in scripts/analysis/gates/closed-bounds.mjs (its own selfTest, run
   // here so this file's single `selfTest()` entry point covers it too).
   closedBoundsSelfTest();
+  // ON-INVALID-CLOSED (fast invariant #29, Spec 124 §5 R-BA gate B, Rule 3,
+  // §5 R-G, WF2 "standardized gates", 2026-09-26) — the closed on_invalid answer
+  // set + the orphan direction live entirely in scripts/analysis/gates/on-invalid.mjs
+  // (its own selfTest, run here so this file's single `selfTest()` entry point
+  // covers it too).
+  onInvalidSelfTest();
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked

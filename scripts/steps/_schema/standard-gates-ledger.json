@@ -134,6 +134,126 @@
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "assert_schema",
+      "item": "config.assert_schema_type_sample_rows.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"assert_schema_type_sample_rows\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "assert_schema",
+      "item": "config.assert_schema_csv_header_bytes.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"assert_schema_csv_header_bytes\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "assert_schema",
+      "item": "config.assert_schema_geojson_probe_bytes.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"assert_schema_geojson_probe_bytes\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "load_ravines",
+      "item": "config.load_ravines_dataset_age_warn_years.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"load_ravines_dataset_age_warn_years\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "load_ravines",
+      "item": "config.load_ravines_geometry_update_warn_pct.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"load_ravines_geometry_update_warn_pct\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "load_ravines",
+      "item": "config.load_ravines_download_timeout_ms.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"clamp\" for \"load_ravines_download_timeout_ms\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "link_massing",
+      "item": "config.massing_shed_threshold_sqm.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"massing_shed_threshold_sqm\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "link_massing",
+      "item": "config.massing_garage_max_sqm.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"default\" for \"massing_garage_max_sqm\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "link_massing",
+      "item": "config.massing_nearest_max_distance_m.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"clamp\" for \"massing_nearest_max_distance_m\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "link_parcel_addresses",
+      "item": "config.link_parcel_addresses_batch_size.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"clamp\" for \"link_parcel_addresses_batch_size\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "compute_centroids",
+      "item": "config.compute_centroids_full_recompute_batch_size.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"clamp\" for \"compute_centroids_full_recompute_batch_size\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "B",
+      "step": "link_parcels",
+      "item": "config.spatial_match_max_distance_m.on_invalid",
+      "disposition": "pending_remediation",
+      "why": "on_invalid \"clamp\" for \"spatial_match_max_distance_m\" is neither \"fail\" nor a default|clamp value with a dated deviations[] entry naming it",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
     }
   ]
 }
