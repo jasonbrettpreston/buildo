@@ -826,6 +826,16 @@ become a 7-line file plus a 606-line island one directory over. §5.5 closes tha
 entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixture:
 `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`.
 
+**Enforced (2026-09-26, Spec 124 §5 R-BA gate E):** the shape rule bans the commonest hiding places
+(console, bare fetch, wall clock, `process.env`, forbidden `require`s) but says nothing about a bare
+numeric or SQL literal deciding a check's outcome — a hard-coded `INTERVAL`/date/numeric bound or
+`UPPER_SNAKE` constant is Rule 3 (tunables externalized) violated from inside compute rather than the
+descriptor. `scripts/analysis/gates/compute-literals.mjs` scans every `scripts/lib/compute/**` module for
+that closed rule set (`step-validate.mjs` fast invariant #32) — a finding is closed only by becoming a
+declared `config.logic_variables[]` entry (as gate A requires for descriptor-level bounds) or a dated
+`standard-gates-ledger.json` row; 31 measured 2026-09-26 across 9 modules, deferred under the "McDonald's
+Airtight" scope ruling (R-BA), closing at "chain_sources conversion complete."
+
 1. **A dispatch table, `{ [checkId]: fn }`** — one named function per declared check, **function name ===
    check id**, exported as `module.exports.checks` so a test can call one check without running the rest.
    `compute(ctx)` iterates `ctx.checks` (the SELECTED ids, from the library) and does nothing else; the
