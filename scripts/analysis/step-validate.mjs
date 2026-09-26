@@ -5552,8 +5552,19 @@ async function main() {
   // derivation above (line ~1653) — ONE definition, not two independently
   // maintained id lists (that drift is exactly what let an id-22 failure
   // hard-stop unrelated slugs before this fix).
-  const validatedSlugs = new Set(summaries.map((s) => s.slug));
-  const registryHardStopFails = registryFails.filter((r) => [...validatedSlugs].some((slug) => registryFailureBlocks(r, slug)));
+  // Gate K fix (2026-09-26) — the doc-only distinction above (`isBlocking`,
+  // R-K's "--staged doc-only rule": a commit touching only a step's REPORT,
+  // never its code, never hard-stops) applies per-row but was never threaded
+  // into THIS fleet-wide derivation: a `--staged` commit whose staged set is
+  // 20 doc-only report touches (this very scorecard-regen commit) would
+  // still see gate K's genuinely-unallowed `link_massing`/`link_neighbourhoods`
+  // in `validatedSlugs` and hard-stop on someone else's unrelated, non-code
+  // commit. Scoped to `summaries[].blocking` (the SAME flag the per-row
+  // check already honours) — a doc-only touch of a blocked slug no longer
+  // hard-stops THIS invocation; the slug's own code-touching commit still
+  // will, same as ever.
+  const blockingSlugs = new Set(summaries.filter((s) => s.blocking).map((s) => s.slug));
+  const registryHardStopFails = registryFails.filter((r) => [...blockingSlugs].some((slug) => registryFailureBlocks(r, slug)));
   if (registryHardStopFails.length) anyHardStop = true;
 
   console.log('\n[step-validate] summary:');
