@@ -12,10 +12,11 @@
 // `parseGeoJson` reproduces that parse as a GENERIC seam function: same tallies and drop
 // ORDER as `parseShapefile` (`key == null` → `bad_key` BEFORE `geometry == null` →
 // `null_geometry`, `rowsParsed` counted first), same `{ [keyColumn]: key, geojson, record }`
-// feature shape, same `coerceKey(raw, { geojson })` 2nd argument (0s). It reads the whole
-// temp file (the bytes already landed on disk through the streamed hash-through, FENCE
-// 0b230472 — the seam never buffers a download, and this is a bounded 158-feature source,
-// not a 200 MB one).
+// feature shape, same `coerceKey(raw, { geojson })` 2nd argument (0s). It STREAMS the temp
+// file (`fs.createReadStream` → `stream-json` parser → `Pick({filter:'features'})` →
+// `StreamArray`), never whole-file reading it: commit cb21b6f3 briefly reintroduced
+// `fs.readFileSync` here and broke the load_ravines F2 no-whole-file-read fence (Spec 43 §9.5,
+// Spec 124 Rule 1), and T7 pins the streamed read at the call-site level.
 //
 // Fixture: a synthetic 4-feature FeatureCollection built in `fs.mkdtempSync`, chosen so
 // each drop mode fires exactly once — A `'1'`+Polygon (KEPT), B `'0'`+Polygon (key), C
@@ -134,16 +135,21 @@ describe('INGESTOR prerequisite 0v — geojson format', () => {
   });
 
   // -------------------------------------------------------------------------
-  // T4 — the legacy error text, byte-for-byte: the parse failure names the
-  // file and the first 100 chars (scripts/load-neighbourhoods.js's own
-  // message), and a FeatureCollection-shaped object with no `features` array
-  // is refused BY NAME rather than iterated into zero rows.
+  // T4 — the legacy error contract: a parse failure names the file (streamed
+  // form, file + parser reason — the legacy 100-char prefix is unreproducible
+  // without buffering the document, which §9.5 forbids), and a FeatureCollection-
+  // shaped object with no `features` array is refused BY NAME by the `Pick`
+  // stage rather than iterated into zero rows.
   // -------------------------------------------------------------------------
-  it('T4 — malformed JSON rejects with the legacy message form; a missing features array is refused', async () => {
+  it('T4 — malformed JSON rejects with the legacy message form (streamed: file + parser reason); a missing features array is refused', async () => {
     const bad = fixture('bad.geojson', '{not json');
     try {
+      // STREAMED form (Spec 43 §9.5, F2 fence): the file and the parser's reason are named;
+      // the legacy 100-char prefix is gone because producing it requires buffering the whole
+      // document — exactly what the fence forbids. The contract is unchanged: a malformed
+      // download REJECTS, it never silently parses to zero rows.
       await expect(acquireLib.parseGeoJson(bad.file, 'AREA_SHORT_CODE', intOrNull, 'neighbourhood_id'))
-        .rejects.toThrow(/^Failed to parse GeoJSON file .+ \(first 100 chars: \{not json\)$/);
+        .rejects.toThrow(/^Failed to parse GeoJSON file .+ \(streamed via stream-json;/);
     } finally {
       bad.cleanup();
     }
@@ -211,5 +217,37 @@ describe('INGESTOR prerequisite 0v — geojson format', () => {
     const bad = clone(LOAD_RAVINES);
     bad.inputs.reads.externals[0].format = 'json';
     expect(() => pipeline.step(bad, async () => {})).toThrow(/does not satisfy step\.schema\.json/);
+  });
+
+  // -------------------------------------------------------------------------
+  // T7 — the F2 fence in behaviour (Spec 43 §9.5, Spec 124 Rule 1): the arm MUST
+  // stream the document (`fs.createReadStream`) and MUST NOT whole-file read it.
+  // commit cb21b6f3 slipped `fs.readFileSync(filePath,'utf8')` into this arm and
+  // broke the load_ravines F2 no-whole-file-read fence; this pins the fix at the
+  // call-site level so the reversion is caught even before the static fence.
+  // The same 4-feature fixture T1 uses: same result, streamed read.
+  // -------------------------------------------------------------------------
+  it('T7 — parseGeoJson reads THROUGH a stream: fs.createReadStream is called and fs.readFileSync is NOT', async () => {
+    const { file, cleanup } = fixture('stream.geojson', JSON.stringify(FEATURES_FOUR));
+    const readSpy = vi.spyOn(fs, 'createReadStream');
+    const wholeSpy = vi.spyOn(fs, 'readFileSync');
+    const wholePromiseSpy = vi.spyOn(fs.promises, 'readFile');
+    try {
+      const parsed = await acquireLib.parseGeoJson(file, 'AREA_SHORT_CODE', intOrNull, 'neighbourhood_id');
+      // The parse still lands the same numbers as T1 — the stream did not change the result.
+      expect(parsed).toMatchObject({ badKey: 2, nullGeometry: 1, rowsParsed: 4 });
+      expect(parsed.features).toHaveLength(1);
+      expect(readSpy).toHaveBeenCalledTimes(1);
+      expect(readSpy.mock.calls[0]![0]).toBe(file);
+      // The F2 fence: no whole-file read of ANY kind (readFileSync OR the async readFile —
+      // both buffer the document, and the fence bans the read, not the specific API).
+      expect(wholeSpy).not.toHaveBeenCalled();
+      expect(wholePromiseSpy).not.toHaveBeenCalled();
+    } finally {
+      readSpy.mockRestore();
+      wholeSpy.mockRestore();
+      wholePromiseSpy.mockRestore();
+      cleanup();
+    }
   });
 });

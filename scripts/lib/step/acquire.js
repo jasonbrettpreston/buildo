@@ -46,11 +46,114 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
-const { Readable } = require('stream');
+const { Readable, Transform } = require('stream');
 const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
 const { parse } = require('csv-parse');
+// `stream-json` is the GeoJSON arm's streamer (Spec 43 §9.5): `parser()` tokenises,
+// `Pick({filter:'features'})` pulls the ONE top-level array, `StreamArray()` emits its
+// elements one at a time. The `geoJson*` factories below are the pipeline stages, kept as
+// factories (not shared singletons — `stream-chain` stages are one-shot) so `parseGeoJson`
+// can be called more than once per process.
+const { parser } = require('stream-json');
+const { pick } = require('stream-json/filters/Pick');
+const { streamArray } = require('stream-json/streamers/StreamArray');
+
+/**
+ * The GeoJSON streaming chain (`parseGeoJson`): `parser()` tokenises, `Pick({filter:'features'})`
+ * pulls the ONE top-level array, `StreamArray()` emits it element by element. Each is a fresh
+ * instance per call — `stream-chain` stages are one-shot, never reused — so these are factories,
+ * not singletons.
+ */
+const geoJsonParser = () => parser();
+const geoJsonFeatures = () => pick({ filter: 'features' });
+const geoJsonStreamArray = () => streamArray();
+
+/**
+ * The GeoJSON parse-failure error (legacy anchor, `parseGeoJson`'s catch). `filePath` names
+ * the download; `err.message` is `stream-json`'s own reason (`Parser cannot parse input: …`).
+ * Extracted so the streamed arm and any future reader share ONE wording (§9.5 forbids
+ * reproducing the legacy 100-char prefix here — it requires buffering the document).
+ */
+const geoJsonFileError = (filePath, err) => new Error(
+  `Failed to parse GeoJSON file ${filePath}: ${err.message} `
+  + '(streamed via stream-json; the legacy 100-char prefix would require buffering the download)',
+);
+
+/**
+ * Thrown by `createFeaturesGuard` — kept a distinct class so `parseGeoJson`'s catch can tell
+ * a "not a FeatureCollection" structural refusal apart from a genuine JSON parse failure and
+ * NOT double-wrap it in `geoJsonFileError`'s "Failed to parse GeoJSON file" prefix (that
+ * prefix names a syntax error; this is a shape error on an otherwise-valid document).
+ */
+class GeoJsonFeaturesShapeError extends Error {}
+
+/**
+ * The `{features: [...]}` contract, enforced ON THE TOKEN STREAM — bounded memory, no
+ * whole-document buffer (Spec 43 §9.5). `Pick({filter:'features'})` alone cannot refuse a
+ * document that lacks the key entirely: it just matches nothing and `StreamArray` then
+ * yields zero elements, which is indistinguishable from a legitimate `"features": []` — the
+ * exact silent-empty-load gap the legacy in-memory check (`Array.isArray(doc.features)`)
+ * existed to close. This guard sits BEFORE `Pick` in the chain (`parser -> guard -> pick ->
+ * streamArray`), passes every token through unchanged, and only watches the TOP-LEVEL
+ * (`depth === 1`) key sequence: a `keyValue` "features" immediately followed by `startArray`
+ * satisfies the contract; a nested `properties.features` (depth > 1) is ignored — the guard
+ * does not fire on it (proven: docs/reports/golden n/a, see the 0v test's nested-key case).
+ * If the document ends without ever satisfying it, `_flush` rejects the pipeline BY NAME,
+ * which `stream/promises.pipeline` propagates as the SAME rejected promise a parser syntax
+ * error would (destroying the still-open `pick`/`streamArray` stages too).
+ */
+function createFeaturesGuard(filePath) {
+  let depth = 0;
+  let armedFeatures = false; // depth-1 keyValue was "features", awaiting its value token
+  let armedType = false; // depth-1 keyValue was "type", awaiting its value token
+  let satisfied = false;
+  let rootIsObject = null;
+  let docTypeValue = null;
+  return new Transform({
+    writableObjectMode: true,
+    readableObjectMode: true,
+    transform(chunk, _enc, cb) {
+      if (rootIsObject === null) rootIsObject = chunk.name === 'startObject';
+      switch (chunk.name) {
+        case 'startObject':
+        case 'startArray':
+          if (depth === 1 && armedFeatures && chunk.name === 'startArray') satisfied = true;
+          depth++;
+          armedFeatures = false;
+          armedType = false;
+          break;
+        case 'endObject':
+        case 'endArray':
+          depth--;
+          break;
+        case 'keyValue':
+          armedFeatures = depth === 1 && chunk.value === 'features';
+          armedType = depth === 1 && chunk.value === 'type';
+          break;
+        case 'stringValue':
+          if (depth === 1 && armedType) docTypeValue = chunk.value;
+          armedFeatures = false;
+          armedType = false;
+          break;
+        default:
+          armedFeatures = false;
+          armedType = false;
+          break;
+      }
+      cb(null, chunk);
+    },
+    flush(cb) {
+      if (satisfied) { cb(); return; }
+      cb(new GeoJsonFeaturesShapeError(
+        `${filePath} is not a GeoJSON FeatureCollection — expected an object with a `
+        + `"features" array, got ${rootIsObject ? 'object' : 'non-object value'}`
+        + `${docTypeValue ? ` (type "${docTypeValue}")` : ''}.`,
+      ));
+    },
+  });
+}
 
 const sourceVersion = require('../source-version');
 const { triggersAt } = require('./staleness');
@@ -430,11 +533,15 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
  * (the `parseShapefile` fallback), which then misses `keyProperty` and counts as a bad
  * key rather than crashing the run.
  *
- * The whole file is read here rather than streamed: the bytes already landed on disk
- * through the streamed hash-through (FENCE 0b230472 — a download is never buffered
- * whole), and `JSON.parse` has no streaming form. The read is therefore of the TEMP
- * file after acquisition, which is a bounded, already-validated payload; the download
- * path's §9.5 streaming guarantee is untouched.
+ * STREAMED (Spec 43 §9.5; restores the load_ravines F2 no-whole-file-read fence):
+ * `fs.createReadStream` → `stream-json` `parser()` → `createFeaturesGuard` (the
+ * `{features:[...]}` shape check, token-level) → `Pick({filter:'features'})` → `StreamArray`,
+ * consumed by an async-generator sink via `stream/promises.pipeline` (`streamPipeline`,
+ * already imported above for the zip-extraction arm). NOT `fs.readFileSync` (which cb21b6f3
+ * briefly introduced here) and NOT `fs.promises.readFile`/`arrayBuffer` either — all three
+ * buffer the WHOLE document, and the F2 fence bans any whole-file read in this file
+ * regardless of which read API spells it. `parseCsv` above streams for the same reason;
+ * this arm mirrors it, at the cost of an extra pipeline stage for the shape check.
  *
  * @param {string} filePath - the downloaded `source.geojson`
  * @param {string} keyProperty - the source-side attribute, `external.key_property`
@@ -445,43 +552,57 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
  * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper reads
  *   the same field name its descriptor declares.
  * @returns {{features: Array<{[keyColumn]: number|string, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}}
- * @throws {Error} on malformed JSON (the legacy loader's own message form, file + first
- *   100 chars) or on a document whose `features` is not an array — refused BY NAME, since
- *   a `{type:"FeatureCollection"}` with no features would otherwise silently parse to zero
- *   rows and a green verdict over an empty load.
+ * @throws {Error} on malformed JSON (the legacy loader's message form, file + the parser's
+ *   own reason — the 100-char prefix is not reproducible without buffering, which §9.5
+ *   forbids) or on a document whose `features` is not an array — refused BY NAME by
+ *   `createFeaturesGuard`, since a `{type:"FeatureCollection"}` with no features would
+ *   otherwise silently parse to zero rows and a green verdict over an empty load.
  */
 async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
-  const raw = fs.readFileSync(filePath, 'utf8');
-  let doc;
-  try {
-    doc = JSON.parse(raw);
-  } catch (err) {
-    // The legacy anchor: `Failed to parse GeoJSON file ${path}: ${err.message}
-    // (first 100 chars: ${raw.slice(0,100)})` — scripts/load-neighbourhoods.js:115-121.
-    // The first 100 characters are the DIAGNOSTIC: a CKAN error page, a truncated
-    // download and a schema change all look the same from the exception alone.
-    throw new Error(`Failed to parse GeoJSON file ${filePath}: ${err.message} (first 100 chars: ${raw.slice(0, 100)})`);
-  }
-  if (!doc || !Array.isArray(doc.features)) {
-    throw new Error(`${filePath} is not a GeoJSON FeatureCollection — expected an object with a `
-      + `"features" array, got ${doc === null ? 'null' : typeof doc}`
-      + `${doc && doc.type ? ` (type "${String(doc.type)}")` : ''}.`);
-  }
   const features = [];
   let badKey = 0;
   let nullGeometry = 0;
   let rowsParsed = 0;
-  for (const f of doc.features) {
-    rowsParsed++;
-    const props = (f && f.properties) || {};
-    const geometry = f ? f.geometry : null;
-    // Built ONCE, reused by the push AND handed to `coerceKey` (0s) — one stringify per
-    // feature, and the same string the write plan's `wkb_geometry` column receives.
-    const geojson = geometry == null ? null : JSON.stringify(geometry);
-    const key = coerceKey(props[keyProperty], { geojson });
-    if (key == null) { badKey++; continue; }
-    if (geometry == null) { nullGeometry++; continue; }
-    features.push({ [keyColumn]: key, geojson, record: props });
+  try {
+    await streamPipeline(
+      fs.createReadStream(filePath),
+      geoJsonParser(),
+      createFeaturesGuard(filePath),
+      geoJsonFeatures(),
+      geoJsonStreamArray(),
+      // The async-generator sink IS the consumer: `stream/promises.pipeline` drives it with
+      // backpressure exactly like the `for await` loop `parseCsv` runs above, so even a
+      // 200 MB FeatureCollection never buffers whole (§9.5), and — unlike a bare `for await`
+      // over the last piped stream — a `pipeline()` sink also gets any UPSTREAM stage's error
+      // (the read stream's ENOENT, the parser's syntax error, the guard's shape refusal):
+      // `pipeline()` destroys every stage and rejects with the FIRST one to fail.
+      async function* geoJsonSink(source) {
+        // Each iteration yields `{ key: <index>, value: <feature> }`; `value` is the feature,
+        // exactly the `f` the old array loop read off `doc.features`. Per-feature logic is
+        // UNCHANGED — the tallies and their ORDER (`rowsParsed` → `badKey` → `nullGeometry`),
+        // the `{ [keyColumn], geojson, record }` shape and `geojson =
+        // JSON.stringify(feature.geometry)` are byte-identical to the pre-stream version.
+        for await (const { value: f } of source) {
+          rowsParsed++;
+          const props = (f && f.properties) || {};
+          const geometry = f ? f.geometry : null;
+          // Built ONCE, reused by the push AND handed to `coerceKey` (0s) — one stringify per
+          // feature, and the same string the write plan's `wkb_geometry` column receives.
+          const geojson = geometry == null ? null : JSON.stringify(geometry);
+          const key = coerceKey(props[keyProperty], { geojson });
+          if (key == null) { badKey++; continue; }
+          if (geometry == null) { nullGeometry++; continue; }
+          features.push({ [keyColumn]: key, geojson, record: props });
+        }
+      },
+    );
+  } catch (err) {
+    // A shape refusal (`createFeaturesGuard`) is already the right message BY NAME — do not
+    // re-wrap it in the "Failed to parse GeoJSON file" prefix, which names a SYNTAX failure.
+    // Everything else (ENOENT on the read stream, a `stream-json` parse error, a non-array
+    // `features` value StreamArray itself refuses) gets the legacy-anchored wording.
+    if (err instanceof GeoJsonFeaturesShapeError) throw err;
+    throw geoJsonFileError(filePath, err);
   }
   return { features, badKey, nullGeometry, rowsParsed };
 }
