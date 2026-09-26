@@ -798,6 +798,20 @@ function buildLinkMeta(ctx) {
     threshold_updated_at: (ctx.gate && ctx.gate.configVersionUpdatedAt) || null,
     // LW-D19 — always observable, per run, even when 0 (the expected steady state).
     is_wsib_registered_corrected: m.is_wsib_registered_corrected || 0,
+    // WF3 GC-5 (2026-09-26) — the self-consumed producer half of the declared
+    // `upstream_ledger` trigger (staleness.trigger: table:"wsib_registry",
+    // emit_key:"wsib_registry_count"). A STRING because the reader compares
+    // String(prevCount) (mirrors link_massing's building_footprints_count and
+    // link_parcels' code_version verbatim). `ctx.cumulative.total` (NOT ctx.matched.total —
+    // buildCumulativeSql's result is threaded onto ctx.cumulative by the runner,
+    // scripts/lib/step/index.js:1844 `cumulative: { linked: Number(c.linked), total:
+    // Number(c.total) }`) is byte-identical in scope to the trigger's own
+    // `SELECT COUNT(*) FROM wsib_registry` — no new query. CAUGHT LIVE (WF3 landing,
+    // 2026-09-26): a first attempt read `m.total` (ctx.matched.total, always undefined)
+    // and the forced-FULL proof run captured the string "undefined" — the mocked RED/GREEN
+    // test had the same wrong shape, so it passed a broken implementation. Fixed against the
+    // real runner wiring, not the plan's citation, and re-proven with a second forced-FULL run.
+    wsib_registry_count: String(ctx.cumulative.total),
   };
 }
 

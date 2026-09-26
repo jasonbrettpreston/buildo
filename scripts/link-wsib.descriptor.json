@@ -486,7 +486,8 @@
   },
 
   "emits": [
-    { "key": "threshold_updated_at", "type": "string", "consumers": ["link_wsib"] }
+    { "key": "threshold_updated_at", "type": "string", "consumers": ["link_wsib"] },
+    { "key": "wsib_registry_count", "type": "string", "consumers": ["link_wsib"] }
   ],
 
   "deviations": [
