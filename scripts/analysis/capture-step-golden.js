@@ -331,6 +331,54 @@ function computeSourceFingerprint({ step, descriptorPath, notesPath, computePath
   return { source_fingerprint: hash.digest('hex'), fingerprint_files: files };
 }
 
+const LIB_STEP_REL = 'scripts/lib/step';
+
+/** Every `scripts/lib/step/**\/*.js` path, repo-relative (forward slashes), SORTED. */
+function libStepFiles() {
+  const out = [];
+  const walk = (relDir) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(path.join(LIB_STEP_REL, relDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      const rel = relDir ? `${relDir}/${e.name}` : e.name;
+      if (e.isDirectory()) walk(rel);
+      else if (e.isFile() && e.name.endsWith('.js')) out.push(`${LIB_STEP_REL}/${rel}`);
+    }
+  };
+  walk('');
+  return out.sort();
+}
+
+/**
+ * Gate G freshness (Spec 124 §5 R-BA gate G, Spec 122 §5.3, WF2 "standardized
+ * gates", 2026-09-26) — sha256 over the sorted repo-relative path + LF-
+ * normalised content of every `scripts/lib/step/**\/*.js`. Stamped as a
+ * TOP-LEVEL `lib_fingerprint` field on every NEW capture (NOT folded into
+ * `source_fingerprint`, which `golden-fingerprint.infra.test.ts` locks byte-
+ * for-byte against the 20 already-committed goldens). This is the SAME shape
+ * as `scripts/analysis/gates/captures.mjs`'s `computeLibFingerprint` — that
+ * module owns the answer set for the gate; this duplicates the walk only
+ * because this harness is CJS and cannot import an ESM gate module. A
+ * both-directions test (`gate-captures.infra.test.ts` T3) locks the two
+ * together so they can never silently drift.
+ * @returns {string}
+ */
+function computeLibFingerprint() {
+  const files = libStepFiles();
+  if (files.length === 0) throw new Error('no scripts/lib/step/**/*.js found — refusing to hash an empty set');
+  const hash = crypto.createHash('sha256');
+  for (const f of files) {
+    hash.update(f);
+    hash.update('\n');
+    hash.update(normaliseEol(fs.readFileSync(f, 'utf8')));
+  }
+  return hash.digest('hex');
+}
+
 /**
  * Which tables to snapshot. Descriptor-driven when the descriptor declares `outputs.writes`;
  * the `--tables=` arg is the fallback for steps that have no descriptor yet. Pure.
@@ -989,6 +1037,12 @@ async function main() {
     console.log(`[capture-step-golden] source_fingerprint SKIPPED — ${descriptorPath} does not exist yet (pre-conversion capture)`);
   }
 
+  // Gate G freshness (fast invariant #39) — a TOP-LEVEL stamp, sibling to
+  // source_fingerprint, never nested inside it (Ask 2 ruling: a separate field
+  // so a scripts/lib/step/** change marks affected steps pending_recapture
+  // without also looking like a source_fingerprint drift).
+  doc.lib_fingerprint = computeLibFingerprint();
+
   const tableLine = doc.table_state
     .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}` +
       (doc.table_timing[t.table] != null ? ` (${doc.table_timing[t.table]} ms)` : ''))
@@ -1052,6 +1106,7 @@ module.exports = {
   deriveInvariantSpecFromDescriptor,
   invariantResult,
   computeSourceFingerprint,
+  computeLibFingerprint,
   stripLastMeasuredForFingerprint,
   computePathFor,
   notesPathFor,

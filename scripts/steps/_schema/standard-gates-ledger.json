@@ -3,7 +3,9 @@
     "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
     "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open.",
     "Gate E rows (2026-09-26) — 32 hard-coded compute literals (13 UPPER_SNAKE numeric consts, 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
-    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ)."
+    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ).",
+    "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X).",
+    "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture."
   ],
   "contract_version": 1,
   "rows": [
@@ -1263,6 +1265,566 @@
       "item": "eol:src/tests/steps/link_neighbourhoods/violations.test.ts",
       "disposition": "pending_remediation",
       "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_schema",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "load_ravines",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_massing",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_wsib",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcel_addresses",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_centroids",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcels",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "refresh_snapshot",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_parcels",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_global_coverage",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_data_bounds",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_engine_health",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_neighbourhoods",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "geocode_permits",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_parcel_sanity",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_ravines",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_heritage",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_parcel_cost_estimates",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "address_points",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "parcels",
+      "item": "explained:report-citation",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/golden/<slug>/explained-diffs.json authored yet — the legacy report-substring citation (checkCaptures' countRe block) is the only G8 diff-explanation channel today (WF2 gate G3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "load_ravines",
+      "item": "nonzero:ravines",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_wsib",
+      "item": "nonzero:wsib_registry",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_wsib",
+      "item": "nonzero:entities",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcel_addresses",
+      "item": "nonzero:parcel_address_points",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_centroids",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcels",
+      "item": "nonzero:permit_parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcels",
+      "item": "nonzero:permits",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_parcels",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_parcels",
+      "item": "nonzero:enrich_parcels_pass3_scope",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_neighbourhoods",
+      "item": "nonzero:permits",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "geocode_permits",
+      "item": "nonzero:permits",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_ravines",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_heritage",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_parcel_cost_estimates",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "address_points",
+      "item": "nonzero:address_points",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "parcels",
+      "item": "nonzero:parcels",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_schema",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "load_ravines",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_massing",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_wsib",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcel_addresses",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_centroids",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_parcels",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "refresh_snapshot",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_parcels",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_global_coverage",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_data_bounds",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_engine_health",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "link_neighbourhoods",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "geocode_permits",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "assert_parcel_sanity",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_ravines",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "enrich_heritage",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "compute_parcel_cost_estimates",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "address_points",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "G",
+      "step": "parcels",
+      "item": "lib_fingerprint",
+      "disposition": "pending_recapture",
+      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"

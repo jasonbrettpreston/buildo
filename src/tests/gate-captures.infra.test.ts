@@ -29,6 +29,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { spawnSync } from 'child_process';
 import * as capturesRaw from '../../scripts/analysis/gates/captures.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
 
@@ -39,7 +40,13 @@ type Capture = { file: string; doc: Record<string, unknown> | null };
 type FleetEntry = { descriptor: Record<string, unknown>; slug: string; posts: Capture[]; cohort: Record<string, unknown> | null };
 type NonzeroState = { table: string; decision: string; detail: string };
 type ExplainedResult = { explained: boolean; entry: Record<string, unknown> | null; reason: string };
-type NonzeroWalk = { pass: boolean; unallowed: Array<{ step: string; item: string }>; orphans: unknown[]; vacuous: string[] };
+type NonzeroWalk = {
+  pass: boolean;
+  unallowed: Array<{ step: string; item: string }>;
+  orphans: unknown[];
+  vacuous: string[];
+  allowed: Array<{ violation: { step: string; item: string } }>;
+};
 
 const captures = capturesRaw as unknown as {
   summaryWriteCount: (doc: unknown) => number;
@@ -358,7 +365,7 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     'parcels:parcels',
   ];
 
-  it('T4: live — every nonzero violation is ledger-allowed or a known RED-FIRST pair, and zero orphans', () => {
+  it('T4: live — every measured nonzero violation is now ledger-allowed (landed 2026-09-26), and zero orphans', () => {
     const fleet = captures.loadCapturesFleet(REPO_ROOT);
     const converted = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, CONVERTED_REL), 'utf8')).converted as unknown[];
     // The fleet is DERIVED from converted.json (R-AN), never a retyped list.
@@ -373,9 +380,15 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     // Zero orphans is the STRUCTURAL invariant and holds unconditionally — a row
     // whose violation is fixed must be deleted (R-X).
     expect(out.orphans).toEqual([]);
-    // The unallowed set is EXACTLY the measured receipt — no more, no fewer.
-    const seen = out.unallowed.map((u) => `${u.step}:${u.item.replace(/^nonzero:/, '')}`).sort();
-    expect(seen).toEqual([...KNOWN_RED_FIRST].sort());
+    // Landed (WF2 gate G wiring, 2026-09-26): the orchestrator filed a
+    // pending_recapture row for every measured RED-FIRST pair, so the live
+    // walk is now GREEN. The allowed set is EXACTLY the measured receipt.
+    expect(out.unallowed).toEqual([]);
+    expect(out.pass).toBe(true);
+    const allowedSeen = out.allowed
+      .map((a) => `${a.violation.step}:${a.violation.item.replace(/^nonzero:/, '')}`)
+      .sort();
+    expect(allowedSeen).toEqual([...KNOWN_RED_FIRST].sort());
   });
 
   it('T4b: the writing steps (outputs.writes[]) are a proper subset of the fleet, and every one is measured', () => {
@@ -403,5 +416,61 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     const body = fn.slice(0, fn.indexOf('\n}'));
     expect(body).not.toContain('lib_fingerprint');
     expect(body).not.toContain('lib/step');
+  });
+
+  // -------------------------------------------------------------------------
+  // T6 — WIRING (orchestrator, 2026-09-26): checkNonzero's gate-G ledger scope,
+  // capture-step-golden.js's CJS lib_fingerprint (must match the ESM answer and
+  // land as a top-level doc field), libStagedSelectsAll, and the three live
+  // fast invariants (#38/#39/#40) in step-validate.mjs.
+  // -------------------------------------------------------------------------
+  describe('T6: wiring', () => {
+    it('T6a: checkNonzero never reports a lib_fingerprint/explained row as an orphan of the nonzero check', () => {
+      const otherRows = [
+        { gate: 'G', step: 'fixture_step', item: 'lib_fingerprint', disposition: 'pending_recapture', why: 'w', closing_brief: 'b', filed: '2026-09-26', adjudicated_by: 'operator' },
+        { gate: 'G', step: 'fixture_step', item: 'explained:report-citation', disposition: 'pending_remediation', why: 'w', closing_brief: 'b', filed: '2026-09-26', adjudicated_by: 'operator' },
+      ];
+      const desc = { identity: { name: 'fixture_step' }, outputs: { writes: [{ table: 'parcels' }] } };
+      const fleet = [{ descriptor: desc, slug: 'fixture_step', posts: [{ file: 'a.json', doc: { summary: { records_new: 5, records_updated: 0 } } }], cohort: null }];
+      const out = captures.checkNonzero(fleet, otherRows);
+      expect(out.orphans).toEqual([]);
+      expect(out.pass).toBe(true);
+    });
+
+    it('T6b: capture-step-golden.js (CJS) computeLibFingerprint matches the ESM gate answer', async () => {
+      const cjs = (await import(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'))) as { computeLibFingerprint: () => string };
+      const esmFp = captures.computeLibFingerprint(REPO_ROOT);
+      expect(cjs.computeLibFingerprint()).toBe(esmFp);
+    });
+
+    it('T6c: capture-step-golden.js stamps a top-level lib_fingerprint (not nested in source_fingerprint)', () => {
+      const harness = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'), 'utf8');
+      expect(harness).toMatch(/doc\.lib_fingerprint = computeLibFingerprint\(\)/);
+    });
+
+    it('T6d: the three fast invariants #38/#39/#40 are wired in step-validate.mjs, importing captures.mjs', () => {
+      const sv = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs'), 'utf8');
+      expect(sv).toContain("from './gates/captures.mjs'");
+      expect(sv).toMatch(/id:\s*38,/);
+      expect(sv).toMatch(/id:\s*39,/);
+      expect(sv).toMatch(/id:\s*40,/);
+      expect(sv).toContain('capturesSelfTest();');
+    });
+
+    it('T6e: live — step-validate.mjs --all --fast reports no registry-level gate-G failure', () => {
+      const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
+        cwd: REPO_ROOT, encoding: 'utf8', timeout: 180_000,
+      });
+      const stdout = `${run.stdout || ''}`;
+      expect(stdout).not.toMatch(/#38:.*FAIL|#39:.*FAIL|#40:.*FAIL/);
+    });
+
+    it('T6f: libStagedSelectsAll (pure, in step-validate.mjs) — both directions via the self-test', () => {
+      const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--self-test-only'], {
+        cwd: REPO_ROOT, encoding: 'utf8', timeout: 60_000,
+      });
+      expect(run.status).toBe(0);
+      expect(`${run.stdout || ''}`).toContain('self-test PASSED');
+    });
   });
 });

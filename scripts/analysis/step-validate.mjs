@@ -137,6 +137,17 @@
  *      fast invariant — the score is only known once that step's own report
  *      is computed). `scripts/analysis/gates/score-floor.mjs` owns both
  *      answer sets
+ *   38-40. CAPTURE-NONZERO/FRESHNESS/EXPLAINED (Spec 124 §5 R-BA gate G, R-C;
+ *      Spec 122 §5.3; Spec 123 §6 G8; WF2 "standardized gates", 2026-09-26):
+ *      #38 a declared write table needs a golden POST capture proving
+ *      records_new+records_updated>0 (or a cohort.json target for a
+ *      multi-write step); #39 every post capture's `lib_fingerprint` (stamped
+ *      by `capture-step-golden.js`) is fresh against `scripts/lib/step/**`,
+ *      `missing` (legacy) ledger-allowed, `mismatch` always RED; #40 a step's
+ *      G8 diff-explanation channel is `explained-diffs.json` or a dated
+ *      transition ledger row — `checkCaptures(`'s own diff loop applies the
+ *      per-key decision live. `scripts/analysis/gates/captures.mjs` owns all
+ *      three answer sets
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -240,6 +251,7 @@ import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from 
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
+import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, LIB_FINGERPRINT_ITEM, EXPLAINED_REPORT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
 import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -336,9 +348,26 @@ function gitStagedFiles() {
  * scorecards would otherwise be permanently unable to land, since backfilling
  * IS touching every report on purpose).
  */
+/**
+ * Gate G2 (Spec 124 §5 R-BA gate G, Fold GC-4, WF2 "standardized gates",
+ * 2026-09-26) — a `scripts/lib/step/**` change is a RUNNER change: it can
+ * affect every converted step's captures (the very `lib_fingerprint` gate G
+ * checks), so `--staged` must select the WHOLE registry, not just the steps
+ * whose own files happen to be staged alongside it. PURE — one closed
+ * predicate, self-testable with no git invocation.
+ * @param {string[]} stagedPaths
+ * @returns {boolean}
+ */
+function libStagedSelectsAll(stagedPaths) {
+  return (Array.isArray(stagedPaths) ? stagedPaths : []).some((p) => String(p).startsWith('scripts/lib/step/'));
+}
+
 function filterToStaged(registry) {
   const staged = new Set(gitStagedFiles());
   if (staged.size === 0) return [];
+  if (libStagedSelectsAll([...staged])) {
+    return registry.map((row) => ({ ...row, blocking: true }));
+  }
   const out = [];
   for (const row of registry) {
     const notesPath = path.dirname(row.relFile) + '/' + path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json';
@@ -1271,6 +1300,16 @@ function isGoldPreKnownGap(slug, invocationKeyStr) {
 function checkCaptures(row, descriptorInfo, computePath, report) {
   const manifest = loadManifest();
   const findings = { invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
+  // Gate G3 (Spec 124 §5 R-BA gate G, Spec 123 §6 G8, WF2 "standardized gates",
+  // 2026-09-26) — the PREFERRED explanation channel is a committed
+  // `explained-diffs.json` entry (`explainedDecision(`, normalised-key match, a
+  // `why` of >= 20 chars); the legacy report-substring citation below is
+  // reachable ONLY when a `{gate:'G', item:'explained:report-citation'}` ledger
+  // row permits it for this step (transition posture — every converted step
+  // carries this row today, none has authored `explained-diffs.json` yet).
+  const explainedRegistry = loadExplained(REPO_ROOT, row.slug);
+  const reportCitationAllowed = loadLedger(REPO_ROOT).rows
+    .some((r) => r && r.gate === 'G' && r.step === row.slug && r.item === EXPLAINED_REPORT_ITEM);
 
   const invocations = derivedInvocations(manifest, row.slug, descriptorInfo && descriptorInfo.descriptor);
   const posts = capturesIn(row.slug, 'post');
@@ -1341,7 +1380,14 @@ function checkCaptures(row, descriptorInfo, computePath, report) {
       const rawSegments = String(key).replace(/\[\d+\]/g, '').split('.').filter((s) => s && !/^\d+$/.test(s));
       const segments = rawSegments.filter((s) => !GENERIC_WRAPPERS.has(s));
       let cited;
-      if (segments.length > 0) {
+      // Gate G3 — the explained-diffs.json channel is checked FIRST; the
+      // report-substring citation below runs only when it did not explain the
+      // key AND the step's transition row permits the legacy path.
+      if (explainedDecision(key, explainedRegistry).explained) {
+        cited = true;
+      } else if (!reportCitationAllowed) {
+        cited = false;
+      } else if (segments.length > 0) {
         // A real field name survives filtering — require it cited BY NAME.
         const leaf = segments[segments.length - 1];
         cited = report && report.toLowerCase().includes(leaf.toLowerCase());
@@ -1927,6 +1973,114 @@ function fastInvariants(rows, converted, pending) {
       pass: eol.pass,
       blockedSlugs: eol.blockedSlugs,
       detail: eol.detail,
+    });
+  }
+
+  // 38. CAPTURE-NONZERO (Spec 124 §5 R-BA gate G, R-C, WF2 "standardized
+  // gates", 2026-09-26) — a step that declares `outputs.writes[].table` must
+  // PROVE a write with a golden POST capture whose `records_new+records_updated
+  // > 0` (single target: `forced_nonzero`; multi-target: a `cohort.json` target
+  // naming a nonzero capture — step-level counters cannot attribute a write to
+  // one of several tables). `outputs:"none"` is vacuous, never listed. Allowed
+  // only by a `{gate:'G', item:'nonzero:<table>'}` ledger row; an ORPHAN row
+  // (its write since captured) is RED too (R-X). `scripts/analysis/gates/captures.mjs`
+  // owns the answer set.
+  {
+    const nz = checkNonzero(loadCapturesFleet(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 38,
+      slug: '(registry)',
+      pass: nz.pass,
+      blockedSlugs: nz.blockedSlugs,
+      detail: nz.detail,
+    });
+  }
+
+  // 39. CAPTURE-FRESHNESS (Spec 124 §5 R-BA gate G, Spec 122 §5.3, WF2
+  // "standardized gates", 2026-09-26) — every post capture's top-level
+  // `lib_fingerprint` (stamped by `capture-step-golden.js#computeLibFingerprint`,
+  // sha256 over `scripts/lib/step/**`) must equal the CURRENT fingerprint
+  // (`fresh`); a legacy capture with no field (`missing`) is allowed only by a
+  // `{gate:'G', item:'lib_fingerprint'}` ledger row; a `mismatch` is RED
+  // regardless of a row. A row for a step with no `missing` capture left is an
+  // ORPHAN (R-X). `scripts/analysis/gates/captures.mjs` owns the answer set.
+  {
+    const fleet39 = loadCapturesFleet(REPO_ROOT).map((e) => ({ slug: e.slug, captures: e.posts }));
+    const current = computeLibFingerprint(REPO_ROOT);
+    const ledgerRows39 = loadLedger(REPO_ROOT).rows;
+    const fr = fleetFreshness(fleet39, current, ledgerRows39, {});
+    const blockedSlugs39 = [...new Set(fr.violations.map((v) => v.step))];
+    const lfRows = ledgerRows39.filter((r) => r && r.gate === 'G' && r.item === LIB_FINGERPRINT_ITEM);
+    const missingSteps = new Set(fr.states.filter((s) => s.state === 'missing').map((s) => s.slug));
+    const orphanRows39 = lfRows.filter((r) => !missingSteps.has(r.step));
+    const pass39 = fr.violations.length === 0 && orphanRows39.length === 0;
+    const detail39 = pass39
+      ? `CAPTURE-FRESHNESS (gate G): ${fr.states.length} post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed`
+      : `CAPTURE-FRESHNESS (gate G): ${fr.violations.length} unallowed`
+        + (fr.violations.length ? ` [${fr.violations.map((v) => `${v.step}:${v.item}`).join('; ')}]` : '')
+        + `; ${orphanRows39.length} orphan ledger row(s)`
+        + (orphanRows39.length ? ` [${orphanRows39.map((o) => o.step).join('; ')}]` : '');
+    results.push({
+      id: 39,
+      slug: '(registry)',
+      pass: pass39,
+      blockedSlugs: [...new Set([...blockedSlugs39, ...orphanRows39.map((o) => o.step)])],
+      detail: detail39,
+    });
+  }
+
+  // 40. CAPTURE-EXPLAINED (Spec 124 §5 R-BA gate G, Spec 123 §6 G8, WF2
+  // "standardized gates", 2026-09-26) — a step's G8 diff-explanation channel is
+  // closed: either `docs/reports/golden/<slug>/explained-diffs.json`
+  // (`{contract_version:1, diffs:[{key,why}]}`) exists and is well-formed (the
+  // per-diff `listed`/RED decision is applied live inside `checkCaptures(`),
+  // OR — during the transition — a `{gate:'G', item:'explained:report-citation'}`
+  // ledger row permits the legacy report-substring citation `checkCaptures(`
+  // still falls back to. A step with NEITHER is RED (no diff-explanation
+  // channel at all); a step that now HAS a valid `explained-diffs.json` but
+  // still carries the transition row is an ORPHAN (R-X — delete the row once
+  // the file lands). Structural only (file-shape), not a diff re-run — the
+  // per-diff decision is `checkCaptures('s own `explainedDecision(` call, live,
+  // every run. `scripts/analysis/gates/captures.mjs` owns the answer set.
+  {
+    const rowsAll40 = loadLedger(REPO_ROOT).rows;
+    const reportCitationRows = rowsAll40.filter((r) => r && r.gate === 'G' && r.item === EXPLAINED_REPORT_ITEM);
+    const violations40 = [];
+    const orphans40 = [];
+    // `loadConvertedDescriptors` (identity.name), NOT `loadScoreFloorSlugs`
+    // (file-basename kebab->snake) — the latter mis-derives 'load_address_points'/
+    // 'load_parcels' for the two steps whose script filename differs from its
+    // identity.name ('address_points'/'parcels'; measured 2026-09-26).
+    const slugs40 = loadConvertedDescriptors(REPO_ROOT).map((d) => d.identity && d.identity.name).filter(Boolean);
+    for (const slug of slugs40) {
+      const explainedDoc = loadExplained(REPO_ROOT, slug);
+      const hasRow = reportCitationRows.some((r) => r.step === slug);
+      if (explainedDoc !== null) {
+        const diffsArr = Array.isArray(explainedDoc.diffs) ? explainedDoc.diffs : null;
+        if (explainedDoc.contract_version !== 1 || !diffsArr) {
+          violations40.push({ step: slug, item: 'explained:malformed', detail: `${slug}/explained-diffs.json is not {contract_version:1, diffs:[...]}` });
+        }
+        if (hasRow) orphans40.push({ step: slug, item: EXPLAINED_REPORT_ITEM });
+        continue;
+      }
+      if (!hasRow) {
+        violations40.push({ step: slug, item: EXPLAINED_REPORT_ITEM, detail: `${slug} has no explained-diffs.json and no explained:report-citation ledger row permitting the legacy citation` });
+      }
+    }
+    const blockedSlugs40 = [...new Set([...violations40, ...orphans40].map((v) => v.step))];
+    const pass40 = violations40.length === 0 && orphans40.length === 0;
+    const detail40 = pass40
+      ? `CAPTURE-EXPLAINED (gate G): ${slugs40.length} step(s) checked — every diff-explanation channel accounted for`
+      : `CAPTURE-EXPLAINED (gate G): ${violations40.length} violation(s)`
+        + (violations40.length ? ` [${violations40.map((v) => `${v.step}:${v.item}`).join('; ')}]` : '')
+        + `; ${orphans40.length} orphan ledger row(s)`
+        + (orphans40.length ? ` [${orphans40.map((o) => o.step).join('; ')}]` : '');
+    results.push({
+      id: 40,
+      slug: '(registry)',
+      pass: pass40,
+      blockedSlugs: blockedSlugs40,
+      detail: detail40,
     });
   }
 
@@ -4296,6 +4450,19 @@ function selfTest() {
   // in scripts/analysis/gates/score-floor.mjs (its own selfTest, run here so
   // this file's single `selfTest()` entry point covers it too).
   scoreFloorSelfTest();
+  // CAPTURE-NONZERO/FRESHNESS/EXPLAINED (fast invariants #38-#40, Spec 124 §5
+  // R-BA gate G, R-C, Spec 122 §5.3, Spec 123 §6 G8, WF2 "standardized gates",
+  // 2026-09-26) — the three closed answer sets + the orphan directions live
+  // entirely in scripts/analysis/gates/captures.mjs (its own selfTest, run
+  // here so this file's single `selfTest()` entry point covers it too).
+  capturesSelfTest();
+  // GATE G2 (Fold GC-4) — libStagedSelectsAll both directions.
+  if (!libStagedSelectsAll(['scripts/lib/step/verdict.js'])) {
+    throw new Error('self-test FAILED (gate G2): a staged scripts/lib/step/** path must select the whole registry');
+  }
+  if (libStagedSelectsAll(['docs/specs/01-pipeline/124_step_standard_policy.md'])) {
+    throw new Error('self-test FAILED (gate G2): a non-lib-step staged path must NOT select the whole registry');
+  }
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked

@@ -373,6 +373,10 @@ export function loadCapturesFleet(repoRoot = REPO_ROOT) {
 
 /**
  * Gate G's NONZERO half over the whole fleet. An ORPHAN row makes `pass` false.
+ * Scoped to `item:` starting `NONZERO_ITEM_PREFIX` — gate G is shared with the
+ * freshness (`lib_fingerprint`) and explained (`explained:*`) items, and an
+ * un-scoped `matchLedger('G', ...)` call would report every OTHER gate-G row
+ * as an orphan of this check (the same class of bug gate F's checkEol had).
  * @param {Array<{descriptor: object, slug: string, posts: Array, cohort: object|null}>} fleet
  * @param {Array<object>} ledgerRows
  */
@@ -391,7 +395,9 @@ export function checkNonzero(fleet, ledgerRows) {
       }
     }
   }
-  const { unallowed, orphans, allowed } = matchLedger('G', violations, ledgerRows);
+  const nonzeroRows = (Array.isArray(ledgerRows) ? ledgerRows : [])
+    .filter((r) => r && typeof r.item === 'string' && r.item.startsWith(NONZERO_ITEM_PREFIX));
+  const { unallowed, orphans, allowed } = matchLedger('G', violations, nonzeroRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const detail = (unallowed.length || orphans.length)
     ? `CAPTURE-NONZERO (gate G): ${unallowed.length} write target(s) with no nonzero capture`
