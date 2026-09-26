@@ -697,6 +697,16 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 
 **Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
+### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
+
+| Word | Status | Detail |
+|---|---|---|
+| STANDARDIZED | PASS | PASS (1 deferred) |
+| OBSERVABLE | PASS | PASS (3 deferred) |
+| SCALABLE | PASS | PASS (1 deferred) |
+| UNDERSTANDABLE | PASS | PASS |
+| ACCURATE | PASS | PASS (4 deferred) |
+
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
@@ -706,7 +716,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=83 RED-evidence=true |
+| G7 | 3 | 3 | file=true fences=3 it-count=83 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=83 |
@@ -732,6 +742,20 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 20 converted slug(s) — 12 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 47 declared counter source(s) across 16 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 | 27 | (registry) | PASS | ROW-ERROR-GATE: 4 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
+| 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
+| 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
+| 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 1 contract(s) checked, all closed (1 ledger-allowed, 0 present+typed/excluded) |
+| 37 | (registry) | PASS | LF-ONLY (gate F): 5 path(s) checked, all LF (5 ledger-allowed) |
+| 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 4 x-banned-for-new path(s) enforced |
+| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 30 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
+| 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 247 definition row(s) checked, 0 legal mirror(s), 0 disagreements |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (16 ledger-allowed, 4 outputs:"none" vacuous) |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 65 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 20 step(s) checked — every diff-explanation channel accounted for |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 31 finding(s), all ledger-allowed (31) |
+| 41 | (registry) | FAIL | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact [link_massing; link_neighbourhoods unledgered]; 0 orphan ledger row(s) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -740,12 +764,47 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 - compare ran: true · diffs found: 91 · unexplained: 0
 
 ### Test suite (item iii)
-- 1538/1539 passed (suite success=false)
-- harvested: 26 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1511/1547 passed (suite success=false)
+- harvested: 27 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
+- failing (36):
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/assert-data-bounds.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/assert-global-coverage.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/enrich-parcels.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/enrich-ravines.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/link-massing.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/link-wsib.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/load-parcels.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/load-ravines.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/refresh-snapshot.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
+  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > RED — every compute-shape rule FIRES on the known-bad fixture (Spec 121 §12b.6)
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > a step with NO when:"pre_write" checks reports Rule 11 enforced-green, vacuously
+  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > link_massing: 1 real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green
+  - src/tests/step-conformance.infra.test.ts > Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful) > link_massing: shape=link declares force_full_on_next_run and its runner (runLinkPhase) is measured REACHABLE against the live scripts/lib/step/index.js
+  - src/tests/steps/assert_data_bounds/violations.test.ts > assert_data_bounds — descriptor + compute (flipped from it.fails at commit 7) > the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)
+  - src/tests/steps/assert_global_coverage/violations.test.ts > assert_global_coverage — descriptor/compute claims, all flipped plain at commit 9 (0 it.fails remain) > the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)
+  - src/tests/steps/link_wsib/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #150 Gate 1 — reproducible against itself: all 3 PRE captures (commit 5, no forced-FULL yet — A-7 not ruled) hash-identical; the POST triple hash-identical TOO, but does NOT match the PRE hash — A-7 landed (a real repair moved rows)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -761,10 +820,10 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 | 8 | Per-target write discipline | enforced-green |  |
 | 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
 | 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
-| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
-| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (vitest not run, or no before-image target)) |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | measured | descriptor=42441B notes=8210B checks=19 rows records_meta=1390B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=42441B notes=8210B checks=19 rows records_meta=1390B (newest post/ capture) |
 
-**Enforced-green: 13/14**
+**Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 
