@@ -81,7 +81,7 @@ describe('standard-gates ledger (R-BA)', () => {
   });
 
   it('T1b: GATES and DISPOSITIONS are the closed sets R-BA names', () => {
-    expect(ledger.GATES).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I']);
+    expect(ledger.GATES).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'K']);
     expect(ledger.DISPOSITIONS.permanent).toEqual([
       'non_tunable',
       'physical_constant',

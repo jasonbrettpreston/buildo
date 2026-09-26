@@ -2399,6 +2399,186 @@
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "assert_schema",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/assert_schema/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "load_ravines",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/load_ravines/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "link_wsib",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/link_wsib/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "link_parcel_addresses",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/link_parcel_addresses/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "compute_centroids",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/compute_centroids/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "link_parcels",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/link_parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "refresh_snapshot",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/refresh_snapshot/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "enrich_parcels",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/enrich_parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "assert_global_coverage",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/assert_global_coverage/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "assert_data_bounds",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/assert_data_bounds/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "assert_engine_health",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/assert_engine_health/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "geocode_permits",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/geocode_permits/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "assert_parcel_sanity",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/assert_parcel_sanity/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "enrich_ravines",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/enrich_ravines/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "enrich_heritage",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/enrich_heritage/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "compute_parcel_cost_estimates",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/compute_parcel_cost_estimates/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "address_points",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/address_points/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
+    },
+    {
+      "gate": "K",
+      "step": "parcels",
+      "item": "red-evidence",
+      "disposition": "pending_remediation",
+      "why": "no docs/reports/red-evidence/parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
+      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
+      "filed": "2026-09-26",
+      "adjudicated_by": "operator"
     }
   ]
 }

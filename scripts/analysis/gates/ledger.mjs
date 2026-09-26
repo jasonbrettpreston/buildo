@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /** The closed set of gates that speak the ledger (Spec 124 §5 R-BA table). */
-export const GATES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I'];
+export const GATES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'K'];
 
 /**
  * The closed disposition menu, split by what the disposition CLAIMS:

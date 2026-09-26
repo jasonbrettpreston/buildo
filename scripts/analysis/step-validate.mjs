@@ -261,6 +261,7 @@ import {
   selfTest as registriesSelfTest,
 } from './gates/registries.mjs';
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
+import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
 // backfill context calls it directly for BOTH frequencies (every_run AND validate_only —
@@ -2219,6 +2220,40 @@ function fastInvariants(rows, converted, pending) {
     });
   }
 
+  // 41. RED-EVIDENCE (Spec 124 §5 R-BA gate K, Spec 123 §6 G7, operator
+  // decision 3, 2026-09-26) — a converted step's PH-7 "prove red" claim is
+  // only real once it cites a COMMITTED vitest JSON reporter artifact under
+  // `docs/reports/red-evidence/<slug>/*.json` with >=1 failed assertion.
+  // Unlike `checkRedEvidence`'s OWN vacuous-pass (silent on whether a claim
+  // is required at all — that is gate H's job), THIS registry check is
+  // scoped to the already-converted fleet, where PH-7 IS unconditionally
+  // required: zero claims is a violation here, same as a bad citation.
+  // Allowed only by a `{gate:'K', item:'red-evidence'}` ledger row; an
+  // ORPHAN row (its artifact since committed) is RED too (R-X). Fleet
+  // DERIVED from converted.json (R-AN), never a retyped list.
+  {
+    const violations41 = [];
+    for (const d of loadConvertedDescriptors(REPO_ROOT)) {
+      const slug = (d.identity && d.identity.name) || '(unknown-step)';
+      const reportPath = reportPathFor(slug);
+      const text = reportPath && existsSync(reportPath) ? stripScorecard(readFileSync(reportPath, 'utf8')) : '';
+      const ev = checkRedEvidence({ repoRoot: REPO_ROOT, slug, reportText: text });
+      if (!(ev.claims > 0 && ev.pass)) violations41.push({ step: slug, item: 'red-evidence' });
+    }
+    const { unallowed: unallowed41, orphans: orphans41 } = matchLedger('K', violations41, loadLedger(REPO_ROOT).rows);
+    const blockedSlugs41 = [...new Set([...unallowed41.map((v) => v.step), ...orphans41.map((o) => o.step)])];
+    results.push({
+      id: 41,
+      slug: '(registry)',
+      pass: unallowed41.length === 0 && orphans41.length === 0,
+      blockedSlugs: blockedSlugs41,
+      detail: `RED-EVIDENCE (gate K): ${violations41.length} step(s) without a committed red-evidence artifact`
+        + (unallowed41.length ? ` [${unallowed41.map((v) => v.step).join('; ')} unledgered]` : '')
+        + `; ${orphans41.length} orphan ledger row(s)`
+        + (orphans41.length ? ` [${orphans41.map((o) => o.step).join('; ')}]` : ''),
+    });
+  }
+
   return results;
 }
 
@@ -2572,10 +2607,31 @@ function scoreG7(row, report) {
     const text = readFileSync(violationsPath, 'utf8');
     itCount = (text.match(/\bit(?:\.each|\.fails)?\s*\(/g) || []).length;
   }
-  const hasRed = /\bRED\b/.test(report);
+  // Gate K (Spec 124 §5 R-BA, operator decision 3, 2026-09-26) — G7 reads the
+  // ARTIFACT, not the word `RED`: a genuine claim requires >=1 citation of
+  // `docs/reports/red-evidence/<slug>/*.json` (a committed vitest JSON
+  // reporter artifact with a failed assertion), never a bare prose "RED". A
+  // step with no genuine artifact but a dated `{gate:'K', item:'red-evidence'}`
+  // ledger row is DEFERRED, not zero — mirrors scoreG8's own posture (a
+  // ledger-covered gap scores full marks; the deferral surfaces via the
+  // ledger + gate V's "(N deferred)" annotation, never via a degraded
+  // G-score). Spec 123 §6's "any zero in G6-G8 is a hard stop regardless of
+  // total" would otherwise turn every one of the 20 currently-deferred steps
+  // into an unconditional, un-deferrable hard stop — exactly the blanket
+  // block the dated ledger rows exist to avoid.
+  const redEvidence = checkRedEvidence({ repoRoot: REPO_ROOT, slug: row.slug, reportText: report });
+  const hasGenuineRed = redEvidence.claims > 0 && redEvidence.pass;
+  const ledgerDeferred = !hasGenuineRed && loadLedger(REPO_ROOT).rows.some(
+    (r) => r && r.gate === 'K' && r.step === row.slug && r.item === 'red-evidence',
+  );
+  const hasRed = hasGenuineRed || ledgerDeferred;
   const lockCoverage = fences.length === 0 || itCount >= fences.length;
   const score = fileExists && lockCoverage && hasRed ? 3 : fileExists && hasRed ? 1 : 0;
-  return { max: 3, score, detail: `file=${fileExists} fences=${fences.length} it-count=${itCount} RED-evidence=${hasRed}` };
+  return {
+    max: 3,
+    score,
+    detail: `file=${fileExists} fences=${fences.length} it-count=${itCount} red-evidence-claims=${redEvidence.claims} red-evidence-pass=${redEvidence.pass} ledger-deferred=${ledgerDeferred}`,
+  };
 }
 function scoreG8(captureFindings) {
   const invOk = captureFindings.invocationsMissing.length === 0;
@@ -3787,17 +3843,22 @@ export function matrixStatusCounts(matrix) {
 // "checker never proven to fire" failure mode gate H exists to catch. Gate H
 // itself is not one of the five words (it validates the MATRIX's own status
 // vocabulary, not a step property) and so never appears below either.
+// ACCURATE now maps to G AND K (WF2 gate K, operator decision 3, 2026-09-26):
+// G8's capture-truth answers ("did a write really happen, is it fresh, is
+// every diff explained") and G7's red-first proof are the SAME word — both
+// are "is what this report claims actually TRUE", never STANDARDIZED/
+// OBSERVABLE/etc.'s structural questions.
 const FIVE_WORD_GATES = Object.freeze({
   STANDARDIZED: ['A', 'I'],
   OBSERVABLE: ['C', 'D'],
   SCALABLE: ['B', 'E'],
   UNDERSTANDABLE: ['F'],
-  ACCURATE: ['G'],
+  ACCURATE: ['G', 'K'],
 });
 
 /** Which registry-scoped `fastInvariants()` ids belong to each ledger-speaking gate. */
 const GATE_INVARIANT_IDS = Object.freeze({
-  A: [28], B: [29], C: [30], D: [31], E: [32], F: [37], G: [38, 39, 40], I: [33, 34, 35, 36],
+  A: [28], B: [29], C: [30], D: [31], E: [32], F: [37], G: [38, 39, 40], I: [33, 34, 35, 36], K: [41],
 });
 
 /**
@@ -4854,6 +4915,12 @@ function selfTest() {
   // own selfTest, run here so this file's single `selfTest()` entry point
   // covers it too).
   registriesSelfTest();
+  // RED-EVIDENCE (fast invariant #41, Spec 124 §5 R-BA gate K, Spec 123 §6
+  // G7, operator decision 3, 2026-09-26) — the closed answer set + both
+  // orphan directions live entirely in scripts/analysis/gates/red-evidence.mjs
+  // (its own selfTest, run here so this file's single `selfTest()` entry
+  // point covers it too).
+  redEvidenceSelfTest();
   // GATE V (Spec 124 §5 R-BA) — the five-word STANDARDIZED/OBSERVABLE/
   // SCALABLE/UNDERSTANDABLE/ACCURATE per-step verdict, derived only from the
   // gates above's own already-computed results (own selfTest, defined in
