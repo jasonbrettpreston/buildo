@@ -116,6 +116,19 @@
  *      WRITE-affecting half (ANY non-`fail` needs a dated, named why — stricter
  *      than the verdict-half #8). Fleet DERIVED from converted.json (R-AN).
  *      `scripts/analysis/gates/on-invalid.mjs` owns the answer set
+ *   30. EMITS-EQUIV (Spec 124 §5 R-BA gate C) — declared `emits[]` == emitted
+ *      `records_meta` keys, both sides minus RUNNER_META_KEYS. `gates/emits-equiv.mjs`
+ *   31. CONSUMER-REGISTRY (Spec 124 §5 R-BA gate D) — generated consumer
+ *      registry present+typed against producer POST goldens. `gates/consumer-registry.mjs`
+ *   32. COMPUTE-LITERALS (Spec 124 §5 R-BA gate E, Rule 2, Rule 3; WF2
+ *      "standardized gates", 2026-09-26): 5 ast-grep rules over
+ *      `scripts/lib/compute/**` ban a hard-coded SQL INTERVAL/date literal, an
+ *      UPPER_SNAKE_CASE numeric constant, a `violations:` comparison against a
+ *      non-zero literal, and a literal numeric SQL bound. A finding is allowed
+ *      only by a `{gate:'E'}` ledger row keyed on `<rule-id>@<line text>`; an
+ *      ORPHAN row is RED too (R-X). `scripts/analysis/gates/compute-literals.mjs`
+ *      owns the answer set; `scripts/hooks/check-step-shape.mjs` applies the
+ *      same allowlist at commit time (only these 5 rule ids are filterable)
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -217,6 +230,7 @@ import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSe
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
+import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -880,6 +894,11 @@ function checkShapeBatch(rows) {
   const computeFiles = [...new Set(rows.map((r) => harness.computePathFor(r.relFile)).filter(Boolean))];
   const stepResults = scanFiles(stepFiles, STEP_SHAPE_RULE);
   const computeResults = scanFiles(computeFiles, COMPUTE_SHAPE_RULE);
+  // Gate E (Spec 124 §5 R-BA, WF2 "standardized gates", 2026-09-26) — the same
+  // ledger-allowlist filter check-step-shape.mjs applies at commit time, so a
+  // ledger-allowed compute literal does not also RED the step's own G-shape
+  // check and policy-matrix rule 2 (`compute is just compute`).
+  filterGateELedgerFindings(computeResults, REPO_ROOT, loadLedger(REPO_ROOT).rows);
   const out = new Map();
   for (const row of rows) {
     const computePath = harness.computePathFor(row.relFile);
@@ -1873,6 +1892,30 @@ function fastInvariants(rows, converted, pending) {
       pass: consumers.pass,
       blockedSlugs: consumers.blockedSlugs,
       detail: consumers.detail,
+    });
+  }
+
+  // 32. COMPUTE-LITERALS (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2
+  // "standardized gates", 2026-09-26) — 5 ast-grep rules appended to
+  // `scripts/ast-grep-rules/compute-shape.yml` ban a hard-coded SQL
+  // INTERVAL/date literal, an UPPER_SNAKE_CASE numeric constant, a
+  // `violations:` key compared against a non-zero literal, and a literal
+  // numeric SQL bound inside `scripts/lib/compute/**` — an invisible,
+  // no-audit-row tunable Rule 3 bans. A finding is allowed ONLY by a gate-E
+  // ledger row keyed on `<rule-id>@<trimmed source line text>` (line TEXT, not
+  // number, survives drift); an ORPHAN row (its finding since fixed) is RED
+  // too (R-X). Registry-scoped with `blockedSlugs` (the id-9/22/25-31 shape).
+  // `scripts/analysis/gates/compute-literals.mjs` owns the answer set;
+  // `scripts/hooks/check-step-shape.mjs` is the blocking driver that applies
+  // this same allowlist at commit time.
+  {
+    const literals = checkComputeLiterals(loadComputeFiles(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 32,
+      slug: '(registry)',
+      pass: literals.pass,
+      blockedSlugs: literals.blockedSlugs,
+      detail: literals.detail,
     });
   }
 
@@ -4188,6 +4231,12 @@ function selfTest() {
   // selfTest, run here so this file's single `selfTest()` entry point covers
   // it too).
   consumerRegistrySelfTest();
+  // COMPUTE-LITERALS (fast invariant #32, Spec 124 §5 R-BA gate E, Rule 2,
+  // Rule 3, WF2 "standardized gates", 2026-09-26) — the 5-rule-id answer set +
+  // the ledger-filter + the orphan direction live entirely in
+  // scripts/analysis/gates/compute-literals.mjs (its own selfTest, run here so
+  // this file's single `selfTest()` entry point covers it too).
+  computeLiteralsSelfTest();
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked

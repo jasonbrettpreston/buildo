@@ -42,6 +42,8 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { filterGateELedgerFindings } from '../analysis/gates/compute-literals.mjs';
+import { loadLedger } from '../analysis/gates/ledger.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // Repo-relative, POSIX-separated on every platform: these strings are printed in
@@ -150,6 +152,24 @@ function scan(files, rule = RULE) {
   return byFile;
 }
 
+/**
+ * Gate E (Spec 124 §5 R-BA, WF2 "standardized gates", 2026-09-26) — drop a
+ * finding for one of the 5 gate-E rule ids when a ledger row allows it.
+ * `scripts/analysis/gates/compute-literals.mjs` owns the one shared
+ * implementation (also used by `step:validate`'s per-step `computeClean`
+ * check), so the two can never drift apart on what counts as allowed.
+ * Mutates `computeResults` in place.
+ */
+function filterGateEFindings(computeResults, repoRoot) {
+  let rows;
+  try {
+    rows = loadLedger(repoRoot).rows;
+  } catch {
+    rows = [];
+  }
+  filterGateELedgerFindings(computeResults, repoRoot, rows);
+}
+
 function main() {
   const converted = readConvertedList();
   const manifestFiles = readManifestStepFiles();
@@ -168,6 +188,7 @@ function main() {
   const reportResults = scan(unconverted);
   const computeFiles = readComputeFiles();
   const computeResults = scan(computeFiles, COMPUTE_RULE);
+  filterGateEFindings(computeResults, REPO_ROOT);
 
   if (AS_JSON) {
     const shape = (map) => [...map.entries()].map(([file, violations]) => ({ file, violations }));

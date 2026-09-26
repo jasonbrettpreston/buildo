@@ -299,3 +299,137 @@ rule:
       regex: '^verdict$'
     - kind: property_identifier
       regex: '^verdict$'
+
+---
+
+id: compute-no-sql-interval-literal
+language: JavaScript
+severity: error
+message: |
+  A literal SQL `INTERVAL '<n> <unit>'` in a compute module (Spec 124 §5 R-BA
+  gate E, Rule 2, Rule 3, WF2 "standardized gates", 2026-09-26).
+
+  A hard-coded interval is exactly the class Rule 3 bans: a window nobody can
+  widen without a code deploy, and no audit row shows it. FIX: move the count
+  into a registered `config.logic_variables[]` and interpolate it
+  (`` `INTERVAL '${ctx.config.<name>} days'` ``), or file a gate-E ledger row
+  citing the physical/unit constant it actually is.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: "(?i)INTERVAL\\s+'\\d+\\s*(minute|hour|day|week|month|year)s?'"
+    - kind: template_string
+      regex: "(?i)INTERVAL\\s+'\\d+\\s*(minute|hour|day|week|month|year)s?'"
+
+---
+
+id: compute-no-sql-date-literal
+language: JavaScript
+severity: error
+message: |
+  A literal ISO date (`'YYYY-MM-DD'`) inside SQL text in a compute module
+  (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2 "standardized gates",
+  2026-09-26).
+
+  A frozen calendar date baked into a query is a tunable a code deploy is the
+  only way to move. FIX: register a `config.logic_variables[]` date/interval,
+  or derive it from `ctx.clock`, or file a gate-E ledger row.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: "'(19|20)\\d{2}-\\d{2}-\\d{2}'"
+    - kind: template_string
+      regex: "'(19|20)\\d{2}-\\d{2}-\\d{2}'"
+
+---
+
+id: compute-no-upper-numeric-const
+language: JavaScript
+severity: error
+message: |
+  An UPPER_SNAKE_CASE numeric constant declared inside a compute module
+  (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2 "standardized gates",
+  2026-09-26).
+
+  A `const FOO_BAR = <number>` reads as configuration but is not declared,
+  seeded, or admin-visible — a second, invisible copy of a tunable, or a
+  genuine physical/unit/CRS constant that belongs in a dated gate-E ledger row
+  with a spec citation rather than a bare literal. FIX: register it as a
+  `config.logic_variables[]` entry, or file the ledger row naming which of
+  `physical_constant` / `unit_conversion` / `coordinate_reference` it is.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: const $N = $V;
+constraints:
+  N:
+    regex: '^[A-Z][A-Z0-9_]+$'
+  V:
+    kind: number
+
+---
+
+id: compute-no-literal-violation-compare
+language: JavaScript
+severity: error
+message: |
+  An object property named `violations` whose value compares against a
+  non-zero numeric literal (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2
+  "standardized gates", 2026-09-26).
+
+  `violations: fraction >= 0.1 ? 1 : 0` bakes the threshold into the compute
+  instead of the descriptor's `checks[].limit` — the same invisible-second-limit
+  defect `compute-no-literal-threshold` bans for a named COUNT, extended to the
+  `violations:` report key itself regardless of the comparison's left-hand name.
+
+  FIX: report the raw `value`/observation via `ctx.report` and let the
+  descriptor's declared `checks[].limit` decide pass/warn/fail, or register the
+  threshold as a `config.logic_variables[]` entry.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  kind: pair
+  regex: '^violations\s*:.*[<>]=?\s*(0\.[1-9][0-9]*|[1-9][0-9]*(\.[0-9]+)?)'
+
+---
+
+id: compute-no-sql-numeric-bound
+language: JavaScript
+severity: error
+message: |
+  A literal numeric SQL bound (Spec 124 §5 R-BA gate E, Rule 2, Rule 3, WF2
+  "standardized gates", 2026-09-26).
+
+  A `< 100` / `> 1000000000`-shaped bound embedded in SQL text is a tunable
+  frozen into the compute — no audit row shows it and no operator can move it
+  without a deploy (measured site: `compute/refresh-snapshot.js` `cost_oor`).
+
+  FIX: move the bound into a registered `config.logic_variables[]` entry, or
+  file a gate-E ledger row.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: '[<>]=?\s*\d{3,}'
+    - kind: template_string
+      regex: '[<>]=?\s*\d{3,}'
