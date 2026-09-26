@@ -3773,6 +3773,135 @@ export function matrixStatusCounts(matrix) {
   return counts;
 }
 
+// ---------------------------------------------------------------------------
+// GATE V (Spec 124 §5 R-BA) — the five-word STANDARDIZED / OBSERVABLE /
+// SCALABLE / UNDERSTANDABLE / ACCURATE verdict, per step, derived ONLY from
+// the mapped gates' own already-computed results — never re-decided here.
+//
+// Word -> gates, mirroring the spec's own mapping exactly: STANDARDIZED (A,
+// I), OBSERVABLE (C, D), SCALABLE (B, E), UNDERSTANDABLE (F), ACCURATE (G).
+// Gate J is DELIBERATELY absent from UNDERSTANDABLE's gate list — it is a
+// `.husky/pre-commit`-only hook (`check-spec-diff.mjs`/`generated-docs.mjs`),
+// never wired into `step-validate.mjs`'s own `fastInvariants()`, so this tool
+// cannot observe it per step; claiming otherwise would be exactly the
+// "checker never proven to fire" failure mode gate H exists to catch. Gate H
+// itself is not one of the five words (it validates the MATRIX's own status
+// vocabulary, not a step property) and so never appears below either.
+const FIVE_WORD_GATES = Object.freeze({
+  STANDARDIZED: ['A', 'I'],
+  OBSERVABLE: ['C', 'D'],
+  SCALABLE: ['B', 'E'],
+  UNDERSTANDABLE: ['F'],
+  ACCURATE: ['G'],
+});
+
+/** Which registry-scoped `fastInvariants()` ids belong to each ledger-speaking gate. */
+const GATE_INVARIANT_IDS = Object.freeze({
+  A: [28], B: [29], C: [30], D: [31], E: [32], F: [37], G: [38, 39, 40], I: [33, 34, 35, 36],
+});
+
+/**
+ * A gate's own ledger `step` key is NOT uniform across gates: A/B/C/D/F/G/I
+ * key on the descriptor's canonical `identity.name` (== `row.slug`, e.g.
+ * `"load_ravines"`); gate E keys on the COMPUTE FILE's own basename (e.g.
+ * `"load-parcels"` for the `parcels` step, `scripts/lib/compute/load-parcels.js`
+ * — `filterGateELedgerFindings`/`compute-literals.mjs`'s own `path.basename`).
+ * The two do not always kebab-convert into each other (`parcels` step / it
+ * measured live, 2026-09-26, over `load-parcels.js` — matched to a completely
+ * different token than the descriptor's own name would kebab to). Compute
+ * this once, from EXACTLY the same `harness.computePathFor` call the caller
+ * already makes for `checkCaptures`, so the two never drift onto their own
+ * derivations of "the compute file."
+ * @param {{slug:string}} row
+ * @param {string|null} computePath e.g. `scripts/lib/compute/load-parcels.js`, or null
+ * @param {string} gate one of FIVE_WORD_GATES's letters
+ */
+function stepTokenForGate(row, computePath, gate) {
+  if (gate !== 'E') return row.slug;
+  return computePath ? path.basename(computePath).replace(/\.js$/, '') : null;
+}
+
+/**
+ * The five-word verdict for ONE step. PURE — every input (`invariantResults`,
+ * `ledgerRows`) is already loaded by the caller; this never touches disk.
+ * A word FAILs iff one of its mapped gates' registry results names this
+ * step's own token in `blockedSlugs` (an UNALLOWED violation — no ledger row
+ * covers it). Absent that, the word PASSes; if the ledger nonetheless carries
+ * `{gate, step: token}` rows for this step under one of the word's gates (a
+ * DEFERRED finding, McDonald's Airtight scope §3), the PASS detail carries
+ * the count rather than reading as if nothing were outstanding.
+ * @param {{slug:string}} row
+ * @param {string|null} computePath
+ * @param {Array<{id:number, slug:string, blockedSlugs?:string[]}>} invariantResults
+ * @param {Array<{gate:string, step:string}>} ledgerRows
+ * @returns {Record<string, {status:'PASS'|'FAIL', deferred:number, detail:string}>}
+ */
+export function computeFiveWordVerdict(row, computePath, invariantResults, ledgerRows) {
+  const results = Array.isArray(invariantResults) ? invariantResults : [];
+  const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
+  const out = {};
+  for (const [word, gates] of Object.entries(FIVE_WORD_GATES)) {
+    const failingGates = new Set();
+    let deferred = 0;
+    for (const gate of gates) {
+      const token = stepTokenForGate(row, computePath, gate);
+      if (!token) continue;
+      for (const id of GATE_INVARIANT_IDS[gate] || []) {
+        const r = results.find((x) => x && x.id === id && x.slug === '(registry)');
+        if (r && Array.isArray(r.blockedSlugs) && r.blockedSlugs.includes(token)) failingGates.add(gate);
+      }
+      deferred += rows.filter((r) => r && r.gate === gate && r.step === token).length;
+    }
+    const status = failingGates.size ? 'FAIL' : 'PASS';
+    const detail = status === 'FAIL'
+      ? `FAIL (gate ${[...failingGates].sort().join('/')} — unledgered)`
+      : deferred > 0 ? `PASS (${deferred} deferred)` : 'PASS';
+    out[word] = { status, deferred, detail };
+  }
+  return out;
+}
+
+/** `computeFiveWordVerdict`'s own in-memory fixture, both directions (Spec 121 §12b.6). */
+export function fiveWordSelfTest() {
+  const row = { slug: 'fixture_step' };
+  const computePath = 'scripts/lib/compute/fixture-step.js';
+  // (1) A gate-A UNALLOWED finding naming this step's own slug FAILs STANDARDIZED,
+  // and only STANDARDIZED — SCALABLE (which does not include gate A) stays PASS.
+  const failingResults = [{ id: 28, slug: '(registry)', blockedSlugs: ['fixture_step'] }];
+  const v1 = computeFiveWordVerdict(row, computePath, failingResults, []);
+  if (v1.STANDARDIZED.status !== 'FAIL') throw new Error(`fiveWordSelfTest FAILED (1a): expected STANDARDIZED FAIL, got ${JSON.stringify(v1.STANDARDIZED)}`);
+  if (v1.SCALABLE.status !== 'PASS') throw new Error(`fiveWordSelfTest FAILED (1b): expected SCALABLE PASS, got ${JSON.stringify(v1.SCALABLE)}`);
+  // (2) The SAME gate-A id, but `blockedSlugs` naming a DIFFERENT step, leaves
+  // this step's STANDARDIZED clean — blockedSlugs scoping must be honoured, not
+  // "any failure anywhere reds every step."
+  const otherStepResults = [{ id: 28, slug: '(registry)', blockedSlugs: ['some_other_step'] }];
+  const v2 = computeFiveWordVerdict(row, computePath, otherStepResults, []);
+  if (v2.STANDARDIZED.status !== 'PASS') throw new Error(`fiveWordSelfTest FAILED (2): expected STANDARDIZED PASS (blockedSlugs names a different step), got ${JSON.stringify(v2.STANDARDIZED)}`);
+  // (3) No unallowed finding, but 2 ledger rows deferring this step's own gate-B
+  // and gate-E (compute-token-keyed) items: SCALABLE PASSes WITH the count.
+  const ledgerRows = [
+    { gate: 'B', step: 'fixture_step' },
+    { gate: 'E', step: 'fixture-step' },
+  ];
+  const v3 = computeFiveWordVerdict(row, computePath, [], ledgerRows);
+  if (v3.SCALABLE.status !== 'PASS' || v3.SCALABLE.deferred !== 2) {
+    throw new Error(`fiveWordSelfTest FAILED (3): expected SCALABLE PASS with 2 deferred, got ${JSON.stringify(v3.SCALABLE)}`);
+  }
+  // (4) Gate E keys on the COMPUTE FILE basename, not `row.slug` — a ledger row
+  // filed under the descriptor's slug (not the compute file's basename) must
+  // NOT be counted as this step's own deferred gate-E item.
+  const wrongTokenRows = [{ gate: 'E', step: 'fixture_step' }];
+  const v4 = computeFiveWordVerdict(row, computePath, [], wrongTokenRows);
+  if (v4.SCALABLE.deferred !== 0) throw new Error(`fiveWordSelfTest FAILED (4): gate E must key on the compute-file basename, not row.slug, got ${JSON.stringify(v4.SCALABLE)}`);
+  // (5) A clean step (no unallowed finding, no ledger row anywhere) reads a bare PASS.
+  const v5 = computeFiveWordVerdict(row, computePath, [], []);
+  for (const word of Object.keys(FIVE_WORD_GATES)) {
+    if (v5[word].status !== 'PASS' || v5[word].deferred !== 0 || v5[word].detail !== 'PASS') {
+      throw new Error(`fiveWordSelfTest FAILED (5): expected a bare PASS for ${word}, got ${JSON.stringify(v5[word])}`);
+    }
+  }
+}
+
 /**
  * The vitest-evidence status for a row, honouring rule 1 (gate H): a row whose
  * ONLY evidence is the vitest run reports `not-run` when that run did not happen
@@ -3940,7 +4069,7 @@ function computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, repor
 // ---------------------------------------------------------------------------
 // Rendering
 // ---------------------------------------------------------------------------
-function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults) {
+function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invariantResults, fiveWord) {
   const lines = [];
   lines.push('## Validation scorecard (generated)');
   lines.push('');
@@ -3949,6 +4078,18 @@ function renderScorecard(row, sc, matrix, captureFindings, vitestResult, invaria
   lines.push('');
   lines.push(`**Score: ${sc.total}/${sc.maxTotal}** · G9 Reflection: ${sc.g9.pass ? 'PASS' : 'FAIL'} · G4d fence-lock coverage: ${sc.g4d.pass ? 'PASS' : 'FAIL'} · G-shape: ${sc.gshape.pass ? 'PASS' : 'FAIL'} · **Hard stop: ${sc.hardStop ? `YES (${sc.hardStopReasons.join(', ')})` : 'no'}**`);
   lines.push('');
+  // GATE V (Spec 124 §5 R-BA) — the five-word verdict, PASS|FAIL drawn ONLY
+  // from the mapped gates' own results above; a ledgered-but-clean word reads
+  // PASS with its deferred count, never a silent PASS indistinguishable from
+  // "nothing outstanding."
+  if (fiveWord) {
+    lines.push('### Five-word verdict (Spec 124 §5 R-BA — "McDonald\'s Airtight")');
+    lines.push('');
+    lines.push('| Word | Status | Detail |');
+    lines.push('|---|---|---|');
+    for (const [word, v] of Object.entries(fiveWord)) lines.push(`| ${word} | ${v.status} | ${v.detail} |`);
+    lines.push('');
+  }
   lines.push('| Gate | Score | Max | Detail |');
   lines.push('|---|---:|---:|---|');
   for (const [id, v] of Object.entries(sc.g)) {
@@ -4713,6 +4854,11 @@ function selfTest() {
   // own selfTest, run here so this file's single `selfTest()` entry point
   // covers it too).
   registriesSelfTest();
+  // GATE V (Spec 124 §5 R-BA) — the five-word STANDARDIZED/OBSERVABLE/
+  // SCALABLE/UNDERSTANDABLE/ACCURATE per-step verdict, derived only from the
+  // gates above's own already-computed results (own selfTest, defined in
+  // this file, run here so `--self-test-only` covers it too).
+  fiveWordSelfTest();
   // GATE G2 (Fold GC-4) — libStagedSelectsAll both directions.
   if (!libStagedSelectsAll(['scripts/lib/step/verdict.js'])) {
     throw new Error('self-test FAILED (gate G2): a staged scripts/lib/step/** path must select the whole registry');
@@ -5282,11 +5428,14 @@ async function main() {
     // row into hardStop, so it needs the matrix as an input, not a sibling.
     const matrix = computePolicyMatrix(row, descriptorInfo, shape, vitestResult, p3, report);
     const sc = computeScorecard(row, report, descriptorInfo, shape, captureFindings, invariantResults, churnFindings, matrix);
+    // GATE V (Spec 124 §5 R-BA) — the five-word verdict, derived only from
+    // the registry-scoped invariant results + ledger already loaded above.
+    const fiveWord = computeFiveWordVerdict(row, computePath, invariantResults, loadLedger(REPO_ROOT).rows);
     // sc.matrix carries the same rows with a " — stage-gated (<stage>)" note
     // appended on any row a declared pending[].stage excluded from hardStop
     // (R-K amendment) — rendering it, not the raw `matrix`, is what keeps the
     // printed table from reading as a silent pass.
-    const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults);
+    const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults, fiveWord);
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}\n\`\`\`\n`);
     console.log(block);
@@ -5318,7 +5467,7 @@ async function main() {
       console.log(`[step-validate] ${row.slug}: hard-stop scored but NOT gating — only its report/tests are staged, not its code (--staged doc-only rule)`);
     }
     if (sc.hardStop && isBlocking) anyHardStop = true;
-    summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking });
+    summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking, fiveWord });
   }
 
   const registryFails = invariantResults.filter((r) => r.slug === '(registry)' && !r.pass);
@@ -5341,7 +5490,14 @@ async function main() {
   if (registryHardStopFails.length) anyHardStop = true;
 
   console.log('\n[step-validate] summary:');
-  for (const s of summaries) console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'}`);
+  for (const s of summaries) {
+    // GATE V (Spec 124 §5 R-BA) — the five-word verdict inline, e.g.
+    // "STANDARDIZED:PASS OBSERVABLE:PASS(3 deferred) SCALABLE:FAIL ...".
+    const words = Object.entries(s.fiveWord || {})
+      .map(([w, v]) => `${w}:${v.status}${v.deferred ? `(${v.deferred} deferred)` : ''}`)
+      .join(' ');
+    console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'} | ${words}`);
+  }
   if (registryFails.length) {
     console.log('[step-validate] registry-level fast invariant failures:');
     for (const r of registryFails) {
