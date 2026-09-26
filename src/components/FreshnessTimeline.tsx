@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { z } from 'zod';
 import type { FunnelRowData } from '@/lib/admin/funnel';
-import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus } from '@/lib/admin/funnel';
+import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus, resolveAuditPct, resolveAuditPctFromHistory } from '@/lib/admin/funnel';
+import type { AuditPctHistoryResolution } from '@/lib/admin/funnel';
 import { CircularBadge, DataFlowTile, TelemetrySection, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 // Spec 47: scripts/manifest.json is the single source of truth for chain step lists.
 // Spec 33 §7 / line 81: the web admin DERIVES from it, never hand-duplicates (precedent:
@@ -406,6 +407,14 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
   const [cancellingChains, setCancellingChains] = useState<Set<string>>(new Set());
   // T5 Sparkline: cached history runs per pipeline slug (lazy-loaded on accordion expand)
   const sparklineCache = useRef<Map<string, SparklineRun[]>>(new Map());
+  // GC-14: cached lookback resolution per pipeline slug, for steps whose CURRENT
+  // run never measured its declared audit metric (e.g. a gated-skip run). Fetched
+  // eagerly (not gated on accordion expand, since the badge itself is always
+  // visible) but ONLY for slugs actually missing a current measurement — see the
+  // effect below.
+  const auditHistoryCache = useRef<Map<string, AuditPctHistoryResolution>>(new Map());
+  const auditHistoryRequested = useRef<Set<string>>(new Set());
+  const [, bumpAuditHistory] = useState(0);
   const toggleExpand = (key: string) => {
     setExpandedSteps((prev) => {
       const next = new Set(prev);
@@ -467,6 +476,35 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
       for (const t of optimisticTimerRef.current.values()) clearTimeout(t);
     };
   }, []);
+
+  // GC-14: for every declared-auditMetric step whose CURRENT run did not measure
+  // it (e.g. link_wsib's gated-skip runs carry no `link_rate_warn` row), fetch its
+  // run history once and resolve the newest run that DID measure it — so the badge
+  // can show that older value + age instead of an unconditional missing marker.
+  useEffect(() => {
+    for (const slug of Object.keys(FUNNEL_SOURCE_BY_SLUG)) {
+      const src = FUNNEL_SOURCE_BY_SLUG[slug];
+      if (!src?.auditMetric) continue;
+      const info = pipelineLastRun[slug];
+      const at = (info?.records_meta as Record<string, unknown> | null | undefined)?.audit_table as
+        { rows?: Array<{ metric: string; value: unknown }> } | undefined;
+      if (resolveAuditPct(at?.rows, src).kind === 'ok') continue; // current run measured it — no lookback needed
+      if (auditHistoryCache.current.has(slug) || auditHistoryRequested.current.has(slug)) continue;
+      auditHistoryRequested.current.add(slug);
+      fetch(`/api/admin/pipelines/history?slug=${encodeURIComponent(slug)}&limit=10`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          const runs = (data?.runs ?? []) as Array<{ started_at: string; records_meta: Record<string, unknown> | null }>;
+          auditHistoryCache.current.set(slug, resolveAuditPctFromHistory(runs, src));
+          bumpAuditHistory((n) => n + 1);
+        })
+        .catch((e) => {
+          console.warn('[audit-history]', e);
+          auditHistoryCache.current.set(slug, { kind: 'missing', reason: 'no_row' });
+          bumpAuditHistory((n) => n + 1);
+        });
+    }
+  }, [pipelineLastRun]);
 
   // Clear "Stopping..." state once the chain is no longer in runningPipelines
   useEffect(() => {
@@ -822,16 +860,44 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                           {/* Circular percentage badge — prefer audit_table metric over funnel matchPct */}
                           {funnelRow && (() => {
                             const funnelSrc = FUNNEL_SOURCE_BY_SLUG[step.slug];
-                            if (funnelSrc?.auditMetric && info?.records_meta) {
-                              const at = (info.records_meta as Record<string, unknown>)?.audit_table as
-                                { rows?: Array<{ metric: string; value: unknown }> } | undefined;
-                              const row = at?.rows?.find(r => r.metric === funnelSrc.auditMetric);
-                              if (row?.value != null) {
-                                const parsed = parseFloat(String(row.value).replace('%', ''));
-                                if (!isNaN(parsed)) return <CircularBadge pct={parsed} />;
-                              }
+                            const at = (info?.records_meta as Record<string, unknown>)?.audit_table as
+                              { rows?: Array<{ metric: string; value: unknown }> } | undefined;
+                            const resolved = resolveAuditPct(at?.rows, funnelSrc);
+                            if (resolved.kind === 'ok') return <CircularBadge pct={resolved.pct} />;
+                            if (!funnelSrc?.auditMetric) return <CircularBadge pct={funnelRow.matchPct} />;
+
+                            // GC-14: the current run never measured the metric (e.g. a
+                            // gated-skip run). Before falling back to the funnel's own
+                            // matchPct, prefer the most recent PRIOR run that DID measure
+                            // it — shown with its age so the operator knows it's not live.
+                            const historical = auditHistoryCache.current.get(step.slug);
+                            if (historical?.kind === 'ok') {
+                              return (
+                                <>
+                                  <CircularBadge pct={historical.pct} />
+                                  <span
+                                    data-testid="audit-metric-stale"
+                                    title={`audit metric ${funnelSrc.auditMetric} last measured ${timeAgo(historical.started_at)} (current run: ${resolved.reason})`}
+                                    className="text-blue-500 text-[10px] ml-0.5"
+                                  >{timeAgo(historical.started_at)}</span>
+                                </>
+                              );
                             }
-                            return <CircularBadge pct={funnelRow.matchPct} />;
+
+                            // No run — current or in the lookback window — ever measured it.
+                            // Never silently show the funnel's own matchPct as if it were the
+                            // audit metric (Spec 124 §7): render the funnel badge but MARK it
+                            // so the operator can see which number they are looking at.
+                            return (
+                              <>
+                                <CircularBadge pct={funnelRow.matchPct} />
+                                <span
+                                  data-testid="audit-metric-missing"
+                                  title={`audit metric ${funnelSrc.auditMetric} ${resolved.reason} — showing funnel match`}
+                                  className="text-amber-600 text-xs"
+                                >!</span>
+                              </>
+                            );
                           })()}
                         </div>
 

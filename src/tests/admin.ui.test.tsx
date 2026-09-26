@@ -2233,15 +2233,21 @@ describe('Full-tile status coloring (no more dots)', () => {
     // Must import FUNNEL_SOURCE_BY_SLUG and use auditMetric for badge override
     expect(source).toContain('FUNNEL_SOURCE_BY_SLUG');
     expect(source).toContain('auditMetric');
-    // Must parse percentage string from audit_table row value
-    expect(source).toMatch(/parseFloat.*replace.*%/);
+    // The declared metric is resolved by the pure resolver (which reads the
+    // declared auditValuePath and reports a *visible* missing marker) instead of an
+    // inline parseFloat that silently falls back to the funnel matchPct.
+    expect(source).toContain('resolveAuditPct');
   });
 
   it('FUNNEL_SOURCES auditMetric entries map to real audit_table metric names', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../lib/admin/funnel.ts'), 'utf-8'
     );
-    const validMetrics = ['tags_coverage_rate', 'classification_coverage', 'link_rate', 'geocode_coverage'];
+    // TYPO LOCK ONLY. This is a hand-typed vocabulary, so it stays green when a
+    // producer RENAMES or reshapes its metric (R-T anti-pattern). The golden-backed
+    // truth — every binding must resolve against the producer's committed POST
+    // golden — lives in src/tests/funnel-audit-metric.logic.test.ts.
+    const validMetrics = ['tags_coverage_rate', 'classification_coverage', 'link_rate', 'link_rate_warn', 'geocode_coverage'];
     // Extract auditMetric values from source
     const auditMatches = [...source.matchAll(/auditMetric:\s*'([^']+)'/g)];
     expect(auditMatches.length).toBe(8);

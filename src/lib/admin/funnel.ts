@@ -22,6 +22,15 @@ export interface FunnelSourceConfig {
   yieldFields: string[];
   /** audit_table metric name to use for CircularBadge (overrides funnel matchPct) */
   auditMetric?: string;
+  /**
+   * dot-path into an object-valued audit row (e.g. 'link_rate_pct').
+   * Several producers (link_wsib → `link_rate_warn`, link_massing/link_parcels →
+   * `link_rate`) carry the readable rate in an OBJECT row detail, not as a scalar
+   * in `value` (LM-D7 / LW-D18). Declaring the path here is what lets
+   * `resolveAuditPct` read the real number instead of quietly showing the funnel's
+   * own matchPct (Spec 124 §7: no silent fallback).
+   */
+  auditValuePath?: string;
 }
 
 export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
@@ -33,13 +42,13 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
   { id: 'trades_commercial', name: 'Trades (Commercial)', statusSlug: 'classify_permits', triggerSlug: 'classify_permits', yieldFields: ['permit_trades'], auditMetric: 'classification_coverage' },
   // 6-8. Entity enrichment
   { id: 'builders', name: 'Entity Extraction', statusSlug: 'builders', triggerSlug: 'builders', yieldFields: ['legal_name', 'phone', 'email', 'website'] },
-  { id: 'wsib', name: 'WSIB Registry', statusSlug: 'link_wsib', triggerSlug: 'link_wsib', yieldFields: ['legal_name', 'trade_name', 'mailing_address'], auditMetric: 'link_rate' },
+  { id: 'wsib', name: 'WSIB Registry', statusSlug: 'link_wsib', triggerSlug: 'link_wsib', yieldFields: ['legal_name', 'trade_name', 'mailing_address'], auditMetric: 'link_rate_warn', auditValuePath: 'link_rate_pct' },
   { id: 'builder_web', name: 'Entity Web Enrichment', statusSlug: 'enrich_wsib_builders', triggerSlug: 'enrich_wsib_builders', yieldFields: ['phone', 'email', 'website'] },
   // 9-13. Spatial & linking
   { id: 'address_matching', name: 'Address Matching', statusSlug: 'geocode_permits', triggerSlug: 'geocode_permits', yieldFields: ['latitude', 'longitude'], auditMetric: 'geocode_coverage' },
-  { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'], auditMetric: 'link_rate' },
+  { id: 'parcels', name: 'Lots (Parcels)', statusSlug: 'link_parcels', triggerSlug: 'link_parcels', yieldFields: ['lot_size', 'frontage', 'depth', 'is_irregular'], auditMetric: 'link_rate', auditValuePath: 'link_rate_pct' },
   { id: 'neighbourhoods', name: 'Neighbourhoods', statusSlug: 'link_neighbourhoods', triggerSlug: 'link_neighbourhoods', yieldFields: ['neighbourhood_id', 'avg_income', 'construction_era'], auditMetric: 'link_rate' },
-  { id: 'massing', name: '3D Massing', statusSlug: 'link_massing', triggerSlug: 'link_massing', yieldFields: ['main_bldg_area', 'max_height', 'est_stories'], auditMetric: 'link_rate' },
+  { id: 'massing', name: '3D Massing', statusSlug: 'link_massing', triggerSlug: 'link_massing', yieldFields: ['main_bldg_area', 'max_height', 'est_stories'], auditMetric: 'link_rate', auditValuePath: 'link_rate_pct' },
   { id: 'link_similar', name: 'Similar Permits', statusSlug: 'link_similar', triggerSlug: 'link_similar', yieldFields: ['similar_permit_id'] },
   { id: 'link_coa', name: 'CoA Linking', statusSlug: 'link_coa', triggerSlug: 'link_coa', yieldFields: ['linked_permit_num', 'linked_confidence'] },
   { id: 'coa', name: 'CoA Applications', statusSlug: 'coa', triggerSlug: 'chain_coa', yieldFields: ['decision', 'hearing_date', 'applicant'] },
@@ -49,6 +58,111 @@ export const FUNNEL_SOURCES: FunnelSourceConfig[] = [
 export const FUNNEL_SOURCE_BY_SLUG: Record<string, FunnelSourceConfig> = Object.fromEntries(
   FUNNEL_SOURCES.map(s => [s.statusSlug, s])
 );
+
+// ---------------------------------------------------------------------------
+// Audit metric resolution — the declared consumer contract
+// ---------------------------------------------------------------------------
+
+/** Minimal shape of an audit_table row as committed by the producers' goldens. */
+export interface AuditMetricRow {
+  metric: string;
+  value: unknown;
+}
+
+export type AuditPctResolution =
+  | { kind: 'ok'; pct: number }
+  | { kind: 'missing'; reason: 'no_metric' | 'no_row' | 'not_numeric' };
+
+/** Absolute guard: a non-finite parse is a missing value, never a rendered number. */
+function finiteOrNull(n: number): number | null {
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Resolve the percentage the badge should render, reading the metric the
+ * PRODUCER actually committed — never silently substituting the funnel's own
+ * matchPct (Spec 124 §7: a silent fallback is a NEVER).
+ *
+ * Order of resolution:
+ *   1. no `auditMetric` declared  → `missing/no_metric`
+ *   2. metric row absent          → `missing/no_row`
+ *   3. `value` a finite number    → `ok` as-is
+ *   4. `value` a "x%" / numeric string → `ok` via parseFloat
+ *   5. `value` an object WITH `auditValuePath` naming a finite number → `ok`
+ *   6. anything else (null, object without a declared/usable path, NaN, Infinity)
+ *      → `missing/not_numeric`
+ */
+export function resolveAuditPct(
+  rows: AuditMetricRow[] | undefined,
+  src: FunnelSourceConfig | undefined
+): AuditPctResolution {
+  const metric = src?.auditMetric;
+  if (!metric) return { kind: 'missing', reason: 'no_metric' };
+
+  const row = rows?.find(r => r.metric === metric);
+  if (!row) return { kind: 'missing', reason: 'no_row' };
+
+  const value = row.value;
+
+  if (typeof value === 'number') {
+    const n = finiteOrNull(value);
+    return n == null ? { kind: 'missing', reason: 'not_numeric' } : { kind: 'ok', pct: n };
+  }
+
+  if (typeof value === 'string') {
+    const n = finiteOrNull(parseFloat(value.replace('%', '')));
+    return n == null ? { kind: 'missing', reason: 'not_numeric' } : { kind: 'ok', pct: n };
+  }
+
+  if (value != null && typeof value === 'object' && src?.auditValuePath) {
+    const nested = (value as Record<string, unknown>)[src.auditValuePath];
+    if (typeof nested === 'number') {
+      const n = finiteOrNull(nested);
+      return n == null ? { kind: 'missing', reason: 'not_numeric' } : { kind: 'ok', pct: n };
+    }
+  }
+
+  return { kind: 'missing', reason: 'not_numeric' };
+}
+
+/** A prior pipeline run as returned by `/api/admin/pipelines/history`. */
+export interface AuditHistoryRun {
+  started_at: string;
+  records_meta?: Record<string, unknown> | null;
+}
+
+export type AuditPctHistoryResolution =
+  | { kind: 'ok'; pct: number; started_at: string }
+  | { kind: 'missing'; reason: 'no_metric' | 'no_row' | 'not_numeric' };
+
+/**
+ * GC-14 (Fold, 2026-09-25): the CURRENT run may never have measured the
+ * declared metric (a gated-skip run's `audit_table` carries none — see
+ * link_wsib's annual cadence). Walk prior runs NEWEST-FIRST and return the
+ * first whose audit rows resolve the metric, carrying that run's `started_at`
+ * so the caller can render its age beside the value. Only when NO run in the
+ * window ever measured it does this report `missing` — the case that gets the
+ * visible marker, never a silent fallback (Spec 124 §7).
+ *
+ * Locks both directions: latest run skipped + an older run measured ⇒ `ok`
+ * with the older run's `started_at`; no run in the window ever measured ⇒
+ * `missing`.
+ */
+export function resolveAuditPctFromHistory(
+  runs: AuditHistoryRun[] | undefined,
+  src: FunnelSourceConfig | undefined
+): AuditPctHistoryResolution {
+  if (!src?.auditMetric) return { kind: 'missing', reason: 'no_metric' };
+
+  const ordered = [...(runs ?? [])].sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''));
+  for (const run of ordered) {
+    const at = (run.records_meta as Record<string, unknown> | null | undefined)?.audit_table as
+      { rows?: AuditMetricRow[] } | undefined;
+    const resolved = resolveAuditPct(at?.rows, src);
+    if (resolved.kind === 'ok') return { kind: 'ok', pct: resolved.pct, started_at: run.started_at };
+  }
+  return { kind: 'missing', reason: 'no_row' };
+}
 
 // ---------------------------------------------------------------------------
 // Funnel row data — computed per source
