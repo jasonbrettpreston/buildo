@@ -1,0 +1,342 @@
+{
+  "contract_version": 1,
+  "generated_from": [
+    "src/lib/admin/funnel.ts",
+    "<converted descriptor>.emits[].consumers",
+    "<converted descriptor>.counters[].source",
+    "<converted descriptor>.staleness.trigger[]"
+  ],
+  "rows": [
+    {
+      "consumer": "address_points",
+      "producer": "address_points",
+      "kind": "records_meta",
+      "key": "address_points_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "assert_data_bounds",
+      "producer": "address_points",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "assert_data_bounds",
+      "producer": "parcels",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "assert_engine_health",
+      "producer": "assert_engine_health",
+      "kind": "records_meta",
+      "key": "records_updated",
+      "value": "any",
+      "source": "counters"
+    },
+    {
+      "consumer": "assert_engine_health",
+      "producer": "assert_engine_health",
+      "kind": "records_meta",
+      "key": "tables_checked",
+      "value": "any",
+      "source": "counters"
+    },
+    {
+      "consumer": "enrich_ravines",
+      "producer": "load_ravines",
+      "kind": "records_meta",
+      "key": "ravine_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_massing",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "building_footprints_count",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_massing",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "building_footprints_count",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_massing",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_massing",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_neighbourhoods",
+      "producer": "link_neighbourhoods",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_neighbourhoods",
+      "producer": "link_neighbourhoods",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_parcels",
+      "producer": "link_parcels",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_parcels",
+      "producer": "link_parcels",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "threshold_updated_at",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "threshold_updated_at",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "wsib_registry_count",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "parcels",
+      "producer": "parcels",
+      "kind": "records_meta",
+      "key": "parcels_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/app/api/admin/control-panel/resync/route.ts",
+      "producer": "assert_data_bounds",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/DataQualityDashboard.tsx",
+      "producer": "assert_data_bounds",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/DataQualityDashboard.tsx",
+      "producer": "assert_parcel_sanity",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "assert_data_bounds",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "assert_global_coverage",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "assert_parcel_sanity",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "assert_schema",
+      "kind": "records_meta",
+      "key": "checks_failed",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "classify_permits",
+      "kind": "audit_metric",
+      "key": "classification_coverage",
+      "value": "percent",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "classify_permits",
+      "kind": "audit_metric",
+      "key": "classification_coverage",
+      "value": "percent",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "classify_scope",
+      "kind": "audit_metric",
+      "key": "tags_coverage_rate",
+      "value": "percent",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "enrich_heritage",
+      "kind": "records_meta",
+      "key": "duration_ms",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "enrich_ravines",
+      "kind": "records_meta",
+      "key": "duration_ms",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "geocode_permits",
+      "kind": "audit_metric",
+      "key": "geocode_coverage",
+      "value": "percent",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "link_massing",
+      "kind": "audit_metric",
+      "key": "link_rate",
+      "value": "percent",
+      "value_path": "link_rate_pct",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "link_neighbourhoods",
+      "kind": "audit_metric",
+      "key": "link_rate",
+      "value": "percent",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "link_parcels",
+      "kind": "audit_metric",
+      "key": "link_rate",
+      "value": "percent",
+      "value_path": "link_rate_pct",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "link_wsib",
+      "kind": "audit_metric",
+      "key": "link_rate_warn",
+      "value": "percent",
+      "value_path": "link_rate_pct",
+      "source": "funnel"
+    },
+    {
+      "consumer": "src/lib/admin/funnel.ts",
+      "producer": "assert_data_bounds",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/lib/admin/funnel.ts",
+      "producer": "assert_parcel_sanity",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/lib/admin/funnel.ts",
+      "producer": "enrich_heritage",
+      "kind": "records_meta",
+      "key": "duration_ms",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/lib/admin/funnel.ts",
+      "producer": "enrich_ravines",
+      "kind": "records_meta",
+      "key": "duration_ms",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/lib/quality/types.ts",
+      "producer": "assert_data_bounds",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/lib/quality/types.ts",
+      "producer": "assert_parcel_sanity",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    }
+  ]
+}

@@ -921,6 +921,8 @@ Five edge classes. **All five are real today; none is declared anywhere a machin
 
 ✅ **LDG-D1 RULED (WF3 `wf3_link_parcels_declared_reads`, 2026-09-03).** `link_parcels`'s table-edge gap (LDG-4 cross-check, HIGH) split: `link_parcel_addresses` is a genuine table edge, now declared; `compute_centroids`'s shared columns (`parcels.centroid_lat`/`centroid_lng`) are NOT a dependency post-KNN-fix (`b37087f3` removed the read entirely — 0 grep hits) — the ledger only still derives it because `lineage-meta-snapshot.json` is stale (no post-fix run has completed anywhere to refresh it), a snapshot-freshness gap, not a table-edge gap.
 
+**Enforced (2026-09-26, Spec 124 §5 R-BA gate D):** the **`records_meta` contracts** class is now machine-checked — `scripts/steps/_schema/consumer-registry.json` is GENERATED from `funnel.ts` + every converted descriptor's `emits[].consumers`/`counters[].source`/`staleness.trigger[]`, each row checked present+typed against the producer's own golden, plus a completeness scan over the consumer corpus (`scripts/analysis/gates/consumer-registry.mjs`, `step-validate.mjs` fast invariant #31) — closing this row's own "frozen by convention" state for the 20 converted steps.
+
 ### 6.2 `records_meta` contracts — verified, and they HALT
 
 `[READ 2026-08-23]` The three §9 blocks are **runtime contracts, not documentation**. Each consumer *throws* on violation.

@@ -32,13 +32,14 @@
  * 20/21 (not 10/11) — 1-13 is reserved so a fast invariant id can NEVER
  * collide with a Policy Coverage Matrix Rule number in a naive stdout scrape
  * (both tables render one row per "| N | ..." and the Fast Invariants table
- * comes first in the output). Currently 18 invariants, ids 1-5,7-9,20-30 (the
+ * comes first in the output). Currently 19 invariants, ids 1-5,7-9,20-31 (the
  * count read "13"/"14" while the id list already said 1-5,7-9,20-24/26 — an
  * off-by-one that predates this line's last edits; corrected 2026-09-17
  * against an actual `--fast` run, which renders 15 rows; the +1 is id 28,
  * CLOSED-BOUND, WF2 §5 R-BA gate A, 2026-09-25, and +1 more is id 29,
  * ON-INVALID-CLOSED, WF2 §5 R-BA gate B, 2026-09-26, and +1 more is id 30,
- * EMITS-EQUIV, WF2 §5 R-BA gate C, 2026-09-27):
+ * EMITS-EQUIV, WF2 §5 R-BA gate C, 2026-09-27, and +1 more is id 31,
+ * CONSUMER-REGISTRY, WF2 §5 R-BA gate D, 2026-09-26):
  *   1. database.min_migration <= migrations/*.sql COUNT (LW-D8 — a COUNT floor,
  *      never a filename number)
  *   2. every declared config.logic_variables[].name has a scripts/seeds/logic_variables.json entry
@@ -215,6 +216,7 @@ const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-gold
 import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
+import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
 import { loadLedger } from './gates/ledger.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -1838,6 +1840,39 @@ function fastInvariants(rows, converted, pending) {
       pass: emits.pass,
       blockedSlugs: emits.blockedSlugs,
       detail: emits.detail,
+    });
+  }
+
+  // 31. CONSUMER-REGISTRY (Spec 124 §5 R-BA gate D, §5 R-T, Rule 10, WF2
+  // "standardized gates", 2026-09-26) — OBSERVABLE-only (GC-3): a GENERATED
+  // registry (`scripts/steps/_schema/consumer-registry.json`, built from
+  // `funnel.ts`'s FUNNEL_SOURCES + every converted descriptor's
+  // `emits[].consumers`/`counters[].source`/`staleness.trigger[]` — never a
+  // hand-typed inventory) records every (consumer, producer, key) contract a
+  // converted step's `records_meta`/`audit_table` participates in. Each row is
+  // checked PRESENT (the key/metric appears in >=1 of the producer's own POST
+  // goldens) AND TYPED (a `percent` row's value, or `value[value_path]`, is a
+  // finite number or a percent string) against the producer's own POST
+  // goldens; a producer NOT in converted.json is `unconverted_producer`, listed
+  // but never checked. The COMPLETENESS half (`scanConsumers`) walks the closed
+  // corpus (`src/lib/admin/**`, `src/components/**`, `src/app/**`, plus the
+  // four named chain scripts) for every `records_meta.<key>` reference and REDs
+  // any hit not covered by RUNNER_META_KEYS, CHAIN_META_KEYS, or a registry row
+  // whose consumer is that file (`undeclared-consumer`) — the `tables_checked`
+  // case: `step-validate.mjs` itself reads `assert_engine_health`'s counter
+  // with no row. A stale registry (drifted from its four sources) is RED before
+  // either half runs. Each RED is allowed only by a gate-D ledger row; an
+  // ORPHAN row (its violation since fixed) is RED too (R-X). Fleet DERIVED from
+  // converted.json (R-AN). `scripts/analysis/gates/consumer-registry.mjs` owns
+  // the answer set.
+  {
+    const consumers = checkConsumerRegistry(REPO_ROOT, loadLedger(REPO_ROOT).rows);
+    results.push({
+      id: 31,
+      slug: '(registry)',
+      pass: consumers.pass,
+      blockedSlugs: consumers.blockedSlugs,
+      detail: consumers.detail,
     });
   }
 
@@ -4146,6 +4181,13 @@ function selfTest() {
   // scripts/analysis/gates/emits-equiv.mjs (its own selfTest, run here so this
   // file's single `selfTest()` entry point covers it too).
   emitsEquivSelfTest();
+  // CONSUMER-REGISTRY (fast invariant #31, Spec 124 §5 R-BA gate D, §5 R-T,
+  // Rule 10, WF2 "standardized gates", 2026-09-26) — the generated-registry
+  // present+typed answer set, the completeness scan, and the orphan direction
+  // live entirely in scripts/analysis/gates/consumer-registry.mjs (its own
+  // selfTest, run here so this file's single `selfTest()` entry point covers
+  // it too).
+  consumerRegistrySelfTest();
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on
   // in-memory git-state fixtures (the probe itself, captureGitState, is locked
