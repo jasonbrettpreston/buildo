@@ -1,0 +1,7 @@
+{
+  "$comment": [
+    "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved)."
+  ],
+  "contract_version": 1,
+  "rows": []
+}

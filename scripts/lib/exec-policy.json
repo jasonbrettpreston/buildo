@@ -32,6 +32,7 @@
     "scripts/steps/_schema/template-freeze.json",
     "scripts/steps/_schema/schema-baseline.json",
     "scripts/steps/_schema/grandfathered.json",
+    "scripts/steps/_schema/standard-gates-ledger.json",
     "scripts/lib/exec-policy.json",
     "docs/specs/00-architecture/00_system_map.md"
   ],
