@@ -529,6 +529,8 @@ golden.
 
 ## 8. Commit plan
 
+**RED evidence (gate K / G7):** `docs/reports/red-evidence/load_centreline/pre2-compute-missing.json` — the ② suite (commit 54b24f31) run against the ① tree (commit d9267df0): 36/36 assertions failed, e.g. `descriptor exists and is AJV-valid`, proving the suite was genuinely red before ②.
+
 Copied from the plan of record §6 (transcribed; the plan file is absent — see the head-of-file note).
 **Provider per commit** is the plan's assignment, not re-decided here.
 
