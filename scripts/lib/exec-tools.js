@@ -756,6 +756,25 @@ function spawnAllowlisted(argv, opts) {
   return spawn(argv[0], argv.slice(1), { ...opts, shell: false });
 }
 
+// §C.1.9 bounded post-kill wait (engine hardening, 2026-09-27 — measured).
+// `taskkill /pid <root> /T /F` snapshots the tree and then kills it; a
+// process created in between by a NON-libuv parent (cmd.exe running an npm
+// script) escapes — libuv puts only a process's DIRECT children in its
+// kill-on-close job, with silent breakaway for theirs. Measured under CPU
+// load: 2 of 14 trials left `node sleep.js` alive with its cmd.exe parent
+// dead, holding our inherited stdout pipe, so runProcess waited on `close`
+// for the fixture's whole 30 s sleep — the operator's full-suite push failed
+// twice on the commit-9 clamp lock (20 s test timeout). A post-kill
+// parent-pid sweep (PowerShell/CIM) was measured and REJECTED: under load it
+// caught 1 of 4 escapes and pushed dispatch to 11-23 s, because the escaped
+// process's parent had itself been created after taskkill's snapshot or
+// reaped by the job cascade. Only a Windows Job Object around the whole tree
+// closes that (filed). What is guaranteed here: after the kill, runProcess
+// waits at most this long for `close`, then drops the pipes and records
+// `orphan_output_holder` in the TIMEOUT detail — never an unbounded hang,
+// never silent.
+const POST_KILL_CLOSE_GRACE_MS = 1500;
+
 function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
   return new Promise((resolve) => {
     const startedAt = Date.now();
@@ -802,19 +821,42 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       // as a NESTED child of its own — a plain SIGTERM/kill on OUR direct
       // child leaves that grandchild running on Windows, where terminating a
       // parent process does not tear down its process tree. `taskkill /T /F`
-      // kills the whole tree; POSIX gets a direct SIGKILL (SIGTERM is not
+      // kills the tree as it stood at its snapshot (see
+      // POST_KILL_CLOSE_GRACE_MS for the measured escape and the bound on
+      // it); POSIX gets a direct SIGKILL (SIGTERM is not
       // guaranteed to stop a process ignoring it, and this budget fence needs
       // a deterministic kill, not a polite request).
       try {
         if (process.platform === 'win32' && child.pid) {
-          spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+          spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
         } else {
           child.kill('SIGKILL');
         }
       } catch {
         // process may already be gone
       }
+      // After the kill, `close` (all stdio pipes closed) normally follows
+      // at once. If it has not within the grace period, something that
+      // escaped the kill still holds our pipe; waiting for `close` would
+      // block this call until THAT process exits — the defect that hung the
+      // full suite. Sweep for escaped children of the killed pids (Windows),
+      // then stop waiting on the pipes and RECORD it rather than hide it.
+      graceTimer = setTimeout(() => {
+        if (settled) {
+          return;
+        }
+        orphanOutputHolder = true;
+        try {
+          child.stdout.destroy();
+          child.stderr.destroy();
+        } catch {
+          // streams already closed
+        }
+        void settle({ exitCode: null, stdout, stderr, truncated, timedOut, durationMs: Date.now() - startedAt });
+      }, POST_KILL_CLOSE_GRACE_MS);
     }, timeoutMs);
+    let graceTimer = null;
+    let orphanOutputHolder = false;
 
     // §C.1.9 (fold-validation LOW, commit 12e) — "the child is gone
     // afterwards" is only genuinely true once the OS has actually reaped it.
@@ -831,13 +873,16 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       }
       settled = true;
       clearTimeout(timer);
+      if (graceTimer) {
+        clearTimeout(graceTimer);
+      }
       if (timedOut && child.pid) {
         for (let i = 0; i < 25 && isPidAlive(child.pid); i++) {
           // eslint-disable-next-line no-await-in-loop -- bounded poll, not a hot loop
           await new Promise((r) => setTimeout(r, 100));
         }
       }
-      resolve(result);
+      resolve({ ...result, orphanOutputHolder });
     }
 
     child.stdout.on('data', (chunk) => capture(chunk, 'out'));
@@ -897,7 +942,10 @@ async function runBashCommandHandler(args, ctx) {
   const post = captureWorktree(repoRoot);
 
   if (result.timedOut) {
-    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}` } }, pre, post };
+    // orphan_output_holder: after the tree kill, something unreachable still
+    // held the command's stdout/stderr pipe and runProcess stopped waiting on
+    // it (see POST_KILL_CLOSE_GRACE_MS) — surfaced, never silent.
+    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}`, detail: { orphan_output_holder: !!result.orphanOutputHolder } } }, pre, post };
   }
   return {
     toolResult: {
