@@ -87,7 +87,7 @@ const LOAD_META_KEYS_18 = [
  * Rule 3 literal ledger (assessment report §6) — the EIGHT variables this row externalizes, with
  * their seed defaults, PLUS the two gate E (McDonald's Airtight, engine brief c3e, 2026-09-26)
  * additions that moved ROUND_SCALE/MAX_DETAIL_KEYS out of the compute module to satisfy
- * compute-no-module-numeric-const. Both are verdict-neutral display knobs (on_invalid: clamp).
+ * compute-no-module-numeric-const. Both are verdict-neutral display knobs (on_invalid: fail, gate B).
  */
 const CONFIG_VARS: Record<string, number> = {
   load_centreline_dataset_age_warn_days: 7,
@@ -680,8 +680,9 @@ describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ th
     const byName = new Map(cfg.logic_variables.map((v) => [v.name, v]));
     expect(byName.get('load_centreline_count_drift_fail_pct')!.on_invalid, 'a malformed VALUE must halt, not silently loosen a FAIL gate').toBe('fail');
     expect(byName.get('load_centreline_invalid_geometry_fail_pct')!.on_invalid).toBe('fail');
-    expect(byName.get('load_centreline_download_retries')!.max, '0/10/clamp — a knob an operator may tune but never a verdict').toBe(10);
-    expect(byName.get('load_centreline_download_retry_backoff_ms')!.on_invalid).toBe('clamp');
+    expect(byName.get('load_centreline_download_retries')!.max, '0/10/fail — a knob an operator may tune but never a verdict').toBe(10);
+    expect(byName.get('load_centreline_download_retry_backoff_ms')!.on_invalid).toBe('fail');
+    for (const v of cfg.logic_variables) expect(v.on_invalid, `${v.name} — gate B`).toBe('fail');
     expect(cfg.validation).toBe('strict');
     expect(cfg.hoisted_above_gate).toBe(true);
   });

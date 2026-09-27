@@ -564,24 +564,24 @@ the direct counterpart of the new `audit_table.rows[13]` row already cited above
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 70 PRE capture(s) across 20 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 72 PRE capture(s) across 21 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 20 converted slug(s) — 12 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
-| 26 | (registry) | PASS | COUNTER-ROOT: 47 declared counter source(s) across 16 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
-| 27 | (registry) | PASS | ROW-ERROR-GATE: 4 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 21 converted slug(s) — 13 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 50 declared counter source(s) across 17 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 5 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
 | 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
 | 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
 | 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
 | 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 1 contract(s) checked, all closed (1 ledger-allowed, 0 present+typed/excluded) |
 | 37 | (registry) | PASS | LF-ONLY (gate F): 5 path(s) checked, all LF (5 ledger-allowed) |
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 4 x-banned-for-new path(s) enforced |
-| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 30 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
+| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 247 definition row(s) checked, 0 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (16 ledger-allowed, 4 outputs:"none" vacuous) |
-| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 65 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
-| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 20 step(s) checked — every diff-explanation channel accounted for |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 67 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 21 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 
@@ -592,12 +592,11 @@ the direct counterpart of the new `audit_table.rows[13]` row already cited above
 - compare ran: true · diffs found: 87 · unexplained: 0
 
 ### Test suite (item iii)
-- 1546/1547 passed (suite success=false)
-- harvested: 27 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1619/1619 passed (suite success=true)
+- harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

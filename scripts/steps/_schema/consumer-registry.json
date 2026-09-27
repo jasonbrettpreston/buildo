@@ -48,6 +48,14 @@
       "source": "counters"
     },
     {
+      "consumer": "enrich_centreline",
+      "producer": "load_centreline",
+      "kind": "records_meta",
+      "key": "centreline_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "enrich_ravines",
       "producer": "load_ravines",
       "kind": "records_meta",
@@ -150,6 +158,14 @@
       "key": "wsib_registry_count",
       "value": "any",
       "source": "trigger"
+    },
+    {
+      "consumer": "load_centreline",
+      "producer": "load_centreline",
+      "kind": "records_meta",
+      "key": "centreline_load.features_updated",
+      "value": "any",
+      "source": "counters"
     },
     {
       "consumer": "parcels",

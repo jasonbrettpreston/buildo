@@ -1543,16 +1543,6 @@
     },
     {
       "gate": "G",
-      "step": "assert_schema",
-      "item": "lib_fingerprint",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
       "step": "load_ravines",
       "item": "lib_fingerprint",
       "disposition": "pending_recapture",

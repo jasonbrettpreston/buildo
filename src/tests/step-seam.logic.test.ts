@@ -65,10 +65,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 20-descriptor registry (batch2 row 3.7 cutover, 2026-09-24 — parcels) yields 16 live pairs (up from 13): this registration ADDS THREE, all as the UPSTREAM half of already-declared edges — parcels itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points)', () => {
+  it('the REAL 21-descriptor registry (batch2 row 3.2 cutover, 2026-09-27 — load_centreline) yields 16 live pairs (UNCHANGED): load_centreline declares NO inputs.reads.steps (a leaf INGESTOR) and NO converted step names it as a read (enrich_centreline is not converted), so it adds ZERO pairs', () => {
     const byName = seam.loadConvertedDescriptors();
     expect(Object.keys(byName).sort()).toEqual(
-      ['address_points', 'assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_ravines', 'parcels', 'refresh_snapshot'].sort(),
+      ['address_points', 'assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_centreline', 'load_ravines', 'parcels', 'refresh_snapshot'].sort(),
     );
     // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
     // [{step: 'load_heritage', version_pin: 'exact'}] ONLY — measured from
@@ -206,6 +206,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // unresolved (the address_points half has been live since ITS cutover). parcels' OWN
     // inputs.reads.steps is [] (a leaf INGESTOR, like load_ravines/assert_schema/
     // address_points), so its registration contributes zero pairs as a downstream.
+    // batch-2 row 3.2 cutover (load_centreline, 2026-09-27) — 16 -> 16 PAIRS, NONE NEW: inputs.reads.steps is [] (measured, scripts/load-centreline.descriptor.json) and its only reader, enrich_centreline, is not converted.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },

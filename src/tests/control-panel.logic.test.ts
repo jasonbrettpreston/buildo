@@ -515,7 +515,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'load_centreline_download_timeout_ms', 'load_centreline_download_retries', 'load_centreline_download_retry_backoff_ms',
   // WF2 row 3.2 gate E (2026-09-26, McDonald's Airtight, engine brief c3e) — ROUND_SCALE and
   // MAX_DETAIL_KEYS moved out of the compute module to satisfy compute-no-module-numeric-const;
-  // both are verdict-neutral display knobs (on_invalid: clamp), never a pass/fail bound.
+  // both are verdict-neutral display knobs (on_invalid: fail — gate B), never a pass/fail bound.
   'load_centreline_round_scale', 'load_centreline_max_detail_keys',
 ];
 

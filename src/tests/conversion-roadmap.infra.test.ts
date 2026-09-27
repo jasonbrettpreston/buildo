@@ -163,8 +163,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // pending[] deleted, converted[] gains the file in the SAME commit, R-K) is a no-op for
     // THIS count — the file already left `remaining` at commit ②, exactly as address_points'
     // own commit 9 was a no-op for its equivalent transition.
-    expect(remaining.length).toBe(43);
-    expect(remainingSlugCount).toBe(45);
+    // 43 -> 42 files / 45 -> 44 slugs: load_centreline's ② (54b24f31) put it in pending[] and this test was not re-run between ② and ③ (same staleness class as above); its ③ CUTOVER (2026-09-27) moves it pending[] -> converted[] (R-K) — measured here.
+    expect(remaining.length).toBe(42);
+    expect(remainingSlugCount).toBe(44);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -231,7 +232,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // same disposition address_points used, since COMPRESSED-form INGESTORs also never
     // route through the census `batch` field, only `converted.json.pending[]`) but gains
     // `status: "converted"`, dropping it from the live C5 count the same way.
-    expect(c5.size).toBe(7);
+    // 7 -> 6 at the batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline's census row RETAINED (R-AO)
+    // with status:"converted", dropping it from the live C5 count the same way as parcels.
+    expect(c5.size).toBe(6);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -479,7 +482,9 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // remaining is UNCHANGED from commit ②'s true value (45) — the slug left `remaining` at
     // commit ②, not at cutover.
     expect(pendingSlugs).toBe(0);
-    expect(remainingSlugs).toBe(45);
+    // batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline moves pending[] -> converted[] (20 -> 21);
+    // remaining 45 -> 44 (its ② pending move, 54b24f31, was never re-measured here — same staleness class).
+    expect(remainingSlugs).toBe(44);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -579,7 +584,8 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     // above), same effect as every prior C5-count drop in this describe block.
     // batch-2 row 3.7 CUTOVER (commit ③, 2026-09-24): parcels converted out of C5 (8->7),
     // the same move.
-    expect(c5).toHaveLength(7);
+    // batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline converted out of C5 (7->6), the same move.
+    expect(c5).toHaveLength(6);
   });
 });
 

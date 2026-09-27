@@ -489,10 +489,7 @@ the legacy loop, which retries with NO sleep [`scripts/load-centreline.js:309-31
 | `centrelineMinFeatureCount` `40000` [`:55`] | — **knowingly-retired** | — | **NEVER READ** (dead, §3 #9); the one truth is the registered `sources_centreline_floor` [`scripts/seeds/logic_variables.json:5140`], REUSED via `checks[].limit_from_config` |
 | `VALIDATION_CHUNK = 5000` [`:536`] | — **knowingly-retired** | — | **LC-D12** — the library validates in a single call |
 
-**Clamp is not a licence to drift.** Both new retry rows and the timeout/threshold rows are
-**`on_invalid:"clamp"`, NOT verdict-affecting** — an operator cannot turn a FAIL into a PASS by
-setting a bad value. The two `fail` rows (`count_drift`, `invalid_geometry`) keep `fail` so a
-malformed value HALTS rather than silently loosening a gate. **`sources_centreline_floor` is SHARED,
+**All eight are `on_invalid:"fail"` as of ③ (2026-09-27, Spec 124 §5 R-BA gate B closed answer #1).** The six rows above marked `clamp` were drafted clamp at ②; gate B (no ledger rows for an in-development step) flipped them to `fail` at ③ — an out-of-range admin value now halts. `config.js` already threw on a missing seed row (LM-D15), so only out-of-range VALUE handling changed; no data value moved. **`sources_centreline_floor` is SHARED,
 never re-minted** (Rule 3, one source of truth) — the ledger reuses the registered key.
 
 **Seeded today: 0 of these** [**MEASURED 2026-09-24**: `scripts/seeds/logic_variables.json` holds only
@@ -627,7 +624,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=4 lock-it-count=40 |
-| G-shape | PASS | — | file-clean=null compute-clean=true |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
@@ -643,24 +640,24 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 70 PRE capture(s) across 20 converted step(s) all tracked + clean (git can restore every reference) |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 20 converted slug(s) — 12 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
-| 26 | (registry) | PASS | COUNTER-ROOT: 47 declared counter source(s) across 16 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
-| 27 | (registry) | PASS | ROW-ERROR-GATE: 4 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 72 PRE capture(s) across 21 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 21 converted slug(s) — 13 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 50 declared counter source(s) across 17 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 5 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
 | 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
 | 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
 | 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
 | 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 1 contract(s) checked, all closed (1 ledger-allowed, 0 present+typed/excluded) |
 | 37 | (registry) | PASS | LF-ONLY (gate F): 5 path(s) checked, all LF (5 ledger-allowed) |
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 4 x-banned-for-new path(s) enforced |
-| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 30 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
+| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
 | 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (16 ledger-allowed, 4 outputs:"none" vacuous) |
-| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 65 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
-| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 20 step(s) checked — every diff-explanation channel accounted for |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 67 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 21 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 
@@ -671,7 +668,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 - compare ran: true · diffs found: 131 · unexplained: 0
 
 ### Test suite (item iii)
-- 1599/1599 passed (suite success=true)
+- 1619/1619 passed (suite success=true)
 - harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
@@ -683,7 +680,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 8 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not scoped to this step |
+| 3 | Tunables externalized | enforced-green | G-4: 8 declared, 2 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 10 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -694,7 +691,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 4 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=ingest runner=runIngestPhase: no staleness.ledgerGatedSkip/selectMode/ENRICHER full-fold on this path (INGESTOR's own tier-1/tier-2 staleness gate); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the forced decision that bypasses the same gate override.force_run bypasses · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=61707B notes=16005B checks=20 rows records_meta=5725B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=61701B notes=16005B checks=20 rows records_meta=5725B (newest post/ capture) |
 
 **Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 

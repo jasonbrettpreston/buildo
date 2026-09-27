@@ -737,14 +737,14 @@
 
   "config": {
     "logic_variables": [
-      { "name": "load_centreline_dataset_age_warn_days", "min": 0, "max": 365, "on_invalid": "clamp" },
+      { "name": "load_centreline_dataset_age_warn_days", "min": 0, "max": 365, "on_invalid": "fail" },
       { "name": "load_centreline_count_drift_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_centreline_invalid_geometry_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "load_centreline_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "clamp" },
-      { "name": "load_centreline_download_retries", "min": 0, "max": 10, "on_invalid": "clamp" },
-      { "name": "load_centreline_download_retry_backoff_ms", "min": 0, "max": 60000, "on_invalid": "clamp" },
-      { "name": "load_centreline_round_scale", "min": 1, "max": 100000, "on_invalid": "clamp" },
-      { "name": "load_centreline_max_detail_keys", "min": 1, "max": 1000, "on_invalid": "clamp" }
+      { "name": "load_centreline_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" },
+      { "name": "load_centreline_download_retries", "min": 0, "max": 10, "on_invalid": "fail" },
+      { "name": "load_centreline_download_retry_backoff_ms", "min": 0, "max": 60000, "on_invalid": "fail" },
+      { "name": "load_centreline_round_scale", "min": 1, "max": 100000, "on_invalid": "fail" },
+      { "name": "load_centreline_max_detail_keys", "min": 1, "max": 1000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true

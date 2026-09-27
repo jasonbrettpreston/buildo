@@ -180,7 +180,7 @@ describe('gate E — the ratio DISPLAY precision is CONFIG-DRIVEN, not a hardcod
 // ===========================================================================
 
 describe('gate E — both variables are DECLARED (config.logic_variables[] + seed rows, Rule 3)', () => {
-  it('loadDescriptor().config.logic_variables carries both with their bounds and on_invalid "clamp"', () => {
+  it('loadDescriptor().config.logic_variables carries both with their bounds and on_invalid "fail"', () => {
     const d = loadDescriptor();
     expect(d.config, 'a step with externalized literals may not declare config:"none"').not.toBe('none');
     const cfg = d.config as { logic_variables: LogicVariable[]; validation: string; hoisted_above_gate: boolean };
@@ -190,11 +190,11 @@ describe('gate E — both variables are DECLARED (config.logic_variables[] + see
       expect(v, `${name} must be declared in config.logic_variables[]`).toBeDefined();
       expect(v!.min).toBe(spec.min);
       expect(v!.max).toBe(spec.max);
-      expect(v!.on_invalid, 'verdict-neutral (R-G / Rule 3: `fail` is mandatory only on verdict-affecting bounds)').toBe('clamp');
+      expect(v!.on_invalid, 'gate B closed answer #1 (Spec 124 §5 R-BA): every load_centreline var is fail — an out-of-range admin value halts').toBe('fail');
     }
   });
 
-  it('seedDefaults() carries both with defaults 1000 / 50 and on_invalid "clamp"', () => {
+  it('seedDefaults() carries both with defaults 1000 / 50 and on_invalid "fail"', () => {
     const S = seedDefaults();
     for (const [name, spec] of Object.entries(NEW_VARS)) {
       const row = S[name];
