@@ -1127,6 +1127,11 @@ export function vitestChildEnv(baseEnv, hookText = readFileSync(PRE_PUSH_HOOK_PA
   return env;
 }
 
+// Harvest spawn ceiling. The fleet harvest is single-fork (R-AG) and grows with
+// every converted step; at 600 s it overran on 2026-09-27 (21 steps) and wrote
+// "SKIPPED" into every scorecard. 30 min keeps a wedged run bounded.
+const VITEST_HARVEST_TIMEOUT_MS = 30 * 60 * 1000;
+
 function runVitest() {
   const outFile = path.join(os.tmpdir(), `step-validate-vitest-${process.pid}.json`);
   const plan = vitestSpawnArgs(packageTestScript(), outFile);
@@ -1160,7 +1165,7 @@ function runVitest() {
   const run = spawnSync(
     process.execPath,
     [vitestEntry(), ...plan.argv],
-    { cwd: REPO_ROOT, encoding: 'utf8', timeout: 600_000, maxBuffer: 256 * 1024 * 1024, env: childEnv },
+    { cwd: REPO_ROOT, encoding: 'utf8', timeout: VITEST_HARVEST_TIMEOUT_MS, maxBuffer: 256 * 1024 * 1024, env: childEnv },
   );
   if (!existsSync(outFile)) {
     return { ranOk: false, error: `vitest produced no JSON report (exit ${run.status}); stderr: ${(run.stderr || '').slice(0, 2000)}`, tests: [] };
