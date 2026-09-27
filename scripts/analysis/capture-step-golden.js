@@ -68,13 +68,16 @@
  */
 'use strict';
 
-const { spawn, execFileSync } = require('child_process');
+const { spawn, spawnSync, execFileSync } = require('child_process');
 const { StringDecoder } = require('string_decoder');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { createResolvedPool } = require('../lib/resolve-db');
 const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, FAIL: RERUN_FAIL } = require('./capture-rerun-proof');
+const { parseFiveWords, captureGuardDecision, sameSessionDecision, prePathFor } = require('./capture-guard');
+
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 const SUMMARY_MARKER = 'PIPELINE_SUMMARY:';
 const META_MARKER = 'PIPELINE_META:';
@@ -880,6 +883,34 @@ async function runRerunProof({ step, chain, args, descriptor }) {
   }
 }
 
+/**
+ * WF2 "conversion simplification" item 2 — CAPTURE LAST (Spec 123 ①②③ table). A POST
+ * capture is refused unless `step-validate --step=<slug> --fast` reads five-word PASS
+ * (`scripts/analysis/capture-guard.js` owns the closed decision; a gate-G-only FAIL is
+ * allowed because G judges the captures this run produces). Runs BEFORE the step is
+ * spawned, so a refusal costs one --fast validation, not a step run. Replaces the
+ * repeated POST recaptures a late gate forced (centreline: C2 twice, ③ once).
+ * `runStepValidate` is injectable for the test; the default spawns the real CLI.
+ * @returns {{slug:string, decision:object}}
+ */
+function postCaptureGuard({ step, runStepValidate }) {
+  const rel = path.relative(REPO_ROOT, path.resolve(String(step))).split(path.sep).join('/');
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8'));
+  const slug = Object.entries(manifest.scripts || {}).find(([, e]) => e && e.file === rel)?.[0];
+  if (!slug) throw new Error(`[capture-step-golden] REFUSING POST capture: no scripts/manifest.json entry points at ${rel}, so step-validate cannot vouch for it`);
+  const run = runStepValidate
+    ? runStepValidate(slug)
+    : spawnSync(process.execPath, [path.join(__dirname, 'step-validate.mjs'), `--step=${slug}`, '--fast'], {
+      cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024,
+    });
+  const decision = captureGuardDecision(parseFiveWords(run.stdout || ''));
+  if (!decision.allow) {
+    throw new Error(`[capture-step-golden] REFUSING POST capture of ${slug}: ${decision.reason} ` +
+      `(step-validate --step=${slug} --fast exit ${run.status}). Capture last: make the step five-word PASS, then capture.`);
+  }
+  return { slug, decision };
+}
+
 function buildCapture(raw) {
   const { normalised, nondeterminism } = normalise(raw);
   const verdict = raw.summary?.records_meta?.audit_table?.verdict ?? null;
@@ -1006,6 +1037,13 @@ async function main() {
     }
   }
 
+  // Item 2 — capture last: a POST capture needs a five-word PASS first.
+  const isPost = Boolean(opts.out && isPostCapturePath(path.resolve(String(opts.out))));
+  if (isPost) {
+    const g = postCaptureGuard({ step });
+    console.log(`[capture-step-golden] capture-last guard: ${g.slug} ${g.decision.reason}`);
+  }
+
   const descriptorPath = descriptorPathFor(step);
   const descriptor = fs.existsSync(descriptorPath) ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) : null;
   const { tables, source: tablesSource } = resolveTables({ descriptor, tablesArg: opts.tables });
@@ -1041,9 +1079,19 @@ async function main() {
   const doc = buildCapture(raw);
   assertCaptureIsValid(doc);
 
+  // Item 2 — PRE and POST must see the same upstream bytes (one session): a committed
+  // PRE for this invocation whose records_meta content_hash differs refuses the POST.
+  if (isPost) {
+    const prePath = prePathFor(path.resolve(String(opts.out)));
+    const preDoc = prePath && fs.existsSync(prePath) ? JSON.parse(fs.readFileSync(prePath, 'utf8')) : null;
+    const session = sameSessionDecision(preDoc, doc);
+    if (!session.same) throw new Error(`[capture-step-golden] REFUSING --out=${opts.out}: ${session.reason}`);
+    console.log(`[capture-step-golden] same-session check: ${session.reason}`);
+  }
+
   // Item 7 — a POST capture is a two-run proof: run 2 must write nothing to any
   // zero_writes table. Top-level field (never in `normalised`, so no G8 diff).
-  if (opts.out && isPostCapturePath(path.resolve(String(opts.out)))) {
+  if (isPost) {
     doc.rerun_proof = await runRerunProof({ step, chain: String(opts.chain), args, descriptor });
     console.log(`[capture-step-golden] rerun proof: ${doc.rerun_proof.answer} — ${doc.rerun_proof.reason}`);
     if (doc.rerun_proof.answer === RERUN_FAIL) {
@@ -1154,6 +1202,7 @@ module.exports = {
   notesPathFor,
   gitHead,
   runRerunProof,
+  postCaptureGuard,
   captureGitState,
   overwriteDecision,
 };
