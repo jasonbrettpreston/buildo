@@ -13,7 +13,7 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "173ca49f87b2f58c47e9adc991dffe1d9c281126",
+  "frozen_at": "407dd91a4f04fea495f62f794f09cee81747e13a",
   "frozen_after_pilot": 9,
   "schema_sha256": "47e3729ce29a1b3d9c37698a08ea5c69f85708f9d246e40a18468d6682ef46e9",
   "categories": [
@@ -135,6 +135,7 @@
       "phase_order": [
         "acquire.resolveTimeoutMs",
         "staleness.resolveOverrides",
+        "staleness.detectInterruptedRetraction",
         "write.buildWritePlan",
         "staleness.priorRunErrorPosture",
         "staleness.readPriorEmitWithPosture",
