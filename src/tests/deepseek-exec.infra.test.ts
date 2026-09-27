@@ -21,6 +21,17 @@ import {
   toolTurn, rawToolTurn, hookedClient, writeBrief, ledgerRecords, cleanupTempDir, REPO_ROOT,
 } from './helpers/deepseek-exec-harness';
 
+// Engine fence F1 (2026-09-27, §C.1.10): one malformed call no longer aborts —
+// the run aborts on the (retry_max + 1)-th CONSECUTIVE one. The lock-2 arms
+// below repeat the same malformed turn that many times so they still prove
+// "aborted, and no tool ever runs"; the retry path itself is locked in
+// src/tests/deepseek-exec-malformed-retry.infra.test.ts.
+const MALFORMED_ABORT_AFTER: number =
+  JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8')).malformed_tool_call_retry_max + 1;
+function repeatTurn<T>(make: (n: number) => T): T[] {
+  return Array.from({ length: MALFORMED_ABORT_AFTER }, (_, n) => make(n));
+}
+
 describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
   let repo = '';
   let ledgerDir = '';
@@ -61,10 +72,10 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
   // ---------------------------------------------------------------------
   // Lock 2 — malformed tool call aborts, no tool ever runs
   // ---------------------------------------------------------------------
-  describe('lock 2: a malformed tool call aborts BEFORE any tool executes', () => {
+  describe('lock 2: repeated malformed tool calls abort BEFORE any tool executes (F1: after retry_max + 1 consecutive)', () => {
     it('unknown tool name', async () => {
       const briefPath = writeBrief(repo);
-      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: [toolTurn('c1', 'bogus_tool', { reason: 'r' })] });
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: repeatTurn((n) => toolTurn(`c${n}`, 'bogus_tool', { reason: 'r' })) });
       expect(summary.status).toBe('aborted');
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(records.some((r) => r.kind === 'error' && r.code === 'MALFORMED_TOOL_CALL')).toBe(true);
@@ -73,7 +84,7 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
 
     it('bad args — missing required field', async () => {
       const briefPath = writeBrief(repo);
-      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: [toolTurn('c1', 'read_file', { reason: 'r' })] });
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: repeatTurn((n) => toolTurn(`c${n}`, 'read_file', { reason: 'r' })) });
       expect(summary.status).toBe('aborted');
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(records.some((r) => r.kind === 'error' && r.code === 'MALFORMED_TOOL_CALL')).toBe(true);
@@ -82,7 +93,7 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
 
     it('unparsable JSON arguments', async () => {
       const briefPath = writeBrief(repo);
-      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: [rawToolTurn('c1', 'read_file', '{not json')] });
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: repeatTurn((n) => rawToolTurn(`c${n}`, 'read_file', '{not json')) });
       expect(summary.status).toBe('aborted');
       const records = ledgerRecords(ledgerDir, summary.run_id);
       expect(records.some((r) => r.kind === 'error' && r.code === 'MALFORMED_TOOL_CALL')).toBe(true);
@@ -209,7 +220,7 @@ describe('SUB-ENG-1 Phase 1 — deepseek-exec.js (Spec 08 §C)', () => {
     const briefPath = writeBrief(repo);
     const turns = [
       toolTurn('c1', 'read_file', { path: 'empty-old-string.txt', reason: 'r' }),
-      toolTurn('c2', 'edit_file', { path: 'empty-old-string.txt', old_string: '', new_string: 'x', reason: 'r' }),
+      ...repeatTurn((n) => toolTurn(`c2-${n}`, 'edit_file', { path: 'empty-old-string.txt', old_string: '', new_string: 'x', reason: 'r' })),
     ];
     const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, transcriptTurns: turns });
     expect(summary.status).toBe('aborted');

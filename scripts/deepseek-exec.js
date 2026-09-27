@@ -61,6 +61,8 @@ const BLOCKED_CODES = new Set([
   // spawnSync capture, and the commit-message format check.
   'HANDLER_FAULT', 'NOT_FOUND', 'IS_DIRECTORY', 'PERMISSION_DENIED',
   'INDEX_DIRTY', 'STAGE_MISMATCH', 'OUTPUT_TOO_LARGE', 'MESSAGE_FORMAT',
+  // Engine fence F2 (2026-09-27) — write_file on an existing file.
+  'WRITE_TOO_LARGE_USE_EDIT', 'WRITE_SHRINK',
 ]);
 
 function sha256Hex(content) {
@@ -76,6 +78,12 @@ function sha256Hex(content) {
 const REQUIRED_POLICY_KEYS = [
   'v', 'bash_allow', 'validators', 'commit_message_pattern',
   'secret_read_deny', 'registry_reserved', 'claude_only_globs', 'limits',
+  // Engine fence F1 (2026-09-27) — §C.1.10's consecutive malformed-call
+  // allowance; a non-negative integer (type-checked below).
+  'malformed_tool_call_retry_max',
+  // Engine fence F2 (2026-09-27) — write_file on an existing file: a
+  // positive-integer line cap and a [0, 1] retained-size ratio.
+  'write_file_max_existing_lines', 'write_file_min_retained_ratio',
 ];
 
 class PolicyInvalidError extends Error {
@@ -93,6 +101,21 @@ function validatePolicyShape(policy) {
   const missing = REQUIRED_POLICY_KEYS.filter((key) => !(key in policy));
   if (missing.length > 0) {
     throw new PolicyInvalidError(`exec-policy.json is missing required key(s): ${missing.join(', ')}`);
+  }
+  // Engine fence F1 — a present-but-malformed retry allowance must fail
+  // closed too (a string or NaN would make the `>` comparison in the loop
+  // silently false forever, i.e. unlimited retries).
+  const retryMax = policy.malformed_tool_call_retry_max;
+  if (!Number.isInteger(retryMax) || retryMax < 0) {
+    throw new PolicyInvalidError(`exec-policy.json malformed_tool_call_retry_max must be a non-negative integer, got ${JSON.stringify(retryMax)}`);
+  }
+  const maxLines = policy.write_file_max_existing_lines;
+  if (!Number.isInteger(maxLines) || maxLines < 1) {
+    throw new PolicyInvalidError(`exec-policy.json write_file_max_existing_lines must be a positive integer, got ${JSON.stringify(maxLines)}`);
+  }
+  const minRatio = policy.write_file_min_retained_ratio;
+  if (typeof minRatio !== 'number' || !(minRatio >= 0 && minRatio <= 1)) {
+    throw new PolicyInvalidError(`exec-policy.json write_file_min_retained_ratio must be a number in [0, 1], got ${JSON.stringify(minRatio)}`);
   }
 }
 
@@ -249,9 +272,9 @@ function buildResultSummary(name, toolResult) {
     case 'grep_files':
       return { matches_count: (toolResult.matches || []).length, truncated: !!toolResult.truncated };
     case 'write_file':
-      return { bytes: toolResult.bytes, sha256: toolResult.sha256, created: !!toolResult.created };
+      return { bytes: toolResult.bytes, sha256: toolResult.sha256, created: !!toolResult.created, cr_normalized: toolResult.cr_normalized };
     case 'edit_file':
-      return { replacements: toolResult.replacements, sha256: toolResult.sha256 };
+      return { replacements: toolResult.replacements, sha256: toolResult.sha256, cr_normalized: toolResult.cr_normalized, eol: toolResult.eol };
     case 'run_bash_command':
       return { exit_code: toolResult.exit_code, truncated: !!toolResult.truncated };
     case 'git_commit':
@@ -292,6 +315,21 @@ async function runEngine(opts = {}) {
       throw new Error(`BRIEF_OUTSIDE_REPO: --brief path escapes the repo root: ${opts.briefPath} (${err.message})`);
     }
     throw err;
+  }
+  // Engine hardening G2 (DeepSeek security lens, 2026-09-27): --transcript
+  // takes the same untrusted path input as --brief and was read via an
+  // unconfined path.resolve — confined identically, BEFORE run_start, so a
+  // refused value writes no ledger record.
+  let transcriptAbs = null;
+  if (opts.transcript) {
+    try {
+      transcriptAbs = resolveConfinedPath(repoRoot, opts.transcript);
+    } catch (err) {
+      if (err instanceof PathDeniedError) {
+        throw new Error(`TRANSCRIPT_OUTSIDE_REPO: --transcript path escapes the repo root: ${opts.transcript} (${err.message})`);
+      }
+      throw err;
+    }
   }
   let briefContent;
   try {
@@ -492,7 +530,7 @@ async function runEngine(opts = {}) {
       if (Array.isArray(opts.transcriptTurns)) {
         modelClient = createTranscriptClient(opts.transcriptTurns);
       } else if (opts.transcript) {
-        const turns = JSON.parse(fs.readFileSync(path.resolve(repoRoot, opts.transcript), 'utf8'));
+        const turns = JSON.parse(fs.readFileSync(transcriptAbs, 'utf8'));
         modelClient = createTranscriptClient(turns);
       } else {
         modelClient = createDeepSeekClient({ model });
@@ -519,6 +557,29 @@ async function runEngine(opts = {}) {
     let toolCallsTotal = 0;
     let blockedTotal = 0;
     const commits = [];
+    // Engine fence F1 (§C.1.10) — CONSECUTIVE malformed calls; any
+    // well-formed (dispatched) call resets it. The run aborts only once this
+    // exceeds policy.malformed_tool_call_retry_max.
+    let consecutiveMalformed = 0;
+    const malformedRetryMax = policy.malformed_tool_call_retry_max;
+
+    // Ledgers one MALFORMED_TOOL_CALL error and either aborts (allowance
+    // exhausted) or hands the same structured error back to the model as
+    // this call's tool result, so every tool_call_id in the assistant turn
+    // still gets its reply and the model can re-issue the call.
+    function handleMalformed(call, message) {
+      ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(message), iteration });
+      consecutiveMalformed += 1;
+      if (consecutiveMalformed > malformedRetryMax) {
+        return true;
+      }
+      messages.push({
+        role: 'tool',
+        tool_call_id: call.id,
+        content: redact(JSON.stringify({ ok: false, error: { code: 'MALFORMED_TOOL_CALL', message } })),
+      });
+      return false;
+    }
 
     function finish(status) {
       const record = {
@@ -564,6 +625,25 @@ async function runEngine(opts = {}) {
         return finish('aborted');
       }
 
+      // Engine hardening G3 (DeepSeek security lens, 2026-09-27): a provider
+      // (or transcript) turn that is not an object, or carries no `message`
+      // object, used to crash the loop with a raw TypeError. It is now a
+      // ledgered MALFORMED_MODEL_TURN on the SAME consecutive counter as F1's
+      // malformed tool calls: the model is re-asked, and the run aborts only
+      // past malformed_tool_call_retry_max. Its usage (if any) is still
+      // billed, so a provider cannot spin the budget for free.
+      if (!turn || typeof turn !== 'object' || !turn.message || typeof turn.message !== 'object') {
+        if (turn && typeof turn === 'object' && turn.usage) {
+          usageTotal = addUsage(usageTotal, turn.usage);
+        }
+        ledger.append({ kind: 'error', code: 'MALFORMED_MODEL_TURN', message: redact(`provider turn has no message object (got ${turn === null ? 'null' : typeof turn}${turn && typeof turn === 'object' ? `, keys: ${Object.keys(turn).join(',')}` : ''})`), iteration });
+        consecutiveMalformed += 1;
+        if (consecutiveMalformed > malformedRetryMax) {
+          return finish('aborted');
+        }
+        continue;
+      }
+
       const turnUsage = turn.usage || emptyUsage();
       usageTotal = addUsage(usageTotal, turnUsage);
       const toolCalls = (turn.message && turn.message.tool_calls) || [];
@@ -589,7 +669,13 @@ async function runEngine(opts = {}) {
         // redacted here too or a secret the model echoes back would survive
         // unredacted for every subsequent turn's prompt.
         content: redact(turn.message.content ?? null),
-        tool_calls: toolCalls,
+        // Engine hardening G1 (DeepSeek security lens, 2026-09-27): the
+        // model's own tool-call ARGUMENTS are re-fed too, so they pass the
+        // same redaction. A COPY — the calls below still dispatch on the raw
+        // arguments (redacting them would corrupt e.g. write_file content).
+        tool_calls: toolCalls.map((c) => (c && c.function && typeof c.function.arguments === 'string'
+          ? { ...c, function: { ...c.function, arguments: redact(c.function.arguments) } }
+          : c)),
       });
 
       // Step 9 panel fold, F-DS15 — "model finished" is evaluated BEFORE the
@@ -621,8 +707,10 @@ async function runEngine(opts = {}) {
         try {
           args = JSON.parse((call.function && call.function.arguments) || '{}');
         } catch (err) {
-          ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(`unparsable arguments for "${name}": ${err.message}`), iteration });
-          return finish('aborted');
+          if (handleMalformed(call, `unparsable arguments for "${name}": ${err.message}`)) {
+            return finish('aborted');
+          }
+          continue;
         }
 
         const isMutating = MUTATING_TOOLS.has(name);
@@ -632,11 +720,14 @@ async function runEngine(opts = {}) {
           dispatchOutcome = await tools.dispatch(name, args);
         } catch (err) {
           if (err instanceof MalformedToolCallError) {
-            ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(err.message), iteration });
-            return finish('aborted');
+            if (handleMalformed(call, err.message)) {
+              return finish('aborted');
+            }
+            continue;
           }
           throw err;
         }
+        consecutiveMalformed = 0;
 
         // §C.3 — pre/post worktree capture is produced by the HANDLER itself
         // (scripts/lib/exec-worktree.js, wired in commit 4) so the window is

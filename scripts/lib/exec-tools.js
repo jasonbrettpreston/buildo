@@ -12,7 +12,10 @@
  *     name, `additionalProperties:false` violation, missing required field,
  *     or a wrong-typed field all throw `MalformedToolCallError` synchronously
  *     — the loop in scripts/deepseek-exec.js turns that into an `error`
- *     ledger record and aborts the run WITHOUT the handler ever executing).
+ *     ledger record WITHOUT the handler ever executing, returns the same
+ *     MALFORMED_TOOL_CALL to the model as that call's tool result, and aborts
+ *     the run only after more than `malformed_tool_call_retry_max`
+ *     consecutive malformed calls — engine fence F1, 2026-09-27).
  *
  * Commit 2 shipped every tool as a schema-validated stub returning
  * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }`. Commit 3 added real
@@ -81,6 +84,11 @@ const SELF_PROTECT_DENYLIST = Object.freeze([
   'scripts/deepseek-exec.js',
   'scripts/lib/exec-tools.js',
   'scripts/lib/exec-ledger.js',
+  // Engine-fence panel (DeepSeek security lens, 2026-09-27): every sibling
+  // fence module the two above require (exec-path/glob/policy-match/claims/
+  // brief/env/worktree/model) — a committed edit to one is loaded by the
+  // NEXT run. A glob, so a new exec-*.js module is covered without retyping.
+  'scripts/lib/exec-*.js',
   'scripts/lib/exec-policy.json',
   '.husky/**',
   '.git/**',
@@ -92,6 +100,8 @@ const SELF_PROTECT_DENYLIST = Object.freeze([
   'src/tests/hooks-composition.infra.test.ts',
   'src/tests/agent-roster.infra.test.ts',
   'src/tests/deepseek-exec*.test.ts',
+  // The shared harness every deepseek-exec* lock imports (same panel fold).
+  'src/tests/helpers/deepseek-exec-harness.ts',
 ]);
 
 // The ledger directory resolves at RUNTIME (outside the repo by design, F11)
@@ -401,13 +411,20 @@ function validateArgs(name, args) {
   }
   const props = schema.parameters.properties || {};
   const required = schema.parameters.required || [];
+  // OWN-property checks, never `in` (engine-fence panel, DeepSeek security
+  // lens 2026-09-27): `'constructor' in props` is true via Object.prototype,
+  // so a model-supplied `constructor`/`toString`/`valueOf` key slipped past
+  // additionalProperties:false and reached validateType, whose F-DS16 plain
+  // Error then escaped dispatch and crashed the engine loop — instead of a
+  // retryable MALFORMED_TOOL_CALL (§C.1.10).
+  const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
   for (const key of required) {
-    if (!(key in args)) {
+    if (!own(args, key)) {
       throw new MalformedToolCallError(`${name}: missing required argument "${key}"`);
     }
   }
   for (const key of Object.keys(args)) {
-    if (!(key in props)) {
+    if (!own(props, key)) {
       throw new MalformedToolCallError(`${name}: unexpected argument "${key}" (additionalProperties: false)`);
     }
     validateType(props[key], args[key], key);
@@ -444,6 +461,65 @@ function checkReadBeforeWrite(absPath, relPosix, runState, requireExisting) {
   const currentSha256 = sha256Hex(fs.readFileSync(absPath));
   if (currentSha256 !== recorded.sha256 || currentStat.mtimeMs !== recorded.mtime_ms) {
     return { ok: false, error: { code: 'STALE', message: `${relPosix} changed since it was last read this run` } };
+  }
+  return null;
+}
+
+/**
+ * Engine fence F3 (2026-09-27, §C.2) — every string the MODEL supplies for a
+ * write (write_file.content, edit_file.old_string/new_string) is LF-only:
+ * `\r\n` and a lone `\r` both become `\n`. Returns the normalised text and
+ * the number of `\r` characters removed (ledgered as `cr_normalized`). Gate F
+ * (Spec 124 §5 R-BA) stays the backstop for anything written another way.
+ */
+function normalizeLf(text) {
+  const removed = text.split('\r').length - 1;
+  return { text: removed === 0 ? text : text.replace(/\r\n?/g, '\n'), removed };
+}
+
+// A file is "uniformly CRLF" when it has at least one `\r\n`, every `\n` is
+// preceded by `\r`, and no `\r` stands alone (count(\r\n) === count(\n) ===
+// count(\r)). edit_file writes such a file back CRLF so an edit
+// never churns every line of a committed-CRLF file (36 tracked files were
+// `i/crlf` on 2026-09-27, Spec 08 itself among them); any other file is
+// written LF.
+function isUniformCrlf(text) {
+  const crlf = text.split('\r\n').length - 1;
+  return crlf > 0 && crlf === text.split('\n').length - 1 && crlf === text.split('\r').length - 1;
+}
+
+function countLines(text) {
+  if (text === '') return 0;
+  const n = text.split('\n').length;
+  return text.endsWith('\n') ? n - 1 : n;
+}
+
+/**
+ * Engine fence F2 (2026-09-27, §C.2) — a whole-file overwrite of an EXISTING
+ * file is the one write that can silently drop content the model never saw
+ * (a windowed read_file, a truncated regeneration). Over
+ * `policy.write_file_max_existing_lines` lines the model must use edit_file
+ * (`WRITE_TOO_LARGE_USE_EDIT`); below `policy.write_file_min_retained_ratio`
+ * of the old byte size the write is refused as a shrink (`WRITE_SHRINK`).
+ * Returns null when allowed, else a blocked toolResult carrying
+ * `error.detail = { old_bytes, old_lines, new_bytes }` for the ledger. A
+ * missing/invalid key THROWS (the dispatch catch-all turns it into a
+ * HANDLER_FAULT record) — never a silently-disabled fence; the engine entry
+ * already refuses such a policy with POLICY_INVALID (F-DS9).
+ */
+function checkWriteShrink(absPath, relPosix, newBytes, policy) {
+  const maxLines = policy && policy.write_file_max_existing_lines;
+  const minRatio = policy && policy.write_file_min_retained_ratio;
+  if (!Number.isInteger(maxLines) || typeof minRatio !== 'number') {
+    throw new Error('exec-policy.json write_file_max_existing_lines / write_file_min_retained_ratio missing or invalid (POLICY_INVALID)');
+  }
+  const old = fs.readFileSync(absPath);
+  const detail = { old_bytes: old.length, old_lines: countLines(old.toString('utf8')), new_bytes: newBytes };
+  if (detail.old_lines > maxLines) {
+    return { ok: false, error: { code: 'WRITE_TOO_LARGE_USE_EDIT', message: `${relPosix} has ${detail.old_lines} lines, over the ${maxLines}-line write_file cap for an existing file; use edit_file for targeted changes`, detail } };
+  }
+  if (newBytes < minRatio * detail.old_bytes) {
+    return { ok: false, error: { code: 'WRITE_SHRINK', message: `${relPosix} would shrink from ${detail.old_bytes} to ${newBytes} bytes, under ${minRatio} of its size; use edit_file, or state the deletion in a brief Claude executes`, detail } };
   }
   return null;
 }
@@ -501,7 +577,10 @@ async function writeFileHandler(args, ctx) {
   if (blocked) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
   }
-  const bytes = Buffer.byteLength(args.content, 'utf8');
+  // Engine fence F3 — LF-normalise BEFORE the byte cap and the F2 shrink
+  // guard, so both measure what actually lands on disk.
+  const { text: content, removed: crNormalized } = normalizeLf(args.content);
+  const bytes = Buffer.byteLength(content, 'utf8');
   if (limits.write_max_bytes && bytes > limits.write_max_bytes) {
     return {
       toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} write is ${bytes} bytes, over the ${limits.write_max_bytes}-byte cap` } },
@@ -509,10 +588,17 @@ async function writeFileHandler(args, ctx) {
       post: captureWorktree(repoRoot),
     };
   }
+  // Engine fence F2 — existing files only; a new file has nothing to lose.
+  if (fs.existsSync(absPath)) {
+    const shrinkBlock = checkWriteShrink(absPath, relPosix, bytes, policy);
+    if (shrinkBlock) {
+      return { toolResult: shrinkBlock, pre, post: captureWorktree(repoRoot) };
+    }
+  }
 
   const created = !fs.existsSync(absPath);
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
-  fs.writeFileSync(absPath, args.content, 'utf8');
+  fs.writeFileSync(absPath, content, 'utf8');
   const post = captureWorktree(repoRoot);
 
   const newStat = fs.statSync(absPath);
@@ -524,7 +610,7 @@ async function writeFileHandler(args, ctx) {
     runState.writtenPaths.add(absPath);
   }
 
-  return { toolResult: { ok: true, path: relPosix, bytes, sha256, created }, pre, post };
+  return { toolResult: { ok: true, path: relPosix, bytes, sha256, created, cr_normalized: crNormalized }, pre, post };
 }
 
 // §C.2 edit_file — exact-string replace inside a file read earlier this run.
@@ -573,8 +659,17 @@ async function editFileHandler(args, ctx) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
   }
 
-  const original = fs.readFileSync(absPath, 'utf8');
-  const occurrences = original.split(args.old_string).length - 1;
+  // Engine fence F3 — match and replace on the file's LF view with LF-only
+  // old/new strings; write back CRLF only for a uniformly-CRLF file.
+  const rawOriginal = fs.readFileSync(absPath, 'utf8');
+  const eol = isUniformCrlf(rawOriginal) ? 'crlf' : 'lf';
+  const original = normalizeLf(rawOriginal).text;
+  const oldN = normalizeLf(args.old_string);
+  const newN = normalizeLf(args.new_string);
+  const oldString = oldN.text;
+  const newString = newN.text;
+  const crNormalized = oldN.removed + newN.removed;
+  const occurrences = original.split(oldString).length - 1;
   if (occurrences === 0) {
     return { toolResult: { ok: false, error: { code: 'NO_MATCH', message: `old_string not found in ${relPosix}` } }, pre, post: captureWorktree(repoRoot) };
   }
@@ -596,10 +691,10 @@ async function editFileHandler(args, ctx) {
   // (its return value is always used literally). The `replace_all` path
   // above (`.split().join()`) was already magic-free.
   const updated = args.replace_all
-    ? original.split(args.old_string).join(args.new_string)
-    : original.replace(args.old_string, () => args.new_string);
+    ? original.split(oldString).join(newString)
+    : original.replace(oldString, () => newString);
 
-  fs.writeFileSync(absPath, updated, 'utf8');
+  fs.writeFileSync(absPath, eol === 'crlf' ? updated.replace(/\n/g, '\r\n') : updated, 'utf8');
   const post = captureWorktree(repoRoot);
 
   const newStat = fs.statSync(absPath);
@@ -609,7 +704,7 @@ async function editFileHandler(args, ctx) {
     runState.writtenPaths.add(absPath);
   }
 
-  return { toolResult: { ok: true, path: relPosix, replacements, sha256 }, pre, post };
+  return { toolResult: { ok: true, path: relPosix, replacements, sha256, cr_normalized: crNormalized, eol }, pre, post };
 }
 
 // §C.4 Windows cmd.exe route hardening (SUB-ENG-1 commit 6). Any argv token
@@ -661,6 +756,71 @@ function spawnAllowlisted(argv, opts) {
   return spawn(argv[0], argv.slice(1), { ...opts, shell: false });
 }
 
+// §C.1.9 bounded post-kill wait (engine hardening, 2026-09-27 — measured).
+// `taskkill /pid <root> /T /F` alone snapshots the tree and then kills it; a
+// process created in between by a NON-libuv parent (cmd.exe running an npm
+// script) escapes — libuv puts only a process's DIRECT children in its
+// kill-on-close job, with silent breakaway for theirs. Under CPU load 2 of 14
+// trials left `node sleep.js` alive with its cmd.exe parent dead, holding our
+// inherited stdout pipe, so runProcess waited on `close` for the fixture's
+// whole 30 s sleep — the operator's full-suite push failed twice on the
+// commit-9 clamp lock (20 s test timeout). killProcessTreeWin32 below closes
+// that race (0 of 18 loaded trials escaped). What it cannot reach is a
+// process whose ENTIRE ancestor chain had exited before the kill (a
+// daemonised `start /b` child) — only a Windows Job Object would (filed). For
+// that residue: after the kill, runProcess waits at most this long for
+// `close`, then drops the pipes and records `orphan_output_holder` in the
+// TIMEOUT detail — never an unbounded hang, never silent.
+const POST_KILL_CLOSE_GRACE_MS = 1500;
+
+// §C.1.9 Windows tree kill (engine hardening, 2026-09-27 — measured). One
+// PowerShell process: (1) ONE process-table query, descendant closure of the
+// root computed in memory (the live tree, BEFORE anything dies); (2)
+// `taskkill /T /F` on the root, adding every pid it reports TERMINATING (not
+// the "child process of PID <x>" parents — the root's line names OUR
+// process); (3) up to 4 sweeps, 100 ms apart, for live processes created
+// after the command started whose parent is any known pid — a grandchild born
+// inside taskkill's snapshot-to-kill window still carries its (now dead)
+// parent's pid — each killed with `/T`. Stops at the first empty sweep. Both
+// numbers interpolated are integers we produced (a pid, Date.now()), never
+// model input. Falls back to a plain `taskkill /T /F` if PowerShell fails.
+// Returns the number of escaped processes the sweeps killed (-1 if the
+// fallback ran).
+function killProcessTreeWin32(rootPid, sinceMs) {
+  if (!Number.isInteger(rootPid) || !Number.isInteger(sinceMs)) {
+    return -1;
+  }
+  const script = [
+    "$ErrorActionPreference = 'SilentlyContinue'",
+    `$root = ${rootPid}; $since = ${sinceMs}; $self = ${process.pid}`,
+    "$epoch = [datetime]'1970-01-01'",
+    'function Born($p) { $p.CreationDate -and ([int64](($p.CreationDate.ToUniversalTime()) - $epoch).TotalMilliseconds) -ge $since }',
+    '$known = @{}; $known[$root] = $true',
+    '$all = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,CreationDate)',
+    '$grew = $true',
+    'while ($grew) { $grew = $false; foreach ($p in $all) { if ($known.ContainsKey([int]$p.ParentProcessId) -and -not $known.ContainsKey([int]$p.ProcessId) -and (Born $p)) { $known[[int]$p.ProcessId] = $true; $grew = $true } } }',
+    '$tk = & taskkill.exe /pid $root /T /F 2>&1 | Out-String',
+    "foreach ($m in [regex]::Matches($tk, 'process with PID (\\d+)')) { $known[[int]$m.Groups[1].Value] = $true }",
+    '$known.Remove($self)',
+    '$escaped = 0; $empty = 0',
+    'for ($r = 0; $r -lt 4 -and $empty -lt 1; $r++) {',
+    '  Start-Sleep -Milliseconds 100',
+    '  $hit = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,CreationDate | Where-Object { $known.ContainsKey([int]$_.ParentProcessId) -and -not $known.ContainsKey([int]$_.ProcessId) -and (Born $_) })',
+    '  if ($hit.Count -eq 0) { $empty++; continue }',
+    '  $empty = 0',
+    '  foreach ($p in $hit) { $known[[int]$p.ProcessId] = $true; $escaped++; & taskkill.exe /pid $p.ProcessId /T /F | Out-Null }',
+    '}',
+    'Write-Output $escaped',
+  ].join('\n');
+  const result = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf8', timeout: 30000, windowsHide: true });
+  const n = Number(String(result.stdout || '').trim().split(/\s+/).pop());
+  if (result.error || result.status !== 0 || !Number.isInteger(n)) {
+    spawnSync('taskkill', ['/pid', String(rootPid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    return -1;
+  }
+  return n;
+}
+
 function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
   return new Promise((resolve) => {
     const startedAt = Date.now();
@@ -707,19 +867,43 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       // as a NESTED child of its own — a plain SIGTERM/kill on OUR direct
       // child leaves that grandchild running on Windows, where terminating a
       // parent process does not tear down its process tree. `taskkill /T /F`
-      // kills the whole tree; POSIX gets a direct SIGKILL (SIGTERM is not
+      // alone kills the tree as it stood at its snapshot, so Windows uses
+      // killProcessTreeWin32 (measured escape + fix documented there and at
+      // POST_KILL_CLOSE_GRACE_MS); POSIX gets a direct SIGKILL (SIGTERM is not
       // guaranteed to stop a process ignoring it, and this budget fence needs
       // a deterministic kill, not a polite request).
       try {
         if (process.platform === 'win32' && child.pid) {
-          spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+          escapedKilled = killProcessTreeWin32(child.pid, startedAt - 2000);
         } else {
           child.kill('SIGKILL');
         }
       } catch {
         // process may already be gone
       }
+      // After the kill, `close` (all stdio pipes closed) normally follows
+      // at once. If it has not within the grace period, something that
+      // escaped the kill still holds our pipe; waiting for `close` would
+      // block this call until THAT process exits — the defect that hung the
+      // full suite. Stop waiting on the pipes and RECORD it rather than hide
+      // it.
+      graceTimer = setTimeout(() => {
+        if (settled) {
+          return;
+        }
+        orphanOutputHolder = true;
+        try {
+          child.stdout.destroy();
+          child.stderr.destroy();
+        } catch {
+          // streams already closed
+        }
+        void settle({ exitCode: null, stdout, stderr, truncated, timedOut, durationMs: Date.now() - startedAt });
+      }, POST_KILL_CLOSE_GRACE_MS);
     }, timeoutMs);
+    let graceTimer = null;
+    let orphanOutputHolder = false;
+    let escapedKilled = 0;
 
     // §C.1.9 (fold-validation LOW, commit 12e) — "the child is gone
     // afterwards" is only genuinely true once the OS has actually reaped it.
@@ -736,13 +920,16 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       }
       settled = true;
       clearTimeout(timer);
+      if (graceTimer) {
+        clearTimeout(graceTimer);
+      }
       if (timedOut && child.pid) {
         for (let i = 0; i < 25 && isPidAlive(child.pid); i++) {
           // eslint-disable-next-line no-await-in-loop -- bounded poll, not a hot loop
           await new Promise((r) => setTimeout(r, 100));
         }
       }
-      resolve(result);
+      resolve({ ...result, orphanOutputHolder, escapedKilled });
     }
 
     child.stdout.on('data', (chunk) => capture(chunk, 'out'));
@@ -802,7 +989,10 @@ async function runBashCommandHandler(args, ctx) {
   const post = captureWorktree(repoRoot);
 
   if (result.timedOut) {
-    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}` } }, pre, post };
+    // orphan_output_holder: after the tree kill, something unreachable still
+    // held the command's stdout/stderr pipe and runProcess stopped waiting on
+    // it (see POST_KILL_CLOSE_GRACE_MS) — surfaced, never silent.
+    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}`, detail: { orphan_output_holder: !!result.orphanOutputHolder, escaped_killed: result.escapedKilled || 0 } } }, pre, post };
   }
   return {
     toolResult: {
@@ -955,7 +1145,7 @@ async function grepFilesHandler(args, ctx) {
   // default buffer would ENOBUFS on a legitimately large result set instead
   // of reporting a specific, recoverable code).
   const grepLimits = { timeout: (policy && policy.limits && policy.limits.timeout_ms) || 600000, maxBuffer: SPAWN_MAX_BUFFER_BYTES };
-  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', shell: false, ...grepLimits });
+  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(['DEEPSEEK_']), encoding: 'utf8', shell: false, ...grepLimits });
   if (result.error) {
     const failure = classifySpawnFailure(result, { code: 'BAD_PATTERN', message: `git grep failed to start: ${result.error.message}` });
     return { toolResult: { ok: false, error: failure } };

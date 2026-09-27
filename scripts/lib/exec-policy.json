@@ -23,6 +23,9 @@
   "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
   "commit_message_pattern": "^(feat|fix|refactor|test|docs|chore)\\([0-9]{2,3}[a-z]?_[a-z0-9_]+\\)!?: .+",
   "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
+  "malformed_tool_call_retry_max": 2,
+  "write_file_max_existing_lines": 200,
+  "write_file_min_retained_ratio": 0.5,
   "registry_reserved": [
     "scripts/manifest.json",
     "scripts/steps/_schema/converted.json",
@@ -42,7 +45,19 @@
     "src/app/api/**/billing/**",
     "src/lib/auth/**",
     "src/lib/billing/**",
-    ".github/workflows/**"
+    ".github/workflows/**",
+    "src/app/api/user-profile/**",
+    "src/app/api/admin/users/**",
+    "src/lib/builders/enrichment.ts",
+    "src/lib/builders/extract-contacts.ts",
+    "src/lib/enrichment/**",
+    "scripts/enrich-web-search.js",
+    "scripts/enrich-wsib.js",
+    "src/app/api/subscribe/**",
+    "src/app/api/webhooks/stripe/**",
+    "src/lib/admin/admin-audit.ts",
+    "src/lib/api/public-projections.ts",
+    "mobile/src/lib/persistFilter.ts"
   ],
   "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
 }

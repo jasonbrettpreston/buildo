@@ -499,12 +499,24 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     it('run_bash_command with timeout_ms:500 against a 30s sleep fixture: TIMEOUT, and the sleep process is no longer running', async () => {
       writeSleepFixture(repo, 30000);
       const briefPath = writeBrief(repo);
-      const summary = await runEngine({
-        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
-        transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npm', 'run', 'test'], timeout_ms: 500, reason: 'r' })],
-      });
-      const records = ledgerRecords(ledgerDir, summary.run_id);
-      const call = toolCallOf(records, 'run_bash_command') as { error?: { code: string }; duration_ms?: number } | undefined;
+      // Fixture start is proven, not assumed (engine hardening 2026-09-27):
+      // under load npm's own startup can outlast a 500ms timeout, so the kill
+      // lands before sleep.js exists and the pid-file assertion below failed
+      // ("the fixture DID start"). Re-run with a doubled timeout until the
+      // fixture's pid file shows it started, then assert on THAT run.
+      let call: { error?: { code: string }; duration_ms?: number } | undefined;
+      for (const timeoutMs of [500, 1000, 2000, 4000, 8000]) {
+        fs.rmSync(path.join(repo, 'sleep.pid'), { force: true });
+        const summary = await runEngine({
+          repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+          transcriptTurns: [toolTurn('c1', 'run_bash_command', { argv: ['npm', 'run', 'test'], timeout_ms: timeoutMs, reason: 'r' })],
+        });
+        const records = ledgerRecords(ledgerDir, summary.run_id);
+        call = toolCallOf(records, 'run_bash_command') as { error?: { code: string }; duration_ms?: number } | undefined;
+        if (fs.existsSync(path.join(repo, 'sleep.pid'))) {
+          break;
+        }
+      }
       expect(call?.error?.code).toBe('TIMEOUT');
       // Hardened (Step 9 panel fold, flaky-lock report from the Phase 3
       // builder): assert the ledger's OWN duration_ms is well under the 30s
@@ -529,7 +541,10 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       }
       expect(stillAlive).toBe(false);
       expect(fs.existsSync(path.join(repo, 'sleep.done'))).toBe(false);
-    }, 20000);
+    // 60 s covers the worst-case retry ladder above (5 attempts, 15.5 s of
+    // timeouts plus npm startup each). It is NOT the defect detector: the
+    // per-run duration_ms bound (< 15 s) and the pid-death check are.
+    }, 60000);
   });
 
   // =========================================================================
