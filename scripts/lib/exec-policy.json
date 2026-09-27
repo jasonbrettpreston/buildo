@@ -45,7 +45,9 @@
     "src/app/api/**/billing/**",
     "src/lib/auth/**",
     "src/lib/billing/**",
-    ".github/workflows/**"
+    ".github/workflows/**",
+    "src/app/api/user-profile/**",
+    "src/app/api/admin/users/**"
   ],
   "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
 }
