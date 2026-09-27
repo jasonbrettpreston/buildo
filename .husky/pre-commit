@@ -12,6 +12,9 @@
 # structurally, so even a developer with BUILDO_TEST_DB=1 exported globally
 # cannot have them fire on every commit; "npm run test:db" is their only
 # path. Pinned by src/tests/hooks-composition.infra.test.ts (both directions).
+# Item 5 (WF2 conversion simplification): the hook tests the INDEX — a staged
+# file that also has unstaged edits is blocked before any check reads the tree.
+bash scripts/hooks/check-partial-staging.sh && \
 node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/steps/_schema/generate-template-freeze.mjs --check && \
   node scripts/analysis/spec-split-check.mjs --check && \
