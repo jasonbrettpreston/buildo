@@ -536,8 +536,8 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 70 PRE capture(s) across 20 converted step(s) all tracked + clean (git can restore every reference) |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 20 converted slug(s) — 12 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 47 declared counter source(s) across 16 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 | 27 | (registry) | PASS | ROW-ERROR-GATE: 4 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
@@ -549,57 +549,32 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 4 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 30 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 247 definition row(s) checked, 0 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (16 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 65 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 20 step(s) checked — every diff-explanation channel accounted for |
-| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 31 finding(s), all ledger-allowed (31) |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 472 · unexplained: 0
+- compare ran: true · diffs found: 466 · unexplained: 0
 
 ### Test suite (item iii)
-- 1522/1547 passed (suite success=false)
-- harvested: 27 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1599/1599 passed (suite success=true)
+- harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (25):
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/assert-data-bounds.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/assert-global-coverage.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/enrich-parcels.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/enrich-ravines.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/link-massing.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/link-wsib.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/load-parcels.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/load-ravines.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > scripts/lib/compute/refresh-snapshot.js — the compute-shape rule is silent (no console.* / bare fetch / clock / env / banned require)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > RED — every compute-shape rule FIRES on the known-bad fixture (Spec 121 §12b.6)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > a step with NO when:"pre_write" checks reports Rule 11 enforced-green, vacuously
-  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > link_massing: 1 real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green
-  - src/tests/step-conformance.infra.test.ts > Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful) > link_massing: shape=link declares force_full_on_next_run and its runner (runLinkPhase) is measured REACHABLE against the live scripts/lib/step/index.js
-  - src/tests/steps/assert_global_coverage/violations.test.ts > assert_global_coverage — descriptor/compute claims, all flipped plain at commit 9 (0 it.fails remain) > the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)
-  - src/tests/steps/assert_data_bounds/violations.test.ts > assert_data_bounds — descriptor + compute (flipped from it.fails at commit 7) > the compute module exists, exports compute, and passes the compute-shape ast-grep rule (Spec 122 §5.5)
-  - src/tests/steps/link_wsib/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #150 Gate 1 — reproducible against itself: all 3 PRE captures (commit 5, no forced-FULL yet — A-7 not ruled) hash-identical; the POST triple hash-identical TOO, but does NOT match the PRE hash — A-7 landed (a real repair moved rows)
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
-| 2 | Compute is just compute | enforced-red |  |
+| 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 8 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 4 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
@@ -611,7 +586,7 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link runner=runLinkPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5900B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5897B (newest post/ capture) |
 
-**Enforced-green: 12/14** · not-run: 0 · vacuous: 0
+**Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 
