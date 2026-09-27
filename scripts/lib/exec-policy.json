@@ -47,7 +47,17 @@
     "src/lib/billing/**",
     ".github/workflows/**",
     "src/app/api/user-profile/**",
-    "src/app/api/admin/users/**"
+    "src/app/api/admin/users/**",
+    "src/lib/builders/enrichment.ts",
+    "src/lib/builders/extract-contacts.ts",
+    "src/lib/enrichment/**",
+    "scripts/enrich-web-search.js",
+    "scripts/enrich-wsib.js",
+    "src/app/api/subscribe/**",
+    "src/app/api/webhooks/stripe/**",
+    "src/lib/admin/admin-audit.ts",
+    "src/lib/api/public-projections.ts",
+    "mobile/src/lib/persistFilter.ts"
   ],
   "limits": { "max_iterations": 40, "max_total_tokens": 400000, "timeout_ms": 600000, "timeout_ceiling_ms": 1200000, "bash_output_bytes": 65536, "read_max_bytes": 262144, "write_max_bytes": 524288, "grep_max_results": 1000 }
 }

@@ -71,6 +71,37 @@ describe('F4: PII paths are claude-only (Spec 08 §B, §C.6.2)', () => {
     expect(fs.readFileSync(path.join(repo, target), 'utf8')).toBe('a\n');
   });
 
+  // F4b (operator ruling 2026-09-27, docs/reports/2026-09-27-engine-pii-path-map.md):
+  // one blocked-write arm per glob class — a literal file and a `**` glob each.
+  it.each([
+    ['business-contact writer (literal)', 'src/lib/builders/extract-contacts.ts'],
+    ['business-contact writer (**)', 'src/lib/enrichment/serper-client.ts'],
+    ['business-contact loader script (literal)', 'scripts/enrich-wsib.js'],
+    ['payment route (**)', 'src/app/api/webhooks/stripe/route.ts'],
+    ['payment route (**, nested)', 'src/app/api/subscribe/exchange/route.ts'],
+    ['PII-redaction fence (literal)', 'src/lib/api/public-projections.ts'],
+    ['PII-redaction fence (literal, mobile)', 'mobile/src/lib/persistFilter.ts'],
+  ])('F4b arm: %s — write_file to %s is blocked PATH_CLAUDE_ONLY', async (_cls, p) => {
+    const res = await run([toolTurn('w1', 'write_file', { path: p, content: 'x\n', reason: 'r' })]);
+    const call = toolCallOf(ledgerRecords(ledgerDir, res.run_id), 'write_file');
+    expect(call?.status).toBe('blocked');
+    expect(call?.error?.code).toBe('PATH_CLAUDE_ONLY');
+    expect(fs.existsSync(path.join(repo, p))).toBe(false);
+  });
+
+  it.each([
+    // Left engine-writable by the same ruling: converted-step code fed by the
+    // public WSIB CSV, a sibling of a fenced literal, and a read-only consumer.
+    'scripts/load-wsib.js',
+    'scripts/lib/compute/link-wsib.js',
+    'src/lib/builders/normalize.ts',
+    'src/lib/admin/github-dispatch.ts',
+    'src/features/leads/lib/get-lead-feed.ts',
+  ])('F4b arm (stays open): write_file to %s is allowed', async (p) => {
+    const res = await run([toolTurn('w1', 'write_file', { path: p, content: 'x\n', reason: 'r' })]);
+    expect(toolCallOf(ledgerRecords(ledgerDir, res.run_id), 'write_file')?.status).toBe('ok');
+  });
+
   it.each([
     'src/app/api/admin/user-stats/route.ts',
     'src/app/api/user-profiles-public/route.ts',
