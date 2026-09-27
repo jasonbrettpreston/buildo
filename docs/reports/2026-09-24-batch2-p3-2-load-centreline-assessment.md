@@ -382,9 +382,11 @@ declares. Six seams; **five are declared deviations or library-owned rungs** (0p
 | **Filesystem** | `fs.mkdtempSync(path.join(os.tmpdir(), 'centreline-'))` [`scripts/load-centreline.js:461`]; `fs.rmSync(tmpRoot, {recursive:true, force:true})` in `finally` [`scripts/load-centreline.js:491`]; partial-file `fs.rmSync(destPath,{force:true})` per retry [`scripts/load-centreline.js:315`] | **Library-owned.** The runner's acquisition path owns the temp dir and its teardown (INGESTOR prerequisites 0b/0l). No `inputs.reads.externals[].cache` declaration is needed — the legacy loader has NO cache short-circuit (unlike `parcels`); **every non-skip run re-downloads** (§7). |
 | **Publisher** | CKAN resource `d86bdca4…` in dataset `1d079757…` [`scripts/load-centreline.js:50-51`] | `inputs.reads.externals[].url` + `id:'ckan:toronto-centreline-tcl-shp'` [`scripts/load-centreline.js:53`] — the declared read-id the tier-1/tier-2 skip logic and `emitMeta`'s reads list key on. |
 
-**Seam summary:** db · clock (**non-trivial**) · network (**0q + 0r rungs, one declared rename**) ·
-argv/env (**one retired, one additive**) · filesystem (library) · publisher. **Five of the six carry a
-declared deviation or a library rung; the only pure reproduction is the publisher identity.**
+**Seam summary:** the **db seam** (`identity.lock:63`, one txn, one class-C full replace) · the
+**clock seam** (**non-trivial** — `runAt` stamps `updated_at` + drives the dataset-age WARN) · the
+**network seam** (**0q + 0r rungs, one declared rename**) · the **argv/env seam** (**one retired, one
+additive**) · filesystem (library) · publisher. **Five of the six carry a declared deviation or a
+library rung; the only pure reproduction is the publisher identity.**
 
 ---
 

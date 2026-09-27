@@ -699,6 +699,23 @@ describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ th
 });
 
 // ===========================================================================
+// 7b. Gate G5 — the PH-5 seam map names every seam the converted step declares
+// ===========================================================================
+
+describe('row 3.2 — the PH-5 seam map names all four seams (gate G5)', () => {
+  const REPORT_REL = 'docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md';
+
+  it('PH-5 seam-map names all four seams (gate G5)', () => {
+    const report = readText(REPORT_REL);
+    const ph5 = report.slice(report.indexOf('## 4. PH-5'), report.indexOf('## 5. PH-6'));
+    expect(/db seam/i.test(ph5)).toBe(true);
+    expect(/clock seam/i.test(ph5)).toBe(true);
+    expect(/network seam/i.test(ph5)).toBe(true);
+    expect(/argv[\s/]*env seam|env seam/i.test(ph5)).toBe(true);
+  });
+});
+
+// ===========================================================================
 // 8. LC-D1/LC-D2 — the two spec-vs-code divergences are NOT re-engineered here
 // ===========================================================================
 
