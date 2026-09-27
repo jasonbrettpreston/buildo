@@ -1,0 +1,28 @@
+{
+  "$comment": [
+    "THE ONE DECLARED LIST of what a ③ cutover regenerates (WF2 'conversion simplification' item 4).",
+    "`npm run cutover -- --step=<slug>` (scripts/analysis/cutover.mjs) runs these IN ORDER and prints,",
+    "per entry, every file it changed. `builtin` entries are the two registry edits the cutover itself",
+    "makes (register in converted.json + delete the pending[] entry, R-K; flip the retained census row,",
+    "R-AO); `cmd` entries run an existing generator unchanged. Replaces grepping a precedent cutover",
+    "commit (8c362325, 1e3b544a) and hand-editing the registry/fleet files. NOT here (still the cutover",
+    "author's judgement, named in the command's closing note): owner-spec As-built text, live-DB golden",
+    "recaptures (assert_schema POST after its probe list moves), execution-budget-disposition.json",
+    "step_timeout values, write-class-disposition.json declared_by notes, orphan ledger rows."
+  ],
+  "contract_version": 1,
+  "generators": [
+    { "id": "register", "kind": "builtin", "does": "converted.json: append the step file to converted[], delete its pending[] entry (R-K)" },
+    { "id": "census", "kind": "builtin", "does": "step-archetype-census.json (+ the two census-copy fixtures): the step's row RETAINED with status converted (R-AO)" },
+    { "id": "template-freeze", "kind": "cmd", "argv": ["node", "scripts/steps/_schema/generate-template-freeze.mjs"], "does": "regenerate the live tier (frozen tier untouched — a RE-FREEZE is never automatic)" },
+    { "id": "template-freeze-check", "kind": "cmd", "argv": ["node", "scripts/steps/_schema/generate-template-freeze.mjs", "--check"], "does": "the pre-commit freeze check" },
+    { "id": "logic-var-groups", "kind": "cmd", "argv": ["node", "scripts/generate-logic-variable-groups.mjs"], "does": "logic-variable-groups.json" },
+    { "id": "logic-vars-docs", "kind": "cmd", "argv": ["node", "scripts/generate-logic-vars-docs.mjs"], "does": "docs/reference/logic-variables-registry.md" },
+    { "id": "assert-schema-probes", "kind": "cmd", "argv": ["node", "scripts/generate-assert-schema-probe-lists.js"], "does": "assert_schema probe_presence + declared_logic_variables_present.expect" },
+    { "id": "consumer-registry", "kind": "cmd", "argv": ["node", "scripts/analysis/gates/consumer-registry.mjs", "--write"], "does": "scripts/steps/_schema/consumer-registry.json (gate D)" },
+    { "id": "conversion-roadmap", "kind": "cmd", "argv": ["node", "scripts/violations/generate-conversion-roadmap.mjs"], "does": "docs/reports/generated/122-conversion-roadmap.md" },
+    { "id": "programme-backlog", "kind": "cmd", "argv": ["node", "scripts/violations/generate-programme-backlog.mjs"], "does": "docs/reports/generated/122-programme-backlog.md" },
+    { "id": "system-map", "kind": "cmd", "argv": ["node", "scripts/generate-system-map.mjs"], "does": "docs/specs/00-architecture/00_system_map.md" },
+    { "id": "scorecards", "kind": "cmd", "argv": ["node", "scripts/analysis/step-validate.mjs", "--all", "--write"], "does": "every assessment report's generated scorecard (the long run — minutes)" }
+  ]
+}
