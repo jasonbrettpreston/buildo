@@ -401,13 +401,20 @@ function validateArgs(name, args) {
   }
   const props = schema.parameters.properties || {};
   const required = schema.parameters.required || [];
+  // OWN-property checks, never `in` (engine-fence panel, DeepSeek security
+  // lens 2026-09-27): `'constructor' in props` is true via Object.prototype,
+  // so a model-supplied `constructor`/`toString`/`valueOf` key slipped past
+  // additionalProperties:false and reached validateType, whose F-DS16 plain
+  // Error then escaped dispatch and crashed the engine loop — instead of a
+  // retryable MALFORMED_TOOL_CALL (§C.1.10).
+  const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
   for (const key of required) {
-    if (!(key in args)) {
+    if (!own(args, key)) {
       throw new MalformedToolCallError(`${name}: missing required argument "${key}"`);
     }
   }
   for (const key of Object.keys(args)) {
-    if (!(key in props)) {
+    if (!own(props, key)) {
       throw new MalformedToolCallError(`${name}: unexpected argument "${key}" (additionalProperties: false)`);
     }
     validateType(props[key], args[key], key);

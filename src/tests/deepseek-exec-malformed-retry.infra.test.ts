@@ -108,6 +108,22 @@ describe('F1: malformed tool call is retried, not fatal (Spec 08 §C.1.10)', () 
     expect(malformedCount(ledgerRecords(ledgerDir, res.run_id))).toBe(1);
   });
 
+  it.each(['constructor', 'toString', 'valueOf', 'hasOwnProperty'])(
+    'arm 3b: an inherited Object.prototype key (%s) is an unexpected argument — MALFORMED and retried, never an engine crash',
+    async (key) => {
+      const { client } = capturingClient([
+        rawToolTurn('m1', 'read_file', JSON.stringify({ path: 'seed.txt', reason: 'r', [key]: 1 })),
+        toolTurn('g1', 'read_file', { path: 'seed.txt', reason: 'r' }),
+        stopTurn(),
+      ]);
+      const res = await run(client);
+      expect(res.status).toBe('completed');
+      const records = ledgerRecords(ledgerDir, res.run_id);
+      expect(malformedCount(records)).toBe(1);
+      expect(records.filter((r) => r.kind === 'tool_call')).toHaveLength(1);
+    },
+  );
+
   it('arm 4: retryMax+1 CONSECUTIVE malformed calls abort the run', async () => {
     const turns: Turn[] = [];
     for (let n = 0; n <= retryMax; n += 1) turns.push(rawToolTurn(`m${n}`, 'read_file', '{not json'));
