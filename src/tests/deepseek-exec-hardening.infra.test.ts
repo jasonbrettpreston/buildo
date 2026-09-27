@@ -75,3 +75,58 @@ describe('G1: tool-call arguments re-fed to the model are redacted (§C.1.5)', (
     expect(readCall?.status).toBe('ok');
   });
 });
+
+describe('G2: --transcript must resolve inside the repo (TRANSCRIPT_OUTSIDE_REPO)', () => {
+  let repo = '';
+  let ledgerDir = '';
+  let outside = '';
+
+  beforeEach(() => {
+    repo = makeRepo();
+    ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-g2-ledger-'));
+    outside = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-outside-'));
+  });
+  afterEach(() => {
+    cleanupTempDir(repo);
+    cleanupTempDir(ledgerDir);
+    cleanupTempDir(outside);
+  });
+
+  it('(a) an absolute --transcript path OUTSIDE the repo root throws TRANSCRIPT_OUTSIDE_REPO', async () => {
+    const outsidePath = path.join(outside, 'transcript.json');
+    fs.writeFileSync(outsidePath, '[]');
+    await expect(
+      runEngine({ repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, transcript: outsidePath }),
+    ).rejects.toThrow(/TRANSCRIPT_OUTSIDE_REPO/);
+  });
+
+  it('(a) a `../`-laced relative --transcript path that escapes the repo throws TRANSCRIPT_OUTSIDE_REPO', async () => {
+    // A relative path is joined against repoRoot; enough `..` segments climb
+    // out of the throwaway repo regardless of the OS temp layout.
+    const escaping = ['..', '..', '..', '..', 'transcript-escape.json'].join('/');
+    await expect(
+      runEngine({ repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, transcript: escaping }),
+    ).rejects.toThrow(/TRANSCRIPT_OUTSIDE_REPO/);
+  });
+
+  it('(b) the refused run writes no ledger file — the fence fires before any ledger record', async () => {
+    const outsidePath = path.join(outside, 'transcript.json');
+    fs.writeFileSync(outsidePath, '[]');
+    await expect(
+      runEngine({ repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, transcript: outsidePath }),
+    ).rejects.toThrow(/TRANSCRIPT_OUTSIDE_REPO/);
+    const ledgers = fs.readdirSync(ledgerDir).filter((f) => f.endsWith('.jsonl'));
+    expect(ledgers).toEqual([]);
+  });
+
+  it('(c) green direction: a repo-relative transcript inside the repo resolves and the run completes', async () => {
+    fs.writeFileSync(path.join(repo, 'transcript.json'), JSON.stringify([toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' }), stopTurn()]));
+    const res = await runEngine({
+      repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, transcript: 'transcript.json',
+    });
+    expect(res.status).toBe('completed');
+    // the recorded turn was actually replayed from the file
+    const readCall = ledgerRecords(ledgerDir, res.run_id).find((r) => r.kind === 'tool_call' && r.tool === 'read_file') as { status?: string } | undefined;
+    expect(readCall?.status).toBe('ok');
+  });
+});

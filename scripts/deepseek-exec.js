@@ -316,6 +316,21 @@ async function runEngine(opts = {}) {
     }
     throw err;
   }
+  // Engine hardening G2 (DeepSeek security lens, 2026-09-27): --transcript
+  // takes the same untrusted path input as --brief and was read via an
+  // unconfined path.resolve — confined identically, BEFORE run_start, so a
+  // refused value writes no ledger record.
+  let transcriptAbs = null;
+  if (opts.transcript) {
+    try {
+      transcriptAbs = resolveConfinedPath(repoRoot, opts.transcript);
+    } catch (err) {
+      if (err instanceof PathDeniedError) {
+        throw new Error(`TRANSCRIPT_OUTSIDE_REPO: --transcript path escapes the repo root: ${opts.transcript} (${err.message})`);
+      }
+      throw err;
+    }
+  }
   let briefContent;
   try {
     briefContent = fs.readFileSync(briefAbs, 'utf8');
@@ -515,7 +530,7 @@ async function runEngine(opts = {}) {
       if (Array.isArray(opts.transcriptTurns)) {
         modelClient = createTranscriptClient(opts.transcriptTurns);
       } else if (opts.transcript) {
-        const turns = JSON.parse(fs.readFileSync(path.resolve(repoRoot, opts.transcript), 'utf8'));
+        const turns = JSON.parse(fs.readFileSync(transcriptAbs, 'utf8'));
         modelClient = createTranscriptClient(turns);
       } else {
         modelClient = createDeepSeekClient({ model });
