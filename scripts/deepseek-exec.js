@@ -76,6 +76,9 @@ function sha256Hex(content) {
 const REQUIRED_POLICY_KEYS = [
   'v', 'bash_allow', 'validators', 'commit_message_pattern',
   'secret_read_deny', 'registry_reserved', 'claude_only_globs', 'limits',
+  // Engine fence F1 (2026-09-27) — §C.1.10's consecutive malformed-call
+  // allowance; a non-negative integer (type-checked below).
+  'malformed_tool_call_retry_max',
 ];
 
 class PolicyInvalidError extends Error {
@@ -93,6 +96,13 @@ function validatePolicyShape(policy) {
   const missing = REQUIRED_POLICY_KEYS.filter((key) => !(key in policy));
   if (missing.length > 0) {
     throw new PolicyInvalidError(`exec-policy.json is missing required key(s): ${missing.join(', ')}`);
+  }
+  // Engine fence F1 — a present-but-malformed retry allowance must fail
+  // closed too (a string or NaN would make the `>` comparison in the loop
+  // silently false forever, i.e. unlimited retries).
+  const retryMax = policy.malformed_tool_call_retry_max;
+  if (!Number.isInteger(retryMax) || retryMax < 0) {
+    throw new PolicyInvalidError(`exec-policy.json malformed_tool_call_retry_max must be a non-negative integer, got ${JSON.stringify(retryMax)}`);
   }
 }
 
@@ -519,6 +529,29 @@ async function runEngine(opts = {}) {
     let toolCallsTotal = 0;
     let blockedTotal = 0;
     const commits = [];
+    // Engine fence F1 (§C.1.10) — CONSECUTIVE malformed calls; any
+    // well-formed (dispatched) call resets it. The run aborts only once this
+    // exceeds policy.malformed_tool_call_retry_max.
+    let consecutiveMalformed = 0;
+    const malformedRetryMax = policy.malformed_tool_call_retry_max;
+
+    // Ledgers one MALFORMED_TOOL_CALL error and either aborts (allowance
+    // exhausted) or hands the same structured error back to the model as
+    // this call's tool result, so every tool_call_id in the assistant turn
+    // still gets its reply and the model can re-issue the call.
+    function handleMalformed(call, message) {
+      ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(message), iteration });
+      consecutiveMalformed += 1;
+      if (consecutiveMalformed > malformedRetryMax) {
+        return true;
+      }
+      messages.push({
+        role: 'tool',
+        tool_call_id: call.id,
+        content: redact(JSON.stringify({ ok: false, error: { code: 'MALFORMED_TOOL_CALL', message } })),
+      });
+      return false;
+    }
 
     function finish(status) {
       const record = {
@@ -621,8 +654,10 @@ async function runEngine(opts = {}) {
         try {
           args = JSON.parse((call.function && call.function.arguments) || '{}');
         } catch (err) {
-          ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(`unparsable arguments for "${name}": ${err.message}`), iteration });
-          return finish('aborted');
+          if (handleMalformed(call, `unparsable arguments for "${name}": ${err.message}`)) {
+            return finish('aborted');
+          }
+          continue;
         }
 
         const isMutating = MUTATING_TOOLS.has(name);
@@ -632,11 +667,14 @@ async function runEngine(opts = {}) {
           dispatchOutcome = await tools.dispatch(name, args);
         } catch (err) {
           if (err instanceof MalformedToolCallError) {
-            ledger.append({ kind: 'error', code: 'MALFORMED_TOOL_CALL', message: redact(err.message), iteration });
-            return finish('aborted');
+            if (handleMalformed(call, err.message)) {
+              return finish('aborted');
+            }
+            continue;
           }
           throw err;
         }
+        consecutiveMalformed = 0;
 
         // §C.3 — pre/post worktree capture is produced by the HANDLER itself
         // (scripts/lib/exec-worktree.js, wired in commit 4) so the window is

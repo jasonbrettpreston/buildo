@@ -23,6 +23,7 @@
   "validators": ["scripts/analysis/step-validate.mjs", "scripts/analysis/step-churn-complexity.mjs", "scripts/analysis/spec-split-check.mjs", "scripts/steps/_schema/generate-template-freeze.mjs"],
   "commit_message_pattern": "^(feat|fix|refactor|test|docs|chore)\\([0-9]{2,3}[a-z]?_[a-z0-9_]+\\)!?: .+",
   "secret_read_deny": [".env", ".env.*", "*.key", "*.pem", "*.p12", "*.pfx", "**/secrets/**"],
+  "malformed_tool_call_retry_max": 2,
   "registry_reserved": [
     "scripts/manifest.json",
     "scripts/steps/_schema/converted.json",
