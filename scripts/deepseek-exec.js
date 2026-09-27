@@ -272,9 +272,9 @@ function buildResultSummary(name, toolResult) {
     case 'grep_files':
       return { matches_count: (toolResult.matches || []).length, truncated: !!toolResult.truncated };
     case 'write_file':
-      return { bytes: toolResult.bytes, sha256: toolResult.sha256, created: !!toolResult.created };
+      return { bytes: toolResult.bytes, sha256: toolResult.sha256, created: !!toolResult.created, cr_normalized: toolResult.cr_normalized };
     case 'edit_file':
-      return { replacements: toolResult.replacements, sha256: toolResult.sha256 };
+      return { replacements: toolResult.replacements, sha256: toolResult.sha256, cr_normalized: toolResult.cr_normalized, eol: toolResult.eol };
     case 'run_bash_command':
       return { exit_code: toolResult.exit_code, truncated: !!toolResult.truncated };
     case 'git_commit':

@@ -448,6 +448,29 @@ function checkReadBeforeWrite(absPath, relPosix, runState, requireExisting) {
   return null;
 }
 
+/**
+ * Engine fence F3 (2026-09-27, §C.2) — every string the MODEL supplies for a
+ * write (write_file.content, edit_file.old_string/new_string) is LF-only:
+ * `\r\n` and a lone `\r` both become `\n`. Returns the normalised text and
+ * the number of `\r` characters removed (ledgered as `cr_normalized`). Gate F
+ * (Spec 124 §5 R-BA) stays the backstop for anything written another way.
+ */
+function normalizeLf(text) {
+  const removed = text.split('\r').length - 1;
+  return { text: removed === 0 ? text : text.replace(/\r\n?/g, '\n'), removed };
+}
+
+// A file is "uniformly CRLF" when it has at least one `\r\n`, every `\n` is
+// preceded by `\r`, and no `\r` stands alone (count(\r\n) === count(\n) ===
+// count(\r)). edit_file writes such a file back CRLF so an edit
+// never churns every line of a committed-CRLF file (36 tracked files were
+// `i/crlf` on 2026-09-27, Spec 08 itself among them); any other file is
+// written LF.
+function isUniformCrlf(text) {
+  const crlf = text.split('\r\n').length - 1;
+  return crlf > 0 && crlf === text.split('\n').length - 1 && crlf === text.split('\r').length - 1;
+}
+
 function countLines(text) {
   if (text === '') return 0;
   const n = text.split('\n').length;
@@ -537,7 +560,10 @@ async function writeFileHandler(args, ctx) {
   if (blocked) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
   }
-  const bytes = Buffer.byteLength(args.content, 'utf8');
+  // Engine fence F3 — LF-normalise BEFORE the byte cap and the F2 shrink
+  // guard, so both measure what actually lands on disk.
+  const { text: content, removed: crNormalized } = normalizeLf(args.content);
+  const bytes = Buffer.byteLength(content, 'utf8');
   if (limits.write_max_bytes && bytes > limits.write_max_bytes) {
     return {
       toolResult: { ok: false, error: { code: 'TOO_LARGE', message: `${relPosix} write is ${bytes} bytes, over the ${limits.write_max_bytes}-byte cap` } },
@@ -555,7 +581,7 @@ async function writeFileHandler(args, ctx) {
 
   const created = !fs.existsSync(absPath);
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
-  fs.writeFileSync(absPath, args.content, 'utf8');
+  fs.writeFileSync(absPath, content, 'utf8');
   const post = captureWorktree(repoRoot);
 
   const newStat = fs.statSync(absPath);
@@ -567,7 +593,7 @@ async function writeFileHandler(args, ctx) {
     runState.writtenPaths.add(absPath);
   }
 
-  return { toolResult: { ok: true, path: relPosix, bytes, sha256, created }, pre, post };
+  return { toolResult: { ok: true, path: relPosix, bytes, sha256, created, cr_normalized: crNormalized }, pre, post };
 }
 
 // §C.2 edit_file — exact-string replace inside a file read earlier this run.
@@ -616,8 +642,17 @@ async function editFileHandler(args, ctx) {
     return { toolResult: blocked, pre, post: captureWorktree(repoRoot) };
   }
 
-  const original = fs.readFileSync(absPath, 'utf8');
-  const occurrences = original.split(args.old_string).length - 1;
+  // Engine fence F3 — match and replace on the file's LF view with LF-only
+  // old/new strings; write back CRLF only for a uniformly-CRLF file.
+  const rawOriginal = fs.readFileSync(absPath, 'utf8');
+  const eol = isUniformCrlf(rawOriginal) ? 'crlf' : 'lf';
+  const original = normalizeLf(rawOriginal).text;
+  const oldN = normalizeLf(args.old_string);
+  const newN = normalizeLf(args.new_string);
+  const oldString = oldN.text;
+  const newString = newN.text;
+  const crNormalized = oldN.removed + newN.removed;
+  const occurrences = original.split(oldString).length - 1;
   if (occurrences === 0) {
     return { toolResult: { ok: false, error: { code: 'NO_MATCH', message: `old_string not found in ${relPosix}` } }, pre, post: captureWorktree(repoRoot) };
   }
@@ -639,10 +674,10 @@ async function editFileHandler(args, ctx) {
   // (its return value is always used literally). The `replace_all` path
   // above (`.split().join()`) was already magic-free.
   const updated = args.replace_all
-    ? original.split(args.old_string).join(args.new_string)
-    : original.replace(args.old_string, () => args.new_string);
+    ? original.split(oldString).join(newString)
+    : original.replace(oldString, () => newString);
 
-  fs.writeFileSync(absPath, updated, 'utf8');
+  fs.writeFileSync(absPath, eol === 'crlf' ? updated.replace(/\n/g, '\r\n') : updated, 'utf8');
   const post = captureWorktree(repoRoot);
 
   const newStat = fs.statSync(absPath);
@@ -652,7 +687,7 @@ async function editFileHandler(args, ctx) {
     runState.writtenPaths.add(absPath);
   }
 
-  return { toolResult: { ok: true, path: relPosix, replacements, sha256 }, pre, post };
+  return { toolResult: { ok: true, path: relPosix, replacements, sha256, cr_normalized: crNormalized, eol }, pre, post };
 }
 
 // §C.4 Windows cmd.exe route hardening (SUB-ENG-1 commit 6). Any argv token
