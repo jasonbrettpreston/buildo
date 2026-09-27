@@ -305,7 +305,10 @@ export function isFiniteNumberOrPercent(v) {
  * VALUE seen for that metric across captures, since "≥1 capture" may need to be
  * a specific one — e.g. `link_wsib`'s `link_rate_warn` only appears in the
  * force-full capture). Returns `null` when the dir does not exist (unmeasurable).
+ * Also collects each capture's raw `records_meta` OBJECT into `metas`, so a DOTTED
+ * key (a `counters.<slot>.source`) can be resolved like the runtime does.
  * @param {string} dir
+ * @returns {{metaKeys:Set<string>, metrics:Map<string,unknown[]>, metas:object[]}|null}
  */
 export function loadGoldenAuditIndex(dir) {
   let entries;
@@ -316,6 +319,7 @@ export function loadGoldenAuditIndex(dir) {
   }
   const metaKeys = new Set();
   const metrics = new Map();
+  const metas = [];
   for (const name of entries.filter((f) => f.endsWith('.json'))) {
     let parsed;
     try {
@@ -325,6 +329,7 @@ export function loadGoldenAuditIndex(dir) {
     }
     const meta = parsed && parsed.summary && parsed.summary.records_meta;
     if (!meta || typeof meta !== 'object') continue;
+    metas.push(meta);
     for (const k of Object.keys(meta)) metaKeys.add(k);
     const at = meta.audit_table;
     const rows = at && Array.isArray(at.rows) ? at.rows : [];
@@ -334,18 +339,48 @@ export function loadGoldenAuditIndex(dir) {
       metrics.get(r.metric).push(r.value);
     }
   }
-  return { metaKeys, metrics };
+  return { metaKeys, metrics, metas };
+}
+
+/**
+ * Resolve a DOTTED `records_meta` key against one capture's raw `records_meta`
+ * object, mirroring the RUNNER's `resolveCounterSource` in
+ * `scripts/lib/step/index.js` (~line 203): split on '.', walk objects, and accept
+ * the result only when it is a FINITE NUMBER — anything else is null, which reads
+ * as "not counted" rather than a silent zero. PURE. (Kept as a local mirror rather
+ * than importing `index.js`, which pulls in the whole runner.)
+ * @param {object} meta one capture's `summary.records_meta`
+ * @param {string} dottedKey e.g. `centreline_load.features_updated`
+ * @returns {number|null}
+ */
+export function resolveDottedMeta(meta, dottedKey) {
+  let node = meta;
+  for (const part of dottedKey.split('.')) {
+    if (node == null || typeof node !== 'object') return null;
+    node = node[part];
+  }
+  return typeof node === 'number' && Number.isFinite(node) ? node : null;
 }
 
 /**
  * Present + typed, for ONE registry row, against ONE step's already-loaded
  * golden index (`loadGoldenAuditIndex`'s return, or `null`). PURE.
  * @param {object} row a registry row
- * @param {{metaKeys:Set<string>, metrics:Map<string,unknown[]>}|null} index
+ * @param {{metaKeys:Set<string>, metrics:Map<string,unknown[]>, metas?:object[]}|null} index
  */
 export function rowPresentTyped(row, index) {
   if (!index) return { ok: false, reason: `no golden POST captures for "${row.producer}"` };
   if (row.kind === 'records_meta') {
+    // A DOTTED key is a `counters.<slot>.source` path, not a top-level key — resolve
+    // it like the runtime's `resolveCounterSource` does against each capture's raw
+    // `records_meta`. The top-level path below stays byte-identical.
+    if (row.key.includes('.')) {
+      const metas = Array.isArray(index.metas) ? index.metas : [];
+      if (!metas.some((m) => resolveDottedMeta(m, row.key) !== null)) {
+        return { ok: false, reason: `records_meta.${row.key} does not resolve to a finite number (the runtime counter resolution, resolveCounterSource) in any POST golden of "${row.producer}"` };
+      }
+      return { ok: true };
+    }
     if (!index.metaKeys.has(row.key)) {
       return { ok: false, reason: `records_meta.${row.key} absent from every POST golden of "${row.producer}"` };
     }
@@ -489,9 +524,10 @@ export function checkConsumerRegistry(repoRoot, ledgerRows) {
 
 /** In-memory fixtures + assertions. Throws on the first failure. */
 export function selfTest() {
-  const idx = (metaKeys, metricsObj) => ({
+  const idx = (metaKeys, metricsObj, metas = []) => ({
     metaKeys: new Set(metaKeys),
     metrics: new Map(Object.entries(metricsObj).map(([k, arr]) => [k, arr])),
+    metas,
   });
   const funnelRow = (over = {}) => ({ consumer: FUNNEL_CONSUMER, producer: 'link_wsib', kind: 'audit_metric', key: 'link_rate_warn', value: 'percent', source: 'funnel', ...over });
 
@@ -516,6 +552,14 @@ export function selfTest() {
   const mRow = { consumer: 'link_massing', producer: 'link_massing', kind: 'records_meta', key: 'code_version', value: 'any', source: 'trigger' };
   if (!rowPresentTyped(mRow, idx(['code_version'], {})).ok) throw new Error('self-test FAILED (5a): present records_meta key reported absent');
   if (rowPresentTyped(mRow, idx([], {})).ok) throw new Error('self-test FAILED (5b): absent records_meta key reported present');
+
+  // (5c-5f) dotted records_meta key (a counters source) resolves like the runtime's resolveCounterSource.
+  const dRow = { consumer: 'load_centreline', producer: 'load_centreline', kind: 'records_meta', key: 'centreline_load.features_updated', value: 'any', source: 'counters' };
+  if (!rowPresentTyped(dRow, idx(['centreline_load'], {}, [{ centreline_load: { features_updated: 0 } }])).ok) throw new Error('self-test FAILED (5c): nested finite counter reported absent');
+  if (rowPresentTyped(dRow, idx(['centreline_load'], {}, [{ centreline_load: {} }])).ok) throw new Error('self-test FAILED (5d): nested leaf absent reported present');
+  if (rowPresentTyped(dRow, idx(['centreline_load'], {}, [{ centreline_load: { features_updated: '0' } }])).ok) throw new Error('self-test FAILED (5e): nested non-number leaf reported typed');
+  if (rowPresentTyped(dRow, idx([], {}, [{}])).ok) throw new Error('self-test FAILED (5f): top-level miss on a dotted key reported present');
+  if (rowPresentTyped(mRow, idx([], {}, [{ code_version: 'x' }])).ok) throw new Error('self-test FAILED (5g): top-level path loosened by metas');
 
   // (6) unconverted producer -> not checked (registryViolations skips it).
   const registry = { rows: [{ ...funnelRow(), producer: 'classify_scope', key: 'tags_coverage_rate' }] };
