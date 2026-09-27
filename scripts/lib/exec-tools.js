@@ -12,7 +12,10 @@
  *     name, `additionalProperties:false` violation, missing required field,
  *     or a wrong-typed field all throw `MalformedToolCallError` synchronously
  *     — the loop in scripts/deepseek-exec.js turns that into an `error`
- *     ledger record and aborts the run WITHOUT the handler ever executing).
+ *     ledger record WITHOUT the handler ever executing, returns the same
+ *     MALFORMED_TOOL_CALL to the model as that call's tool result, and aborts
+ *     the run only after more than `malformed_tool_call_retry_max`
+ *     consecutive malformed calls — engine fence F1, 2026-09-27).
  *
  * Commit 2 shipped every tool as a schema-validated stub returning
  * `{ ok:false, error:{ code:'NOT_IMPLEMENTED' } }`. Commit 3 added real
