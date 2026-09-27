@@ -625,6 +625,25 @@ async function runEngine(opts = {}) {
         return finish('aborted');
       }
 
+      // Engine hardening G3 (DeepSeek security lens, 2026-09-27): a provider
+      // (or transcript) turn that is not an object, or carries no `message`
+      // object, used to crash the loop with a raw TypeError. It is now a
+      // ledgered MALFORMED_MODEL_TURN on the SAME consecutive counter as F1's
+      // malformed tool calls: the model is re-asked, and the run aborts only
+      // past malformed_tool_call_retry_max. Its usage (if any) is still
+      // billed, so a provider cannot spin the budget for free.
+      if (!turn || typeof turn !== 'object' || !turn.message || typeof turn.message !== 'object') {
+        if (turn && typeof turn === 'object' && turn.usage) {
+          usageTotal = addUsage(usageTotal, turn.usage);
+        }
+        ledger.append({ kind: 'error', code: 'MALFORMED_MODEL_TURN', message: redact(`provider turn has no message object (got ${turn === null ? 'null' : typeof turn}${turn && typeof turn === 'object' ? `, keys: ${Object.keys(turn).join(',')}` : ''})`), iteration });
+        consecutiveMalformed += 1;
+        if (consecutiveMalformed > malformedRetryMax) {
+          return finish('aborted');
+        }
+        continue;
+      }
+
       const turnUsage = turn.usage || emptyUsage();
       usageTotal = addUsage(usageTotal, turnUsage);
       const toolCalls = (turn.message && turn.message.tool_calls) || [];

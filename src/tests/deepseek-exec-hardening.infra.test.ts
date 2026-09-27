@@ -130,3 +130,75 @@ describe('G2: --transcript must resolve inside the repo (TRANSCRIPT_OUTSIDE_REPO
     expect(readCall?.status).toBe('ok');
   });
 });
+
+// G3 counts against the F1 allowance (malformed_tool_call_retry_max).
+const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
+const retryMax: number = policy.malformed_tool_call_retry_max;
+
+describe('G3: a provider turn with no message is a ledgered error, retried per the F1 counter', () => {
+  let repo = '';
+  let ledgerDir = '';
+
+  beforeEach(() => {
+    repo = makeRepo();
+    ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-g3-ledger-'));
+  });
+  afterEach(() => {
+    cleanupTempDir(repo);
+    cleanupTempDir(ledgerDir);
+  });
+
+  // A turn shaped like a real completion but with the `message` key absent —
+  // a provider contract violation the engine must survive, not crash on.
+  const messageLessTurn = () => ({
+    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    finish_reason: 'stop',
+  }) as unknown as Turn;
+
+  function customClient(turns: Array<Turn | null>) {
+    let i = 0;
+    return {
+      async next() {
+        if (i >= turns.length) return stopTurn();
+        const t = turns[i];
+        i += 1;
+        return t as Turn;
+      },
+    };
+  }
+  function malformedModelCount(records: Array<Record<string, unknown>>) {
+    return records.filter((r) => r.kind === 'error' && r.code === 'MALFORMED_MODEL_TURN').length;
+  }
+  function run(client: unknown) {
+    return runEngine({ repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, modelClient: client });
+  }
+
+  it('(a) one message-less turn is ledgered and retried; the following good call still runs', async () => {
+    const client = customClient([
+      messageLessTurn(),
+      toolTurn('g1', 'read_file', { path: 'seed.txt', reason: 'r' }),
+      stopTurn(),
+    ]);
+    const res = await run(client);
+    expect(res.status).toBe('completed');
+    const records = ledgerRecords(ledgerDir, res.run_id);
+    expect(malformedModelCount(records)).toBe(1);
+    const readCall = records.find((r) => r.kind === 'tool_call' && r.tool === 'read_file') as { status?: string } | undefined;
+    expect(readCall?.status).toBe('ok');
+  });
+
+  it('(b) retryMax+1 CONSECUTIVE message-less turns abort the run', async () => {
+    const turns: Array<Turn | null> = [];
+    for (let n = 0; n <= retryMax; n += 1) turns.push(messageLessTurn());
+    turns.push(stopTurn());
+    const res = await run(customClient(turns));
+    expect(res.status).toBe('aborted');
+    expect(malformedModelCount(ledgerRecords(ledgerDir, res.run_id))).toBe(retryMax + 1);
+  });
+
+  it('(c) a `null` turn is ledgered as MALFORMED_MODEL_TURN, retried, and the run completes', async () => {
+    const res = await run(customClient([null, stopTurn()]));
+    expect(res.status).toBe('completed');
+    expect(malformedModelCount(ledgerRecords(ledgerDir, res.run_id))).toBe(1);
+  });
+});
