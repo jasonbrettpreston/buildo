@@ -7,8 +7,9 @@
 // then kills it; a process created in between by cmd.exe (outside any libuv
 // job) escapes, keeps OUR inherited stdout pipe open, and dispatch waited on
 // `close` until it exited (34-36 s against a 30 s fixture, 2 of 14 loaded
-// trials). The escape itself is a load race; the HANG is reproduced
-// deterministically below with a cmd.exe `start /b` pipe holder.
+// trials; 0 of 18 after the snapshot + taskkill + parent-pid sweep fix). The
+// escape itself is a load race; the HANG is reproduced deterministically
+// below with a cmd.exe `start /b` pipe holder.
 //
 // Fixture start is not assumed: npm's own startup can exceed a short ceiling
 // under load (the kill then lands before the fixture exists and the test
@@ -30,7 +31,7 @@ const CEILINGS_MS = [1500, 3000, 6000, 12000];
 const KILL_BUDGET_MS = 5000;
 const PID_LOG = 'children.log';
 
-type Outcome = { toolResult: { ok: boolean; error?: { code: string; detail?: { orphan_output_holder?: boolean } } } };
+type Outcome = { toolResult: { ok: boolean; error?: { code: string; detail?: { orphan_output_holder?: boolean; escaped_killed?: number } } } };
 
 function isAlive(pid: number): boolean {
   try {
@@ -112,6 +113,7 @@ describe.runIf(process.platform === 'win32')('run_bash_command TIMEOUT: tree kil
     expect(elapsedMs, `dispatch took ${elapsedMs}ms at a ${ceilingMs}ms ceiling`).toBeLessThan(ceilingMs + KILL_BUDGET_MS);
     expect(pids.filter(isAlive), 'no spawned child outlives the kill').toEqual([]);
     expect(outcome.toolResult.error?.detail?.orphan_output_holder).toBe(false);
+    expect(outcome.toolResult.error?.detail?.escaped_killed, 'the kill reports its sweep count').toBeGreaterThanOrEqual(0);
   }, 120000);
 
   // The pipe-holder case, deterministic: `start /b` makes cmd.exe create a

@@ -757,23 +757,69 @@ function spawnAllowlisted(argv, opts) {
 }
 
 // §C.1.9 bounded post-kill wait (engine hardening, 2026-09-27 — measured).
-// `taskkill /pid <root> /T /F` snapshots the tree and then kills it; a
+// `taskkill /pid <root> /T /F` alone snapshots the tree and then kills it; a
 // process created in between by a NON-libuv parent (cmd.exe running an npm
 // script) escapes — libuv puts only a process's DIRECT children in its
-// kill-on-close job, with silent breakaway for theirs. Measured under CPU
-// load: 2 of 14 trials left `node sleep.js` alive with its cmd.exe parent
-// dead, holding our inherited stdout pipe, so runProcess waited on `close`
-// for the fixture's whole 30 s sleep — the operator's full-suite push failed
-// twice on the commit-9 clamp lock (20 s test timeout). A post-kill
-// parent-pid sweep (PowerShell/CIM) was measured and REJECTED: under load it
-// caught 1 of 4 escapes and pushed dispatch to 11-23 s, because the escaped
-// process's parent had itself been created after taskkill's snapshot or
-// reaped by the job cascade. Only a Windows Job Object around the whole tree
-// closes that (filed). What is guaranteed here: after the kill, runProcess
-// waits at most this long for `close`, then drops the pipes and records
-// `orphan_output_holder` in the TIMEOUT detail — never an unbounded hang,
-// never silent.
+// kill-on-close job, with silent breakaway for theirs. Under CPU load 2 of 14
+// trials left `node sleep.js` alive with its cmd.exe parent dead, holding our
+// inherited stdout pipe, so runProcess waited on `close` for the fixture's
+// whole 30 s sleep — the operator's full-suite push failed twice on the
+// commit-9 clamp lock (20 s test timeout). killProcessTreeWin32 below closes
+// that race (0 of 18 loaded trials escaped). What it cannot reach is a
+// process whose ENTIRE ancestor chain had exited before the kill (a
+// daemonised `start /b` child) — only a Windows Job Object would (filed). For
+// that residue: after the kill, runProcess waits at most this long for
+// `close`, then drops the pipes and records `orphan_output_holder` in the
+// TIMEOUT detail — never an unbounded hang, never silent.
 const POST_KILL_CLOSE_GRACE_MS = 1500;
+
+// §C.1.9 Windows tree kill (engine hardening, 2026-09-27 — measured). One
+// PowerShell process: (1) ONE process-table query, descendant closure of the
+// root computed in memory (the live tree, BEFORE anything dies); (2)
+// `taskkill /T /F` on the root, adding every pid it reports TERMINATING (not
+// the "child process of PID <x>" parents — the root's line names OUR
+// process); (3) up to 4 sweeps, 100 ms apart, for live processes created
+// after the command started whose parent is any known pid — a grandchild born
+// inside taskkill's snapshot-to-kill window still carries its (now dead)
+// parent's pid — each killed with `/T`. Stops at the first empty sweep. Both
+// numbers interpolated are integers we produced (a pid, Date.now()), never
+// model input. Falls back to a plain `taskkill /T /F` if PowerShell fails.
+// Returns the number of escaped processes the sweeps killed (-1 if the
+// fallback ran).
+function killProcessTreeWin32(rootPid, sinceMs) {
+  if (!Number.isInteger(rootPid) || !Number.isInteger(sinceMs)) {
+    return -1;
+  }
+  const script = [
+    "$ErrorActionPreference = 'SilentlyContinue'",
+    `$root = ${rootPid}; $since = ${sinceMs}; $self = ${process.pid}`,
+    "$epoch = [datetime]'1970-01-01'",
+    'function Born($p) { $p.CreationDate -and ([int64](($p.CreationDate.ToUniversalTime()) - $epoch).TotalMilliseconds) -ge $since }',
+    '$known = @{}; $known[$root] = $true',
+    '$all = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,CreationDate)',
+    '$grew = $true',
+    'while ($grew) { $grew = $false; foreach ($p in $all) { if ($known.ContainsKey([int]$p.ParentProcessId) -and -not $known.ContainsKey([int]$p.ProcessId) -and (Born $p)) { $known[[int]$p.ProcessId] = $true; $grew = $true } } }',
+    '$tk = & taskkill.exe /pid $root /T /F 2>&1 | Out-String',
+    "foreach ($m in [regex]::Matches($tk, 'process with PID (\\d+)')) { $known[[int]$m.Groups[1].Value] = $true }",
+    '$known.Remove($self)',
+    '$escaped = 0; $empty = 0',
+    'for ($r = 0; $r -lt 4 -and $empty -lt 1; $r++) {',
+    '  Start-Sleep -Milliseconds 100',
+    '  $hit = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,CreationDate | Where-Object { $known.ContainsKey([int]$_.ParentProcessId) -and -not $known.ContainsKey([int]$_.ProcessId) -and (Born $_) })',
+    '  if ($hit.Count -eq 0) { $empty++; continue }',
+    '  $empty = 0',
+    '  foreach ($p in $hit) { $known[[int]$p.ProcessId] = $true; $escaped++; & taskkill.exe /pid $p.ProcessId /T /F | Out-Null }',
+    '}',
+    'Write-Output $escaped',
+  ].join('\n');
+  const result = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf8', timeout: 30000, windowsHide: true });
+  const n = Number(String(result.stdout || '').trim().split(/\s+/).pop());
+  if (result.error || result.status !== 0 || !Number.isInteger(n)) {
+    spawnSync('taskkill', ['/pid', String(rootPid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    return -1;
+  }
+  return n;
+}
 
 function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
   return new Promise((resolve) => {
@@ -821,14 +867,14 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       // as a NESTED child of its own — a plain SIGTERM/kill on OUR direct
       // child leaves that grandchild running on Windows, where terminating a
       // parent process does not tear down its process tree. `taskkill /T /F`
-      // kills the tree as it stood at its snapshot (see
-      // POST_KILL_CLOSE_GRACE_MS for the measured escape and the bound on
-      // it); POSIX gets a direct SIGKILL (SIGTERM is not
+      // alone kills the tree as it stood at its snapshot, so Windows uses
+      // killProcessTreeWin32 (measured escape + fix documented there and at
+      // POST_KILL_CLOSE_GRACE_MS); POSIX gets a direct SIGKILL (SIGTERM is not
       // guaranteed to stop a process ignoring it, and this budget fence needs
       // a deterministic kill, not a polite request).
       try {
         if (process.platform === 'win32' && child.pid) {
-          spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+          escapedKilled = killProcessTreeWin32(child.pid, startedAt - 2000);
         } else {
           child.kill('SIGKILL');
         }
@@ -839,8 +885,8 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       // at once. If it has not within the grace period, something that
       // escaped the kill still holds our pipe; waiting for `close` would
       // block this call until THAT process exits — the defect that hung the
-      // full suite. Sweep for escaped children of the killed pids (Windows),
-      // then stop waiting on the pipes and RECORD it rather than hide it.
+      // full suite. Stop waiting on the pipes and RECORD it rather than hide
+      // it.
       graceTimer = setTimeout(() => {
         if (settled) {
           return;
@@ -857,6 +903,7 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
     }, timeoutMs);
     let graceTimer = null;
     let orphanOutputHolder = false;
+    let escapedKilled = 0;
 
     // §C.1.9 (fold-validation LOW, commit 12e) — "the child is gone
     // afterwards" is only genuinely true once the OS has actually reaped it.
@@ -882,7 +929,7 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
           await new Promise((r) => setTimeout(r, 100));
         }
       }
-      resolve({ ...result, orphanOutputHolder });
+      resolve({ ...result, orphanOutputHolder, escapedKilled });
     }
 
     child.stdout.on('data', (chunk) => capture(chunk, 'out'));
@@ -945,7 +992,7 @@ async function runBashCommandHandler(args, ctx) {
     // orphan_output_holder: after the tree kill, something unreachable still
     // held the command's stdout/stderr pipe and runProcess stopped waiting on
     // it (see POST_KILL_CLOSE_GRACE_MS) — surfaced, never silent.
-    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}`, detail: { orphan_output_holder: !!result.orphanOutputHolder } } }, pre, post };
+    return { toolResult: { ok: false, error: { code: 'TIMEOUT', message: `command exceeded ${timeoutMs}ms: ${args.argv.join(' ')}`, detail: { orphan_output_holder: !!result.orphanOutputHolder, escaped_killed: result.escapedKilled || 0 } } }, pre, post };
   }
   return {
     toolResult: {
