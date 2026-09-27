@@ -54,6 +54,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { matchLedger, loadLedger, LEDGER_REL_PATH } from './ledger.mjs';
 import { loadConvertedDescriptors } from './closed-bounds.mjs';
+import { asConvertedFiles, withCommittedSet } from './converted-set.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -484,7 +485,11 @@ export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROO
 
 /** Both halves, disk-backed — what `step-validate.mjs` calls. Also verifies the registry is fresh (`--check`). */
 export function checkConsumerRegistry(repoRoot, ledgerRows) {
-  const fresh = checkRegistryFresh(repoRoot);
+  // Item 1 (gates from ①): with a pending step evaluated as-converted, the COMMITTED
+  // registry is still checked fresh against the committed set, and the contracts are
+  // checked on the registry the cutover will generate (built in memory, overlay on).
+  const overlay = asConvertedFiles().length > 0;
+  const fresh = withCommittedSet(() => checkRegistryFresh(repoRoot));
   if (!fresh.fresh) {
     return {
       pass: false,
@@ -497,7 +502,7 @@ export function checkConsumerRegistry(repoRoot, ledgerRows) {
       allowed: [],
     };
   }
-  return checkConsumerContracts(readRegistry(repoRoot), ledgerRows, repoRoot);
+  return checkConsumerContracts(overlay ? buildRegistry(repoRoot) : readRegistry(repoRoot), ledgerRows, repoRoot);
 }
 
 // ---------------------------------------------------------------------------

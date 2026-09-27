@@ -246,6 +246,7 @@ const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-gold
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
 import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { setAsConverted } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
@@ -5522,6 +5523,14 @@ async function main() {
   }
 
   const { converted, pending } = loadConverted();
+  // GATES FROM ① (Spec 124 §5 R-BA scope; WF2 "conversion simplification" item 1):
+  // a PENDING target is evaluated exactly as if converted — the R-BA registry gates
+  // (#28-#41) read converted.json through gates/converted-set.mjs, so they see this
+  // run's pending targets registered, as the ③ cutover will. Their blockedSlugs then
+  // name the pending slug, and the per-row + registry hard-stop below apply unchanged
+  // (the hook's --staged run blocks on the as-converted result).
+  // A pending step with no descriptor yet (early ①) has nothing a registry gate reads.
+  setAsConverted(targets.filter((r) => r.stage === 'pending' && existsSync(path.join(REPO_ROOT, harness.descriptorPathFor(r.relFile)))).map((r) => r.relFile), REPO_ROOT);
   const invariantResults = fastInvariants(targets, converted, pending);
   const shapeBatch = checkShapeBatch(targets);
   const vitestResult = opts.fast ? { ranOk: false, error: '--fast: vitest spawn skipped' } : runVitest();

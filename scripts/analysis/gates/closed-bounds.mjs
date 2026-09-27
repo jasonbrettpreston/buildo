@@ -20,10 +20,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { matchLedger, loadLedger, LEDGER_REL_PATH } from './ledger.mjs';
+import { readConvertedJson } from './converted-set.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
-const CONVERTED_REL_PATH = 'scripts/steps/_schema/converted.json';
 export const GATE_A_DISPOSITIONS = ['non_tunable', 'pending_remediation'];
 const ZERO_TOLERANCE = 'viol == 0';
 const FIELDS = [['limit', 'limit_from_config', true], ['warn_limit', 'warn_limit_from_config', false]];
@@ -96,12 +96,8 @@ const descriptorPathFor = (relFile) => String(relFile).replace(/\.(js|py)$/, '')
  * @param {string} [repoRoot]
  */
 export function loadConvertedDescriptors(repoRoot = REPO_ROOT) {
-  let parsed;
-  try {
-    parsed = JSON.parse(fs.readFileSync(path.join(repoRoot, CONVERTED_REL_PATH), 'utf8'));
-  } catch (e) {
-    throw new Error(`converted.json unreadable at ${CONVERTED_REL_PATH}: ${e.message}`);
-  }
+  // converted-set.mjs: the ONE read — includes a pending step evaluated as-converted (item 1).
+  const parsed = readConvertedJson(repoRoot);
   const read = (rel, from) => {
     try {
       return JSON.parse(fs.readFileSync(path.join(repoRoot, rel), 'utf8'));

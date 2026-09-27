@@ -40,10 +40,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { matchLedger, loadLedger, LEDGER_REL_PATH, GATES } from './ledger.mjs';
+import { readConvertedJson } from './converted-set.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
-const CONVERTED_REL_PATH = 'scripts/steps/_schema/converted.json';
 
 /** Spec 123 §6 / Spec 124 Rule 13 (R-BA) — policy constant, not a step tunable. */
 export const SCORE_FLOOR = 14;
@@ -238,7 +238,7 @@ export function lsFilesEol(repoRoot = REPO_ROOT, paths = []) {
 
 /** The converted fleet's slugs + report scorecard paths, derived from converted.json. */
 export function loadConvertedSlugs(repoRoot = REPO_ROOT) {
-  const parsed = JSON.parse(fs.readFileSync(path.join(repoRoot, CONVERTED_REL_PATH), 'utf8'));
+  const parsed = readConvertedJson(repoRoot);
   return (Array.isArray(parsed.converted) ? parsed.converted : []).map((rel) =>
     path.basename(String(rel)).replace(/\.js$/, '').replace(/-/g, '_'));
 }
