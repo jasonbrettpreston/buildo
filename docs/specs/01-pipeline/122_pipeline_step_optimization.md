@@ -1271,6 +1271,7 @@ Two entry criteria belong to the architecture, not the plan, and they bind where
 |---|---|
 | ⚠️ **No step converts before one clean `chain_sources` run in the cloud** — **gates C1, NOT the S-stages (R3):** library/schema/ledger/conformance work converts nothing and proceeds in parallel | converting while the chain cannot complete makes a conversion regression **indistinguishable** from the pre-existing envelope failure (§11 KFM 7) |
 | ⚠️ **Phase B lands, and the golden master is captured AFTER it** | capturing earlier freezes pre-Phase-B behaviour, and the conversion then **silently reverts Phase B behind a green differential** |
+| **One resolver (2026-09-27):** a gate that reads a runtime structure imports the runtime's own function (`scripts/lib/step/index.js`), never a mirrored copy — gate D resolves dotted `counters.<slot>.source` rows through `resolveCounterSource` itself. **Supersedes** gate D's local `resolveDottedMeta` mirror (`75c1a731`); locked by `gate-consumer-registry.infra.test.ts` T9 | a mirror drifts from the runtime silently, so the gate then scores a structure the runner never produces |
 
 ### 10.2 The two namespaces, disambiguated
 

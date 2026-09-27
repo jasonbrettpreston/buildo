@@ -59,7 +59,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 const require = createRequire(import.meta.url);
 /** The runner-owned `records_meta` keys, declared ONCE in the step library (gate C). */
-const RUNNER_META_KEYS = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')).RUNNER_META_KEYS;
+// ONE RESOLVER (Spec 122 §10): the gate imports the runtime's own functions, never a mirror.
+const { RUNNER_META_KEYS, resolveCounterSource } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
 const RUNNER_META_KEYS_SET = new Set(RUNNER_META_KEYS);
 
 export const CONSUMER_REGISTRY_REL_PATH = 'scripts/steps/_schema/consumer-registry.json';
@@ -343,26 +344,6 @@ export function loadGoldenAuditIndex(dir) {
 }
 
 /**
- * Resolve a DOTTED `records_meta` key against one capture's raw `records_meta`
- * object, mirroring the RUNNER's `resolveCounterSource` in
- * `scripts/lib/step/index.js` (~line 203): split on '.', walk objects, and accept
- * the result only when it is a FINITE NUMBER — anything else is null, which reads
- * as "not counted" rather than a silent zero. PURE. (Kept as a local mirror rather
- * than importing `index.js`, which pulls in the whole runner.)
- * @param {object} meta one capture's `summary.records_meta`
- * @param {string} dottedKey e.g. `centreline_load.features_updated`
- * @returns {number|null}
- */
-export function resolveDottedMeta(meta, dottedKey) {
-  let node = meta;
-  for (const part of dottedKey.split('.')) {
-    if (node == null || typeof node !== 'object') return null;
-    node = node[part];
-  }
-  return typeof node === 'number' && Number.isFinite(node) ? node : null;
-}
-
-/**
  * Present + typed, for ONE registry row, against ONE step's already-loaded
  * golden index (`loadGoldenAuditIndex`'s return, or `null`). PURE.
  * @param {object} row a registry row
@@ -371,12 +352,13 @@ export function resolveDottedMeta(meta, dottedKey) {
 export function rowPresentTyped(row, index) {
   if (!index) return { ok: false, reason: `no golden POST captures for "${row.producer}"` };
   if (row.kind === 'records_meta') {
-    // A DOTTED key is a `counters.<slot>.source` path, not a top-level key — resolve
-    // it like the runtime's `resolveCounterSource` does against each capture's raw
-    // `records_meta`. The top-level path below stays byte-identical.
+    // A DOTTED key is a `counters.<slot>.source` path, not a top-level key — resolved
+    // by the runtime's OWN `resolveCounterSource` (imported, never mirrored) against
+    // each capture's raw `records_meta`. The top-level path below stays byte-identical.
     if (row.key.includes('.')) {
       const metas = Array.isArray(index.metas) ? index.metas : [];
-      if (!metas.some((m) => resolveDottedMeta(m, row.key) !== null)) {
+      const slot = { source: `records_meta.${row.key}` };
+      if (!metas.some((m) => resolveCounterSource(slot, { records_meta: m }) !== null)) {
         return { ok: false, reason: `records_meta.${row.key} does not resolve to a finite number (the runtime counter resolution, resolveCounterSource) in any POST golden of "${row.producer}"` };
       }
       return { ok: true };
