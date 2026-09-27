@@ -209,7 +209,7 @@ describe('G4: grep_files child env scrubs DEEPSEEK_* (Spec 08 F-II6)', () => {
     const calls = [...source.matchAll(/scrubbedEnv\(([^)]*)\)/g)];
     expect(calls.length, 'expected at least 3 scrubbedEnv(...) call sites in exec-tools.js').toBeGreaterThanOrEqual(3);
     for (const call of calls) {
-      const argText = call[1].trim();
+      const argText = (call[1] ?? '').trim();
       expect(
         argText.includes("'DEEPSEEK_'"),
         `scrubbedEnv(${argText}) in scripts/lib/exec-tools.js does not scrub the DEEPSEEK_ env prefix (Spec 08 F-II6)`,
