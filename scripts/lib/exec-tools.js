@@ -81,6 +81,11 @@ const SELF_PROTECT_DENYLIST = Object.freeze([
   'scripts/deepseek-exec.js',
   'scripts/lib/exec-tools.js',
   'scripts/lib/exec-ledger.js',
+  // Engine-fence panel (DeepSeek security lens, 2026-09-27): every sibling
+  // fence module the two above require (exec-path/glob/policy-match/claims/
+  // brief/env/worktree/model) — a committed edit to one is loaded by the
+  // NEXT run. A glob, so a new exec-*.js module is covered without retyping.
+  'scripts/lib/exec-*.js',
   'scripts/lib/exec-policy.json',
   '.husky/**',
   '.git/**',
@@ -92,6 +97,8 @@ const SELF_PROTECT_DENYLIST = Object.freeze([
   'src/tests/hooks-composition.infra.test.ts',
   'src/tests/agent-roster.infra.test.ts',
   'src/tests/deepseek-exec*.test.ts',
+  // The shared harness every deepseek-exec* lock imports (same panel fold).
+  'src/tests/helpers/deepseek-exec-harness.ts',
 ]);
 
 // The ledger directory resolves at RUNTIME (outside the repo by design, F11)
