@@ -1050,7 +1050,7 @@ async function grepFilesHandler(args, ctx) {
   // default buffer would ENOBUFS on a legitimately large result set instead
   // of reporting a specific, recoverable code).
   const grepLimits = { timeout: (policy && policy.limits && policy.limits.timeout_ms) || 600000, maxBuffer: SPAWN_MAX_BUFFER_BYTES };
-  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', shell: false, ...grepLimits });
+  const result = spawnSync('git', argv, { cwd: repoRoot, env: scrubbedEnv(['DEEPSEEK_']), encoding: 'utf8', shell: false, ...grepLimits });
   if (result.error) {
     const failure = classifySpawnFailure(result, { code: 'BAD_PATTERN', message: `git grep failed to start: ${result.error.message}` });
     return { toolResult: { ok: false, error: failure } };
