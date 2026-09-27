@@ -24,17 +24,25 @@
  * without a database, a child process or a network
  * (`src/tests/capture-guard.logic.test.ts`). Nothing here touches disk or DB.
  *
- * THE ONE DELIBERATE EXCEPTION — gate G:
+ * THE DELIBERATE EXCEPTION — the capture-derived gates C, D, G:
  * -------------------------------------------------------------
- * A five-word FAIL is not automatically a refusal. Gate G (#38-#40: nonzero
- * capture, lib_fingerprint freshness, explained diffs) judges the captures THIS
- * run PRODUCES — it is precisely the gate a capture FEEDS. If a G-only failure
- * blocked the capture, then a library change (which moves `lib_fingerprint`,
- * which fails gate G, which is fixed BY recapturing) could never be recaptured:
- * a deadlock. So a FAIL whose every named gate is capture-derived is ALLOWED —
- * the capture is the fix. G is still enforced on the COMMITTED captures by
- * step-validate, so the exemption buys no silence, only order. Any FAIL naming
- * any other gate is refused.
+ * A five-word FAIL is not automatically a refusal. Gates C (#30 emits vs the POST
+ * goldens' records_meta), D (#31 consumer contracts present+typed in the POST
+ * goldens) and G (#38-#40: nonzero capture, lib_fingerprint freshness, explained
+ * diffs) judge the captures THIS run PRODUCES — they are the gates a capture FEEDS
+ * (panel fold, Integration H1: with G alone, the FIRST POST capture at ② and any
+ * recapture after an emits[] edit were refused on C's no-golden-dir /
+ * declared-not-emitted). Known cost, stated: D's completeness scan and registry
+ * staleness are not golden-derived yet ride the same letter — both stay enforced on
+ * the committed state by step-validate before the step can land.
+ * NOT read: step-validate's exit code / per-row hard stops (G6-G9, per-step
+ * invariants). The guard is the five-word verdict only; those hard-stop the commit.
+ * Why the exception exists: if a capture-derived failure blocked the capture, a
+ * library change (which moves `lib_fingerprint`, failing gate G, fixed BY
+ * recapturing) could never be recaptured — a deadlock. So a FAIL whose every named
+ * gate is capture-derived is ALLOWED; the capture is the fix, and C/D/G are still
+ * enforced on the COMMITTED captures by step-validate (order, not silence). Any FAIL
+ * naming any other gate is refused.
  */
 'use strict';
 
@@ -53,12 +61,10 @@ const FIVE_WORDS = Object.freeze([
 
 /**
  * Gates that judge the captures THIS run produces, so they cannot gate the
- * capture that satisfies them. Gate G (#38-#40: nonzero capture,
- * lib_fingerprint freshness, explained diffs) is the whole set: a G-only failure
- * cannot block the capture that fixes it (else a lib change could never be
- * recaptured). G is STILL enforced on the committed captures by step-validate.
+ * capture that satisfies them: C (#30), D (#31), G (#38-#40) — see the header.
+ * All three are STILL enforced on the committed captures by step-validate.
  */
-const CAPTURE_DERIVED_GATES = Object.freeze(['G']);
+const CAPTURE_DERIVED_GATES = Object.freeze(['C', 'D', 'G']);
 
 const STATUS_PASS = 'PASS';
 const STATUS_FAIL = 'FAIL';

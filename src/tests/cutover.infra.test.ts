@@ -166,6 +166,22 @@ describe('npm run cutover on a fixture slug', () => {
     expect(second.stdout).toContain('0 file(s) changed');
   });
 
+  it('an on_fail "report" generator that fails is printed, the run continues, and the command exits 1 (panel fold M1)', () => {
+    put('scripts/analysis/cutover-generators.json', JSON.stringify({
+      generators: [
+        { id: 'register', kind: 'builtin', does: 'r' },
+        { id: 'census', kind: 'builtin', does: 'c' },
+        { id: 'red', kind: 'cmd', argv: ['node', '-e', 'process.exitCode = 3'], on_fail: 'report', does: 'x' },
+        { id: 'after', kind: 'cmd', argv: ['node', '-e', "require('fs').writeFileSync('after.txt', 'ran\\n')"], does: 'y' },
+      ],
+    }));
+    const r = cutover();
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain('red: FAILED (on_fail report — continuing)');
+    expect(r.stdout).toContain('after: changed after.txt');
+    expect(r.stdout).toContain('FAILED (reported): red');
+  });
+
   it('a slug that is neither pending nor converted is refused before anything runs', () => {
     const r = spawnSync(process.execPath, [CLI, '--step=nope', `--repo=${fixture}`], { cwd: fixture, env: env(), encoding: 'utf8' });
     expect(r.status).toBe(1);

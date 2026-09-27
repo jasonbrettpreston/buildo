@@ -70,8 +70,8 @@ describe('vocabulary', () => {
     expect(Object.isFrozen(FIVE_WORDS)).toBe(true);
   });
 
-  it('CAPTURE_DERIVED_GATES is exactly the frozen [G] set', () => {
-    expect(CAPTURE_DERIVED_GATES).toEqual(['G']);
+  it('CAPTURE_DERIVED_GATES is exactly the frozen [C, D, G] set (panel fold H1)', () => {
+    expect(CAPTURE_DERIVED_GATES).toEqual(['C', 'D', 'G']);
     expect(Object.isFrozen(CAPTURE_DERIVED_GATES)).toBe(true);
   });
 });
@@ -135,6 +135,11 @@ describe('parseFiveWords', () => {
 
 // ── 3. captureGuardDecision ─────────────────────────────────────────────────
 describe('captureGuardDecision', () => {
+  it('ALLOWS the first ② POST capture: OBSERVABLE FAIL on gate C/D only (no golden dir yet) — panel fold H1', () => {
+    const out = captureGuardDecision(parseFiveWords(allPassStdout('| OBSERVABLE | FAIL | FAIL (gate C/D — unledgered) |')));
+    expect(out.allow).toBe(true);
+  });
+
   it('allows an all-PASS verdict', () => {
     const out = captureGuardDecision(parseFiveWords(allPassStdout()));
     expect(out.allow).toBe(true);
@@ -192,13 +197,13 @@ describe('captureGuardDecision', () => {
       '| STANDARDIZED | PASS | PASS |',
       '| OBSERVABLE | PASS | PASS |',
       '| SCALABLE | FAIL | FAIL (gate B — unledgered) |',
-      '| UNDERSTANDABLE | FAIL | FAIL (gate C) |',
+      '| UNDERSTANDABLE | FAIL | FAIL (gate F) |',
       '| ACCURATE | FAIL | FAIL (gate G/K — unledgered) |',
     ])));
     expect(out.allow).toBe(false);
-    expect(out.failing).toEqual(['SCALABLE (gate B)', 'UNDERSTANDABLE (gate C)', 'ACCURATE (gate G/K)']);
+    expect(out.failing).toEqual(['SCALABLE (gate B)', 'UNDERSTANDABLE (gate F)', 'ACCURATE (gate G/K)']);
     expect(out.reason).toBe(
-      'five-word verdict not PASS: SCALABLE (gate B), UNDERSTANDABLE (gate C), ACCURATE (gate G/K)',
+      'five-word verdict not PASS: SCALABLE (gate B), UNDERSTANDABLE (gate F), ACCURATE (gate G/K)',
     );
   });
 

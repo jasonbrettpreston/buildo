@@ -88,3 +88,27 @@ describe('gates from ① — a pending step is evaluated as-converted', () => {
     expect(out).toMatch(new RegExp(`${slug}: \\d+/\\d+ hard-stop=\\w+ \\| STANDARDIZED:`));
   }, 320_000);
 });
+
+// ---------------------------------------------------------------------------
+// Panel fold (Integration H2/M2): the overlay honours the declared R-K stage — a
+// stage excluding G8 (no current POST goldens) is not hard-stopped by the
+// golden-derived registry gates (#30 C, #31 D, #38-#40 G); one excluding G7 is
+// not hard-stopped by #41 (K). shape_clean / converted exclude nothing.
+// ---------------------------------------------------------------------------
+describe('gates from ① — stage-scoped registry exclusions (the R-K stage vocabulary, no new one)', () => {
+  it('descriptor_only excludes #30/#31/#38-#41 but never a declaration gate (#28 A, #29 B)', async () => {
+    const sv = await import('../../scripts/analysis/step-validate.mjs');
+    for (const id of [30, 31, 38, 39, 40, 41]) expect(sv.stageExcludesRegistry(id, 'descriptor_only'), `#${id}`).toBe(true);
+    for (const id of [28, 29, 32, 33, 37]) expect(sv.stageExcludesRegistry(id, 'descriptor_only'), `#${id}`).toBe(false);
+  });
+
+  it('compute_ported excludes the golden gates but not #41; shape_clean and a converted step exclude nothing', async () => {
+    const sv = await import('../../scripts/analysis/step-validate.mjs');
+    expect(sv.stageExcludesRegistry(38, 'compute_ported')).toBe(true);
+    expect(sv.stageExcludesRegistry(41, 'compute_ported')).toBe(false);
+    for (const id of [29, 30, 38, 41]) {
+      expect(sv.stageExcludesRegistry(id, 'shape_clean')).toBe(false);
+      expect(sv.stageExcludesRegistry(id, undefined)).toBe(false);
+    }
+  });
+});

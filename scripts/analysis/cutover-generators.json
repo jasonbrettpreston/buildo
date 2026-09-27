@@ -23,6 +23,6 @@
     { "id": "conversion-roadmap", "kind": "cmd", "argv": ["node", "scripts/violations/generate-conversion-roadmap.mjs"], "does": "docs/reports/generated/122-conversion-roadmap.md" },
     { "id": "programme-backlog", "kind": "cmd", "argv": ["node", "scripts/violations/generate-programme-backlog.mjs"], "does": "docs/reports/generated/122-programme-backlog.md" },
     { "id": "system-map", "kind": "cmd", "argv": ["node", "scripts/generate-system-map.mjs"], "does": "docs/specs/00-architecture/00_system_map.md" },
-    { "id": "scorecards", "kind": "cmd", "argv": ["node", "scripts/analysis/step-validate.mjs", "--all", "--write"], "does": "every assessment report's generated scorecard (the long run — minutes)" }
+    { "id": "scorecards", "kind": "cmd", "argv": ["node", "scripts/analysis/step-validate.mjs", "--all", "--write"], "on_fail": "report", "does": "every assessment report's generated scorecard (the long run — minutes); exits 1 (reported, not thrown) while assert_schema's POST goldens are stale from the probe-list move above — recapture, then re-run this entry" }
   ]
 }

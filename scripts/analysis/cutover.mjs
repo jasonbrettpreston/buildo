@@ -35,6 +35,10 @@ export const CENSUS_RELS = [
 ];
 export const KINDS = Object.freeze(['builtin', 'cmd']);
 export const BUILTINS = Object.freeze(['register', 'census']);
+// `throw` (default): a failing generator stops the cutover. `report`: it is printed,
+// the run continues, and the command exits 1 — for a check whose red is EXPECTED
+// until an author step lands (the scorecard regen before the assert_schema recapture).
+export const ON_FAIL = Object.freeze(['throw', 'report']);
 export const RETAINED_REASON = 'RETAINED at cutover per Spec 124 R-AO: archetype and batch are the census\'s own '
   + 'pre-cutover values, kept verbatim and never re-derived from the descriptor (a copy would make fast invariant '
   + '#25 compare a value to itself); converted.json registers the file in converted[] and deletes its pending[] '
@@ -184,6 +188,7 @@ export function loadGenerators(root) {
     if (!KINDS.includes(g.kind)) throw new Error(`cutover: generator ${g.id} kind ${JSON.stringify(g.kind)} is not one of ${KINDS.join('|')}`);
     if (g.kind === 'builtin' && !BUILTINS.includes(g.id)) throw new Error(`cutover: unknown builtin ${g.id}`);
     if (g.kind === 'cmd' && (!Array.isArray(g.argv) || g.argv.length === 0)) throw new Error(`cutover: cmd ${g.id} has no argv`);
+    if (g.on_fail !== undefined && !ON_FAIL.includes(g.on_fail)) throw new Error(`cutover: generator ${g.id} on_fail ${JSON.stringify(g.on_fail)} is not one of ${ON_FAIL.join('|')}`);
   }
   return list;
 }
@@ -220,13 +225,15 @@ function runBuiltin(root, id, step) {
   }
 }
 
+/** @returns {string|null} null on success, else the failure text (thrown unless on_fail is `report`). */
 function runCmd(root, g) {
   const [bin, ...rest] = g.argv;
   const res = spawnSync(bin === 'node' ? process.execPath : bin, rest, { cwd: root, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 });
-  if (res.status !== 0) {
-    const tail = `${res.stdout || ''}\n${res.stderr || ''}`.trim().split('\n').slice(-15).join('\n');
-    throw new Error(`cutover: ${g.id} (${g.argv.join(' ')}) exited ${res.status}\n${tail}`);
-  }
+  if (res.status === 0) return null;
+  const tail = `${res.stdout || ''}\n${res.stderr || ''}`.trim().split('\n').slice(-15).join('\n');
+  const text = `cutover: ${g.id} (${g.argv.join(' ')}) exited ${res.status}\n${tail}`;
+  if (g.on_fail === 'report') return text;
+  throw new Error(text);
 }
 
 export function runCutover({ root = DEFAULT_ROOT, slug, skip = [], log = console.log }) {
@@ -236,6 +243,7 @@ export function runCutover({ root = DEFAULT_ROOT, slug, skip = [], log = console
   const step = resolveStep(root, slug);
   log(`[cutover] ${slug} (${step.file}) — ${step.alreadyConverted ? 'already registered' : `pending -> converted (${step.convertedAt})`}`);
   const changed = {};
+  const failed = [];
   for (const g of generators) {
     if (skip.includes(g.id)) {
       log(`[cutover]   ${g.id}: SKIPPED (--skip) — ${g.does}`);
@@ -243,7 +251,13 @@ export function runCutover({ root = DEFAULT_ROOT, slug, skip = [], log = console
     }
     const before = snapshot(root);
     if (g.kind === 'builtin') runBuiltin(root, g.id, step);
-    else runCmd(root, g);
+    else {
+      const fail = runCmd(root, g);
+      if (fail) {
+        failed.push(g.id);
+        log(`[cutover]   ${g.id}: FAILED (on_fail report — continuing)\n${fail}`);
+      }
+    }
     const diff = changedPaths(before, snapshot(root));
     changed[g.id] = diff;
     log(`[cutover]   ${g.id}: ${diff.length ? `changed ${diff.join(', ')}` : 'no change'}`);
@@ -251,8 +265,11 @@ export function runCutover({ root = DEFAULT_ROOT, slug, skip = [], log = console
   const total = new Set(Object.values(changed).flat()).size;
   log(`[cutover] ${total} file(s) changed. Still the author's judgement (not generated): owner-spec As-built text; `
     + 'live-DB recaptures (assert_schema POST after its probe list moves); execution-budget-disposition.json '
-    + 'step_timeout; write-class-disposition.json declared_by notes; orphan ledger rows.');
-  return { step, changed, total };
+    + 'step_timeout; write-class-disposition.json declared_by notes; orphan ledger rows; programme-items.json '
+    + 'evidence; review_followups.md rows; generator code edits; legacy-shell text-scan test lists (retiring a '
+    + 'lock needs its successor named); the step\'s own seeds/tests.');
+  if (failed.length) log(`[cutover] FAILED (reported): ${failed.join(', ')} — re-run them after the author steps above.`);
+  return { step, changed, total, failed };
 }
 
 function parseArgs(argv) {
@@ -274,7 +291,8 @@ if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === imp
       for (const g of loadGenerators(opts.root)) console.log(`${g.id} (${g.kind}) — ${g.does}`);
     } else {
       if (!opts.slug) throw new Error('usage: npm run cutover -- --step=<slug> [--skip=<id,...>] [--list]');
-      runCutover({ root: opts.root, slug: opts.slug, skip: opts.skip });
+      const res = runCutover({ root: opts.root, slug: opts.slug, skip: opts.skip });
+      if (res.failed.length) process.exitCode = 1;
     }
   } catch (err) {
     console.error(err.message);
