@@ -74,6 +74,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { createResolvedPool } = require('../lib/resolve-db');
+const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, FAIL: RERUN_FAIL } = require('./capture-rerun-proof');
 
 const SUMMARY_MARKER = 'PIPELINE_SUMMARY:';
 const META_MARKER = 'PIPELINE_META:';
@@ -848,6 +849,37 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
   }
 }
 
+/**
+ * WF2 "conversion simplification" item 7 — the TWO-RUN zero-writes proof (Spec 122
+ * §1.0/§1.1 `idempotent_rerun: "zero_writes"`). A POST capture's run 1 is the capture
+ * above; this runs the SAME invocation (same argv, same env, same chain) again at once
+ * and measures, per table whose targets declare `zero_writes`, the rows physically
+ * rewritten (xmin newer than a txid read just before run 2) and the row-count delta
+ * (`scripts/analysis/capture-rerun-proof.js` owns the closed answer set). FAIL refuses
+ * the capture in main(), before any write. Replaces the per-step ad hoc rerun checks
+ * (e.g. link_massing's `rows_changed_ratio`) as the standing proof; those stay until
+ * a coverage review retires them. A descriptor with no zero_writes target never runs
+ * run 2 (answer NOT_APPLICABLE).
+ */
+async function runRerunProof({ step, chain, args, descriptor }) {
+  const tables = rerunTables(descriptor);
+  if (tables.length === 0) return rerunProofDecision({ tables, measured: {}, run2: null });
+  const pool = createResolvedPool({ label: 'capture-step-golden:rerun-proof' });
+  try {
+    const env = { ...process.env };
+    if (chain === 'none') delete env.PIPELINE_CHAIN; else env.PIPELINE_CHAIN = chain;
+    console.log(`[capture-step-golden] rerun proof: run 2 of ${step} (zero_writes tables: ${tables.map((t) => `${t.table}(${t.mode})`).join(', ')})`);
+    const { measured, run2, lo } = await measureRerun(pool, tables, async () => {
+      const child = await spawnStep({ scriptPath: step, args, env });
+      const rm = parseMarkers(child.stdout).summary?.records_meta ?? {};
+      return { exit_code: child.exit_code, skipped: rm.skipped === true, terminal: rm.terminal ?? null };
+    });
+    return { ...rerunProofDecision({ tables, measured, run2 }), txid_before_run2: lo, run2 };
+  } finally {
+    await pool.end();
+  }
+}
+
 function buildCapture(raw) {
   const { normalised, nondeterminism } = normalise(raw);
   const verdict = raw.summary?.records_meta?.audit_table?.verdict ?? null;
@@ -1009,6 +1041,16 @@ async function main() {
   const doc = buildCapture(raw);
   assertCaptureIsValid(doc);
 
+  // Item 7 — a POST capture is a two-run proof: run 2 must write nothing to any
+  // zero_writes table. Top-level field (never in `normalised`, so no G8 diff).
+  if (opts.out && isPostCapturePath(path.resolve(String(opts.out)))) {
+    doc.rerun_proof = await runRerunProof({ step, chain: String(opts.chain), args, descriptor });
+    console.log(`[capture-step-golden] rerun proof: ${doc.rerun_proof.answer} — ${doc.rerun_proof.reason}`);
+    if (doc.rerun_proof.answer === RERUN_FAIL) {
+      throw new Error(`[capture-step-golden] REFUSING --out=${opts.out}: the immediate second run was not a zero-write rerun (${doc.rerun_proof.reason}) — the descriptor's idempotent_rerun: "zero_writes" is false for this step`);
+    }
+  }
+
   // R-C — the LOCKFILE stamp. Computed after the run (not before): the fields it hashes
   // (step file, descriptor, notes, compute module) are exactly what could have changed
   // BETWEEN this capture and the one it will later be compared against.
@@ -1111,6 +1153,7 @@ module.exports = {
   computePathFor,
   notesPathFor,
   gitHead,
+  runRerunProof,
   captureGitState,
   overwriteDecision,
 };
