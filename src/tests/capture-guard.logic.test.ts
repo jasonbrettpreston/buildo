@@ -56,8 +56,9 @@ function allPassStdout(override?: string) {
   ];
   if (!override) return stdout(rows);
   // The override REPLACES the row for its word (one verdict per word per step).
-  const word = override.split('|')[1].trim();
-  return stdout(rows.map((r) => (r.split('|')[1].trim() === word ? override : r)));
+  const firstCell = (row: string) => (row.split('|')[1] ?? '').trim();
+  const word = firstCell(override);
+  return stdout(rows.map((r) => (firstCell(r) === word ? override : r)));
 }
 
 // ── 1. vocabulary ───────────────────────────────────────────────────────────

@@ -265,7 +265,7 @@ describe('rerunProofDecision', () => {
 describe('measureRerun', () => {
   /** A fake pool recording every query, answering by statement shape. */
   function fakePool(values: { count: number[]; lo: number; rewritten: number[] }) {
-    const calls: Array<{ sql: string; params?: unknown[] }> = [];
+    const calls: Array<{ sql: string; params: unknown[] | undefined }> = [];
     let countIx = 0;
     let rewrittenIx = 0;
     return {

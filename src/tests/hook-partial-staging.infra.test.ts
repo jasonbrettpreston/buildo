@@ -21,7 +21,7 @@ const PRE_COMMIT = fs.readFileSync(path.join(REPO_ROOT, '.husky/pre-commit'), 'u
 
 const ENV_ALLOW = ['PATH', 'Path', 'SystemRoot', 'SYSTEMROOT', 'ComSpec', 'TEMP', 'TMP', 'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA'];
 function childEnv(home: string): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = {};
+  const env: Record<string, string | undefined> = {};
   for (const k of ENV_ALLOW) if (process.env[k] !== undefined) env[k] = process.env[k];
   env.HOME = home;
   env.GIT_CONFIG_NOSYSTEM = '1';
@@ -29,11 +29,11 @@ function childEnv(home: string): NodeJS.ProcessEnv {
   env.GIT_AUTHOR_EMAIL = 'test@example.invalid';
   env.GIT_COMMITTER_NAME = 'partial-staging-test';
   env.GIT_COMMITTER_EMAIL = 'test@example.invalid';
-  return env;
+  return env as NodeJS.ProcessEnv;
 }
 
 let repo = '';
-let env: NodeJS.ProcessEnv = {};
+let env = {} as NodeJS.ProcessEnv;
 function git(...args: string[]) {
   const real = fs.realpathSync(repo);
   if (!real.startsWith(fs.realpathSync(os.tmpdir())) || real === fs.realpathSync(REPO_ROOT)) {
