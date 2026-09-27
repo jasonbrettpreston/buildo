@@ -1,0 +1,88 @@
+{
+  "contract_version": 1,
+  "step": "load_centreline",
+  "source": "docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md §9(a)-(e) and §7",
+  "note": "Every entry transcribes a diff class already adjudicated in the committed assessment report. Keys are listed in the form normaliseDiffKey collapses to (array indices -> []). contract_version 1; the gate requires why.length >= 20.",
+  "diffs": [
+    {
+      "key": "meta[].external[]",
+      "why": "§9(e): the descriptor's own external id 'ckan:toronto-centreline-tcl-shp' replaces the legacy's generic literal \"CKAN\"; deriveMeta renders the same descriptor fact the legacy hard-coded."
+    },
+    {
+      "key": "meta[].reads.ckan:toronto-centreline-tcl-shp",
+      "why": "§9(e): deriveMeta holds that an external is not also a read, so meta[0].reads is {} rather than the legacy's hard-coded map {\"ckan:toronto-centreline-tcl-shp\": []}."
+    },
+    {
+      "key": "meta[].writes.toronto_centreline[]",
+      "why": "§9(e): the same 20 write columns in a different declared order — created_at (the db_default column, listed last) and updated_at swap; deriveMeta iterates declaration order."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "§7 row 7: standalone's own ledger row — DB-assigned serial id plus wall-clock started_at/completed_at, the declared per-run non-determinism that the capture masks."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "§9(d): the two legacy config-loader lines are gone (LC-D3, config now resolves through ctx.config) and the completion tag changed from [load-centreline] to [load_centreline]."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "§9(b): the declared checks now push PASS/INFO rows at 0/false (ravines Fold D), so 11 rows the legacy emitted only conditionally are always present and rows[0]-rows[8] reorder."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "§9(b): sub-field of the additive audit rows — metric only exists on the 11 newly-always-emitted declared-check rows (and the index shift they cause), not on legacy's conditional subset."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "§9(b): sub-field of the additive audit rows — source:\"check\" is only set on the declared-check rows the converted runner always emits, so it is absent on the legacy rows."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "§9(b): sub-field of the additive audit rows — status is present on every declared-check row (PASS/INFO/WARN) whereas the legacy pushed a conditional subset with a narrower set."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "§9(b): sub-field of the additive audit rows — threshold (e.g. \"viol == 0\", \"pct <= 0.5\") is rendered on the declared-check rows the legacy never emitted, so it exists only on the new rows."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "§9(b): sub-field of the additive audit rows — value appears on the 11 newly-always-emitted declared-check rows and on the index-shifted legacy rows as the same declared metric moves position."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary; there is no legacy pipeline.run() equivalent for a failed-check count."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary; the legacy summary had no warned-check counter at all."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary — the resolved logic_variables block, with no legacy equivalent (config resolution moved to ctx.config, LC-D3)."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary — the pre-write gate's reason/gated_skip state, which the legacy pipeline.run() shape never carried."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary — chain_owned/owned ledger ownership, a runner concept the legacy step's own summary never exposed."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary — the pool-error count is a runner-level observability field with no legacy equivalent."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "§9(c): a library-derived key the runner adds to every converted step's summary — the aggregated warning strings (here the two unknown-code/jurisdiction WARNs) are not present on the legacy shape."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "§9(c): terminal=\"loaded_preserved_empty_guard\" is LC-D18 (pinned) — the library terminal-selection branch has no discriminator for which check warned, so it fell back to the only success terminal; observability-only."
+    },
+    {
+      "key": "summary.records_meta.centreline_load.features_deleted",
+      "why": "§9(a)/§7 row 4: equals the PRE-state row count (the DELETE rowCount), i.e. the previous run's table size — an inter-run coupling, not a genuine per-run drift."
+    }
+  ]
+}

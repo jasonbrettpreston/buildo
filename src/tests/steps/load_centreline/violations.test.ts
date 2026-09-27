@@ -55,6 +55,8 @@ const DESCRIPTOR_REL = 'scripts/load-centreline.descriptor.json';
 const COMPUTE_REL = 'scripts/lib/compute/load-centreline.js';
 const RECORDS_REL = `${STEP_DIR_REL}/fixtures/centreline-records.json`;
 const SEED_REL = 'scripts/seeds/logic_variables.json';
+/** Gate G8's explanation channel for this step's PRE/POST diff set (Spec 124 §5 R-BA gate G). */
+const EXPLAINED_DIFFS_REL = 'docs/reports/golden/load_centreline/explained-diffs.json';
 
 /** Spec 62 L4 / Spec 47 §A.5 — 65 collided with enrich-parcels, 63 is the next free gap [READ load-centreline.js:41]. */
 const LOCK_ID = 63;
@@ -732,5 +734,36 @@ describe('row 3.2 — LC-D1/LC-D2: no geometry_update / mass_delete check, and t
     const d = loadDescriptor();
     expect(checkById(d, 'centreline_duplicate_centreline_id_count').severity, 'the loader WARNS and dedupeBySourceId keeps the FIRST [READ load-centreline.js:204-215, :516]').toBe('WARN');
     expect(checkById(d, 'centreline_bad_centreline_id_count').severity, 'a bad CENTREL2 is a counted loss, not a run-stopper [READ load-centreline.js:509]').toBe('WARN');
+  });
+});
+
+// ===========================================================================
+// 9. Gate G8 — the PRE/POST diff set is explained by a committed
+//    `explained-diffs.json` (Spec 124 §5 R-BA gate G; Spec 123 §6 G8)
+// ===========================================================================
+
+describe('row 3.2 — gate G8: explained-diffs.json is well-formed (contract_version 1, every why >= 20 chars)', () => {
+  interface ExplainedDoc { contract_version?: number; diffs?: Array<{ key?: unknown; why?: unknown }> }
+
+  function explained(): ExplainedDoc {
+    // was RED at ①: MISSING ARTIFACT docs/reports/golden/load_centreline/explained-diffs.json
+    return JSON.parse(readText(EXPLAINED_DIFFS_REL)) as ExplainedDoc;
+  }
+
+  it('parses, declares contract_version 1, and carries a non-empty diffs[] array', () => {
+    const d = explained();
+    expect(d.contract_version, 'the gate reads `{contract_version:1, diffs:[...]}` — a mis-versioned doc is `explained:malformed`').toBe(1);
+    expect(Array.isArray(d.diffs), 'diffs must be an array').toBe(true);
+    expect(d.diffs!.length, 'the measured PRE/POST diff set is 20 normalised keys — an empty ledger explains nothing').toBeGreaterThan(0);
+  });
+
+  it('every entry carries a string key and a why of at least 20 characters (the gate\'s `MIN_WHY_LEN`)', () => {
+    const d = explained();
+    for (const [i, entry] of d.diffs!.entries()) {
+      expect(typeof entry.key, `diffs[${i}].key must be a string`).toBe('string');
+      expect((entry.key as string).length, `diffs[${i}].key must not be empty`).toBeGreaterThan(0);
+      expect(typeof entry.why, `diffs[${i}].why must be a string`).toBe('string');
+      expect((entry.why as string).length, `diffs[${i}] (${String(entry.key)}) why is shorter than the 20-char gate minimum`).toBeGreaterThanOrEqual(20);
+    }
   });
 });
