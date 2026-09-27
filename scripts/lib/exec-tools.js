@@ -448,6 +448,42 @@ function checkReadBeforeWrite(absPath, relPosix, runState, requireExisting) {
   return null;
 }
 
+function countLines(text) {
+  if (text === '') return 0;
+  const n = text.split('\n').length;
+  return text.endsWith('\n') ? n - 1 : n;
+}
+
+/**
+ * Engine fence F2 (2026-09-27, §C.2) — a whole-file overwrite of an EXISTING
+ * file is the one write that can silently drop content the model never saw
+ * (a windowed read_file, a truncated regeneration). Over
+ * `policy.write_file_max_existing_lines` lines the model must use edit_file
+ * (`WRITE_TOO_LARGE_USE_EDIT`); below `policy.write_file_min_retained_ratio`
+ * of the old byte size the write is refused as a shrink (`WRITE_SHRINK`).
+ * Returns null when allowed, else a blocked toolResult carrying
+ * `error.detail = { old_bytes, old_lines, new_bytes }` for the ledger. A
+ * missing/invalid key THROWS (the dispatch catch-all turns it into a
+ * HANDLER_FAULT record) — never a silently-disabled fence; the engine entry
+ * already refuses such a policy with POLICY_INVALID (F-DS9).
+ */
+function checkWriteShrink(absPath, relPosix, newBytes, policy) {
+  const maxLines = policy && policy.write_file_max_existing_lines;
+  const minRatio = policy && policy.write_file_min_retained_ratio;
+  if (!Number.isInteger(maxLines) || typeof minRatio !== 'number') {
+    throw new Error('exec-policy.json write_file_max_existing_lines / write_file_min_retained_ratio missing or invalid (POLICY_INVALID)');
+  }
+  const old = fs.readFileSync(absPath);
+  const detail = { old_bytes: old.length, old_lines: countLines(old.toString('utf8')), new_bytes: newBytes };
+  if (detail.old_lines > maxLines) {
+    return { ok: false, error: { code: 'WRITE_TOO_LARGE_USE_EDIT', message: `${relPosix} has ${detail.old_lines} lines, over the ${maxLines}-line write_file cap for an existing file; use edit_file for targeted changes`, detail } };
+  }
+  if (newBytes < minRatio * detail.old_bytes) {
+    return { ok: false, error: { code: 'WRITE_SHRINK', message: `${relPosix} would shrink from ${detail.old_bytes} to ${newBytes} bytes, under ${minRatio} of its size; use edit_file, or state the deletion in a brief Claude executes`, detail } };
+  }
+  return null;
+}
+
 // §C.2 write_file — full overwrite; read-before-write + staleness (§C.1.6)
 // gate an EXISTING file, a new file needs no prior read. Pre/post worktree
 // capture (§C.3, F10) brackets the actual fs.writeFileSync call.
@@ -508,6 +544,13 @@ async function writeFileHandler(args, ctx) {
       pre,
       post: captureWorktree(repoRoot),
     };
+  }
+  // Engine fence F2 — existing files only; a new file has nothing to lose.
+  if (fs.existsSync(absPath)) {
+    const shrinkBlock = checkWriteShrink(absPath, relPosix, bytes, policy);
+    if (shrinkBlock) {
+      return { toolResult: shrinkBlock, pre, post: captureWorktree(repoRoot) };
+    }
   }
 
   const created = !fs.existsSync(absPath);

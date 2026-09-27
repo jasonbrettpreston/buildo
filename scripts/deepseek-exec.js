@@ -61,6 +61,8 @@ const BLOCKED_CODES = new Set([
   // spawnSync capture, and the commit-message format check.
   'HANDLER_FAULT', 'NOT_FOUND', 'IS_DIRECTORY', 'PERMISSION_DENIED',
   'INDEX_DIRTY', 'STAGE_MISMATCH', 'OUTPUT_TOO_LARGE', 'MESSAGE_FORMAT',
+  // Engine fence F2 (2026-09-27) — write_file on an existing file.
+  'WRITE_TOO_LARGE_USE_EDIT', 'WRITE_SHRINK',
 ]);
 
 function sha256Hex(content) {
@@ -79,6 +81,9 @@ const REQUIRED_POLICY_KEYS = [
   // Engine fence F1 (2026-09-27) — §C.1.10's consecutive malformed-call
   // allowance; a non-negative integer (type-checked below).
   'malformed_tool_call_retry_max',
+  // Engine fence F2 (2026-09-27) — write_file on an existing file: a
+  // positive-integer line cap and a [0, 1] retained-size ratio.
+  'write_file_max_existing_lines', 'write_file_min_retained_ratio',
 ];
 
 class PolicyInvalidError extends Error {
@@ -103,6 +108,14 @@ function validatePolicyShape(policy) {
   const retryMax = policy.malformed_tool_call_retry_max;
   if (!Number.isInteger(retryMax) || retryMax < 0) {
     throw new PolicyInvalidError(`exec-policy.json malformed_tool_call_retry_max must be a non-negative integer, got ${JSON.stringify(retryMax)}`);
+  }
+  const maxLines = policy.write_file_max_existing_lines;
+  if (!Number.isInteger(maxLines) || maxLines < 1) {
+    throw new PolicyInvalidError(`exec-policy.json write_file_max_existing_lines must be a positive integer, got ${JSON.stringify(maxLines)}`);
+  }
+  const minRatio = policy.write_file_min_retained_ratio;
+  if (typeof minRatio !== 'number' || !(minRatio >= 0 && minRatio <= 1)) {
+    throw new PolicyInvalidError(`exec-policy.json write_file_min_retained_ratio must be a number in [0, 1], got ${JSON.stringify(minRatio)}`);
   }
 }
 
