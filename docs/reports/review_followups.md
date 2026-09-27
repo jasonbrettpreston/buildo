@@ -3,6 +3,21 @@ _Generated following the Pipeline Clean-up Mandate. Trimmed 2026-05-05 — full 
 
 ---
 
+## 2026-09-27 — engine-fence panel residue (wf2/engine-fence)
+
+Source: the WF2 engine-fence output panel (DeepSeek security lens on `scripts/deepseek-exec.js` + `scripts/lib/exec-tools.js`, grounded by Claude; Integration seat). Fixed on the branch: F1–F5, F4b, the prototype-key crash, sibling fence-module self-protection, G1–G4. Filed here by orchestrator ruling:
+
+| Severity | Item | Disposition |
+|----------|------|--------------|
+| LOW | **Provider-downgrade stderr line is not redacted.** `deepseek-exec.js` writes `provider downgraded to claude (${reason})` straight to stderr; `resolveProvider` embeds the raw `--provider`/`EXECUTION_PROVIDER` value in that reason (the CLI `.catch` redacts, this line does not). GROUNDED (read). | **DEFER — engine v1.1.** Wrap in `redact()`, or hash/omit the offending value. |
+| LOW | **`edit_file` has no size cap.** `write_file` enforces `limits.write_max_bytes`; `edit_file` (esp. `replace_all`) can grow a file without bound. GROUNDED (read). | **DEFER — engine v1.1.** Apply the same cap to the post-edit content. |
+| MED (plausible) | **Committer-lock reclaim race.** `acquireCommitterLock` reclaims a stale lock by unlink-then-create; two engines observing the same stale lock can interleave so both hold it. Not executed. | **DEFER — measure first.** Reclaim by rename / re-read-and-compare before unlink. |
+| MED (plausible) | **A hook failure after `git add` leaves the paths staged**, so every later `git_commit` in the run returns `INDEX_DIRTY` with no allowlisted recovery. Not executed. | **DEFER — measure first.** On any post-add failure, `git reset -q -- <our paths>` (safe: the pre-add index was verified empty). |
+| MED | **A windowed `read_file` still licenses a full `write_file`.** `readState` records the whole-file sha256, so reading 10 lines permits overwriting the file; F2's retained-ratio check is the only guard (a padded rewrite passes it). | **DEFER.** Record the covered line range and refuse a full overwrite after a windowed read (or require `limit ≥ lines_total`). |
+| MED | **No case folding on Windows** in self-protection / `registry_reserved` / `claude_only_globs` / secret-glob comparisons, nor in `readState`/`writtenPaths` keys. Whether `Scripts/Lib/Exec-Tools.js` reaches the denylisted inode depends on `resolveConfinedPath`'s realpath behaviour — UNVERIFIED. | **DEFER — measure first** (probe a case-variant write on win32). |
+| LOW | **System-map side effect of the F5 parity lock.** Spec 08 §C.6.2 now spells out every `claude_only_globs` literal, and `npm run system-map` harvests every backticked `src/` path, so Spec 08 appears to OWN `src/lib/builders/enrichment.ts`, `src/lib/builders/extract-contacts.ts`, `src/lib/admin/admin-audit.ts`, `src/lib/api/public-projections.ts` (Implementation column). Anything deriving a file's governing spec from the map is misled. | **DEFER.** Recommendation (note only): have the parity lock read a fenced list block that the system-map generator skips. |
+| MED | **`scripts/hooks/**` and the `scripts/analysis/*` validators the pre-commit hook runs are engine-writable**, and execute inside the engine's own `git_commit`. Not folded into self-protection: the engine legitimately edits both (e.g. the `wf2-gates-j-hooks` brief). | **CLOSED BY conversion-simplification item 11** (gate freeze + `registry_reserved`). |
+
 ## 2026-09-24 — engine + golden residue
 
 Source: DeepSeek execution-engine runs across today's INGESTOR-prerequisite batch (0p/0q/0r/0s) and the parcels ③ cutover golden capture — residue noticed while finishing prerequisite 0s (`coerceKey` receives geojson), not fixed here (library/tooling/data-hygiene items, out of 0s's `write_scope`).
