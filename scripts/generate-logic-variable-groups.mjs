@@ -495,7 +495,9 @@ const GROUP_ORDER = [
       "load_centreline_invalid_geometry_fail_pct",
       "load_centreline_download_timeout_ms",
       "load_centreline_download_retries",
-      "load_centreline_download_retry_backoff_ms"
+      "load_centreline_download_retry_backoff_ms",
+      "load_centreline_round_scale",
+      "load_centreline_max_detail_keys"
     ]
   },
   {

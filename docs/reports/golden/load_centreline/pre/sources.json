@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-centreline.js",
   "chain": "sources",
-  "git_head": "b4913395e66bb3f7f9c15127e27f122f296eba18",
+  "git_head": "1476e4884bc3ed69877f112f66c1e25e6bbacc46",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -23,7 +23,7 @@
           },
           {
             "metric": "centreline_dataset_age_days",
-            "value": 0,
+            "value": 1,
             "status": "INFO"
           },
           {
@@ -58,18 +58,18 @@
           },
           {
             "metric": "centreline_features_deleted",
-            "value": 47363,
+            "value": 47320,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 587.64,
+            "value": 1060.42,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 80525,
+            "value": 44624,
             "threshold": null,
             "status": "INFO"
           }
@@ -77,10 +77,10 @@
       },
       "centreline_load": {
         "spec_version": "1.1",
-        "source_dataset_version": "f9a9adfc0ca5ddaa726b622635927197",
-        "last_modified": "Thu, 24 Sep 2026 18:14:56 GMT",
-        "etag": "\"1790273696.272-117702225-1305219654\"",
-        "content_hash": "f9a9adfc0ca5ddaa726b622635927197",
+        "source_dataset_version": "af9ab187945e2f9c55a1ca620109a381",
+        "last_modified": "Fri, 25 Sep 2026 18:14:55 GMT",
+        "etag": "\"1790360095.532-117702225-1305219654\"",
+        "content_hash": "af9ab187945e2f9c55a1ca620109a381",
         "feature_count_raw": 64385,
         "feature_count_filtered": 47320,
         "filtered_out_non_street": 17065,
@@ -89,7 +89,7 @@
         "unknown_jurisdiction_count": 97,
         "features_inserted": 47320,
         "features_updated": 0,
-        "features_deleted": 47363,
+        "features_deleted": 47320,
         "invalid_geometry_skipped": 0,
         "delete_skipped_empty_guard": false,
         "f_c1_empty_temp_guard_fired": false,
@@ -135,15 +135,15 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[source-centreline]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[source-centreline]\",\"msg\":\"Loaded 608 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":47320,\"records_new\":47320,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":63,\"name\":\"Toronto Centreline\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"status\":\"INFO\"},{\"metric\":\"centreline_dataset_age_days\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"centreline_feature_count_raw\",\"value\":64385,\"status\":\"INFO\"},{\"metric\":\"centreline_unknown_feature_code_count\",\"value\":1,\"status\":\"WARN\"},{\"metric\":\"centreline_unknown_jurisdiction_count\",\"value\":97,\"status\":\"WARN\"},{\"metric\":\"centreline_feature_count_filtered\",\"value\":47320,\"status\":\"INFO\"},{\"metric\":\"centreline_geometry_skipped_pct\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"centreline_features_inserted\",\"value\":47320,\"status\":\"INFO\"},{\"metric\":\"centreline_features_deleted\",\"value\":47363,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":587.64,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":80525,\"threshold\":null,\"status\":\"INFO\"}]},\"centreline_load\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"f9a9adfc0ca5ddaa726b622635927197\",\"last_modified\":\"Thu, 24 Sep 2026 18:14:56 GMT\",\"etag\":\"\\\"1790273696.272-117702225-1305219654\\\"\",\"content_hash\":\"f9a9adfc0ca5ddaa726b622635927197\",\"feature_count_raw\":64385,\"feature_count_filtered\":47320,\"filtered_out_non_street\":17065,\"filtered_out_federal\":0,\"unknown_feature_code_count\":1,\"unknown_jurisdiction_count\":97,\"features_inserted\":47320,\"features_updated\":0,\"features_deleted\":47363,\"invalid_geometry_skipped\":0,\"delete_skipped_empty_guard\":false,\"f_c1_empty_temp_guard_fired\":false,\"drift_check_passed\":true}}}\nPIPELINE_META:{\"reads\":{\"ckan:toronto-centreline-tcl-shp\":[]},\"writes\":{\"toronto_centreline\":[\"source_id\",\"geom\",\"linear_name_full\",\"linear_name\",\"linear_name_type\",\"linear_name_dir\",\"feature_code_desc\",\"jurisdiction\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"lo_num_r\",\"hi_num_r\",\"parity_l\",\"parity_r\",\"oneway_dir_code_desc\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"CKAN\"]}\n\n[load-centreline] completed in 80.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[source-centreline]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[source-centreline]\",\"msg\":\"Loaded 623 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":47320,\"records_new\":47320,\"records_updated\":0,\"records_meta\":{\"audit_table\":{\"phase\":63,\"name\":\"Toronto Centreline\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"status\":\"INFO\"},{\"metric\":\"centreline_dataset_age_days\",\"value\":1,\"status\":\"INFO\"},{\"metric\":\"centreline_feature_count_raw\",\"value\":64385,\"status\":\"INFO\"},{\"metric\":\"centreline_unknown_feature_code_count\",\"value\":1,\"status\":\"WARN\"},{\"metric\":\"centreline_unknown_jurisdiction_count\",\"value\":97,\"status\":\"WARN\"},{\"metric\":\"centreline_feature_count_filtered\",\"value\":47320,\"status\":\"INFO\"},{\"metric\":\"centreline_geometry_skipped_pct\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"centreline_features_inserted\",\"value\":47320,\"status\":\"INFO\"},{\"metric\":\"centreline_features_deleted\",\"value\":47320,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1060.42,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":44624,\"threshold\":null,\"status\":\"INFO\"}]},\"centreline_load\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"af9ab187945e2f9c55a1ca620109a381\",\"last_modified\":\"Fri, 25 Sep 2026 18:14:55 GMT\",\"etag\":\"\\\"1790360095.532-117702225-1305219654\\\"\",\"content_hash\":\"af9ab187945e2f9c55a1ca620109a381\",\"feature_count_raw\":64385,\"feature_count_filtered\":47320,\"filtered_out_non_street\":17065,\"filtered_out_federal\":0,\"unknown_feature_code_count\":1,\"unknown_jurisdiction_count\":97,\"features_inserted\":47320,\"features_updated\":0,\"features_deleted\":47320,\"invalid_geometry_skipped\":0,\"delete_skipped_empty_guard\":false,\"f_c1_empty_temp_guard_fired\":false,\"drift_check_passed\":true}}}\nPIPELINE_META:{\"reads\":{\"ckan:toronto-centreline-tcl-shp\":[]},\"writes\":{\"toronto_centreline\":[\"source_id\",\"geom\",\"linear_name_full\",\"linear_name\",\"linear_name_type\",\"linear_name_dir\",\"feature_code_desc\",\"jurisdiction\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"lo_num_r\",\"hi_num_r\",\"parity_l\",\"parity_r\",\"oneway_dir_code_desc\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"CKAN\"]}\n\n[load-centreline] completed in 44.6s\n",
   "stderr": "{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-centreline]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1991,
+  "pipeline_runs_max_id_before": 2024,
   "table_state": [
     {
       "table": "toronto_centreline",
       "row_count": 47320,
-      "content_hash": "b5ccf0ee574fd4ce82ab7a66ce834108",
+      "content_hash": "4cb7efcddf7ca4ab8bf92a902fc9902b",
       "order_by": "explicit",
       "order_columns": [
         "source_id"
@@ -173,7 +173,7 @@
   "tables_source": "arg",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "toronto_centreline": 489
+    "toronto_centreline": 396
   },
   "table_specs": {
     "toronto_centreline": {
@@ -226,7 +226,7 @@
       "value": "0"
     }
   ],
-  "invariants_file": "docs/reports/golden/load_centreline/invariants.json",
+  "invariants_file": "C:/Users/User/buildo-centreline/docs/reports/golden/load_centreline/invariants.json",
   "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
@@ -253,7 +253,7 @@
             {
               "metric": "centreline_dataset_age_days",
               "status": "INFO",
-              "value": 0
+              "value": 1
             },
             {
               "metric": "centreline_feature_count_raw",
@@ -288,27 +288,27 @@
             {
               "metric": "centreline_features_deleted",
               "status": "INFO",
-              "value": 47363
+              "value": 47320
             }
           ],
           "verdict": "WARN"
         },
         "centreline_load": {
-          "content_hash": "f9a9adfc0ca5ddaa726b622635927197",
+          "content_hash": "af9ab187945e2f9c55a1ca620109a381",
           "delete_skipped_empty_guard": false,
           "drift_check_passed": true,
-          "etag": "\"1790273696.272-117702225-1305219654\"",
+          "etag": "\"1790360095.532-117702225-1305219654\"",
           "f_c1_empty_temp_guard_fired": false,
           "feature_count_filtered": 47320,
           "feature_count_raw": 64385,
-          "features_deleted": 47363,
+          "features_deleted": 47320,
           "features_inserted": 47320,
           "features_updated": 0,
           "filtered_out_federal": 0,
           "filtered_out_non_street": 17065,
           "invalid_geometry_skipped": 0,
-          "last_modified": "Thu, 24 Sep 2026 18:14:56 GMT",
-          "source_dataset_version": "f9a9adfc0ca5ddaa726b622635927197",
+          "last_modified": "Fri, 25 Sep 2026 18:14:55 GMT",
+          "source_dataset_version": "af9ab187945e2f9c55a1ca620109a381",
           "spec_version": "1.1",
           "unknown_feature_code_count": 1,
           "unknown_jurisdiction_count": 97
@@ -357,7 +357,7 @@
     "pipeline_runs": [],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[source-centreline]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Loaded 608 logic variables from control panel\",\"tag\":\"[source-centreline]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 623 logic variables from control panel\",\"tag\":\"[source-centreline]\"}",
       "[load-centreline] completed in <DUR>"
     ],
     "table_state": [
@@ -382,7 +382,7 @@
           "oneway_dir_code_desc",
           "source_dataset_version"
         ],
-        "content_hash": "b5ccf0ee574fd4ce82ab7a66ce834108",
+        "content_hash": "4cb7efcddf7ca4ab8bf92a902fc9902b",
         "order_by": "explicit",
         "order_columns": [
           "source_id"
@@ -416,5 +416,6 @@
   },
   "source_fingerprint": null,
   "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet"
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "e011cea9d909dd7da68a5133e155bbfdd2add38674d024bcd405d390d73a1cdb"
 }

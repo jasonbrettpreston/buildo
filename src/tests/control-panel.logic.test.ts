@@ -513,6 +513,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // is knowingly RETIRED, never seeded (assert_data_bounds owns the floor).
   'load_centreline_dataset_age_warn_days', 'load_centreline_count_drift_fail_pct', 'load_centreline_invalid_geometry_fail_pct',
   'load_centreline_download_timeout_ms', 'load_centreline_download_retries', 'load_centreline_download_retry_backoff_ms',
+  // WF2 row 3.2 gate E (2026-09-26, McDonald's Airtight, engine brief c3e) — ROUND_SCALE and
+  // MAX_DETAIL_KEYS moved out of the compute module to satisfy compute-no-module-numeric-const;
+  // both are verdict-neutral display knobs (on_invalid: clamp), never a pass/fail bound.
+  'load_centreline_round_scale', 'load_centreline_max_detail_keys',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

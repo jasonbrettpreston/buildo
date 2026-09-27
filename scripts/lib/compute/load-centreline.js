@@ -34,20 +34,14 @@
 'use strict';
 
 const { safeParseIntOrNull } = require('../safe-math');
-
-/** Milliseconds per day. */
-const MS_PER_DAY = 86400000;
-/** Display precision of the ratio values in the audit rows; never compared against anything. */
-const ROUND_SCALE = 1000;
-/**
- * LC-D15 — how many dropped source ids ONE audit row carries in its detail.
- *
- * Structural, not a P4 tunable: it is a display bound, compared against nothing. The
- * bound that decides pass/fail is `load_centreline_invalid_geometry_fail_pct`, and it is
- * computed from the FULL skipped count, never from the truncated list. (The ravines
- * LR-D1 shape.)
- */
-const MAX_DETAIL_KEYS = 50;
+// Gate E closed answer #3 (Spec 124 §5 R-BA): a pure unit conversion's ONE home is
+// scripts/lib/units.js — MS_PER_DAY is a duration DEFINITION (24 h x 60 min x 60 s x
+// 1000 ms), never a policy knob and never a literal in a compute. The display bound
+// (was MAX_DETAIL_KEYS) and the ratio display precision (was ROUND_SCALE) are NOT unit
+// conversions: they are operator-editable logic variables read from `ctx.config`
+// (`load_centreline_max_detail_keys`, `load_centreline_round_scale`), because a step IN
+// DEVELOPMENT carries no ledger row of any disposition (R-BA in-development scope).
+const { MS_PER_DAY } = require('../units');
 
 // ===========================================================================
 // L25 feature-type + jurisdiction filter sets (all lowercase; values normalized
@@ -205,8 +199,14 @@ function datasetAgeStatus(ageDays, thresholdDays) {
   return ageDays > thresholdDays ? 'WARN' : 'INFO';
 }
 
-function round3(n) {
-  return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
+/**
+ * Display precision of a ratio: round to `scale` decimals' worth of places, then back.
+ * `scale` is the operator-editable `load_centreline_round_scale` (default 1000 = 3 dp),
+ * threaded in by the caller — never a literal here (gate E; the value is compared
+ * against nothing, it only shapes what the audit row prints).
+ */
+function round3(n, scale) {
+  return Math.round(n * scale) / scale;
 }
 
 // ===========================================================================
@@ -425,7 +425,7 @@ function centreline_feature_count_filtered(ctx) {
  */
 function centreline_count_drift_pct(ctx) {
   const pct = computeCountDeltaPct(filteredCount(ctx.acquired), priorFiltered(ctx));
-  ctx.report('centreline_count_drift_pct', { value: pct, detail: round3(pct) });
+  ctx.report('centreline_count_drift_pct', { value: pct, detail: round3(pct, ctx.config.load_centreline_round_scale) });
 }
 
 /**
@@ -439,15 +439,21 @@ function centreline_geometry_skipped_pct(ctx) {
   const total = filteredCount(a);
   const pct = total > 0 ? (a.invalid_geometry_skipped || 0) / total : 0;
   // LC-D15 — the dropped keys travel in ONE row's detail, capped, with the FULL count
-  // beside them (the ravines LR-D1 shape).
+  // beside them (the ravines LR-D1 shape). The cap is the operator-editable
+  // `load_centreline_max_detail_keys`, and the ratio's display precision the
+  // operator-editable `load_centreline_round_scale` — neither is a literal here
+  // (gate E; the pass/fail bound is `load_centreline_invalid_geometry_fail_pct`,
+  // computed from `dropped.length`, never from the truncated list).
+  const maxDetailKeys = ctx.config.load_centreline_max_detail_keys;
+  const scale = ctx.config.load_centreline_round_scale;
   const dropped = a.skipped_keys || [];
   ctx.report('centreline_geometry_skipped_pct', {
     value: pct,
-    detail: dropped.length === 0 ? round3(pct) : {
-      pct: round3(pct),
+    detail: dropped.length === 0 ? round3(pct, scale) : {
+      pct: round3(pct, scale),
       dropped_count: dropped.length,
-      dropped_source_ids: dropped.slice(0, MAX_DETAIL_KEYS),
-      dropped_ids_truncated: dropped.length > MAX_DETAIL_KEYS,
+      dropped_source_ids: dropped.slice(0, maxDetailKeys),
+      dropped_ids_truncated: dropped.length > maxDetailKeys,
     },
   });
 }
@@ -719,5 +725,3 @@ module.exports.STREET_CLASS_EXCLUDE = STREET_CLASS_EXCLUDE;
 module.exports.UNKNOWN_FEATURE_SENTINEL = UNKNOWN_FEATURE_SENTINEL;
 module.exports.DBF = DBF;
 module.exports.REQUIRED_DBF_FIELDS = REQUIRED_DBF_FIELDS;
-// LC-D15's display bound, exported so its lock reads the real number rather than 50.
-module.exports.MAX_DETAIL_KEYS = MAX_DETAIL_KEYS;

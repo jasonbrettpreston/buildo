@@ -504,7 +504,8 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - `scripts/quality/assert-entity-tracing.js` (centreline_* fields to coverage grid)
 - `scripts/quality/assert-global-coverage.js` (`parcels.is_corner_lot` coverage threshold)
 - `scripts/manifest.json` (chain arrays updated)
-- `scripts/seeds/logic_variables.json` (**[as-built ②]** 6 `load_centreline_*` keys per §12.3a — ~~5 keys~~ *(superseded, LC-D3)*)
+- `scripts/seeds/logic_variables.json` (**[as-built ②]** 8 `load_centreline_*` keys per §12.3a — ~~5 keys~~ *(superseded, LC-D3)* — **[as-built C2, gate E]** +2: `load_centreline_round_scale`, `load_centreline_max_detail_keys`)
+- `scripts/lib/units.js` (**[as-built C2]** read-only: `MS_PER_DAY` for the dataset-age WARN — Spec 124 §5 R-BA gate E closed answer #3)
 - `src/tests/load-centreline.{logic,infra}.test.ts`, `src/tests/enrich-centreline.{logic,infra}.test.ts`, `src/tests/db/migration-N-centreline.db.test.ts`
 - `docs/runbook/source_centreline_first_deploy_validation.md` (NOT §3.7 ledger-writer spike per L21; 7-day post-deploy convergence pattern)
 
@@ -1201,7 +1202,7 @@ at all (MEASURED grep, zero call sites) and is KNOWINGLY RETIRED, not renamed: t
 floor it would have carried already lives in `sources_centreline_floor`
 (`assert-data-bounds.js`). `centrelineSkipCheckThresholdDays` is renamed
 `load_centreline_dataset_age_warn_days` (same 7-day default). The as-built loader's
-six knobs, all registered `logic_variables[]` under `scripts/load-centreline.descriptor.json`
+eight knobs, all registered `logic_variables[]` under `scripts/load-centreline.descriptor.json`
 `config.logic_variables` and seeded in `scripts/seeds/logic_variables.json`:
 
 ```json
@@ -1211,9 +1212,19 @@ six knobs, all registered `logic_variables[]` under `scripts/load-centreline.des
   "load_centreline_invalid_geometry_fail_pct":   0.05,
   "load_centreline_download_timeout_ms":         600000,
   "load_centreline_download_retries":            2,
-  "load_centreline_download_retry_backoff_ms":   0
+  "load_centreline_download_retry_backoff_ms":   0,
+  "load_centreline_round_scale":                 1000,
+  "load_centreline_max_detail_keys":             50
 }
 ```
+
+**[as-built C2, gate E]** The two additions above are both verdict-neutral DISPLAY
+knobs, so a malformed value is clamped (`on_invalid: clamp`) rather than failed:
+`load_centreline_round_scale` (default 1000, min 1, max 100000) sets the display
+rounding of the drift/geometry-skipped ratio `detail`, and
+`load_centreline_max_detail_keys` (default 50, min 1, max 1000) caps the
+dropped-source-id list in the geometry-skipped row (LC-D15, ravines LR-D1) — the
+pass/fail decision still reads the FULL skipped count, never the truncated list.
 
 `load_centreline_download_retries`/`_backoff_ms` are NEW knobs (0q, INGESTOR
 prerequisite): the legacy loader retried downloads 3 times with no configurable

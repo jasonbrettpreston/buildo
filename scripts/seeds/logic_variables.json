@@ -5147,6 +5147,26 @@
       "group": "Source Ingestion"
     }
   },
+  "load_centreline_round_scale": {
+    "default": 1000,
+    "type": "number",
+    "min": 1,
+    "max": 100000,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) / Spec 124 §5 R-BA gate E — DISPLAY precision of the ratio values in the audit rows (round to `scale` decimals' worth of places, then back: Math.round(n * scale) / scale). 1000 = the pre-externalization module-level literal `ROUND_SCALE` in scripts/lib/compute/load-centreline.js, carried byte-for-byte as the default. The value is compared against NOTHING — it shapes only what the audit row prints, never a PASS/FAIL — so a malformed value is clamped rather than failed (R-G / Rule 3: `on_invalid: \\\"fail\\\"` is mandatory only on verdict-affecting bounds). It is NOT a unit conversion, so it does not belong in scripts/lib/units.js. CONSUMED by load_centreline (scripts/lib/compute/load-centreline.js round3, via ctx.config, on centreline_count_drift_pct and centreline_geometry_skipped_pct). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_centreline_max_detail_keys": {
+    "default": 50,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "Spec 124 Rule 3 (row 3.2, INGESTOR) / Spec 124 §5 R-BA gate E — LC-D15: how many dropped source ids ONE audit row carries in its detail (the ravines LR-D1 shape, whose own cap was the pre-externalization literal MAX_DETAIL_KEYS = 50). 50 = that literal, carried byte-for-byte as the default. It is a DISPLAY bound, compared against nothing: the bound that decides pass/fail is `load_centreline_invalid_geometry_fail_pct`, and it is computed from the FULL skipped count (dropped_count), never from the truncated list, with `dropped_ids_truncated` beside them so the reader is never misled about how much was lost. Verdict-neutral, so a malformed value is clamped rather than failed (R-G / Rule 3). CONSUMED by load_centreline (scripts/lib/compute/load-centreline.js centreline_geometry_skipped_pct, via ctx.config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "load_centreline_download_retry_backoff_ms": {
     "default": 0,
     "type": "number",

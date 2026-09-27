@@ -83,7 +83,12 @@ const LOAD_META_KEYS_18 = [
   'features_inserted', 'features_updated', 'features_deleted', 'invalid_geometry_skipped',
   'delete_skipped_empty_guard', 'f_c1_empty_temp_guard_fired', 'drift_check_passed',
 ];
-/** Rule 3 literal ledger (assessment report §6) — the SIX variables this row externalizes, with their seed defaults. */
+/**
+ * Rule 3 literal ledger (assessment report §6) — the EIGHT variables this row externalizes, with
+ * their seed defaults, PLUS the two gate E (McDonald's Airtight, engine brief c3e, 2026-09-26)
+ * additions that moved ROUND_SCALE/MAX_DETAIL_KEYS out of the compute module to satisfy
+ * compute-no-module-numeric-const. Both are verdict-neutral display knobs (on_invalid: clamp).
+ */
 const CONFIG_VARS: Record<string, number> = {
   load_centreline_dataset_age_warn_days: 7,
   load_centreline_count_drift_fail_pct: 0.5,
@@ -91,6 +96,8 @@ const CONFIG_VARS: Record<string, number> = {
   load_centreline_download_timeout_ms: 600000,
   load_centreline_download_retries: 2,
   load_centreline_download_retry_backoff_ms: 0,
+  load_centreline_round_scale: 1000,
+  load_centreline_max_detail_keys: 50,
 };
 
 // ---------------------------------------------------------------------------
@@ -661,7 +668,7 @@ describe('row 3.2 — buildLoadMeta reproduces the frozen §9 producer block (lo
 // ===========================================================================
 
 describe('row 3.2 — Rule 3 literal ledger (report §6): logic_variables ⊇ the six, no bare compute literals', () => {
-  it('the descriptor declares all SIX variables with the report §6 bounds and on_invalid postures', () => {
+  it('the descriptor declares all EIGHT variables with the report §6 bounds and on_invalid postures', () => {
     // was RED at ①: MISSING ARTIFACT scripts/load-centreline.descriptor.json
     const d = loadDescriptor();
     expect(d.config, 'a step with externalized literals may not declare config:"none"').not.toBe('none');
