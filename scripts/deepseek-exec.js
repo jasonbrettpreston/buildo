@@ -635,7 +635,13 @@ async function runEngine(opts = {}) {
         // redacted here too or a secret the model echoes back would survive
         // unredacted for every subsequent turn's prompt.
         content: redact(turn.message.content ?? null),
-        tool_calls: toolCalls,
+        // Engine hardening G1 (DeepSeek security lens, 2026-09-27): the
+        // model's own tool-call ARGUMENTS are re-fed too, so they pass the
+        // same redaction. A COPY — the calls below still dispatch on the raw
+        // arguments (redacting them would corrupt e.g. write_file content).
+        tool_calls: toolCalls.map((c) => (c && c.function && typeof c.function.arguments === 'string'
+          ? { ...c, function: { ...c.function, arguments: redact(c.function.arguments) } }
+          : c)),
       });
 
       // Step 9 panel fold, F-DS15 — "model finished" is evaluated BEFORE the
