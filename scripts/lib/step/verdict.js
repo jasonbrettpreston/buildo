@@ -143,7 +143,8 @@ function resolveWarnLimit(check, config) {
  * `pop`/`ratio` are NOT silently tolerated: they return `unevaluable`, which
  * resolves to the declared severity upstream.
  *
- * ⚠️ `pct` READS `observation.value`, NOT a violation count. A percentage check
+ * ⚠️ `pct` READS `observation.value`, NOT a violation count — ENFORCED since Q1
+ * (2026-09-28): `violations` is never read by this arm. A percentage check
  * reports the measured ratio itself, so `violations` is left undefined and the row's
  * rendered value is the ratio. Reporting BOTH would make the bound compare against
  * a 0/1 flag while the row displayed a ratio — a threshold column that does not
@@ -167,9 +168,14 @@ function evaluateLimit(limit, observation) {
 
   const pct = typeof limit === 'string' ? limit.match(PCT_RE) : null;
   if (pct) {
-    if (measured === null) return { unevaluable: 'check reported no numeric ratio' };
+    // Q1 (skip-rate WF3, 2026-09-28): a 0/1 flag reported as violations was
+    // compared to the percentage bound and always passed — this arm reads
+    // `observation.value` ONLY, so a flag is `unevaluable` at the declared severity.
+    // The message text is the pre-Q1 one, byte-for-byte: a pct check that already
+    // reported no ratio renders the same audit row it always did (golden-neutral).
+    if (!Number.isFinite(observation.value)) return { unevaluable: 'check reported no numeric ratio' };
     const bound = Number(pct[2]);
-    return { ok: pct[1] === '>=' ? measured >= bound : measured <= bound };
+    return { ok: pct[1] === '>=' ? observation.value >= bound : observation.value <= bound };
   }
 
   // R-T addendum (Ask 2, Fold A-4b) — value_min/value_max read observation.value
