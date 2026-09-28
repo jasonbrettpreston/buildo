@@ -21,8 +21,13 @@ if [ -n "$PARTIAL" ]; then
 fi
 MAX_BYTES=52428800  # 50 MB: GitHub warns at 50 MB and rejects at 100 MB
 BIG="$(git diff --cached --name-only --diff-filter=ACMR | while IFS= read -r f; do
-  s="$(git cat-file -s ":$f" 2>/dev/null || echo 0)"
-  [ "$s" -gt "$MAX_BYTES" ] && printf '%s (%s bytes)\n' "$f" "$s"
+  # --diff-filter=ACMR guarantees every listed path HAS an index entry, so the
+  # unreadable arm fires only on real corruption — and it fails CLOSED (blocked).
+  if s="$(git cat-file -s ":$f" 2>/dev/null)"; then
+    [ "$s" -gt "$MAX_BYTES" ] && printf '%s (%s bytes)\n' "$f" "$s"
+  else
+    printf '%s (size unreadable)\n' "$f"
+  fi
 done)"
 if [ -n "$BIG" ]; then
   echo "pre-commit: BLOCKED — staged file(s) over the 50 MB cap (GitHub rejects at 100 MB; history is never rewritten, so a big blob is permanent):"

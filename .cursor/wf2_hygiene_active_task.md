@@ -87,7 +87,7 @@ Greps: `git grep -n "hooksPath\|\"prepare\"" -- package.json .husky src/tests`; 
 ## Execution Plan (one commit each; one committer; order chosen so each commit is green in CI)
 - [ ] 0. `node scripts/ai-env-check.mjs`. Wait until no push/suite is running on this machine.
 - [x] 1. H4 track plans (secret grep first) → C2 green.
-- [x] 2. H5: C1 sort (test-only), then C3 POSIX kill (engine brief, Spec 08 sentence); `npm run test`. C4/C5 → append to `.cursor/wf3_test_db_suite_red_active_task.md` as clusters (its C7 owns making db-tests required).
+- [x] 2. H5: C1 sort (test-only), then C3 POSIX kill (engine brief, Spec 08 sentence); `npm run test`. C4/C5 → append to `.cursor/wf3_test_db_suite_red_active_task.md` as clusters (its C7 owns making db-tests required). **SUPERSEDED at implementation (orchestrator scope, 2026-09-27): C4 and C5 were FIXED on this branch (3d656b23, ed9943d2; 18/18 against a testcontainer), because `ci_green_for_sha` requires DB Integration Tests green — deferring them would have blocked every cloud dispatch.** Output panel (Guardian + Code Reviewer) folded: lessons.md `npx husky` line (HIGH), size-cap fail-closed (MED).
 - [ ] 3. (DEFERRED 2026-09-27 by orchestrator scope) H3 before-image untrack + ignore + Spec 122 R-M sentence.
 - [ ] 4. (DEFERRED 2026-09-27 by orchestrator scope) H1 `.gitattributes` + renormalize (a commit that touches only EOL; verify `step:validate --all` unchanged).
 - [x] 5. H2 size cap (+ temp-repo test).

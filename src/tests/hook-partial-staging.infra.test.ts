@@ -131,3 +131,18 @@ describe('pre-commit refuses a staged blob over 50 MB', () => {
     fs.rmSync(path.join(repo, 'big file.bin'), { force: true });
   });
 });
+
+// WF2 hygiene H6 — husky's own install unconditionally runs
+// `git config core.hooksPath .husky/_`, which REVERTS the tracked-`.husky`
+// setup (`node scripts/hooks/install-hooks.mjs`, run by `prepare` and
+// `npm run worktree:setup`) and silently reopens the hookless-worktree hole.
+// RED on the old sentence, which read: "After `npm ci --ignore-scripts`, run
+// `npx husky` in the worktree and confirm `ls .husky/_/pre-commit` before the
+// first commit." — it mentions `npx husky` with no `NEVER` on the line.
+describe('docs never instruct npx husky (H6)', () => {
+  it('every line mentioning `npx husky` in tasks/lessons.md also says NEVER', () => {
+    const lines = fs.readFileSync(path.join(REPO_ROOT, 'tasks/lessons.md'), 'utf8').split('\n');
+    const offenders = lines.filter((l) => l.includes('npx husky') && !l.includes('NEVER'));
+    expect(offenders).toEqual([]);
+  });
+});
