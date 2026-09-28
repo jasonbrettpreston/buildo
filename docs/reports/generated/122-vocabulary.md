@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 482 declarable fields
+# The step contract — 20 categories, 483 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,7 +15,7 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 28 | 7 | 0 |
+| 2 | `inputs` | 29 | 8 | 0 |
 | 3 | `outputs` | 102 | 30 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
@@ -162,10 +162,11 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, csv_options, url, license, on_head_error, key_property, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, license, on_head_error, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
-| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` | ! |
+| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` | ! |
+| `reads.externals[].role` | `primary` · `lookup` | ! |
 | `reads.externals[].csv_options` | object {bom, relax_quotes} | — |
 | `reads.externals[].csv_options.bom` | `true` · `false` | † |
 | `reads.externals[].csv_options.relax_quotes` | `true` · `false` | † |

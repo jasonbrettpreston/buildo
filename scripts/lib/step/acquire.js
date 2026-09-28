@@ -51,6 +51,7 @@ const { pipeline: streamPipeline } = require('stream/promises');
 const StreamZip = require('node-stream-zip');
 const shapefile = require('shapefile');
 const { parse } = require('csv-parse');
+const ExcelJS = require('exceljs');
 // `stream-json` is the GeoJSON arm's streamer (Spec 43 §9.5): `parser()` tokenises,
 // `Pick({filter:'features'})` pulls the ONE top-level array, `StreamArray()` emits its
 // elements one at a time. The `geoJson*` factories below are the pipeline stages, kept as
@@ -608,6 +609,60 @@ async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
 }
 
 /**
+ * Parse an XLSX into its RAW array-of-objects rows (`parseXlsx`), the SECOND arm the
+ * neighbourhoods step needs (INGESTOR prerequisite 0w, 2026-09-28, Spec 122 §8 RE-FREEZE
+ * #27). The founding source is the Census profile workbook: a TRANSPOSED sheet where row 1
+ * is a header row (`Characteristic`, `Neighbourhood Number`, `Agincourt`, …) and each
+ * subsequent row is ONE characteristic with a cell per neighbourhood. The legacy loader
+ * converted that sheet in-module (`scripts/load-neighbourhoods.js`, the "Convert ExcelJS
+ * sheet to array-of-objects" block); this function reproduces that conversion GENERICALLY.
+ *
+ * ⚠️ SHAPE IS HARD-WIRED, LIKE THE CSV ARM'S AGREED OPTIONS. One consumer means no knob:
+ * sheet index 0, header row 1, `includeEmpty: true` on the header/row cell walks (so a
+ * BLANK cell still yields a key/value pair rather than shifting columns), a null/undefined
+ * header becomes `_${colNumber}`, a null/undefined value becomes `''`, and every header
+ * missing from a row is back-filled with `''`. `eachRow({ includeEmpty: false })` SKIPS an
+ * entirely blank row — the counting contract `rowsParsed` depends on. This is a
+ * byte-for-byte reproduction of the legacy block, not a re-interpretation of it.
+ *
+ * The rows are handed back RAW (no key coercion, no feature shaping): a lookup is not a
+ * feature table. The runner's `compute.buildLookup` consumes `rows` and `stats`; the seam
+ * knows nothing about census characteristics or neighbourhood columns.
+ *
+ * @param {string} filePath - the downloaded `source.xlsx`
+ * @returns {Promise<{rows: Array<Record<string, unknown>>, rowsParsed: number, sheetName: string}>}
+ *   `rowsParsed` is `rows.length` — the raw row count `ctx.acquired.rows_parsed` reports.
+ */
+async function parseXlsx(filePath) {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(filePath);
+  const sheet = workbook.worksheets[0];
+  const sheetName = sheet.name;
+
+  // Convert ExcelJS sheet to array-of-objects (like xlsx sheet_to_json)
+  const headers = [];
+  sheet.getRow(1).eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber] = cell.value != null ? String(cell.value) : `_${colNumber}`;
+  });
+  const rows = [];
+  sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    if (rowNumber === 1) return; // skip header
+    const obj = {};
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const key = headers[colNumber] || `_${colNumber}`;
+      obj[key] = cell.value != null ? cell.value : '';
+    });
+    // Fill missing columns with default ''
+    for (const h of headers) {
+      if (h && !(h in obj)) obj[h] = '';
+    }
+    rows.push(obj);
+  });
+
+  return { rows, rowsParsed: rows.length, sheetName };
+}
+
+/**
  * The `post_acquisition` gate (header item 3). Kept in this file and NOWHERE else:
  * `./staleness.js` owns the pre-acquisition position only, so there is exactly one
  * place the content-hash decision can be reverted from.
@@ -646,6 +701,21 @@ async function acquireExternal({
   ctxFetch, log, tag, slug, external, descriptor, config, prior, timeoutMs,
   keyProperty, keyColumn, coerceKey, forced, preAcquisitionGate, emitSkeleton,
 }) {
+  // ── 0w: A LOOKUP IS XLSX-ONLY, AND AN XLSX IS LOOKUP-ONLY (2026-09-28) ──────────
+  // The TWO new declarations (`role: "lookup"`, `format: "xlsx"`) are one axis spelled
+  // twice: a lookup exists ONLY as a shapefile-free tabular side-source (today the
+  // neighbourhoods Census workbook) and an xlsx is NEVER a primary feature table (it has
+  // no key column shape, no geometry). Refusing the mismatch BY NAME here — as the FIRST
+  // statement, before the HEAD — means a mis-paired external is a construction defect
+  // named at the seam, not a network call that downloads a file no parser can key.
+  const isLookup = external.role === 'lookup';
+  if (isLookup !== (external.format === 'xlsx')) {
+    throw new Error(`${tag} external "${external.id}" declares role "${String(external.role)}" `
+      + `with format "${String(external.format)}": a lookup (role "lookup") is xlsx-only `
+      + 'and an xlsx (format "xlsx") is lookup-only — declare `role: "lookup"` with '
+      + '`format: "xlsx"`, or a primary feature format ("shapefile_zip", "csv", "geojson") '
+      + 'with no role.');
+  }
   // The DS4 contract, built HERE because this is where a gate can fire: a skipped run
   // must still land a `completed` row carrying the PRIOR block, since every downstream
   // HALT gate filters on completed rows and would read a skip as an absent producer.
@@ -696,7 +766,14 @@ async function acquireExternal({
     rows_parsed: 0,
   };
 
-  const tier1 = preAcquisitionGate(head);
+  // ── 0w: A LOOKUP IS NEVER GATED ───────────────────────────────────────────────
+  // A lookup has no staleness lifecycle of its own: it is a side-table, not a producer,
+  // so neither gate tier applies. The runner REFUSES a descriptor that names a lookup in
+  // any `staleness.trigger[]` entry (the trigger/`external` scoping is the runner's
+  // construction check), so reaching here with `isLookup` means "ungated by declaration".
+  // The reason string is a DISTINCT value — not `no_post_acquisition_trigger` — so an
+  // operator reading the row sees WHY nothing was gated.
+  const tier1 = isLookup ? { skip: false, reason: 'lookup_ungated' } : preAcquisitionGate(head);
   if (tier1.skip) {
     log.info(tag, `pre-acquisition gate: skip (${tier1.reason}) — nothing downloaded`);
     return {
@@ -712,10 +789,10 @@ async function acquireExternal({
   try {
     // The downloaded file's NAME is derived from the DECLARED format, so nothing
     // downstream has to sniff it: `.zip` for the archive, `.csv`/`.geojson` for the
-    // flat files (`geojson` added at INGESTOR prerequisite 0v, 2026-09-25). Path only —
-    // `downloadArchive` is byte-identical for all three, and the bytes are hashed as
-    // they land on either branch (FENCE 0b230472).
-    const destPath = path.join(tmpRoot, ({ csv: 'source.csv', geojson: 'source.geojson' })[external.format] || 'source.zip');
+    // flat files (`geojson` added at INGESTOR prerequisite 0v, 2026-09-25; `xlsx` added
+    // at 0w). Path only — `downloadArchive` is byte-identical for all four, and the
+    // bytes are hashed as they land on either branch (FENCE 0b230472).
+    const destPath = path.join(tmpRoot, ({ csv: 'source.csv', geojson: 'source.geojson', xlsx: 'source.xlsx' })[external.format] || 'source.zip');
     const dl = await downloadWithRetries(ctxFetch, external.url, destPath, timeoutMs, algorithm, {
       ...resolveRetryPolicy(descriptor, config), log, tag,
     });
@@ -729,9 +806,11 @@ async function acquireExternal({
       bytes_downloaded: dl.bytesDownloaded,
       download_attempts: dl.attempts,
     };
-    const tier2 = forced
-      ? { skip: false, reason: 'force_run' }
-      : contentHashSkip({ descriptor, contentHash: dl.contentHash, prior });
+    const tier2 = isLookup
+      ? { skip: false, reason: 'lookup_ungated' }
+      : forced
+        ? { skip: false, reason: 'force_run' }
+        : contentHashSkip({ descriptor, contentHash: dl.contentHash, prior });
     if (tier2.skip) {
       log.info(tag, `post-acquisition gate: skip (${tier2.reason}) — bytes identical, nothing parsed`);
       return { acquired, tier1, tier2, features: [], emitBlock: buildSkipReEmitMeta({
@@ -763,9 +842,29 @@ async function acquireExternal({
       // shapefile arm is `parseGeoJson`'s own contract (see its JSDoc); this branch
       // only names the parser.
       parsed = await parseGeoJson(dl.archivePath, keyProperty, coerceKey, keyColumn);
+    } else if (external.format === 'xlsx') {
+      // ── 0w: THE LOOKUP ARM (2026-09-28) ──────────────────────────────────────
+      // An XLSX is never a feature table — it is a lookup (the pairing is enforced at
+      // the top of this function), so the arm returns the RAW rows and NO features. The
+      // caller (`runIngestPhase`) hands `rows` to `compute.buildLookup`; the seam itself
+      // stays domain-free. `rows_parsed` is the workbook's row count; the feature-side
+      // tallies keep their base values (0) because there is no feature side here.
+      const x = await parseXlsx(dl.archivePath);
+      // Same shape as the feature arms' success line below: a lookup download must be as
+      // visible in the run log as the primary's (bytes, digest, what was parsed).
+      log.info(tag, `acquired lookup "${external.id}": ${x.rowsParsed} row(s) from sheet "${x.sheetName}" `
+        + `(${dl.bytesDownloaded} bytes, ${algorithm} ${dl.contentHash.slice(0, 8)}…)`);
+      return {
+        acquired: { ...acquired, rows_parsed: x.rowsParsed },
+        tier1,
+        tier2,
+        features: [],
+        rows: x.rows,
+        emitBlock: null,
+      };
     } else {
       throw new Error(`${tag} external "${external.id}" declares format "${String(external.format)}", which no parser `
-        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv" or "geojson" (step.schema.json '
+        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv", "geojson" or "xlsx" (step.schema.json '
         + 'inputs.reads.externals[].format), or teach acquire.js the new payload format — an '
         + 'unrecognised value must never fall through to the shapefile parser.');
     }
@@ -806,6 +905,7 @@ module.exports = {
   parseShapefile,
   parseCsv,
   parseGeoJson,
+  parseXlsx,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,
