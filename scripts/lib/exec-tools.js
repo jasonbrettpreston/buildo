@@ -826,7 +826,15 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
     const startedAt = Date.now();
     let child;
     try {
-      child = spawnAllowlisted(argv, { cwd, env });
+      // §C.1.9 POSIX tree kill (WF2 hygiene H5/C3, 2026-09-27 — measured red on
+      // Linux CI and in a node:20-bookworm container): `npm run <script>` makes
+      // npm our direct child and the script's own process its GRANDCHILD, so a
+      // SIGKILL to the direct child alone orphans the grandchild, which keeps
+      // running. `detached: true` gives the child its own process group (pgid ==
+      // child.pid), which the timeout below kills as a whole. Windows is
+      // unchanged: its tree kill is killProcessTreeWin32 (f8ba3f75), and
+      // `detached` there would mean a new console, not a process group.
+      child = spawnAllowlisted(argv, { cwd, env, detached: process.platform !== 'win32' });
     } catch (err) {
       resolve({ exitCode: null, stdout: '', stderr: err.message, truncated: false, timedOut: false, durationMs: Date.now() - startedAt });
       return;
@@ -869,12 +877,21 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
       // parent process does not tear down its process tree. `taskkill /T /F`
       // alone kills the tree as it stood at its snapshot, so Windows uses
       // killProcessTreeWin32 (measured escape + fix documented there and at
-      // POST_KILL_CLOSE_GRACE_MS); POSIX gets a direct SIGKILL (SIGTERM is not
-      // guaranteed to stop a process ignoring it, and this budget fence needs
-      // a deterministic kill, not a polite request).
+      // POST_KILL_CLOSE_GRACE_MS); POSIX SIGKILLs the child's whole process
+      // GROUP (`process.kill(-pid)`, the group made by `detached: true` at
+      // spawn — the direct child alone left npm's grandchild running, H5/C3).
+      // SIGKILL, not SIGTERM: SIGTERM is not guaranteed to stop a process
+      // ignoring it, and this budget fence needs a deterministic kill.
       try {
         if (process.platform === 'win32' && child.pid) {
           escapedKilled = killProcessTreeWin32(child.pid, startedAt - 2000);
+        } else if (child.pid) {
+          try {
+            process.kill(-child.pid, 'SIGKILL');
+          } catch {
+            // group already gone (ESRCH) — fall back to the direct child
+            child.kill('SIGKILL');
+          }
         } else {
           child.kill('SIGKILL');
         }
@@ -924,7 +941,10 @@ function runProcess(argv, { cwd, env, timeoutMs, outputCapBytes }) {
         clearTimeout(graceTimer);
       }
       if (timedOut && child.pid) {
-        for (let i = 0; i < 25 && isPidAlive(child.pid); i++) {
+        // POSIX polls the whole process GROUP (negative pid, H5/C3): the
+        // grandchild, not only the direct child, must be gone before resolve.
+        const pollPid = process.platform === 'win32' ? child.pid : -child.pid;
+        for (let i = 0; i < 25 && isPidAlive(pollPid); i++) {
           // eslint-disable-next-line no-await-in-loop -- bounded poll, not a hot loop
           await new Promise((r) => setTimeout(r, 100));
         }
