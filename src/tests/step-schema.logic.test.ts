@@ -794,6 +794,12 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // across this cutover by construction, same class as geocode_permits/
       // link_neighbourhoods/compute_parcel_cost_estimates above.
       'scripts/load-address-points.descriptor.json',
+      // conversion-simplification item 8 (2026-09-27, wf2/lib-batch-0t-8-9): records_unchanged is
+      // now MEASURED by the write (Spec 122 §11 KFM 9), so the PR-D1 pin's "records_unchanged is
+      // inflated by the dropped count" prose is RETIRED in place (dated UPDATE text in
+      // on_batch_error_why + the PR-D1 residue deferral). Prose only — no field value changes;
+      // load-address-points.descriptor.json (AP-D3) carries the same note and is already listed.
+      'scripts/load-parcels.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];

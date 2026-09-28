@@ -366,8 +366,22 @@ function derivedMeasureExpr(entry) {
   return `ROUND((${area})::numeric, ${entry.scale})`;
 }
 
-/** The repair/normalise expression per kind. Polygon = today's byte-identical text; point keeps 1. */
-function geometryFinalExpr(geometryKind) {
+/**
+ * The repair/normalise expression per kind. Polygon = today's byte-identical text; point keeps 1.
+ *
+ * ⚠️ `geometry_repair: "none"` on a POLYGON write (0t follow-on, batch-2 row 3.6, 2026-09-27;
+ * plan §4 0t + Fold SF-2) stores the transformed input EXACTLY — no `ST_Multi`, no
+ * `ST_CollectionExtract`. "none" means "store what the source said": the legacy massing loader
+ * stored its Polygons as POLYGON, and the Multi wrap turned every new Polygon row into a
+ * MULTIPOLYGON (measured over 517 stored rows: 96/517 WKB-equal with the wrap, 508/517 without;
+ * the 9 are pre-existing float drift). The four statuses still classify the stored value: a
+ * Polygon/MultiPolygon is `accepted`, anything else `skipped_unsupported_type`. The default
+ * `make_valid` arm is untouched, byte for byte.
+ */
+function geometryFinalExpr(geometryKind, repair = 'make_valid') {
+  if (geometryKind === 'polygon' && repair === 'none') {
+    return 'repaired';
+  }
   if (geometryKind === 'polygon') {
     return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))';
   }
@@ -508,7 +522,7 @@ const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = '
   // meanings, reporting the geometry the caller asked to store.
   assertGeometryRepair(repair, 'geometryValidationSql');
   const repairExpr = repair === 'none' ? 'geom' : 'ST_MakeValid(geom)';
-  const finalExpr = geometryFinalExpr(geometryKind);
+  const finalExpr = geometryFinalExpr(geometryKind, repair);
   const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
   // `columns[].derived_from_geometry` (prerequisite 0u, 2026-09-24) — a measure of the PRE-repair
   // `geom` computed DB-side and carried to the INSERT under the column's own name.
@@ -1436,6 +1450,10 @@ async function executeWrite(pool, {
     deleted,
     rows_scanned: rowsScanned,
     rows_changed: rowsChanged,
+    // Item 8 (row conservation) — rows this write SUBMITTED whose guarded upsert was a
+    // no-op (not RETURNed). Measured at the write, over the rows it was handed — never
+    // derived from the acquired count, which would absorb every dropped row (KFM 9).
+    unchanged: rowsScanned - rowsChanged,
     // `expected_change_ratio` is MEASURED here and CHECKED by a declared check, so
     // `idempotent_rerun: "zero_writes"` is a number in the audit table rather than a
     // claim: re-run an unchanged source and this must read 0.

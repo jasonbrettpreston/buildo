@@ -105,6 +105,9 @@ const VOLATILE_KEYS = [
   // OLDER pre/post pair happened to share the same value coincidentally; a
   // fresh capture never will), never a defect this WF2 introduced.
   'chain_run_id',
+  // records_meta.code_sha (WF2 "conversion simplification" item 9) — the commit the run
+  // executed; differs between any two captures taken at different commits by design.
+  'code_sha',
 ];
 // audit_table rows whose `metric` is auto-injected timing by emitSummary (pipeline.js:346-352)
 const VOLATILE_METRIC_PREFIXES = ['sys_'];

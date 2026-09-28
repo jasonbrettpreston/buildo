@@ -112,7 +112,7 @@ describe('measured counts — independently re-derived, not transcribed from the
     return map;
   }
 
-  it('44 remaining files, 46 remaining slugs (excluding the 19 converted — address_points CUTOVER, batch-2 row 3.1 commit 9, 2026-09-24 — 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
+  it('the convertible fleet totals 63 files / 65 slugs, its remaining/converted/pending split DERIVED from converted.json (R-AN, conversion-simplification item 4 — the old "44 remaining files, 46 remaining slugs" literals went stale at every ② and ③; history: excluding the 19 converted — address_points CUTOVER, batch-2 row 3.1 commit 9, 2026-09-24 — 0 pending, the 1 python-exempt file and the 1 RUNNER-owned exemption — `reconcile`, Spec 124 R-AP, 2026-09-15)', () => {
     const fileToSlugs = fileToSlugsMap();
     const convertedSet = new Set(CONVERTED);
     const pendingSet = new Set(PENDING_FILES);
@@ -164,8 +164,14 @@ describe('measured counts — independently re-derived, not transcribed from the
     // THIS count — the file already left `remaining` at commit ②, exactly as address_points'
     // own commit 9 was a no-op for its equivalent transition.
     // 43 -> 42 files / 45 -> 44 slugs: load_centreline's ② (54b24f31) put it in pending[] and this test was not re-run between ② and ③ (same staleness class as above); its ③ CUTOVER (2026-09-27) moves it pending[] -> converted[] (R-K) — measured here.
-    expect(remaining.length).toBe(42);
-    expect(remainingSlugCount).toBe(44);
+    // DERIVED since conversion-simplification item 4 (R-AN): the 42/44 literals above had to be
+    // hand-bumped at every ② and ③ (and went stale twice). The remaining/converted/pending
+    // SPLIT is now derived from converted.json; only the manifest's convertible TOTAL is pinned
+    // (63 files / 65 slugs) — a cutover or a pending move never changes it, so a manifest or
+    // exemption change is still the one thing that trips this.
+    const doneFiles = Object.keys(fileToSlugs).filter((f) => convertedSet.has(f) || pendingSet.has(f));
+    expect(remaining.length + doneFiles.length).toBe(63);
+    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(65);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -234,7 +240,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // `status: "converted"`, dropping it from the live C5 count the same way.
     // 7 -> 6 at the batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline's census row RETAINED (R-AO)
     // with status:"converted", dropping it from the live C5 count the same way as parcels.
-    expect(c5.size).toBe(6);
+    // DERIVED since conversion-simplification item 4 (R-AN): was the hand-bumped literal 6. The
+    // batch identity asserted below (c4 + c5 + c6 = remaining, with C4/C6 pinned) now carries C5;
+    // this line only keeps the bucket from being vacuously empty.
+    expect(c5.size).toBeGreaterThan(0);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -481,10 +490,12 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // `converted[]` (19 -> 20, derived via CONVERTED.length above), pending falls back to 0;
     // remaining is UNCHANGED from commit ②'s true value (45) — the slug left `remaining` at
     // commit ②, not at cutover.
-    expect(pendingSlugs).toBe(0);
     // batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline moves pending[] -> converted[] (20 -> 21);
     // remaining 45 -> 44 (its ② pending move, 54b24f31, was never re-measured here — same staleness class).
-    expect(remainingSlugs).toBe(44);
+    // DERIVED since conversion-simplification item 4 (R-AN): the pendingSlugs/remainingSlugs
+    // literals moved at every ② and ③; the identity above (68 pinned, converted from
+    // converted.json) already fixes them. Cross-check the pending half against converted.json.
+    expect(rows.filter((r) => r.pending).length).toBe(args.convertedInfo.pending.length);
   });
 
   it('the rendered report never silently drops the 3 exemptions — all appear in the Declared exemptions table and the totality sentence states IDENTITY HOLDS', async () => {
@@ -585,7 +596,12 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     // batch-2 row 3.7 CUTOVER (commit ③, 2026-09-24): parcels converted out of C5 (8->7),
     // the same move.
     // batch-2 row 3.2 CUTOVER (commit ③, 2026-09-27): load_centreline converted out of C5 (7->6), the same move.
-    expect(c5).toHaveLength(6);
+    // DERIVED since conversion-simplification item 4 (R-AN): was the hand-bumped literal 6.
+    // The generator's C5 rows must equal the census's own active C5 files, read independently.
+    const censusRows = (JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ file: string; batch: string; status?: string }> }).entries;
+    const activeC5 = new Set(censusRows.filter((e) => e.batch === 'C5' && e.status !== 'converted').map((e) => e.file));
+    expect(activeC5.size).toBeGreaterThan(0);
+    expect(c5).toHaveLength(activeC5.size);
   });
 });
 

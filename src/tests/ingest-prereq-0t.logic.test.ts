@@ -92,10 +92,18 @@ describe('INGESTOR prerequisite 0t — geometry_repair', () => {
     expect(plan.geometry_repair).toBe('none');
     const sql = plan.validation_sql as string;
     expect(sql, 'the repair call is what "none" REMOVES').not.toContain('ST_MakeValid');
-    // The FAMILY's final expression is untouched — the repair axis is orthogonal to the
-    // kind, so a `none` polygon still Multi-wraps what it stores (legacy parcels did not,
-    // which is a family question, not a repair one).
-    expect(sql).toContain('ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))');
+    // CORRECTED (0t follow-on, batch-2 row 3.6, 2026-09-27; plan §4 0t + Fold SF-2): the
+    // title always said "no ST_Multi" but this line asserted the opposite. `none` means
+    // "store what the source said": the legacy massing loader stored its 426,857 Polygons
+    // as POLYGON (measured), so a `none` polygon's geom_final is the transformed input
+    // itself — no ST_Multi and no ST_CollectionExtract (517 stored rows re-derived:
+    // 508/517 WKB-equal without the Multi wrap vs 96/517 with it; the 9 are M-D8 drift).
+    expect(sql, '"none" must not Multi-wrap what it stores').not.toMatch(/ST_Multi\(/);
+    expect(sql).not.toMatch(/ST_CollectionExtract\(/);
+    expect(sql).toContain('repaired AS geom_final');
+    // …and the default arm is untouched (byte-identical, pinned by T0 too).
+    const def = writeLib.buildWritePlan(specOf(LOAD_RAVINES, 'geometry_repair'), LOAD_RAVINES);
+    expect(def.validation_sql).toContain('ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired)) AS geom_final');
     // The un-repaired text, exactly.
     expect(sql).toContain('geom AS repaired');
     // The ORIGINAL geometry is still measured — that is the whole point of "none".

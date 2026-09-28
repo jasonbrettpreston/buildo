@@ -664,7 +664,8 @@ function buildLoadMeta(ctx) {
     rows_read: rowsRead,
     records_inserted: inserted,
     records_updated: updated,
-    records_unchanged: Math.max(0, rowsRead - inserted - updated),
+    // measured by the write (no-op rows it submitted), never read − inserted − updated (Spec 122 §11 KFM 9)
+    records_unchanged: numberOrNull(w.unchanged) || 0,
     records_skipped: numberOrNull(a.shaped_skipped) || 0,
     errors: numberOrNull(a.batch_errors) || 0,
   };
@@ -691,7 +692,8 @@ function buildAuditBlock(ctx) {
       { metric: 'rows_read', value: rowsRead },
       { metric: 'records_inserted', value: inserted },
       { metric: 'records_updated', value: updated },
-      { metric: 'records_unchanged', value: Math.max(0, rowsRead - inserted - updated - skipped) },
+      // measured by the write (no-op rows it submitted), never read − inserted − updated (Spec 122 §11 KFM 9)
+      { metric: 'records_unchanged', value: numberOrNull(w.unchanged) || 0 },
       { metric: 'records_skipped', value: skipped },
       { metric: 'skip_rate', value: round3(skipRate) },
       { metric: 'records_errors', value: errors },
