@@ -1,0 +1,39 @@
+{
+  "_why": "Transposed Census XLSX stand-in for the legacy loadProfiles() branch table. Row 1 is the header (col 0 = 'Neighbourhood Name', cols 1-3 = neighbourhood names); row 2 is the format-2 ID row ('Neighbourhood Number') whose numeric cells supply the neighbourhood_id per column. Every subsequent row is [characteristic, Alpha, Beta, Gamma] with characteristic strings copied verbatim from the script's INCOME_CHARACTERISTICS keys, PCT_CHARACTERISTIC, CONSTRUCTION_PERIODS and the exact-match / startsWith branches in loadProfiles(). Value cells pin parseNumeric() edge cases: 100000.4 rounds, the comma string '95,000.6' is comma-cleaned, the suppression tokens 'x' and '...' parse to null (absent), and 0 is a real zero distinct from absent. SPEC LINK: docs/specs/01-pipeline/57_source_neighbourhoods.md, docs/specs/01-pipeline/123_step_opt_assessment_validation.md §4.5 (legacy oracle, not source-text).",
+  "sheet": "hd2021_census_profile",
+  "grid": [
+    ["Neighbourhood Name", "Alpha", "Beta", "Gamma"],
+    ["Neighbourhood Number", 1, 2, 3],
+    ["Average total income of household in 2020 ($)", 100000.4, "95,000.6", "x"],
+    ["Median total income of household in 2020 ($)", 80000, 70000, 60000],
+    ["Average total income in 2020 among recipients ($)", 50000.5, 40000, 30000],
+    [
+      "Prevalence of low income based on the Low-income measure, after tax (LIM-AT) (%)",
+      12.34,
+      5,
+      "..."
+    ],
+    ["Owner", 60, 0, 30],
+    ["Renter", 40, 0, 70],
+    ["1960 or before", 10, 5, 0],
+    ["1961 to 1980", 10, 3, 0],
+    ["2016 to 2021", 2, 8, 0],
+    ["Total couple families", 90, 0, 45],
+    ["Total one-parent families", 10, 0, 5],
+    ["Married or living common-law", 45, 10, "x"],
+    [
+      "Total - Marital status for the total population aged 15 years and over - 100% data",
+      90,
+      0,
+      "x"
+    ],
+    ["Immigrants", 30, 20, 10],
+    [
+      "Total - Immigrant status and period of immigration for the population in private households - 25% sample data",
+      100,
+      80,
+      40
+    ],
+    ["Population, 2021", 1000, 2000, 3000]
+  ]
+}

@@ -68,10 +68,12 @@ As the geographic aggregation layer, this script ingests 158 Toronto neighbourho
 - `src/lib/leads/lead-detail-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/lib/leads/lead-inspect-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/app/api/permits/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
+- `scripts/analysis/neighbourhoods-cohort-differential.js` — batch-2 row 3.8 R-AS forced-change cohort differential (Spec 124 R-AS): derives + commits the I/N/G/C/Q key-shift cohort (no pre-existing row is ever deleted — every row is FK-referenced by `id`) and runs the pre/post proof through `capture-step-golden.js`, restore-always (WF2 row 3.8 ①).
 
 ### Cross-Spec Dependencies
 - `scripts/load-permits.js` — referenced only for the `n.id = p.neighbourhood_id` JOIN guidance (§2); this spec does not define its contract.
 - `scripts/load-parcels.js` — referenced only for the shared `id SERIAL` PK convention (§2); this spec does not define its contract.
 - `scripts/link-neighbourhoods.js` — downstream consumer of `neighbourhoods` via point-in-polygon matching (§4 Consumed by); its own contract lives in its step spec.
 - `scripts/compute-cost-estimates.js` — referenced only for the same JOIN guidance (§2); this spec does not define its contract.
+- `scripts/analysis/capture-step-golden.js` — spawned by the cohort differential to run this step and hash `neighbourhoods`; its contract lives in Spec 122 §5.3, not here.
 </constraints>

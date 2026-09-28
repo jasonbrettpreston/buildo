@@ -1,0 +1,11 @@
+[
+  { "name": "row_count", "sql": "SELECT count(*) FROM neighbourhoods" },
+  { "name": "geom_null", "sql": "SELECT count(*) FROM neighbourhoods WHERE geom IS NULL" },
+  { "name": "invalid_geom", "sql": "SELECT count(*) FROM neighbourhoods WHERE NOT ST_IsValid(geom)" },
+  { "name": "geom_types", "sql": "SELECT string_agg(k||'='||n, ',' ORDER BY k) FROM (SELECT GeometryType(geom) k, count(*) n FROM neighbourhoods GROUP BY 1) s" },
+  { "name": "geom_equals_geometry_derivation", "sql": "SELECT count(*) FROM neighbourhoods WHERE ST_AsBinary(geom) = ST_AsBinary(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 4326))" },
+  { "name": "census_all_14_non_null", "sql": "SELECT count(*) FROM neighbourhoods WHERE num_nulls(avg_household_income, median_household_income, avg_individual_income, low_income_pct, tenure_owner_pct, tenure_renter_pct, period_of_construction, couples_pct, lone_parent_pct, married_pct, university_degree_pct, immigrant_pct, visible_minority_pct, english_knowledge_pct) = 0" },
+  { "name": "top_mother_tongue_non_null", "sql": "SELECT count(*) FROM neighbourhoods WHERE top_mother_tongue IS NOT NULL" },
+  { "name": "id_key_map_hash", "sql": "SELECT md5(string_agg(id || ':' || neighbourhood_id, '|' ORDER BY id)) FROM neighbourhoods" },
+  { "name": "shifted_key_range_rows", "sql": "SELECT count(*) FROM neighbourhoods WHERE neighbourhood_id >= 100000" }
+]

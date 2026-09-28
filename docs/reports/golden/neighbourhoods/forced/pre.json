@@ -1,0 +1,394 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts\\load-neighbourhoods.js",
+  "chain": "sources",
+  "git_head": "90ae17d0f3c52bc8667c7093d621a493a13ee2ca",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 158,
+    "records_new": 0,
+    "records_updated": 158,
+    "records_meta": {
+      "duration_ms": 2720,
+      "boundaries_loaded": 158,
+      "census_rows_matched": 31,
+      "has_postgis": true,
+      "audit_table": {
+        "phase": 9,
+        "name": "Neighbourhood Boundaries",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "boundaries_loaded",
+            "value": 158,
+            "threshold": ">= 158",
+            "status": "PASS"
+          },
+          {
+            "metric": "census_rows_matched",
+            "value": 31,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "has_postgis",
+            "value": "yes",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 57.14,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 2765,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "City GeoJSON": [
+          "AREA_SHORT_CODE",
+          "AREA_NAME",
+          "geometry"
+        ],
+        "Census XLSX": [
+          "income",
+          "tenure",
+          "demographics"
+        ]
+      },
+      "writes": {
+        "neighbourhoods": [
+          "neighbourhood_id",
+          "name",
+          "geometry",
+          "geom",
+          "avg_household_income",
+          "median_household_income",
+          "avg_individual_income",
+          "low_income_pct",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "period_of_construction",
+          "couples_pct",
+          "lone_parent_pct",
+          "married_pct",
+          "university_degree_pct",
+          "immigrant_pct",
+          "visible_minority_pct",
+          "english_knowledge_pct"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"=== Buildo Neighbourhood Loader ===\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"Using cached boundaries: C:\\\\Users\\\\User\\\\buildo-neighbourhoods\\\\data\\\\neighbourhoods-4326.geojson\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"Using cached profiles: C:\\\\Users\\\\User\\\\buildo-neighbourhoods\\\\data\\\\neighbourhood-profiles-2021.xlsx\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"Step 1: Loading neighbourhood boundaries...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Inserted 158 neighbourhood boundaries.\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"Step 2: Loading Census profiles from XLSX...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Sheet \\\"hd2021_census_profile\\\" has 2603 rows\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Characteristic column: \\\"Neighbourhood Name\\\"\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Found 158 neighbourhood columns\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Matched 31 characteristic rows for updates.\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Computing derived percentages...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"  Census profile updates complete.\"}\n{\"level\":\"INFO\",\"tag\":\"[load-neighbourhoods]\",\"msg\":\"Load complete\",\"context\":{\"boundaries\":158,\"census_updates\":31,\"duration\":\"2.7s\"}}\nPIPELINE_SUMMARY:{\"records_total\":158,\"records_new\":0,\"records_updated\":158,\"records_meta\":{\"duration_ms\":2720,\"boundaries_loaded\":158,\"census_rows_matched\":31,\"has_postgis\":true,\"audit_table\":{\"phase\":9,\"name\":\"Neighbourhood Boundaries\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"boundaries_loaded\",\"value\":158,\"threshold\":\">= 158\",\"status\":\"PASS\"},{\"metric\":\"census_rows_matched\",\"value\":31,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"has_postgis\",\"value\":\"yes\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":57.14,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2765,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"City GeoJSON\":[\"AREA_SHORT_CODE\",\"AREA_NAME\",\"geometry\"],\"Census XLSX\":[\"income\",\"tenure\",\"demographics\"]},\"writes\":{\"neighbourhoods\":[\"neighbourhood_id\",\"name\",\"geometry\",\"geom\",\"avg_household_income\",\"median_household_income\",\"avg_individual_income\",\"low_income_pct\",\"tenure_owner_pct\",\"tenure_renter_pct\",\"period_of_construction\",\"couples_pct\",\"lone_parent_pct\",\"married_pct\",\"university_degree_pct\",\"immigrant_pct\",\"visible_minority_pct\",\"english_knowledge_pct\"]}}\n\n[load-neighbourhoods] completed in 2.8s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 2086,
+  "table_state": [
+    {
+      "table": "neighbourhoods",
+      "row_count": 163,
+      "content_hash": "c486a1f3219d300c658c530cac80c699",
+      "order_by": "explicit",
+      "order_columns": [
+        "neighbourhood_id"
+      ],
+      "columns": [
+        "neighbourhood_id",
+        "name",
+        "geometry",
+        "geom",
+        "avg_household_income",
+        "median_household_income",
+        "avg_individual_income",
+        "low_income_pct",
+        "tenure_owner_pct",
+        "tenure_renter_pct",
+        "period_of_construction",
+        "couples_pct",
+        "lone_parent_pct",
+        "married_pct",
+        "university_degree_pct",
+        "immigrant_pct",
+        "visible_minority_pct",
+        "english_knowledge_pct",
+        "census_year",
+        "top_mother_tongue"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "neighbourhoods": 350
+  },
+  "table_specs": {
+    "neighbourhoods": {
+      "columns": [
+        "neighbourhood_id",
+        "name",
+        "geometry",
+        "geom",
+        "avg_household_income",
+        "median_household_income",
+        "avg_individual_income",
+        "low_income_pct",
+        "tenure_owner_pct",
+        "tenure_renter_pct",
+        "period_of_construction",
+        "couples_pct",
+        "lone_parent_pct",
+        "married_pct",
+        "university_degree_pct",
+        "immigrant_pct",
+        "visible_minority_pct",
+        "english_knowledge_pct",
+        "census_year",
+        "top_mother_tongue"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "neighbourhood_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [
+    {
+      "name": "row_count",
+      "value": "163"
+    },
+    {
+      "name": "geom_null",
+      "value": "5"
+    },
+    {
+      "name": "invalid_geom",
+      "value": "0"
+    },
+    {
+      "name": "geom_types",
+      "value": "MULTIPOLYGON=158"
+    },
+    {
+      "name": "geom_equals_geometry_derivation",
+      "value": "153"
+    },
+    {
+      "name": "census_all_14_non_null",
+      "value": "163"
+    },
+    {
+      "name": "top_mother_tongue_non_null",
+      "value": "0"
+    },
+    {
+      "name": "id_key_map_hash",
+      "value": "94fd5ecc9742fccc7d459d6aae3f77a5"
+    },
+    {
+      "name": "shifted_key_range_rows",
+      "value": "5"
+    }
+  ],
+  "invariants_file": "docs/reports/golden/neighbourhoods/invariants.json",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts\\load-neighbourhoods.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Neighbourhood Boundaries",
+          "phase": 9,
+          "rows": [
+            {
+              "metric": "boundaries_loaded",
+              "status": "PASS",
+              "threshold": ">= 158",
+              "value": 158
+            },
+            {
+              "metric": "census_rows_matched",
+              "status": "INFO",
+              "threshold": null,
+              "value": 31
+            },
+            {
+              "metric": "has_postgis",
+              "status": "INFO",
+              "threshold": null,
+              "value": "yes"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "boundaries_loaded": 158,
+        "census_rows_matched": 31,
+        "has_postgis": true
+      },
+      "records_new": 0,
+      "records_total": 158,
+      "records_updated": 158
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "Census XLSX": [
+            "income",
+            "tenure",
+            "demographics"
+          ],
+          "City GeoJSON": [
+            "AREA_SHORT_CODE",
+            "AREA_NAME",
+            "geometry"
+          ]
+        },
+        "writes": {
+          "neighbourhoods": [
+            "neighbourhood_id",
+            "name",
+            "geometry",
+            "geom",
+            "avg_household_income",
+            "median_household_income",
+            "avg_individual_income",
+            "low_income_pct",
+            "tenure_owner_pct",
+            "tenure_renter_pct",
+            "period_of_construction",
+            "couples_pct",
+            "lone_parent_pct",
+            "married_pct",
+            "university_degree_pct",
+            "immigrant_pct",
+            "visible_minority_pct",
+            "english_knowledge_pct"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"=== Buildo Neighbourhood Loader ===\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Using cached boundaries: C:\\\\Users\\\\User\\\\buildo-neighbourhoods\\\\data\\\\neighbourhoods-4326.geojson\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Using cached profiles: C:\\\\Users\\\\User\\\\buildo-neighbourhoods\\\\data\\\\neighbourhood-profiles-2021.xlsx\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Step 1: Loading neighbourhood boundaries...\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Inserted 158 neighbourhood boundaries.\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Step 2: Loading Census profiles from XLSX...\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Sheet \\\"hd2021_census_profile\\\" has 2603 rows\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Characteristic column: \\\"Neighbourhood Name\\\"\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Found 158 neighbourhood columns\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Matched 31 characteristic rows for updates.\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Computing derived percentages...\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"  Census profile updates complete.\",\"tag\":\"[load-neighbourhoods]\"}",
+      "{\"context\":{\"boundaries\":158,\"census_updates\":31,\"duration\":\"<DUR>\"},\"level\":\"INFO\",\"msg\":\"Load complete\",\"tag\":\"[load-neighbourhoods]\"}",
+      "[load-neighbourhoods] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "neighbourhood_id",
+          "name",
+          "geometry",
+          "geom",
+          "avg_household_income",
+          "median_household_income",
+          "avg_individual_income",
+          "low_income_pct",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "period_of_construction",
+          "couples_pct",
+          "lone_parent_pct",
+          "married_pct",
+          "university_degree_pct",
+          "immigrant_pct",
+          "visible_minority_pct",
+          "english_knowledge_pct",
+          "census_year",
+          "top_mother_tongue"
+        ],
+        "content_hash": "c486a1f3219d300c658c530cac80c699",
+        "order_by": "explicit",
+        "order_columns": [
+          "neighbourhood_id"
+        ],
+        "row_count": 163,
+        "table": "neighbourhoods"
+      }
+    ],
+    "invariants": [
+      {
+        "name": "row_count",
+        "value": "163"
+      },
+      {
+        "name": "geom_null",
+        "value": "5"
+      },
+      {
+        "name": "invalid_geom",
+        "value": "0"
+      },
+      {
+        "name": "geom_types",
+        "value": "MULTIPOLYGON=158"
+      },
+      {
+        "name": "geom_equals_geometry_derivation",
+        "value": "153"
+      },
+      {
+        "name": "census_all_14_non_null",
+        "value": "163"
+      },
+      {
+        "name": "top_mother_tongue_non_null",
+        "value": "0"
+      },
+      {
+        "name": "id_key_map_hash",
+        "value": "94fd5ecc9742fccc7d459d6aae3f77a5"
+      },
+      {
+        "name": "shifted_key_range_rows",
+        "value": "5"
+      }
+    ]
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "7aa5f2c53b8039ff35c897155f781666f63dd2152e83f5f5def7cf6c5a9a2439"
+}
