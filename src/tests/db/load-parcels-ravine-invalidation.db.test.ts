@@ -12,7 +12,9 @@
 // The fence MOVED with the parcels conversion: `load-parcels.js` is now a frozen shell (the
 // inline upsert SQL is gone, 0 hits for DEC-FENCE2), and the fence is DECLARED in
 // scripts/load-parcels.descriptor.json `outputs.invalidates[]` (three entries,
-// `set_null_on_change_of: "geometry"`) and RENDERED by
+// `set_null_on_change_of: "geom"` — WF3 2026-09-28 moved the watch from the raw jsonb
+// `geometry` to the derived `geom`, the shape every enrich-* step reads; the fence's intent,
+// "the stamp follows the shape", is unchanged) and RENDERED by
 // scripts/lib/step/write.js `buildWritePlan(writeSpec, descriptor)` (the `invalidatesSetArms`
 // block) as the ON CONFLICT SET CASE arms. This file therefore (A) locks the DECLARATION and
 // the RENDERED SQL — never weakened, only re-pointed — and (B) proves the CASE semantics
@@ -37,7 +39,7 @@ const UPSERT_SQL: string = writeLib.buildWritePlan(LOAD_PARCELS.outputs.writes[0
 
 // ── (A) Source-contract: the DECLARED fence AND its rendered CASE invalidation ─────────────
 describe('load-parcels descriptor — DEC-FENCE2 source contract (#418)', () => {
-  it('NULLs the ravine + heritage stamps via a CASE gated ONLY on geometry change', () => {
+  it('NULLs the ravine + heritage + centreline stamps via a CASE gated ONLY on a geom change (WF3 2026-09-28: watched column `geom`)', () => {
     // The DECLARATION (the descriptor), for each of the three stamps.
     for (const column of [
       'ravine_dataset_version_when_enriched',
@@ -47,22 +49,24 @@ describe('load-parcels descriptor — DEC-FENCE2 source contract (#418)', () => 
       const entry = INVALIDATES.find((e) => e.column === column);
       if (!entry) throw new Error(`invalidates[] entry for ${column}`);
       expect(entry.table).toBe('parcels');
-      expect(entry.set_null_on_change_of).toBe('geometry');
+      expect(entry.set_null_on_change_of).toBe('geom');
       expect(entry.when).toContain('DEC-FENCE2');
     }
     // The RENDERED SQL (write.js buildWritePlan): each stamp NULLed by a CASE gated on the
-    // geometry-change predicate (NOT the broader upsert WHERE — an address-only update must
-    // preserve the stamp; the regex pins the WHEN to exactly the geometry predicate).
+    // geom-change predicate (NOT the broader upsert WHERE — an address-only update must
+    // preserve the stamp; the regex pins the WHEN to exactly the derived-geom predicate).
+    // Re-pointed IN PLACE, WF3 2026-09-28: the legacy `geometry::jsonb` WHEN text is
+    // knowingly retired — the stamp now follows `geom`, the shape the enrichers read.
     expect(UPSERT_SQL).toMatch(
-      /ravine_dataset_version_when_enriched = CASE\s+WHEN parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb\s+THEN NULL ELSE parcels\.ravine_dataset_version_when_enriched END/,
+      /ravine_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.ravine_dataset_version_when_enriched END/,
     );
     expect(UPSERT_SQL).toMatch(
-      /heritage_dataset_version_when_enriched = CASE\s+WHEN parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb\s+THEN NULL ELSE parcels\.heritage_dataset_version_when_enriched END/,
+      /heritage_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.heritage_dataset_version_when_enriched END/,
     );
     // WF2 P11-1: the centreline arm is the load-bearing precondition for the
     // enrich_centreline row-level version-skip gate.
     expect(UPSERT_SQL).toMatch(
-      /centreline_dataset_version_when_enriched = CASE\s+WHEN parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb\s+THEN NULL ELSE parcels\.centreline_dataset_version_when_enriched END/,
+      /centreline_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.centreline_dataset_version_when_enriched END/,
     );
   });
 });

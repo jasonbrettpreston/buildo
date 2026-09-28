@@ -3,7 +3,7 @@
     "name": "parcels",
     "display_name": "Toronto Property Parcels",
     "owner": "data",
-    "description": "Loads Toronto's Property Boundaries CSV (~498K rows, ~224 MB, GeoJSON `geometry` column) from the CKAN Open Data portal into the parcels table: a class-A guarded upsert (INSERT ... ON CONFLICT (parcel_id) DO UPDATE ... WHERE <9 IS DISTINCT FROM terms>, NO retraction anywhere) over 17 columns + geom, in one step-scoped transaction. DEFAULT codegen authors the statement (plan D1 REVISED, operator ruling 2026-09-24) via two DECLARED axes — `columns[].on_empty:\"preserve\"|\"preserve_null\"` (prerequisites 0m/0m-follow-on) and `outputs.invalidates[].set_null_on_change_of` (prerequisite 0l) — so the legacy SET text (the five COALESCE(NULLIF(...)) address preservations, the date_effective COALESCE, and the three DEC-FENCE2 CASE arms) is reproduced by the shared library, never a per-step compute-authored statement. The INGESTOR archetype's THIRD member (after load_ravines class B and address_points class A); first row converted under R-PACE-1's compressed form.",
+    "description": "Loads Toronto's Property Boundaries CSV (~498K rows, ~224 MB, GeoJSON `geometry` column) from the CKAN Open Data portal into the parcels table: a class-A guarded upsert (INSERT ... ON CONFLICT (parcel_id) DO UPDATE ... WHERE <10 IS DISTINCT FROM terms>, NO retraction anywhere) over 17 columns + geom, in one step-scoped transaction. DEFAULT codegen authors the statement (plan D1 REVISED, operator ruling 2026-09-24) via two DECLARED axes — `columns[].on_empty:\"preserve\"|\"preserve_null\"` (prerequisites 0m/0m-follow-on) and `outputs.invalidates[].set_null_on_change_of` (prerequisite 0l) — so the legacy SET text (the five COALESCE(NULLIF(...)) address preservations, the date_effective COALESCE, and the three DEC-FENCE2 CASE arms) is reproduced by the shared library, never a per-step compute-authored statement. The INGESTOR archetype's THIRD member (after load_ravines class B and address_points class A); first row converted under R-PACE-1's compressed form.",
     "lock": 55,
     "why_lock": {
       "text": "Mutual exclusion with every other writer of parcels across the fleet (Spec 47 §A.5 lock registry row 55) [READ scripts/load-parcels.js:218, `const ADVISORY_LOCK_ID = 55;`]. The lock is declared here and acquired by the library from descriptor.identity.lock; scripts/load-parcels.js keeps `const ADVISORY_LOCK_ID = 55;` as a §5.4 SOURCE-TEXT constant (declared, never read), and the two are asserted equal by src/tests/steps/parcels/violations.test.ts. The lock holds across the whole step — acquisition, parse, the write and the score — because the ~498K-row load must not interleave with a second writer.",
@@ -79,14 +79,15 @@
             "addr_num_normalized",
             "street_name_normalized",
             "street_type_normalized",
-            "date_effective"
+            "date_effective",
+            "geometry"
           ],
           "scope": "none",
           "expected_change_ratio": ">= 0",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
           "why": {
-            "text": "Class A, DEFAULT codegen (plan D1 REVISED, operator ruling 2026-09-24 — standardized/observable/scalable/simple: compute-authored SQL for the whole target is exactly what the ruling rejects for an INGESTOR [READ scripts/steps/_schema/step.schema.json:1054]). The pre-conversion loader issued ONE statement shape — INSERT INTO parcels (...) VALUES ... ON CONFLICT (parcel_id) DO UPDATE SET ... WHERE <9 OR-terms> IS DISTINCT FROM, NO DELETE anywhere (0 grep matches for DELETE/TRUNCATE) [READ scripts/load-parcels.js:297-378]. A byte-identical re-run updates zero rows; no parcel is ever removed by this step. Two DECLARED axes (prerequisites 0l/0m, executed by the shared codegen in scripts/lib/step/write.js) reproduce the legacy text without a line of step-specific SQL: `columns[].on_empty:\"preserve\"` on the five address columns (COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)) + `\"preserve_null\"` on date_effective (COALESCE(EXCLUDED.x, parcels.x), the non-text NULLIF-less form), and `outputs.invalidates[].set_null_on_change_of:\"geometry\"` on the three DEC-FENCE2 stamps (the CASE...THEN NULL...END arms). This `guard_columns` list is EIGHT entries — the nine-term WHERE clause's ninth term, `parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb`, is NOT declared here: it is added automatically, FIRST, by the codegen because `geometry` is the watched column of all three `invalidates[]` entries below (deduplicated against this list — `changeOfGuardColumns` in write.js). geom is NOT itself a guard predicate: it is set unconditionally beside geometry whenever the guard passes. The reproduction is PROVEN, not asserted: step-library.logic.test.ts T5/T7 clone this exact shape (five on_empty:\"preserve\" columns + one preserve_null + three set_null_on_change_of:\"geometry\" entries + these eight guard_columns) and assert `buildWritePlan(...).upsertSqlFor(1)` equals the legacy file text whitespace-normalised; this descriptor's own violations.test.ts T7-cite fence re-proves it against THIS descriptor. The legacy script wrapped each 1,000-row batch in its OWN withTransaction (:252-253, :275); the library wraps ALL batches in ONE step-scoped transaction (executeWrite) — declared here as the truth, with the atomicity-window widening recorded in deviations[].",
+            "text": "Class A, DEFAULT codegen (plan D1 REVISED, operator ruling 2026-09-24 — standardized/observable/scalable/simple: compute-authored SQL for the whole target is exactly what the ruling rejects for an INGESTOR [READ scripts/steps/_schema/step.schema.json:1054]). The pre-conversion loader issued ONE statement shape — INSERT INTO parcels (...) VALUES ... ON CONFLICT (parcel_id) DO UPDATE SET ... WHERE <9 OR-terms> IS DISTINCT FROM, NO DELETE anywhere (0 grep matches for DELETE/TRUNCATE) [READ scripts/load-parcels.js:297-378]. A byte-identical re-run updates zero rows; no parcel is ever removed by this step. Two DECLARED axes (prerequisites 0l/0m, executed by the shared codegen in scripts/lib/step/write.js) reproduce the legacy text without a line of step-specific SQL: `columns[].on_empty:\"preserve\"` on the five address columns (COALESCE(NULLIF(EXCLUDED.x,''), parcels.x)) + `\"preserve_null\"` on date_effective (COALESCE(EXCLUDED.x, parcels.x), the non-text NULLIF-less form), and `outputs.invalidates[].set_null_on_change_of:\"geom\"` on the three DEC-FENCE2 stamps (the CASE...THEN NULL...END arms). This `guard_columns` list is NINE entries (WF3 2026-09-28): the eight legacy columns plus `geometry`, the raw jsonb source, compared structurally (`parcels.geometry IS DISTINCT FROM EXCLUDED.geometry` on a jsonb column). The ten-term WHERE clause's first term, `parcels.geom IS DISTINCT FROM EXCLUDED.geom`, is added automatically, FIRST, by the codegen because `geom` is the watched column of all three `invalidates[]` entries below (`changeOfGuardColumns` in write.js). The guard compares the stored DERIVED shape AND the raw source: the legacy INSERT never wrote `geom` (9,855 NULL) and the repair arm differs from the legacy raw write (16 rows); a `geometry`-only guard converges neither. The reproduction is PROVEN, not asserted: step-library.logic.test.ts T5/T7 clone the PRE-WF3 shape (five on_empty:\"preserve\" columns + one preserve_null + three set_null_on_change_of:\"geometry\" entries + these eight guard_columns) and assert `buildWritePlan(...).upsertSqlFor(1)` equals the legacy file text whitespace-normalised; this descriptor's own violations.test.ts T7-cite fence re-proves it against THIS descriptor. The legacy-text reproduction (T5/T7) holds EXCEPT the two declared WF3-2026-09-28 deltas (watched column `geom`; `geometry` a plain jsonb guard term). The legacy script wrapped each 1,000-row batch in its OWN withTransaction (:252-253, :275); the library wraps ALL batches in ONE step-scoped transaction (executeWrite) — declared here as the truth, with the atomicity-window widening recorded in deviations[].",
             "liveness": {
               "kind": "file",
               "ref": "src/tests/step-library.logic.test.ts"
@@ -107,20 +108,20 @@
       {
         "table": "parcels",
         "column": "ravine_dataset_version_when_enriched",
-        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
-        "set_null_on_change_of": "geometry"
+        "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
+        "set_null_on_change_of": "geom"
       },
       {
         "table": "parcels",
         "column": "heritage_dataset_version_when_enriched",
-        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
-        "set_null_on_change_of": "geometry"
+        "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
+        "set_null_on_change_of": "geom"
       },
       {
         "table": "parcels",
         "column": "centreline_dataset_version_when_enriched",
-        "when": "this write changes parcels.geometry (jsonb IS DISTINCT FROM) — the DEC-FENCE2 CASE arm, #418",
-        "set_null_on_change_of": "geometry"
+        "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
+        "set_null_on_change_of": "geom"
       }
     ],
     "publish": "direct",
