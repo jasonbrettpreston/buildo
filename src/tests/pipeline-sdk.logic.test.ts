@@ -1293,17 +1293,22 @@ describe('Pipeline SDK', () => {
     // is deliberately absent from this list, not missing) and PROVEN equal to the legacy SQL
     // text by step-library.logic.test.ts's T5/T7 (`buildWritePlan(...).upsertSqlFor(1)` vs the
     // legacy file text whitespace-normalised) — this test reads the same declaration, not the SQL.
-    it('load-parcels.js declares the IS DISTINCT FROM guard on the 8 non-geometry columns, plus geometry via invalidates[] (re-homed onto the descriptor at conversion)', () => {
+    it('load-parcels.js declares the IS DISTINCT FROM guard on 9 columns (8 legacy + raw geometry) and DEC-FENCE2 watches the derived geom (WF3 2026-09-28)', () => {
+      // WF3 2026-09-28 (parcels geom guard): the pre-WF3 shape pinned here (8 columns, no geometry,
+      // invalidates watching geometry) left 9,855 NULL + 16 invalid geoms unreachable. geometry is now a
+      // declared guard term, and the invalidates watch geom, so the codegen adds geom IS DISTINCT FROM as the first term.
       const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'load-parcels.descriptor.json'), 'utf-8'));
       const write = d.outputs.writes[0].write_discipline;
       expect(write.guard).toBe('is_distinct_from');
       expect(write.guard_columns).toEqual([
         'lot_size_sqm', 'feature_type', 'address_number', 'linear_name_full',
         'addr_num_normalized', 'street_name_normalized', 'street_type_normalized', 'date_effective',
+        'geometry',
       ]);
-      expect(write.guard_columns).not.toContain('geometry');
+      expect(write.guard_columns).not.toContain('geom');
       const invalidates = d.outputs.invalidates as Array<{ set_null_on_change_of: string }>;
-      expect(invalidates.every((inv) => inv.set_null_on_change_of === 'geometry')).toBe(true);
+      expect(invalidates).toHaveLength(3);
+      expect(invalidates.every((inv) => inv.set_null_on_change_of === 'geom')).toBe(true);
     });
 
     // §9.3 — load-massing.js upsert must guard against no-op updates.
