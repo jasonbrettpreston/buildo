@@ -325,7 +325,8 @@ function buildLoadMeta(ctx) {
     rows_read: numberOrNull(a.feature_count) || 0,
     records_inserted: inserted,
     records_updated: updated,
-    records_unchanged: Math.max(0, (numberOrNull(a.feature_count) || 0) - inserted - updated),
+    // measured by the write (no-op rows it submitted), never read − inserted − updated (Spec 122 §11 KFM 9)
+    records_unchanged: numberOrNull(w.unchanged) || 0,
     records_skipped: numberOrNull(a.shaped_skipped) || 0,
     errors: numberOrNull(a.batch_errors) || 0,
   };

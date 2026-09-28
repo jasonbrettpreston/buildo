@@ -276,7 +276,7 @@
     },
     "on_batch_error": "drop_batch",
     "on_batch_error_why": {
-      "text": "AP-D3 (PIN, DO NOT FIX — Spec 123 §3.1). A failed batch flush is logged, `errors++`, and its rows DROPPED for the run [READ load-address-points.js:372-378]; the schema's own on_batch_error description cites this file. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it. The alternative (fail_step) would be a behaviour change smuggled into a no-op-diff commit; the post-cutover fix, if any, is a separate commit with its own RED lock.",
+      "text": "AP-D3 (PIN, DO NOT FIX — Spec 123 §3.1). A failed batch flush is logged, `errors++`, and its rows DROPPED for the run [READ load-address-points.js:372-378]; the schema's own on_batch_error description cites this file. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it. The alternative (fail_step) would be a behaviour change smuggled into a no-op-diff commit; the post-cutover fix, if any, is a separate commit with its own RED lock. UPDATE 2026-09-27 (conversion-simplification item 8, operator-authorized; review_followups #69): records_unchanged is now MEASURED by the write (written.unchanged = rows the guarded upsert submitted but did not change), never derived, so the \"inflated by the dropped count\" clause above is RETIRED; runIngestPhase's row-conservation identity (scripts/lib/step/conservation.js) throws on any unaccounted row. The batch-drop itself (#68) is untouched by this change.",
       "liveness": {
         "kind": "file",
         "ref": "scripts/load-address-points.js"

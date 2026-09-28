@@ -2120,6 +2120,8 @@ describe('Fold C / LR-D9 — when:"pre_write" aborts BEFORE any write (Spec 59 L
         features,
         acquired: {
           feature_count: featureCount,
+          // the raw count the real seam always sets (acquire.js); runIngestPhase's row-conservation identity reads it (Spec 122 §11 KFM 9)
+          rows_parsed: featureCount,
           last_modified: LIVE_LAST_MODIFIED,
           last_modified_ms: Date.parse(LIVE_LAST_MODIFIED),
           etag: null,

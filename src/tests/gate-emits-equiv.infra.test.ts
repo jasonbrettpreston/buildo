@@ -182,6 +182,7 @@ describe('gate C — declared emits equals emitted records_meta', () => {
     const literalRunnerKeys = [
       'ledger_row',
       'chain_run_id',
+      'code_sha',
       'pool_errors',
       'checks_passed',
       'checks_failed',
@@ -199,8 +200,9 @@ describe('gate C — declared emits equals emitted records_meta', () => {
     for (const key of ['gate', 'config', 'terminal', 'dry_run', 'errors', 'warnings']) {
       expect(set.has(key)).toBe(true);
     }
-    // A fixed, closed length so a silent drop is caught.
-    expect(emits.RUNNER_META_KEYS.length).toBe(13);
+    // A fixed, closed length so a silent drop is caught (13 -> 14: code_sha,
+    // conversion-simplification item 9).
+    expect(emits.RUNNER_META_KEYS.length).toBe(14);
   });
 
   // -------------------------------------------------------------------------

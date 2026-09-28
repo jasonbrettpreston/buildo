@@ -658,7 +658,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | OBSERVABLE | PASS | PASS |
 | SCALABLE | PASS | PASS (3 deferred) |
 | UNDERSTANDABLE | PASS | PASS |
-| ACCURATE | PASS | PASS (4 deferred) |
+| ACCURATE | PASS | PASS (3 deferred) |
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -717,8 +717,8 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 - compare ran: true · diffs found: 153 · unexplained: 0
 
 ### Test suite (item iii)
-- 1619/1619 passed (suite success=true)
-- harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1625/1625 passed (suite success=true)
+- harvested: 31 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
 - failing: none
@@ -740,7 +740,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=39864B notes=12911B checks=7 rows records_meta=1501B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=40476B notes=12911B checks=7 rows records_meta=1549B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

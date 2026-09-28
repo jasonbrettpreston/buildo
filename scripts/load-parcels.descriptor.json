@@ -198,7 +198,7 @@
     },
     "on_batch_error": "drop_batch",
     "on_batch_error_why": {
-      "text": "PR-D1 (PIN, DO NOT FIX — Spec 123 §3.1, review_followups #68). A failed flushBatch() logs, `errors++`, and DROPS the batch's rows for the run [READ scripts/load-parcels.js:550-554; the same in the truncated-CSV recovery path :571-575], and records_unchanged is then inflated by the dropped count [:401's own comment]. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it; fail_step would be a behaviour change smuggled into a no-op-diff commit. The post-cutover fix, if any, is a separate commit with its own RED lock.",
+      "text": "PR-D1 (PIN, DO NOT FIX — Spec 123 §3.1, review_followups #68). A failed flushBatch() logs, `errors++`, and DROPS the batch's rows for the run [READ scripts/load-parcels.js:550-554; the same in the truncated-CSV recovery path :571-575], and records_unchanged is then inflated by the dropped count [:401's own comment]. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it; fail_step would be a behaviour change smuggled into a no-op-diff commit. The post-cutover fix, if any, is a separate commit with its own RED lock. UPDATE 2026-09-27 (conversion-simplification item 8, operator-authorized; review_followups #69): records_unchanged is now MEASURED by the write (written.unchanged = rows the guarded upsert submitted but did not change), never derived, so the \"inflated by the dropped count\" clause above is RETIRED; runIngestPhase's row-conservation identity (scripts/lib/step/conservation.js) throws on any unaccounted row. The batch-drop itself (#68) is untouched by this change.",
       "liveness": {
         "kind": "file",
         "ref": "scripts/load-parcels.js"
@@ -475,7 +475,7 @@
       "check_id": "none"
     },
     {
-      "what": "PR-D1 residue — a failed batch's rows are logged, counted in `errors`, and DROPPED for the run, so the load can complete with fewer than the source's rows and no per-row evidence of which; `records_unchanged` is inflated by the dropped count. Declared via execution.on_batch_error:\"drop_batch\".",
+      "what": "PR-D1 residue — a failed batch's rows are logged, counted in `errors`, and DROPPED for the run, so the load can complete with fewer than the source's rows and no per-row evidence of which; `records_unchanged` is inflated by the dropped count. Declared via execution.on_batch_error:\"drop_batch\". RETIRED 2026-09-27 for records_unchanged (conversion-simplification item 8: now measured, see on_batch_error_why); the batch-drop clause stands.",
       "measured": "load-parcels.js:550-554 (catch → log.error, errors++, batch = []) and :401's own 'lost rows inflate this count' comment [MEASURED 2026-09-24, report §5.1 PR-D1]",
       "check_id": "records_errors"
     },

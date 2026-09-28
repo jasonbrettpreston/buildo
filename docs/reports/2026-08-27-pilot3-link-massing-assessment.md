@@ -360,6 +360,7 @@ Declared BEFORE any old/new diff. Sources: `scripts/analysis/capture-step-golden
 | `key:pipeline_runs[0].id` | `excluded-with-reason` | serial PK (`VOLATILE_KEYS`) — standalone captures only (in-chain the row is `run-chain`'s) |
 | `key:pipeline_runs[0].started_at` · `key:pipeline_runs[0].completed_at` · `key:pipeline_runs[0].duration_ms` | `excluded-with-reason` | wall clock / elapsed (`VOLATILE_KEYS`); written out in full because the inventory is machine-read key-by-key |
 | `key:id` · `key:run_id` · `key:timestamp` · `key:elapsed_ms` · `key:elapsed_s` · `key:generated_at` · `key:checked_at` · `key:captured_at` · `key:summary.records_meta.chain_run_id` · `key:pipeline_runs[0].records_meta.chain_run_id` | `excluded-with-reason` | `VOLATILE_KEYS` (harness); `chain_run_id` added 2026-09-03 (WF2 "Rules 10/11/12 mechanical checkers" C2 — a per-invocation chain-run correlation UUID, R-B/R-U, run-scoped by design; stamped on both the emitted summary and the persisted `pipeline_runs` row) |
+| `key:summary.records_meta.code_sha` · `key:pipeline_runs[0].records_meta.code_sha` | `excluded-with-reason` | `VOLATILE_KEYS` (harness); `code_sha` added 2026-09-27 (conversion-simplification item 9, Spec 122 §11 KFM 11 — the commit the run executed, `GITHUB_SHA` else `git rev-parse HEAD`; differs between any two captures taken at different commits by design; stamped on both the emitted summary and the persisted `pipeline_runs` row) |
 | `row:sys_duration_ms` · `row:sys_velocity_rows_sec` · `row:sys_linked_parcel_null_centroid_count_duration_ms` · `row:sys_nearest_share_pct_duration_ms` · `row:sys_parcels_with_centroid_duration_ms` · `row:sys_pb_distinct_parcels_duration_ms` · `row:sys_pb_rows_duration_ms` · `row:sys_pb_unique_pairs_violations_duration_ms` · `row:sys_borrowed_primary_links_duration_ms` | `excluded-with-reason` | `VOLATILE_METRIC_PREFIXES` `sys_` — every per-check timing companion row, observed on every audited run. This row was updated WF3 S0.3 (2026-09-22): a fresh, non-stale recapture (this session's own goldens) surfaced 6 pre-existing `sys_*_duration_ms` companions (added by plausibility rows landed after this report was authored on 2026-08-27) that the inventory never named, plus the new `sys_borrowed_primary_links_duration_ms` this commit's own plausibility row adds — all now declared explicitly rather than silently passing on a stale golden that predated them. |
 | `pattern:duration_literal` | `normalize-then-match` | `completed in 8.4s`, the `Linking complete` `duration: '7.9s'`, progress `— 7.8s —` → `<DUR>` |
 | `pattern:iso_timestamp` · `pattern:pg_timestamp` · `pattern:rows_per_sec` · `pattern:run_id_literal` · `pattern:pipeline_runs_id_literal` · `pattern:pid_literal` | `normalize-then-match` | harness masks (`<TS>`, `<RATE>` for the progress line's `rows/s`, `<RUN_ID>`, `pipeline_runs <ID>`, `pid=<PID>`) |
@@ -563,8 +564,8 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 - compare ran: true · diffs found: 466 · unexplained: 0
 
 ### Test suite (item iii)
-- 1619/1619 passed (suite success=true)
-- harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1625/1625 passed (suite success=true)
+- harvested: 31 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
 - failing: none
@@ -586,7 +587,7 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link runner=runLinkPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5897B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5962B (newest post/ capture) |
 
 **Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 

@@ -919,6 +919,23 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     }
   });
 
+  it('records_meta.code_sha (conversion-simplification item 9) — the commit the run executed: GITHUB_SHA when CI sets it, else git HEAD; a runner key, stamped on every recorded run', async () => {
+    expect(stepLib.RUNNER_META_KEYS).toContain('code_sha');
+    const saved = process.env.GITHUB_SHA;
+    const cap = captureEmissions();
+    try {
+      process.env.GITHUB_SHA = 'ABCDEF0123456789ABCDEF0123456789ABCDEF01';
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool: fakePool(), chainId: 'sources' });
+      expect(cap.summary().records_meta.code_sha, 'CI commit, normalised to lower case').toBe('abcdef0123456789abcdef0123456789abcdef01');
+    } finally {
+      cap.restore();
+      if (saved === undefined) delete process.env.GITHUB_SHA; else process.env.GITHUB_SHA = saved;
+    }
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim().toLowerCase();
+    expect(stepLib.resolveCodeSha({}), 'no GITHUB_SHA -> this checkout HEAD').toBe(head);
+    expect(stepLib.resolveCodeSha({ GITHUB_SHA: 'not-a-sha' }), 'a malformed GITHUB_SHA is ignored, never stamped').toBe(head);
+  });
+
   it('a blocking FAIL rejects — but the audit rows are emitted FIRST (WAP, §7.2)', async () => {
     const pool = fakePool();
     const cap = captureEmissions();
@@ -2100,6 +2117,9 @@ describe('LR-D9 — when:"pre_write" aborts BEFORE any write (Fold C, operator r
   function acquiredOf(featureCount: number, skipped: number) {
     return {
       feature_count: featureCount,
+      // Spec 122 §11 KFM 9 — the RAW acquisition count the real acquireExternal
+      // always sets; rowConservation throws when it is absent.
+      rows_parsed: featureCount,
       invalid_geometry_skipped: skipped,
       invalid_geometry_repaired: 0,
       geometry_collection_extracted: 0,
@@ -2258,7 +2278,7 @@ describe('LR-D9 — when:"pre_write" aborts BEFORE any write (Fold C, operator r
   it('the OTHER direction — a healthy load still reaches executeWrite through the same gate', async () => {
     const config = seedConfig();
     const pool = fakePool({ logicVars: config });
-    const written = { inserted: 0, updated: 0, deleted: 0, rows_scanned: 1, rows_changed: 0, delete_skipped_empty_guard: false };
+    const written = { inserted: 0, updated: 0, deleted: 0, rows_scanned: 1, rows_changed: 0, unchanged: 1, delete_skipped_empty_guard: false };
     const stubs = [
       vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: { ...prior, feature_count: 1 }, error: null }),
       vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
@@ -5208,14 +5228,20 @@ describe('INGESTOR CSV acquisition — format axis + compute.shapeRecord (batch-
         tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
         features: rawFeatures,
         acquired: {
-          feature_count: 5, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+          feature_count: 5, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 5, bytes_downloaded: 100,
           content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
           last_modified: null, last_modified_ms: null, etag: null, license_url: null,
         },
       }),
-      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
-      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
-        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      vi.spyOn(writeLib, 'validateGeometries').mockImplementation(async (...args: unknown[]) => (
+        { carried: args[2] as unknown[], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }
+      )),
+      vi.spyOn(writeLib, 'executeWrite').mockImplementation(async (...args: unknown[]) => {
+        const carried = (args[1] as { carried: unknown[] }).carried;
+        return {
+          inserted: 0, updated: 0, deleted: 0, rows_scanned: carried.length, rows_changed: 0,
+          unchanged: carried.length, delete_skipped_empty_guard: false,
+        };
       }),
     ];
     try {
@@ -5449,9 +5475,15 @@ describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind
     const stubs = [
       vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
       vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
-      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
-      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
-        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      vi.spyOn(writeLib, 'validateGeometries').mockImplementation(async (...args: unknown[]) => (
+        { carried: args[2] as unknown[], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }
+      )),
+      vi.spyOn(writeLib, 'executeWrite').mockImplementation(async (...args: unknown[]) => {
+        const carried = (args[1] as { carried: unknown[] }).carried;
+        return {
+          inserted: 0, updated: 0, deleted: 0, rows_scanned: carried.length, rows_changed: 0,
+          unchanged: carried.length, delete_skipped_empty_guard: false,
+        };
       }),
     ];
     try {
@@ -5503,7 +5535,7 @@ describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind
       tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
       features: rawFeatures,
       acquired: {
-        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 3, bytes_downloaded: 100,
         content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
         last_modified: null, last_modified_ms: null, etag: null, license_url: null,
       },
@@ -5550,7 +5582,7 @@ describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind
       tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
       features: rawFeatures,
       acquired: {
-        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        feature_count: 3, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 3, bytes_downloaded: 100,
         content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
         last_modified: null, last_modified_ms: null, etag: null, license_url: null,
       },
@@ -5916,7 +5948,7 @@ describe('runIngestPhase honours write_discipline.set_source:"compute" — compu
     tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
     features,
     acquired: {
-      feature_count: features.length, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+      feature_count: features.length, bad_key_count: 0, null_geometry_count: 0, rows_parsed: features.length, bytes_downloaded: 100,
       content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
       last_modified: null, last_modified_ms: null, etag: null, license_url: null,
     },
@@ -6613,7 +6645,7 @@ describe('runIngestPhase — write_discipline.class dispatch (INGESTOR prerequis
     tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
     features,
     acquired: {
-      feature_count: features.length, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
+      feature_count: features.length, rows_parsed: features.length, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
       geometry_collection_extracted: 0, skipped_keys: [],
       content_hash: 'aa', source_dataset_version: 'aa', last_modified: null, last_modified_ms: null,
       etag: null, license_url: null,
@@ -6756,7 +6788,7 @@ describe('the pre_write gate three-way — checks[].on_warn "skip_write" (INGEST
     tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
     features: [{ source_id: 1, geom: Buffer.from('') }],
     acquired: {
-      feature_count: 1, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
+      feature_count: 1, rows_parsed: 1, invalid_geometry_skipped: 0, invalid_geometry_repaired: 0,
       geometry_collection_extracted: 0, skipped_keys: [],
       content_hash: 'aa', source_dataset_version: 'aa', last_modified: null, last_modified_ms: null,
       etag: null, license_url: null,
@@ -6900,15 +6932,21 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
     const stubs = [
       vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
       vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
-      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
-      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
-        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      vi.spyOn(writeLib, 'validateGeometries').mockImplementation(async (...args: unknown[]) => (
+        { carried: args[2] as unknown[], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }
+      )),
+      vi.spyOn(writeLib, 'executeWrite').mockImplementation(async (...args: unknown[]) => {
+        const carried = (args[1] as { carried: unknown[] }).carried;
+        return {
+          inserted: 0, updated: 0, deleted: 0, rows_scanned: carried.length, rows_changed: 0,
+          unchanged: carried.length, delete_skipped_empty_guard: false,
+        };
       }),
       vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
         tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
         features: rawFeatures,
         acquired: {
-          feature_count: 2, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+          feature_count: 2, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 2, bytes_downloaded: 100,
           content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
           last_modified: null, last_modified_ms: null, etag: null, license_url: null,
         },
@@ -7028,8 +7066,12 @@ describe('INGESTOR prerequisite 0o — acquired.rows_read / rows_shaped / column
           repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [],
         };
       }),
-      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
-        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      vi.spyOn(writeLib, 'executeWrite').mockImplementation(async (...args: unknown[]) => {
+        const carried = (args[1] as { carried: unknown[] }).carried;
+        return {
+          inserted: 0, updated: 0, deleted: 0, rows_scanned: carried.length, rows_changed: 0,
+          unchanged: carried.length, delete_skipped_empty_guard: false,
+        };
       }),
       // rows_parsed (7) is deliberately UNEQUAL to feature_count (4) — 3 rows were
       // dropped upstream (bad key / null geometry) before ever reaching this mock,
@@ -7194,9 +7236,15 @@ describe('INGESTOR prerequisite 0p — shapeRecord skip reasons + tags', () => {
     const stubs = [
       vi.spyOn(stalenessLib, 'readPriorEmitWithPosture').mockResolvedValue({ prior: null, error: null }),
       vi.spyOn(writeLib, 'assertWritePrivileges').mockResolvedValue({ ravines: { rls_enabled: true, bypassrls: true, policies: 0 } }),
-      vi.spyOn(writeLib, 'validateGeometries').mockResolvedValue({ carried: [], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }),
-      vi.spyOn(writeLib, 'executeWrite').mockResolvedValue({
-        inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0, delete_skipped_empty_guard: false,
+      vi.spyOn(writeLib, 'validateGeometries').mockImplementation(async (...args: unknown[]) => (
+        { carried: args[2] as unknown[], repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [] }
+      )),
+      vi.spyOn(writeLib, 'executeWrite').mockImplementation(async (...args: unknown[]) => {
+        const carried = (args[1] as { carried: unknown[] }).carried;
+        return {
+          inserted: 0, updated: 0, deleted: 0, rows_scanned: carried.length, rows_changed: 0,
+          unchanged: carried.length, delete_skipped_empty_guard: false,
+        };
       }),
     ];
     try {
@@ -7238,7 +7286,7 @@ describe('INGESTOR prerequisite 0p — shapeRecord skip reasons + tags', () => {
       tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
       features: rawFeatures,
       acquired: {
-        feature_count: 6, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        feature_count: 6, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 6, bytes_downloaded: 100,
         content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
         last_modified: null, last_modified_ms: null, etag: null, license_url: null,
       },
@@ -7288,7 +7336,7 @@ describe('INGESTOR prerequisite 0p — shapeRecord skip reasons + tags', () => {
       tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
       features: rawFeatures,
       acquired: {
-        feature_count: 2, bad_key_count: 0, null_geometry_count: 0, bytes_downloaded: 100,
+        feature_count: 2, bad_key_count: 0, null_geometry_count: 0, rows_parsed: 2, bytes_downloaded: 100,
         content_hash: 'deadbeef', source_dataset_version: 'deadbeef',
         last_modified: null, last_modified_ms: null, etag: null, license_url: null,
       },

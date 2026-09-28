@@ -668,8 +668,8 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 - compare ran: true · diffs found: 131 · unexplained: 0
 
 ### Test suite (item iii)
-- 1619/1619 passed (suite success=true)
-- harvested: 29 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1625/1625 passed (suite success=true)
+- harvested: 31 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
 - failing: none
@@ -691,7 +691,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 4 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=ingest runner=runIngestPhase: no staleness.ledgerGatedSkip/selectMode/ENRICHER full-fold on this path (INGESTOR's own tier-1/tier-2 staleness gate); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the forced decision that bypasses the same gate override.force_run bypasses · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=61701B notes=16005B checks=20 rows records_meta=5725B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=61701B notes=16005B checks=20 rows records_meta=5777B (newest post/ capture) |
 
 **Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 

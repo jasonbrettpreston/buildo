@@ -60,6 +60,7 @@
  */
 'use strict';
 
+const { execFileSync } = require('child_process');
 const pipeline = require('../pipeline');
 // Module-top alias — see the pass-5 statement_timeout restore in runEnrichPhase for why this
 // value getter must not be spelled `pipeline.getPoolStatementTimeoutMs(` inside a runner body.
@@ -72,6 +73,7 @@ const { resolveConfig, retiredVarRow } = require('./config');
 const staleness = require('./staleness');
 const acquire = require('./acquire');
 const write = require('./write');
+const { rowConservation } = require('./conservation');
 const { finalizeStrandedRun } = require('../ledger-window');
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[] executor.
 // EP-D17 (WF3, 2026-09-10, C1/C4) — parseDurationMs resolves the step's own declared
@@ -140,6 +142,7 @@ const RUNNER_META_KEYS = Object.freeze([
   'terminal',
   'ledger_row',
   'chain_run_id',
+  'code_sha',
   'pool_errors',
   'dry_run',
   'checks_passed',
@@ -149,6 +152,31 @@ const RUNNER_META_KEYS = Object.freeze([
   'warnings',
   'audit_table',
 ]);
+
+/**
+ * `records_meta.code_sha` (WF2 "conversion simplification" item 9) — the commit whose code
+ * this run executed, stamped by the RUNNER on every run it records (never per step, so it is
+ * a RUNNER_META_KEYS member). `GITHUB_SHA` when CI sets it (the dispatched commit, not a
+ * branch tip), else `git rev-parse HEAD` of this checkout; `null` — observable, never a
+ * fabricated value — when neither resolves. Replaces the forensic headSha + reflog
+ * diagnosis the 2026-09-15 stale-main cloud failure needed.
+ * @param {Record<string, string|undefined>} [env]
+ * @returns {string|null}
+ */
+function resolveCodeSha(env = process.env) {
+  const SHA_RE = /^[0-9a-f]{7,64}$/i;
+  const ci = typeof env.GITHUB_SHA === 'string' ? env.GITHUB_SHA.trim() : '';
+  if (SHA_RE.test(ci)) return ci.toLowerCase();
+  try {
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: __dirname, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    return SHA_RE.test(head) ? head.toLowerCase() : null;
+  } catch (err) {
+    pipeline.log.warn('[step-runner]', `code_sha: no GITHUB_SHA and git rev-parse HEAD failed (${err.message}) — records_meta.code_sha is null`);
+    return null;
+  }
+}
 
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
@@ -1024,6 +1052,11 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const written = writeSpec.write_discipline.class === write.STAGING_FULL_REPLACE_CLASS
     ? await write.executeStagingReplace(pool, { ...writeArgs, prior })
     : await write.executeWrite(pool, { ...writeArgs, shouldSkipDelete: compute.shouldSkipDelete });
+  // ROW CONSERVATION (WF2 "conversion simplification" item 8, Spec 122 §11 KFM 9): every
+  // row the source yielded is a named skip, an insert, an update or a MEASURED no-op —
+  // exactly once. A mismatch throws RowConservationError with every count (the write.js
+  // 0-of-495,495 class, generally, not only the ValidationKeyMissError seam).
+  rowConservation(acquired, written);
 
   return {
     skipped: false,
@@ -4862,7 +4895,7 @@ async function runWithPool(runnable, pool, ctx) {
   // logic.test.ts) - windowError = err; ... throw err; must stay close to catch (err) {.
   function emitInnerLockDeniedSkip() {
     status = RUN_STATUS.SELF_SKIPPED;
-    recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, pool_errors: pool.__buildoPoolErrorCount ?? 0 };
+    recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, code_sha: resolveCodeSha(), pool_errors: pool.__buildoPoolErrorCount ?? 0 };
     pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     return { status, recordsMeta, runId, acquired: false };
   }
@@ -5540,6 +5573,8 @@ async function runWithPool(runnable, pool, ctx) {
         // uncorrelated. `null` is the honest, always-observable standalone
         // value (Rule 1: nothing hidden).
         chain_run_id: chainRunId,
+        // Item 9 — the commit this run executed (resolveCodeSha, above); always present.
+        code_sha: resolveCodeSha(),
         // Pilot 9 commit 8 P5(a), Spec 48 §3.10 — pool.on('error') events (pipeline.js's
         // attachPoolErrorLogger) COALESCE-merged in from the pool's own per-run counter,
         // not log-only: an idle-client error used to be visible ONLY on stdout, invisible
@@ -5590,7 +5625,7 @@ async function runWithPool(runnable, pool, ctx) {
       // a lock-held skip is still a real chain-spawned (or standalone) row,
       // and the seam pass / chain-end synthesis must see the SAME key on
       // every row regardless of which branch produced it.
-      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, pool_errors: pool.__buildoPoolErrorCount ?? 0 };
+      recordsMeta = { ...skipRecordsMeta(descriptor, 'advisory_lock_held_elsewhere'), ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1], chain_run_id: chainRunId, code_sha: resolveCodeSha(), pool_errors: pool.__buildoPoolErrorCount ?? 0 };
       pipeline.emitSummary({ records_total: null, records_new: null, records_updated: null, records_meta: recordsMeta });
     }
     return { status, recordsMeta, runId, acquired: lockResult.acquired };
@@ -5682,6 +5717,7 @@ module.exports = {
   STEP_CTX_KEYS,
   LEDGER_ROW_VALUES,
   RUNNER_META_KEYS,
+  resolveCodeSha,
   deriveMeta,
   deriveCounters,
   resolveCounterSource,
