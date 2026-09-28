@@ -91,3 +91,58 @@ describe('pre-commit tests the index — partial staging is blocked', () => {
     expect(code[0]).toMatch(/^bash scripts\/hooks\/check-partial-staging\.sh && \\$/);
   });
 });
+
+// WF2 hygiene H2 — GitHub warns at 50 MB and rejects at 100 MB; three 92 MB
+// before-image files reached history. The same staged-content preamble that
+// runs first in `.husky/pre-commit` refuses a staged blob over the 50 MB cap
+// and names the ignore rule. Behavioural, in the same throwaway repo.
+describe('pre-commit refuses a staged blob over 50 MB', () => {
+  it('RED: a 51 MB staged blob blocks, naming the file, the cap and .gitignore', () => {
+    git('reset', '-q');
+    git('checkout', '--', '.');
+    write('big.bin', Buffer.alloc(51 * 1024 * 1024).toString('latin1'));
+    git('add', 'big.bin');
+    const r = runCheck();
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain('big.bin');
+    expect(r.stdout).toContain('50 MB');
+    expect(r.stdout).toContain('.gitignore');
+    git('reset', '-q');
+    fs.rmSync(path.join(repo, 'big.bin'), { force: true });
+  });
+
+  it('GREEN: a small (1 KB) staged file passes the size cap', () => {
+    git('reset', '-q');
+    write('small.bin', Buffer.alloc(1024).toString('latin1'));
+    git('add', 'small.bin');
+    const r = runCheck();
+    expect(r.status).toBe(0);
+    git('reset', '-q');
+    fs.rmSync(path.join(repo, 'small.bin'), { force: true });
+  });
+
+  it('EDGE: a staged path with a space (51 MB) is named intact', () => {
+    write('big file.bin', Buffer.alloc(51 * 1024 * 1024).toString('latin1'));
+    git('add', 'big file.bin');
+    const r = runCheck();
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain('  big file.bin (');
+    git('reset', '-q');
+    fs.rmSync(path.join(repo, 'big file.bin'), { force: true });
+  });
+});
+
+// WF2 hygiene H6 — husky's own install unconditionally runs
+// `git config core.hooksPath .husky/_`, which REVERTS the tracked-`.husky`
+// setup (`node scripts/hooks/install-hooks.mjs`, run by `prepare` and
+// `npm run worktree:setup`) and silently reopens the hookless-worktree hole.
+// RED on the old sentence, which read: "After `npm ci --ignore-scripts`, run
+// `npx husky` in the worktree and confirm `ls .husky/_/pre-commit` before the
+// first commit." — it mentions `npx husky` with no `NEVER` on the line.
+describe('docs never instruct npx husky (H6)', () => {
+  it('every line mentioning `npx husky` in tasks/lessons.md also says NEVER', () => {
+    const lines = fs.readFileSync(path.join(REPO_ROOT, 'tasks/lessons.md'), 'utf8').split('\n');
+    const offenders = lines.filter((l) => l.includes('npx husky') && !l.includes('NEVER'));
+    expect(offenders).toEqual([]);
+  });
+});

@@ -55,6 +55,12 @@ on:
         required: false
         type: string
 
+# WF2 hygiene H7: the pre-dispatch step reads this SHA's CI runs (`gh run list`),
+# which needs actions:read; nothing in this workflow writes via GITHUB_TOKEN.
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   sources:
     runs-on: ubuntu-latest   # Spec 113 §8.2 option 3 (Network Restrictions off + strong auth) — resolved 2026-07-20
@@ -184,6 +190,23 @@ jobs:
       - name: Pre-flight — migrate.js --verify (runbook rule 2)
         run: node scripts/migrate.js --verify
         env: *pipeline-env
+
+      - name: Pre-flight — cloud-pre-dispatch (seeds, migrations, guards, CI green for this SHA)
+        # WF2 hygiene H7 (Spec 123 §7.2 A5; operator D2 2026-09-27). Refuses the dispatch
+        # BEFORE any chain step runs when a converted step's logic_variables seed row is
+        # missing (LM-D15 otherwise throws mid-chain, after the dispatch is spent), a
+        # migration is unapplied, a declared guard is absent, or this SHA's newest
+        # `Test Suite` / `DB Integration Tests` run is not `success`. stranded_running_rows
+        # and sharing_chain_running are deliberately NOT selected: reconcile-runs.js and
+        # the chain concurrency guard own those (one owner per concern). Exit 1 on FAIL even
+        # with --dry (--dry only skips writing report files). The three anchor keys are
+        # inlined because an alias cannot be extended with GH_TOKEN (repo pattern).
+        run: node scripts/analysis/cloud-pre-dispatch.mjs --dry --only=seed_rows_present,migrations_missing,declared_guards_present,ci_green_for_sha
+        env:
+          PIPELINE_CHAIN: ${{ github.workflow }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          SUPABASE_CA_CERT_PATH: ${{ github.workspace }}/scripts/certs/supabase-ca.pem
+          GH_TOKEN: ${{ github.token }}
 
       - name: Ensure data/ exists (gitignored — absent on every fresh checkout)
         # Pipeline Rehab P2 (2026-08-03): belt to the loaders' own in-code

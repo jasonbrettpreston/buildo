@@ -14,6 +14,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
@@ -210,5 +211,40 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
   it('RED — a tampered pre-commit with the J2 lib-suite invocation stripped is caught', () => {
     const tampered = PRE_COMMIT.replace(/VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src\/tests\/steps\/ --run \|\| exit 1/, 'true');
     expect(stripComments(tampered)).not.toMatch(/vitest src\/tests\/steps\/ --run/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WF2 hygiene H6 (2026-09-27) — hooks run in EVERY worktree. `core.hooksPath`
+// used to be `.husky/_`, a husky-GENERATED, gitignored directory that
+// `npm ci --ignore-scripts` never creates, so a fresh worktree silently ran NO
+// hooks (21 hookless commits on 2026-09-27). The hooks path is now the TRACKED
+// `.husky` directory, so each tracked hook must be directly executable by git:
+// a `#!/bin/sh` first line (Git for Windows reads the shebang) AND mode 100755
+// in the index (git on Linux ignores a non-executable hook, with only a hint).
+// ---------------------------------------------------------------------------
+describe('hooks path (H6) — every worktree runs the tracked .husky hooks', () => {
+  const PKG = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')) as { scripts: Record<string, string> };
+  const HOOK_NAMES = ['pre-commit', 'pre-push', 'commit-msg', 'prepare-commit-msg'];
+
+  it('GREEN — `prepare` sets core.hooksPath via install-hooks.mjs (never the generated `husky` wrapper); worktree:setup verifies', () => {
+    expect(PKG.scripts.prepare).toBe('node scripts/hooks/install-hooks.mjs');
+    expect(PKG.scripts['worktree:setup']).toMatch(/npm ci --ignore-scripts/);
+    expect(PKG.scripts['worktree:setup']).toMatch(/npm rebuild @ast-grep\/cli/);
+    expect(PKG.scripts['worktree:setup']).toMatch(/node scripts\/hooks\/install-hooks\.mjs --verify$/);
+    const installer = fs.readFileSync(path.join(REPO_ROOT, 'scripts/hooks/install-hooks.mjs'), 'utf8');
+    expect(installer).toContain("'core.hooksPath', HOOKS_PATH");
+    expect(installer).toContain("const HOOKS_PATH = '.husky';");
+  });
+
+  it('GREEN — every tracked hook starts `#!/bin/sh` and is mode 100755 in the index', () => {
+    const r = spawnSync('git', ['ls-files', '-s', '--', ...HOOK_NAMES.map((n) => `.husky/${n}`)], { cwd: REPO_ROOT, encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    const modes = new Map(r.stdout.trim().split('\n').map((l) => [l.split('\t')[1], l.split(/\s+/)[0]]));
+    for (const name of HOOK_NAMES) {
+      expect(modes.get(`.husky/${name}`), `.husky/${name} index mode`).toBe('100755');
+      const first = fs.readFileSync(path.join(REPO_ROOT, '.husky', name), 'utf8').split('\n', 1)[0];
+      expect(first, `.husky/${name} shebang`).toBe('#!/bin/sh');
+    }
   });
 });

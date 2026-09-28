@@ -649,6 +649,7 @@ env:
   as an automated step rather than left to operator discipline: a workflow whose target
   schema has drifted (an unapplied or checksum-mismatched migration) fails loudly here,
   before any pipeline script runs against a schema it wasn't written for.
+- **Cloud pre-dispatch pre-flight** (WF2 hygiene H7, 2026-09-27) — every `chain-*.yml` runs `node scripts/analysis/cloud-pre-dispatch.mjs --dry --only=seed_rows_present,migrations_missing,declared_guards_present,ci_green_for_sha` immediately after the `migrate.js --verify` step: a missing `logic_variables` seed row, an unapplied migration, an absent declared guard, or a SHA whose newest `Test Suite`/`DB Integration Tests` run is not `success` (operator D2) fails the job before any chain step runs. The workflows declare `permissions: { contents: read, actions: read }` for the step's `gh run list`. Locked by `src/tests/chain-predispatch-wiring.infra.test.ts`.
 - **UTC/DST drift** — every workflow's concurrency-guard step additionally logs the current
   America/Toronto time and emits a `::notice` drift annotation; see §2.1 for the full
   reconciliation this implements (single UTC cron entry + observability-grade in-job ET

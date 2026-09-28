@@ -27,9 +27,12 @@ const cloudPre = require('../../scripts/analysis/cloud-pre-dispatch.mjs') as unk
   checkTableFloors: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkSeedRowsPresent: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkSharingChainRunning: (pool: unknown, chainId?: string) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
+  checkCiGreenForSha: (opts: { sha: string; listCiRuns: (sha: string) => Promise<Array<{ workflowName: string; status: string; conclusion: string }>> }) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
+  CHECK_IDS: string[];
+  REQUIRED_CI_WORKFLOWS: string[];
   renderMarkdown: (report: unknown) => string;
   renderConsoleTable: (rows: Array<Record<string, unknown>>) => string;
-  parseArgs: (argv: string[]) => { out: string | null; dry: boolean; help: boolean };
+  parseArgs: (argv: string[]) => { out: string | null; dry: boolean; help: boolean; only: string[] | null; sha: string | null };
   usage: () => string;
   reportStamp: (date?: Date) => string;
   convertedWriteTables: (descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => string[];
@@ -69,6 +72,17 @@ function fakeDescriptors(spec: Record<string, Record<string, unknown>>) {
   for (const [slug, descriptor] of Object.entries(spec)) out[slug] = { descriptor };
   return out;
 }
+
+/**
+ * A stubbed `listCiRuns` returning the newest-first success runs for BOTH required
+ * workflows — every EXISTING `buildReport` call passes this so no test ever spawns
+ * `gh`. The real default (`spawnSync('gh', ['run','list',...])`) is exercised by
+ * nothing here on purpose: CI is not reachable from a unit test.
+ */
+const greenCi = async () => [
+  { workflowName: 'DB Integration Tests', status: 'completed', conclusion: 'success' },
+  { workflowName: 'Test Suite', status: 'completed', conclusion: 'success' },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. stranded_running_rows
@@ -137,7 +151,7 @@ describe('checkMigrationsMissing — both directions (filename-keyed, never vers
     // them, so a FAIL is the only correct answer; the point is that the REAL file
     // listing is what drives it (the check is not fed a hand-written list).
     const pool = fakePool([['FROM schema_migrations', [{ filename: '001_permits.sql' }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}) });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     const r = report.rows.find((x) => x.id === 'migrations_missing');
     expect(r?.severity).toBe('FAIL');
     expect((r?.value as string[]).length).toBeGreaterThan(100);
@@ -393,7 +407,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
   it('one FAIL row among otherwise-INFO rows yields verdict FAIL', async () => {
     // Everything healthy EXCEPT a stranded running row.
     const pool = healthyPool([['stranded', [{ id: 7, pipeline: 'sources:parcels', started_at: null }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}) });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     const severities = report.rows.map((r) => r.severity);
     expect(severities.filter((s) => s === 'FAIL')).toHaveLength(1);
     expect(severities.filter((s) => s === 'INFO').length).toBeGreaterThanOrEqual(4);
@@ -406,15 +420,16 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
       descriptorsByName: fakeDescriptors({
         enrich_heritage: { guards: { requires: [{ kind: 'column', name: 'parcels.heritage_verified_flag', on_missing: 'warn' }] } },
       }),
+      listCiRuns: greenCi,
     });
     expect(report.rows.map((r) => r.severity)).toContain('WARN');
     expect(report.rows.map((r) => r.severity)).not.toContain('FAIL');
     expect(report.verdict).toBe('WARN');
   });
 
-  it('all six checks emit exactly one row each, in declaration order', async () => {
+  it('all seven checks emit exactly one row each, in declaration order', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}) });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     expect(report.rows.map((r) => r.id)).toEqual([
       'stranded_running_rows',
       'migrations_missing',
@@ -422,12 +437,13 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
       'table_floors',
       'seed_rows_present',
       'sharing_chain_running',
+      'ci_green_for_sha',
     ]);
   });
 
   it('every row carries the {id, severity, value, limit, why} shape (one row per check, Spec 48 §3.6)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}) });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     for (const r of report.rows) {
       expect(typeof r.id).toBe('string');
       expect(['FAIL', 'WARN', 'INFO']).toContain(r.severity);
@@ -440,8 +456,184 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
 
   it('the report names the database it graded (never silent about the target)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres' });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
     expect(report.database).toBe('postgres');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The `--only` filter — a selected subset runs, in DECLARATION order, and only
+// the selected checks touch the pool.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildReport { only } — selected subset, declaration order, unselected never runs', () => {
+  /** A healthy pool: every migration applied, no stranded rows, no running chain. */
+  function healthyPool(extra: Array<[string, Array<Record<string, unknown>>]> = []) {
+    const migrationFiles = readdirSync(path.join(REPO_ROOT, 'migrations'))
+      .filter((f: string) => /^\d{3}_.*\.sql$/.test(f))
+      .map((filename: string) => ({ filename }));
+    return fakePool([
+      ['ORDER BY id', extra.find(([n]) => n === 'stranded')?.[1] ?? []],
+      ['chain_sources', []],
+      ['FROM schema_migrations', migrationFiles],
+      ['FROM logic_variables', []],
+      ...extra.filter(([n]) => n !== 'stranded'),
+    ]);
+  }
+
+  it('runs ONLY the selected checks, and in CHECK_IDS declaration order (migrations_missing first)', async () => {
+    const pool = healthyPool();
+    const report = await cloudPre.buildReport(pool, {
+      descriptorsByName: fakeDescriptors({}),
+      only: ['seed_rows_present', 'migrations_missing'],
+      listCiRuns: greenCi,
+    });
+    // Declaration order: migrations_missing (2) before seed_rows_present (5), never the
+    // order they were named on the command line.
+    expect(report.rows.map((r) => r.id)).toEqual(['migrations_missing', 'seed_rows_present']);
+  });
+
+  it('an UNSELECTED check never runs — no stranded-rows query text is ever issued', async () => {
+    const pool = healthyPool();
+    await cloudPre.buildReport(pool, {
+      descriptorsByName: fakeDescriptors({
+        compute_centroids: { config: { logic_variables: [{ name: 'compute_centroids_full_recompute_batch_size' }] } },
+      }),
+      only: ['seed_rows_present', 'migrations_missing'],
+      listCiRuns: greenCi,
+    });
+    expect(pool.calls.some((c) => /FROM pipeline_runs/.test(c.text))).toBe(false);
+    // ...and the two selected queries WERE issued (the filter is not \"run nothing\").
+    expect(pool.calls.some((c) => /FROM schema_migrations/.test(c.text))).toBe(true);
+    expect(pool.calls.some((c) => /FROM logic_variables/.test(c.text))).toBe(true);
+  });
+
+  it('only: null runs all seven checks (the default is unchanged)', async () => {
+    const pool = healthyPool();
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: null, listCiRuns: greenCi });
+    expect(report.rows.map((r) => r.id)).toEqual(cloudPre.CHECK_IDS);
+  });
+
+  it('an unknown id rejects with an Error naming it AND listing the known ids', async () => {
+    const pool = healthyPool();
+    await expect(cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi }))
+      .rejects.toThrow(/nope/);
+    let err: Error | null = null;
+    try {
+      await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi });
+    } catch (e) {
+      err = e as Error;
+    }
+    expect(err).not.toBeNull();
+    for (const id of cloudPre.CHECK_IDS) expect((err as Error).message).toContain(id);
+  });
+
+  it('only: [] rejects — a gate that selects NO checks must not fold to a vacuous PASS', async () => {
+    // `--only=` / `--only=,` parse to [] (parseArgs drops empty entries). Running zero
+    // checks over zero measurements would yield verdict PASS and let a chain dispatch
+    // unchecked — the "green because it never looked" failure this checklist closes.
+    const pool = healthyPool();
+    await expect(cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: [], listCiRuns: greenCi }))
+      .rejects.toThrow(/selected no checks/);
+    // Nothing ran: the refusal is BEFORE any check touches the pool.
+    expect(pool.calls).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. ci_green_for_sha — operator D2 (2026-09-27): never dispatch on a SHA whose CI
+//    is not green. Both directions, through a stubbed listCiRuns (never `gh`).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('checkCiGreenForSha — both directions (operator D2)', () => {
+  /** @param {Array<{workflowName:string,status:string,conclusion:string}>} runs */
+  const stub = (runs: Array<{ workflowName: string; status: string; conclusion: string }>) =>
+    async () => runs;
+
+  it('GREEN: both required workflows completed/success is INFO', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: stub([
+        { workflowName: 'Test Suite', status: 'completed', conclusion: 'success' },
+        { workflowName: 'DB Integration Tests', status: 'completed', conclusion: 'success' },
+      ]),
+    });
+    expect(r.id).toBe('ci_green_for_sha');
+    expect(r.severity).toBe('INFO');
+    expect(r.value).toMatchObject({
+      sha: 'abc',
+      workflows: { 'Test Suite': 'success', 'DB Integration Tests': 'success' },
+    });
+  });
+
+  it('RED: one required workflow failed is a FAIL', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: stub([
+        { workflowName: 'Test Suite', status: 'completed', conclusion: 'success' },
+        { workflowName: 'DB Integration Tests', status: 'completed', conclusion: 'failure' },
+      ]),
+    });
+    expect(r.severity).toBe('FAIL');
+    expect((r.value as { workflows: Record<string, string> }).workflows['DB Integration Tests']).toBe('failure');
+  });
+
+  it('RED: an in_progress run (conclusion \'\') is a FAIL', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: stub([
+        { workflowName: 'Test Suite', status: 'in_progress', conclusion: '' },
+        { workflowName: 'DB Integration Tests', status: 'completed', conclusion: 'success' },
+      ]),
+    });
+    expect(r.severity).toBe('FAIL');
+    expect((r.value as { workflows: Record<string, string> }).workflows['Test Suite']).toBe('in_progress');
+  });
+
+  it('RED: a required workflow ABSENT is a FAIL whose value names it `missing`', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: stub([
+        { workflowName: 'Test Suite', status: 'completed', conclusion: 'success' },
+      ]),
+    });
+    expect(r.severity).toBe('FAIL');
+    expect((r.value as { workflows: Record<string, string> }).workflows['DB Integration Tests']).toBe('missing');
+  });
+
+  it('RED: only the NEWEST run per workflow counts — an older success under a newer failure is a FAIL', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: stub([
+        // gh run list is newest-first: the first row for Test Suite wins.
+        { workflowName: 'Test Suite', status: 'completed', conclusion: 'failure' },
+        { workflowName: 'Test Suite', status: 'completed', conclusion: 'success' },
+        { workflowName: 'DB Integration Tests', status: 'completed', conclusion: 'success' },
+      ]),
+    });
+    expect(r.severity).toBe('FAIL');
+    expect((r.value as { workflows: Record<string, string> }).workflows['Test Suite']).toBe('failure');
+  });
+
+  it('RED: listCiRuns throwing is a FAIL with the error text in value', async () => {
+    const r = await cloudPre.checkCiGreenForSha({
+      sha: 'abc',
+      listCiRuns: async () => { throw new Error('gh exploded'); },
+    });
+    expect(r.severity).toBe('FAIL');
+    expect(JSON.stringify(r.value)).toContain('gh exploded');
+  });
+
+  it('RED: an empty sha is a FAIL (nothing to check against)', async () => {
+    const r = await cloudPre.checkCiGreenForSha({ sha: '', listCiRuns: stub([]) });
+    expect(r.severity).toBe('FAIL');
+  });
+
+  it('the row states the limit, and pull-quotes operator D2 / Spec 124 §5 R-BA 11(e)', async () => {
+    const r = await cloudPre.checkCiGreenForSha({ sha: 'abc', listCiRuns: stub([]) });
+    expect(r.limit).toBe("every required CI workflow's newest run for this SHA = success");
+    expect(r.why).toContain('R-BA 11(e)');
+    expect(r.why).toContain('D2');
   });
 });
 
@@ -485,6 +677,17 @@ describe('READ-ONLY lock — no write verb in the script outside comments', () =
     const statements = stripped.match(/\b(SELECT|WITH)\b/g) ?? [];
     expect(statements.length).toBeGreaterThan(4);
   });
+
+  it('the header tells the truth about the exit code: FAIL exits 1 with OR without --dry', () => {
+    // The old header said "Exit 1 on FAIL, 0 otherwise, 0 on --dry." — false: main()
+    // returns the FAIL exit code in both modes, and the chain-*.yml gate depends on it
+    // (--dry only skips writing the report files).
+    expect(src).toMatch(/return report\.verdict === 'FAIL' \? 1 : 0;/);
+    // ...and the return is NOT guarded by an `opts.dry` branch, so --dry cannot swallow it.
+    expect(src).not.toMatch(/opts\.dry[\s\S]{0,200}return report\.verdict === 'FAIL' \? 1 : 0;/);
+    expect(src).toContain('Exit 1 on FAIL, 0 otherwise — with or without');
+    expect(src).not.toContain('Exit 1 on FAIL, 0 otherwise, 0 on --dry.');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -499,10 +702,20 @@ describe('argv + usage', () => {
   });
 
   it('parseArgs reads --out=<dir>, --dry and --help/-h', () => {
-    expect(cloudPre.parseArgs(['--out=/tmp/x', '--dry'])).toEqual({ out: '/tmp/x', dry: true, help: false });
+    expect(cloudPre.parseArgs(['--out=/tmp/x', '--dry'])).toEqual({ out: '/tmp/x', dry: true, help: false, only: null, sha: null });
     expect(cloudPre.parseArgs(['--help']).help).toBe(true);
     expect(cloudPre.parseArgs(['-h']).help).toBe(true);
-    expect(cloudPre.parseArgs([])).toEqual({ out: null, dry: false, help: false });
+    expect(cloudPre.parseArgs([])).toEqual({ out: null, dry: false, help: false, only: null, sha: null });
+  });
+
+  it('parseArgs reads --only=<csv> (trimmed, empty entries dropped) and --sha=<sha>', () => {
+    expect(cloudPre.parseArgs(['--only=a,b', '--sha=abc'])).toEqual({
+      out: null, dry: false, help: false, only: ['a', 'b'], sha: 'abc',
+    });
+    expect(cloudPre.parseArgs(['--only= a , ,b ']).only).toEqual(['a', 'b']);
+    expect(cloudPre.parseArgs(['--only=']).only).toEqual([]);
+    expect(cloudPre.parseArgs([]).only).toBeNull();
+    expect(cloudPre.parseArgs([]).sha).toBeNull();
   });
 
   it('usage() documents all three flags and the cloud invocation', () => {
@@ -510,6 +723,8 @@ describe('argv + usage', () => {
     expect(text).toContain('--out=');
     expect(text).toContain('--dry');
     expect(text).toContain('--help');
+    expect(text).toContain('--only=');
+    expect(text).toContain('--sha=');
     expect(text).toContain('SUPABASE_DATABASE_URL');
   });
 
@@ -585,10 +800,10 @@ describe('probeRequirement — extracted from index.js, and the runner still cal
 // cross-check with the cloud runbook's own wording (a)-(e)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('the six checks cover the runbook §3c pre-checks\' DB-side items', () => {
+describe('the seven checks cover the runbook §3c pre-checks\' DB-side items', () => {
   it('the report renders as both markdown and a console table without throwing', async () => {
     const pool = fakePool([['FROM pipeline_runs', [{ id: 7, pipeline: 'chain_sources', started_at: null }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres' });
+    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
     const md = cloudPre.renderMarkdown(report);
     expect(md).toContain('CLOUD-PRE');
     expect(md).toContain(report.verdict);

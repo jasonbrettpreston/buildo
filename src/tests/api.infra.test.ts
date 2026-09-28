@@ -1072,7 +1072,8 @@ describe('Admin mutations are audited (Spec 128 R-12 / Spec 33 §8.1)', () => {
     }
     // An unaudited admin mutation is a compliance hole (admin-audit.ts:56-58)
     // and blocks Spec 126 surface conversion (Spec 128 R-12).
-    expect(offenders).toEqual(AUDIT_GAPS_FILED);
+    // Membership is the lock; order is filesystem noise.
+    expect([...offenders].sort()).toEqual([...AUDIT_GAPS_FILED].sort());
   });
 
   it('every mutating /api/admin/** export refuses the shared non-session sentinels', () => {
@@ -1099,7 +1100,8 @@ describe('Admin mutations are audited (Spec 128 R-12 / Spec 33 §8.1)', () => {
         if (!inline && !delegated) offenders.push(`${rel} ${h.method}`);
       }
     }
-    expect(offenders).toEqual(SESSION_GATE_GAPS_FILED);
+    // Membership is the lock; order is filesystem noise.
+    expect([...offenders].sort()).toEqual([...SESSION_GATE_GAPS_FILED].sort());
   });
 
   it('every mutating /api/admin/** export is Origin-gated by the shared guard (Spec 33 §13 CSRF)', () => {
@@ -1304,9 +1306,14 @@ describe('Public data routes project explicit allow-lists, never SELECT * (§4.3
   });
 });
 
+// readdir order is filesystem-defined (NTFS sorted, ext4 hash order), but the
+// order-sensitive callers would differ per OS — so the walk sorts by code unit.
 function findRouteFiles(dir: string): string[] {
   const results: string[] = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  const entries = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...findRouteFiles(full));

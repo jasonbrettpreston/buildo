@@ -19,7 +19,12 @@
 //     node -r dotenv/config scripts/analysis/cloud-pre-dispatch.mjs
 // or `npm run cloud:pre` (the alias already passes `-r dotenv/config`).
 //
-// Six checks, six audit rows, ONE verdict. Every check is a pure function over query
+// RUN (from a `chain-*.yml`, after `migrate.js --verify`) — the operator's D2 subset:
+//   node scripts/analysis/cloud-pre-dispatch.mjs --dry \
+//     --only=seed_rows_present,migrations_missing,declared_guards_present,ci_green_for_sha
+// A FAIL exits 1 and stops the job BEFORE any step runs.
+//
+// Seven checks, seven audit rows, ONE verdict. Every check is a pure function over query
 // results (or over a descriptor corpus loaded from disk) — the ONLY DB access is inside
 // the check functions below, each of which is handed the pool — so a duck-typed fake pool
 // drives the whole set (src/tests/cloud-pre-dispatch.logic.test.ts):
@@ -41,9 +46,15 @@
 //                                dispatch has already been spent.
 //   6. sharing_chain_running   — isChainRunning('sources'). Dispatch while the chain is up
 //                                is a wasted dispatch, not a queued one.
+//   7. ci_green_for_sha        — every required CI workflow's newest run for the SHA being
+//                                dispatched is `success` (operator D2, 2026-09-27). A chain
+//                                on a red/unverified SHA is a wasted or wrong dispatch; CI
+//                                is the backstop (Spec 124 §5 R-BA 11(e)).
 //
 // The verdict is `deriveVerdict(rows)` (Rule 10 — the ONLY place a verdict is computed in
-// this repo, scripts/lib/step/verdict.js). Exit 1 on FAIL, 0 otherwise, 0 on --dry.
+// this repo, scripts/lib/step/verdict.js). Exit 1 on FAIL, 0 otherwise — with or without
+// --dry (--dry only skips writing the report files; the chain-*.yml gate relies on the
+// FAIL exit).
 //
 // Writes (unless --dry):
 //   docs/reports/pipeline-validation/cloud-pre/<YYYY-MM-DDTHH-mm-ssZ>.json
@@ -54,6 +65,7 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 
 const require = createRequire(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -66,7 +78,7 @@ const { probeRequirement } = require(path.join(REPO_ROOT, 'scripts/lib/step/inde
 const { isChainRunning } = require(path.join(REPO_ROOT, 'scripts/lib/chain-concurrency.js'));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Row construction. Six checks, ONE row shape: {id, severity, value, limit, why}.
+// Row construction. Seven checks, ONE row shape: {id, severity, value, limit, why}.
 // Rules 12's "truthful crash" sibling — a row is built by the check that measured
 // it, and the three severities are the only values any check may return.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -376,28 +388,152 @@ export async function checkSharingChainRunning(pool, chainId = 'sources') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 7. ci_green_for_sha — operator D2 (2026-09-27): never dispatch on a SHA whose
+//    CI is not green. CI is the backstop (Spec 124 §5 R-BA 11(e)).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The `name:` of the two workflows that must be green for a SHA — test.yml and
+ * db-tests.yml. `gh run list` reports `workflowName` as this same `name:`. */
+export const REQUIRED_CI_WORKFLOWS = ['Test Suite', 'DB Integration Tests'];
+
+/**
+ * `gh run list` for one commit, newest first. `workflowName,status,conclusion` is
+ * exactly the JSON the check needs and nothing else (no `--limit` beyond 100 ordering
+ * is required: the newest run per workflow is the ONLY one that counts).
+ *
+ * @param {string} sha
+ * @returns {Promise<Array<{workflowName: string, status: string, conclusion: string}>>}
+ */
+async function defaultListCiRuns(sha) {
+  const res = spawnSync(
+    'gh',
+    ['run', 'list', '--commit', sha, '--json', 'workflowName,status,conclusion', '--limit', '100'],
+    { encoding: 'utf8' },
+  );
+  if (res.error) throw new Error(`gh run list failed: ${res.error.message}`);
+  if (res.status !== 0) throw new Error(`gh run list failed: ${res.stderr || `exit ${res.status}`}`);
+  return JSON.parse(res.stdout || '[]');
+}
+
+/**
+ * Every REQUIRED_CI_WORKFLOWS workflow's NEWEST run for `sha` must be `completed` /
+ * `success`. Any other outcome — a failure, an `in_progress`/`queued` run (conclusion
+ * `''`), or a workflow with no run at all — is a FAIL: a chain dispatched on a red or
+ * unverified SHA is a wasted or wrong dispatch (operator D2, 2026-09-27), and CI is
+ * the backstop that would have caught it (Spec 124 §5 R-BA 11(e)).
+ *
+ * Only the NEWEST run per workflow counts: `gh run list` is newest-first, so an older
+ * success sitting under a newer failure must NOT be read as green.
+ *
+ * @param {{sha: string, listCiRuns?: (sha: string) => Promise<Array<{workflowName: string, status: string, conclusion: string}>>}} opts
+ * @returns {Promise<ReturnType<typeof row>>}
+ */
+export async function checkCiGreenForSha({ sha, listCiRuns = defaultListCiRuns }) {
+  const limit = "every required CI workflow's newest run for this SHA = success";
+  const why = 'Spec 124 §5 R-BA 11(e) CI is the backstop; a chain on a red/unverified SHA is a wasted or wrong dispatch (operator D2, 2026-09-27).';
+  if (!sha) {
+    return row('ci_green_for_sha', 'FAIL', { sha: sha || null, error: 'no SHA to check (empty --sha/GITHUB_SHA/git HEAD)' }, limit, why);
+  }
+  let runs;
+  try {
+    runs = await listCiRuns(sha);
+  } catch (err) {
+    return row('ci_green_for_sha', 'FAIL', { sha, error: err.message }, limit, why);
+  }
+  // Newest-first per workflow: first row wins.
+  const newest = new Map();
+  for (const r of runs) {
+    if (!newest.has(r.workflowName)) newest.set(r.workflowName, r);
+  }
+  const workflows = {};
+  let green = true;
+  for (const name of REQUIRED_CI_WORKFLOWS) {
+    const run = newest.get(name);
+    let state;
+    if (!run) state = 'missing';
+    else if (run.status === 'completed' && run.conclusion === 'success') state = 'success';
+    else if (run.status === 'completed') state = run.conclusion || 'completed';
+    else state = run.status || 'unknown';
+    workflows[name] = state;
+    if (state !== 'success') green = false;
+  }
+  return row('ci_green_for_sha', green ? 'INFO' : 'FAIL', { sha, workflows }, limit, why);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // The checklist + the report.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** The seven check ids, in DECLARATION order — the order rows are emitted in, the
+ * order `--only` selects against, and the only set of ids `--only` accepts. */
+export const CHECK_IDS = [
+  'stranded_running_rows',
+  'migrations_missing',
+  'declared_guards_present',
+  'table_floors',
+  'seed_rows_present',
+  'sharing_chain_running',
+  'ci_green_for_sha',
+];
+
+/** The SHA this run grades: `--sha=` wins, else `$GITHUB_SHA`, else `git rev-parse
+ * HEAD`. A failed `git` call yields '' — which `checkCiGreenForSha` FAILs on, so an
+ * unidentifiable HEAD blocks rather than silently passing. */
+export function resolveSha(explicitSha) {
+  if (explicitSha) return explicitSha;
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+  const res = spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' });
+  if (res.error || res.status !== 0) return '';
+  return (res.stdout || '').trim();
+}
+
 /**
- * Run all six checks against the target, in declaration order, and fold to ONE
- * report. The verdict is `deriveVerdict(rows)` — never a hand-rolled cascade, and
- * never derived from anything but the rows themselves (Rule 10).
+ * Run the selected checks against the target, in DECLARATION order (`CHECK_IDS`), and
+ * fold to ONE report. The verdict is `deriveVerdict(rows)` — never a hand-rolled
+ * cascade, and never derived from anything but the rows themselves (Rule 10).
+ *
+ * `opts.only` (null/absent = all seven) restricts the run to a subset — validated
+ * FIRST, so an unknown id throws before any check touches the pool. Checks not selected
+ * never run at all: the chain dispatch uses `--only=` for the operator's D2 subset.
  *
  * @param {import('pg').Pool} pool
- * @param {{descriptorsByName?: Record<string, {descriptor: object}>, database?: string, listMigrations?: () => string[]}} [opts]
+ * @param {{descriptorsByName?: Record<string, {descriptor: object}>, database?: string, listMigrations?: () => string[], only?: string[]|null, sha?: string, listCiRuns?: Function}} [opts]
  * @returns {Promise<{database: string|null, generated_at: string, rows: Array<object>, verdict: 'PASS'|'WARN'|'FAIL'}>}
  */
 export async function buildReport(pool, opts = {}) {
   const descriptorsByName = opts.descriptorsByName || seam.loadConvertedDescriptors();
-  const rows = [
-    await checkStrandedRunningRows(pool),
-    await checkMigrationsMissing(pool, { listMigrations: opts.listMigrations }),
-    await checkDeclaredGuardsPresent(pool, descriptorsByName),
-    await checkTableFloors(pool, descriptorsByName),
-    await checkSeedRowsPresent(pool, descriptorsByName),
-    await checkSharingChainRunning(pool, 'sources'),
-  ];
+  const only = opts.only ?? null;
+  if (only !== null) {
+    const unknown = only.filter((id) => !CHECK_IDS.includes(id));
+    if (unknown.length > 0) {
+      throw new Error(`unknown check id(s): ${unknown.join(', ')} — known ids: ${CHECK_IDS.join(', ')}`);
+    }
+    // A gate that selects NOTHING must not pass. `--only=` / `--only=,` parse to [],
+    // which would run zero checks and fold to PASS — a green verdict over a corpus of
+    // no measurements is the exact "green because it never looked" failure this
+    // checklist exists to close (Spec 121 §12b.6), and a chain step that would then
+    // dispatch unchecked. Refuse instead of reporting a vacuous PASS.
+    if (only.length === 0) {
+      throw new Error('--only selected no checks — known ids: ' + CHECK_IDS.join(', '));
+    }
+  }
+  const selected = (id) => only === null || only.includes(id);
+  const sha = resolveSha(opts.sha);
+
+  const rows = [];
+  for (const id of CHECK_IDS) {
+    if (!selected(id)) continue;
+    switch (id) {
+      case 'stranded_running_rows': rows.push(await checkStrandedRunningRows(pool)); break;
+      case 'migrations_missing': rows.push(await checkMigrationsMissing(pool, { listMigrations: opts.listMigrations })); break;
+      case 'declared_guards_present': rows.push(await checkDeclaredGuardsPresent(pool, descriptorsByName)); break;
+      case 'table_floors': rows.push(await checkTableFloors(pool, descriptorsByName)); break;
+      case 'seed_rows_present': rows.push(await checkSeedRowsPresent(pool, descriptorsByName)); break;
+      case 'sharing_chain_running': rows.push(await checkSharingChainRunning(pool, 'sources')); break;
+      case 'ci_green_for_sha': rows.push(await checkCiGreenForSha({ sha, listCiRuns: opts.listCiRuns })); break;
+      default: throw new Error(`unhandled check id: ${id}`);
+    }
+  }
   return {
     database: opts.database ?? null,
     generated_at: new Date().toISOString(),
@@ -468,12 +604,19 @@ export function usage() {
   return [
     'Usage: node -r dotenv/config scripts/analysis/cloud-pre-dispatch.mjs [options]',
     '',
-    'READ-ONLY pre-dispatch cloud-state checklist (Spec 123 §7.2 A5). Six checks, one',
-    'verdict (deriveVerdict, Spec 124 Rule 10). Exit 1 on FAIL, 0 otherwise.',
+    'READ-ONLY pre-dispatch cloud-state checklist (Spec 123 §7.2 A5). Seven checks, one',
+    'verdict (deriveVerdict, Spec 124 Rule 10). Exit 1 on FAIL, 0 otherwise — with or',
+    'without --dry (--dry only skips writing the report files; the chain-*.yml gate',
+    'relies on the FAIL exit).',
     '',
     'Options:',
     '  --out=<dir>   write the report under <dir> instead of',
     '                docs/reports/pipeline-validation/cloud-pre/',
+    '  --only=<csv>  run ONLY the named checks (comma-separated, declaration order).',
+    '                Chain dispatch (operator D2) uses:',
+    '                --only=seed_rows_present,migrations_missing,declared_guards_present,ci_green_for_sha',
+    '  --sha=<sha>   the SHA to grade for ci_green_for_sha (default: $GITHUB_SHA, else',
+    '                `git rev-parse HEAD`)',
     '  --dry         run the checks and print, write NO files',
     '  --help, -h    print this usage and exit 0 (no DB, no env needed)',
     '',
@@ -484,13 +627,17 @@ export function usage() {
   ].join('\n');
 }
 
-/** Parse argv the way this file documents: `--out=<dir>`, `--dry`, `--help`/`-h`. */
+/** Parse argv the way this file documents: `--out=<dir>`, `--only=<csv>`, `--sha=<sha>`,
+ * `--dry`, `--help`/`-h`. */
 export function parseArgs(argv) {
-  const opts = { out: null, dry: false, help: false };
+  const opts = { out: null, dry: false, help: false, only: null, sha: null };
   for (const arg of argv) {
     if (arg === '--help' || arg === '-h') opts.help = true;
     else if (arg === '--dry') opts.dry = true;
     else if (arg.startsWith('--out=')) opts.out = arg.slice('--out='.length) || null;
+    else if (arg.startsWith('--only=')) {
+      opts.only = arg.slice('--only='.length).split(',').map((s) => s.trim()).filter((s) => s !== '');
+    } else if (arg.startsWith('--sha=')) opts.sha = arg.slice('--sha='.length) || null;
   }
   return opts;
 }
@@ -511,7 +658,7 @@ async function main() {
     const idRes = await pool.query('SELECT current_database() AS database');
     const database = idRes.rows[0] ? idRes.rows[0].database : null;
 
-    const report = await buildReport(pool, { database });
+    const report = await buildReport(pool, { database, only: opts.only, sha: opts.sha });
 
     console.log(renderConsoleTable(report.rows));
     console.log(`\nverdict: ${report.verdict} (database: ${database ?? '(unknown)'})`);
