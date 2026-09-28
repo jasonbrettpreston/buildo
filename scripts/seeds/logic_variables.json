@@ -5227,6 +5227,36 @@
       "group": "Source Ingestion"
     }
   },
+  "neighbourhoods_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 1800000,
+    "description": "Spec 124 Rule 3 (row 3.8, INGESTOR) — AbortController budget for ONE attempt at either neighbourhoods CKAN download (the 2,141,269 B boundary GeoJSON, sha256 b0cb5807…0233, and the 1,763,175 B census-profile XLSX, sha256 9a3c3729…45eb). 60000 = the fleet INGESTOR default (the same 60000 as massing_download_timeout_ms), adopted because the legacy neighbourhoods fetch carried NO timeout at all (there is no legacy literal or anchor to carry), and it is ≥ 5× the ~4 s PRE-measured run, so the default externalizes a bound that did not previously exist. This ONE variable is shared by both externals (the primary GeoJSON and the census XLSX lookup, which the runner acquires with the same timeout), so a slow edge is tuned in one place. on_invalid fail (gate B). CONSUMED by neighbourhoods (scripts/lib/step/acquire.js download, via execution.network.timeout_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "neighbourhoods_dead_tuple_ratio_warn_max": {
+    "default": 0.3,
+    "type": "number",
+    "min": 0,
+    "max": 5,
+    "description": "WF3 EP-D17 naming convention (2026-09-10) / Spec 124 Rule 3 (row 3.8, INGESTOR) — trigger bound on neighbourhoods' pg_stat_user_tables dead_ratio, read by scripts/lib/step/plausibility.js's runMaintenance executor by naming convention (\"${table}_dead_tuple_ratio_warn_max\", the same convention as building_footprints_dead_tuple_ratio_warn_max) as the execution.maintenance VACUUM ANALYZE trigger (N-D9, the massing M-D12 precedent). 0.3 = the parcels precedent (parcels_dead_tuple_ratio_warn_max), chosen over the fleet's own auto-VACUUM trigger because the legacy step vacuumed on EVERY run (N-D9), so a looser-than-auto-VACUUM bound is the faithful conversion of that unconditional maintenance into a trigger. The legacy unconditional VACUUM is gone; this ratio bound replaces it (data-invisible, N-D9). on_invalid fail (gate B). CONSUMED by scripts/lib/step/plausibility.js (runMaintenance) via neighbourhoods' config. Operator-tunable.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "neighbourhoods_maintenance_timeout_minutes": {
+    "default": 15,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "WF3 EP-D17 naming convention (2026-09-10) / Spec 124 Rule 3 (row 3.8, INGESTOR) — declared ceiling, in minutes, for the execution.maintenance VACUUM/ANALYZE statement scripts/lib/step/plausibility.js's runMaintenance issues on neighbourhoods (keyed by \"${table}_maintenance_timeout_minutes\", the same table-keyed runMaintenance convention as neighbourhoods_dead_tuple_ratio_warn_max). Applied via SET statement_timeout on a dedicated autocommit client (VACUUM forbids an enclosing transaction). 15 = the parcels precedent (parcels_maintenance_timeout_minutes), carrying real margin over the few minutes a VACUUM was estimated to take for the dead tuples that motivated the EP-D17 work. The key is the TABLE name by the shared runMaintenance naming convention (it coincides with the step slug here). on_invalid fail (gate B). CONSUMED by scripts/lib/step/plausibility.js (runMaintenance). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "load_centreline_download_retry_backoff_ms": {
     "default": 0,
     "type": "number",
@@ -5290,7 +5320,7 @@
   "sources_neighbourhoods_floor": {
     "default": 158,
     "type": "number",
-    "description": "assert-data-bounds: neighbourhoods row-count FAIL floor (IL-9, e3dad53d/b4e3d56e). SHARED ACROSS TWO STEPS DELIBERATELY (I4 Ask 5 ruling, 2026-09-16): 158 is ONE municipal boundary count, and a second registry row for the same fact would be a second source of truth for it (Rule 1, one home per concern). The un-prefixed shared-variable precedent is spatial_match_max_distance_m / spatial_match_confidence, which a converted LINK step consumes without owning the name. NOTE for a future editor: the two consumers must keep IDENTICAL min/max bounds, because one of them declares on_invalid \"fail\" with hoisted_above_gate true, so an admin edit legal for one step would halt the other above its advisory lock in two chains. CONSUMED by assert_data_bounds and by link_neighbourhoods (via checks[].limit_from_config on both neighbourhoods_loaded_before_write and neighbourhoods_loaded).",
+    "description": "assert-data-bounds: neighbourhoods row-count FAIL floor (IL-9, e3dad53d/b4e3d56e). SHARED ACROSS THREE STEPS DELIBERATELY (I4 Ask 5 ruling, 2026-09-16): 158 is ONE municipal boundary count, and a second registry row for the same fact would be a second source of truth for it (Rule 1, one home per concern). The un-prefixed shared-variable precedent is spatial_match_max_distance_m / spatial_match_confidence, which a converted LINK step consumes without owning the name. NOTE for a future editor: the three consumers must keep IDENTICAL min/max bounds, because one of them declares on_invalid \"fail\" with hoisted_above_gate true, so an admin edit legal for one step would halt the other above its advisory lock in two chains. CONSUMED by assert_data_bounds and by link_neighbourhoods (via checks[].limit_from_config on both neighbourhoods_loaded_before_write and neighbourhoods_loaded) and by neighbourhoods (checks[].limit_from_config on boundaries_loaded, batch-2 row 3.8).",
     "min": 1,
     "max": 1000,
     "admin": {

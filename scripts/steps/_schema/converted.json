@@ -68,7 +68,7 @@
   ],
   "contract_version": 1,
   "pending": [
-    { "file": "scripts/load-neighbourhoods.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.8 (neighbourhoods, INGESTOR 6th member, class A guarded_upsert, two sources -> one target, COMPRESSED per R-PACE-1; library prerequisites 0v (RE-FREEZE #25) and 0w (RE-FREEZE #27) landed at 1b06d00f). ① lands the assessment + red suite + PRE goldens + R-AS forced-change cohort; ② the descriptor/compute/shell/seeds + POST goldens + forced-change proof (stage -> shape_clean); ③ registers, per Spec 124 R-K.", "declared": "2026-09-28", "stage": "red_suite" }
+    { "file": "scripts/load-neighbourhoods.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.8 (neighbourhoods, INGESTOR 6th member, class A guarded_upsert, two sources -> one target, COMPRESSED per R-PACE-1; library prerequisites 0v (RE-FREEZE #25) and 0w (RE-FREEZE #27) landed at 1b06d00f). ① lands the assessment + red suite + PRE goldens + R-AS forced-change cohort; ② the descriptor/compute/shell/seeds + POST goldens + forced-change proof (stage -> shape_clean); ③ registers, per Spec 124 R-K.", "declared": "2026-09-28", "stage": "shape_clean" }
   ],
   "converted": [
     "scripts/quality/assert-schema.js",

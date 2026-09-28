@@ -362,6 +362,7 @@ const GROUP_ORDER = [
       "enrich_parcels_pending_scope_warn_max",
       "parcels_dead_tuple_ratio_warn_max",
       "building_footprints_dead_tuple_ratio_warn_max",
+      "neighbourhoods_dead_tuple_ratio_warn_max",
       "parcels_null_address_pct_max",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",
@@ -503,7 +504,9 @@ const GROUP_ORDER = [
       "massing_batch_error_rate_max_pct",
       "massing_story_height_m",
       "massing_download_timeout_ms",
-      "building_footprints_maintenance_timeout_minutes"
+      "building_footprints_maintenance_timeout_minutes",
+      "neighbourhoods_download_timeout_ms",
+      "neighbourhoods_maintenance_timeout_minutes"
     ]
   },
   {

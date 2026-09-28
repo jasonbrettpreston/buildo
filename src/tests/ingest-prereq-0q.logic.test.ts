@@ -6,7 +6,8 @@
 // RETRIES. `execution.network.retries` has been a FROZEN schema field since S1 with
 // NO READER anywhere in `scripts/lib/` (measured 2026-09-24), and the acquisition
 // seam's one download call (`downloadArchive`) makes exactly ONE attempt. The legacy
-// loaders made ONE attempt too — `scripts/load-neighbourhoods.js:52` `downloadFile` and
+// loaders made ONE attempt too — the pre-② `scripts/load-neighbourhoods.js`
+// `downloadFile` (commit 110c8c31; the live path is a frozen shell since row 3.8 ②) and
 // its copies in load-address-points/load-parcels/load-massing have NO retry loop (Fold
 // G-4, 2026-09-25, MEASURED); only centreline's `downloadZipWithRetry` retried (THREE
 // times, no backoff, WARN per failure, partial file removed, HEAD never retried). This

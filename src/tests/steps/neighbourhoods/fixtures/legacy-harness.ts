@@ -1,15 +1,18 @@
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §4.5 (legacy oracle, not source-text)
 // SPEC LINK: docs/specs/01-pipeline/57_source_neighbourhoods.md
 //
-// Batch-2 row 3.8 ① — the NEIGHBOURHOODS legacy oracle.
+// Batch-2 row 3.8 ① — the NEIGHBOURHOODS legacy oracle. Re-pointed at ② to the PRE-② fixture copy.
 //
-// This module does NOT require `scripts/load-neighbourhoods.js` in-process (that script calls
-// `pipeline.run()` at module scope and would try to talk to Postgres). Instead it reads the script
-// as SOURCE TEXT, strips the shebang, and evaluates it inside a `new Function` with a curated
-// CommonJS `require` shim: `./lib/pipeline` and `exceljs` are fakes, `./lib/safe-math` and the
-// node builtins (`fs`/`path`/`https`/`http`) are the real modules. The script's top-level
-// `pipeline.run('load-neighbourhoods', cb)` therefore only STORES the callback — the caller decides
-// when to drive it via `runMain(argv2, argv3)`.
+// This module does NOT require `scripts/load-neighbourhoods.js` in-process. Two reasons, now:
+// (1) at ② that live path became the §5.1 frozen `pipeline.step(...)` shell — a 40-line stub with
+// no legacy logic left to observe; and (2) it still talks to Postgres when driven. So the oracle
+// reads the BYTE-IDENTICAL PRE-② SOURCE, committed VERBATIM as the fixture copy
+// `fixtures/legacy-load-neighbourhoods.js.txt` (= `git show 110c8c31:scripts/load-neighbourhoods.js`,
+// sha256 9638974e…8729), as SOURCE TEXT: it strips the shebang and evaluates it inside a
+// `new Function` with a curated CommonJS `require` shim: `./lib/pipeline` and `exceljs` are fakes,
+// `./lib/safe-math` and the node builtins (`fs`/`path`/`https`/`http`) are the real modules. The
+// script's top-level `pipeline.run('load-neighbourhoods', cb)` therefore only STORES the callback —
+// the caller decides when to drive it via `runMain(argv2, argv3)`.
 //
 // The oracle's job (Spec 123 §4.5): a future converted implementation must reproduce the legacy
 // OBSERVABLE BEHAVIOUR — the ordered `pool.query()` SQL/params stream, the `emitSummary` /
@@ -22,7 +25,12 @@ import path from 'path';
 
 /** Repo root, derived from this file's location (src/tests/steps/neighbourhoods/fixtures/). */
 const REPO_ROOT = path.resolve(__dirname, '../../../../../');
-const SCRIPT_REL = 'scripts/load-neighbourhoods.js';
+// ② re-point: the live path `scripts/load-neighbourhoods.js` is now the frozen `pipeline.step(...)`
+// shell, so the legacy oracle reads this VERBATIM copy of the pre-② source instead. The copy is
+// byte-identical to `git show 110c8c31:scripts/load-neighbourhoods.js` (sha256 9638974e…8729), and
+// `__dirname` is still passed as `scripts/` below, so the legacy relative requires resolve exactly
+// as they did before the freeze.
+const SCRIPT_REL = 'src/tests/steps/neighbourhoods/fixtures/legacy-load-neighbourhoods.js.txt';
 const SAFE_MATH_REL = 'scripts/lib/safe-math.js';
 
 /** A grid cell as it appears in the census fixture (`null`/`undefined` → absent). */
@@ -228,8 +236,9 @@ export function gridToRows(grid: Grid): SheetRow[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Evaluate `scripts/load-neighbourhoods.js` source text with a curated `require` shim and return
- * handles onto its exports plus the observable capture surfaces.
+ * Reads the PRE-② legacy source (fixture copy `fixtures/legacy-load-neighbourhoods.js.txt`) as
+ * SOURCE TEXT, evaluates it with a curated `require` shim, and returns handles onto its exports
+ * plus the observable capture surfaces.
  *
  * The script's module-scope `pipeline.run('load-neighbourhoods', cb)` only STORES `cb`; nothing runs
  * until the caller invokes `runMain(argv2, argv3)`.
@@ -285,6 +294,9 @@ export function loadLegacy(opts: LoadLegacyOpts = {}): LegacyOracle {
   const safeMath = require(path.join(REPO_ROOT, SAFE_MATH_REL)) as SafeMathModule;
 
   // --- custom require ------------------------------------------------------
+  // `__dirname` for the evaluated source: the LEGACY location `scripts/`, NEVER derived from
+  // SCRIPT_REL (which now points at `src/tests/…/fixtures/`). The pre-② script's relative requires
+  // (`./lib/pipeline`, `./lib/safe-math`) must resolve exactly as they did before the ② freeze.
   const scriptDir = path.join(REPO_ROOT, 'scripts');
 
   // Each `new ExcelJS.Workbook()` gets a FRESH sheet view over the same grid, so repeated

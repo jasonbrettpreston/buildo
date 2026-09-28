@@ -706,7 +706,7 @@ describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
 
 // ── Regression: assert-schema NEIGHBOURHOOD_ID_PROPS sync ─────────────
 
-describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.js', () => {
+describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with the load-neighbourhoods descriptor', () => {
   const schemaSource = fs.readFileSync(
     path.join(__dirname, '../../scripts/lib/compute/assert-schema.js'), 'utf-8'
   );
@@ -717,11 +717,22 @@ describe('assert-schema.js NEIGHBOURHOOD_ID_PROPS sync with load-neighbourhoods.
     expect(match![1]).not.toContain("'AREA_S_CD'");
   });
 
-  it('includes AREA_SHORT_CODE which load-neighbourhoods.js reads', () => {
-    const loadSource = fs.readFileSync(
-      path.join(__dirname, '../../scripts/load-neighbourhoods.js'), 'utf-8'
+  it('includes AREA_SHORT_CODE, the key_property load-neighbourhoods declares (re-homed onto the descriptor at ②)', () => {
+    // RE-HOMED (batch-2 row 3.8, commit ②, 2026-09-28): load-neighbourhoods.js is the
+    // frozen `pipeline.step(...)` shell, so the key it reads is no longer source text —
+    // it is `N-D6` declared data in the descriptor. The primary external (the one with
+    // no `role`) is the GeoJSON boundaries, and its key_property is the AREA_SHORT_CODE
+    // the loader keys on; the assert-schema list must keep naming it.
+    const descriptor = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, '../../scripts/load-neighbourhoods.descriptor.json'), 'utf-8'
+      )
     );
-    expect(loadSource).toContain('AREA_SHORT_CODE');
+    const externals: { role?: string; key_property?: string }[] =
+      descriptor.inputs.reads.externals;
+    const primary = externals.find((e) => e.role === undefined);
+    expect(primary).toBeDefined();
+    expect(primary!.key_property).toBe('AREA_SHORT_CODE');
     const match = schemaSource.match(/NEIGHBOURHOOD_ID_PROPS\s*=\s*\[([\s\S]*?)\]/);
     expect(match).not.toBeNull();
     expect(match![1]).toContain("'AREA_SHORT_CODE'");

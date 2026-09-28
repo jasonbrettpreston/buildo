@@ -9,16 +9,18 @@
 //
 // Batch-2 row 3.8 — `neighbourhoods`, the INGESTOR archetype's SIXTH member (after `load_ravines`,
 // `address_points`, `parcels`, `load_centreline`, `massing`) — R-PACE-1 COMPRESSED form (two sources → one target).
-// Commit ① lands this RED suite + fixtures + the commit-① assessment report + PRE goldens; commit ②
-// lands the descriptor + compute + frozen shell + seeds (POST goldens, zero-diff); commit ③ is the
-// cutover (registration).
+// Commit ① landed the RED suite + fixtures + the commit-① assessment report + PRE goldens; commit ②
+// landed the descriptor + compute + frozen shell + notes + seeds (POST goldens, zero-diff); commit ③
+// is the cutover (registration).
 //
-// ✅ EVERY RED CLAIM IS RED TODAY FOR THE RIGHT REASON — `artifact()` asserts the future file exists
-// and names it, so a missing descriptor/compute fails as a NAMED ARTIFACT, never as a TS or require
-// error. RED claims are `it.fails` with the post-② value stated inline; legacy pins are plain `it`
-// (GREEN TODAY, the oracle for the RED values). The legacy script is never required in-process — it
-// calls `pipeline.run()` at module scope and would open a pool; `fixtures/legacy-harness.ts`
-// evaluates it as SOURCE TEXT with a fake pipeline / fake pool / fake ExcelJS.
+// ✅ THE 11 RED CLAIMS FLIPPED GREEN AT ②. What was `it.fails` is now plain `it(` — the descriptor,
+// compute, frozen shell, notes and seeds all exist, so each claim passes against them. The 8 legacy
+// pins (L1–L8) were green at ① and read the PRE-② script as SOURCE TEXT from the VERBATIM fixture
+// copy `fixtures/legacy-load-neighbourhoods.js.txt` (= `git show 110c8c31:scripts/load-neighbourhoods.js`,
+// sha256 9638974e…8729): at ② the live `scripts/load-neighbourhoods.js` became the frozen shell, so
+// the oracle no longer reads it. It is NEVER required in-process — the pre-② script calls
+// `pipeline.run()` at module scope and would open a pool; `fixtures/legacy-harness.ts` evaluates its
+// source text with a fake pipeline / fake pool / fake ExcelJS.
 //
 // Artifacts asserted against (plan of record `.cursor/batch2_p3_8_neighbourhoods_active_task.md`;
 // commit-① report `docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md`):
@@ -478,6 +480,8 @@ interface WriteSpec {
 
 interface Descriptor {
   identity: { name: string; archetype: string; lock: number; spec: string; display_name?: string };
+  /** Spec 122 §5.1 — the frozen shape lives under `execution` (massing ② precedent). */
+  execution: { shape: string; [k: string]: unknown };
   inputs: { reads: { externals: Array<{ id: string; format: string; role?: string; key_property?: string; [k: string]: unknown }> } };
   outputs: 'none' | { writes: WriteSpec[]; invalidates?: unknown };
   checks: Check[];
@@ -485,29 +489,30 @@ interface Descriptor {
 }
 
 // ===========================================================================
-// PART 2 — the converted RED claims (row 3.8 ①). EVERY test here is `it.fails`
-// — vitest INVERTS it, so the body must genuinely THROW today and the run
-// reports each as an expected failure. The throw is a NAMED MISSING ARTIFACT
-// (`artifact()`), never a require/TS error: the FIRST statement of every body
-// that touches a future file goes through `loadDescriptor()` /
-// `readText()` / `artifact()`. Each red value is paired with a `legacy L<n>`
-// comment naming the part-1 pin it replaces.
+// PART 2 — the converted claims, FLIPPED GREEN at ② (landed row 3.8 ①).
+// These were `it.fails` at ① — vitest INVERTED them, because the body genuinely
+// THREW: the throw was a NAMED MISSING ARTIFACT (`artifact()`), never a
+// require/TS error, since the FIRST statement of every body that touches a
+// future file goes through `loadDescriptor()` / `readText()` / `artifact()`.
+// At ② that throw is gone: every body now passes as a plain `it(`. Each claim
+// keeps its `legacy L<n>` comment naming the part-1 pin it replaces.
 //
-// The pre-② state: `scripts/load-neighbourhoods.js` is still the legacy
-// source-text loader — it calls `pipeline.run()` at module scope, has no
-// `.descriptor.json`, no `.notes.json`, no `lib/compute/` module.
+// The pre-② state, for the record: `scripts/load-neighbourhoods.js` was the
+// legacy source-text loader — it called `pipeline.run()` at module scope and
+// had no `.descriptor.json`, no `.notes.json` and no `lib/compute/` module.
 // ===========================================================================
 
-describe('row 3.8 — the four ① artifacts exist and the frozen shape lands (RED: none of them exist today)', () => {
-  it.fails('D1 — descriptor AJV-valid; identity name/archetype/spec/lock/display_name; shape "ingest"; notes file exists; shell text has pipeline.step( and NOT pipeline.run( (RED: MISSING ARTIFACT descriptor first; the shell also still calls pipeline.run() today) (flips at: commit ②)', () => {
-    const d = loadDescriptor(); // MISSING ARTIFACT scripts/load-neighbourhoods.descriptor.json — the RED reason
+describe('row 3.8 — the four ① artifacts exist and the frozen shape lands (GREEN at ②)', () => {
+  it('D1 — descriptor AJV-valid; identity name/archetype/spec/lock/display_name; shape "ingest"; notes file exists; shell text has pipeline.step( and NOT pipeline.run( (flipped GREEN at ②)', () => {
+    const d = loadDescriptor(); // MISSING ARTIFACT scripts/load-neighbourhoods.descriptor.json — the ① RED reason
     expect(d.identity.name).toBe('neighbourhoods');
     expect(d.identity.archetype).toBe('INGESTOR');
     expect(d.identity.spec).toBe('57');
     expect(d.identity.lock).toBe(LOCK_ID); // legacy L1: ADVISORY_LOCK_ID = 57 [READ scripts/load-neighbourhoods.js:627]
     // Fold H-1 (§14): the audit_table NAME legacies at :705 as "Neighbourhood Boundaries".
     expect(d.identity.display_name).toBe('Neighbourhood Boundaries');
-    expect(d.shape).toBe('ingest'); // Spec 122 §5.1 frozen shape
+    // corrected at ② (massing ② precedent): the frozen Spec 122 §5.1 shape lives under `execution`.
+    expect(d.execution.shape).toBe('ingest');
     expect(fs.existsSync(abs(NOTES_REL)), `MISSING ARTIFACT ${NOTES_REL} — publisher vocabulary + storage-format constants`).toBe(true);
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
@@ -515,8 +520,8 @@ describe('row 3.8 — the four ① artifacts exist and the frozen shape lands (R
   });
 });
 
-describe('row 3.8 — D2 externals: the GeoJSON primary + the census XLSX lookup (RED: no descriptor today)', () => {
-  it.fails('D2 — primary ckan:neighbourhoods-4326 format geojson key_property AREA_SHORT_CODE (N-D6: no AREA_S_CD/AREA_ID arm); lookup ckan:nbhd-2021-census-profile format xlsx role lookup (RED: no descriptor today) (flips at: commit ②)', () => {
+describe('row 3.8 — D2 externals: the GeoJSON primary + the census XLSX lookup (GREEN at ②)', () => {
+  it('D2 — primary ckan:neighbourhoods-4326 format geojson key_property AREA_SHORT_CODE (N-D6: no AREA_S_CD/AREA_ID arm); lookup ckan:nbhd-2021-census-profile format xlsx role lookup (flipped GREEN at ②)', () => {
     const d = loadDescriptor();
     const externals = d.inputs.reads.externals;
     const primary = externals.find((e) => e.id === PRIMARY_ID);
@@ -532,9 +537,9 @@ describe('row 3.8 — D2 externals: the GeoJSON primary + the census XLSX lookup
   });
 });
 
-describe('row 3.8 — D3 coerceKey: the B2 key parse (RED: no compute module today)', () => {
-  it.fails("D3 — coerceKey: '1'→1, '129'→129, '0'→null, ''→null, undefined→null, 'abc' throws /positive integer/ (RED: no compute module today) (flips at: commit ②)", () => {
-    const compute = loadComputeModule(); // MISSING ARTIFACT scripts/lib/compute/load-neighbourhoods.js — the RED reason
+describe('row 3.8 — D3 coerceKey: the B2 key parse (GREEN at ②)', () => {
+  it("D3 — coerceKey: '1'→1, '129'→129, '0'→null, ''→null, undefined→null, 'abc' throws /positive integer/ (flipped GREEN at ②)", () => {
+    const compute = loadComputeModule(); // MISSING ARTIFACT scripts/lib/compute/load-neighbourhoods.js — the ① RED reason
     // legacy L1/L2: safeParsePositiveInt(props.AREA_S_CD || props.AREA_SHORT_CODE || props.AREA_ID || '0')
     // [READ scripts/load-neighbourhoods.js:132]; 0/empty ⇒ falsy ⇒ the feature is SKIPPED (:134).
     expect(compute.coerceKey!('1')).toBe(1);
@@ -547,8 +552,8 @@ describe('row 3.8 — D3 coerceKey: the B2 key parse (RED: no compute module tod
   });
 });
 
-describe('row 3.8 — D4 shapeRecord name fallback: AREA_NAME ‖ AREA_LONG_CODE (RED: no compute module today)', () => {
-  it.fails("D4 — shapeRecord on fixtures (a)/(b) ⇒ name 'Alpha'/'Beta Long'; (f) ⇒ the 0p skip reason string 'missing_name' (RED: no compute module today) (flips at: commit ②)", () => {
+describe('row 3.8 — D4 shapeRecord name fallback: AREA_NAME ‖ AREA_LONG_CODE (GREEN at ②)', () => {
+  it("D4 — shapeRecord on fixtures (a)/(b) ⇒ name 'Alpha'/'Beta Long'; (f) ⇒ the 0p skip reason string 'missing_name' (flipped GREEN at ②)", () => {
     const compute = loadComputeModule();
     const features = (JSON.parse(readText(FEATURES_REL)) as FeatureCollection).features;
     /** The seam `runIngestPhase` passes (:887) — a lookup map, a tag spy, a fixed run_at. */
@@ -574,8 +579,8 @@ describe('row 3.8 — D4 shapeRecord name fallback: AREA_NAME ‖ AREA_LONG_CODE
   });
 });
 
-describe('row 3.8 — D5 buildLookup: the B6–B8 census pivot (RED: no compute module today)', () => {
-  it.fails('D5 — buildLookup(LOOKUP_ID, gridToRows(grid), {config:{}}) ⇒ .map normalised over CENSUS_COLUMNS = EXPECTED_CENSUS and .stats.matched_rows = EXPECTED_MATCHED (RED: no compute module today) (flips at: commit ②)', () => {
+describe('row 3.8 — D5 buildLookup: the B6–B8 census pivot (GREEN at ②)', () => {
+  it('D5 — buildLookup(LOOKUP_ID, gridToRows(grid), {config:{}}) ⇒ .map normalised over CENSUS_COLUMNS = EXPECTED_CENSUS and .stats.matched_rows = EXPECTED_MATCHED (flipped GREEN at ②)', () => {
     const compute = loadComputeModule();
     const out = compute.buildLookup!(LOOKUP_ID, gridToRows(censusGrid()), { config: {} }) as {
       map: Record<number, Record<string, CensusCell>>;
@@ -594,8 +599,8 @@ describe('row 3.8 — D5 buildLookup: the B6–B8 census pivot (RED: no compute 
   });
 });
 
-describe('row 3.8 — D6 the lookup merge into shapeRecord (RED: no compute module today)', () => {
-  it.fails('D6 — shapeRecord fixture (a) with lookups {[LOOKUP_ID]: {1: EXPECTED_CENSUS[1]}} ⇒ avg_household_income 100000; fixture (c) (key 3 absent) ⇒ every CENSUS_COLUMNS null (N-D14: keeps stored) (RED: no compute module today) (flips at: commit ②)', () => {
+describe('row 3.8 — D6 the lookup merge into shapeRecord (GREEN at ②)', () => {
+  it('D6 — shapeRecord fixture (a) with lookups {[LOOKUP_ID]: {1: EXPECTED_CENSUS[1]}} ⇒ avg_household_income 100000; fixture (c) (key 3 absent) ⇒ every CENSUS_COLUMNS null (N-D14: keeps stored) (flipped GREEN at ②)', () => {
     const compute = loadComputeModule();
     const features = (JSON.parse(readText(FEATURES_REL)) as FeatureCollection).features;
     const shaped = (index: number, lookups: Record<string, unknown>) => compute.shapeRecord!(features[index]!.properties, {
@@ -618,8 +623,8 @@ describe('row 3.8 — D6 the lookup merge into shapeRecord (RED: no compute modu
   });
 });
 
-describe('row 3.8 — D7 preserve_null guard: the census merge is a guarded COALESCE (RED: no descriptor today)', () => {
-  it.fails('D7 — the upsert SQL carries, per census column, the COALESCE set arm AND the (EXCLUDED.c IS NOT NULL AND t.c IS DISTINCT FROM EXCLUDED.c) guard; plus name/geometry IS DISTINCT FROM; .guard_columns ⊇ name, geometry, all 14 (RED: no descriptor today) (flips at: commit ②)', () => {
+describe('row 3.8 — D7 preserve_null guard: the census merge is a guarded COALESCE (GREEN at ②)', () => {
+  it('D7 — the upsert SQL carries, per census column, the COALESCE set arm AND the (EXCLUDED.c IS NOT NULL AND t.c IS DISTINCT FROM EXCLUDED.c) guard; plus name/geometry IS DISTINCT FROM; .guard_columns ⊇ name, geometry, all 14 (flipped GREEN at ②)', () => {
     const d = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write codegen
     const writeLib = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js')) as {
@@ -642,8 +647,8 @@ describe('row 3.8 — D7 preserve_null guard: the census merge is a guarded COAL
   });
 });
 
-describe('row 3.8 — D8 geom on insert: N-D1 (RED: the legacy INSERT omits geom) (flips at: commit ②)', () => {
-  it.fails('D8 — the INSERT column list contains geom and the SQL contains ST_GeomFromWKB(; the geom column is written:"step" (RED: legacy L3 NULLs geom on insert) (flips at: commit ②)', () => {
+describe('row 3.8 — D8 geom on insert: N-D1 (GREEN at ②; the legacy INSERT omits geom)', () => {
+  it('D8 — the INSERT column list contains geom and the SQL contains ST_GeomFromWKB(; the geom column is written:"step" (flipped GREEN at ②; legacy L3 NULLs geom on insert)', () => {
     const d = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write codegen
     const writeLib = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js')) as {
@@ -663,8 +668,8 @@ describe('row 3.8 — D8 geom on insert: N-D1 (RED: the legacy INSERT omits geom
   });
 });
 
-describe('row 3.8 — D9 the three pre_write/B11/N-D17/N-D6 refusals (RED: no descriptor/compute today)', () => {
-  it.fails('D9 — checks declared per the Gate answers (duplicate_key_count + null_geometry_count FAIL pre_write with order_guarantee naming Spec 57; bad_key_count FAIL); driveCheck duplicate_key_count 1 ⇒ violations 1, 0 ⇒ 0 (RED: no descriptor/compute today) (flips at: commit ②)', () => {
+describe('row 3.8 — D9 the three pre_write/B11/N-D17/N-D6 refusals (GREEN at ②)', () => {
+  it('D9 — checks declared per the Gate answers (duplicate_key_count + null_geometry_count FAIL pre_write with order_guarantee naming Spec 57; bad_key_count FAIL); driveCheck duplicate_key_count 1 ⇒ violations 1, 0 ⇒ 0 (flipped GREEN at ②)', () => {
     const d = loadDescriptor();
     // legacy L4: B11 — a duplicate key aborts via `cannot affect row a second time`.
     const dup = checkById(d, 'duplicate_key_count');
@@ -687,8 +692,8 @@ describe('row 3.8 — D9 the three pre_write/B11/N-D17/N-D6 refusals (RED: no de
   });
 });
 
-describe('row 3.8 — D10 the floor check: B12 (RED: no descriptor/compute today) (flips at: commit ②)', () => {
-  it.fails('D10 — boundaries_loaded: rows_shaped 157 vs floor 158 ⇒ violations > 0 and value 157; rows_shaped 158 ⇒ violations 0 (RED: no descriptor/compute today) (flips at: commit ②)', () => {
+describe('row 3.8 — D10 the floor check: B12 (GREEN at ②)', () => {
+  it('D10 — boundaries_loaded: rows_shaped 157 vs floor 158 ⇒ violations > 0 and value 157; rows_shaped 158 ⇒ violations 0 (flipped GREEN at ②)', () => {
     const d = loadDescriptor();
     const c = checkById(d, 'boundaries_loaded');
     // legacy L7: `boundaries_loaded >= 158` FAILs at 157, PASSes at 158; the bound is the
@@ -703,8 +708,8 @@ describe('row 3.8 — D10 the floor check: B12 (RED: no descriptor/compute today
   });
 });
 
-describe('row 3.8 — D11 the lock-skip WARN terminal: B15 (RED: the legacy path emits nothing — L8)', () => {
-  it.fails('D11 — terminals include skip_lock_contention; skipRecordsMeta(d,"advisory_lock_held_elsewhere").audit_table name "Neighbourhood Boundaries", verdict WARN (RED: legacy L8 emits no summary at all) (flips at: commit ②)', () => {
+describe('row 3.8 — D11 the lock-skip WARN terminal: B15 (GREEN at ②; the legacy path L8 emits nothing)', () => {
+  it('D11 — terminals include skip_lock_contention; skipRecordsMeta(d,"advisory_lock_held_elsewhere").audit_table name "Neighbourhood Boundaries", verdict WARN (flipped GREEN at ②; legacy L8 emits no summary at all)', () => {
     const d = loadDescriptor();
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS runner library
     const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as {

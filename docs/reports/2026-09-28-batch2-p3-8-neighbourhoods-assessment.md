@@ -496,6 +496,8 @@ and L5 is verify-only because the script path is unchanged.
   147 [MEASURED plan §2]; §1.1) · **0j** `insert_only` · **0l** `invalidates` · **0u**
   `derived_from_geometry` · **0k** `set_source:"compute"`.
 
+**Seams named (G5, as-built at ②):** the **DB seam** is the runner pool + advisory lock 57 + ONE step-scoped transaction (class A guarded upsert; the pre_write gate runs before it opens); the **clock seam** is the runner's `run_at` handed to `shapeRecord` (unused by this step) with `created_at`/`census_year` db_default; the **network seam** is `scripts/lib/step/acquire.js` for BOTH externals (HEAD `on_head_error:"warn_row"`, timeout `neighbourhoods_download_timeout_ms`, `retries:0` — ④ F1); the **argv/env seam** is empty (`process.argv[2]`/`[3]` and the `data/` cache retired, N-D5; only `PIPELINE_CHAIN` via `execution.invocation`).
+
 ### 5.1 Prerequisites status @ `90ae17d0` (MEASURED 2026-09-28, grep)
 <!-- ANCHOR:§5.1 -->
 
@@ -727,8 +729,8 @@ worktree @ `90ae17d0`) — the plan §6 ① form plus `--tables=neighbourhoods` 
 table must be named), the 20-column projection spelled out, and `--invariants=`:
 
 ```
-node -r dotenv/config scripts/analysis/capture-step-golden.js --step=scripts/load-neighbourhoods.js --chain=sources --out=docs/reports/golden/neighbourhoods/pre/sources.json --tables=neighbourhoods --table-columns=neighbourhoods:neighbourhood_id,name,geometry,geom,avg_household_income,married_pct,period_of_construction,pct_detached,pct_semi_detached,pct_row_house,pct_apartment,pct_other_dwelling,pct_owned,pct_rented,pct_band_rent,pct_single_detached,pct_moved_1yr,pct_immigrant,pct_mother_tongue_english,census_year,top_mother_tongue --table-order=neighbourhoods:neighbourhood_id --invariants=docs/reports/golden/neighbourhoods/invariants.json
-node -r dotenv/config scripts/analysis/capture-step-golden.js --step=scripts/load-neighbourhoods.js --chain=none --out=docs/reports/golden/neighbourhoods/pre/standalone.json --tables=neighbourhoods --table-columns=neighbourhoods:neighbourhood_id,name,geometry,geom,avg_household_income,married_pct,period_of_construction,pct_detached,pct_semi_detached,pct_row_house,pct_apartment,pct_other_dwelling,pct_owned,pct_rented,pct_band_rent,pct_single_detached,pct_moved_1yr,pct_immigrant,pct_mother_tongue_english,census_year,top_mother_tongue --table-order=neighbourhoods:neighbourhood_id --invariants=docs/reports/golden/neighbourhoods/invariants.json
+node -r dotenv/config scripts/analysis/capture-step-golden.js --step=scripts/load-neighbourhoods.js --chain=sources --out=docs/reports/golden/neighbourhoods/pre/sources.json --tables=neighbourhoods --table-columns=neighbourhoods:neighbourhood_id,name,geometry,geom,avg_household_income,median_household_income,avg_individual_income,low_income_pct,tenure_owner_pct,tenure_renter_pct,period_of_construction,couples_pct,lone_parent_pct,married_pct,university_degree_pct,immigrant_pct,visible_minority_pct,english_knowledge_pct,census_year,top_mother_tongue --table-order=neighbourhoods:neighbourhood_id --invariants=docs/reports/golden/neighbourhoods/invariants.json
+node -r dotenv/config scripts/analysis/capture-step-golden.js --step=scripts/load-neighbourhoods.js --chain=none --out=docs/reports/golden/neighbourhoods/pre/standalone.json --tables=neighbourhoods --table-columns=neighbourhoods:neighbourhood_id,name,geometry,geom,avg_household_income,median_household_income,avg_individual_income,low_income_pct,tenure_owner_pct,tenure_renter_pct,period_of_construction,couples_pct,lone_parent_pct,married_pct,university_degree_pct,immigrant_pct,visible_minority_pct,english_knowledge_pct,census_year,top_mother_tongue --table-order=neighbourhoods:neighbourhood_id --invariants=docs/reports/golden/neighbourhoods/invariants.json
 ```
 
 `--table-order=neighbourhoods:neighbourhood_id` is the determinism anchor for the table projection (the `id`
@@ -739,6 +741,8 @@ what the plan wrote as `<14 census>` [plan §6 ①]. `invariants.json` (row_coun
 0, geom_types MULTIPOLYGON=158, geom_equals_geometry_derivation 158, census_all_14_non_null 158,
 top_mother_tongue_non_null 0, id_key_map_hash `b6d78983a0788478b70594f66c086460`, shifted_key_range_rows 0)
 is passed via `--invariants=`.
+
+(Corrected at ②: the ① text of this block listed 15 non-existent columns; the golden's own `table_state[0].columns` is the record of what ran.)
 
 ### 9.1 Captured (MEASURED 2026-09-28)
 
@@ -813,6 +817,40 @@ with the Fold CF-5/CF-6 amendments]:
   DELETEd and 30/30 rows were updated from the before-image**; hash **`9b111a6a…`**, id hash **`b6d78983…`**,
   **158 rows** = baseline — **restored: true**, re-verified by an **independent read-only query** afterwards.
 
+### 9.2 Commit ② — POST goldens, forced-change proof, compare (MEASURED 2026-09-28)
+
+- **Capture last:** `step-validate --step=neighbourhoods --fast` five-word PASS on every non-capture-derived
+  word before each POST capture (gates C/D/G capture-derived; gate K closed first by the §10 red-evidence
+  artifact). Same commands as §9 with `--out=…/post/{sources,standalone}.json` (20-column projection,
+  `--invariants` = the ① file).
+- **Steady state:** `post/sources.json` and `post/standalone.json`: exit 0, verdict PASS, terminal `loaded`;
+  `neighbourhoods` 158 rows, table content_hash `9b111a6a18a701666746bfd2ceee0bdb` — **byte-identical to PRE
+  on both chains**; all 9 invariants identical (geom_null 0, invalid_geom 0, MULTIPOLYGON=158,
+  geom_equals_geometry_derivation 158, census_all_14_non_null 158, top_mother_tongue_non_null 0, id_key_map_hash
+  `b6d78983…`, shifted_key_range_rows 0). Counters new 0 / updated 0 (legacy 0/158, N-D2/N-D3);
+  `boundaries_loaded` 158, `census_rows_matched` 31 (= legacy). Maintenance row: dead_ratio 0 ≤ 0.3 ⇒ VACUUM
+  skipped (N-D9). **Two-run proof PASS** on every POST capture (run 2 rewrote 0 rows, strict).
+- **Source identity (Fold CF-6 (iv)):** the converted run downloaded live; the runner logged `md5 3d3895fe…`
+  2,141,269 B and `md5 6ffe6838…` 1,763,175 B = the cohort digests; both files re-downloaded from CKAN after
+  the POST runs: sha256 `b0cb5807…0233` / `9a3c3729…45eb` = PRE. CKAN did not republish; the differential is
+  valid. (The runner hashes md5 because no post_acquisition trigger is declared; it keeps the hash out of
+  records_meta, so the cohort script's post witness now reads the acquisition log line — a ② change to
+  `scripts/analysis/neighbourhoods-cohort-differential.js`.)
+- **Forced change (R-AS):** same cohort (I 5 key-shift, N 5, G 5, C 10, Q 5, control 128), perturbed hash
+  `af1662e5…` (= ①). CONVERTED run → `forced/post.json`: new 5 / updated 20 (legacy new 0 / updated 158 — N-D3
+  literals); new rows 5/5 with geom = `ST_SetSRID(ST_GeomFromGeoJSON(geometry::text),4326)` 5/5 and NULL 0/5
+  (legacy NULL 5/5 — **N-D1, the one declared key**); N/G/C arm hashes healed; Q 5/5 NOT healed
+  (guard-composition witness, both paths); negative-control hash unchanged. Table hash `2762a3fb…` vs legacy
+  `c486a1f3…`; **with the 5 new rows' geom NULLed the converted table hashes to
+  `c486a1f3219d300c658c530cac80c699` exactly** ⇒ geom on those 5 rows is the ONLY difference. Verdict WARN from
+  `boundary_rows_inserted` = 5 (N-D1 visibility, by design). Guarded non-zero capture `post/sources.forced.json`
+  (gate G #38): same numbers, two-run proof PASS. Restore after every forced run: FK refs 0/0/0, 5 inserted rows
+  deleted, 30/30 restored, table hash `9b111a6a…`, id hash `b6d78983…`, 158 rows = baseline.
+- **Compare:** 94 diff keys over the three pairs, every one explained in
+  `docs/reports/golden/neighbourhoods/explained-diffs.json` (N-D1/2/3/4/6/9/11/12, runner meta keys, stdout,
+  standalone ledger row, forced-pair invariants). `step-validate --fast`: 16/17, hard-stop no, five words PASS.
+- **Runtime:** converted run 4.9 s (legacy PRE ~4.3 s), within the declared 5m budget.
+
 ---
 
 ## 10. Red suite (PH-7)
@@ -843,6 +881,8 @@ until the descriptor exists**, because the body's first statement is `loadDescri
 **stated here, not hidden**: at ① the shell still calls `pipeline.run()` [READ
 `scripts/load-neighbourhoods.js`], so D1 is red for the descriptor reason FIRST and the shell-text reason
 SECOND. `converted.json` `pending[]` `{file, stage:"red_suite"}` is a **`registry_reserved`** edit — **landed by the orchestrator 2026-09-28** (`registers_at: "commit ③"`).
+
+**RED evidence (gate K / G7):** `docs/reports/red-evidence/neighbourhoods/pre2-artifacts-missing.json` — the ② suite (as landed in commit ②) run against the ① tree state (descriptor, notes and compute absent; the shell restored to its ① bytes from 110c8c31; every file sha256-verified back afterwards): 11 assertions failed and 9 passed (the 8 legacy pins, which read the committed pre-② fixture copy, + the report marker), each failure "MISSING ARTIFACT scripts/load-neighbourhoods.descriptor.json" or "…/lib/compute/load-neighbourhoods.js", e.g. `D10 — boundaries_loaded: rows_shaped 157 vs floor 158 ⇒ violations > 0 and value 157; rows_shaped 158 ⇒ violations 0 (flipped GREEN at ②)` — genuine assertion failures, not an import crash.
 
 | Id | Claim | Status | Legacy value (oracle) | RED reason today | Flips at |
 |---|---|---|---|---|---|
@@ -892,3 +932,107 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 | **A SOURCE-TEXT legacy ORACLE (eval with fakes) beats source-text REGEX locks for two-source loaders** | `fixtures/legacy-harness.ts` reads `scripts/load-neighbourhoods.js` as **source text**, strips the shebang and evaluates it in `new Function` with a curated `require` shim (**fake** `./lib/pipeline` + **fake** `exceljs`; **real** `./lib/safe-math` + node builtins), so the script's module-scope `pipeline.run()` only **stores** its callback. Every RED value is then the legacy's **own output** off the fake pool + `emitSummary`/`emitMeta` payloads — not a hand-typed number, and not a regex pin that rots when the shell freezes. **Candidate harness for `3.4 load_heritage`** (also two sources → one target). The regex-lock form (`expect(content).toContain('census_rows_matched')`) is exactly what §4.1 must re-home at ②; this harness makes the re-home unnecessary for the behaviour half. |
 | **Engine registry sweeps HALLUCINATE absences** | three separate **"NO MATCH"** claims (`tasks/lessons.md` "no entry"; `acquire.js` "retried THREE times" → NB-X3 **already corrected by 0v**, 0 hits for the false form; the Fold H-3 "×6" `admin-existing.json` count not reproduced — 22 table hits vs 0 script-path hits, §3(c)) were each **refuted by grep at review**. **Standard: every absence claim needs an EXECUTED grep whose output is quoted** — an absence asserted without the command is a hallucination risk, and §3 marks exactly which referents it found **that the plan missed**. |
 | **RE-FREEZE ordinals claimed in a plan go STALE across parallel rows** | the plan reserves `#26` for 0w, but row 3.2 took `#26` in parallel (§5.1) — a plan-written ordinal is a **snapshot of a shared counter**, not a reservation. **Standard: re-grep the RE-FREEZE log for the next free ordinal at LANDING time**, never trust the number written into the plan; §5.1 flags the collision as an OPEN QUESTION for the orchestrator rather than silently renumbering. Resolved here: 0w landed as #27 (4ea7621e). |
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=neighbourhoods --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
+
+| Word | Status | Detail |
+|---|---|---|
+| STANDARDIZED | PASS | PASS |
+| OBSERVABLE | PASS | PASS |
+| SCALABLE | PASS | PASS |
+| UNDERSTANDABLE | PASS | PASS |
+| ACCURATE | PASS | PASS |
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=39313d9 |
+| G3 | 1 | 2 | table rows=31 vocab-hit rows=2 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 19 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=22 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=22 |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=245 |
+| 2 | neighbourhoods | PASS | 4 declared, missing from seeds: none |
+| 3 | neighbourhoods | PASS | retired=0 overlap-with-declared=none |
+| 7 | neighbourhoods | PASS | SPEC LINK header present=true |
+| 8 | neighbourhoods | PASS | G-4: 4 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | neighbourhoods | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | neighbourhoods | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 74 PRE capture(s) across 22 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 22 converted slug(s) — 14 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 53 declared counter source(s) across 18 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 6 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
+| 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
+| 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
+| 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 1 contract(s) checked, all closed (1 ledger-allowed, 0 present+typed/excluded) |
+| 37 | (registry) | PASS | LF-ONLY (gate F): 5 path(s) checked, all LF (5 ledger-allowed) |
+| 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 4 x-banned-for-new path(s) enforced |
+| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
+| 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (14 ledger-allowed, 4 outputs:"none" vacuous) |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 73 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 23 step(s) checked — every diff-explanation channel accounted for |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
+| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): none
+- stale fingerprints: none
+- compare ran: true · diffs found: 94 · unexplained: 0
+
+### Test suite (item iii)
+- 1754/1754 passed (suite success=true)
+- harvested: 35 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing: none
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 4 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 4 | Compute rule declared | enforced-green | G-2: 0 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 3 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=35014B notes=13368B checks=6 rows records_meta=2287B (newest post/ capture) |
+
+**Enforced-green: 13/14** · not-run: 0 · vacuous: 0
+

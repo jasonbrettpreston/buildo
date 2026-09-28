@@ -1,0 +1,662 @@
+{
+  "identity": {
+    "name": "neighbourhoods",
+    "display_name": "Neighbourhood Boundaries",
+    "owner": "data",
+    "description": "Loads Toronto's 158 Neighbourhood Boundaries (GeoJSON, CRS84) together with the 2021 Neighbourhood Census Profile (XLSX) as a lookup, merging both sources into ONE class-A guarded upsert into neighbourhoods (17 columns + geom) inside a single step-scoped transaction.",
+    "lock": 57,
+    "why_lock": { "text": "Mutual exclusion with every other writer of neighbourhoods (Spec 47 §A.5 row 57); the shell keeps `const ADVISORY_LOCK_ID = 57;` as a §5.4 source-text constant, asserted equal by the pipeline advisory-lock suite.", "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" } },
+    "spec": "57",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        { "id": "ckan:neighbourhoods-4326", "kind": "http_file", "format": "geojson", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson", "license": "https://open.toronto.ca/open-data-license/", "key_property": "AREA_SHORT_CODE", "cache": "none", "on_head_error": "warn_row" },
+        { "id": "ckan:nbhd-2021-census-profile", "kind": "http_file", "format": "xlsx", "role": "lookup", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/6e19a90f-971c-46b3-852c-0c48c436d1fc/resource/19d4a806-7385-4889-acf2-256f1e079060/download/nbhd_2021_census_profile_full_158model.xlsx", "license": "https://open.toronto.ca/open-data-license/", "cache": "none", "on_head_error": "warn_row" }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "neighbourhoods",
+        "key": "neighbourhood_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "geometry_repair": "none",
+        "columns": [
+          {"name":"neighbourhood_id","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"name","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"geometry","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"geom","vocabulary":"none","written":"step","bind":"wkb_geometry"},
+          {"name":"avg_household_income","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"median_household_income","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"avg_individual_income","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"low_income_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"tenure_owner_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"tenure_renter_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"period_of_construction","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"couples_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"lone_parent_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"married_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"university_degree_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"immigrant_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"visible_minority_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"english_knowledge_pct","vocabulary":"none","written":"step","bind":"value","on_empty":"preserve_null"},
+          {"name":"created_at","vocabulary":"none","written":"db_default","bind":"value"},
+          {"name":"census_year","vocabulary":"none","written":"db_default","bind":"value"}
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert", "guard": "is_distinct_from", "guard_columns": ["name", "geometry", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"], "scope": "none", "expected_change_ratio": ">= 0", "idempotent_rerun": "zero_writes", "txn_scope": "step",
+          "why": { "text": "Legacy UNNEST batch INSERT ... ON CONFLICT (neighbourhood_id) DO UPDATE SET with the boundary guard `WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name` plus, in the same statement now, the 8 census UPDATEs and the bulk 5-pct arm [READ scripts/load-neighbourhoods.js, anchors `ON CONFLICT (neighbourhood_id) DO UPDATE SET` and `IS DISTINCT FROM EXCLUDED.name`]. The census columns carry on_empty preserve_null because legacy keeps the stored value when the source omits one (absent rows keep stored; the bulk arm is literally `COALESCE(v.married_pct, n.married_pct)`), folding 5 autocommit UPDATEs into ONE guarded upsert (N-D2).", "liveness": { "kind": "file", "ref": "src/tests/steps/neighbourhoods/violations.test.ts" } }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": true, "on_collision": "fail", "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": { "statements": 1, "why": { "text": "Only the guarded upsert writes: the legacy boundary INSERT, the 8 census UPDATEs and the run's VACUUM ANALYZE become one upsert plus a declared execution.maintenance entry [READ scripts/load-neighbourhoods.js, anchors `INSERT INTO neighbourhoods` and `VACUUM ANALYZE neighbourhoods`] (N-D2/N-D9).", "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" } } }
+  },
+  "staleness": { "scope": "none", "trigger": "none", "mode_select": "none", "checkpoint": "none", "interval": "none", "fingerprint": "derived", "fingerprint_inputs": "none", "logic_version": "none", "on_fingerprint_change": "run" },
+  "guards": {
+    "requires": [
+      { "kind": "extension", "name": "postgis", "on_missing": "fail", "why": { "text": "N-D4. The legacy probe `SELECT 1 FROM pg_extension WHERE extname = 'postgis'` selected an optional geom SET arm and silently skipped geometry when PostGIS was absent; it is now a fail-loud precondition because geom is a contract column (link-coa-to-parcels reads geometry via Turf and link_neighbourhoods reads n.geom), following the link_neighbourhoods LN-D2 precedent.", "liveness": { "kind": "external", "ref": "postgis" } } },
+      { "kind": "rls_bypass_or_policy", "name": "neighbourhoods", "on_missing": "fail", "why": { "text": "Migration 227 enables RLS on neighbourhoods with 0 policies: the upsert works only under rolbypassrls=true, else it affects 0 rows silently while the verdict still reads PASS.", "liveness": { "kind": "table", "ref": "neighbourhoods" } } }
+    ],
+    "srid": 4326,
+    "empty_source": "neighbourhoods",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "5m",
+    "txn_scope": "step",
+    "txn_budget": "2m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "10m",
+    "batch": 1000,
+    "needs_disk_mb": 16,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A feature with no AREA_NAME/AREA_LONG_CODE is skipped and the load continues [READ scripts/load-neighbourhoods.js, anchor `Skipping feature with missing ID or name`], exactly as legacy did. The tolerance is bounded by the FAIL floor `boundaries_loaded`, so a source that degraded into unnamed features cannot pass silently.",
+      "liveness": {
+        "kind": "check",
+        "ref": "boundaries_loaded"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_batch_error_why": {
+      "text": "N-D8. The step owns ONE transaction (txn_scope step), so a failed statement rolls back everything: there is no per-batch boundary left to drop, and legacy's separate boundary/census transactions are retired.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    },
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a counter the library already measured, so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-neighbourhoods.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": [
+        "ckan0.cf.opendata.inter.prod-toronto.ca"
+      ],
+      "timeout": "60000ms",
+      "timeout_from_config": "neighbourhoods_download_timeout_ms",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": [
+      {
+        "operation": "vacuum_analyze",
+        "table": "neighbourhoods",
+        "owned_by": "self",
+        "why": {
+          "text": "N-D9. The legacy shell ran `await pool.query('VACUUM ANALYZE neighbourhoods')` on every run, because the full upsert plus census enrichment creates ~1,264 dead tuples on a 158-row table. runMaintenance (EP-D17) now gates it on `neighbourhoods_dead_tuple_ratio_warn_max` and runs it autocommit after the write, exactly as VACUUM requires.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/step/plausibility.js"
+          }
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "boundaries_loaded",
+      "kind": "bound",
+      "expect": { "of": "rows_shaped (features with a key and a name, pre-dedupe)", "direction": "min" },
+      "limit": "value_min 158",
+      "limit_from_config": "sources_neighbourhoods_floor",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Catastrophic-load detector: the legacy audit row `threshold: '>= 158'` with `status: boundaryCount >= 158 ? 'PASS' : 'FAIL'` [READ scripts/load-neighbourhoods.js, anchor `boundaryCount >= 158`]. The bound SHARES the registered variable `sources_neighbourhoods_floor` (default 158) with assert_data_bounds and link_neighbourhoods via limit_from_config — the SAME key, not a second one (Rule 3, one home per concern). The limit uses the R-T addendum `value_min` form, a RAW MEASURED count: pairing `viol == 0` with a FLOOR variable is the AP-D6 trap where resolveLimit substitutes 158 into the flag and compares 0/1 against it.",
+        "liveness": {
+          "kind": "table",
+          "ref": "neighbourhoods"
+        }
+      }
+    },
+    {
+      "id": "census_rows_matched",
+      "kind": "field_coverage",
+      "expect": { "reports": "census characteristic rows buildLookup matched (acquired.lookups[...].stats.matched_rows)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO audit row `metric: 'census_rows_matched'` [READ scripts/load-neighbourhoods.js], carried so the audit table keeps its row rather than going silent. Purely descriptive (INFO, no negative direction, never gates) and a raw count, so `viol == 0` is the correct limit form with no limit_from_config; N-D10 records that a WARN floor on it is deferred to F2.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-neighbourhoods.js"
+        }
+      }
+    },
+    {
+      "id": "bad_key_count",
+      "kind": "invariant",
+      "expect": { "violation_when": "a feature's AREA_SHORT_CODE is absent, empty or 0" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.",
+        "spec_ref": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "anchor": "Pre-write refusals"
+      },
+      "why": {
+        "text": "N-D6. The dead AREA_S_CD arm and the AREA_ID arm (7-digit ids, which would key 158 wrong rows) are retired, so a key-less feature is now a pre-write refusal rather than a silent skip.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-neighbourhoods.js"
+        }
+      }
+    },
+    {
+      "id": "duplicate_key_count",
+      "kind": "invariant",
+      "expect": { "violation_when": "two features share an AREA_SHORT_CODE" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.",
+        "spec_ref": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "anchor": "Pre-write refusals"
+      },
+      "why": {
+        "text": "N-D7. Legacy aborted with Postgres' `cannot affect row a second time` from its single UNNEST INSERT; the converted dedupe would instead proceed silently, so the refusal is kept here as an explicit pre-write gate.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-neighbourhoods.js"
+        }
+      }
+    },
+    {
+      "id": "null_geometry_count",
+      "kind": "invariant",
+      "expect": { "violation_when": "a feature has a null geometry" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.",
+        "spec_ref": "docs/specs/01-pipeline/57_source_neighbourhoods.md",
+        "anchor": "Pre-write refusals"
+      },
+      "why": {
+        "text": "N-D17. Legacy's `ST_GeomFromGeoJSON` of a jsonb 'null' throws and fails the run; the converted parser instead skips and counts such features, so the refusal is kept here.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-neighbourhoods.js"
+        }
+      }
+    },
+    {
+      "id": "boundary_rows_inserted",
+      "kind": "invariant",
+      "expect": { "violation_when": "the upsert inserted a NEW boundary row (written.inserted > 0)" },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "N-D1. The insert path is dead on live input (the 158 rows carry created_at 2026-02-20), and a new City boundary set is a years-scale event, so a NEW boundary row is surfaced rather than treated as routine.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-neighbourhoods.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": ["src/components/FreshnessTimeline.tsx"],
+      "skeleton": { "phase": 9, "name": "Neighbourhood Boundaries", "verdict": "PASS", "rows": [] }
+    },
+    { "key": "boundaries_loaded", "type": "int", "consumers": [] },
+    { "key": "census_rows_matched", "type": "int", "consumers": [] },
+    { "key": "duration_ms", "type": "int", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "N-D1 — the legacy INSERT `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)` omits geom, so a NEW row got geom NULL",
+      "why": {
+        "text": "Knowingly retired: the insert path is dead on live input (created_at 2026-02-20 on 158/158, 0 NULL geom, no trigger), no schema value can pin an insert-only NULL, and the retired arm would blind link_neighbourhoods' `n.geom IS NOT NULL` corpus; a NEW row is now surfaced by the check boundary_rows_inserted.",
+        "liveness": { "kind": "check", "ref": "boundary_rows_inserted" }
+      },
+      "adjudicated_by": "Fold CF-4 (Schema-Fidelity/Op-Model seat), Spec 124 §7 LM-D7/A-8 + R-AR.1",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D2 — 8 unguarded census UPDATEs (`UPDATE neighbourhoods AS n SET`) rewriting 1,264 tuples per unchanged run",
+      "why": {
+        "text": "Folded into the guarded upsert with on_empty preserve_null; 2,212/2,212 cells byte-identical (Fold CF-5), so an unchanged rerun writes 0.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "adjudicated_by": "orchestrator, AP-D4/M-D3 precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D3 — counters `records_new: 0,` literal and `records_updated: boundaryCount`",
+      "why": {
+        "text": "Counters now come from written.inserted/updated, so an unchanged source reads 0 updated (158→0) while a real insert reads new.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "orchestrator, AP-D4 precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D4 — the PostGIS probe, its optional geom arm and the INFO audit row `has_postgis`",
+      "why": {
+        "text": "A DB fact, not a data condition: it is now the fail-loud guard guards.requires postgis, so a missing extension reddens the run instead of silently skipping geometry.",
+        "liveness": { "kind": "external", "ref": "postgis" }
+      },
+      "adjudicated_by": "link_neighbourhoods LN-D2 precedent (Spec 124 Rule 2 R-W)",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D5 — the `data/neighbourhoods-4326.geojson` cache plus the `process.argv[2]`/`[3]` path overrides",
+      "why": {
+        "text": "The step downloads from CKAN every run and caches none (cache:\"none\"), so a stale local file can no longer feed a run; the retired cache was measured byte-identical to CKAN.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "Spec 124 R-AZ, M-D10 precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D6 — the key OR-chain `safeParsePositiveInt(props.AREA_S_CD` (AREA_S_CD ‖ AREA_SHORT_CODE ‖ AREA_ID ‖ '0')",
+      "why": {
+        "text": "AREA_S_CD is absent 158/158 (dead) and the AREA_ID arm would key 158 wrong rows; key_property is AREA_SHORT_CODE only, and a key-less feature is now the pre_write FAIL bad_key_count.",
+        "liveness": { "kind": "check", "ref": "bad_key_count" }
+      },
+      "adjudicated_by": "orchestrator, plan §2 B2",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D7 — the duplicate-key abort `cannot affect row a second time` (one UNNEST INSERT)",
+      "why": {
+        "text": "The converted dedupe would proceed silently, so the refusal is retained as the pre_write FAIL duplicate_key_count; 0 duplicates measured.",
+        "liveness": { "kind": "check", "ref": "duplicate_key_count" }
+      },
+      "adjudicated_by": "plan §2 B11, Fold CF-8",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D8 — split transactions (boundary txn + 5 autocommit census UPDATEs + bulk txn)",
+      "why": {
+        "text": "Replaced by ONE step-scoped transaction; a partial-census state is unreachable, which is strictly stronger than the legacy arrangement.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "adjudicated_by": "address_points Fold B3 / massing M-D11 precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D9 — `await pool.query('VACUUM ANALYZE neighbourhoods');` on every run",
+      "why": {
+        "text": "Now the declared execution.maintenance vacuum_analyze gated on `neighbourhoods_dead_tuple_ratio_warn_max` (EP-D17): the trigger differs (only when dead tuples warrant it) but the effect is data-invisible, since VACUUM changes no row values.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/plausibility.js" }
+      },
+      "adjudicated_by": "massing M-D12 precedent (EP-D17)",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D11 — verdict `hasFails ? 'FAIL' : 'PASS'` parallel boolean",
+      "why": {
+        "text": "The verdict now derives from the check rows (verdict.js, Rule 10) rather than a hand-threaded boolean; on healthy input both forms read PASS identically.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+      },
+      "adjudicated_by": "Spec 124 Rule 10, parcels/address_points precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D12 — emitMeta labels `\"Census XLSX\": [\"income\", \"tenure\", \"demographics\"]` (categories, not fields)",
+      "why": {
+        "text": "PIPELINE_META is now derived from the descriptor (external ids plus declared columns) instead of hand-typed category labels, so metadata cannot drift from what the step actually reads and writes.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "orchestrator, M-D6 precedent",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D13 — legacy wrote whatever `ST_GeomFromGeoJSON` parsed",
+      "why": {
+        "text": "With geometry_kind polygon, a non-polygon feature is now `skipped_unsupported_type` rather than written; exposure is zero (158/158 MultiPolygon, 0 invalid).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "adjudicated_by": "plan §2 B4",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D14 — census UPDATEs keyed on every matched id",
+      "why": {
+        "text": "A table row whose key is absent from this run's GeoJSON gets no census write, because the upsert only touches primary (GeoJSON-derived) rows; exposure is zero (ids 158/158 equal across GeoJSON, XLSX and DB).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-neighbourhoods.js" }
+      },
+      "adjudicated_by": "Fold CF-5",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D15 — Spec 57 drift (population column, Turf.js, \"step 9\", NUMERIC incomes)",
+      "why": {
+        "text": "Spec 57 is brought as-built (INT incomes, no population column, step 17); the drift was documentary only, with no runtime behavior affected.",
+        "liveness": { "kind": "file", "ref": "docs/specs/01-pipeline/57_source_neighbourhoods.md" }
+      },
+      "adjudicated_by": "plan §2 B17",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D17 — null geometry: `ST_GeomFromGeoJSON` of jsonb 'null' throws (UPDATE arm)",
+      "why": {
+        "text": "The converted parser skips and counts such features instead of throwing, and the refusal is kept as the pre_write FAIL check `null_geometry_count`; exposure 0/158.",
+        "liveness": { "kind": "check", "ref": "null_geometry_count" }
+      },
+      "adjudicated_by": "Fold CF-8",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D18 — legacy census UPDATE never touched geom",
+      "why": {
+        "text": "A census-only change now fires the merged guard and its SET also rewrites `geom = EXCLUDED.geom`, so a geom-drifted row with a census change heals under the converted form only; 0 rows today (derived geom = stored 158/158), pinned wrong-form and fixed post-conversion.",
+        "liveness": { "kind": "table", "ref": "neighbourhoods" }
+      },
+      "adjudicated_by": "Fold CF-5",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D19 — legacy bare `get(url, (response) => {` issued no HEAD",
+      "why": {
+        "text": "The converted step HEADs each external, and `on_head_error:\"warn_row\"` is set on BOTH externals (a WARN head_error row plus proceeding is the closest parity to legacy's unverified fetch).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "Fold H-5 (Op-Model seat)",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "progress/cadence literals — `downloaded % (2 * 1024 * 1024)` MB log window plus `toFixed(1)` duration strings",
+      "why": {
+        "text": "Retired: there is no per-byte loop left for a cadence knob to bind to, so the MB-window and duration-string formatting are dropped.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "address_points commit-9 P4 precedent",
+      "date": "2026-09-28"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "N-D10 — census_rows_matched stays INFO (never verdict-capable) although a floor (31 on the live source) is countable; ④ F2 adds the WARN floor neighbourhoods_census_rows_matched_min.",
+      "measured": "census_rows_matched = 31 on PRE golden 2026-09-28 [MEASURED]",
+      "check_id": "census_rows_matched"
+    },
+    {
+      "what": "N-D16 — acquisition has no retry (execution.network.retries 0, legacy parity): a transient CKAN 502 fails the run; ④ F1 adds retries_from_config + backoff.",
+      "measured": "cloud run 34769829628 (2026-09-13) halted on an un-retried GET; 0 failed local runs [MEASURED plan §2]",
+      "check_id": "none"
+    },
+    {
+      "what": "Serial burn — every run consumes ~158 id sequence values (INSERT ... ON CONFLICT evaluates nextval), identical to legacy; id is never projected.",
+      "measured": "sequence last_value 948 vs max(id) 158 [MEASURED Fold CF-6]",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {"file": "load-neighbourhoods.notes.json", "entries": 8},
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture. This step is class A (write_discipline.class \"guarded_upsert\", retract:\"none\"): it holds NO retraction path and NO scoped delete, and it writes inside ONE step-scoped transaction (execution.txn_scope:\"step\"). A kill mid-run therefore leaves exactly what that transaction left — either NOTHING (the txn rolled back, no committed rows) or the FULLY-COMMITTED guarded upsert of all 17 columns plus geom; there is no half-cleared neighbourhoods table an incremental gate could misread as complete, and no retraction to recover because none exists. The force_full_on_next_run obligation binds only targets with retract_when full_only or retract:\"all\" (per the schema's own note on this field) — neither is declared here. Nothing is owed to a successor run beyond re-running the idempotent upsert, which zero-writes on an unchanged source (replay:\"idempotent_upsert\", idempotent_rerun:\"zero_writes\"). Genuinely none rather than silently ignored.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The generic before-image mechanism (scripts/lib/step/write.js writeBeforeImage) mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope to capture. This step declares retract:\"none\" with write_discipline.scope:\"none\", so there is no retraction for the mechanism to mirror and nothing to capture. Every column (the 2 boundary-derived fields, the 8 census characteristics, created_at, census_year and both geometry forms) is re-derived from the sources on every run, so a re-run recovers the same rows identically without a before-image. Declared out of scope rather than silently skipped (parcels' text shape; massing precedent).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 227,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated",
+      "scoped_by": "neighbourhood_id"
+    },
+    "records_new": {
+      "source": "written.inserted",
+      "scoped_by": "neighbourhood_id"
+    },
+    "records_updated": {
+      "source": "written.updated",
+      "scoped_by": "neighbourhood_id"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "sources_neighbourhoods_floor", "min": 1, "max": 1000, "on_invalid": "fail" },
+      { "name": "neighbourhoods_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" },
+      { "name": "neighbourhoods_dead_tuple_ratio_warn_max", "min": 0, "max": 5, "on_invalid": "fail" },
+      { "name": "neighbourhoods_maintenance_timeout_minutes", "min": 1, "max": 60, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 9
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "boundaries_loaded": "int",
+        "census_rows_matched": "int",
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The guarded upsert committed: every parsed feature is inserted or updated (split by RETURNING xmax = 0), with no retraction (retract:\"none\"). The step has NO staleness gate (staleness.scope:\"none\"), so success is the NORMAL terminal of every run — an unchanged source is not a skip, it is a zero-writes completed run (idempotent_rerun:\"zero_writes\").",
+        "liveness": {
+          "kind": "table",
+          "ref": "neighbourhoods"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "boundaries_loaded": "int",
+        "census_rows_matched": "int",
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The declared WARN check tripped with NO FAIL: boundary_rows_inserted is WARN-severity and blocking:false, so a NEW boundary row landing (N-D1) still commits and the run is completed_with_warnings — a new City boundary set is surfaced, never promoted to a halt. The same terminal carries a WARN head_error row from either external (on_head_error:\"warn_row\", N-D19), which lists as a warning row and proceeds rather than failing the run.",
+        "liveness": {
+          "kind": "check",
+          "ref": "boundary_rows_inserted"
+        }
+      }
+    },
+    {
+      "id": "failed_boundaries_floor",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "boundaries_loaded": "int",
+        "census_rows_matched": "int",
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "boundaries_loaded fell below sources_neighbourhoods_floor (default 158) — the legacy audit row `threshold: '>= 158'` flipped to FAIL. The FAIL row is declared; blocking:false, so the run reads as failed and the chain continues (the load already committed exactly as the legacy loader wrote its FAIL row and exited 0).",
+        "liveness": {
+          "kind": "check",
+          "ref": "boundaries_loaded"
+        }
+      }
+    },
+    {
+      "id": "failed_pre_write_refusal",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "boundaries_loaded": "int",
+        "census_rows_matched": "int",
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "bad_key_count, duplicate_key_count or null_geometry_count FAILed at the pre_write gate: NO transaction was opened, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is untouched, exactly as legacy's abort on duplicates (`cannot affect row a second time`) or null geometry did (N-D6/N-D7/N-D17).",
+        "liveness": {
+          "kind": "check",
+          "ref": "duplicate_key_count"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A download of either external (the GeoJSON boundaries or the census XLSX), the GeoJSON/XLSX parse, or coerceKey on a non-numeric AREA_SHORT_CODE threw before any write was attempted; legacy halted on the same conditions (its `/positive integer/` key check threw too). neighbourhoods is untouched (no transaction was opened).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "failed_empty_source",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "inputs.expect_nonempty is true: a source that shapes to ZERO features fails rather than landing an empty 'success' — an empty boundaries file is a publisher error, not an empty load.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 57 is held by another process. Pre-conversion the step returned silently when the lock was not acquired (legacy `if (!lockResult.acquired) return;`); the library now emits a row-derived WARN summary instead of a silent return.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

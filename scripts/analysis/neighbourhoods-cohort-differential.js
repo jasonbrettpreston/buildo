@@ -466,13 +466,35 @@ async function run(args) {
           else collect(v);
         }
       })(summary);
+      // The CONVERTED runner is the second witness. It prints its acquisition into the run
+      // log — `acquired 158 feature(s) (2141269 bytes, md5 3d3895fe…)` and `acquired lookup
+      // "ckan:nbhd-2021-census-profile": 2603 row(s) … (1763175 bytes, md5 6ffe6838…)`,
+      // anchored in scripts/lib/step/acquire.js — but keeps the acquired block OUT of
+      // records_meta, and neither POST summary carries a `content_hash` at all. So scanning
+      // the harness-echoed stdout is what actually ties a live download to the cohort.
+      // Prefix + exact byte count is the strongest statement a 1-line log allows (the full
+      // sha256 is not printed); the orchestrator additionally re-downloads both files and
+      // compares full sha256 after each POST run (report §9), so this is a corroborating,
+      // not sole, witness.
+      const logWitnesses = [];
+      for (const m of out.matchAll(/\((\d+) bytes, (sha256|md5) ([0-9a-f]{8})…\)/g)) {
+        logWitnesses.push({ bytes: Number(m[1]), alg: m[2], prefix: m[3] });
+      }
       for (const s of cohort.sources) {
         const want = s.digest ? [s.digest.sha256, s.digest.md5] : [];
-        if (!want.some((h) => hashes.includes(h))) {
-          throw new Error(`VOID: no summary content_hash matches source ${s.name} (${s.file}) sha256/md5 ${want.join('|')} — live download cannot be tied to the cohort`);
+        let kind = null;
+        if (want.some((h) => hashes.includes(h))) kind = 'summary';
+        if (!kind && s.digest) {
+          const w = logWitnesses.find((x) => x.bytes === s.digest.bytes
+            && x.prefix === (s.digest[x.alg] || '').slice(0, 8));
+          if (w) kind = `log ${w.alg} ${w.prefix} ${w.bytes}B`;
         }
+        if (!kind) {
+          throw new Error(`VOID: no summary content_hash matches source ${s.name} (${s.file}) sha256/md5 ${want.join('|')} and no acquisition log line witnesses it (log witnesses seen: ${logWitnesses.map((w) => `${w.alg} ${w.prefix} ${w.bytes}B`).join(', ') || 'none'}) — live download cannot be tied to the cohort`);
+        }
+        console.log(`[differential:${side}] source identity witnessed for ${s.name} (${s.file}): ${kind}`);
       }
-      console.log(`[differential:${side}] source identity confirmed: ${hashes.length} content_hash value(s) witness ${cohort.sources.length} live source(s)`);
+      console.log(`[differential:${side}] source identity confirmed: ${cohort.sources.length} live source(s) witnessed (${hashes.length} summary content_hash value(s), ${logWitnesses.length} acquisition log line(s))`);
     }
 
     // 7. Witnesses. `newRows` are the loader's I-arm INSERTs: keys that were only
@@ -516,6 +538,26 @@ async function run(args) {
     const negAfter = (await pool.query(hashSql(`WHERE ${KEY} = ANY($1::int[])`), [cohort.negative_control])).rows[0].h;
     console.log(`[differential:${side}] witness negative_control hash: ${negAfter} ${negAfter === cohort.arm_hashes.negative_control ? '(arm_hash OK)' : '(ARM HASH MISMATCH)'}`);
 
+    // N-D1 — the "N-D1 is the ONLY difference" witness (plan §6 ②). The whole point of the
+    // forced change is that the converted end state equals the LEGACY end state EXCEPT the one
+    // declared key: `geom` on the 5 I-arm rows (legacy NULL; converted ST_SetSRID(...)). So
+    // re-hash the post-run table with `geom` NULLed on EXACTLY the step-inserted rows and demand
+    // it equal the legacy end-state table hash — itself recorded (same harness, same ROW()/md5
+    // formula as hashSql()) in the legacy forced capture forced/pre.json table_state[0].content_hash.
+    // The CASE returns the `geom` column's OWN type, so its ROW()::text form is unchanged when
+    // non-NULL (no cast, no added parentheses) and only the 5 new rows' text becomes NULL.
+    let nd1OnlyHash = null; let nd1OnlyOk = true;
+    if (side === 'post') {
+      // hash the post-run table with geom NULLed on exactly the new I-arm rows (ids not in the before-image)
+      const newIds = newRows.map((r) => Number(r.id));
+      const proj = PROJ.map((c) => (c === 'geom' ? `CASE WHEN id = ANY($1::int[]) THEN NULL ELSE geom END` : c)).join(', ');
+      nd1OnlyHash = (await pool.query(`SELECT md5(string_agg(ROW(${proj})::text, '|' ORDER BY ${KEY})) AS h FROM ${TABLE}`, [newIds])).rows[0].h;
+      const preCapture = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'docs/reports/golden/neighbourhoods/forced/pre.json'), 'utf8'));
+      const legacyHash = preCapture.table_state[0].content_hash;
+      nd1OnlyOk = nd1OnlyHash === legacyHash;
+      console.log(`[differential:${side}] witness N-D1-only: post table with the ${newIds.length} new rows' geom NULLed = ${nd1OnlyHash} ${nd1OnlyOk ? '== legacy forced end state (OK)' : `!= legacy forced end state ${legacyHash} (MISMATCH)`}`);
+    }
+
     const healedAll = ['N', 'G', 'C'].every((arm) => healed[arm] === cohort.arm_hashes[arm]);
     if (side === 'pre') {
       console.log(`[differential:${side}] counters records_total=${summary.records_total} (expect 158)`);
@@ -528,6 +570,7 @@ async function run(args) {
       && healedAll
       && qUnhealed === cohort.Q.length
       && negAfter === cohort.arm_hashes.negative_control
+      && nd1OnlyOk // true on the pre side (the N-D1-only witness only runs post); the required POST claim
       && (side === 'pre'
         ? newGeomNull === cohort.I.length && Number(summary.records_total) === 158
         : newGeomNull === 0 && newGeomDerived === newRows.length
