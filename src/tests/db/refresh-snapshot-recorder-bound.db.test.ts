@@ -18,7 +18,7 @@
 // Run: BUILDO_TEST_DB=1 npx vitest run src/tests/db/refresh-snapshot-recorder-bound.db.test.ts --no-file-parallelism
 
 import path from 'node:path';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../');
@@ -408,30 +408,66 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
       phase_deadline_minutes_from_config: 'test_v1_exhausted_deadline_min',
     });
     const compute = fakeCompute({
-      main: [{ key: 'main_instant', sql: 'SELECT 1' }],
+      main: [{ key: 'main_instant', sql: 'SELECT 1 AS v1_main_marker' }],
       optional: [
         { key: 'never_attempted_1', sql: 'SELECT 1' },
         { key: 'never_attempted_2', sql: 'SELECT 1' },
       ],
     });
-    // A 1ms declared deadline — deterministically exhausted by the time an INSTANT main
-    // read (BEGIN + pg_backend_pid() + one SELECT + COMMIT, several real round trips)
-    // completes, on any real Postgres connection. Chosen over "sleep close to the
-    // deadline" specifically to avoid racing wall-clock jitter for a precise near-zero
-    // remainder (see remainingBudgetMs's own unit test below for the exact arithmetic,
-    // proven without any timing race at all).
-    const config = { test_v1_exhausted_deadline_min: 1 / 60000 };
-    const result = await stepLib.runRecorderPhase({
-      descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
-    });
-    expect(result.matched!.optional_failed).toEqual(['never_attempted_1', 'never_attempted_2']);
-    for (const key of ['never_attempted_1', 'never_attempted_2']) {
-      const entry = result.matched!.read_timings!.find((t) => t.key === key)!;
-      expect(entry.cancelled).toBe(true);
-      expect(entry.cancel_kind).toBe('phase_deadline');
-      expect(entry.elapsed_ms).toBe(0); // never attempted, not merely fast
-      expect(entry.row_count).toBeNull();
+    // The budget is exhausted by an injected clock jump AFTER the main read, so the real
+    // 60s cancel timer can never race the main read (CI 2026-09-27 run on d968e3e9
+    // cancelled the main read at 1ms). A 1-MINUTE declared deadline is deliberate: the
+    // real `setTimeout` armed on the main read is 60000ms, which cannot fire during an
+    // instant `SELECT 1` on any real connection, while `Date.now()` is advanced by
+    // +120000ms once the marked main read resolves — so `remainingBudgetMs` sees the
+    // budget as already spent and the optional skip branch is taken BY CONSTRUCTION,
+    // never by a wall-clock race.
+    const config = { test_v1_exhausted_deadline_min: 1 };
+    let offsetMs = 0;
+    const realNow = Date.now.bind(Date);
+    const spy = vi.spyOn(Date, 'now').mockImplementation(() => realNow() + offsetMs);
+    type Poolish = import('pg').Pool;
+    type PoolClientish = import('pg').PoolClient;
+    // The phase touches only `pool.query(...)` (requirements/privileges/prior-row/prev-row/
+    // transaction) and `pool.connect()` (connectPair, withTransaction) — forward both, and
+    // wrap each connected client's `query` so the marker read's completion advances the clock.
+    const clockPool = {
+      query: (...args: Parameters<Poolish['query']>) => pool.query(...args),
+      connect: async (): Promise<PoolClientish> => {
+        const client = await pool.connect();
+        const realQuery = client.query.bind(client);
+        const wrappedQuery = (async (...args: Parameters<PoolClientish['query']>) => {
+          const res = await realQuery(...args);
+          const text = args[0];
+          if (typeof text === 'string' && text.includes('v1_main_marker')) offsetMs = 120000;
+          return res;
+        }) as PoolClientish['query'];
+        return new Proxy(client, {
+          get: (target, prop, receiver) => (prop === 'query' ? wrappedQuery : Reflect.get(target, prop, receiver)),
+        }) as PoolClientish;
+      },
+    } as unknown as Poolish;
+    try {
+      const result = await stepLib.runRecorderPhase({
+        descriptor, pool: clockPool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
+        preWriteGate: null, clockNow: () => new Date(),
+      });
+      expect(result.matched!.optional_failed).toEqual(['never_attempted_1', 'never_attempted_2']);
+      // The CI failure mode: at 1ms the real cancel timer fired DURING the main read, so it
+      // was cancelled and the step threw. Here the main read completed untouched — proof the
+      // skip below is a construction (`remainingBudgetMs` arithmetic), not a lost race.
+      const mainEntry = result.matched!.read_timings!.find((t) => t.key === 'main_instant')!;
+      expect(mainEntry.phase).toBe('main');
+      expect(mainEntry.cancelled).toBeUndefined();
+      for (const key of ['never_attempted_1', 'never_attempted_2']) {
+        const entry = result.matched!.read_timings!.find((t) => t.key === key)!;
+        expect(entry.cancelled).toBe(true);
+        expect(entry.cancel_kind).toBe('phase_deadline');
+        expect(entry.elapsed_ms).toBe(0); // never attempted, not merely fast
+        expect(entry.row_count).toBeNull();
+      }
+    } finally {
+      spy.mockRestore();
     }
   }, 20000);
 
