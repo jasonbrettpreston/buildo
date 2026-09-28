@@ -346,8 +346,10 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
   // extra 4 are genuinely-zero-capture steps the plan's count did not reach).
   // That is the expected red, not a defect.
   // -------------------------------------------------------------------------
+  // WF3 2026-09-28 (pct-flag): address_points:address_points and parcels:parcels CLOSED —
+  // their POST goldens were recaptured with a forced-change cohort (records_updated 1000 / 954),
+  // and the same commit deleted their two `nonzero:*` ledger rows.
   const KNOWN_RED_FIRST = [
-    'address_points:address_points',
     'compute_centroids:parcels',
     'compute_parcel_cost_estimates:parcels',
     'enrich_heritage:parcels',
@@ -362,7 +364,6 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     'link_wsib:entities',
     'link_wsib:wsib_registry',
     'load_ravines:ravines',
-    'parcels:parcels',
   ];
 
   it('T4: live — every measured nonzero violation is now ledger-allowed (landed 2026-09-26), and zero orphans', () => {

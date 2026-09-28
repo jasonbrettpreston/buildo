@@ -206,18 +206,23 @@ function csv_header_drift(ctx) {
  * so it always short-circuited to PASS on the never-written fields and the legacy
  * loader's documented null-address WARN silently disappeared from the converted
  * audit_table.verdict.
+ *
+ * WF3 2026-09-28: the check reports the measured ratio as `value` on its variable's
+ * scale (raw fraction, 0–1) and the verdict (`verdict.js`'s `pct <=` arm,
+ * `limit_from_config`) is the ONLY comparator. The former 0/1 `violations` flag was
+ * compared to the bound itself (0.1): right only because a flag of 1 exceeds any bound
+ * below 1, while the row's threshold described a ratio comparison that was never made.
  */
 function null_address_number_pct(ctx) {
   const a = ctx.acquired || {};
   const attempted = numberOrNull(a.rows_shaped);
   const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
-    return ctx.report('null_address_number_pct', { violations: 0, detail: null });
+    return ctx.report('null_address_number_pct', { value: 0, detail: null });
   }
-  const limit = ctx.config.address_points_null_address_number_max_pct;
   ctx.report('null_address_number_pct', {
     detail: buildNullAddressNumberAuditRow(nullRows, attempted).value,
-    violations: nullRows / attempted > limit ? 1 : 0,
+    value: nullRows / attempted,
   });
 }
 
@@ -226,20 +231,24 @@ function null_address_number_pct(ctx) {
  * denominator is `rows_read` (the parsed records the step actually saw); the numerator
  * is what `shapeRecord` refused to carry plus the keys `coerceKey` could not coerce —
  * both counted by the library, neither fabricated here. Bound from config (Rule 3).
+ *
+ * WF3 2026-09-28: the check reports the measured ratio as `value` on its variable's
+ * scale (percent, 0–100) and the verdict (`verdict.js`'s `pct <=` arm,
+ * `limit_from_config`) is the ONLY comparator — a 0/1 `violations` flag was compared
+ * to the bound itself (5) and could never FAIL.
  */
 function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
   const rowsRead = numberOrNull(a.rows_read) != null ? numberOrNull(a.rows_read) : numberOrNull(a.feature_count);
   if (rowsRead == null || rowsRead <= 0) {
-    return ctx.report('skip_rate_pct', { violations: 0, detail: null });
+    return ctx.report('skip_rate_pct', { value: 0, detail: null });
   }
   const skipped = numberOrNull(a.records_skipped) != null
     ? numberOrNull(a.records_skipped)
     : (numberOrNull(a.shaped_skipped) || 0) + (numberOrNull(a.bad_key_count) || 0);
-  const limit = ctx.config.address_points_skip_rate_max_pct;
   ctx.report('skip_rate_pct', {
     detail: round3((skipped / rowsRead) * 100),
-    violations: skipped / rowsRead > limit ? 1 : 0,
+    value: (skipped * 100) / rowsRead,
   });
 }
 

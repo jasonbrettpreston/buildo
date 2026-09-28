@@ -174,15 +174,20 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     expect(check.limit_from_config).toBe('address_points_null_address_number_max_pct');
     expect(Object.keys(compute.checks)).toContain('null_address_number_pct');
     // The dispatched check trips only ABOVE the declared config bound (Rule 3: the
-    // number is the operator's, not a literal in the compute).
+    // number is the operator's, not a literal in the compute). WF3 2026-09-28: the
+    // row's STATUS is now the assertion (the real verdict, not the 0/1 flag the
+    // compute used to report); the check reports the measured fraction as `value`.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js'));
     const run = async (nullRows: number, attempted: number, limit: number, pctUnit?: number) => {
-      const reported: Record<string, { violations?: number }> = {};
+      let obs: { value?: number; violations?: number; detail?: unknown } = {};
+      const config = { address_points_null_address_number_max_pct: pctUnit ?? limit };
       const ctx = {
         checks: ['null_address_number_pct'],
-        config: { address_points_null_address_number_max_pct: pctUnit ?? limit },
+        config,
         descriptor: { identity: { name: 'address_points' } },
         log: { error() {} },
-        report(id: string, obs: { violations?: number }) { reported[id] = obs; },
+        report(_id: string, o: { value?: number; violations?: number; detail?: unknown }) { obs = o; },
         acquired: {
           rows_shaped: attempted,
           column_nulls: { address_number: nullRows },
@@ -190,7 +195,7 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
         written: null,
       };
       await compute.compute(ctx);
-      return reported.null_address_number_pct!.violations;
+      return verdict.checkRow(check, obs, 'fail_step', config).status;
     };
     // FIX (row 3.1 fix pass): the literal was ratio-mismatched — the compute (and the
     // frozen RED suite src/tests/steps/address_points/violations.test.ts, and the drift
@@ -204,10 +209,11 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     // populated by any runner (review_followups.md:4082). The run() helper's
     // (nullRows, attempted) params are unchanged; only the ctx.acquired shape below
     // moved onto the new counter names.
-    await expect(run(50, 1000, 1)).resolves.toBe(0); // 0.05 < 1 ⇒ clean
-    await expect(run(1000, 1000, 1)).resolves.toBe(0); // 1.00 > 1 is false — boundary is strict >
-    await expect(run(500, 1000, 0.1)).resolves.toBe(1); // 0.50 > 0.10 ⇒ violation
-    await expect(run(50, 1000, 0.1)).resolves.toBe(0); // 0.05 < 0.10 ⇒ clean
+    // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared)
+    await expect(run(50, 1000, 1)).resolves.toBe('PASS'); // 0.05 <= 1 ⇒ clean
+    await expect(run(1000, 1000, 1)).resolves.toBe('PASS'); // 1.00 <= 1 — the pct grammar is `<=`
+    await expect(run(500, 1000, 0.1)).resolves.toBe('WARN'); // 0.50 > 0.10 ⇒ violation
+    await expect(run(50, 1000, 0.1)).resolves.toBe('PASS'); // 0.05 <= 0.10 ⇒ clean
   });
 
   it('the verdict is row-derived, not a parallel boolean in the compute', () => {

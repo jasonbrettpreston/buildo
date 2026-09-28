@@ -5070,7 +5070,7 @@
   "address_points_skip_rate_max_pct": {
     "default": 5,
     "type": "number",
-    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — WARN ceiling on the coordinate/ID skip rate: skipped rows as a percentage of rows_read. A row is skipped when ADDRESS_POINT_ID is not an int, or when neither a parseable `geometry` NOR a numeric LATITUDE/LONGITUDE pair is present. 5 = the pre-externalization literal (loader load-address-points.js:413-418). Never FAIL: a rising skip rate is a CSV-drift signal, not a reason to halt an otherwise-loadable load. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js skip_rate_pct, via checks[].limit_from_config).",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — FAIL-severity (blocking:false) ceiling on the coordinate/ID skip rate: skipped rows as a percentage of rows_read. A row is skipped when ADDRESS_POINT_ID is not an int, or when neither a parseable `geometry` NOR a numeric LATITUDE/LONGITUDE pair is present. 5 = the pre-externalization literal (loader load-address-points.js:413-418). FAIL-severity, blocking:false: the row reads FAIL above the bound but the step still exits 0 (legacy `skipRate >= 5 ? 'FAIL'`; descriptor checks[] skip_rate_pct). Compared by the verdict against the reported percent (0–100). CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js skip_rate_pct, via checks[].limit_from_config).",
     "min": 0,
     "max": 100,
     "admin": {
@@ -5080,7 +5080,7 @@
   "address_points_null_address_number_max_pct": {
     "default": 0.1,
     "type": "number",
-    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — WARN ceiling on the percentage of rows with an EMPTY ADDRESS_NUMBER. More than this means the publisher stripped the column upstream — the same 2026-05-20 strip pattern that emptied parcels.address_number. 0.1 = the pre-externalization literal (the threshold text in scripts/lib/address-points-csv-drift.js:94-96). WARN, never FAIL: a null address_number does not make the address point unloadable (the guarded upsert preserves the existing value), it only makes the point unusable for downstream joins. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js null_address_number_pct, via checks[].limit_from_config).",
+    "description": "Spec 124 Rule 3 (row 3.1, INGESTOR) — WARN ceiling on the FRACTION (0–1, not percent) of rows with an EMPTY ADDRESS_NUMBER. More than this means the publisher stripped the column upstream — the same 2026-05-20 strip pattern that emptied parcels.address_number. 0.1 = the pre-externalization literal (the threshold text in scripts/lib/address-points-csv-drift.js:94-96). WARN, never FAIL: a null address_number does not make the address point unloadable (the guarded upsert preserves the existing value), it only makes the point unusable for downstream joins. CONSUMED by load_address_points (scripts/lib/compute/load-address-points.js null_address_number_pct, via checks[].limit_from_config).",
     "min": 0,
     "max": 100,
     "admin": {

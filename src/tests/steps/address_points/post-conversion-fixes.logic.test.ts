@@ -139,27 +139,43 @@ describe('address_points AP-D7 — the declared on_empty preservation axis (RE-F
 // ===========================================================================
 
 describe('address_points AP-D8 — null_address_number_pct reads the 0o counters', () => {
-  it('L5a — rows_shaped 100 / column_nulls.address_number 20 ⇒ one violation (RED: reads a dead field ⇒ 0)', () => {
+  it('L5a — rows_shaped 100 / column_nulls.address_number 20 ⇒ WARN, value 0.2 (RED: reads a dead field ⇒ 0)', () => {
     // RED value before the fix: `attempted`/`nullRows` read `attempted_address_number_rows` /
     // `null_address_number_rows`, which no runner writes ⇒ the compute's `numberOrNull(...) == null`
-    // guard short-circuits to `violations: 0` forever. 0.20 > 0.10 ⇒ 1.
+    // guard short-circuits to `violations: 0` forever. 0.20 > 0.10 ⇒ WARN.
     const calls = driveCheck('null_address_number_pct', {
       acquired: { rows_shaped: 100, column_nulls: { address_number: 20 } }, config: CFG,
     });
-    expect(calls[0]![1].violations, '0.20 > 0.10 ⇒ violation').toBe(1);
+    expect(calls[0]![1].value, '0.20 ⇒ the measured fraction').toBe(0.2);
+    expect(calls[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
+    // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const check = (loadDescriptor().checks as Array<{ id: string }>).find((c) => c.id === 'null_address_number_pct');
+    expect(verdict.checkRow(check, calls[0]![1], 'fail_step', CFG).status, '0.20 > 0.10 ⇒ WARN').toBe('WARN');
   });
 
-  it('L5b — rows_shaped 100 / column_nulls.address_number 1 ⇒ zero violations (RED: 0 both ways today, but for the WRONG reason)', () => {
+  it('L5b — rows_shaped 100 / column_nulls.address_number 1 ⇒ PASS, value 0.01 (RED: 0 both ways today, but for the WRONG reason)', () => {
     const calls = driveCheck('null_address_number_pct', {
       acquired: { rows_shaped: 100, column_nulls: { address_number: 1 } }, config: CFG,
     });
-    expect(calls[0]![1].violations, '0.01 < 0.10 ⇒ clean').toBe(0);
+    expect(calls[0]![1].value, '0.01 ⇒ the measured fraction').toBe(0.01);
+    // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared)
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const check = (loadDescriptor().checks as Array<{ id: string }>).find((c) => c.id === 'null_address_number_pct');
+    expect(verdict.checkRow(check, calls[0]![1], 'fail_step', CFG).status, '0.01 <= 0.10 ⇒ PASS').toBe('PASS');
   });
 
-  it('L5c — an unmeasured run reports violations 0 and detail null, and never throws', () => {
+  it('L5c — an unmeasured run reports value 0 and detail null, and never throws', () => {
     const calls = driveCheck('null_address_number_pct', { acquired: {}, config: CFG });
-    expect(calls[0]![1].violations).toBe(0);
+    expect(calls[0]![1].value).toBe(0);
     expect(calls[0]![1].detail).toBeNull();
+    expect(calls[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
   });
 
   it('L5d (source lock) — the compute no longer names the dead `attempted_address_number_rows` field', () => {

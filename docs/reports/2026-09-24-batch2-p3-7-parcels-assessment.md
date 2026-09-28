@@ -641,6 +641,14 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 
 **Also landing in this residue commit:** `scripts/lib/compute/load-parcels.js`'s `null_address_pct` re-pointed onto the generic INGESTOR prerequisite 0o runner counters (`acquired.rows_shaped` / `acquired.column_nulls.address_number`) instead of the never-populated `attempted_address_number_rows`/`null_address_number_rows` fields (review_followups MED row, closed in the same commit — see the diff above); two new `violations.test.ts` cases locking the re-point's WARN/clean boundary and its safe no-op when the runner counters are absent.
 
+## WF3 2026-09-28 — pct checks report the measured ratio (POST recapture, forced-change proof)
+
+`skip_rate_pct` and `null_address_pct` now report `value` (percent 0–100 / fraction 0–1) instead of a 0/1 `violations` flag, so `verdict.js`'s `pct <=` arm compares the real ratio (plan `.cursor/wf3_skip_rate_never_fails_active_task.md`; its red-first vitest JSON is committed under the WF3's own red-evidence directory `wf3-pct-flag` — deliberately NOT cited by path here, because a path citation in this report is gate K's PH-7 claim for the step itself). The compute change moves `source_fingerprint`, so both POST goldens were recaptured at `1b9ee7de` + this diff. Rendered audit values are byte-identical (`detail` is rendered first): `skip_rate_pct` 0.598 PASS, `null_address_pct` "100.0%" WARN — no status moved on real data.
+
+**Forced-change proof (MEASURED 2026-09-28, local DB 127.0.0.1:54322).** A 1,000-row cohort (first 1,000 by `parcel_id`) was tried first: the run rewrote 954 of them, and the other 46 are rows the table retains that the current CSV no longer carries (class A never retracts), so they kept the perturbation. They were restored by hand in one transaction that committed only on an exact cohort-hash match (`6a57eb08…`), and that capture was discarded. The recorded captures use the 954 in-source rows as the cohort (`lot_size_sqm + 1`, a guard column, not geometry, so no enrichment stamp is invalidated): `sources.json` run 1 `records_updated: 954`; `standalone.json` run 1 `records_updated: 1054` (the 954 plus a 100-row diagnostic cohort, below); run 2 zero writes on both (`rerun_proof` PASS). The cohort hash returns to its pre-perturbation value `80ffd4cd…` after each capture.
+
+**Explained G8 diffs vs the prior POST goldens (4 in `sources.json`, 7 in `standalone.json`):** `records_updated` / `records_unchanged` (the cohort; `pipeline_runs[0].*` twins in `standalone.json`), and `table_state[0].content_hash` (`2b31a120…` → `d668def9…` sources, → `7b9dc5bf…` standalone). The content_hash change is MEASURED, not assumed. The 100-row diagnostic cohort (every descriptor write column snapshotted as md5 before perturbation, diffed after the run) came back with `lot_size_sqm` restored on all 100 rows, and **`geom` changed on 2 of the 100**. `geom` is NOT one of the write guard's `IS DISTINCT FROM` disjuncts, so a row whose guard never trips keeps the `geom` a pre-0t-geometry-repair loader wrote (0t = `5ece69b1`). Any forced rewrite refreshes it to the current code's output. The same mechanism accounts for the sources hash (954 rewritten rows), and the standalone hash differs from the sources hash by those 2 diagnostic-cohort `geom` refreshes. This is a pre-existing latent staleness surfaced by the proof, not introduced by this WF3 (filed for the orchestrator, not fixed here). Ledger row `G nonzero:parcels` deleted — closed by this nonzero capture.
+
 ---
 
 ## Validation scorecard (generated)
@@ -658,7 +666,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | OBSERVABLE | PASS | PASS |
 | SCALABLE | PASS | PASS (3 deferred) |
 | UNDERSTANDABLE | PASS | PASS |
-| ACCURATE | PASS | PASS (3 deferred) |
+| ACCURATE | PASS | PASS (2 deferred) |
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -669,10 +677,10 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=2 it-count=60 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
+| G7 | 3 | 3 | file=true fences=2 it-count=59 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=2 lock-it-count=60 |
+| G4d (fence<=lock) | PASS | — | fences=2 lock-it-count=59 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -704,7 +712,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
 | 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (16 ledger-allowed, 4 outputs:"none" vacuous) |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (14 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 70 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 22 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
@@ -714,15 +722,16 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 153 · unexplained: 0
+- compare ran: true · diffs found: 154 · unexplained: 0
 
 ### Test suite (item iii)
-- 1695/1696 passed (suite success=false)
-- harvested: 32 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1725/1727 passed (suite success=false)
+- harvested: 33 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (2):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -741,7 +750,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=40476B notes=12911B checks=7 rows records_meta=1549B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=41334B notes=13118B checks=7 rows records_meta=1552B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

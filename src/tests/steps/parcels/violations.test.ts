@@ -100,11 +100,10 @@ const CONFIG_VARS: Record<string, number> = {
   parcels_skip_rate_max_pct: 10,
   parcels_download_timeout_ms: 60000,
   // Spec 124 Rule 3 (McDonald's Airtight L1, 2026-09-26) — externalizes the null_address_pct
-  // WARN bound (compute/load-parcels.js null_address_pct, `ctx.config[NULL_ADDRESS_PCT_VAR]`,
-  // raw-fraction scale). NOT added to NEW_CONFIG_VARS below: unlike its siblings this var is
-  // read via a bracket-notation VAR-const indirection, not a literal `ctx.config.<name>` in
-  // source text, so the generic dot-notation grep at "the compute reads every threshold..."
-  // does not apply to it (its own bracket-form read is exercised directly by the checks below).
+  // WARN bound (null_address_pct, raw-fraction scale). NOT added to NEW_CONFIG_VARS below:
+  // since WF3 2026-09-28 the compute no longer reads it at all — the check reports the measured
+  // fraction as `value` and the verdict resolves this var via the descriptor's
+  // `limit_from_config` (exercised by the checks below and pct-checks-evaluate.logic.test.ts).
   parcels_null_address_pct_max: 0.1,
 };
 /** New variables this step mints (sources_parcels_floor is SHARED, pre-existing). */
@@ -718,10 +717,19 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
   });
 
   it('skip_rate_pct FAILs at/above the config bound (loader :421, "< 10%", NOT WARN — this row is legacy FAIL, unlike rows_read below)', () => {
+    // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared).
+    const check = checkById(loadDescriptor(), 'skip_rate_pct');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
     const over = driveCheck('skip_rate_pct', { acquired: { rows_read: 100, records_skipped: 15 }, config: CFG });
-    expect(over[0]![1].violations, '15% >= 10% ⇒ violation').toBeGreaterThan(0);
+    expect(over[0]![1].value, '15% ⇒ the measured percent').toBe(15);
+    expect(over[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
+    expect(verdict.checkRow(check, over[0]![1], 'fail_step', CFG).status, '15 > 10 ⇒ FAIL').toBe('FAIL');
     const under = driveCheck('skip_rate_pct', { acquired: { rows_read: 100, records_skipped: 1 }, config: CFG });
-    expect(under[0]![1].violations, '1% < 10% ⇒ clean').toBe(0);
+    expect(under[0]![1].value, '1% ⇒ the measured percent').toBe(1);
+    expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG).status, '1 <= 10 ⇒ PASS').toBe('PASS');
   });
 
   it('rows_read_floor reads sources_parcels_floor via ctx.config (SHARED key, Rule 3, report §6 PR-D5 pin — the loader\'s own WARN stays WARN, never promoted to FAIL)', () => {
@@ -732,16 +740,26 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
   });
 
   it('null_address_pct reads the GENERIC runner counters (prerequisite 0o rename, commit ③) — rows_shaped / column_nulls.address_number, WARN at >= 10%', () => {
+    // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared).
+    const check = checkById(loadDescriptor(), 'null_address_pct');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
     const over = driveCheck('null_address_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 20 } }, config: CFG });
-    expect(over[0]![1].violations, '20/100 = 20% >= 10% ⇒ violation').toBeGreaterThan(0);
+    expect(over[0]![1].value, '20/100 = 0.2 ⇒ the measured fraction').toBe(0.2);
+    expect(over[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
+    expect(verdict.checkRow(check, over[0]![1], 'fail_step', CFG).status, '0.2 > 0.1 ⇒ WARN').toBe('WARN');
     const under = driveCheck('null_address_pct', { acquired: { rows_shaped: 100, column_nulls: { address_number: 1 } }, config: CFG });
-    expect(under[0]![1].violations, '1/100 = 1% < 10% ⇒ clean').toBe(0);
+    expect(under[0]![1].value, '1/100 = 0.01 ⇒ the measured fraction').toBe(0.01);
+    expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG).status, '0.01 <= 0.1 ⇒ PASS').toBe('PASS');
   });
 
-  it('null_address_pct is silent (0 violations, no throw) when the runner counters are absent — the pre-0o short-circuit stays a safe no-op, never a crash', () => {
+  it('null_address_pct is silent (value 0, detail null, no violations key, no throw) when the runner counters are absent — the pre-0o short-circuit stays a safe no-op, never a crash', () => {
     const empty = driveCheck('null_address_pct', { acquired: {}, config: CFG });
-    expect(empty[0]![1].violations).toBe(0);
+    expect(empty[0]![1].value).toBe(0);
     expect(empty[0]![1].detail).toBeNull();
+    expect(empty[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
   });
 
   it('records_errors FAILs above 0 (loader :422, "== 0")', () => {
@@ -801,6 +819,17 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
   it('the compute reads every threshold through ctx.config.<name> — no bare literal bound', () => {
     const src = readText(COMPUTE_REL);
     for (const v of NEW_CONFIG_VARS) {
+      if (v === 'parcels_skip_rate_max_pct') {
+        // WF3 2026-09-28: skip_rate_pct no longer compares against this variable itself —
+        // the verdict (verdict.js `pct <=`, via checks[].limit_from_config) is the only
+        // comparator; the check reports the measured ratio as `value`. The threshold is
+        // still read from ctx.config, inside verdict.js instead of here.
+        expect(readText(COMPUTE_REL).includes('ctx.config.' + v), 'WF3: the compute no longer compares against the bound itself').toBe(false);
+        const descriptor = loadDescriptor();
+        const skipCheck = checkById(descriptor, 'skip_rate_pct');
+        expect(skipCheck.limit_from_config, 'the verdict reads the bound via ctx.config (limit_from_config)').toBe(v);
+        continue;
+      }
       expect(src.includes(`ctx.config.${v}`), `the compute must read ${v} via ctx.config`).toBe(true);
     }
     expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the floor check reads the SHARED variable via ctx.config').toBe(true);

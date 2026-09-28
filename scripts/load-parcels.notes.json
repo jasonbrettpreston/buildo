@@ -66,7 +66,7 @@
   ],
   "suspicious_if": [
     {
-      "what": "The load completes with errors > 0, or with rows_read meaningfully below the source's own row count. A failed 1,000-row flush DROPS that batch's rows for the run (PR-D1 / review_followups #68), increments `errors` and inflates records_unchanged by the dropped count — so the load can 'succeed' while silently carrying fewer parcels than the CSV holds. The declared records_errors FAIL row and the skip_rate_pct FAIL row are the two places this surfaces.",
+      "what": "The load completes with errors > 0, or with rows_read meaningfully below the source's own row count. A failed 1,000-row flush DROPS that batch's rows for the run (PR-D1 / review_followups #68), increments `errors` and inflates records_unchanged by the dropped count — so the load can 'succeed' while silently carrying fewer parcels than the CSV holds. The declared records_errors FAIL row is where a dropped batch surfaces, and rows_read_floor (WARN) catches a short read; skip_rate_pct counts rows the step REFUSES to carry (CSV drift), not dropped batches, and since WF3 2026-09-28 it can actually reach FAIL (it previously compared a 0/1 flag to the bound).",
       "measured": {
         "value": { "drop_path": "flushBatch catch -> errors++ -> batch = []", "evidence_row": "records_errors", "pinned": "PR-D1" },
         "date": "2026-09-24",

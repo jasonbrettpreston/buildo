@@ -61,15 +61,6 @@ const {
 const SOURCE_CRS = 4326;
 
 /**
- * Spec 124 Rule 3 (McDonald's Airtight L1) — the null-address WARN bound, externalized.
- * The comparison lives in `null_address_pct` below and reads this key via `ctx.config`
- * directly on the RAW FRACTION (0–1 scale): do NOT divide by 100, unlike its sibling
- * `parcels_skip_rate_max_pct` (which IS on a 0–100 scale). Default 0.1 preserves the
- * former `fraction >= 0.1` literal byte-for-byte.
- */
-const NULL_ADDRESS_PCT_VAR = 'parcels_null_address_pct_max';
-
-/**
  * The two rows-with-a-null-address readers. The `parcels_null_address_pct` audit row is
  * built by the shared drift lib, never forked here — only its ROW TEXT comes from that
  * library; the 0.1 WARN boundary itself now reads `parcels_null_address_pct_max` through
@@ -489,26 +480,31 @@ function csv_header_drift(ctx) {
  * ~100% forever and this row reads WARN on EVERY run. Carried as-is and declared in
  * descriptor.limitations[]; retiring it would HIDE the strip from the next reader.
  * WARN, never FAIL — a null address does not make the row unloadable. The ROW text is
- * the shared builder's; the 0.10 WARN boundary now comes from `ctx.config` via
- * `parcels_null_address_pct_max` (Spec 124 Rule 3, McDonald's Airtight L1), read on the
- * RAW FRACTION scale (0–1) — no `/100`.
+ * the shared builder's; the 0.10 WARN boundary is `parcels_null_address_pct_max` (Spec 124
+ * Rule 3, McDonald's Airtight L1), resolved by the verdict through the descriptor's
+ * `limit_from_config` and compared on the RAW FRACTION scale (0–1) — no `/100`.
  * Denominator/numerator now read the GENERIC runner counters (prerequisite 0o,
  * 2026-09-24 commit ③ rename): `acquired.rows_shaped` (post-shapeRecord survivor
  * count) and `acquired.column_nulls.address_number` (counted on `validated.carried`,
  * `''`/null/undefined alike) — this WARN can genuinely fire now instead of always
  * short-circuiting to PASS on the never-populated legacy-named fields.
+ *
+ * WF3 2026-09-28: the check reports the measured ratio as `value` on its variable's
+ * scale (raw fraction, 0–1) and the verdict (`verdict.js`'s `pct <=` arm,
+ * `limit_from_config`) is the ONLY comparator. The former 0/1 `violations` flag was
+ * compared to the bound itself (0.1): right only because a flag of 1 exceeds any bound
+ * below 1, while the row's threshold described a ratio comparison that was never made.
  */
 function null_address_pct(ctx) {
   const a = ctx.acquired || {};
   const attempted = numberOrNull(a.rows_shaped);
   const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
-    return ctx.report('null_address_pct', { violations: 0, detail: null });
+    return ctx.report('null_address_pct', { value: 0, detail: null });
   }
-  const fraction = nullRows / attempted;
   ctx.report('null_address_pct', {
     detail: buildNullAddressAuditRow(nullRows, attempted).value,
-    violations: fraction >= ctx.config[NULL_ADDRESS_PCT_VAR] ? 1 : 0,
+    value: nullRows / attempted,
   });
 }
 
@@ -518,19 +514,24 @@ function null_address_pct(ctx) {
  * The denominator is `rows_read`; the numerator is what `shapeRecord` refused to carry
  * (feature-type / expiry / empty PARCELID), counted by the library. Bound from config
  * (Rule 3): `parcels_skip_rate_max_pct`.
+ *
+ * WF3 2026-09-28: the check reports the measured ratio as `value` on its variable's
+ * scale (percent, 0–100) and the verdict (`verdict.js`'s `pct <=` arm,
+ * `limit_from_config`) is the ONLY comparator — a 0/1 `violations` flag was compared
+ * to the bound itself (10) and could never FAIL.
  */
 function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
   const rowsRead = numberOrNull(a.rows_read) != null ? numberOrNull(a.rows_read) : numberOrNull(a.feature_count);
   if (rowsRead == null || rowsRead <= 0) {
-    return ctx.report('skip_rate_pct', { violations: 0, detail: null });
+    return ctx.report('skip_rate_pct', { value: 0, detail: null });
   }
   const skipped = numberOrNull(a.records_skipped) != null
     ? numberOrNull(a.records_skipped)
     : (numberOrNull(a.shaped_skipped) || 0) + (numberOrNull(a.bad_key_count) || 0);
   ctx.report('skip_rate_pct', {
     detail: round3((skipped / rowsRead) * 100),
-    violations: skipped / rowsRead > ctx.config.parcels_skip_rate_max_pct / 100 ? 1 : 0,
+    value: (skipped * 100) / rowsRead,
   });
 }
 

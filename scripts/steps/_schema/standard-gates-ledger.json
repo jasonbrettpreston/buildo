@@ -1523,26 +1523,6 @@
     },
     {
       "gate": "G",
-      "step": "address_points",
-      "item": "nonzero:address_points",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
-      "step": "parcels",
-      "item": "nonzero:parcels",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
       "step": "load_ravines",
       "item": "lib_fingerprint",
       "disposition": "pending_recapture",
