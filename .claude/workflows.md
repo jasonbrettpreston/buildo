@@ -346,6 +346,7 @@ Do not modify `.eas/workflows/` config without a WF2.
 - [ ] **Run setup:** `npm run wf8 -- --slug=<slug> --wf=<N> [--from=<queued_file>]`
       Equivalent to:
         git worktree add ../buildo-<slug> -b wf<N>/<slug> <base>
+        npm run worktree:setup   # npm ci --ignore-scripts + ast-grep binary + hooks path (.husky), verified
         # if --from given:
         mv .cursor/<queued_file> ../buildo-<slug>/.cursor/active_task.md
         # always:

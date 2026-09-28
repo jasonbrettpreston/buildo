@@ -51,7 +51,8 @@ function ok(msg) {
 }
 
 function sh(cmd, opts = {}) {
-  return execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8', ...opts }).trim();
+  // With `stdio: 'inherit'` execSync returns null (no captured stdout) — `?? ''`.
+  return (execSync(cmd, { cwd: REPO_ROOT, encoding: 'utf8', ...opts }) ?? '').trim();
 }
 
 function shTry(cmd) {
@@ -115,6 +116,14 @@ function run() {
   console.log(`\n→ git worktree add ${destDir} -b ${branch} ${opts.base}`);
   sh(`git worktree add "${destDir}" -b ${branch} ${opts.base}`, { stdio: 'inherit' });
   ok(`worktree created at ${destDir}`);
+
+  // WF2 hygiene H6: a fresh worktree has no `.husky/_` (husky-generated, gitignored)
+  // and `npm ci --ignore-scripts` never creates it, so the tree would run NO hooks.
+  // Run the setup step here (deps + ast-grep binary + tracked hooks path, verified):
+  // a throw propagates, so a hookless tree is never handed off silently.
+  console.log('\n→ npm run worktree:setup (hooks + deps)');
+  sh('npm run worktree:setup', { cwd: destDir, stdio: 'inherit' });
+  ok('worktree:setup done — hooks active');
 
   if (fromAbs) {
     const target = resolve(destDir, '.cursor', 'active_task.md');
