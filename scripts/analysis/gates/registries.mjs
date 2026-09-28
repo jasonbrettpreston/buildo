@@ -30,6 +30,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readConvertedJson } from './converted-set.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -108,7 +109,7 @@ export function bannedCoverage({ schema, validateSource }) {
 /** Every fingerprint input a converted descriptor declares. `"none"` declares nothing. */
 export function declaredFingerprintInputs(repoRoot = REPO_ROOT) {
   const out = [];
-  for (const relFile of readJson(repoRoot, CONVERTED_REL_PATH).converted || []) {
+  for (const relFile of readConvertedJson(repoRoot).converted || []) {
     const rel = String(relFile).replace(/\.(js|py)$/, '') + '.descriptor.json';
     let descriptor;
     try {
@@ -223,7 +224,7 @@ export function censusParity(converted, census) {
 export function loadConvertedSlugs(repoRoot = REPO_ROOT) {
   const byFile = new Map(Object.entries(readJson(repoRoot, MANIFEST_REL_PATH).scripts || {})
     .map(([slug, e]) => [e.file, slug]));
-  return (readJson(repoRoot, CONVERTED_REL_PATH).converted || []).map((relFile) => ({
+  return (readConvertedJson(repoRoot).converted || []).map((relFile) => ({
     file: relFile,
     slug: byFile.get(relFile) || kebab(path.basename(String(relFile)).replace(/\.(js|py)$/, '')),
   }));

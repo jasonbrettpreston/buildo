@@ -43,6 +43,14 @@ The body (everything after the closing `---`) is the system prompt's payload —
 ## Fix
 <the specific change — file(s), the expected diff shape, anything NOT to touch>
 
+## Gate answers
+<for every declared field this brief sets (a logic variable and its on_invalid,
+a check limit, an emits[] key, a counters source, a write_discipline value),
+QUOTE the closed answer set of each Spec 124 §5 R-BA gate that reads it —
+e.g. gate B: on_invalid is "fail", or default|clamp WITH a dated deviations[]
+entry naming that variable. A brief that sets a field without its gate answer
+lets the engine write a value the gate then refuses (the c3e clamp error).>
+
 ## Green
 <the exact verification commands: `npx vitest run <path>`, `npm run typecheck`>
 

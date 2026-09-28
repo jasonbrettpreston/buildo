@@ -246,6 +246,7 @@ const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-gold
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
 import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { setAsConverted } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
@@ -374,8 +375,13 @@ function libStagedSelectsAll(stagedPaths) {
 function filterToStaged(registry) {
   const staged = new Set(gitStagedFiles());
   if (staged.size === 0) return [];
+  const ownCodeStaged = (row) => {
+    const notesPath = path.dirname(row.relFile) + '/' + path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json';
+    return [row.relFile, harness.descriptorPathFor(row.relFile), notesPath, harness.computePathFor(row.relFile)]
+      .filter(Boolean).some((c) => staged.has(c));
+  };
   if (libStagedSelectsAll([...staged])) {
-    return registry.map((row) => ({ ...row, blocking: true }));
+    return registry.map((row) => ({ ...row, blocking: true, ownCodeStaged: ownCodeStaged(row) }));
   }
   const out = [];
   for (const row of registry) {
@@ -388,7 +394,7 @@ function filterToStaged(registry) {
     ].filter(Boolean);
     const codeTouched = codeCandidates.some((c) => staged.has(c));
     const docTouched = docCandidates.some((c) => staged.has(c));
-    if (codeTouched || docTouched) out.push({ ...row, blocking: codeTouched });
+    if (codeTouched || docTouched) out.push({ ...row, blocking: codeTouched, ownCodeStaged: codeTouched });
   }
   return out;
 }
@@ -2847,6 +2853,21 @@ function aggregateHardStop(g, g9, invariantsFail, matrixHardStop, excl, stage) {
 // `id === 9` — so an id-22 registry failure hard-stopped every unrelated
 // `--staged`/`--step=X` run even when its `blockedSlugs` named none of them.
 // Caller is expected to have already checked `!result.pass`.
+/**
+ * Gates from ① (conversion-simplification item 1, panel fold): a pending step evaluated
+ * as-converted must not hard-stop on a registry gate that judges an artifact its DECLARED
+ * stage says does not exist yet. The SAME stage exclusions R-K already applies to G7/G8:
+ * a stage excluding G8 (no current POST goldens) excludes the golden-derived registry gates
+ * #30 (C), #31 (D), #38-#40 (G); a stage excluding G7 (no red proof yet) excludes #41 (K).
+ * shape_clean and converted steps exclude nothing.
+ * @param {number} id @param {string|undefined} stage
+ */
+const CAPTURE_DERIVED_REGISTRY_IDS = Object.freeze({ G8: [30, 31, 38, 39, 40], G7: [41] });
+export function stageExcludesRegistry(id, stage) {
+  const excl = stageExclusions(stage);
+  return Object.entries(CAPTURE_DERIVED_REGISTRY_IDS).some(([gate, ids]) => excl.gates.has(gate) && ids.includes(id));
+}
+
 function registryFailureBlocks(result, slug) {
   if (Array.isArray(result.blockedSlugs)) return result.blockedSlugs.includes(slug);
   return true;
@@ -2881,7 +2902,7 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   // used by main()'s fleet-wide `registryHardStopFails`.
   const invariantsFail = invariantResults.some((r) => {
     if (!r.pass && r.slug === row.slug) return true;
-    if (!r.pass && r.slug === '(registry)') return registryFailureBlocks(r, row.slug);
+    if (!r.pass && r.slug === '(registry)') return registryFailureBlocks(r, row.slug) && !stageExcludesRegistry(r.id, row.pendingStage);
     return false;
   });
   // R-K amendment: `row.pendingStage` is undefined for every converted step
@@ -5522,6 +5543,18 @@ async function main() {
   }
 
   const { converted, pending } = loadConverted();
+  // GATES FROM ① (Spec 124 §5 R-BA scope; WF2 "conversion simplification" item 1):
+  // a PENDING target is evaluated exactly as if converted — the R-BA registry gates
+  // (#28-#41) read converted.json through gates/converted-set.mjs, so they see this
+  // run's pending targets registered, as the ③ cutover will. Their blockedSlugs then
+  // name the pending slug, and the per-row + registry hard-stop below apply unchanged
+  // (the hook's --staged run blocks on the as-converted result).
+  // A pending step with no descriptor yet (early ①) has nothing a registry gate reads.
+  // Scope (panel fold M2): `--step=<slug>`, and a `--staged` row whose OWN code is staged —
+  // never `--all` (pre-push, the cutover's scorecard regen) and never a row selected only
+  // because scripts/lib/step/** is staged, so one in-flight step cannot block another's commit.
+  const overlayRows = opts.all ? [] : targets.filter((r) => opts.step || r.ownCodeStaged);
+  setAsConverted(overlayRows.filter((r) => r.stage === 'pending' && existsSync(path.join(REPO_ROOT, harness.descriptorPathFor(r.relFile)))).map((r) => r.relFile), REPO_ROOT);
   const invariantResults = fastInvariants(targets, converted, pending);
   const shapeBatch = checkShapeBatch(targets);
   const vitestResult = opts.fast ? { ranOk: false, error: '--fast: vitest spawn skipped' } : runVitest();
@@ -5616,7 +5649,8 @@ async function main() {
   // hard-stops THIS invocation; the slug's own code-touching commit still
   // will, same as ever.
   const blockingSlugs = new Set(summaries.filter((s) => s.blocking).map((s) => s.slug));
-  const registryHardStopFails = registryFails.filter((r) => [...blockingSlugs].some((slug) => registryFailureBlocks(r, slug)));
+  const stageBySlug = new Map(targets.map((t) => [t.slug, t.pendingStage]));
+  const registryHardStopFails = registryFails.filter((r) => [...blockingSlugs].some((slug) => registryFailureBlocks(r, slug) && !stageExcludesRegistry(r.id, stageBySlug.get(slug))));
   if (registryHardStopFails.length) anyHardStop = true;
 
   console.log('\n[step-validate] summary:');

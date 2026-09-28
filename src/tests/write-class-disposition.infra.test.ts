@@ -411,7 +411,15 @@ describe('write-class-disposition — WD-1 both-directions lock (Spec 122 §1.4/
     // converted-scoped: the pin moves the instant a descriptor file lands, not at
     // cutover):
     const contentionFindings = checkOnContentionBannedDeclared(mutated, descriptorPaths);
-    expect(contentionFindings.length).toBe(21); // batch-2 row 3.2 — load_centreline descriptor-scoped, +1 (20 -> 21)
+    // DERIVED (R-AN; conversion-simplification item 4 — was a hand-bumped literal, 20 at
+    // batch-2 row 3.7): every live descriptor that declares sharing.on_contention "self_skip",
+    // read independently of the checker, and never zero (a vacuous count proves nothing).
+    const selfSkipDeclarers = descriptorPaths.filter((p) => {
+      const d = loadJson(p);
+      return !!d.sharing && d.sharing.on_contention === 'self_skip';
+    });
+    expect(selfSkipDeclarers.length).toBeGreaterThan(0);
+    expect(contentionFindings.length).toBe(selfSkipDeclarers.length);
     expect(contentionFindings.every((f) => f.includes('self_skip') && f.includes('"retire"'))).toBe(true);
   });
 

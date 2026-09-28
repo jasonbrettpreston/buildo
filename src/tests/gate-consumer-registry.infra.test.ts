@@ -165,3 +165,41 @@ describe('gate D — generated consumer registry, present+typed, completeness sc
     expect(status.ok).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// T9 — ONE RESOLVER (WF2 "conversion simplification" item 3, Spec 122 §10 row):
+// a gate that reads a runtime structure imports the runtime's function and never
+// mirrors it. Gate D's dotted `counters.<slot>.source` rows resolve through the
+// runner's own `resolveCounterSource` (scripts/lib/step/index.js) — the local
+// `resolveDottedMeta` mirror (75c1a731) is gone, and no path walk is re-implemented.
+// ---------------------------------------------------------------------------
+describe('gate D — one resolver (the runtime resolveCounterSource, never a mirror)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { resolveCounterSource } = require('../../scripts/lib/step/index.js');
+  const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/gates/consumer-registry.mjs'), 'utf8');
+
+  it('T9a: the gate exports no mirrored resolver and re-implements no dotted-path walk', () => {
+    expect((reg as Record<string, unknown>).resolveDottedMeta).toBeUndefined();
+    expect(src).not.toMatch(/\.split\(\s*['"]\.['"]\s*\)/);
+    expect(src).toMatch(/resolveCounterSource/);
+  });
+
+  it('T9b: a dotted row is present+typed exactly when the runtime resolves it', () => {
+    const key = 'centreline_load.features_updated';
+    const row = { consumer: 'load_centreline', producer: 'load_centreline', kind: 'records_meta', key, value: 'any', source: 'counters' };
+    const cases: object[] = [
+      { centreline_load: { features_updated: 0 } },
+      { centreline_load: { features_updated: 7 } },
+      { centreline_load: {} },
+      { centreline_load: { features_updated: '0' } },
+      { centreline_load: { features_updated: Number.NaN } },
+      { centreline_load: null },
+      {},
+    ];
+    for (const m of cases) {
+      const runtime = resolveCounterSource({ source: `records_meta.${key}` }, { records_meta: m }) !== null;
+      const gate = reg.rowPresentTyped(row, { metaKeys: new Set(Object.keys(m)), metrics: new Map(), metas: [m] }).ok;
+      expect(gate).toBe(runtime);
+    }
+  });
+});

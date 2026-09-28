@@ -11,6 +11,17 @@
 // (Fold A-5 — real column names, not `slug`/`run_at`).
 
 import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+
+/** identity.name of every converted.json converted[] descriptor, read straight from disk (R-AN). */
+function convertedIdentityNames(): string[] {
+  const root = path.resolve(__dirname, '..', '..');
+  const conv = JSON.parse(fs.readFileSync(path.join(root, 'scripts/steps/_schema/converted.json'), 'utf8')) as { converted: string[] };
+  return conv.converted
+    .map((f) => JSON.parse(fs.readFileSync(path.join(root, f.replace(/\.(js|py)$/, '.descriptor.json')), 'utf8')).identity.name as string)
+    .sort();
+}
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const seam = require('../../scripts/lib/step/seam.js') as {
@@ -65,11 +76,11 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL 21-descriptor registry (batch2 row 3.2 cutover, 2026-09-27 — load_centreline) yields 16 live pairs (UNCHANGED): load_centreline declares NO inputs.reads.steps (a leaf INGESTOR) and NO converted step names it as a read (enrich_centreline is not converted), so it adds ZERO pairs', () => {
+  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 16 live pairs (up from 13): this registration ADDS THREE, all as the UPSTREAM half of already-declared edges — parcels itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points)', () => {
     const byName = seam.loadConvertedDescriptors();
-    expect(Object.keys(byName).sort()).toEqual(
-      ['address_points', 'assert_data_bounds', 'assert_engine_health', 'assert_global_coverage', 'assert_parcel_sanity', 'assert_schema', 'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_heritage', 'enrich_parcels', 'enrich_ravines', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcel_addresses', 'link_parcels', 'link_wsib', 'load_centreline', 'load_ravines', 'parcels', 'refresh_snapshot'].sort(),
-    );
+    // DERIVED from converted.json (R-AN; conversion-simplification item 4): each converted
+    // file's own descriptor identity.name, read directly — a cutover needs no edit here.
+    expect(Object.keys(byName).sort()).toEqual(convertedIdentityNames());
     // enrich_heritage (batch2 row 2.2, cut over 2026-09-20) declares inputs.reads.steps:
     // [{step: 'load_heritage', version_pin: 'exact'}] ONLY — measured from
     // scripts/enrich-heritage.descriptor.json. load_heritage is NOT itself converted (not in
