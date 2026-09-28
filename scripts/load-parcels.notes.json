@@ -36,11 +36,11 @@
   ],
   "read_this_way": [
     {
-      "what": "The write is class A: a guarded upsert keyed on parcel_id whose DO UPDATE is gated on a NINE-term `IS DISTINCT FROM` OR-chain (geometry, lot_size_sqm, feature_type, the five address columns, date_effective). A byte-identical re-run therefore updates ZERO rows and inserts ZERO rows, and — because there is NO DELETE anywhere in the loader — no parcel is ever removed by this step. A run that reports inserted=0, updated=0 is the healthy no-op case, not a failure. The guard is what makes idempotent_rerun:\\\"zero_writes\\\" true rather than aspirational.",
+      "what": "The write is class A: a guarded upsert keyed on parcel_id whose DO UPDATE is gated on a TEN-term `IS DISTINCT FROM` OR-chain (geom, geometry, lot_size_sqm, feature_type, the five address columns, date_effective). A byte-identical re-run therefore updates ZERO rows and inserts ZERO rows, and — because there is NO DELETE anywhere in the loader — no parcel is ever removed by this step. A run that reports inserted=0, updated=0 is the healthy no-op case, not a failure. The guard is what makes idempotent_rerun:\\\"zero_writes\\\" true rather than aspirational.",
       "measured": {
-        "value": { "write_class": "guarded_upsert", "guard": "is_distinct_from", "guard_terms": 9, "retract": "none", "idempotent_rerun": "zero_writes" },
-        "date": "2026-09-24",
-        "query": "grep -c \"IS DISTINCT FROM\" (guard block) scripts/load-parcels.js"
+        "value": { "write_class": "guarded_upsert", "guard": "is_distinct_from", "guard_terms": 10, "retract": "none", "idempotent_rerun": "zero_writes" },
+        "date": "2026-09-28",
+        "query": "buildWritePlan(...).upsertSqlFor(1) WHERE terms"
       }
     },
     {
@@ -54,7 +54,7 @@
   ],
   "decisions": [
     {
-      "what": "The DEC-FENCE2 fence: the three *_dataset_version_when_enriched lineage stamps (ravine, heritage, centreline) are NULLed inside the SAME DO UPDATE via `CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.<stamp> END`. The centreline arm EXISTS in the tree — review_followups #430 is stale — and the descriptor declares all three as outputs.invalidates[] because they are lineage INVALIDATIONS, not extra statements.",
+      "what": "The DEC-FENCE2 fence: the three *_dataset_version_when_enriched lineage stamps (ravine, heritage, centreline) are NULLed inside the SAME DO UPDATE via `CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.<stamp> END`. The centreline arm EXISTS in the tree — review_followups #430 is stale — and the descriptor declares all three as outputs.invalidates[] because they are lineage INVALIDATIONS, not extra statements. WF3 2026-09-28: the watched column moved from the raw jsonb to the derived geom — the stamp follows the shape the enrichers read.",
       "why": "A NULL stamp is how the enrich-* steps learn their cached enrichment no longer matches the geometry: consumers then RECOMPUTE rather than SKIP. Writing it as a separate UPDATE (the obvious refactor) would double the write inventory and open a window in which the row carries shifted geometry with a stale stamp — the exact inconsistency the fence exists to prevent. Declaring the invalidation in the descriptor, and NOT a second statement in the SQL, pins the mechanism.",
       "adjudicated": "orchestrator ruling, plan D1 (WF2 P11-1 / #430 reconciliation), 2026-09-24"
     },
@@ -102,7 +102,7 @@
       }
     },
     {
-      "what": "CKAN coordinate jitter (review_followups:3075) and the centroid invalidation gap (review_followups:3114). The first means `geometry::jsonb IS DISTINCT FROM` fires on sub-metre vertex drift between publishes, so the DEC-FENCE2 stamps are NULLed (and enrich-* recomputes) for data that did not meaningfully change — the POST golden's byte-identity claim is per-run, not per-source-publish. The second is named and explicitly OUT OF SCOPE for this conversion: compute-centroids' derived centroid is not in the invalidate list, but that is a compute_centroids defect and compute_centroids is already converted (PR-D3 / PR-D4).",
+      "what": "CKAN coordinate jitter (review_followups:3075) and the centroid invalidation gap (review_followups:3114). The first means `geometry::jsonb IS DISTINCT FROM` fires on sub-metre vertex drift between publishes (geom moves with the coordinates: unchanged), so the DEC-FENCE2 stamps are NULLed (and enrich-* recomputes) for data that did not meaningfully change — the POST golden's byte-identity claim is per-run, not per-source-publish. The second is named and explicitly OUT OF SCOPE for this conversion: compute-centroids' derived centroid is not in the invalidate list, but that is a compute_centroids defect and compute_centroids is already converted (PR-D3 / PR-D4).",
       "measured": {
         "value": { "jitter": "sub-metre vertex drift, no etag change", "centroid_gap": "no *_when_enriched stamp in compute-centroids.js", "scope": "PR-D3 carried; PR-D4 out of scope" },
         "date": "2026-09-24",
@@ -120,7 +120,7 @@
     },
     {
       "const": "the three DEC-FENCE2 CASE arms (ravine, heritage, centreline *_dataset_version_when_enriched) survive the conversion VERBATIM — including the centreline arm #430 wrongly calls missing",
-      "value": "outputs.invalidates[] declares all three entries with set_null_on_change_of:\"geometry\" (prerequisite 0l); the shared codegen (scripts/lib/step/write.js) EXECUTES them as the three `CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.<stamp> END` arms — declared, not compute-authored (plan D1 REVISED)",
+      "value": "outputs.invalidates[] declares all three entries with set_null_on_change_of:\"geom\" (prerequisite 0l; WF3 2026-09-28 moved the watch from the raw jsonb to the derived geom); the shared codegen (scripts/lib/step/write.js) EXECUTES them as the three `CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.<stamp> END` arms — declared, not compute-authored (plan D1 REVISED)",
       "incident": "Severity MEDIUM. The fence is the ONLY thing that makes an enrich-* consumer recompute after a parcel's geometry moves. Dropping an arm (as #430's stale reading invited) leaves a row with new geometry and a stamp from the OLD geometry, so enrich-ravine / enrich-heritage / enrich-centreline SKIP a parcel that changed — a wrong value with no error and no count. The lock compares write.buildWritePlan(...).upsertSqlFor(1) against fixtures/legacy-upsert.sql.txt, both read from the ONE fixture; step-library.logic.test.ts T5/T7 prove the shared codegen reproduces it.",
       "commit": "pending (batch-2 row 3.7 ②)",
       "lock_test": "src/tests/steps/parcels/violations.test.ts"

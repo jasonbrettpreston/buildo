@@ -95,7 +95,9 @@ describe('INGESTOR prerequisite 0u — derived_from_geometry', () => {
     const cases: Array<[string, Record<string, unknown>, string, string | null]> = [
       ['load-ravines', LOAD_RAVINES, '7fc585fd9e9fa5aa', '0d4fdf73fc14b06b'],
       ['load-address-points', LOAD_ADDRESS_POINTS, '3be0ece91cd97212', null],
-      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', 'b9a3cdff3a99858a'],
+      // parcels upsert re-pinned b9a3cdff3a99858a → 79a43d482e479ba1 by WF3 2026-09-28 (the
+      // parcels descriptor's guard + DEC-FENCE2 watch; no library change — see the 0t T0 note).
+      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', '79a43d482e479ba1'],
     ];
     for (const [name, descriptor, validationHash, upsertHash] of cases) {
       const d = descriptor as { outputs: { writes: Array<Record<string, unknown>> } };

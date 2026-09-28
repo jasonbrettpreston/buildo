@@ -61,21 +61,21 @@ const WRITE_COLUMNS = [
 ];
 const WRITE_CLASS = 'guarded_upsert';
 /**
- * D1 REVISED (operator ruling 2026-09-24 — no compute-authored SQL for an INGESTOR):
- * `write_discipline.guard_columns` is the EIGHT declared entries, NOT the tree's full
- * nine-term WHERE clause. `geometry` — the ninth OR-term, `parcels.geometry::jsonb IS
- * DISTINCT FROM EXCLUDED.geometry::jsonb` — is never declared here: the shared codegen
- * (scripts/lib/step/write.js `changeOfGuardColumns`) adds it automatically and FIRST,
- * because `geometry` is the watched column of all three `outputs.invalidates[]` entries
- * below (deduplicated against this list). This is exactly the shape
- * `src/tests/step-library.logic.test.ts`'s T7 fixture declares (the five `on_empty:
- * "preserve"` address columns + `date_effective` `on_empty:"preserve_null"`, i.e. this
- * same eight-item list) and proves reproduces the legacy nine-term guard byte-for-byte.
+ * WF3 2026-09-28 (A+W): `write_discipline.guard_columns` is now the NINE declared entries —
+ * the eight legacy columns plus `geometry`, the raw jsonb source. The ten-term WHERE clause's
+ * FIRST term, `parcels.geom IS DISTINCT FROM EXCLUDED.geom`, is still NOT declared here: the
+ * shared codegen (scripts/lib/step/write.js `changeOfGuardColumns`) adds it automatically and
+ * FIRST, because `geom` is now the watched column of all three `outputs.invalidates[]` entries
+ * below (deduplicated against this list). Do not RESTORE the legacy shape here: the pre-WF3
+ * pin (`geometry` the auto-added watched column, NEVER declared) let the write guard see only
+ * the raw source, so it converged neither the 9,855 NULL geoms the legacy INSERT left nor the
+ * 16 rows the make_valid repair arm would rewrite.
  */
 const GUARD_COLUMNS = [
   'lot_size_sqm', 'feature_type',
   'address_number', 'linear_name_full', 'addr_num_normalized',
   'street_name_normalized', 'street_type_normalized', 'date_effective',
+  'geometry',
 ];
 /** The five TEXT address columns declared `on_empty:"preserve"` (plan D1 REVISED, prerequisite 0m). */
 const PRESERVE_COLUMNS = [
@@ -330,7 +330,7 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(w[0]!.write_discipline.txn_scope, 'plan D1 — the runner wraps ALL batches in ONE step transaction, declared deviation').toBe('step');
   });
 
-  it('the 17 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geometry" (plan D1 REVISED, prerequisite 0l)', () => {
+  it('the 17 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geom" (plan D1 REVISED prerequisite 0l; watch column moved to the derived geom, WF3 2026-09-28)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
@@ -340,11 +340,11 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(names).toEqual([...INVALIDATE_COLUMNS].sort());
     for (const inv of outs.invalidates) {
       expect(inv.table).toBe('parcels');
-      expect(/geometry.*IS DISTINCT FROM|DEC-FENCE2|#418/i.test(inv.when), 'the when names the geometry-change gate').toBe(true);
+      expect(/geom.*IS DISTINCT FROM|DEC-FENCE2|#418/i.test(inv.when), 'the when names the geom-change gate').toBe(true);
       expect(
         inv.set_null_on_change_of,
-        'prerequisite 0l — the codegen EXECUTES this entry only when set_null_on_change_of names the watched column',
-      ).toBe('geometry');
+        'prerequisite 0l — the codegen EXECUTES this entry only when set_null_on_change_of names the watched column (WF3 2026-09-28: the watched column is the derived `geom`, the shape the enrichers read)',
+      ).toBe('geom');
     }
   });
 
@@ -361,12 +361,12 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(declaredOnEmpty).toEqual([...PRESERVE_COLUMNS, PRESERVE_NULL_COLUMN].sort());
   });
 
-  it('guard_columns carry the 8-item DECLARED set (report §1.4\'s tree count of 9 OR-terms is still true at RUNTIME — `geometry` is the ninth, added automatically via invalidates[].set_null_on_change_of, never declared here)', () => {
+  it('guard_columns carry the 9-item DECLARED set (WF3 2026-09-28: the eight legacy columns + `geometry`, the raw jsonb source; `geom` is the tenth RUNTIME term, added automatically, FIRST, via invalidates[].set_null_on_change_of)', () => {
     const d = loadDescriptor();
     const gc = writes(d)[0]!.write_discipline.guard_columns as string[] | 'all_declared';
     expect(Array.isArray(gc), 'guard_columns must be the explicit WHERE-clause set').toBe(true);
     expect((gc as string[]).sort()).toEqual([...GUARD_COLUMNS].sort());
-    expect((gc as string[]).includes('geometry'), 'geometry is NOT declared — it is auto-added, first, via invalidates[]').toBe(false);
+    expect((gc as string[]).includes('geometry'), 'WF3 2026-09-28 — `geometry`, the raw jsonb source, is DECLARED as a plain structural guard term').toBe(true);
   });
 
   it('execution.on_batch_error is drop_batch (PR-D1 pin) and network declares the shared timeout var', () => {
@@ -459,11 +459,33 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
 // ===========================================================================
 
 describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim (fixtures/legacy-upsert.sql.txt)', () => {
+  /**
+   * WF3 2026-09-28 — the TWO declared deltas from the legacy text (knowingly retired legacy
+   * pins; the fixture file itself stays byte-identical as the historical record):
+   *   (a) the watched predicate moves from the raw jsonb source to the derived geom
+   *       (`parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb` →
+   *        `parcels.geom IS DISTINCT FROM EXCLUDED.geom`) — the WHERE's first term + 3 CASE arms;
+   *   (b) the WHERE gains `OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry` after the
+   *       date_effective term (the raw jsonb source stays a plain structural guard term).
+   * Each replacement must match exactly as often as stated (4 and 1), so any THIRD drift in
+   * either the fixture or the codegen still reddens the comparison. Input: whitespace-normalised.
+   */
+  function applyWf3Deltas(legacyNorm: string): string {
+    const oldWatched = /parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb/g;
+    expect((legacyNorm.match(oldWatched) ?? []).length, 'delta (a): 1 WHERE term + 3 CASE arms').toBe(4);
+    const dateTerm = normalizeWs('OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)');
+    expect(legacyNorm.split(dateTerm).length - 1, 'delta (b): the date_effective term the geometry term follows').toBe(1);
+    return legacyNorm
+      .replace(oldWatched, 'parcels.geom IS DISTINCT FROM EXCLUDED.geom')
+      .replace(dateTerm, `${dateTerm} OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry`);
+  }
+
   /** Extract a fenced fragment from the legacy fixture and assert the SAME normalised text appears
    *  in the generated statement — both sides read from the ONE fixture, so there is no second,
    *  independently-typed copy of the SQL to drift out of sync. */
   function fenceFragments(): string[] {
-    const legacy = normalizeWs(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8'));
+    // The fixture, after the two declared WF3-2026-09-28 deltas (`applyWf3Deltas`).
+    const legacyDelta = applyWf3Deltas(normalizeWs(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8')));
     const FRAGMENTS = [
       'address_number = COALESCE(NULLIF(EXCLUDED.address_number, \'\'), parcels.address_number)',
       'linear_name_full = COALESCE(NULLIF(EXCLUDED.linear_name_full, \'\'), parcels.linear_name_full)',
@@ -471,21 +493,22 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
       'street_name_normalized = COALESCE(NULLIF(EXCLUDED.street_name_normalized, \'\'), parcels.street_name_normalized)',
       'street_type_normalized = COALESCE(NULLIF(EXCLUDED.street_type_normalized, \'\'), parcels.street_type_normalized)',
       'date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective)',
-      'ravine_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END',
-      'heritage_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
-      'centreline_dataset_version_when_enriched = CASE WHEN parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
-      'WHERE parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb',
+      'ravine_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END',
+      'heritage_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
+      'centreline_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
+      'WHERE parcels.geom IS DISTINCT FROM EXCLUDED.geom',
       'OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm',
       'OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type',
       'OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)',
+      'OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry',
       'ON CONFLICT (parcel_id)',
       'RETURNING (xmax = 0) AS is_insert',
     ];
     // Sanity: every fragment we are about to demand of the generated statement is genuinely
     // present in the fixture itself (never assert a fragment that drifted out of the fixture's
-    // own text).
+    // own text), after the two declared WF3-2026-09-28 deltas.
     for (const f of FRAGMENTS) {
-      expect(legacy.includes(normalizeWs(f)), `fixture drift: "${f}" not found in legacy-upsert.sql.txt`).toBe(true);
+      expect(legacyDelta.includes(normalizeWs(f)), `fixture drift: "${f}" not found in legacy-upsert.sql.txt (post-WF3 deltas)`).toBe(true);
     }
     return FRAGMENTS;
   }
@@ -497,7 +520,7 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
     expect(legacy).toContain('RETURNING (xmax = 0) AS is_insert');
   });
 
-  it('write.buildWritePlan(writes[0], descriptor).upsertSqlFor(1) reproduces the legacy UPSERT tail whitespace-normalised, MINUS the legacy ${geomLine} arm (out of scope for prerequisites 0l/0m, T5/T7\'s own exclusion) — the DECLARED on_empty + set_null_on_change_of axes are the ONLY source of the SET/WHERE text', () => {
+  it('write.buildWritePlan(writes[0], descriptor).upsertSqlFor(1) reproduces the legacy tail EXCEPT the two declared WF3-2026-09-28 deltas (watched column `geom`; `geometry` a plain jsonb guard term) and MINUS the legacy ${geomLine} arm (out of scope for prerequisites 0l/0m, T5/T7\'s own exclusion) — the DECLARED on_empty + set_null_on_change_of axes are the ONLY source of the SET/WHERE text', () => {
     const d = loadDescriptor();
     const writeSpec = writes(d)[0]!;
     const plan = writeLib.buildWritePlan(writeSpec, d);
@@ -510,14 +533,36 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
     const actualTail = sql.slice(sql.indexOf('\nON CONFLICT')).replace(/;$/, '');
     const actualNorm = normalizeWs(actualTail.replace('geom = EXCLUDED.geom,', ''));
 
+    // The fixture is the HISTORICAL record and stays byte-identical; the comparison applies
+    // EXACTLY the two declared WF3-2026-09-28 deltas to it (`applyWf3Deltas`, knowingly
+    // retired legacy pins), so any third drift stays red.
     let legacy = stripSqlComments(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8'));
     legacy = legacy.replace(/\$\{geomLine\}\s*/, '');
     const legacyTail = legacy.slice(legacy.indexOf('ON CONFLICT'));
-    const legacyNorm = normalizeWs(legacyTail);
+    const legacyNorm = applyWf3Deltas(normalizeWs(legacyTail));
 
-    expect(actualNorm, 'the shared codegen, driven ONLY by declared axes, must reproduce the legacy statement byte-for-byte (whitespace-normalised) — cite step-library.logic.test.ts T7').toBe(legacyNorm);
+    expect(actualNorm, 'the shared codegen, driven ONLY by declared axes, must reproduce the legacy statement byte-for-byte (whitespace-normalised) EXCEPT the two declared WF3-2026-09-28 deltas — cite step-library.logic.test.ts T7').toBe(legacyNorm);
     for (const frag of fenceFragments()) {
       expect(actualNorm, `generated SQL is missing the fenced fragment: ${frag}`).toContain(normalizeWs(frag));
+    }
+  });
+
+  it('WF3 2026-09-28: the guard and DEC-FENCE2 watch the derived geom — upsertSqlFor(1) carries `parcels.geom IS DISTINCT FROM EXCLUDED.geom` in the WHERE and in each of the three stamp CASE arms (RED today: the guard watches `geometry` only, so a geom-only change never writes nor nulls the stamps)', () => {
+    const d = loadDescriptor();
+    const sql = writeLib.buildWritePlan(writes(d)[0], d).upsertSqlFor(1);
+    const where = sql.slice(sql.indexOf('\n  WHERE '));
+    expect(where, 'the WHERE opens on the watched derived column').toContain(
+      'parcels.geom IS DISTINCT FROM EXCLUDED.geom',
+    );
+    expect(where, 'the raw jsonb source stays a guard term beside it').toContain(
+      'parcels.geometry IS DISTINCT FROM EXCLUDED.geometry',
+    );
+    for (const stamp of INVALIDATE_COLUMNS) {
+      expect(sql, `DEC-FENCE2 arm for ${stamp}`).toMatch(
+        new RegExp(
+          `${stamp} = CASE WHEN parcels\\.geom IS DISTINCT FROM EXCLUDED\\.geom THEN NULL ELSE parcels\\.${stamp} END`,
+        ),
+      );
     }
   });
 
