@@ -1,5 +1,5 @@
 # Active Task: WF2 — Repo hygiene (LF, big files, tracked plans, CI green, hooks in every worktree, seed check at dispatch)
-**Status:** Authorized 2026-09-27 (operator "y", all 11 recommendations accepted incl. ci_green_for_sha)
+**Status:** Implementation (subset H4/H5/H2/H6/H7/H9 landed on wf2/hygiene; H1/H3/H8 deferred) — Authorized 2026-09-27 (operator "y", all 11 recommendations accepted incl. ci_green_for_sha)
 **Workflow:** WF2 (enhance existing tooling). One commit per item, and every item names what it REPLACES or REMOVES (operator principle 2026-09-27: standardized AND simple, no new gates).
 **Domain Mode:** Backend/Pipeline (`scripts/hooks/`, `.husky/`, `.github/workflows/`, `scripts/lib/exec-tools.js`), plus test-only edits.
 **Execution Provider:** deepseek drafted this plan: run `20260928T005619Z-0dd1cb13`; the orchestrator re-grounded and rewrote it. At implementation: **claude** for `.github/workflows/**` (engine `claude_only_globs`), `.husky/*`, and the `git rm --cached`/renormalize commits (git index operations, not file writes); **deepseek** for the `exec-tools.js` POSIX kill fix and the test-only fixes (briefs < 5 KB, `write_scope` = named files).
@@ -86,14 +86,14 @@ Greps: `git grep -n "hooksPath\|\"prepare\"" -- package.json .husky src/tests`; 
 
 ## Execution Plan (one commit each; one committer; order chosen so each commit is green in CI)
 - [ ] 0. `node scripts/ai-env-check.mjs`. Wait until no push/suite is running on this machine.
-- [ ] 1. H4 track plans (secret grep first) → C2 green.
-- [ ] 2. H5: C1 sort (test-only), then C3 POSIX kill (engine brief, Spec 08 sentence); `npm run test`. C4/C5 → append to `.cursor/wf3_test_db_suite_red_active_task.md` as clusters (its C7 owns making db-tests required).
-- [ ] 3. H3 before-image untrack + ignore + Spec 122 R-M sentence.
-- [ ] 4. H1 `.gitattributes` + renormalize (a commit that touches only EOL; verify `step:validate --all` unchanged).
-- [ ] 5. H2 size cap (+ temp-repo test).
-- [ ] 6. H6 hooks path + `worktree:setup` + wf8 + hooks-composition assertion; prove in a throwaway worktree.
-- [ ] 7. H7 `--only` + workflow steps (claude) + Spec 123 A5 sentence.
-- [ ] 8. H9 measure; commit or drop.
+- [x] 1. H4 track plans (secret grep first) → C2 green.
+- [x] 2. H5: C1 sort (test-only), then C3 POSIX kill (engine brief, Spec 08 sentence); `npm run test`. C4/C5 → append to `.cursor/wf3_test_db_suite_red_active_task.md` as clusters (its C7 owns making db-tests required).
+- [ ] 3. (DEFERRED 2026-09-27 by orchestrator scope) H3 before-image untrack + ignore + Spec 122 R-M sentence.
+- [ ] 4. (DEFERRED 2026-09-27 by orchestrator scope) H1 `.gitattributes` + renormalize (a commit that touches only EOL; verify `step:validate --all` unchanged).
+- [x] 5. H2 size cap (+ temp-repo test).
+- [x] 6. H6 hooks path + `worktree:setup` + wf8 + hooks-composition assertion; prove in a throwaway worktree.
+- [x] 7. H7 `--only` (+ `ci_green_for_sha`, D2) + workflow steps (claude) + Spec 123 A5 sentence.
+- [x] 8. H9 measure; commit or drop. **DROPPED — REFUTED 2026-09-27:** in this worktree (warm `tsconfig.tsbuildinfo`), a probe chain a.ts→b.ts (untyped re-export)→c.ts was type-checked clean, then ONLY a.ts changed its return type to `string`; `npx tsc --noEmit` reported `c.ts(2,14): TS2322` on BOTH consecutive runs and `npm run typecheck` reported it too. Incremental buildinfo does not hide a transitive error. The 2026-09-27 slip is explained by H6 instead (the hook never ran in that hookless worktree). No change to pre-commit.
 - [ ] 9. Panel: Regression Guardian (C4 fence #418, H3 R-M, H6 husky history), Code Reviewer grounded, Integration (workflow env: `DATABASE_URL` secret available at the new step). Push. **Exit criterion:** both CI workflows green on the pushed SHA.
 
 ## Operator decisions
