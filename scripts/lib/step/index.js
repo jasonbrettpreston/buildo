@@ -675,7 +675,36 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const emit = emitsList(descriptor)[0] || null;
   const emitKey = emit ? emit.key : null;
   const skeleton = emit && emit.skeleton && emit.skeleton !== 'none' ? { ...emit.skeleton } : {};
-  const external = descriptor.inputs.reads.externals.find((e) => typeof e.url === 'string' && e.url.length > 0);
+  // ── ONE URL-BEARING PRIMARY, PLUS ANY NUMBER OF DECLARED LOOKUPS (0w, 2026-09-28) ────
+  // ⚠️ BEFORE 0w THIS WAS A SILENT `.find`. (Fold CF-2, 2026-09-25.) A SECOND url-bearing
+  // external was DECLARED and NEVER ACQUIRED: `.find` returned the first match and every
+  // other url'd entry vanished without a word — the same "declared, left empty, green
+  // verdict" class the `writes.length !== 1` guard above closes, one axis over. The split
+  // is by DECLARED ROLE (Rule 10): absent means `"primary"` (byte-identical for every
+  // descriptor written before 0w, and for all four converted INGESTORs today), `"lookup"`
+  // is the tabular side-source `compute.buildLookup` consumes (0w), and the schema enum admits no third value.
+  //
+  // ⚠️ "EXACTLY ONE" IS A RUNTIME REFUSAL, NOT A SCHEMA maxItems (Fold CF-3, 2026-09-25).
+  // 3.4 `load_heritage` legitimately declares TWO url-bearing PRIMARIES for two targets;
+  // enforcing that here as a schema cap would make heritage's widening a schema RE-FREEZE
+  // plus an enum churn. As a named runtime refusal it is lifted by deleting these four
+  // lines and adding a per-primary target binding — one field, zero enum churn — while a
+  // mis-declared descriptor still costs no network, exactly as the `writes.length` guard
+  // and the `shapeRecord` format check refuse above the HEAD. The throw names the ids
+  // because ids are what the reader must go and fix.
+  const urled = descriptor.inputs.reads.externals.filter((e) => typeof e.url === 'string' && e.url.length > 0);
+  const primaries = urled.filter((e) => e.role === undefined || e.role === 'primary');
+  const lookups = urled.filter((e) => e.role === 'lookup');
+  if (primaries.length !== 1) {
+    throw new Error(`${tag} this INGESTOR declares ${primaries.length} url-bearing primary external(s) `
+      + `(${primaries.map((e) => e.id).join(', ') || 'none'}), and the runner acquires exactly ONE `
+      + `(inputs.reads.externals[].role absent or "primary"). ${
+        primaries.length === 0
+          ? 'A URL-bearing external with role "lookup" is a side-source and never the primary; declare the feature source with no role.'
+          : 'Before 0w a `.find` here silently ignored every url-bearing external after the first — declared, never fetched, and the run green over it.'
+      } Multiple primaries are a runtime refusal, not a schema cap (Fold CF-3): 3.4 load_heritage lifts this throw by binding each primary to its own write target.`);
+  }
+  const external = primaries[0];
   // ⚠️ EVERY EXTERNAL THAT CARRIES A RECORD OWES A SHAPE, DECLARED BEFORE THE FIRST
   // NETWORK CALL. Both parsers hand back the publisher's per-feature data verbatim —
   // `parseCsv` as the row object, `parseShapefile` (since 0f) as the DBF properties on
@@ -715,6 +744,72 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       + '`shapeRecord(record)` — the pure mapping from ONE parsed CSV row to the column values '
       + `outputs.writes[0] ("${writeSpec.table}") binds, \`null\` for a row the step refuses to load. `
       + 'compute.shapeRecord is ' + (compute.shapeRecord === undefined ? 'undefined' : typeof compute.shapeRecord) + '.');
+  }
+  // ── THE LOOKUP CONSTRUCTION REFUSALS (0w part C2, 2026-09-28) ────────────────
+  // ⚠️ ALL FOUR FIRE HERE, ABOVE THE `acquireExternal` CALL AND THE `assertWritePrivileges`
+  // QUERY — the SAME "a mis-declared step owes no network and no pool access" posture as
+  // the `writes.length !== 1` guard and the `csv`/`shapeRecord` format check above. C1
+  // acquired the lookups AFTER the primary's download and checked `buildLookup` inside the
+  // loop that acquires them; that ordering fetched the workbook, rejected it, and only then
+  // learned the export was missing. (iii) moved here for exactly that reason.
+  //
+  // (ii) A LOOKUP MAY NOT BE REACHED BY A STALENESS TRIGGER (Fold CF-2). A `lookup` is a
+  // side-source, not a producer: `acquire.js` short-circuits BOTH tiers to
+  // `{skip:false, reason:'lookup_ungated'}` from the `role` alone, so a trigger that named
+  // one would gate on a signal that can never move — and "skip semantics over two content
+  // hashes" is a policy nobody designed (this step declares `trigger:"none"` like
+  // address_points/parcels). Refused for the SCOPED case (an entry whose `external` names a
+  // lookup) and for the UNSCOPED one (an entry with no `external`, which would have to
+  // apply to some external and the lookup is the one it must never reach). `Array.isArray`
+  // is what makes the legal `trigger: "none"` spelling — the enum value three converted
+  // INGESTORs already declare — fall straight through rather than read as an empty list.
+  // (iv) A LOOKUP MAY NOT DECLARE `key_property` (INERT today, R-AJ). An xlsx lookup is
+  // joined INSIDE `shapeRecord`; it is never a keyed source of its own (`keyProperty` is
+  // `undefined` when the runner acquires it, below), so a key column on it is a declaration
+  // the runner cannot honour. Refused rather than ignored, for the reason every other guard
+  // in this run of guards exists: a field that reads as meaningful and changes nothing is
+  // how a descriptor starts lying about its behaviour.
+  if (lookups.length > 0) {
+    const lookupIds = new Set(lookups.map((l) => l.id));
+    const triggers = descriptor.staleness && Array.isArray(descriptor.staleness.trigger)
+      ? descriptor.staleness.trigger
+      : [];
+    // Only the three ACQUISITION positions can reach an external; a `pre_compute` trigger
+    // (ledger/code/interval) is step-scoped, never external-scoped, and stays legal.
+    const ACQUISITION_POSITIONS = new Set(['pre_acquisition', 'acquisition', 'post_acquisition']);
+    for (const t of triggers) {
+      if (!ACQUISITION_POSITIONS.has(t.position)) continue;
+      const unscoped = t.external === undefined || t.external === null;
+      if (!(unscoped || lookupIds.has(t.external))) continue;
+      throw new Error(`${tag} this INGESTOR declares role "lookup" external(s) `
+        + `(${[...lookupIds].join(', ')}) and staleness.trigger[] carries an entry that could reach one `
+        + `(${unscoped ? 'no external — unscoped' : `external "${t.external}"`}, position "${t.position}"). `
+        + 'A lookup is a side-source, not a producer: acquire.js short-circuits both tiers to '
+        + '"lookup_ungated" from the role alone, so a trigger naming (or unscoped over) a lookup would '
+        + 'gate on a signal that can never move — skip semantics over two content hashes are not designed. '
+        + `Scope every trigger to the primary by id, or declare staleness.trigger "none" (the spelling this step's peers use).`);
+    }
+    for (const l of lookups) {
+      if (Object.prototype.hasOwnProperty.call(l, 'key_property')) {
+        throw new Error(`${tag} the external "${l.id}" declares role "lookup" AND key_property `
+          + `("${String(l.key_property)}"). A lookup is joined INSIDE compute.shapeRecord as a side-source — `
+          + 'the runner hands it to acquire.js with keyProperty undefined, because an xlsx row is never keyed '
+          + 'or coerced — so a key column on a lookup is a declaration the runner cannot honour. Remove it '
+          + '(the primary owns key_property) or declare the external as a primary.');
+      }
+    }
+    // (iii) THE COMPUTE OWES `buildLookup` FOR EVERY DECLARED LOOKUP (Fold CF-2), resolved
+    // like `buildWriteSql` above: a compute EXPORT, no schema byte. One check for the whole
+    // lookup SET (the export is a property of the compute, not of any one lookup), and it
+    // names the contract the same way the `csv`/`shapeRecord` throw does.
+    if (typeof compute.buildLookup !== 'function') {
+      throw new Error(`${tag} this INGESTOR declares role "lookup" external(s) `
+        + `(${[...lookupIds].join(', ')}) and must therefore export `
+        + '`buildLookup(externalId, rows, { config })` returning `{ map, stats }` — the pure pivot from a '
+        + "lookup's RAW parsed rows to the keyed map `shapeRecord` joins through and the stats the step "
+        + `reports. compute.buildLookup is ${compute.buildLookup === undefined ? 'undefined' : typeof compute.buildLookup}. `
+        + 'Refused BEFORE the download for the same reason the shapeRecord guard above is.');
+    }
   }
   // ONE source for the timeout (peel 8c): `execution.network.timeout_from_config` names
   // the logic variable, the resolved value wins, and the `timeout` literal is the stated
@@ -855,6 +950,77 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     };
   }
 
+  // ── THE LOOKUPS, AFTER THE PRIMARY'S GATE AND BEFORE THE SHAPE MAPPING (0w, 2026-09-28) ─
+  // A `role:"lookup"` external is a TABULAR SIDE-SOURCE (`format:"xlsx"`, the pairing the
+  // seam refuses to break) that the step's `shapeRecord` joins INTO each primary feature —
+  // today the neighbourhoods Census profile, keyed by neighbourhood number. It is acquired
+  // through the SAME seam and the SAME policy as the primary (one HEAD, one streamed
+  // download+hash, the descriptor's shared `execution.network` timeout and retry budget,
+  // `acquire.js`), because the alternative — a second download path in the runner — is a
+  // second place the FENCE 0b230472 policy could drift from.
+  //
+  // ⚠️ ACQUIRED *AFTER* THE PRIMARY'S GATE, DELIBERATELY. A skip means nothing is written,
+  // so there is no row a lookup could join into: downloading the workbook on a skip run is a
+  // pure bandwidth cost with no reader, which is exactly what the tier-1/tier-2 gates exist
+  // to avoid. The primary's gate has already resolved by the time control reaches here.
+  //
+  // ⚠️ NEVER GATED, DECLAREDLY. A lookup has no staleness lifecycle of its own — it is not a
+  // producer, so neither tier applies and `acquire.js` short-circuits BOTH to
+  // `{skip:false, reason:'lookup_ungated'}` from the `role` alone. The gate below is passed
+  // for SIGNATURE parity only (the seam always calls it); it is unreachable for a lookup, so
+  // the runner states the same reason string the seam would have used rather than inventing a
+  // descriptor field to say "ungated" twice. The refusal that a lookup may not appear in
+  // `staleness.trigger[]` is the runner's construction check (part C2) — the trigger/external
+  // scoping is construction, and reaching here means "ungated by declaration".
+  //
+  // ⚠️ `compute.buildLookup` IS RESOLVED LIKE `buildWriteSql` (Fold CF-2): a compute EXPORT,
+  // no schema byte. Called ONCE per lookup — the map is built here and handed to `shapeRecord`
+  // as DATA, so the step's per-record shaping never rebuilds the pivot 158 times (the rung
+  // that was tried and rejected: a memo inside `shapeRecord` is module-scope compute state,
+  // Rule 2's side-channel).
+  //
+  // `keyProperty`/`coerceKey` are `undefined` because a lookup has NO key column: `parseXlsx`
+  // returns RAW rows and never keys or coerces anything. `keyColumn` is handed in only for
+  // `acquire.js`'s uniform signature; nothing on the xlsx arm reads it.
+  const lookupMaps = {};
+  const lookupAcquired = {};
+  // ⚠️ `compute.buildLookup` WAS RESOLVED HERE IN C1, INSIDE THIS LOOP — MOVED to the
+  // construction block above (refusal iii, part C2) so the SAME mis-declaration is refused
+  // before the primary's download and not after it. Reaching this line now means the export
+  // has been proven present; the loop keeps ONLY the per-lookup acquisition and the ONE call.
+  for (const l of lookups) {
+    const lr = await acquire.acquireExternal({
+      ctxFetch: fetchImpl,
+      log,
+      tag,
+      slug: descriptor.identity.name,
+      external: l,
+      descriptor,
+      config,
+      prior,
+      timeoutMs,
+      keyProperty: undefined,
+      keyColumn,
+      coerceKey: undefined,
+      forced,
+      emitSkeleton: skeleton,
+      preAcquisitionGate: () => ({ skip: false, reason: 'lookup_ungated' }),
+    });
+    const built = compute.buildLookup(l.id, lr.rows, { config });
+    lookupMaps[l.id] = built.map;
+    // The five fields of the lookup's OWN acquisition block the step's `census_rows_matched`
+    // counter and the audit table read — `rows_parsed` is the workbook's row count
+    // (`parseXlsx`'s `rows.length`), never the primary's feature count.
+    lookupAcquired[l.id] = {
+      content_hash: lr.acquired.content_hash,
+      bytes_downloaded: lr.acquired.bytes_downloaded,
+      download_attempts: lr.acquired.download_attempts,
+      rows_parsed: lr.acquired.rows_parsed,
+      head_error: lr.acquired.head_error,
+      stats: built.stats,
+    };
+  }
+
   // ── THE SHAPE MAPPING, BEFORE THE DEDUPE ─────────────────────────────────────
   // Order is the guarantee: both parsers yield `{[keyColumn]: key, record}` (a
   // shapefile also carries a pre-stringified `geojson`), and only a SHAPED record has
@@ -884,7 +1050,12 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   if (shapeRecord) {
     const shaped = [];
     for (const f of features) {
-      const record = shapeRecord(f.record, { geojson: f.geojson, config, run_at: runAt, tag: tagRecord });
+      // `...lookups` LAST so the 0w ctx key can never shadow one of the four the shaping
+      // rule has read since 0n/0o/0p, and is ABSENT (not `{}`) for the descriptors that
+      // declare no lookup — the T-pin every converted INGESTOR still passes byte-identically.
+      const record = shapeRecord(f.record, {
+        geojson: f.geojson, config, run_at: runAt, tag: tagRecord, ...(lookups.length ? { lookups: lookupMaps } : {}),
+      });
       if (record == null || typeof record === 'string') {
         const r = typeof record === 'string' && record ? record : 'unspecified';
         skippedByReason[r] = (skippedByReason[r] || 0) + 1;
@@ -935,6 +1106,14 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
 
   const acquired = {
     ...result.acquired,
+    // ── THE LOOKUPS' OWN ACQUISITION BLOCKS (0w, 2026-09-28) ────────────────────
+    // Keyed by the lookup external's id, each carrying that lookup's `content_hash`,
+    // `bytes_downloaded`, `download_attempts`, `rows_parsed`, `head_error` and the
+    // `stats` `compute.buildLookup` returned — the producer of the legacy
+    // `census_rows_matched` counter (`acquired.lookups[id].stats.matched_rows`).
+    // ABSENT (never `{}`) unless a lookup is declared, so every pre-0w descriptor
+    // acquires a byte-identical block: the whole point of the T-pin.
+    ...(lookups.length ? { lookups: lookupAcquired } : {}),
     // Two names for two different counts, BOTH real: `result.acquired.rows_parsed` is
     // the raw feature count `parseCsv`/`parseShapefile` produced, unrenamed here so the
     // acquisition seam's own vocabulary survives; `rows_read` is the SAME number under
