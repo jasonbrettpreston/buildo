@@ -1254,7 +1254,10 @@ function sharedRunnerConsumedVars(): string[] {
  *       `ctx.config` object, matched only in scripts/lib/step/index.js (not in computes, so a
  *       compute that invents a `configValues` local does not get silently credited);
  *   (b) the library-derived maintenance key per declared `execution.maintenance[]` entry,
- *       mirrored by NAME from plausibility.js (`${entry.table}_maintenance_timeout_minutes`) —
+ *       mirrored by NAME from plausibility.js (`${entry.table}_maintenance_timeout_minutes` AND the
+ *       trigger bound `${entry.table}_dead_tuple_ratio_warn_max`, runMaintenance's `cfgKey` —
+ *       credited since batch-2 row 3.6 ③, 2026-09-28: massing is the first step whose ONLY
+ *       reader of that key is the executor itself; enrich_parcels also reads it in a check) —
  *       a descriptor with `maintenance: "none"` (or none at all) derives nothing.
  * Both directions are locked below ("pilot 9 commit 9 — library-consumed tunables").
  */
@@ -1271,7 +1274,7 @@ function sharedRunnerConfigValuesReads(src?: string): string[] {
 function maintenanceDerivedVars(descriptor: { execution?: { maintenance?: 'none' | Array<{ table: string }> } }): string[] {
   const m = descriptor.execution?.maintenance;
   if (!Array.isArray(m)) return [];
-  return [...new Set(m.map((e) => `${e.table}_maintenance_timeout_minutes`))];
+  return [...new Set(m.flatMap((e) => [`${e.table}_maintenance_timeout_minutes`, `${e.table}_dead_tuple_ratio_warn_max`]))];
 }
 
 /** (a) ∪ (b) for one step — the library-consumed set the dead-declaration check credits. */
@@ -1824,8 +1827,8 @@ describe('pilot 9 commit 9 — library-consumed tunables (EP-D17: configValues.<
   it('RED — (b) a descriptor with maintenance "none" (or absent) derives NO maintenance key; a declared entry derives exactly `<table>_maintenance_timeout_minutes` (mirrors plausibility.js by name)', () => {
     expect(maintenanceDerivedVars({ execution: { maintenance: 'none' } })).toEqual([]);
     expect(maintenanceDerivedVars({})).toEqual([]);
-    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'parcels' }, { table: 'parcels' }] } })).toEqual(['parcels_maintenance_timeout_minutes']);
-    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'permits' }] } })).toEqual(['permits_maintenance_timeout_minutes']);
+    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'parcels' }, { table: 'parcels' }] } })).toEqual(['parcels_maintenance_timeout_minutes', 'parcels_dead_tuple_ratio_warn_max']);
+    expect(maintenanceDerivedVars({ execution: { maintenance: [{ table: 'permits' }] } })).toEqual(['permits_maintenance_timeout_minutes', 'permits_dead_tuple_ratio_warn_max']);
   });
 
   it('RED canary — the dead-declaration finding still FIRES for a declared var that no path (compute, *_from_config, shared ctx.config, configValues, maintenance-derived) reads — the widening did not blanket-credit everything', () => {
@@ -2353,7 +2356,13 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // enrich-parcels.js reads the `parcels` table's own base columns (geometry, lot_size_sqm,
     // etc.) throughout every pass. Same disposition as RV-D5/EH-D4 — allowlisted, not fixed,
     // out of scope for THIS conversion. Filed alongside RV-D5/EH-D4 in defect-ledger.md.
-    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 row 3.7
+    // WIDENED AGAIN at the batch-2 row 3.6 cutover (2026-09-28): massing became a CONVERTED
+    // producer, so the ledger can now see enrich_parcels' long-standing read of
+    // building_footprints (its Spec 65 §5 existing-structure pass: footprint_area_sqm,
+    // max_height_m, estimated_stories, geom). Same disposition as RV-D5/EH-D4: declaring it
+    // moves enrich_parcels' own seam pairs and staleness gating, out of scope for a
+    // conversion that must not change enrich_parcels' behaviour.
+    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines', 'massing', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6
     // NEW at the batch-2 row 3.7 cutover (2026-09-24): parcels becoming a CONVERTED producer
     // makes the ledger's column-overlap derivation newly VISIBLE for every OTHER converted
     // step whose compute reads the `parcels` table directly but has never declared a

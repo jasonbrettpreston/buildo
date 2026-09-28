@@ -77,7 +77,10 @@ function shapeRecord(record, seam) {
   const centroid = (props.LONGITUDE != null && props.LATITUDE != null)
     ? [safeParseFloat(props.LONGITUDE, 'LONGITUDE'), safeParseFloat(props.LATITUDE, 'LATITUDE')]
     : computeCentroid(ring);
-  const stories = estimateStories(maxHeight, (facts.config || {}).massing_story_height_m);
+  // `config` is the step's RESOLVED ctx.config handed in on the seam (parcels shape), so the
+  // conformance scan sees the read as `config.massing_story_height_m` (Rule 3).
+  const config = facts.config || {};
+  const stories = estimateStories(maxHeight, config.massing_story_height_m);
   return {
     geojson,
     geometry: geojson,

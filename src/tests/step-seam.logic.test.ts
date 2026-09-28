@@ -76,7 +76,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 16 live pairs (up from 13): this registration ADDS THREE, all as the UPSTREAM half of already-declared edges — parcels itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points)', () => {
+  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 17 live pairs (up from 16 at the batch-2 row 3.6 massing cutover): massing ADDS ONE, as the UPSTREAM half of link_massing already-declared read — massing itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points/parcels)', () => {
     const byName = seam.loadConvertedDescriptors();
     // DERIVED from converted.json (R-AN; conversion-simplification item 4): each converted
     // file's own descriptor identity.name, read directly — a cutover needs no edit here.
@@ -218,6 +218,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // inputs.reads.steps is [] (a leaf INGESTOR, like load_ravines/assert_schema/
     // address_points), so its registration contributes zero pairs as a downstream.
     // batch-2 row 3.2 cutover (load_centreline, 2026-09-27) — 16 -> 16 PAIRS, NONE NEW: inputs.reads.steps is [] (measured, scripts/load-centreline.descriptor.json) and its only reader, enrich_centreline, is not converted.
+    // batch-2 row 3.6 cutover (massing, 2026-09-28) — 16 -> 17 PAIRS, ONE NEW: massing declares inputs.reads.steps [] (a leaf INGESTOR) but link_massing already declares it ({step: 'massing', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
@@ -235,6 +236,9 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // falls between 'enrich_ravines:load_ravines' and 'link_massing:compute_centroids'.
       { upstream: 'address_points', downstream: 'geocode_permits' },
       { upstream: 'compute_centroids', downstream: 'link_massing' },
+      // batch-2 row 3.6 (2026-09-28) — sorts here: 'link_massing:massing' falls after
+      // 'link_massing:compute_centroids' ('compute_centroids' < 'massing').
+      { upstream: 'massing', downstream: 'link_massing' },
       // batch-2 I5 (2026-09-16) — sorts here by deriveSeamPairs's own deterministic
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
       // between 'link_massing:compute_centroids' and 'link_parcel_addresses:link_parcels'.
@@ -395,6 +399,8 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_load_ravines_before_enrich_ravines',
     'seam_address_points_before_geocode_permits',
     'seam_compute_centroids_before_link_massing',
+    // batch-2 row 3.6 cutover (2026-09-28) — massing registering resolves link_massing's declared read.
+    'seam_massing_before_link_massing',
     // batch-2 I5 cutover (2026-09-16) — in deriveSeamPairs's own `downstream:upstream` sort
     // position. link_neighbourhoods declared this read at ITS cutover the same day;
     // geocode_permits' registration is what resolves it to a live producer, which is why a

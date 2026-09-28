@@ -57,6 +57,7 @@ As a spatial data dependency, this script ingests 3D building footprint volumes 
 ### Core Logic
 `[as-built 2026-09-27, row 3.6 ②]` Runner phases: acquire (CKAN every run, `cache:"none"`, M-D10) -> parse shapefile + `coerceKey` -> `shapeRecord` (skip no-geometry / ring < 4) -> last-wins dedupe (M-D3) -> geometry validator (transform, area) -> class A guarded upsert (guard = the legacy five columns, M-D4 pinned; F2) -> checks + invariants + `execution.maintenance` VACUUM ANALYZE gated on `building_footprints_dead_tuple_ratio_warn_max` (M-D12).
 superseded: "1. Download shapefile ZIP, extract to temp directory 2. Parse shapefile features, convert to GeoJSON 3. Calculate centroids for each footprint 4. Batch upsert with parameter flush threshold (30K params)"
+`[as-built 2026-09-28, row 3.6 ③]` CUTOVER: `scripts/load-massing.js` is registered in `scripts/steps/_schema/converted.json` (22nd converted step, INGESTOR 5/9, class A); `massing -> link_massing` is now a live seam pair (both converted). Cloud prerequisite: seed the six massing logic variables (`scripts/seeds/apply-logic-variables.js`) before the first cloud sources run (LM-D15: a missing row throws).
 5. `link-massing.js` runs as the next manifest chain step in the `sources` chain (a chain-step, not an auto-trigger fired from within the loader)
 
 ### `link-massing.js` `--full` gate (WF2 P11-2)

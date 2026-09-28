@@ -168,6 +168,14 @@
       "source": "counters"
     },
     {
+      "consumer": "massing",
+      "producer": "massing",
+      "kind": "records_meta",
+      "key": "massing_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "parcels",
       "producer": "parcels",
       "kind": "records_meta",
@@ -313,6 +321,14 @@
       "value": "percent",
       "value_path": "link_rate_pct",
       "source": "funnel"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "massing",
+      "kind": "records_meta",
+      "key": "audit_table",
+      "value": "any",
+      "source": "emits"
     },
     {
       "consumer": "src/lib/admin/funnel.ts",

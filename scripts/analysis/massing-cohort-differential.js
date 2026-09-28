@@ -91,7 +91,9 @@ function requireEnv(name) {
 }
 
 function makePool(label) {
-  return createResolvedPool({ label, minMigration: null, expectDatabase: requireEnv('PG_DATABASE') });
+  // Default migration floor (resolve-db): scripts/migrate.js is the ONE sanctioned floor exemption
+  // (src/tests/resolve-db.logic.test.ts); this read/restore harness has no reason to run below it.
+  return createResolvedPool({ label, expectDatabase: requireEnv('PG_DATABASE') });
 }
 
 function parseArgs(argv) {

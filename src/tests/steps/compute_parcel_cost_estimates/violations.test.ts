@@ -222,11 +222,13 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
   // link_parcel_addresses — moving the fleet-wide count 13 -> 16. See
   // src/tests/step-seam.logic.test.ts for the full derivation; this lock only asserts the
   // arithmetic reflects the live registry, not this step's own contribution alone.
-  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11 -> 13 -> 16 (batch-2 row 3.7, 2026-09-24)', () => {
+  // WIDENED AGAIN at the batch-2 row 3.6 cutover (2026-09-28): massing registering adds ONE
+  // pair (massing -> link_massing, not involving this step), moving the count 16 -> 17.
+  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11 -> 13 -> 16 -> 17 (batch-2 rows 3.7 + 3.6)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seam: any = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
     const registry = seam.loadConvertedDescriptors();
-    expect(seam.deriveSeamPairs(registry).length).toBe(16);
+    expect(seam.deriveSeamPairs(registry).length).toBe(17);
   });
 });
 

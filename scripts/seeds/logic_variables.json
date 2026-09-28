@@ -5280,7 +5280,7 @@
   "sources_building_footprints_floor": {
     "default": 400000,
     "type": "number",
-    "description": "assert-data-bounds: building_footprints row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 427K). CONSUMED by assert_data_bounds.",
+    "description": "assert-data-bounds: building_footprints row-count FAIL floor (IL-8, 1f8ca38a — ~95% of live 427K). CONSUMED by assert_data_bounds, and by massing (batch-2 row 3.6: checks[features_read_floor] limit_from_config, WARN — the legacy load-massing.js >= 400000 floor; scripts/lib/compute/load-massing.js reads ctx.config.sources_building_footprints_floor).",
     "min": 1,
     "max": 5000000,
     "admin": {
