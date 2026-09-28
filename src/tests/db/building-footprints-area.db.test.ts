@@ -199,4 +199,35 @@ describe.skipIf(!dbAvailable())('building_footprints area backfill — live-DB r
     // No change because the WHERE IS NULL guard rejected the malicious update.
     expect(after.rows[0]!.area_sqm).toBe(before.rows[0]!.area_sqm);
   });
+
+  // RE-POINTED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②, 2026-09-27). The
+  // load-massing.js post-INSERT UPDATE pass is gone: the converted step seeds both area
+  // columns AT INSERT from the geometry validator's own statement (prerequisite 0u,
+  // `columns[].derived_from_geometry` on scripts/load-massing.descriptor.json). This pins
+  // that the statement the executor actually issues returns, for the SAME Web Mercator
+  // fixture, byte-for-byte the values the legacy UPDATE above stored (numeric text on
+  // both sides — no Number() hop).
+  it('row 3.6 ②: massing\'s declared validator seeds the SAME area the legacy UPDATE computed (0u arm)', async () => {
+    if (!pool) return;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+    const write = require('../../../scripts/lib/step/write.js') as {
+      buildWritePlan: (w: unknown, d: unknown) => { validation_sql: string };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor
+    const d = require('../../../scripts/load-massing.descriptor.json') as { outputs: { writes: unknown[] } };
+    const plan = write.buildWritePlan(d.outputs.writes[0], d);
+    const validated = await pool.query<{ status: string; footprint_area_sqm: string; footprint_area_sqft: string }>(
+      plan.validation_sql,
+      [[SOURCE_ID_WEB_MERCATOR], [JSON.stringify(WEB_MERCATOR_SQUARE)]],
+    );
+    const stored = await pool.query<{ area_sqm: string; area_sqft: string }>(
+      `SELECT footprint_area_sqm::text AS area_sqm, footprint_area_sqft::text AS area_sqft
+       FROM building_footprints WHERE source_id = $1`,
+      [SOURCE_ID_WEB_MERCATOR],
+    );
+    expect(validated.rowCount).toBe(1);
+    expect(validated.rows[0]!.status).toBe('accepted');
+    expect(String(validated.rows[0]!.footprint_area_sqm)).toBe(stored.rows[0]!.area_sqm);
+    expect(String(validated.rows[0]!.footprint_area_sqft)).toBe(stored.rows[0]!.area_sqft);
+  });
 });

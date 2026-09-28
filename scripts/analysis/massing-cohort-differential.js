@@ -360,7 +360,11 @@ async function run(args) {
       maxBuffer: 1024 * 1024 * 64,
       stdio: ['ignore', 'pipe', 'inherit'],
     });
-    const summaryLine = out.split('\n').filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop();
+    // The FIRST summary is the run under test. A POST capture path (golden/<slug>/post/*.json)
+    // makes the harness run the step a SECOND time (the two-run zero-writes proof, conversion-
+    // simplification item 7), whose summary reads 0/0 by design; `.pop()` read that second run
+    // and failed a genuine 500/200 forced run (measured 2026-09-28, row 3.6 ②).
+    const summaryLine = out.split('\n').find((l) => l.startsWith('PIPELINE_SUMMARY:'));
     if (!summaryLine) throw new Error('no PIPELINE_SUMMARY line in the harness output');
     const summary = JSON.parse(summaryLine.slice('PIPELINE_SUMMARY:'.length));
     console.log(`[differential:${args.side}] RUN records_new=${summary.records_new} (expect ${d.length}), ` +

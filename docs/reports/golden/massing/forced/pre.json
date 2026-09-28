@@ -1,9 +1,9 @@
 {
   "harness": "scripts/analysis/capture-step-golden.js",
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
-  "step": "scripts\\load-massing.js",
+  "step": "scripts\\load-massing.legacy-oracle.js",
   "chain": "sources",
-  "git_head": "a48465e278ea7da063f38b186ddb7cca8d8d2702",
+  "git_head": "e41208798a2da0681963f26f2274c624046580f2",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 500,
     "records_updated": 204,
     "records_meta": {
-      "duration_ms": 82564,
+      "duration_ms": 97300,
       "features_read": 428184,
       "records_inserted": 500,
       "records_updated": 204,
@@ -73,13 +73,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 8.51,
+            "value": 7.23,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 82721,
+            "value": 97389,
             "threshold": null,
             "status": "INFO"
           }
@@ -120,10 +120,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"3D Massing Loader starting...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Reading: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\3d-massing-wgs84\\\\3DMassingShapefile_2025_WGS84.shp\"}\n  [load-massing] 50,000 / 480,000 (10.4%) — 13.8s — 3624 rows/s\n  [load-massing] 100,000 / 480,000 (20.8%) — 24.4s — 4099 rows/s\n  [load-massing] 150,000 / 480,000 (31.3%) — 35.8s — 4189 rows/s\n  [load-massing] 200,000 / 480,000 (41.7%) — 47.1s — 4250 rows/s\n  [load-massing] 250,000 / 480,000 (52.1%) — 58.3s — 4291 rows/s\n  [load-massing] 300,000 / 480,000 (62.5%) — 66.1s — 4541 rows/s\n  [load-massing] 350,000 / 480,000 (72.9%) — 71.8s — 4873 rows/s\n  [load-massing] 400,000 / 480,000 (83.3%) — 77.7s — 5148 rows/s\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Post-INSERT area-backfill: 500 rows updated\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Post-INSERT geom-backfill: 500 rows updated\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Load complete\",\"context\":{\"features_read\":428184,\"inserted\":500,\"updated\":204,\"skipped\":0,\"errors\":0,\"duration\":\"82.6s\"}}\nPIPELINE_SUMMARY:{\"records_total\":704,\"records_new\":500,\"records_updated\":204,\"records_meta\":{\"duration_ms\":82564,\"features_read\":428184,\"records_inserted\":500,\"records_updated\":204,\"records_unchanged\":427480,\"features_skipped\":0,\"errors\":0,\"audit_table\":{\"phase\":7,\"name\":\"Building Footprints Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"features_read\",\"value\":428184,\"threshold\":\">= 400000\",\"status\":\"PASS\"},{\"metric\":\"records_inserted\",\"value\":500,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":204,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unchanged\",\"value\":427480,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"features_skipped\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"skip_rate\",\"value\":\"0.0%\",\"threshold\":\"< 5%\",\"status\":\"PASS\"},{\"metric\":\"batch_errors\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"batch_error_rate\",\"value\":\"0.0%\",\"threshold\":\"< 1%\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":8.51,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":82721,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"City Shapefile\":[\"SOURCE_ID\",\"geometry\",\"AREA_SQ_M\",\"MAX_HEIGHT\",\"MIN_HEIGHT\",\"ELEV_Z\",\"EST_STORIES\"]},\"writes\":{\"building_footprints\":[\"source_id\",\"geometry\",\"footprint_area_sqm\",\"footprint_area_sqft\",\"max_height_m\",\"min_height_m\",\"elev_z\",\"estimated_stories\",\"centroid_lat\",\"centroid_lng\"]}}\n\n[load-massing] completed in 82.7s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"3D Massing Loader starting...\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Reading: C:\\\\Users\\\\User\\\\buildo-massing\\\\data\\\\3d-massing-wgs84\\\\3DMassingShapefile_2025_WGS84.shp\"}\n  [load-massing] 50,000 / 480,000 (10.4%) — 12.4s — 4024 rows/s\n  [load-massing] 100,000 / 480,000 (20.8%) — 21.8s — 4580 rows/s\n  [load-massing] 150,000 / 480,000 (31.3%) — 36.2s — 4143 rows/s\n  [load-massing] 200,000 / 480,000 (41.7%) — 46.4s — 4311 rows/s\n  [load-massing] 250,000 / 480,000 (52.1%) — 55.9s — 4475 rows/s\n  [load-massing] 300,000 / 480,000 (62.5%) — 66.9s — 4487 rows/s\n  [load-massing] 350,000 / 480,000 (72.9%) — 77.5s — 4519 rows/s\n  [load-massing] 400,000 / 480,000 (83.3%) — 86.9s — 4605 rows/s\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Post-INSERT area-backfill: 500 rows updated\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Post-INSERT geom-backfill: 500 rows updated\"}\n{\"level\":\"INFO\",\"tag\":\"[load-massing]\",\"msg\":\"Load complete\",\"context\":{\"features_read\":428184,\"inserted\":500,\"updated\":204,\"skipped\":0,\"errors\":0,\"duration\":\"97.3s\"}}\nPIPELINE_SUMMARY:{\"records_total\":704,\"records_new\":500,\"records_updated\":204,\"records_meta\":{\"duration_ms\":97300,\"features_read\":428184,\"records_inserted\":500,\"records_updated\":204,\"records_unchanged\":427480,\"features_skipped\":0,\"errors\":0,\"audit_table\":{\"phase\":7,\"name\":\"Building Footprints Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"features_read\",\"value\":428184,\"threshold\":\">= 400000\",\"status\":\"PASS\"},{\"metric\":\"records_inserted\",\"value\":500,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":204,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unchanged\",\"value\":427480,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"features_skipped\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"skip_rate\",\"value\":\"0.0%\",\"threshold\":\"< 5%\",\"status\":\"PASS\"},{\"metric\":\"batch_errors\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"batch_error_rate\",\"value\":\"0.0%\",\"threshold\":\"< 1%\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":7.23,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":97389,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"City Shapefile\":[\"SOURCE_ID\",\"geometry\",\"AREA_SQ_M\",\"MAX_HEIGHT\",\"MIN_HEIGHT\",\"ELEV_Z\",\"EST_STORIES\"]},\"writes\":{\"building_footprints\":[\"source_id\",\"geometry\",\"footprint_area_sqm\",\"footprint_area_sqft\",\"max_height_m\",\"min_height_m\",\"elev_z\",\"estimated_stories\",\"centroid_lat\",\"centroid_lng\"]}}\n\n[load-massing] completed in 97.4s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 1994,
+  "pipeline_runs_max_id_before": 2047,
   "table_state": [
     {
       "table": "building_footprints",
@@ -152,7 +152,7 @@
   "tables_source": "arg",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "building_footprints": 16177
+    "building_footprints": 18427
   },
   "table_specs": {
     "building_footprints": {
@@ -189,7 +189,7 @@
     "row:sys_velocity_rows_sec"
   ],
   "normalised": {
-    "step": "scripts\\load-massing.js",
+    "step": "scripts\\load-massing.legacy-oracle.js",
     "chain": "sources",
     "exit_code": 0,
     "summary": {
@@ -337,5 +337,6 @@
   },
   "source_fingerprint": null,
   "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet"
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "dc411ebb63a87ef92e76caf8f422ac679f2ec9eb8446e6f994a1aa4f1d0283a8"
 }

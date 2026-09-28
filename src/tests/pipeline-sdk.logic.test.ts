@@ -1112,7 +1112,8 @@ describe('Pipeline SDK', () => {
       'load-coa.js',
       'load-neighbourhoods.js',
       'load-wsib.js',
-      'load-massing.js',
+      // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
+      // 2026-09-27) — same treatment, same successor lock (step-conformance.infra.test.ts).
       'classify-permits.js',
       'classify-scope.js',
       // geocode-permits.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 I5, 2026-09-16)
@@ -1305,10 +1306,25 @@ describe('Pipeline SDK', () => {
       expect(invalidates.every((inv) => inv.set_null_on_change_of === 'geometry')).toBe(true);
     });
 
-    // §9.3 — load-massing.js upsert must guard against no-op updates
-    it('load-massing.js upsert has IS DISTINCT FROM guard to prevent ghost updates', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'load-massing.js'), 'utf-8');
-      expect(content).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+    // §9.3 — load-massing.js upsert must guard against no-op updates.
+    // RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②, 2026-09-27): the
+    // hand-written ON CONFLICT left the 488-line script with the rest of its body; the guard
+    // is now GENERATED from `write_discipline.guard`/`guard_columns` (the link_massing
+    // template below). The assertion runs over the SQL write.js actually produces AND the
+    // exact columns it guards — strictly stronger than the old regex over the file text.
+    it('the massing upsert has an IS DISTINCT FROM guard, over exactly the legacy five columns (M-D4 pinned)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
+      const write = require('../../scripts/lib/step/write.js');
+      const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'load-massing.descriptor.json'), 'utf-8'));
+      const plan = write.buildWritePlan(d.outputs.writes[0], d);
+      expect(plan.upsert_sql).toMatch(/ON CONFLICT[\s\S]*?DO UPDATE[\s\S]*?WHERE[\s\S]*?IS DISTINCT FROM/i);
+      expect(plan.guard_columns).toEqual(['geometry', 'max_height_m', 'min_height_m', 'centroid_lat', 'centroid_lng']);
+      // M-D4 (KNOWN-DEFECT, pinned wrong form; F2 widens it): elev_z / estimated_stories are
+      // SET but never guarded, exactly as the legacy WHERE clause.
+      expect(plan.upsert_sql).toMatch(/elev_z = EXCLUDED\.elev_z/);
+      expect(plan.upsert_sql).toMatch(/estimated_stories = EXCLUDED\.estimated_stories/);
+      expect(plan.guard_columns).not.toContain('elev_z');
+      expect(plan.guard_columns).not.toContain('estimated_stories');
     });
 
     // §9.3 — the link_massing upsert must guard against no-op updates.

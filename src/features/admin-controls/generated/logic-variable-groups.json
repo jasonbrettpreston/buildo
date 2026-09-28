@@ -300,6 +300,7 @@
       "enrich_parcels_zone_class_pct_warn_floor",
       "enrich_parcels_pending_scope_warn_max",
       "parcels_dead_tuple_ratio_warn_max",
+      "building_footprints_dead_tuple_ratio_warn_max",
       "parcels_null_address_pct_max",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",
@@ -436,7 +437,12 @@
       "load_centreline_download_retries",
       "load_centreline_download_retry_backoff_ms",
       "load_centreline_round_scale",
-      "load_centreline_max_detail_keys"
+      "load_centreline_max_detail_keys",
+      "massing_skip_rate_max_pct",
+      "massing_batch_error_rate_max_pct",
+      "massing_story_height_m",
+      "massing_download_timeout_ms",
+      "building_footprints_maintenance_timeout_minutes"
     ]
   },
   {

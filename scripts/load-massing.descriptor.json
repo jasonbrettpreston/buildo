@@ -1,0 +1,705 @@
+{
+  "identity": {
+    "name": "massing",
+    "display_name": "Building Footprints Ingestion",
+    "owner": "data",
+    "description": "Loads Toronto's 3D Massing shapefile (EPSG:3857, 428,184 records) from CKAN into building_footprints via a class-A guarded upsert (10 columns + geom; the two area columns and geom derived by the geometry validator at INSERT) in one step-scoped transaction.",
+    "lock": 56,
+    "why_lock": { "text": "Mutual exclusion with every other writer of building_footprints (Spec 47 §A.5 row 56); the shell keeps `const ADVISORY_LOCK_ID = 56;` as a §5.4 source-text constant, asserted equal by src/tests/steps/massing/violations.test.ts.", "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" } },
+    "spec": "56",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        { "id": "ckan:3d-massing-shapefile-wgs84", "kind": "http_file", "format": "shapefile_zip", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip", "license": "https://open.toronto.ca/open-data-license/", "cache": "none" }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "building_footprints",
+        "key": "source_id",
+        "key_sql_type": "TEXT",
+        "geometry_kind": "polygon",
+        "geometry_srid": 3857,
+        "geometry_repair": "none",
+        "columns": [
+          {"name":"source_id","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"geometry","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"footprint_area_sqm","vocabulary":"none","written":"insert_only","bind":"value","derived_from_geometry":{"measure":"geodesic_area","unit":"m2","scale":2}},
+          {"name":"footprint_area_sqft","vocabulary":"none","written":"insert_only","bind":"value","derived_from_geometry":{"measure":"geodesic_area","unit":"ft2","scale":2}},
+          {"name":"max_height_m","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"min_height_m","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"elev_z","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"estimated_stories","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"centroid_lat","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"centroid_lng","vocabulary":"none","written":"step","bind":"value"},
+          {"name":"geom","vocabulary":"none","written":"insert_only","bind":"wkb_geometry"},
+          {"name":"created_at","vocabulary":"none","written":"db_default","bind":"value"}
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert", "guard": "is_distinct_from", "guard_columns": ["geometry", "max_height_m", "min_height_m", "centroid_lat", "centroid_lng"], "scope": "none", "expected_change_ratio": ">= 0", "idempotent_rerun": "zero_writes", "txn_scope": "step",
+          "why": { "text": "Legacy per-batch INSERT verbatim [READ scripts/load-massing.js, anchor `ON CONFLICT (source_id) DO UPDATE SET`]: the legacy five predicates (M-D4 wrong-form, §4.3; widening is F2); area/geom insert_only seeded by the validator (0t/0u) instead of legacy S7/S8; per-1000 batch txn becomes one step txn (M-D11).", "liveness": { "kind": "file", "ref": "src/tests/step-library.logic.test.ts" } }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": { "unique": false, "on_collision": "last_write_wins", "on_collision_why": { "text": "M-D3: source_id is md5(geometry) (DBF has no OBJECTID/ID), so identical geometries collide; the file-order last occurrence wins, as legacy's cross-batch overwrite did.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" } }, "key_space_migration": "none" }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": { "statements": 1, "why": { "text": "Only the guarded upsert writes: legacy S1 becomes a declared invariant FAIL, S2/S3 are measured-dead and retired (M-D1), S7/S8 rehome to insert-time derived columns (M-D7).", "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" } } }
+  },
+  "staleness": { "scope": "none", "trigger": "none", "mode_select": "none", "checkpoint": "none", "interval": "none", "fingerprint": "derived", "fingerprint_inputs": "none", "logic_version": "none", "on_fingerprint_change": "run" },
+  "guards": {
+    "requires": [
+      { "kind": "rls_bypass_or_policy", "name": "building_footprints", "on_missing": "fail", "why": { "text": "RLS default-deny on building_footprints (migration 227; 0 policies): the upsert works only under rolbypassrls=true, else it affects 0 rows silently and the verdict still reads PASS.", "liveness": { "kind": "table", "ref": "building_footprints" } } },
+      { "kind": "index", "name": "idx_building_footprints_geom_gist", "on_missing": "fail", "why": { "text": "The GiST index on building_footprints.geom (migrations 065/098) that link_massing's spatial join plans through; without it that join is a sequential scan over ~427K footprints.", "liveness": { "kind": "file", "ref": "migrations/065_building_footprints_geom.sql" } } }
+    ],
+    "srid": 4326,
+    "empty_source": "building_footprints",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "10m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": 1000,
+    "needs_disk_mb": 512,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A feature the step refuses to carry is counted and the load continues: a feature with no geometry, or an outer ring with fewer than 4 points, is skipped [READ scripts/load-massing.js, anchor `if (!ring || ring.length < 4)`]. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
+      "liveness": {
+        "kind": "check",
+        "ref": "skip_rate_pct"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_batch_error_why": {
+      "text": "M-D11. The step owns ONE transaction (txn_scope step), so any failed statement rolls back the whole write and fails the step: there is no per-batch boundary left to drop. The legacy per-1000 flush catch that logged, `errors++` and dropped the batch [READ scripts/load-massing.js, anchor `errors++;` in the flush catch] is retired together with the per-batch txn, so `fail_step` is the truthful disposition of a batch failure rather than a retained swallow.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    },
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check here reads a counter the library already measured, so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-massing.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": [
+        "ckan0.cf.opendata.inter.prod-toronto.ca"
+      ],
+      "timeout": "60000ms",
+      "timeout_from_config": "massing_download_timeout_ms",
+      "retries": 0,
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": [
+      {
+        "operation": "vacuum_analyze",
+        "table": "building_footprints",
+        "owned_by": "self",
+        "why": {
+          "text": "M-D12. The legacy shell ran `await pool.query('VACUUM ANALYZE building_footprints')` after its geom backfill UPDATE [READ scripts/load-massing.js, anchor `if ((geomUpdateRes.rowCount ?? 0) > 0)`]. That UPDATE is gone — geom and the derived areas are seeded at INSERT — so the vacuum is rehomed as a declared maintenance entry: the executor's runMaintenance (EP-D17) gates it on `building_footprints_dead_tuple_ratio_warn_max` and runs it autocommit, i.e. OUTSIDE the step's write transaction, exactly as VACUUM requires.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/step/plausibility.js"
+          }
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "features_read_floor",
+      "kind": "bound",
+      "expect": { "of": "rows_read (every parsed shapefile record)", "direction": "min" },
+      "limit": "value_min 400000",
+      "limit_from_config": "sources_building_footprints_floor",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Catastrophic-load detector [READ scripts/load-massing.js, `threshold: '>= 400000'`, status WARN — never FAIL]. SEVERITY STAYS WARN: severity is not archetype-derived, and promoting it would introduce a halt that never existed. The bound SHARES the registered variable `sources_building_footprints_floor` (default 400000) with assert_data_bounds through limit_from_config — the SAME key, not a second one (Rule 3, one home per concern). The `limit` string uses verdict.js's R-T addendum `value_min` form (a RAW MEASURED value) and reads the raw rows_read count, NOT `\"viol == 0\"`: that form plus limit_from_config is the exact AP-D6 trap where resolveLimit substitutes the config value (400000) into the violation form and compares a 0/1 flag against ~400000, so the check would FAIL on every run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "building_footprints"
+        }
+      }
+    },
+    {
+      "id": "records_inserted",
+      "kind": "field_coverage",
+      "expect": { "reports": "rows the guarded upsert inserted (RETURNING xmax = 0)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO audit row `metric: 'records_inserted'` [READ scripts/load-massing.js], carried so the audit table keeps its rows rather than going silent. Purely descriptive (INFO, no negative direction, never gates) and a raw count, so `viol == 0` is the correct limit form here (no limit_from_config).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    },
+    {
+      "id": "records_updated",
+      "kind": "field_coverage",
+      "expect": { "reports": "rows the guarded upsert updated (RETURNING xmax <> 0)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "M-D3: the legacy run reads 4 updated on every unchanged run, from cross-batch self-overwrite of duplicate hashes (source_id is md5(geometry), so identical geometries collide across batch boundaries) [READ scripts/load-massing.js, `ON CONFLICT (source_id) DO UPDATE SET`]. The converted step dedupes the whole file once before writing, so an unchanged rerun reads 0 — the INFO row is carried, its value corrected by construction. Descriptive, no negative direction, `viol == 0` is the raw-count form.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "records_unchanged",
+      "kind": "field_coverage",
+      "expect": { "reports": "rows the file carried but the write left untouched (a re-run's zero-writes)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO row (legacy formula Math.max(0, processed - inserted - updated - skipped)), now the guarded upsert's MEASURED no-op count written.unchanged (Spec 122 §11 KFM 9; scripts/lib/step/conservation.js asserts rows_read = skips + inserted + updated + unchanged). Value moves from the legacy 428,180 to the measured 427,077 on an unchanged run: the 1,107 duplicate-hash rows the legacy absorbed into unchanged are named by duplicate_key_count (M-D3), plus the 4 legacy self-overwrites. Descriptive only (INFO).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "features_skipped",
+      "kind": "field_coverage",
+      "expect": { "reports": "source features the step declined to carry (bad_key_count + null_geometry_count + shaped_skipped)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The runner's skip counter, summing bad_key_count + null_geometry_count + shaped_skipped. The 0s re-bucketing is one-way and declared: a feature with a null geometry now counts as bad_key because coerceKey returns null for it, so the two buckets overlap rather than double-count, and the SUM preserves the legacy `skipped` meaning [READ scripts/load-massing.js, anchor `if (!ring || ring.length < 4)`]. Purely descriptive (INFO, no negative direction gate) — a healthy run shows a counted zero where the legacy could not.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "skip_rate_pct",
+      "kind": "bound",
+      "expect": { "of": "(bad_key_count + null_geometry_count + shaped_skipped) over rows_read, percent", "direction": "max" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy `status: skipRate >= 5 ? 'FAIL'` [READ scripts/load-massing.js] is a STRICT boundary (5.0% fails) that `pct <=` cannot express, and a `pct` limit on a check that also reports `violations` compares the 0/1 flag (verdict.js `measured` prefers violations) so it could never fail; the compute therefore compares against `ctx.config.massing_skip_rate_max_pct` (Rule 3) and reports violations 0/1. No limit_from_config is declared for the same reason.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "batch_errors",
+      "kind": "field_coverage",
+      "expect": { "reports": "failed write batches" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO audit row for failed write batches [READ scripts/load-massing.js], carried so the audit table keeps its row rather than going silent. Purely descriptive (INFO, no negative direction, never gates); a raw count, so `viol == 0` is the correct limit form and no limit_from_config is declared.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "batch_error_rate_pct",
+      "kind": "bound",
+      "expect": { "of": "batch_errors over ceil(rows_read / execution.batch), percent", "direction": "max" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy `errorRate >= 1 ? 'FAIL'` [READ scripts/load-massing.js] is a STRICT boundary that `pct <=` cannot express, and a `pct` limit on a check that also reports `violations` compares the 0/1 flag (verdict.js `measured` prefers violations) so it could never fail; the compute therefore compares against `ctx.config.massing_batch_error_rate_max_pct` (Rule 3) and reports violations 0/1, so no limit_from_config is declared. Under `txn_scope: \\\"step\\\"` a failed batch fails the step before checks run, so a completed run reads 0 (VERIFY-INT-5; address_points precedent). The denominator keeps the legacy per-1000 batch count (execution.batch); the library executor itself chunks statements at pipeline.maxRowsPerInsert(11) = 5957 rows, so the declared batch is the legacy unit, not the executor's.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "duplicate_key_count",
+      "kind": "field_coverage",
+      "expect": { "reports": "features dropped by the last-write-wins dedupe (duplicate geometry hashes)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "M-D3. source_id is md5(geometry) (the DBF has no OBJECTID/ID), so identical geometries collide and the whole-file last-write-wins dedupe drops the earlier occurrences; P-M measured 1,107 such dropped features [READ scripts/load-massing.js, `ON CONFLICT (source_id) DO UPDATE SET`]. Descriptive observability only (INFO, no negative direction, never gates); a raw count, so `viol == 0` is the limit form and no limit_from_config is declared.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    },
+    {
+      "id": "invalid_geometry_stored",
+      "kind": "field_coverage",
+      "expect": { "reports": "carried rows whose geometry is invalid and stored unrepaired (geometry_repair none)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "M-D2 observability: geometry_repair is `none`, so a carried row whose geometry is invalid is stored as-is rather than healed; this counter surfaces the acquired.invalid_geometry_stored quantity. Descriptive only (INFO, no negative direction, never gates); a raw count, so `viol == 0` is the limit form and no limit_from_config is declared.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-massing.js"
+        }
+      }
+    }
+  ],
+  "invariants": [
+    {
+      "id": "building_footprints_foreign_key_space_rows",
+      "sql": "SELECT count(*)::int FROM building_footprints WHERE source_id NOT LIKE 'hash_%'",
+      "bound": "value_max 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-09-27T17:35:40.000Z",
+        "commit": "1828b4e1",
+        "cost_ms": 386,
+        "sample_n": 3,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "M-D1. Legacy S1 detection [READ scripts/load-massing.js, anchor `WHERE source_id NOT LIKE 'hash_%' LIMIT 1`] kept as a FAIL invariant; its S2-S5 auto-DELETE cleanup is knowingly retired (0 such rows measured; unreachable after 0s).",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      }
+    },
+    {
+      "id": "footprint_area_null_count",
+      "sql": "SELECT count(*)::int FROM building_footprints WHERE footprint_area_sqm IS NULL OR footprint_area_sqft IS NULL",
+      "bound": "value_max 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-09-27T17:35:40.000Z",
+        "commit": "1828b4e1",
+        "cost_ms": 275,
+        "sample_n": 3,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "M-D7. Replaces the 'heal any NULL row' half of legacy S7 [READ scripts/load-massing.js, anchor `WHERE footprint_area_sqm IS NULL`]; measured 0.",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      }
+    },
+    {
+      "id": "geom_null_count",
+      "sql": "SELECT count(*)::int FROM building_footprints WHERE geom IS NULL",
+      "bound": "value_max 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-09-27T17:35:40.000Z",
+        "commit": "1828b4e1",
+        "cost_ms": 26,
+        "sample_n": 3,
+        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
+      },
+      "why": {
+        "text": "M-D7. Replaces the heal half of legacy S8 [READ scripts/load-massing.js, anchor `WHERE geom IS NULL AND geometry IS NOT NULL`]; measured 0.",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      }
+    }
+  ],
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": ["src/components/FreshnessTimeline.tsx"],
+      "skeleton": { "phase": 7, "name": "Building Footprints Ingestion", "verdict": "PASS", "rows": [] }
+    },
+    {
+      "key": "massing_load",
+      "type": "object",
+      "consumers": ["massing"],
+      "skeleton": { "duration_ms": 0, "features_read": 0, "records_inserted": 0, "records_updated": 0, "records_unchanged": 0, "features_skipped": 0, "errors": 0 }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "M-D1 — the S2-S5 key-format auto-cleanup (DELETE FROM parcel_buildings WHERE building_id IN, DELETE FROM building_footprints WHERE source_id NOT LIKE 'hash_%', the mirror LIKE 'hash_%' arm, and their VACUUMs)",
+      "why": {
+        "text": "Knowingly retired: 0 non-hash rows measured, unreachable after 0s, so the deletes could only ever touch rows the load never writes. Detection is kept as the invariant building_footprints_foreign_key_space_rows so a foreign-key-space row still reddens the run.",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      },
+      "adjudicated_by": "Spec 124 §5 worked example (LM-D7 / ruling A-8), plan Fold SF-6 O1",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D3 — records_updated read 4 on an unchanged run (legacy cross-batch self-overwrite of duplicate hashes)",
+      "why": {
+        "text": "The legacy loader read 4 updated every run from cross-batch self-overwrite of duplicate hashes (1,107 extra rows, P-M); the runner dedupes the whole file last-wins before writing, so an unchanged rerun reads 0 and the final data is identical.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" }
+      },
+      "adjudicated_by": "orchestrator, plan Fold SF-6 O2 (AP-D4 precedent)",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D6 — PIPELINE_META derived from the descriptor rather than the legacy emitMeta DBF-field reads",
+      "why": {
+        "text": "The legacy emitMeta named four DBF fields that do not exist (SOURCE_ID, AREA_SQ_M, ELEV_Z, EST_STORIES) and its writes omitted geom; deriving the meta from the descriptor is Rule 1's no-fictional-declaration requirement, not a data change.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" }
+      },
+      "adjudicated_by": "orchestrator, plan Fold SF-6 O2",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D7 — the 'heal any NULL row' halves of S7/S8 (area + geom UPDATE ... WHERE IS NULL)",
+      "why": {
+        "text": "0 NULL rows measured; area/geom are now seeded at INSERT (0u/0t) and guarded by the two null-count FAIL invariants, so the heal UPDATE has nothing left to repair.",
+        "liveness": { "kind": "table", "ref": "building_footprints" }
+      },
+      "adjudicated_by": "plan §3 S7/S8",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D10 — the local data/3d-massing-wgs84/ cache, process.argv[2] path override and the PowerShell/unzip execSync extraction",
+      "why": {
+        "text": "Retired: the step now downloads from CKAN every run (cache:\"none\", format:\"shapefile_zip\"), matching the parcels/address_points posture, so a stale local cache can no longer silently feed a run.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "Spec 124 R-AZ, parcels/address_points precedent",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D11 — per-1000-row pipeline.withTransaction batches",
+      "why": {
+        "text": "Replaced by ONE step-scoped transaction (txn_scope:\"step\"): a mid-run failure now rolls back everything instead of leaving committed batches, and the drop-batch-and-continue catch is gone (on_batch_error:\"fail_step\"). Success path byte-identical.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "adjudicated_by": "address_points Fold B3 / parcels D1 precedent",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "M-D12 — the VACUUM trigger 'my backfill UPDATE touched rows'",
+      "why": {
+        "text": "The legacy shell ran VACUUM ANALYZE only when its geom backfill UPDATE changed rows; that UPDATE is gone, so the trigger moves to the declared execution.maintenance dead-ratio gate.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/plausibility.js" }
+      },
+      "adjudicated_by": "plan §3 S9 (EP-D17 executor)",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "progress/cadence literals (10 * 1024 * 1024 download log window, processed % 50000, 480000 progress denominator)",
+      "why": {
+        "text": "Dead under the whole-array runner: there is no per-byte or per-row progress loop left for a cadence tunable to bind to, so declaring one would be a dead operator-facing knob.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "address_points commit-9 P4 / parcels D3 precedent",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "audit row shape — legacy string values skip_rate/batch_error_rate ('0.0%')",
+      "why": {
+        "text": "The names become checks skip_rate_pct/batch_error_rate_pct (numeric detail, 0/1 violations vs the config bound), and features_read becomes features_read_floor, so each row carries a comparable number rather than a formatted string.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" }
+      },
+      "adjudicated_by": "orchestrator, row 3.6 ②",
+      "date": "2026-09-27"
+    },
+    {
+      "from": "records_meta layout — the legacy top-level keys (duration_ms, features_read, records_inserted, records_updated, records_unchanged, features_skipped, errors) beside audit_table",
+      "why": {
+        "text": "The seven legacy keys move, names unchanged and meanings unchanged except duration_ms (reads 0: the ingest runner never sets ctx.elapsed_ms, the parcels_load / address_points_load latent defect, filed in review_followups 2026-09-28), into ONE `massing_load` block (parcels_load / address_points_load precedent), because `errors` is a runner meta key and top-level producer keys would collide with the runner's own. No reader of the top-level keys exists outside tests (link_massing's gate reads the table COUNT; funnel.ts never evaluates massing's run).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" }
+      },
+      "adjudicated_by": "orchestrator, row 3.6 ② (Integration seat item 7)",
+      "date": "2026-09-27"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "M-D2 — 17 invalid geoms are stored unrepaired (geometry_repair:\"none\", legacy parity); the F1 follow-up would flip this.",
+      "measured": "acquired.invalid_geometry_stored = 17 [MEASURED P-M]",
+      "check_id": "invalid_geometry_stored"
+    },
+    {
+      "what": "M-D4 — elev_z/estimated_stories are not guard columns, so an elev-only source change is never written (pinned; F2 would widen the guard).",
+      "measured": "write_discipline.guard_columns lacks elev_z/estimated_stories [READ scripts/load-massing.descriptor.json]",
+      "check_id": "none"
+    },
+    {
+      "what": "M-D5 — geometry-hash key + no retraction: a changed building leaves its old row forever (0 orphans measured by P-M, latent).",
+      "measured": "retract:\"none\"; source_id = md5(geometry); P-M orphan count 0 [MEASURED P-M]",
+      "check_id": "none"
+    },
+    {
+      "what": "M-D8 — 3,850 stored geoms differ from a fresh re-derivation by <= 1.42e-14 deg; insert-only geom is never recomputed.",
+      "measured": "3,850 rows, max delta 1.42e-14 deg [MEASURED P-M]",
+      "check_id": "none"
+    },
+    {
+      "what": "M-D9 — the centroid fallback averages a 3857 ring into lat/lng (metres); dead today (P-M: 0 features missing LATITUDE/LONGITUDE).",
+      "measured": "P-M: 0 features missing LATITUDE/LONGITUDE [MEASURED P-M]",
+      "check_id": "none"
+    },
+    {
+      "what": "M-D13 — every run burns ~428K id sequence values (INSERT ... ON CONFLICT bumps the sequence even on conflict).",
+      "measured": "~428,184 sequence values consumed per run [MEASURED P-M]",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "load-massing.notes.json",
+    "entries": 8
+  },
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture. This step is class A (write_discipline.class \"guarded_upsert\", retract:\"none\"): it holds NO retraction path and NO scoped delete, and it writes inside ONE step-scoped transaction (execution.txn_scope:\"step\"). A kill mid-run therefore leaves exactly what that transaction left — either NOTHING (the txn rolled back, no committed rows) or the FULLY-COMMITTED guarded upsert; there is no half-cleared table an incremental gate could misread as complete, and no retraction to recover because none exists. The force_full_on_next_run obligation binds only targets with retract_when full_only or retract:\"all\" (per the schema's own note on this field) — neither is declared here. Nothing is owed to a successor run beyond re-running the idempotent upsert, which zero-writes on a byte-identical source (replay:\"idempotent_upsert\", idempotent_rerun:\"zero_writes\"). Genuinely none rather than silently ignored.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The generic before-image mechanism (scripts/lib/step/write.js writeBeforeImage) mirrors a retraction's write_discipline.scope predicate as a SELECT — it structurally requires a scope to capture. This step declares retract:\"none\" with write_discipline.scope:\"none\", so there is no retraction for the mechanism to mirror and nothing to capture. Every column is re-derived from the source on every run, so a re-run recovers the same rows identically without a before-image. Declared out of scope rather than silently skipped (parcels' text shape).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 227,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated",
+      "scoped_by": "source_id"
+    },
+    "records_new": {
+      "source": "written.inserted",
+      "scoped_by": "source_id"
+    },
+    "records_updated": {
+      "source": "written.updated",
+      "scoped_by": "source_id"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "sources_building_footprints_floor", "min": 1, "max": 5000000, "on_invalid": "fail" },
+      { "name": "massing_skip_rate_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "massing_batch_error_rate_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "massing_story_height_m", "min": 1, "max": 10, "on_invalid": "fail" },
+      { "name": "massing_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" },
+      { "name": "building_footprints_dead_tuple_ratio_warn_max", "min": 0, "max": 5, "on_invalid": "fail" },
+      { "name": "building_footprints_maintenance_timeout_minutes", "min": 1, "max": 60, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 7
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "massing_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The guarded upsert committed: every parsed feature is inserted or updated (split by RETURNING xmax = 0), with no retraction (retract:\"none\"). The step has NO staleness gate (staleness.scope:\"none\"), so success is the NORMAL terminal of every run — an unchanged source is not a skip, it is a zero-writes completed run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "building_footprints"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "massing_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The declared WARN check tripped with NO FAIL: features_read_floor is WARN-severity and blocking:false, so a load carrying fewer than the configured floor of parsed features still lands and the run is completed_with_warnings — severity stays WARN exactly as the legacy row read, never promoted to a halt.",
+        "liveness": {
+          "kind": "check",
+          "ref": "features_read_floor"
+        }
+      }
+    },
+    {
+      "id": "failed_skip_rate",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "massing_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "skip_rate_pct or batch_error_rate_pct reached FAIL — a rising skip rate or a failed write batch (strict legacy boundaries 5% / 1%). The FAIL row is declared; blocking:false, so the run reads as failed and the chain continues (the load already committed, exactly as the legacy loader exited 0).",
+        "liveness": {
+          "kind": "check",
+          "ref": "skip_rate_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The CKAN download or the shapefile parse threw before any write was attempted; the temp file is removed on this path as on every other, and building_footprints is untouched (no transaction was opened).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "failed_empty_source",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "inputs.expect_nonempty is true: a source that parses to ZERO records fails rather than landing an empty 'success' — an empty shapefile is a publisher error, not an empty load.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 56 is held by another process. Pre-conversion the step wrapped everything in pipeline.withAdvisoryLock and returned silently when the lock was not acquired (legacy `if (!lockResult.acquired) return;`); the library now emits a row-derived SKIP summary instead of a silent return.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

@@ -517,6 +517,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MAX_DETAIL_KEYS moved out of the compute module to satisfy compute-no-module-numeric-const;
   // both are verdict-neutral display knobs (on_invalid: fail — gate B), never a pass/fail bound.
   'load_centreline_round_scale', 'load_centreline_max_detail_keys',
+  // batch-2 row 3.6 (2026-09-24, Spec 124 Rule 3) — massing's own six: the shared
+  // sources_building_footprints_floor is already listed above (Sources Catastrophic-Load
+  // Floors), and the two `building_footprints_*` names are keyed by TABLE per the EP-D17
+  // runMaintenance naming convention, not by the step prefix. The legacy STORY_HEIGHT_M = 3.0
+  // IS a knob now (massing_story_height_m, below); the md5 key format and the *100/100 / *1e7/1e7
+  // rounding are storage-format constants in compute (notes.json), and 10.7639104167 is a unit
+  // constant in write.js — none of those is an admin knob, so none reaches this list.
+  'massing_skip_rate_max_pct', 'massing_batch_error_rate_max_pct', 'massing_story_height_m',
+  'massing_download_timeout_ms', 'building_footprints_dead_tuple_ratio_warn_max',
+  'building_footprints_maintenance_timeout_minutes',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

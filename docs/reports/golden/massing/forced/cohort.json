@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T10:25:07.374Z",
+  "generated_at": "2026-09-28T05:26:12.517Z",
   "predicates": {
     "hash": "SELECT md5(string_agg(ROW(source_id, geometry, footprint_area_sqm, footprint_area_sqft, max_height_m, min_height_m, elev_z, estimated_stories, centroid_lat, centroid_lng, geom)::text, '|' ORDER BY source_id)) AS h FROM building_footprints",
     "negative_control": "SELECT md5(string_agg(ROW(source_id, geometry, footprint_area_sqm, footprint_area_sqft, max_height_m, min_height_m, elev_z, estimated_stories, centroid_lat, centroid_lng, geom)::text, '|' ORDER BY source_id)) AS h\n                   FROM building_footprints WHERE NOT ST_IsValid(geom)",
@@ -8,7 +8,7 @@
     "E": "UPDATE ... SET elev_z = elev_z + 1 WHERE source_id IN (E) — selected by: bf.elev_z IS NOT NULL AND ST_IsValid(bf.geom)",
     "legacy_area": "ROUND(ST_Area((ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326))::geography)::numeric, 2)",
     "legacy_geom": "ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(geometry::text), 3857), 4326)",
-    "exclude": "P-M probe duplicate-key groups from C:/Users/User/AppData/Local/Temp/claude/scratch-massing/pm.json"
+    "exclude": "P-M probe duplicate-key groups from C:/Users/User/AppData/Local/Temp/claude/C--Users-User-Buildo/8e679ff2-f59d-4c49-ab7f-d1824a518944/scratchpad/pm.json"
   },
   "D": [
     "hash_000b2e91156b",
@@ -63,7 +63,6 @@
     "hash_0196853f92bf",
     "hash_019fefdb6910",
     "hash_01a756891fb2",
-    "hash_01b340a1b85a",
     "hash_01c5940be4d8",
     "hash_01dfe9e4be52",
     "hash_01e6db1c0e8f",
@@ -100,7 +99,6 @@
     "hash_02b72950ec77",
     "hash_02bc16ecd402",
     "hash_02bc85a82990",
-    "hash_02bea95cb291",
     "hash_02c2bcf1bb41",
     "hash_02c917e4f45e",
     "hash_02ca27d75767",
@@ -360,7 +358,6 @@
     "hash_09949454344d",
     "hash_09971e06726d",
     "hash_0997dca8b4bd",
-    "hash_099ad71e383d",
     "hash_099f4f46fb75",
     "hash_09af7eb0704a",
     "hash_09b9cda6652f",
@@ -510,7 +507,10 @@
     "hash_0def73223b72",
     "hash_0df1b1a0895c",
     "hash_0df5a7341408",
-    "hash_0dfd9c52e3d1"
+    "hash_0dfd9c52e3d1",
+    "hash_0dfe0f355188",
+    "hash_0e08e3fc234f",
+    "hash_0e11c9140fab"
   ],
   "U": [
     "hash_0000aaa4efbc",

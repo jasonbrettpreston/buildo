@@ -8,6 +8,8 @@
 // zip download at :137 precedes its only mkdirSync at :142, which creates
 // extractDir, not data/). Result: every scheduled chain-sources run ENOENTs
 // on the first loader step.
+// (Three of the four are since re-homed onto the runner's acquire.js — see
+// the RE-HOMED notes above LOADERS; load-neighbourhoods.js remains.)
 //
 // These tests EXECUTE each loader's real `downloadFile()` source (extracted
 // verbatim — the loaders are `pipeline.run()` scripts, so requiring them
@@ -36,9 +38,13 @@ const os = require('os') as typeof import('os');
 // INGESTORs, address_points included.
 // load-parcels.js RE-HOMED the same way at its own cutover (batch-2 row 3.7,
 // compressed commit ③, 2026-09-24) — same successor lock, parcels included.
+// load-massing.js RE-HOMED the same way at its own conversion (batch-2 row 3.6,
+// commit ②, 2026-09-27): the frozen shell has no `downloadFile()` (nor its
+// `data/3d-massing-wgs84/` cache, M-D10) — `scripts/lib/step/acquire.js`
+// downloads into its own mkdtemp directory for the shapefile_zip format too.
+// Same successor lock (step-library.logic.test.ts acquisition battery).
 const LOADERS = [
   'load-neighbourhoods.js',
-  'load-massing.js',
 ];
 
 /**

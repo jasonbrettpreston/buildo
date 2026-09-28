@@ -1,0 +1,173 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-massing.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 8,",
+    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap. It",
+    "lives here because the descriptor schema's root is additionalProperties:false",
+    "and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "Every run of this step LOADS. There is no staleness gate — no HEAD/ETag probe, no content hash, no local-shapefile short-circuit (the argv/local-path override and the `data/3d-massing-wgs84/` cache were retired per Spec 124 R-AZ, M-D10) — so an unchanged source reads inserted 0 / updated 0 and the audit table is the post-write counter block plus the declared check rows, never a skip. M-D3 is the one forced diff: the legacy read updated 4 on every unchanged run (cross-batch self-overwrite of duplicate geometry-hash keys, MEASURED runs 1285/1359/1400/1478); the runner dedupes the whole set last-wins, so the data is identical and updated goes 4 → 0.",
+      "measured": {
+        "value": {
+          "gate_reads_in_loader": 0,
+          "retract_statements": 0,
+          "write_statements": 1,
+          "legacy_updated_on_unchanged_run": 4
+        },
+        "date": "2026-09-27",
+        "query": "grep -nE \"HEAD|ETag|createHash|existsSync\" scripts/load-massing.js"
+      }
+    }
+  ],
+  "constants": [
+    {
+      "what": "`'hash_'` + the 12 md5 hex chars are the KEY FORMAT, not a tunable: massing's coerceKey builds source_id as 'hash_' + md5(JSON.stringify(geometry)).slice(0,12) because the DBF carries no OBJECTID/ID. Changing either the prefix or the 12 truncation RE-KEYS the table — every one of 427,077 rows gets a new source_id and the old row is never retracted (class A, no re-key path), so the table would double. It is a storage-format constant in compute, named here with why (parcels D3 precedent). Likewise `* 100 / 100` (2 dp on max_height_m / min_height_m / elev_z) and `* 10000000 / 10000000` (1e-7 on the centroid lat/lng) are STORAGE-FORMAT constants inside shapeRecord, each re-stating what the column stores. The unit constant `10.7639104167` (m2 → ft2) and the area `scale:2` live in scripts/lib/step/write.js and the descriptor respectively (prerequisite 0u), NOT as logic variables: an admin knob over a unit conversion would silently rewrite every stored row rather than change a bound (the parcels D3 ruling).",
+      "measured": {
+        "value": {
+          "key_prefix": "hash_",
+          "key_md5_hex_chars": 12,
+          "rows_rekeyed_on_change": 427077,
+          "rounding_literals": 3,
+          "sqm_to_sqft": 10.7639104167
+        },
+        "date": "2026-09-27",
+        "query": "grep -n \"'hash_'\\|slice(0, 12)\\|100) / 100\\|10000000) / 10000000\" scripts/lib/compute/load-massing.js"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "`duplicate_key_count` ~1,107 is NORMAL, not a defect. The source has no id property, so source_id is md5(geometry) and identical geometries collide: the P-M probe measured 961 duplicate-geometry groups carrying 1,107 extra rows (428,184 − 427,077), of which only 28 groups differ in attributes. The step resolves duplicates LAST-wins by file order (source_key_policy {unique:false, on_collision:\"last_write_wins\"}, the same rule the legacy within-batch Map dedupe applied), so the surviving row is the last occurrence's — a duplicate split across two batches resolves the same way it always did. A non-zero count here is the source's own redundancy, not a run failure.",
+      "measured": {
+        "value": {
+          "duplicate_key_count": 1107,
+          "duplicate_key_group_count": 961,
+          "groups_with_differing_attrs": 28,
+          "feature_count": 428184,
+          "distinct_keys": 427077
+        },
+        "date": "2026-09-27",
+        "query": "node -r dotenv/config scripts/analysis/probe-shapefile-acquire.mjs --url=$ZIP_URL --db (via scripts/lib/step/acquire.js)"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "`invalid_geometry_stored` ~17 is NORMAL. The step declares geometry_repair:\"none\" (M-D2, legacy parity — the legacy stored 17 invalid geometries unrepaired rather than run ST_MakeValid), so a carried row whose geometry is invalid is stored as-is and counted under acquired.invalid_geometry_stored (the Fold PB-3 library counter, goldens-neutral). The count is DESCRIPTIVE (INFO, never gates). It is ~17 on the measured input and is not a signal to add repair: F1 (flip to make_valid for new rows) is a separate post-conversion commit with its own RED→GREEN, deliberately not folded here.",
+      "measured": {
+        "value": {
+          "invalid_geometry_stored": 17,
+          "geometry_repair": "none",
+          "declared_check": "invalid_geometry_stored"
+        },
+        "date": "2026-09-27",
+        "query": "grep -n \"invalid_geometry_stored\" scripts/lib/step/acquire.js scripts/load-massing.descriptor.json"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The S2–S5 key-format auto-cleanup (detect a source_id strategy change and DELETE the mismatched rows + VACUUM) is RETIRED, not carried: it is dead on the measured input (0 non-`hash_` rows) and structurally unreachable after prerequisite 0s, because the converted coerceKey derives the key from geometry ALONE and ignores every DBF property — a publisher adding OBJECTID can no longer re-key the table (M-D1). Detection is preserved as the DECLARED invariant `building_footprints_foreign_key_space_rows` (FAIL if > 0); remediation is a RUNBOOK ACTION, never an automatic DELETE.",
+      "measured": {
+        "value": {
+          "non_hash_rows": 0,
+          "parcel_buildings_rows_joined_to_non_hash": 0,
+          "invariant": "building_footprints_foreign_key_space_rows"
+        },
+        "date": "2026-09-27",
+        "query": "SELECT COUNT(*) FROM building_footprints WHERE source_id NOT LIKE 'hash_%'"
+      },
+      "why": "A non-zero count means a key re-format happened, and the fix is an operator decision — parcel_buildings.building_id carries an FK to building_footprints.id with NO cascade, so an automatic DELETE would either fail on the FK or, with a cascade added casually, silently drop 520,492 links. The run must FAIL loudly and hand the operator a runbook, not guess."
+    }
+  ],
+  "suspicious_if": [
+    {
+      "what": "`features_read` < 400,000 is a WARN (the shared sources_building_footprints_floor, value 400000 — the catastrophic-load detector, WARN-not-FAIL as the legacy read it). A `records_new` SPIKE on an unchanged CKAN sha256 is the more specific alarm: the source bytes did not move, so a sudden insert burst means the KEY FORMAT changed (the md5 input or the prefix moved), which re-keys every row into a fresh insert rather than an update — exactly the `building_footprints_foreign_key_space_rows` invariant's failure mode seen from the write side.",
+      "measured": {
+        "value": {
+          "features_read_floor": 400000,
+          "severity": "WARN",
+          "unchanged_source_sha256": "9617089710518f1a24f70ca11b4a7c20ae45ab8e52a6fbed1bc088192efe6285"
+        },
+        "date": "2026-09-27",
+        "query": "grep -n \"sources_building_footprints_floor\\|features_read_floor\" scripts/load-massing.descriptor.json scripts/seeds/logic_variables.json"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Two silent blind spots, both carried verbatim. (1) `geom` and the two area columns are INSERT-ONLY (the `geometry` jsonb IS updated): they are seeded at INSERT and NEVER recomputed on an update, exactly as the legacy area SET-omission (WF2 #C 2026-05-09) and the `WHERE geom IS NULL` pass did, so stored values can differ from a fresh re-derivation by float noise and the step never heals them (M-D8: 3,850 geoms by <= 1.42e-14 deg, 361 sqm / 3,868 sqft area rows by <= 0.01). (2) `elev_z` and `estimated_stories` are NOT guard columns (M-D4): a source change that moves only those is never written and nothing in the audit table shows it; F2 widens the guard post-cutover with its own RED fixture.",
+      "measured": {
+        "value": {
+          "geom_drift_rows": 3850,
+          "geom_drift_max_deg": 1.42e-14,
+          "area_sqm_drift_rows": 361,
+          "area_sqft_drift_rows": 3868,
+          "written": "insert_only",
+          "guard_columns": 5,
+          "missing_from_guard": [
+            "elev_z",
+            "estimated_stories"
+          ],
+          "fix": "F2"
+        },
+        "date": "2026-09-27",
+        "query": "grep -n \"insert_only\\|derived_from_geometry\" scripts/load-massing.descriptor.json"
+      }
+    }
+  ],
+  "limitations": [
+    {
+      "what": "M-D5 — a changed building leaves its OLD row behind. source_id is a geometry hash and the class-A upsert has retract:\"none\", so when a building's geometry changes the new geometry is a NEW key (a fresh insert) and the previous key's row is never deleted; it stays in `building_footprints` forever and is still linkable by link_massing. The orphan count is 0 today (the P-M `--db` key diff found db_keys_absent_from_file = 0, file_keys_absent_from_db = 0), so the defect is latent/structural rather than presently manifest, but it is not closed here: retraction needs an FK/cascade design co-owned with link_massing (parcel_buildings.building_id has no cascade) and is filed in review_followups.",
+      "measured": {
+        "value": {
+          "retract": "none",
+          "orphans_today": 0,
+          "db_keys_absent_from_file": 0,
+          "file_keys_absent_from_db": 0
+        },
+        "date": "2026-09-27",
+        "query": "node ... scripts/analysis/probe-shapefile-acquire.mjs --db (db_key_count 427077; both diffs 0)"
+      }
+    }
+  ],
+  "fences": [
+    {
+      "const": "the WF2 #C 2026-05-09 area SET-omission survives as insert_only",
+      "value": "columns footprint_area_sqm / footprint_area_sqft declared written:\"insert_only\" with derived_from_geometry {measure:\"geodesic_area\", unit:\"m2\"|\"ft2\", scale:2} (prerequisite 0u); the generated upsert's SET clause names neither column",
+      "incident": "WF2 #C 2026-05-09: the area pair is OMITTED from the upsert SET on purpose. If it were included, EXCLUDED would carry the freshly-derived value and OVERWRITE every existing row's stored area on a re-load — opening a window where compute-cost-estimates.js (advisory lock 83, independent of lock 56) reads a mid-flight value and takes the wrong GFA path. insert_only keeps the pair out of SET and the guard; the value is seeded at INSERT only, from the legacy S7 ST_Area(…::geography) expression.",
+      "commit": "pending (batch-2 row 3.6 ②)",
+      "lock_test": "src/tests/steps/massing/violations.test.ts"
+    },
+    {
+      "const": "the S8 geom transform is 3857 → 4326 with geometry_repair:\"none\"",
+      "value": "outputs.writes[0].columns geom written:\"insert_only\", bind:\"wkb_geometry\", geometry_srid:3857; descriptor geometry_repair:\"none\"",
+      "incident": "WF3 2026-06-10: link_massing's PostGIS fast path (ST_Contains(bf.geom, parcel_centroid_4326)) needs geom populated in WGS84, but migrations 065/098 only ST_SetSRID'd without transforming, so the legacy added an explicit ST_Transform(…, 3857), 4326). geometry_repair:\"none\" stops the library from slipping ST_MakeValid in (massing is the FIRST consumer of the \"none\" arm; its 17 invalid geometries stay unrepaired, M-D2). The library polygon arm also skips its ST_Multi normalisation under \"none\" (0t follow-on, 2026-09-27, plan SF-2), so a new Polygon row is stored POLYGON exactly as the legacy stored it.",
+      "commit": "pending (batch-2 row 3.6 ②)",
+      "lock_test": "src/tests/steps/massing/violations.test.ts"
+    },
+    {
+      "const": "Pipeline Rehab P2 (2026-08-03) — the mkdir-before-download is retired with downloadFile",
+      "value": "acquisition is the runner's acquire.js (download + extractArchive, format:\"shapefile_zip\"); acquire.js owns mkdtemp",
+      "incident": "The 2026-08-03 mkdir fix existed because the legacy downloadFile opened its write stream into the gitignored data/ dir, which does not exist on a fresh CI checkout, BEFORE the loader's only mkdirSync ran — a fresh runner crashed on the download. The converted step never touches data/: the local cache is retired (M-D10) and acquire.js's mkdtemp owns the temp dir, so the ordering hazard cannot recur. src/tests/sources-loader-mkdir.logic.test.ts:40's listing of load-massing.js is removed with the why.",
+      "commit": "pending (batch-2 row 3.6 ②)",
+      "lock_test": "src/tests/sources-loader-mkdir.logic.test.ts"
+    },
+    {
+      "const": "the CKAN resource id in ZIP_URL rotates; the durable fix is NOT in this conversion",
+      "value": "inputs.reads.externals[].url carries the current resource id as data; the package_show resolution stays a review_followups item",
+      "incident": "The dataset id is stable but the CKAN resource id is not: the previous id 404'd on 2026-08-03 (run 30842232783, 86 min into the chain) after a re-registration, while the filename part was unchanged. Because the converted step re-fetches from CKAN every run (cache:\"none\", M-D10), a rotation now fails AFTER the download attempt rather than being masked by a stale local extract. Durable fix — resolve the newest resource at runtime via CKAN package_show instead of hardcoding — was filed 2026-08-03 and remains a separate change, not folded here.",
+      "commit": "pending (batch-2 row 3.6 ②)",
+      "lock_test": "src/tests/steps/massing/violations.test.ts"
+    }
+  ]
+}

@@ -845,25 +845,10 @@ describe('load-permits.js fetches live CKAN data', () => {
   });
 });
 
-describe('Cross-platform ZIP extraction in load-massing.js', () => {
-
-  it('load-massing.js does not use unzip without platform guard', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/load-massing.js'),
-      'utf-8'
-    );
-    expect(source).toMatch(/platform\(\)\s*===\s*['"]win32['"]/);
-    expect(source).toMatch(/else\s*\{[\s\S]*?unzip/);
-  });
-
-  it('load-massing.js handles Windows extraction', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/load-massing.js'),
-      'utf-8'
-    );
-    expect(source).toMatch(/win32|Expand-Archive|platform/);
-  });
-});
+// "Cross-platform ZIP extraction in load-massing.js" RE-HOMED (Spec 122 §5.1 conversion,
+// batch-2 row 3.6 ②, 2026-09-27): the PowerShell/unzip execSync extraction is retired with the
+// data/ cache (M-D10); scripts/lib/step/acquire.js extracts shapefile_zip archives in-process on
+// every platform, locked by step-library.logic.test.ts's acquisition battery.
 
 // "Pipeline route captures stderr and validates script" describe DELETED
 // (WF2 route rewrite, 2026-07-25). The route no longer spawns a child process, so
@@ -891,12 +876,12 @@ describe('Pipeline run concurrency handling', () => {
 
 describe('Massing pipeline chains link-massing after load', () => {
 
-  it('load-massing.js invokes link-massing.js after loading footprints', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/load-massing.js'),
-      'utf-8'
-    );
-    expect(source).toMatch(/link-massing/);
+  // RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): the frozen shell no longer names link-massing in
+  // prose; the ORDER is the manifest's (Spec 56 §3 item 5), asserted on the chain itself.
+  it('the sources chain runs link_massing immediately after massing', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/manifest.json'), 'utf-8'));
+    const chain: string[] = manifest.chains.sources;
+    expect(chain.indexOf('link_massing')).toBe(chain.indexOf('massing') + 1);
   });
 
   it('load-massing.js no longer couples to link-massing via execSync (chain orchestrator handles sequencing)', () => {

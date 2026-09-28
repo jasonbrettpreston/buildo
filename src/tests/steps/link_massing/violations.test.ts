@@ -1544,7 +1544,11 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     loadDescriptor();
     const strays = walk(abs('src/tests'))
       .map((p) => path.relative(REPO_ROOT, p).replace(/\\/g, '/'))
-      .filter((f) => !f.startsWith(STEP_DIR_REL) && /fixtures?\//.test(f) && /massing|parcel_buildings/i.test(path.basename(f)));
+      // A fixture inside ANOTHER step's own directory (src/tests/steps/<slug>/) already lives next to
+      // its step — e.g. the `massing` INGESTOR's src/tests/steps/massing/fixtures/massing-features.json
+      // (batch-2 row 3.6, 2026-09-28), whose basename the /massing/ regex also matches. Only a stray
+      // OUTSIDE every step directory is a #184 violation for link_massing.
+      .filter((f) => !f.startsWith(STEP_DIR_REL) && !f.startsWith('src/tests/steps/') && /fixtures?\//.test(f) && /massing|parcel_buildings/i.test(path.basename(f)));
     expect(strays, 'link_massing fixtures outside the step directory').toEqual([]);
   });
 

@@ -615,8 +615,9 @@ describe('Incremental Processing Guards', () => {
   // load-parcels.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.7, compressed
   // commit ③, 2026-09-24) — same treatment, asserted in
   // src/tests/steps/parcels/violations.test.ts instead.
+  // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
+  // 2026-09-27) — same treatment; asserted in src/tests/steps/massing/violations.test.ts.
   const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
-    'load-massing.js',
     'load-neighbourhoods.js',
     'load-wsib.js',
   ];
@@ -639,9 +640,10 @@ describe('Incremental Processing Guards', () => {
   // load-parcels.js RE-HOMED (batch-2 row 3.7, compressed commit ③, 2026-09-24) —
   // same treatment; skip_rate_pct/rows_read_floor are checks[] entries in
   // src/tests/steps/parcels/violations.test.ts now.
-  const CSV_LOADERS_WITH_THRESHOLDS = [
-    'load-massing.js',
-  ];
+  // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
+  // 2026-09-27) — same treatment; asserted in src/tests/steps/massing/violations.test.ts.
+  // (the list is now empty; the loop is kept so a future CSV loader re-joins it by name)
+  const CSV_LOADERS_WITH_THRESHOLDS: string[] = [];
 
   for (const script of CSV_LOADERS_WITH_THRESHOLDS) {
     it(`${script} has skip_rate and records_unchanged in audit_table`, () => {
@@ -716,7 +718,7 @@ describe('PIPELINE_SUMMARY convention', () => {
   const SCRIPTS_WITH_COUNTS = [
     'load-permits.js',
     'load-coa.js',
-    'load-massing.js',
+    // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): the library emits PIPELINE_SUMMARY.
     'load-neighbourhoods.js',
     'extract-builders.js',
     'classify-permits.js',
@@ -935,7 +937,7 @@ describe('PIPELINE_META convention', () => {
   const SCRIPTS_WITH_META = [
     'load-permits.js',
     'load-coa.js',
-    'load-massing.js',
+    // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): PIPELINE_META is derived from the descriptor (M-D6).
     'load-neighbourhoods.js',
     'load-wsib.js',
     'extract-builders.js',

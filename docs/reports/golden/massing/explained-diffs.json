@@ -1,0 +1,124 @@
+{
+  "contract_version": 1,
+  "step": "massing",
+  "source": "docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md §9 (row 3.6 ② POST compare) + scripts/load-massing.descriptor.json deviations[]",
+  "note": "Every entry is a diff class between the ① PRE goldens (legacy loader) and the ② POST goldens (converted step), over BOTH pairs (sources, standalone). table_state (building_footprints 427077 rows, content_hash 18d7bf97...) and all seven invariants are BYTE-IDENTICAL PRE to POST on both pairs; verdict PASS on both. Keys are listed in the form normaliseDiffKey collapses to (array indices -> []). contract_version 1; the gate requires why.length >= 20.",
+  "diffs": [
+    {
+      "key": "meta[].external",
+      "why": "M-D6: PIPELINE_META is derived from the descriptor (deriveMeta); the declared external id ckan:3d-massing-shapefile-wgs84 is now named, where the legacy emitMeta named none."
+    },
+    {
+      "key": "meta[].reads.City Shapefile",
+      "why": "M-D6: the legacy emitMeta read-map named four DBF fields that do not exist in the file (SOURCE_ID, AREA_SQ_M, ELEV_Z, EST_STORIES); Rule 1 forbids declaring fiction, and deriveMeta treats the external as the read source, so the fictional map is gone."
+    },
+    {
+      "key": "meta[].writes.building_footprints[]",
+      "why": "M-D6: the declared write columns now include geom (always written by the legacy S8 backfill but omitted from its emitMeta) and created_at (the db_default column the descriptor declares); the ten legacy columns are unchanged and in the same order."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "M-D10 / progress-cadence deviation: the legacy download-progress, extraction, 50,000-row progress, post-INSERT backfill and Load complete log lines are gone with the whole-array runner; the runner logs its target line, one acquired N feature(s) line and completed-in."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone only: the legacy loader wrote no pipeline_runs row when invoked outside a chain (PRE ledger []); the converted runner owns the ledger and records its own completed row (library behaviour, every converted step)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "Additive declared rows: duplicate_key_count (1,107, M-D3), invalid_geometry_stored (17, M-D2), the three FAIL invariants (building_footprints_foreign_key_space_rows / footprint_area_null_count / geom_null_count, all 0, M-D1/M-D7) and the library sys_* rows (invariant timings, sys_maintenance_building_footprints_vacuum_analyze, M-D12)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "Audit-row-shape deviation: features_read -> features_read_floor, skip_rate -> skip_rate_pct, batch_error_rate -> batch_error_rate_pct (declared check ids); same measurement, same boundary."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "The library's buildAuditTable tags every row with its origin (check / invariant); the legacy hand-built rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "Declared-bound rendering: the threshold column shows the descriptor's closed bound in force (value_min 400000 resolved from sources_building_footprints_floor; viol == 0 for the INFO rows and the two strict-boundary FAIL checks) instead of the legacy prose '>= 400000' / '< 5%' / '< 1%' / null."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "records_updated 4 -> 0 (M-D3: the legacy cross-batch self-overwrite of duplicate hashes is gone, the whole file is deduped once); records_unchanged 428,180 -> 427,077 (Spec 122 §11 KFM 9: now the MEASURED no-op count; the 1,107 duplicates are named by duplicate_key_count and conservation holds 428,184 = 1,107 + 0 + 0 + 427,077); skip_rate / batch_error_rate '0.0%' strings -> numeric 0."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner meta key: the resolved config.logic_variables values in force for this run (Rule 3), stamped by the library; the legacy loader read literals and emitted none."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "Runner meta key: the staleness gate decision ({gated_skip:false, reason:'loaded'}); massing declares no staleness trigger, so every run loads, exactly as the legacy did."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner meta key: which ledger owns the pipeline_runs row (chain_owned in-chain); library behaviour for every converted step."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner meta key the library stamps (pool error count, 0); the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner meta key: the declared terminal reached (loaded); legacy had no terminal vocabulary."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "records_meta layout deviation: the legacy top-level errors count moves into massing_load.errors; top-level errors is now the runner's own meta key."
+    },
+    {
+      "key": "summary.records_meta.features_read",
+      "why": "records_meta layout deviation: moved, name and value unchanged (428,184), into the massing_load block (parcels_load / address_points_load precedent)."
+    },
+    {
+      "key": "summary.records_meta.features_skipped",
+      "why": "records_meta layout deviation: moved, name and value unchanged (0), into the massing_load block."
+    },
+    {
+      "key": "summary.records_meta.records_inserted",
+      "why": "records_meta layout deviation: moved, name and value unchanged (0), into the massing_load block."
+    },
+    {
+      "key": "summary.records_meta.records_unchanged",
+      "why": "records_meta layout deviation: moved into massing_load; value is the measured 427,077 (KFM 9 conservation) rather than the legacy derived 428,180, see audit rows value entry."
+    },
+    {
+      "key": "summary.records_meta.records_updated",
+      "why": "records_meta layout deviation: moved into massing_load; value 0 rather than the legacy constant 4 (M-D3 deviation, adjudicated AP-D4 precedent)."
+    },
+    {
+      "key": "summary.records_meta.massing_load",
+      "why": "The declared massing_load emit block carrying the seven legacy records_meta names (duration_ms, features_read, records_inserted, records_updated, records_unchanged, features_skipped, errors); duration_ms reads 0 exactly as the parcels_load / address_points_load precedents (ctx.elapsed_ms is not supplied by the runner)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "Library counters: records_total is null on a zero-write run for every converted class-A INGESTOR (parcels and address_points POST goldens read null identically); the legacy summed inserted + updated to 4 from its self-overwrite churn (M-D3)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "M-D3 deviation: 4 -> 0 on an unchanged run; the legacy's 4 was cross-batch self-overwrite of duplicate geometry hashes, final table data identical (table_state hash byte-equal)."
+    },
+    {
+      "key": "step",
+      "why": "Forced-change pair only (forced/pre.json vs forced/post.json): the R-AS cohort was re-derived at ② (3 of the ① D rows had since been linked by link_massing on 2026-09-26, so the no-FK predicate no longer held), and the legacy side was re-run from the ① file materialised as scripts/load-massing.legacy-oracle.js (removed afterwards), so the recorded step path differs; the step behaviour compared is legacy vs converted."
+    },
+    {
+      "key": "invariants[]",
+      "why": "Forced-change pair only: the cohort harness passes no --invariants file, so the legacy capture (no descriptor) records none and the converted capture derives the three declared invariants[] from the descriptor (all 0). The steady-state pre/post pairs use the same invariants.json and match exactly."
+    }
+  ]
+}

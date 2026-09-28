@@ -5167,6 +5167,66 @@
       "group": "Source Ingestion"
     }
   },
+  "massing_skip_rate_max_pct": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.6, INGESTOR) — maximum tolerated percentage of read features the massing loader may skip before the skip_rate audit row reads FAIL (legacy load-massing.js:453, `skipRate >= 5 ? 'FAIL' : 'PASS'`). A feature is skipped when it carries no geometry (`!feature.geometry`) or its extracted ring has fewer than four points (:318-327) — so a rising skip rate is shapefile drift, not a healthy filter. 5 = the legacy literal carried byte-for-byte. The numerator under the converted (whole-array) seam MUST read `bad_key_count + null_geometry_count + shaped_skipped` over `rows_read` so the legacy numerator/denominator is preserved regardless of which counter bucket a null-geometry feature lands in (0s counter re-bucketing). on_invalid fail (gate B). CONSUMED by scripts/lib/compute/load-massing.js (skip_rate check) via ctx.config. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "massing_batch_error_rate_max_pct": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.6, INGESTOR) — maximum tolerated percentage of failed batch flushes before the batch_error_rate audit row reads FAIL (legacy load-massing.js:455, `errorRate >= 1 ? 'FAIL' : 'PASS'`, where errorRate = errors / ceil(processed / batchSize) * 100). 1 = the legacy literal carried byte-for-byte. NOTE the reachability caveat (VERIFY-INT-5, the address_points precedent): the legacy committed per-1,000-row batch, so a failed flush was a real, per-batch event; the converted runner owns ONE transaction for the whole step (txn_scope:\"step\", M-D11), under which a batch error may be structurally unreachable and this FAIL a dead declaration. The row is kept exactly as the legacy read it; the reachability question is filed, not silently resolved. on_invalid fail (gate B). CONSUMED by scripts/lib/compute/load-massing.js (batch_error_rate check) via ctx.config. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "massing_story_height_m": {
+    "default": 3,
+    "type": "number",
+    "min": 1,
+    "max": 10,
+    "description": "Spec 124 Rule 3 (row 3.6, INGESTOR) — assumed floor-to-floor height, in metres, used to derive estimated_stories = max(1, round(max_height_m / massing_story_height_m)) (legacy load-massing.js:27, `STORY_HEIGHT_M = 3.0`). 3 = the legacy literal carried byte-for-byte. This variable is WRITE-AFFECTING: it changes `estimated_stories`, which enrich_parcels and compute-*-cost-estimates read, so it carries fail posture. It is DISTINCT from Spec 65's `storey_height_m` (the by-law envelope's storey height, a different quantity) and the two are NEVER shared. on_invalid fail (gate B). CONSUMED by scripts/lib/compute/load-massing.js (shapeRecord → estimateStories) via ctx.config. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "massing_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 1800000,
+    "description": "Spec 124 Rule 3 (row 3.6, INGESTOR) — AbortController budget for ONE attempt at the CKAN 3D-massing zip (81,415,175 B, sha256 96170897…6285). 60000 = the fleet INGESTOR default, adopted because the pre-conversion downloadFile allowed NO timeout at all (it read none — there is no legacy literal to carry), and it is ≥ 5× the P-M-measured 6.9 s download [MEASURED 2026-09-24], so the default externalizes a bound that did not previously exist. The descriptor literal execution.network.timeout states the same 60000 as the fallback for an un-seeded database (execution.network.timeout_from_config names this variable, so there is ONE source). Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. on_invalid fail (gate B). CONSUMED by massing (scripts/lib/step/acquire.js download, via execution.network.timeout_from_config). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "building_footprints_dead_tuple_ratio_warn_max": {
+    "default": 0.1,
+    "type": "number",
+    "min": 0,
+    "max": 5,
+    "description": "WF3 EP-D17 naming convention (2026-09-10) / Spec 124 Rule 3 (row 3.6, INGESTOR) — trigger bound on building_footprints' pg_stat_user_tables dead_ratio, read by scripts/lib/step/plausibility.js's runMaintenance executor by naming convention (\"${table}_dead_tuple_ratio_warn_max\") as the execution.maintenance VACUUM ANALYZE trigger (M-D12); massing declares no plausibility check on it. 0.1 = engine_health_dead_tuple_ratio_warn_max, the fleet's own auto-VACUUM trigger, so massing's self-maintenance fires no later than the chain-tail sweep would. The legacy trigger was the geom-backfill UPDATE's dead tuples (:429-433, fires only on insert runs — the last 4 runs inserted 0); under the converted seam area/geom are seeded at INSERT, so that specific trigger is gone and the dead-ratio bound replaces it (data-invisible, M-D12). on_invalid fail (gate B). CONSUMED by scripts/lib/step/plausibility.js (runMaintenance) via massing's config. Operator-tunable.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "building_footprints_maintenance_timeout_minutes": {
+    "default": 15,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "WF3 EP-D17 naming convention (2026-09-10) / Spec 124 Rule 3 (row 3.6, INGESTOR) — declared ceiling, in minutes, for the execution.maintenance VACUUM/ANALYZE statement scripts/lib/step/plausibility.js's runMaintenance issues on building_footprints (keyed by \"${table}_maintenance_timeout_minutes\", the same convention as building_footprints_dead_tuple_ratio_warn_max). Applied via SET statement_timeout on a dedicated autocommit client (VACUUM forbids an enclosing transaction). 15 = the parcels precedent (parcels_maintenance_timeout_minutes), carrying real margin over the few minutes a VACUUM was estimated to take for the dead tuples that motivated the EP-D17 work. Note this is one of two `building_footprints_*` vars whose key is NOT prefixed with the step prefix — they are keyed by TABLE by the shared runMaintenance naming convention, not by this step. on_invalid fail (gate B). CONSUMED by scripts/lib/step/plausibility.js (runMaintenance). Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "load_centreline_download_retry_backoff_ms": {
     "default": 0,
     "type": "number",

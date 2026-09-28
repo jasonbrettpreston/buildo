@@ -68,7 +68,7 @@
   ],
   "contract_version": 1,
   "pending": [
-    { "file": "scripts/load-massing.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.6 (massing, INGESTOR 4th member, class A guarded_upsert, COMPRESSED per R-PACE-1; library prerequisites 0s/0t/0u landed at a48465e2). ① lands the assessment + red suite + PRE goldens + R-AS forced-change cohort; ② the descriptor/compute/shell/seeds + POST goldens + forced-change proof (stage -> shape_clean); ③ registers, per Spec 124 R-K.", "declared": "2026-09-24", "stage": "red_suite" }
+    { "file": "scripts/load-massing.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.6 (massing, INGESTOR 4th member, class A guarded_upsert, COMPRESSED per R-PACE-1; library prerequisites 0s/0t/0u landed at a48465e2). ① lands the assessment + red suite + PRE goldens + R-AS forced-change cohort; ② the descriptor/compute/shell/seeds + POST goldens + forced-change proof (stage -> shape_clean); ③ registers, per Spec 124 R-K.", "declared": "2026-09-24", "stage": "shape_clean" }
   ],
   "converted": [
     "scripts/quality/assert-schema.js",
