@@ -208,6 +208,12 @@ exceeds the 300-min job cap. **The sanctioned remedy is a TEMPORARY COMPUTE RESI
 raised ceiling** (R-AQ) — `enrich_parcels_pass5_timeout_minutes` and
 `manifest…step_timeout_minutes` stay unchanged.
 
+**Operator ruling 2026-09-29 (Spec 124 R-AQ.1):** no cloud dispatch at all until EVERY data-sources
+step is converted. Step 3's `--only=enrich_parcels` proof and every batch-2 per-slug proof then run
+together as ONE end-of-sources acceptance set (one or more pinned runs, partial or full) on a single
+resize window. That set is what flips `EP-PIN-D17` to BUILT, and `EP-PIN-D17` blocks every C6
+(post-sources) cutover until it does. `enrich_centreline` no longer waits on this procedure.
+
 **This whole procedure is an OPERATOR ACTION that the orchestrator (this runbook, an
 agent, a WF) REQUESTS via the two hard-stop prompts below — it is never performed by the
 orchestrator itself.** There is no API/CLI path in this repo that resizes Supabase compute;

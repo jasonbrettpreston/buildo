@@ -263,6 +263,7 @@ import {
 } from './gates/registries.mjs';
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
+import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
 // backfill context calls it directly for BOTH frequencies (every_run AND validate_only —
@@ -418,7 +419,7 @@ function loadConverted() {
     pendingStages[String(p.file).replace(/\\/g, '/')] = p.stage;
   }
   return {
-    converted: (parsed.converted || []).map((f) => String(f).replace(/\\/g, '/')),
+    converted: convertedFilesOf(parsed),
     pending: pendingRaw.map((p) => (typeof p === 'string' ? p : p.file)).map((f) => String(f).replace(/\\/g, '/')),
     pendingStages,
   };
@@ -5529,9 +5530,22 @@ async function main() {
 
   const registry = buildRegistry();
   let targets;
+  // #43 OWNER-SPEC-DIFF (Spec 124 §5 R-BB; Spec 123 §7 row 9(b)) — COMMIT-SCOPED, so it runs
+  // here, BEFORE the early return below (a cutover commit may stage only registry/spec files and
+  // select no step), and it is never a fastInvariants() row (git-state-dependent, so it would make
+  // every generated scorecard non-reproducible). Its FAIL feeds anyHardStop explicitly below.
+  let ownerSpecHardStop = false;
   if (opts.staged) {
+    const ownerSpec = checkOwnerSpecDiff(readCommitChangeSet(REPO_ROOT));
+    console.log(`[step-validate] #43 (commit) ${ownerSpec.pass ? 'PASS' : 'FAIL'} ${ownerSpec.detail}`);
+    ownerSpecHardStop = !ownerSpec.pass;
     targets = filterToStaged(registry);
     if (targets.length === 0) {
+      if (ownerSpecHardStop) {
+        console.error('\n[step-validate] HARD STOP: fast invariant #43 OWNER-SPEC-DIFF failed (see above). Exiting non-zero.');
+        process.exitCode = 1;
+        return;
+      }
       console.log('[step-validate] --staged: no converted/pending step touched by this commit — nothing to validate, exiting clean.');
       return;
     }
@@ -5563,6 +5577,7 @@ async function main() {
   const churnFindings = loadChurnFindings();
 
   let anyHardStop = false;
+  if (ownerSpecHardStop) anyHardStop = true; // #43 is not in invariantResults — set explicitly (panel I-2)
   const summaries = [];
 
   for (const row of targets) {

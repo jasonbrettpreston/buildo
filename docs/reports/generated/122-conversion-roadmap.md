@@ -29,7 +29,7 @@ Remaining files: **40** (+ **0** pending) · remaining slugs: **42** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | EP-PIN-D17 (enrich_centreline); B2-OWNER-SPEC-DIFF (enrich_centreline) |
+| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline | sources (1) | bottom-left | — | — |
 | INGESTOR | `scripts/load-heritage.js` | load_heritage | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
 | INGESTOR | `scripts/load-wsib.js` | load_wsib | sources (1) | top-right | — | — |

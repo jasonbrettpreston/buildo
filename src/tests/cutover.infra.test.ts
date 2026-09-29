@@ -159,6 +159,7 @@ describe('npm run cutover on a fixture slug', () => {
     expect(first.stdout).toContain('census: changed scripts/steps/_schema/step-archetype-census.json');
     expect(first.stdout).toContain('gen: changed generated.txt');
     expect(first.stdout).toContain('3 file(s) changed');
+    expect(first.stdout, 'panel I-1: a repo with no system map still exits 0 and says so').toContain('system map absent');
 
     const second = cutover();
     expect(second.status, second.stderr).toBe(0);
