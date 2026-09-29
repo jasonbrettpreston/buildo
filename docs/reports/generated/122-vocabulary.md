@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 484 declarable fields
+# The step contract — 20 categories, 486 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,7 +15,7 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 30 | 8 | 0 |
+| 2 | `inputs` | 32 | 9 | 0 |
 | 3 | `outputs` | 102 | 30 | 2 |
 | 4 | `staleness` | 25 | 7 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
@@ -44,6 +44,7 @@
 | `ASSERT` | outputs = `none` · recovery = `none` · counters = `none` |
 | `?` | execution.shape declared |
 | `INGESTOR` | outputs |
+| `?` | execution.shape declared |
 | `INGESTOR` | outputs is object · **if outputs.writes is a predicate ⇒ outputs.writes** |
 | `LINK / MATCHER` | outputs.invalidates min 1 · counters is object |
 | `ENRICHER` | outputs is object · execution is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
@@ -164,7 +165,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, key_property, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
 | `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` | ! |
@@ -176,6 +177,8 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals[].path` | string | — |
 | `reads.externals[].license` | string | — |
 | `reads.externals[].on_head_error` | `fail_step` · `warn_row` | ! |
+| `reads.externals[].target` | string | — |
+| `reads.externals[].on_failure` | `abort_step` · `fail_row_continue` · `warn_row_continue` | ! |
 | `reads.externals[].key_property` | string | — |
 | `reads.externals[].cache` | `none` · `revalidate` · `reuse_if_fresh` · `reuse_if_present` | † ! |
 | `reads.externals[].cache_why` | object {text, liveness} | — |
@@ -655,7 +658,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `records_total` | `none` \| object {source, scoped_by, why} | † |
-| `records_total.source` | string | † |
+| `records_total.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
 | `records_total.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_total.why` | object {text, liveness} | — |
 | `records_total.why.text` | string | † |
@@ -663,7 +666,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `records_total.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `records_total.why.liveness.ref` | string | † |
 | `records_new` | `none` \| object {source, scoped_by, why} | † |
-| `records_new.source` | string | † |
+| `records_new.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
 | `records_new.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_new.why` | object {text, liveness} | — |
 | `records_new.why.text` | string | † |
@@ -671,7 +674,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `records_new.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `records_new.why.liveness.ref` | string | † |
 | `records_updated` | `none` \| object {source, scoped_by, why} | † |
-| `records_updated.source` | string | † |
+| `records_updated.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
 | `records_updated.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_updated.why` | object {text, liveness} | — |
 | `records_updated.why.text` | string | † |

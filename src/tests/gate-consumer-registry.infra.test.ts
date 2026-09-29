@@ -202,4 +202,47 @@ describe('gate D — one resolver (the runtime resolveCounterSource, never a mir
       expect(gate).toBe(runtime);
     }
   });
+
+  it('T9c: a SUM source — one row per records_meta term, present exactly when the runtime resolves the sum', () => {
+    const rows = reg.buildCountersRows([
+      {
+        identity: { name: 's' },
+        counters: {
+          records_total: { source: 'written.inserted + records_meta.a.x' },
+          records_new: { source: 'records_meta.a.x + records_meta.b.y' },
+          records_updated: { source: 'written.updated' },
+        },
+      },
+    ]);
+    expect(rows.map((r: { key: string }) => r.key).sort()).toEqual(['a.x', 'a.x', 'b.y']);
+    for (const row of rows) {
+      expect(row).toMatchObject({ consumer: 's', producer: 's', kind: 'records_meta', source: 'counters' });
+    }
+
+    const sumSource = { source: 'records_meta.a.x + records_meta.b.y' };
+    const metas: object[] = [
+      { a: { x: 1 }, b: { y: 2 } },
+      { a: { x: 1 }, b: {} },
+      { a: { x: 1 }, b: { y: Number.NaN } },
+      { a: { x: '1' }, b: { y: 2 } },
+      {},
+    ];
+    for (const m of metas) {
+      const runtime = resolveCounterSource(sumSource, { records_meta: m }) !== null;
+      const keyRows = rows
+        .filter((r: { key: string }) => r.key === 'a.x' || r.key === 'b.y')
+        .map((r: { key: string }) => r);
+      expect(new Set(keyRows.map((r) => r.key))).toEqual(new Set(['a.x', 'b.y']));
+      const gate = keyRows.every((row) =>
+        reg.rowPresentTyped(row, { metaKeys: new Set(Object.keys(m)), metrics: new Map(), metas: [m] }).ok,
+      );
+      expect(gate).toBe(runtime);
+    }
+
+    // The runtime's own sum semantics: both operands present + finite => the sum;
+    // a missing/NaN operand => null, never silently treated as 0.
+    expect(resolveCounterSource(sumSource, { records_meta: metas[0] })).toBe(3);
+    expect(resolveCounterSource(sumSource, { records_meta: metas[1] })).toBeNull();
+    expect(resolveCounterSource(sumSource, { records_meta: metas[2] })).toBeNull();
+  });
 });

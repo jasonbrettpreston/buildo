@@ -102,7 +102,7 @@
     },
     {
       "key": "summary.records_total",
-      "why": "Library counters: null on the converted runs (parcels/address_points/massing POST goldens read null identically); legacy literal 158 (N-D3)."
+      "why": "Library counters (LG-30): records_total declares the SUM `written.inserted + written.updated`, which the pre-0x resolver could not parse (null on every converted run, not because of zero writes). Post-fold it resolves to inserted + updated; legacy literal 158 (N-D3)."
     },
     {
       "key": "summary.records_updated",

@@ -102,11 +102,11 @@
     },
     {
       "key": "summary.records_meta.massing_load",
-      "why": "The declared massing_load emit block carrying the seven legacy records_meta names (duration_ms, features_read, records_inserted, records_updated, records_unchanged, features_skipped, errors); duration_ms reads 0 exactly as the parcels_load / address_points_load precedents (ctx.elapsed_ms is not supplied by the runner)."
+      "why": "The declared massing_load emit block carrying the seven legacy records_meta names (duration_ms, features_read, records_inserted, records_updated, records_unchanged, features_skipped, errors); duration_ms is the runner's own elapsed clock (ctx.elapsed_ms, supplied by runWithPool's INGESTOR branch since the 0x fold, LG-30); the capture normalises duration keys, so it is not a data diff."
     },
     {
       "key": "summary.records_total",
-      "why": "Library counters: records_total is null on a zero-write run for every converted class-A INGESTOR (parcels and address_points POST goldens read null identically); the legacy summed inserted + updated to 4 from its self-overwrite churn (M-D3)."
+      "why": "Library counters (LG-30): records_total declares the SUM `written.inserted + written.updated`; before the 0x fold the resolver walked it as one dotted path and returned null on EVERY run (not only zero-write runs). Post-fold it resolves to inserted + updated; the legacy value 4 was its self-overwrite churn (M-D3)."
     },
     {
       "key": "summary.records_updated",

@@ -206,8 +206,12 @@ export function buildCountersRows(descriptors) {
     if (!slug || !counters || typeof counters !== 'object') continue;
     for (const cfg of Object.values(counters)) {
       const src = cfg && cfg.source;
-      if (typeof src === 'string' && src.startsWith('records_meta.')) {
-        const key = src.slice('records_meta.'.length);
+      if (typeof src !== 'string') continue;
+      // 0x fold (library counter defect): a DECLARED SUM source contributes one row per
+      // records_meta.<key> TERM; each is resolved by the runtime's resolveCounterSource below.
+      for (const term of src.split('+').map((t) => t.trim())) {
+        if (!term.startsWith('records_meta.')) continue;
+        const key = term.slice('records_meta.'.length);
         if (key) rows.push({ consumer: slug, producer: slug, kind: 'records_meta', key, value: 'any', source: 'counters' });
       }
     }
