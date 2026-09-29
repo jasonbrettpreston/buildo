@@ -280,6 +280,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // scripts/seeds/logic_variables.json, rendered under GROUPS "WSIB Matching".
   'link_wsib_link_rate_warn_pct',
   'link_wsib_tier1_confidence',
+  'run_stranded_after_minutes', // one-reaper-rule WF2 (2026-09-29, 833caab4) — reconcile's stranded-run age floor (retired env RECONCILE_STRANDED_AFTER_MINUTES)
+  'run_heartbeat_fresh_minutes', // one-reaper-rule WF2 (2026-09-29, 833caab4) — a live heartbeat younger than this spares a running row
   'link_wsib_tier2_confidence',
   'link_wsib_tier3_confidence',
   'link_wsib_entity_fanin_warn',
