@@ -332,4 +332,5 @@ Every test file carries the `SPEC LINK` header.
 - `enrich-centreline.js` — AF-1 `abuts_laneway` consumed same-run; chain order `enrich_centreline` → `enrich_parcels` (Spec 62)
 - `load-neighbourhoods.js` — §8 C2 spatial-joins `parcels` against `neighbourhoods` loaded by this script
 - `classify-permits.js` — §8 SN-1 only references chain sequencing ("permits chain after `classify_permits`"); trade classification is owned by Spec 80
+- **Spec 67** (`67_maxbuild_bylaw_derivation.md`) — derivation methodology + scenario catalogue for §4's max-build envelope (explains/derives; this spec stays the as-built owner)
 </constraints>
