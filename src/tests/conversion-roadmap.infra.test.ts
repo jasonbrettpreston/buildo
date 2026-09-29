@@ -61,6 +61,32 @@ describe('step-archetype-census.json — schema validity', () => {
     expect(ok, JSON.stringify(validate.errors, null, 2)).toBe(true);
   });
 
+  // Spec 124 §5 R-BB (fast invariant #43 OWNER-SPEC-DIFF): a retained converted row may declare
+  // spec_diff "N-A" + spec_diff_reason (>= 20 chars) instead of touching its owner specs.
+  it('spec_diff "N-A" is legal only with a spec_diff_reason (>= 20 chars) on a status:"converted" row', async () => {
+    const Ajv = (await import('ajv')).default;
+    const schema = JSON.parse(fs.readFileSync(CENSUS_SCHEMA_PATH, 'utf8'));
+    const ajv = new Ajv({ allErrors: true, strict: false });
+    const validate = ajv.compile(schema);
+    const base = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<Record<string, unknown>> };
+    const convertedIdx = base.entries.findIndex((e) => e.status === 'converted');
+    const remainingIdx = base.entries.findIndex((e) => e.status === undefined);
+    expect(convertedIdx).toBeGreaterThan(-1);
+    expect(remainingIdx).toBeGreaterThan(-1);
+    const withRow = (idx: number, extra: Record<string, unknown>) => {
+      const copy = JSON.parse(JSON.stringify(base)) as { entries: Array<Record<string, unknown>> };
+      copy.entries[idx] = { ...copy.entries[idx], ...extra };
+      return copy;
+    };
+    const reason = 'owner specs intentionally unchanged: pure refactor';
+    expect(validate(withRow(convertedIdx, { spec_diff: 'N-A', spec_diff_reason: reason })), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(withRow(convertedIdx, { spec_diff: 'N-A' }))).toBe(false);
+    expect(validate(withRow(convertedIdx, { spec_diff: 'N-A', spec_diff_reason: 'too short' }))).toBe(false);
+    expect(validate(withRow(convertedIdx, { spec_diff: 'YES', spec_diff_reason: reason }))).toBe(false);
+    expect(validate(withRow(convertedIdx, { spec_diff_reason: reason }))).toBe(false);
+    expect(validate(withRow(remainingIdx, { spec_diff: 'N-A', spec_diff_reason: reason }))).toBe(false);
+  });
+
   it('declares exemptions[] (Ask A2 + Spec 124 R-AP) — never empty, one row per non-JS/null-file manifest slug PLUS the RUNNER-owned class', () => {
     const data = JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { exemptions: Array<{ slug: string; reason: string }> };
     expect(data.exemptions.length).toBeGreaterThan(0);

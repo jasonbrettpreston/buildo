@@ -642,3 +642,39 @@ describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA f
     expect(sta1!.gate.applies_when).toEqual({ descriptor_path: 'outputs.publish', equals: 'pointer' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Spec 124 §5 R-AQ.1 (operator ruling 2026-09-29): no cloud dispatch until every data-sources
+// step is converted. EP-PIN-D17's cloud proof is DEFERRED, never waived: it stays PARTIAL and
+// now gates every C6 (post-sources) cutover instead of enrich_centreline's. Blocks are the census
+// C6 slugs, derived, never retyped. B2-OWNER-SPEC-DIFF is BUILT (fast invariant #43, R-BB).
+// ---------------------------------------------------------------------------
+describe('R-AQ.1 — EP-PIN-D17 gates the end-of-sources boundary, never a sources cutover', () => {
+  const CENSUS_ENTRIES = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8')) as {
+    entries: Array<{ slug: string; batch: string; status?: string }>;
+  }).entries;
+  const c6 = CENSUS_ENTRIES.filter((e) => e.batch === 'C6').map((e) => e.slug).sort();
+  const c5 = CENSUS_ENTRIES.filter((e) => e.batch === 'C5').map((e) => e.slug);
+
+  it('EP-PIN-D17 stays PARTIAL and a cutover_prereq (deferred, never waived)', () => {
+    const d17 = ITEMS.find((i) => i.id === 'EP-PIN-D17');
+    expect(d17).toBeDefined();
+    expect(d17!.status).toBe('PARTIAL');
+    expect(d17!.gate.kind).toBe('cutover_prereq');
+    expect(d17!.evidence).toContain('R-AQ.1');
+  });
+
+  it('EP-PIN-D17 blocks exactly the census C6 slugs and no C5 (sources) slug', () => {
+    const d17 = ITEMS.find((i) => i.id === 'EP-PIN-D17')!;
+    expect(c6.length).toBeGreaterThan(0);
+    expect([...d17.gate.blocks].sort()).toEqual(c6);
+    expect(d17.gate.blocks.filter((s) => c5.includes(s))).toEqual([]);
+    expect(d17.gate.blocks).not.toContain('enrich_centreline');
+  });
+
+  it('B2-OWNER-SPEC-DIFF is BUILT', () => {
+    const b2 = ITEMS.find((i) => i.id === 'B2-OWNER-SPEC-DIFF');
+    expect(b2).toBeDefined();
+    expect(b2!.status).toBe('BUILT');
+  });
+});

@@ -10,9 +10,9 @@ Total items: **127**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 28 |
+| ⬜ NOT_STARTED | 27 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 79 |
+| ✅ BUILT | 80 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -41,7 +41,7 @@ Total items: **127**
 | `EP-PIN-D9` | 78 §P3C.2 | EP-D9 pin — pass-4 comps candidate selection has no deterministic tiebreak (comparable_builds jsonb instability) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D10` | 122 §3.0b | EP-D10 pin — enrich_parcels_pass3_scope grows unbounded (append-only, never pruned) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-08 |
 | `EP-PIN-D14` | 78 §P3A.1 / 122 §3.0b | EP-D14 pin — pass-5 D4' recovery walks unconsumed enrich_parcels_pass3_scope rows one at a time (full-scan UPDATE per parcel, redundant under --full) | ✅ BUILT | pilot: pilot9_enrich_parcels | enrich_parcels | 2026-09-09 |
-| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | enrich_centreline | 2026-09-11 |
+| `EP-PIN-D17` | 124 §7 / 48 §3.5 | EP-D17 pin — parcels post-run checks are unbounded serial full scans over a bloat-inflated heap | ⚠️ PARTIAL | pilot: pilot9_enrich_parcels | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
 | `GOLD-PRE` | 122 §5.3 | Golden PRE-side capture completeness enforced per declared chain | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-10 |
 | `C4-GATE` | 122 §5.3 / C4 plan §3.4 | C4 "every chain" capture gate is a CHECKER — completeness + freshness, both sides | ✅ BUILT | wf: C4 step H — c4_chain_completeness_gate (2026-09-11) — CLOSED | assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits | 2026-09-11 |
 | `HB-1` | 124 §2 Rule 12 | Heartbeat covers the WHOLE step, not only phase boundaries (EP-D15) | ✅ BUILT | wf: wf: conversion-roadmap commit 3, 2026-09-10 | — | 2026-09-10 |
@@ -52,7 +52,7 @@ Total items: **127**
 | `SEAM-CHAIN-1` | 122 §6.5 | seam checks are scoped to the chain they run in | ✅ BUILT | followup: docs/reports/review_followups.md — WF2 batch-2 Phase 0.10 section, the seam.js MED row | address_points | 2026-09-15 |
 | `B2-PRICING-ADMIN` | 124 R-AU | Admin editor for pricing DATA (archetype_cost_rates + PARCEL_COST_LINES/PERMITTED_VALUES) | ✅ BUILT | wf: wf: batch-2 row 2.5 (.cursor/batch2_p2_5_pricing_admin_active_task.md) - Cross-Domain admin pricing editor | enrich_centreline | 2026-09-23 |
 | `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ✅ BUILT | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-23 |
-| `B2-OWNER-SPEC-DIFF` | 123 §7 row 9; 124 §4.5 | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ⬜ NOT_STARTED | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-21 |
+| `B2-OWNER-SPEC-DIFF` | 123 §7 row 9(b); 124 §5 R-BB | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ✅ BUILT | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-29 |
 
 ## Nice-to-have — real gap, not currently blocking (100)
 

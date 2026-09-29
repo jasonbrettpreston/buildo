@@ -22,6 +22,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { ownerSpecsFor, SYSTEM_MAP_REL } from './gates/owner-spec-diff.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_ROOT = path.resolve(HERE, '..', '..');
@@ -268,6 +269,15 @@ export function runCutover({ root = DEFAULT_ROOT, slug, skip = [], log = console
     + 'step_timeout; write-class-disposition.json declared_by notes; orphan ledger rows; programme-items.json '
     + 'evidence; review_followups.md rows; generator code edits; legacy-shell text-scan test lists (retiring a '
     + 'lock needs its successor named); the step\'s own seeds/tests.');
+  // Fast invariant #43 OWNER-SPEC-DIFF (Spec 124 §5 R-BB) — surface the obligation now, not only
+  // when the commit hook refuses. An absent system map (fixture repos) is reported, never a throw.
+  const mapAbs = path.join(root, SYSTEM_MAP_REL);
+  if (!fs.existsSync(mapAbs)) {
+    log(`[cutover] owner specs (#43): system map absent (${SYSTEM_MAP_REL}) — cannot name them here`);
+  } else {
+    const owners = ownerSpecsFor(step.file, fs.readFileSync(mapAbs, 'utf8'));
+    log(`[cutover] owner specs this cutover commit must touch (#43 OWNER-SPEC-DIFF), or declare census spec_diff "N-A" + spec_diff_reason: ${owners.length ? owners.join(', ') : 'NONE named in the system map — N-A required'}`);
+  }
   if (failed.length) log(`[cutover] FAILED (reported): ${failed.join(', ')} — re-run them after the author steps above.`);
   return { step, changed, total, failed };
 }

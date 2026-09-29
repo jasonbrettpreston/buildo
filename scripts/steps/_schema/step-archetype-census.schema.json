@@ -93,8 +93,22 @@
           "type": "string",
           "minLength": 7,
           "description": "The commit-9 cutover SHA this row was converted at (short or full). Required whenever `status` is `\"converted\"`, forbidden otherwise — a retention claim carries the commit that makes it checkable."
+        },
+        "spec_diff": {
+          "const": "N-A",
+          "description": "Spec 124 §5 R-BB (fast invariant #43 OWNER-SPEC-DIFF, 2026-09-29). Declared ONLY on a retained converted row, in the cutover commit, when that commit deliberately touches none/some of the owner specs the system map names for this file. Requires spec_diff_reason. Replaces Spec 123 §7 row 9(b)'s commit-body \"N-A\" convention."
+        },
+        "spec_diff_reason": {
+          "type": "string",
+          "minLength": 20,
+          "description": "Why the owner specs need no diff (>= 20 chars, mirrored by NA_REASON_MIN in scripts/analysis/gates/owner-spec-diff.mjs). Requires spec_diff."
         }
-      }
+      },
+      "dependencies": {
+        "spec_diff": ["spec_diff_reason", "status"],
+        "spec_diff_reason": ["spec_diff"]
+      },
+      "$comment": "dependencies -> status works because status's enum is [\"converted\"] only (panel I-5): spec_diff is legal only on a retained converted row."
     }
   }
 }
