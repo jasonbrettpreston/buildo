@@ -1687,7 +1687,8 @@
             "source": {
               "type": "string",
               "minLength": 1,
-              "description": "Which compute variable feeds this counter. Retires the 9 distinct semantics measured for records_total."
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*(\\s*\\+\\s*[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)*$",
+              "description": "Which compute variable feeds this counter. Retires the 9 distinct semantics measured for records_total. 0x fold (library counter defect): a dotted path into {acquired, written, matched, cumulative, gate, records_meta}, or a SUM of dotted paths ('written.inserted + written.updated') — the closed grammar scripts/lib/step/index.js resolveCounterSource executes; any other expression is refused at load instead of silently resolving to null."
             },
             "scoped_by": {
               "description": "The outputs.writes[].key this counter counts, or \"step\" for a whole-step count. §11 counter scoping.",
@@ -2068,6 +2069,36 @@
                       "why": "only a declaration can decide whether the library throws; the WARN row is library-owned (Rule 10)"
                     }
                   },
+                  "target": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0x (RE-FREEZE #29, 2026-09-29). The outputs.writes[].table this PRIMARY external writes. Declared on EVERY primary of a multi-primary INGESTOR (two or more url-bearing primaries, each bound to its own write target) and absent on every single-primary one. A descriptor that declares it is dispatched to ingestPrimaries (scripts/lib/step/index.js), which runs runIngestPhase once per primary with its own prior sub-block (emits[0].skeleton[<id>]), its own gates and its own write transaction. The cross-array facts (every primary targeted, targets distinct, each a declared table, every write targeted, no lookup) are runtime refusals 0x B1-B9, because JSON Schema cannot relate two arrays.",
+                    "type": "string",
+                    "minLength": 1,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "rung (a) positional binding (primary i writes writes[i]) — implicit, which Rule 10 bans",
+                        "rung (a') writes[].external — puts the binding on the target side, but the external is what gets acquired",
+                        "rung (e) infer the target from compute.shapeRecord — compute-hidden"
+                      ],
+                      "why": "load_heritage acquires two CKAN datasets into two tables with independent skip and failure (DEC-K); an explicit per-primary binding is the only declared rung"
+                    }
+                  },
+                  "on_failure": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0x (RE-FREEZE #29, 2026-09-29). Requires `target`. The DECLARED posture of ONE primary of a multi-primary INGESTOR when its acquisition or write THROWS, or its pre_write gate aborts. Absent (or \"abort_step\") rethrows / stops the loop — today's behaviour. \"fail_row_continue\" records the primary as failed, emits ONE library-owned FAIL row (primary_failed:<id>, errored) and continues with the next primary (heritage DEC-K). \"warn_row_continue\" does the same with a WARN row (zoning's overlays). A RowConservationError and the step-level pre-loop privilege preflight are never caught; a per-primary privilege re-probe failure under a *_continue posture is caught and recorded as primary_failed:<id>. Separate from on_head_error, which keeps its HEAD-only meaning.",
+                    "enum": [
+                      "abort_step",
+                      "fail_row_continue",
+                      "warn_row_continue"
+                    ],
+                    "x-frozen": true,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "reuse on_head_error (HEAD-only, and step-scoped in meaning)",
+                        "a boolean required:true|false (cannot express FAIL-and-continue)",
+                        "catch in compute (the throw precedes compute)"
+                      ],
+                      "why": "only a declaration can decide whether the library rethrows; the row is library-owned (Rule 10)"
+                    }
+                  },
                   "key_property": {
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). For a record-bearing external (shapefile .dbf, CSV, GeoJSON properties): the SOURCE-SIDE attribute that becomes `outputs.writes[].key`. Declaring it is what lets a generic parser run without knowing the domain — and it makes an upstream rename (the #426 class) a descriptor diff instead of an undeclared constant inside a loader.",
                     "type": "string"
@@ -2205,6 +2236,39 @@
                       "not": {
                         "required": [
                           "url"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "x-rule": "0x (RE-FREEZE #29, M1a): on_failure is a multi-primary posture and requires target — on a single-primary step it would be declared and never read (R-AJ).",
+                    "if": {
+                      "required": [
+                        "on_failure"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "target"
+                      ]
+                    }
+                  },
+                  {
+                    "x-rule": "0x (RE-FREEZE #29, M1b): a targeted external is a PRIMARY — role \"lookup\" is a side-source joined inside shapeRecord and is never bound to a write target.",
+                    "if": {
+                      "required": [
+                        "target"
+                      ]
+                    },
+                    "then": {
+                      "not": {
+                        "properties": {
+                          "role": {
+                            "const": "lookup"
+                          }
+                        },
+                        "required": [
+                          "role"
                         ]
                       }
                     }
@@ -4439,6 +4503,33 @@
               }
             }
           }
+        }
+      }
+    },
+    {
+      "x-profile": "0x (RE-FREEZE #29, M2): a descriptor with a targeted external (a multi-primary INGESTOR) must declare execution.shape \"ingest\"; isIngestStep's url fallback (scripts/lib/step/index.js) must never decide which runner a multi-primary step reaches.",
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "properties": {
+              "reads": {
+                "type": "object",
+                "properties": {
+                  "externals": { "type": "array", "contains": { "type": "object", "required": ["target"] } }
+                },
+                "required": ["externals"]
+              }
+            },
+            "required": ["reads"]
+          }
+        },
+        "required": ["inputs"]
+      },
+      "then": {
+        "properties": {
+          "execution": { "type": "object", "required": ["shape"], "properties": { "shape": { "const": "ingest" } } }
         }
       }
     },

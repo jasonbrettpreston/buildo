@@ -73,7 +73,7 @@ const { resolveConfig, retiredVarRow } = require('./config');
 const staleness = require('./staleness');
 const acquire = require('./acquire');
 const write = require('./write');
-const { rowConservation } = require('./conservation');
+const { rowConservation, RowConservationError } = require('./conservation');
 const { finalizeStrandedRun } = require('../ledger-window');
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[] executor.
 // EP-D17 (WF3, 2026-09-10, C1/C4) — parseDurationMs resolves the step's own declared
@@ -231,12 +231,22 @@ async function assertDatabaseTarget(pool, descriptor) {
  */
 function resolveCounterSource(slot, scope) {
   if (!slot || slot === 'none' || typeof slot.source !== 'string') return null;
-  let node = scope;
-  for (const part of slot.source.split('.')) {
-    if (node == null || typeof node !== 'object') return null;
-    node = node[part];
+  // 0x fold (library counter defect): a DECLARED SUM of dotted paths ("written.inserted +
+  // written.updated") — the closed grammar step.schema.json's counter.source pattern admits.
+  // Every term must resolve to a finite number; one absent term makes the whole sum null
+  // ("not counted"), never a partial sum.
+  let total = 0;
+  for (const term of slot.source.split('+').map((t) => t.trim())) {
+    if (term === '') return null;
+    let node = scope;
+    for (const part of term.split('.')) {
+      if (node == null || typeof node !== 'object') return null;
+      node = node[part];
+    }
+    if (typeof node !== 'number' || !Number.isFinite(node)) return null;
+    total += node;
   }
-  return typeof node === 'number' && Number.isFinite(node) ? node : null;
+  return total;
 }
 
 /**
@@ -635,6 +645,267 @@ function ledgerPipelineName(descriptor, chainId) {
   return chain ? `${chain}:${descriptor.identity.name}` : descriptor.identity.name;
 }
 
+// ── MULTI-PRIMARY INGESTOR (0x, RE-FREEZE #29) ──────────────────────────────────────
+// A descriptor is multi-primary when some `inputs.reads.externals[]` entry carries a
+// STRING `target`. Such a step is dispatched by runWithPool to ingestPrimaries, which
+// acquires each primary and writes it to the `outputs.writes[].table` its `target`
+// names. Every refusal below fires BEFORE any pool or network call, so a mis-declared
+// descriptor costs nothing but the throw — the same "no network on a bad declaration"
+// property the `writes.length` and one-url-bearing-primary guards hold above the HEAD.
+function isMultiPrimary(descriptor) {
+  const ex = descriptor && descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.externals;
+  return Array.isArray(ex) && ex.some((e) => e && typeof e.target === 'string');
+}
+
+function multiPrimaryBinding(descriptor, tag) {
+  const refuse = (code, msg) => { throw new Error(`${tag} multi-primary INGESTOR (0x ${code}): ${msg}`); };
+  const externals = descriptor.inputs.reads.externals;
+  const writes = descriptor.outputs.writes;
+  const emit = emitsList(descriptor)[0] || null;
+  const seen = new Set();
+  for (const e of externals) {
+    if (seen.has(e.id)) refuse('B8', `the external id "${e.id}" is declared twice; ids key acquired.primaries and the emit sub-block.`);
+    seen.add(e.id);
+    if (e.role === 'lookup') refuse('B5', `the external "${e.id}" is role "lookup"; a multi-primary step declares primaries only.`);
+  }
+  if (externals.length < 2) refuse('B7', `"${externals.map((e) => e.id).join('", "')}" declares target but a multi-primary step needs two or more primaries; a single primary declares no target.`);
+  const tables = writes.map((w) => w.table);
+  const byTarget = new Map();
+  const pairs = [];
+  for (const e of externals) {
+    if (typeof e.target !== 'string' || e.target.length === 0) refuse('B1', `the primary "${e.id}" declares no target; every primary of a multi-primary step names its outputs.writes[].table.`);
+    if (!tables.includes(e.target)) refuse('B2', `the primary "${e.id}" targets "${e.target}", which is not a declared outputs.writes[].table (${tables.join(', ')}).`);
+    if (byTarget.has(e.target)) refuse('B3', `the primaries "${byTarget.get(e.target)}" and "${e.id}" both target "${e.target}".`);
+    byTarget.set(e.target, e.id);
+    const hasUrl = typeof e.url === 'string' && e.url.length > 0;
+    if (!hasUrl || Object.prototype.hasOwnProperty.call(e, 'path') || e.format === 'xlsx') {
+      refuse('B9', `the primary "${e.id}" must be url-bearing, carry no path and not be xlsx (filesystem and lookup arms have no multi-primary consumer; lifting this returns the 0fs A3/G3 refusals to the never-caught set).`);
+    }
+    const sub = emit && emit.skeleton && emit.skeleton !== 'none' ? emit.skeleton[e.id] : undefined;
+    if (!sub || typeof sub !== 'object') refuse('B6', `emits[0].skeleton["${e.id}"] must be an object: it is the primary's own prior/skip sub-block.`);
+    pairs.push({ external: e, writeSpec: writes.find((w) => w.table === e.target), onFailure: e.on_failure || 'abort_step' });
+  }
+  for (const w of writes) {
+    if (!byTarget.has(w.table)) refuse('B4', `the write target "${w.table}" is targeted by no primary; it would be declared and left empty.`);
+  }
+  return pairs;
+}
+
+// ── ingestPrimaries (0x) ─────────────────────────────────────────────────────
+// WHY NARROWING: `runIngestPhase` drives exactly ONE write target and one primary's
+// worth of acquire/validate/write, so it is handed an ORDINARY single-primary
+// descriptor — one txn per target, one emit sub-block, its own failure posture. The
+// narrowing is done here rather than by teaching `runIngestPhase` about multi-primary
+// semantics: its body, its refusals and its ordering guarantees are untouched. The
+// staleness triggers are narrowed by `t.external` because `triggersAt` filters by
+// position only — an un-narrowed trigger list would let primary B's trigger answer
+// for primary A. The ONE privilege preflight (`assertWritePrivileges`) is deliberately
+// OUTSIDE the loop: it is the uncaught, once-per-step pool query the 0x freezing ruling
+// requires, so a step that cannot write fails before any primary is acquired. Each narrowed
+// runIngestPhase call re-probes (write.js iterates guards.requires); a failure of THAT
+// re-probe under a *_continue posture is caught like any other throw and recorded as
+// primary_failed:<id> — only the pre-loop preflight is never caught.
+async function ingestPrimaries(args) {
+  const { descriptor, pool, compute, log, tag, preWriteGate } = args;
+  const pairs = multiPrimaryBinding(descriptor, tag);
+  for (const { external, writeSpec } of pairs) {
+    if (external.format === 'csv' && typeof compute.shapeRecord !== 'function') {
+      throw new Error(`${tag} the primary "${external.id}" declares format "csv", so this INGESTOR must export shapeRecord(record) (0x pre-loop check: refused before any primary is acquired).`);
+    }
+    if (writeSpec.write_discipline && writeSpec.write_discipline.set_source === 'compute' && typeof compute.buildWriteSql !== 'function') {
+      throw new Error(`${tag} the write target "${writeSpec.table}" declares write_discipline.set_source "compute", so this INGESTOR must export buildWriteSql (0x pre-loop check).`);
+    }
+  }
+  await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  const emit = emitsList(descriptor)[0];
+  const triggers = descriptor.staleness ? descriptor.staleness.trigger : undefined;
+  const results = [];
+  let stopped = false;
+  for (const { external, writeSpec, onFailure } of pairs) {
+    const id = external.id;
+    const base = { id, target: writeSpec.table, onFailure };
+    if (stopped) { results.push(base); continue; }
+    const narrowed = {
+      ...descriptor,
+      inputs: { ...descriptor.inputs, reads: { ...descriptor.inputs.reads, externals: [external] } },
+      outputs: { ...descriptor.outputs, writes: [writeSpec] },
+      emits: [{ ...emit, skeleton: emit.skeleton[id] }],
+      staleness: Array.isArray(triggers)
+        ? { ...descriptor.staleness, trigger: triggers.filter((t) => t.external === undefined || t.external === null || t.external === id) }
+        : descriptor.staleness,
+    };
+    try {
+      const out = await runIngestPhase({
+        ...args,
+        descriptor: narrowed,
+        subKey: id,
+        preWriteGate: preWriteGate ? (s) => preWriteGate({ ...s, primary: id }) : null,
+      });
+      results.push({ ...base, out });
+      if (onFailure === 'abort_step' && out.writeSkipped && Array.isArray(out.failedPreWrite)) stopped = true;
+    } catch (err) {
+      if (onFailure === 'abort_step' || err instanceof RowConservationError) throw err;
+      log.error(tag, `primary "${id}" failed under on_failure "${onFailure}"; continuing with the next primary: ${err.message}`);
+      results.push({ ...base, error: err.message });
+    }
+  }
+  return aggregatePrimaries(results, { emitKey: emit ? emit.key : null, overrides: staleness.resolveOverrides(descriptor) });
+}
+
+// ── aggregatePrimaries (0x) ──────────────────────────────────────────────────
+// Folds the per-primary results of `ingestPrimaries` into the ONE result shape
+// `runWithPool` already reads. `results[]` items are `{id, target, onFailure, out?, error?}`;
+// an item with neither `out` nor `error` was never reached (an earlier `abort_step` stopped it).
+// PURE: no I/O, no library-namespace call.
+function aggregatePrimaries(results, base) {
+  const primaries = {};
+  const byTarget = {};
+  const sums = { inserted: 0, updated: 0, deleted: 0, rows_scanned: 0, rows_changed: 0 };
+  const prior = {};
+  const headErrors = [];
+  const failedPreWrite = [];
+  const failedPreWriteWarn = [];
+  let writeSkippedPreWriteWarn = false;
+  let priorError = null;
+  let overrides;
+  for (const r of results) {
+    const o = r.out;
+    if (!o) {
+      primaries[r.id] = r.error !== undefined
+        ? { outcome: 'failed', error: r.error, target: r.target, on_failure: r.onFailure }
+        : { outcome: 'not_reached', target: r.target, on_failure: r.onFailure };
+      continue;
+    }
+    if (overrides === undefined) overrides = o.overrides;
+    prior[r.id] = o.prior;
+    if (!priorError && o.priorError) priorError = o.priorError;
+    const acq = o.acquired || {};
+    if (acq.head_error) headErrors.push(`${r.id}: ${acq.head_error}`);
+    const entry = { ...acq, reason: o.reason, target: r.target, on_failure: r.onFailure };
+    if (o.skipped) {
+      entry.outcome = 'skipped';
+      entry.signal = o.signal;
+      entry.emitBlock = o.emitBlock;
+    } else if (o.writeSkipped) {
+      entry.outcome = 'write_skipped';
+      if (Array.isArray(o.failedPreWrite)) {
+        entry.failed_pre_write = o.failedPreWrite;
+        if (r.onFailure === 'abort_step') failedPreWrite.push(...o.failedPreWrite.map((c) => `${r.id}:${c}`));
+      }
+      if (o.writeSkippedPreWriteWarn) {
+        writeSkippedPreWriteWarn = true;
+        failedPreWriteWarn.push(...(o.failedPreWriteWarn || []).map((c) => `${r.id}:${c}`));
+      }
+    } else {
+      entry.outcome = 'loaded';
+      for (const k of Object.keys(sums)) sums[k] += Number(o.written && o.written[k]) || 0;
+    }
+    primaries[r.id] = entry;
+    if (o.written) byTarget[r.target] = o.written;
+  }
+  return {
+    skipped: false,
+    reason: 'multi_primary',
+    ...(failedPreWrite.length ? { failedPreWrite } : {}),
+    ...(writeSkippedPreWriteWarn ? { writeSkippedPreWriteWarn: true, failedPreWriteWarn } : {}),
+    acquired: { primaries, head_error: headErrors.length ? headErrors.join('; ') : null },
+    written: {
+      ...sums,
+      unchanged: Object.values(byTarget).reduce((n, w) => n + (Number(w && w.unchanged) || 0), 0),
+      delete_skipped_empty_guard: Object.values(byTarget).some((w) => w && w.delete_skipped_empty_guard === true),
+      ...(Object.values(byTarget).some((w) => w && w.write_skipped_pre_write_fail === true) ? { write_skipped_pre_write_fail: true } : {}),
+      ...(Object.values(byTarget).some((w) => w && w.write_skipped_pre_write_warn === true) ? { write_skipped_pre_write_warn: true } : {}),
+      by_target: byTarget,
+    },
+    prior,
+    priorError,
+    overrides: overrides === undefined ? base.overrides : overrides,
+    emitKey: base.emitKey,
+    emitBlock: null,
+  };
+}
+
+/**
+ * INGESTOR prerequisite 0x (RE-FREEZE #29) — ONE row per primary that FAILED under a
+ * `*_continue` posture, said out loud ON THE AUDIT TABLE.
+ *
+ * `external[].on_failure: "fail_row_continue" | "warn_row_continue"` (0x) makes a
+ * multi-primary INGESTOR record a primary whose acquisition/write THREW and carry on with
+ * the next one. `ingestPrimaries` logs and `aggregatePrimaries` records `outcome:"failed"`
+ * (or `outcome:"write_skipped"` with `failed_pre_write`, when that primary's own pre_write
+ * gate aborted — the same refusal the single-primary `preWriteAbortRows` renders), but until
+ * this fold NOTHING put either on the run's own record: the step ended `completed`/PASS over
+ * a primary that was never loaded. A log line is not observability.
+ *
+ * Rule 10: the row is LIBRARY-owned, never step-declared, because only the library that
+ * swallowed the throw can be trusted to report it. Row-derived cascade, exactly the
+ * `preWriteAbortRows`/`preWriteSkipRows` idiom: a `fail_row_continue` primary is FAIL with
+ * `errored: true` — a refused acquisition is not a priced anomaly an operator could have
+ * looked at and accepted, so `override.accept_anomaly` must not be able to switch the run
+ * green over it — and a `warn_row_continue` primary is WARN with `errored` deliberately
+ * ABSENT (a DECLARED posture). No new boolean and no second derivation either way.
+ *
+ * NOT a row for an `abort_step` primary: its abort is `preWriteAbortRows`' row and its throw
+ * fails the step outright. NOT a row for a `skip_write` WARN (`preWriteSkipRows` renders it)
+ * nor for a healthy primary. Absent entirely on every single-primary run — no run declares
+ * `on_failure` without `target`, so `acquired.primaries` is absent there and a healthy
+ * audit table is unchanged, byte for byte.
+ *
+ * @param {Array<{acquired?:{primaries?:Object<string,{outcome?:string,error?:string,on_failure?:string,failed_pre_write?:string[]}>}}|null>} phaseResults - the per-shape runner results
+ * @returns {Array<object>} one row per failed `*_continue` primary, in declaration order
+ */
+function primaryFailureRows(phaseResults) {
+  const rows = [];
+  for (const p of phaseResults || []) {
+    const primaries = p && p.acquired && p.acquired.primaries;
+    if (!primaries || typeof primaries !== 'object') continue;
+    for (const [id, e] of Object.entries(primaries)) {
+      const aborted = e.outcome === 'write_skipped' && Array.isArray(e.failed_pre_write);
+      if (e.on_failure === 'abort_step' || (e.outcome !== 'failed' && !aborted)) continue;
+      const fail = e.on_failure === 'fail_row_continue';
+      rows.push({
+        metric: `primary_failed:${id}`,
+        value: aborted ? `pre_write aborted: ${e.failed_pre_write.join(', ')}` : `failed: ${e.error}`,
+        threshold: `primary "${id}" acquires and writes (on_failure "${e.on_failure}" continues past it)`,
+        status: fail ? 'FAIL' : 'WARN',
+        source: 'gate',
+        ...(fail ? { errored: true } : {}),
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * Multi-primary skips have to re-emit, not just report (0x OUTPUT-panel fold).
+ *
+ * The single-primary path re-stamps the prior run's declared block on a gated skip
+ * (DS4) so the sub-block survives into `records_meta`. A multi-primary run can skip
+ * ONE primary while its siblings load, and each skip is decided per primary, so the
+ * same re-emit has to be done per skipped primary — otherwise that primary's prior
+ * sub-block is simply lost and the next run reloads what it already had.
+ *
+ * Loaded primaries are deliberately NOT handled here: their sub-blocks are the
+ * compute's own to write, and duplicating them would let a stale file win over a
+ * fresh one. This function only folds the skipped primaries' `acquired.…emitBlock`
+ * (built by acquire.js) into the run's own `records_meta[emitKey]`, merging over
+ * whatever the compute already returned under that key. Pure, no I/O.
+ *
+ * @param {object|null} ingest        `acquired.primaries[id].outcome/emitBlock`, `emitKey`
+ * @param {object|null} computeResult the compute's result, may carry `records_meta`
+ * @returns {object} `{}`, or `{ [emitKey]: { …own, [id]: emitBlock } }` for the skips
+ */
+function multiPrimarySkipEmit(ingest, computeResult) {
+  const primaries = ingest && ingest.acquired && ingest.acquired.primaries;
+  if (!primaries || typeof primaries !== 'object' || !ingest.emitKey) return {};
+  const skipped = Object.entries(primaries)
+    .filter(([, e]) => e && e.outcome === 'skipped' && e.emitBlock && typeof e.emitBlock === 'object');
+  if (skipped.length === 0) return {};
+  const meta = computeResult && computeResult.records_meta;
+  const own = meta && meta[ingest.emitKey] && typeof meta[ingest.emitKey] === 'object' ? meta[ingest.emitKey] : {};
+  return { [ingest.emitKey]: { ...own, ...Object.fromEntries(skipped.map(([id, e]) => [id, e.emitBlock])) } };
+}
+
 /**
  * The ACQUIRE → VALIDATE → WRITE phase (ruling A-1(b)).
  *
@@ -656,7 +927,7 @@ function ledgerPipelineName(descriptor, chainId) {
  *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey }) {
   // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
   // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
   // departure DELETE. A second declared target would be acquired for, gated over and then
@@ -665,6 +936,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // several? whose keys does the departure DELETE scope by?); until it exists the throw
   // names the tables rather than letting the descriptor claim something the runner
   // does not do. This fires BEFORE the HEAD, so a mis-declared step costs no network.
+  // 0x (RE-FREEZE #29) answers that question for a TARGETED descriptor: `ingestPrimaries`
+  // calls this function once per primary with `writes: [its target]` — several txns, each
+  // call's own plan scoping its own departure DELETE — so this throw now fences only an
+  // untargeted descriptor (the step-library "Fold D" lock pins it).
   const writes = descriptor.outputs.writes;
   if (writes.length !== 1) {
     throw new Error(`${tag} the INGESTOR archetype drives exactly ONE write target, and this descriptor declares `
@@ -687,8 +962,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // ⚠️ "EXACTLY ONE" IS A RUNTIME REFUSAL, NOT A SCHEMA maxItems (Fold CF-3, 2026-09-25).
   // 3.4 `load_heritage` legitimately declares TWO url-bearing PRIMARIES for two targets;
   // enforcing that here as a schema cap would make heritage's widening a schema RE-FREEZE
-  // plus an enum churn. As a named runtime refusal it is lifted by deleting these four
-  // lines and adding a per-primary target binding — one field, zero enum churn — while a
+  // plus an enum churn. 0x (RE-FREEZE #29) KEPT the refusal as the fence for an UNtargeted
+  // descriptor: a multi-primary step declares `externals[].target` on every primary and
+  // runWithPool dispatches it to `ingestPrimaries`, which calls this function once per
+  // primary with a one-external narrowed descriptor — one field, zero enum churn — while a
   // mis-declared descriptor still costs no network, exactly as the `writes.length` guard
   // and the `shapeRecord` format check refuse above the HEAD. The throw names the ids
   // because ids are what the reader must go and fix.
@@ -727,7 +1004,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
         primaries.length === 0
           ? 'A URL-bearing external with role "lookup" is a side-source and never the primary; declare the feature source with no role.'
           : 'Before 0w a `.find` here silently ignored every url-bearing external after the first — declared, never fetched, and the run green over it.'
-      } Multiple primaries are a runtime refusal, not a schema cap (Fold CF-3): 3.4 load_heritage lifts this throw by binding each primary to its own write target.`);
+      } Multiple primaries are a runtime refusal, not a schema cap (Fold CF-3): a multi-primary step declares externals[].target on every primary and is dispatched to ingestPrimaries (0x, RE-FREEZE #29) before this line.`);
   }
   const external = primaries[0];
   // 0fs (G3): an absent operator file must land ITS OWN terminal, never a fallback one.
@@ -933,9 +1210,15 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // absent default) and proceed-and-say-so (`warn_row`, which owes the audit row
   // below). Neither is silent.
   const posture = staleness.priorRunErrorPosture(descriptor);
-  const { prior, error: priorError } = await staleness.readPriorEmitWithPosture(
+  const { prior: priorBlock, error: priorError } = await staleness.readPriorEmitWithPosture(
     pool, ledgerPipelineName(descriptor, chainId), emitKey, posture,
   );
+  // 0x (RE-FREEZE #29): a multi-primary call (ingestPrimaries) passes its primary id as
+  // `subKey` and gates against ITS OWN sub-block of the prior emit; a single-primary call
+  // passes none, so `prior` is the very same object as before (byte-identical path).
+  const prior = subKey === undefined
+    ? priorBlock
+    : (priorBlock && typeof priorBlock[subKey] === 'object' ? priorBlock[subKey] : null);
   if (priorError) {
     log.warn(tag, `prior-run read failed under posture "${posture}" — continuing with NO baseline: ${priorError.message}`);
   }
@@ -5340,7 +5623,8 @@ async function runWithPool(runnable, pool, ctx) {
           stepCtx.checks = stepCtx.checks.filter((id) => onlyChecks.has(id));
         }
       } else if (isIngestStep(descriptor)) {
-        ingest = await runIngestPhase({
+        // 0x (RE-FREEZE #29): a descriptor with a targeted external is multi-primary.
+        ingest = await (isMultiPrimary(descriptor) ? ingestPrimaries : runIngestPhase)({
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
@@ -5351,6 +5635,9 @@ async function runWithPool(runnable, pool, ctx) {
         stepCtx.prior = ingest.prior;
         stepCtx.overrides = ingest.overrides;
         stepCtx.gate = { skipped: ingest.skipped, reason: ingest.reason };
+        // 0x fold (library counter defect): the run's own elapsed time, exactly as every
+        // sibling branch supplies it — before this line every INGESTOR emitted duration_ms 0.
+        stepCtx.elapsed_ms = Date.now() - startMs;
         if (ingest.skipped) {
           // A GATED SKIP still reports every `when: "pre"` check, so the run says
           // WHY it was allowed to skip instead of emitting a bare SKIPPED row. The
@@ -5647,6 +5934,9 @@ async function runWithPool(runnable, pool, ctx) {
         // Prerequisite 0r (Fold IC-1) — the DECLARED HEAD-failure posture, said out loud as a
         // WARN (§headErrorRows). Absent on the default "fail_step" and on every healthy run.
         ...headErrorRows([ingest]),
+        // 0x (RE-FREEZE #29) — a multi-primary step's per-primary failure under a declared
+        // `*_continue` on_failure, said out loud (§primaryFailureRows). Absent otherwise.
+        ...primaryFailureRows([ingest]),
         // EP-PHASE-DEADLINE / EP-PASS3-BACKLOG Observability fold — the deadline abort and
         // the fail-open retirement failure, each said out loud on the audit table rather
         // than only in a log line. Both absent on every healthy run.
@@ -5763,6 +6053,9 @@ async function runWithPool(runnable, pool, ctx) {
         // skip — but it returns `records_meta: {}` when `ctx.written` is null, so it
         // contributes no block of its own and this one is not overwriting anything.
         ...(ingest && ingest.skipped && ingest.emitKey ? { [ingest.emitKey]: ingest.emitBlock } : {}),
+        // 0x (OUTPUT-panel fold) — a multi-primary run re-emits each SKIPPED primary's prior
+        // sub-block over the compute's block (§multiPrimarySkipEmit); {} for a single primary.
+        ...multiPrimarySkipEmit(ingest, computeResult),
         // LG-15 / G-13 — a gated skip re-stamps the SAME self-consumed producer field
         // (`threshold_updated_at`-shaped: whatever the config_version trigger's emit_key
         // names) from the prior run's own block, so the NEXT run's config_version diff
@@ -5998,6 +6291,12 @@ module.exports = {
   preWriteAbortRows,
   preWriteSkipRows,
   headErrorRows,
+  // 0x (RE-FREEZE #29) — the multi-primary INGESTOR dispatcher and its pure helpers.
+  isMultiPrimary,
+  multiPrimaryBinding,
+  ingestPrimaries,
+  aggregatePrimaries,
+  primaryFailureRows,
   phaseDeadlineRows,
   scopeRetireFailureRows,
   makePreWriteGate,
