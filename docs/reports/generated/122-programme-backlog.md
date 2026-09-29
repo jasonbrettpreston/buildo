@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **127**
+Total items: **129**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 27 |
+| ⬜ NOT_STARTED | 29 |
 | ⚠️ PARTIAL | 16 |
 | ✅ BUILT | 80 |
 | ⏭️ SUPERSEDED | 4 |
@@ -28,10 +28,12 @@ Total items: **127**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (21)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (23)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
+| `LDG-10` | 122 §6 / 124 R-AQ.1 | Cross-step ledger COMPLETE for the sources chain — proven by a gate, not assumed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — cross-step ledger completeness gate (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
+| `CHAIN-TOOLING` | 124 chain completion (e) | Chain completion (e): tooling integration — new gates wired into hooks within a speed budget, preflight shows chain status, cloud:pre covers every seed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — chain tooling integration (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
 | `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |

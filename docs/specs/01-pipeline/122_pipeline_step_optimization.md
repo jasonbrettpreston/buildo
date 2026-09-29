@@ -1024,6 +1024,36 @@ What actually stands between "reorder the array" and "silently wrong data":
 
 **MOVED to `122a_step_optimization_appendix.md` ## Appendix §A10 — The claim that replaces #145 (moved from Spec 122 §6) — HISTORICAL, 2026-09-10 — 2026-09-10 (Spec 124 §4 R-I(4)).** Historical; Claim-register bookkeeping (Spec 120 claim #145 vs its replacement) — a one-time disposition record, not live standard text.
 
+### 6.6 Completeness is gated, not assumed — chain completion (operator ruling 2026-09-29)
+
+**A chain is COMPLETE only when four conditions hold, and each is a mechanical gate with a closed PASS/FAIL answer — the register row is Spec 124 §5 R-BC.**
+
+**(a) Conversion.** Every slug in `manifest.chains.<chain>` has its `manifest.scripts[slug].file` present in `scripts/steps/_schema/converted.json`'s `converted[]` (the array holds file paths, not slugs), except a row declared in `scripts/steps/_schema/step-archetype-census.json`'s `exemptions[]`. The exemption classes today are `python_step_excluded`, `no_file` and `runner_owned`.
+
+**(b) Ledger silence.** Zero rows in `scripts/steps/_schema/standard-gates-ledger.json` whose `step` is one of the chain's steps.
+
+**(c) Cross-step ledger PROVEN complete for the chain** — this section's subject.
+
+**(d) Cloud acceptance.** The per-slug ACC-1 table for every chain step (Spec 124 R-AQ.1; the flip clause of programme item `EP-PIN-D17`).
+
+The mechanical approach for **(c)** is programme item `LDG-10` (`scripts/steps/_schema/programme-items.json`, status NOT_STARTED, gate kind `cutover_prereq`, blocking every census `C6` slug). One check per §6.1 edge class, proven in both directions on fixtures:
+
+- **Table edges** — every step's declared `inputs.reads`/`outputs.writes` reconcile with runtime lineage (`records_meta.pipeline_meta`, the §6.0 ① generator's source) with ZERO undeclared reads/writes; §6.1's two proven `telemetry_tables` omissions are the red cases this must catch.
+- **`records_meta` contracts** — gate D's completeness scan (`scripts/analysis/gates/consumer-registry.mjs`, fast invariant #31 — today scoped to `records_meta` keys and `audit_table` metrics; the table-reader half is LDG-10's widening) finds zero undeclared readers of any chain table or `records_meta` key, INCLUDING readers outside the chain (e.g. `enrich_wsib`, the lead feed, admin routes).
+- **Version pins / watermarks** — every cross-step stamp read (§6.3) is declared in the reading step's `staleness`.
+- **Invalidation** — every derived join key has a declared invalidator (§6.4, claim #54). Re-verify §6.4a's centroid gap: `migrations/245_parcels_centroid_geom_invalidation.sql` adds a fourth arm to migration 242's trigger function that NULLs `centroid_lat`/`centroid_lng` on an `IS DISTINCT FROM` geometry change (lines 81–82), so the gap looks closed at the code level; LDG-10 must prove it, not assume it. §6.4's `*_dataset_version_when_enriched` asymmetry (loader-only invalidation) is not covered by 245 and stays in scope.
+- **Ordering** — chain order is DERIVED from declared edges and checked against `manifest.chains`, replacing the hand-written `indexOf` assertions in `src/tests/chain.logic.test.ts` (§6.5, one of them wrong).
+
+**Why this is the shape of the claim.** §6.1 says all five classes are real and none is fully machine-readable; only the `records_meta` class is enforced end-to-end today (gates C and D); table edges are cross-checked only for converted producers against the committed lineage snapshot (LDG-4, `src/tests/step-conformance.infra.test.ts`). "Complete" asserted without a gate is exactly the tier-0 claim Spec 119 §4.6 calls a finding.
+
+**Measured state at ruling time, sources chain, 28 slugs:** 4 unconverted (`load_heritage`, `enrich_centreline`, `load_wsib`, `load_zoning`), 1 exempt (`reconcile`, `runner_owned`); 160 ledger rows name sources steps (129 `pending_remediation`, 31 `pending_recapture`); LDG-10 NOT_STARTED; EP-PIN-D17 PARTIAL. So sources is **not complete on any of the four**.
+
+**APPENDED 2026-09-29 (operator) — a fifth condition and a strict-zero ruling (Spec 124 §5 R-BC, appended).** The "four conditions" above now read five: (a)–(e).
+
+- **(e) Tooling integrated** — programme item `CHAIN-TOOLING`, checked once at chain end, must not slow anything. Four mechanical parts: (1) every fast invariant / generated-artifact drift check the chain introduced (e.g. #43 OWNER-SPEC-DIFF) runs at pre-commit, locked by extending `src/tests/hooks-composition.infra.test.ts` — no new machinery; (2) pre-commit stays FILE-ONLY (no DB, no network — DB checks live in `npm run test:db` / `npm run cloud:pre`) and its measured wall time stays within Spec 124 R-BC's budget (≤ +10% vs the chain-start baseline, measured before/after); (3) `node scripts/ai-env-check.mjs` prints one registry-derived status line per chain (converted count, open ledger rows, LDG-10, cloud acceptance); (4) `cloud:pre`'s `seed_rows_present` covers every key in `scripts/seeds/logic_variables.json`, not only converted descriptors' declared vars.
+
+**Strict zero — the ledger for (c) takes no allowlist either.** (b) admits no standard-gates-ledger row of any disposition, pending or permanent. LDG-10 has NO allowlist and NO exception file: zero undeclared edges in every one of the five §6.1 classes. An edge that truly cannot be declared is closed by changing the descriptor or the gate (a Spec 124 §5 row + an `Operator-Ruling:` commit trailer), never by an excuse row. This is the same R-X closing-row posture `scripts/analysis/gates/ledger.mjs` already applies to gate rows, taken to its end state. (Grounded 2026-09-29: the trailer is NEW — zero `Operator-Ruling:` trailers in the last 300 commits and no hook reads one yet; there is no invariant "#42 defect-prefix" — the nearest gate is #36 DEFECT-ID-UNIQUENESS; #43 already runs at pre-commit via `step-validate.mjs --staged --fast`; no pre-commit wall-time baseline is recorded anywhere yet, so CHAIN-TOOLING takes the first measurement.)
+
 ## 7. The validator, baked in
 
 **Spec 120 §5 is inherited MOSTLY unchanged, §5.0 is SUPERSEDED, and this WF adds fields Spec 120 never had (R-T addendum commit 7, 2026-08-30).** Inherited: one record type plus a `kind` discriminator, `pop == 0 → INFO` as a non-configurable fence, magnitude floors rather than existence floors, the CLEAN sampler, self-retiring baselines, `freshness` distinguishing `UNKNOWN` from fresh. **§5.0's "12 named check types" promise never shipped as its own mechanism** — `checks[]` (9 named kinds + free-form SQL, §12.5/R6) covers the same ground through the already-built vocabulary (programme item `VAL-1`, `SUPERSEDED`; Spec 120 §5.0's own note amended to match). **New, added by this WF, absent from Spec 120 entirely:** `invariants[]`/`plausibility[]` (Spec 124 §2 Rule 13's DATA half — `frequency`/`when`/`source`-tagged bound-doctrine checks, `last_measured` with a companion `sample_n`), the seam-validation pass (§5.6/Spec 124 §8's layer table), chain-end synthesis automation, and `records_meta.chain_run_id` (R-U).
