@@ -2009,6 +2009,26 @@
       "group": "Pipeline Staleness Thresholds"
     }
   },
+  "run_stranded_after_minutes": {
+    "default": 120,
+    "type": "number",
+    "description": "Minutes a pipeline_runs row may stay running before scripts/reconcile-runs.js (Spec 122 §7.4) may reap it as crashed — the floor: nothing younger is ever reaped. A row past this is still spared while its records_meta.last_heartbeat_at is within run_heartbeat_fresh_minutes. Replaces the retired RECONCILE_STRANDED_AFTER_MINUTES env var (default 120 unchanged). on_invalid fail (gate B semantics, enforced by reconcile's own Zod schema — reconcile has no descriptor): an out-of-bounds value throws before the advisory lock and nothing is reaped; a missing row reaps on this default and emits a rule_source FAIL row.",
+    "min": 30,
+    "max": 10080,
+    "admin": {
+      "group": "Pipeline Staleness Thresholds"
+    }
+  },
+  "run_heartbeat_fresh_minutes": {
+    "default": 30,
+    "type": "number",
+    "description": "Minutes within which a running pipeline_runs row's records_meta.last_heartbeat_at counts as fresh. scripts/reconcile-runs.js spares such a row (and its chain_<id> parent row) past run_stranded_after_minutes. Keep at least 2x the largest *_heartbeat_minutes — reconcile emits a heartbeat_window_margin WARN otherwise. on_invalid fail (gate B semantics, enforced by reconcile's own Zod schema — reconcile has no descriptor): an out-of-bounds value throws before the advisory lock and nothing is reaped; a missing row reaps on this default and emits a rule_source FAIL row.",
+    "min": 10,
+    "max": 1440,
+    "admin": {
+      "group": "Pipeline Staleness Thresholds"
+    }
+  },
   "staleness_max_days_stale": {
     "default": 60,
     "type": "number",

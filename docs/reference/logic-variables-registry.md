@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (618) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (620) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **624** logic variables (618 numeric, 6 JSONB).
+Total: **626** logic variables (620 numeric, 6 JSONB).
 
 ---
 
@@ -599,6 +599,8 @@ Total: **624** logic variables (618 numeric, 6 JSONB).
 | `reno_coa_uplift_pct` | numeric | 0.05 | 0 – 1 | — | seed | group: Cost Tuning | Spec 65 §6 (Phase 2) — CoA variance uplift on the by-law max-build GFA: max_newbuild_coa_gfa_sqm = max_buildable_gfa_sqm × (1 + this). CONSUMED by enrich-parcels.js (scenario pass). Operator-tunable calibration heuristic. |
 | `reno_kitchen_gfa_pct` | numeric | 0.15 | 0.01 – 1 | — | seed | group: Cost Tuning | Spec 65 §6 (Phase 2) — kitchen-reno floor area as a fraction of the current-home GFA (cur_est_kitchen_gfa_sqm). CONSUMED by enrich-parcels.js. Operator-tunable. |
 | `road_overlay_distance_m` | numeric | 5 | 0 – 100 | — | seed | group: Source Ingestion | Distance (metres) for the LineString zoning-overlay spatial join (Policy Road, Priority Retail). SEEDED by Spec 58 load-zoning; CONSUMED by enrich-parcels.js (pilot 9 commit 9 cutover, 2026-09-08) via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg). |
+| `run_heartbeat_fresh_minutes` | numeric | 30 | 10 – 1440 | — | seed | group: Pipeline Staleness Thresholds | Minutes within which a running pipeline_runs row's records_meta.last_heartbeat_at counts as fresh. scripts/reconcile-runs.js spares such a row (and its chain_<id> parent row) past run_stranded_after_minutes. Keep at least 2x the largest *_heartbeat_minutes — reconcile emits a heartbeat_window_margin WARN otherwise. on_invalid fail (gate B semantics, enforced by reconcile's own Zod schema — reconcile has no descriptor): an out-of-bounds value throws before the advisory lock and nothing is reaped; a missing row reaps on this default and emits a rule_source FAIL row. |
+| `run_stranded_after_minutes` | numeric | 120 | 30 – 10080 | — | seed | group: Pipeline Staleness Thresholds | Minutes a pipeline_runs row may stay running before scripts/reconcile-runs.js (Spec 122 §7.4) may reap it as crashed — the floor: nothing younger is ever reaped. A row past this is still spared while its records_meta.last_heartbeat_at is within run_heartbeat_fresh_minutes. Replaces the retired RECONCILE_STRANDED_AFTER_MINUTES env var (default 120 unchanged). on_invalid fail (gate B semantics, enforced by reconcile's own Zod schema — reconcile has no descriptor): an out-of-bounds value throws before the advisory lock and nothing is reaped; a missing row reaps on this default and emits a rule_source FAIL row. |
 | `score_tier_elite` | numeric | 80 | 51 – 100 | `scripts/compute-opportunity-scores.js` | seed | group: Scoring Tiers | Minimum opportunity_score (0-100) for a lead to be classified as 'elite' tier in the scoring distribution telemetry |
 | `score_tier_moderate` | numeric | 20 | 1 – 79 | `scripts/compute-opportunity-scores.js` | seed | group: Scoring Tiers | Minimum opportunity_score (0-100) for a lead to be classified as 'moderate' tier (below strong) in the scoring distribution telemetry; scores below this are 'low' |
 | `score_tier_strong` | numeric | 50 | 21 – 99 | `scripts/compute-opportunity-scores.js` | seed | group: Scoring Tiers | Minimum opportunity_score (0-100) for a lead to be classified as 'strong' tier (below elite) in the scoring distribution telemetry |
@@ -647,4 +649,4 @@ Total: **624** logic variables (618 numeric, 6 JSONB).
 
 ---
 
-*Generated from 608 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
+*Generated from 610 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*

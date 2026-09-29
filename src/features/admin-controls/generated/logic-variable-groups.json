@@ -464,7 +464,9 @@
     "keys": [
       "staleness_max_stale_over_30d",
       "staleness_min_coverage_pct",
-      "staleness_max_days_stale"
+      "staleness_max_days_stale",
+      "run_stranded_after_minutes",
+      "run_heartbeat_fresh_minutes"
     ]
   },
   {
