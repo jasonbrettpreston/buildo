@@ -741,12 +741,11 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 - compare ran: true · diffs found: 150 · unexplained: 0
 
 ### Test suite (item iii)
-- 1771/1772 passed (suite success=false)
+- 1772/1772 passed (suite success=true)
 - harvested: 35 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -765,7 +764,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=39970B notes=8765B checks=6 rows records_meta=1424B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=39970B notes=8765B checks=6 rows records_meta=1426B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 
