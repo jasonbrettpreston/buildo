@@ -338,8 +338,11 @@ describe('docs/reports/generated/122-conversion-roadmap.md — generated, drift-
     const pendingSlugs = pendingFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0);
     expect(text).toContain(`Remaining files: **${remainingFiles.length}** (+ **${pendingFiles.length}** pending)`);
     expect(text).toContain(`remaining slugs: **${remainingSlugs}** (+ **${pendingSlugs}** pending)`);
-    // Never a vacuous pass: the derivation must still be measuring a real fleet.
-    expect(remainingFiles.length).toBeGreaterThan(40);
+    // Never a vacuous pass: the derivation must still be measuring a real fleet. The floor is on the
+    // WHOLE fleet the derivation walked (converted + pending + remaining), which never shrinks — the
+    // remainder alone shrinks with every cutover (it hit exactly 40 at the neighbourhoods cutover, 2026-09-28).
+    expect(Object.keys(fileToSlugs).length).toBeGreaterThan(40);
+    expect(remainingFiles.length + pendingFiles.length).toBeGreaterThan(0);
   });
 });
 
