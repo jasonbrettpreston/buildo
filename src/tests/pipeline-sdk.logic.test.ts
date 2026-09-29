@@ -1110,7 +1110,8 @@ describe('Pipeline SDK', () => {
     const PIPELINE_SCRIPTS = [
       'load-permits.js',
       'load-coa.js',
-      'load-neighbourhoods.js',
+      // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
+      // 2026-09-28) — same treatment, same successor lock (step-conformance.infra.test.ts).
       'load-wsib.js',
       // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
       // 2026-09-27) — same treatment, same successor lock (step-conformance.infra.test.ts).
@@ -1257,13 +1258,19 @@ describe('Pipeline SDK', () => {
     // Phase G (Spec 42 §6.11): create-pre-permits.js retired entirely in Commit 2;
     // file deleted from scripts/. No records_new assertion remains.
 
-    // §11 — load-neighbourhoods.js records_new must be 0 (upsert path can't distinguish
-    // inserts from no-ops without SQL rowCount; records_updated carries boundary count)
-    it('load-neighbourhoods.js emitSummary records_new is 0, records_updated is boundaryCount', () => {
-      const content = fs.readFileSync(path.join(scriptDir, 'load-neighbourhoods.js'), 'utf-8');
-      expect(content).toMatch(/records_new:\s*0/);
-      expect(content).not.toMatch(/records_new:\s*boundaryCount/);
-      expect(content).toMatch(/records_updated:\s*boundaryCount/);
+    // §11 — the legacy load-neighbourhoods.js `records_new: 0` literal is N-D3 (retired);
+    // counters now come from the descriptor's written.inserted / written.updated sources.
+    it('load-neighbourhoods: the counters declare their written.* source (N-D3 retired; re-homed onto the descriptor at ②)', () => {
+      const descriptor = JSON.parse(
+        fs.readFileSync(path.join(scriptDir, 'load-neighbourhoods.descriptor.json'), 'utf-8'),
+      ) as {
+        counters: Record<string, { source: string }>;
+        deviations: Array<{ from: string }>;
+      };
+      expect(descriptor.counters.records_new!.source).toBe('written.inserted');
+      expect(descriptor.counters.records_updated!.source).toBe('written.updated');
+      // N-D3 is a declared deviation, not a silent drop.
+      expect(descriptor.deviations.some((d) => d.from.startsWith('N-D3'))).toBe(true);
     });
 
     // §9.3 — load-permits.js must hash mapped fields, not raw CKAN object
@@ -1906,14 +1913,29 @@ describe('Pipeline SDK', () => {
     // rather than falling back to a client-side parse, so there is no JSON.parse of
     // row geometry left to guard. See src/tests/steps/compute_centroids/violations.test.ts
     // (G4d fence lock, CC-D1) for the retirement's both-directions proof.
-    it('load-neighbourhoods.js wraps GeoJSON file parse in try-catch', () => {
-      const content = fsB5.readFileSync(path.join(scriptDirB5, 'load-neighbourhoods.js'), 'utf-8');
-      // The file parse section must have try-catch
-      const loadSection = content.slice(
-        content.indexOf('Loading neighbourhood'),
-        content.indexOf('features') > 0 ? content.indexOf('features') : content.length
+    // RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②, 2026-09-28): the GeoJSON
+    // file parse moved OUT of the frozen shell into the runner's scripts/lib/step/acquire.js
+    // `parseGeoJson` (0v), which wraps the stream pipeline in try/catch and rethrows
+    // geoJsonFileError — the successor of the shell's own file-parse try-catch.
+    it('load-neighbourhoods: the GeoJSON file parse is guarded (re-homed onto acquire.js parseGeoJson at ②)', () => {
+      const acquire = fsB5.readFileSync(
+        path.resolve(__dirname, '../../scripts/lib/step/acquire.js'),
+        'utf-8',
       );
-      expect(loadSection).toMatch(/try\s*\{[\s\S]*?JSON\.parse/);
+      const parseBody = acquire.slice(
+        acquire.indexOf('async function parseGeoJson('),
+        acquire.indexOf('function parseXlsx('),
+      );
+      // The parse body must have try-catch that rethrows the legacy-anchored error.
+      expect(parseBody).toMatch(/try\s*\{[\s\S]*?catch \(err\)/);
+      expect(parseBody).toContain('throw geoJsonFileError(');
+      // The step's primary external must still be the GeoJSON boundary file.
+      const descriptor = JSON.parse(
+        fsB5.readFileSync(path.join(scriptDirB5, 'load-neighbourhoods.descriptor.json'), 'utf-8'),
+      ) as { inputs: { reads: { externals: Array<{ id: string; format: string }> } } };
+      const primary = descriptor.inputs.reads.externals[0];
+      expect(primary!.id).toBe('ckan:neighbourhoods-4326');
+      expect(primary!.format).toBe('geojson');
     });
 
     it('load-permits.js wraps local file JSON.parse in try-catch', () => {

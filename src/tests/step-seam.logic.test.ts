@@ -76,7 +76,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 17 live pairs (up from 16 at the batch-2 row 3.6 massing cutover): massing ADDS ONE, as the UPSTREAM half of link_massing already-declared read — massing itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points/parcels)', () => {
+  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 18 live pairs (up from 17 at the batch-2 row 3.8 neighbourhoods cutover): neighbourhoods ADDS ONE, as the UPSTREAM half of link_neighbourhoods\' already-declared read — neighbourhoods itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points/parcels/massing)', () => {
     const byName = seam.loadConvertedDescriptors();
     // DERIVED from converted.json (R-AN; conversion-simplification item 4): each converted
     // file's own descriptor identity.name, read directly — a cutover needs no edit here.
@@ -219,6 +219,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // address_points), so its registration contributes zero pairs as a downstream.
     // batch-2 row 3.2 cutover (load_centreline, 2026-09-27) — 16 -> 16 PAIRS, NONE NEW: inputs.reads.steps is [] (measured, scripts/load-centreline.descriptor.json) and its only reader, enrich_centreline, is not converted.
     // batch-2 row 3.6 cutover (massing, 2026-09-28) — 16 -> 17 PAIRS, ONE NEW: massing declares inputs.reads.steps [] (a leaf INGESTOR) but link_massing already declares it ({step: 'massing', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
+    // batch-2 row 3.8 cutover (neighbourhoods, 2026-09-28) — 17 -> 18 PAIRS, ONE NEW: neighbourhoods declares inputs.reads.steps [] (a leaf INGESTOR) but link_neighbourhoods already declares it ({step: 'neighbourhoods', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
@@ -243,6 +244,9 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
       // between 'link_massing:compute_centroids' and 'link_parcel_addresses:link_parcels'.
       { upstream: 'geocode_permits', downstream: 'link_neighbourhoods' },
+      // batch-2 row 3.8 (2026-09-28) — sorts here: 'link_neighbourhoods:neighbourhoods' falls
+      // immediately after 'link_neighbourhoods:geocode_permits' ('geocode_permits' < 'neighbourhoods').
+      { upstream: 'neighbourhoods', downstream: 'link_neighbourhoods' },
       // batch-2 row 3.1 (2026-09-24) — sorts here: 'link_parcel_addresses:address_points'
       // falls between 'link_neighbourhoods:geocode_permits' and
       // 'link_parcel_addresses:link_parcels' ('address_points' < 'link_parcels').
@@ -389,6 +393,11 @@ describe('runSeamChecks — one row per derived pair', () => {
   // 'sources' chain (Spec 43 rows 5/10/9/23), so chain-scoping does NOT filter out any of the
   // three new pairs — see the deriveSeamPairs test above for the full derivation. Registry
   // 19 -> 20 descriptors; live pairs/metrics 13 -> 16.
+  // neighbourhoods (batch2 row 3.8, cut over 2026-09-28) ADDS ONE MORE — measured 2026-09-28
+  // (`seam.runSeamChecks({chainId:'sources'})` against the real registry): link_neighbourhoods
+  // is ITSELF a member of the 'sources' chain (Spec 43 row 18), so chain-scoping does NOT
+  // filter out `neighbourhoods -> link_neighbourhoods` — see the deriveSeamPairs test above for
+  // the full derivation. Registry 22 -> 23 descriptors; live pairs/metrics 17 -> 18.
   const EXPECTED_SEAM_METRICS = [
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
@@ -406,6 +415,8 @@ describe('runSeamChecks — one row per derived pair', () => {
     // geocode_permits' registration is what resolves it to a live producer, which is why a
     // cutover can add a seam pair the converting step never declared.
     'seam_geocode_permits_before_link_neighbourhoods',
+    // batch-2 row 3.8 cutover (2026-09-28) — neighbourhoods registering resolves link_neighbourhoods' declared read.
+    'seam_neighbourhoods_before_link_neighbourhoods',
     'seam_address_points_before_link_parcel_addresses',
     'seam_parcels_before_link_parcel_addresses',
     'seam_link_parcel_addresses_before_link_parcels',

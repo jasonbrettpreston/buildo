@@ -527,6 +527,10 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'massing_skip_rate_max_pct', 'massing_batch_error_rate_max_pct', 'massing_story_height_m',
   'massing_download_timeout_ms', 'building_footprints_dead_tuple_ratio_warn_max',
   'building_footprints_maintenance_timeout_minutes',
+  // batch-2 row 3.8 neighbourhoods (Rule 3). The shared sources_neighbourhoods_floor is already
+  // listed above; these are the three new neighbourhoods-owned knobs.
+  'neighbourhoods_download_timeout_ms', 'neighbourhoods_dead_tuple_ratio_warn_max',
+  'neighbourhoods_maintenance_timeout_minutes',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

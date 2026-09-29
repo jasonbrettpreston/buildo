@@ -1,0 +1,169 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-neighbourhoods.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 8,",
+    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap. It",
+    "lives here because the descriptor schema's root is additionalProperties:false",
+    "and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "Every run LOADS. The step declares `staleness.scope:\"none\"` / `trigger:\"none\"` — no HEAD/ETag probe, no content hash, no local-cache short-circuit (the `process.argv[2]`/`[3]` path override and the `data/` GeoJSON/XLSX cache were retired per N-D5, Spec 124 R-AZ) — so an unchanged source reads inserted 0 / updated 0 and the audit table is the post-write counter block plus the declared check rows, never a skip. N-D2/N-D3 are the forced diff: the legacy read updated 158 and rewrote 1,264 tuples (158 × 8 unguarded census UPDATEs) on an UNCHANGED source; the converted merged guarded upsert makes an unchanged rerun write zero (idempotent_rerun:\"zero_writes\").",
+      "measured": {
+        "value": {
+          "gate_reads_in_loader": 0,
+          "retract_statements": 0,
+          "write_statements": 1,
+          "legacy_updated_on_unchanged_run": 158,
+          "legacy_tuples_rewritten": 1264
+        },
+        "date": "2026-09-28",
+        "query": "grep -nE \"HEAD|ETag|createHash|existsSync|process\\.argv\" scripts/load-neighbourhoods.js"
+      }
+    }
+  ],
+  "constants": [
+    {
+      "what": "`Math.round(x * 1000) / 10` (the 1-dp percentage form for tenure_owner_pct / tenure_renter_pct / couples_pct / lone_parent_pct / married_pct / university_degree_pct / immigrant_pct / visible_minority_pct / english_knowledge_pct) and `Math.round` (the INT income columns avg_household_income / median_household_income / avg_individual_income) are STORAGE-FORMAT constants living inside `buildLookup`, NOT tunables: each re-states what the column stores (11 pct cols are NUMERIC(5,2) and the 3 incomes INTEGER), so an admin knob over the rounding would silently rewrite every stored row rather than change a bound (the parcels D3 ruling; Spec 124 §5 R-BA gate E). `low_income_pct` is deliberately NOT rounded in JS — the NUMERIC(5,2) cast rounds it on the write path (Fold CF-5), so rounding it here would be a second, divergent rounding. The descriptor declares these columns `written:\"step\"` with no scale field, which is why the rounding literals stay inline in compute.",
+      "measured": {
+        "value": {
+          "pct_form": "Math.round(x * 1000) / 10",
+          "income_form": "Math.round",
+          "pct_columns": 11,
+          "income_columns": 3,
+          "low_income_pct_unrounded_in_js": true,
+          "rounding_literals": 2
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"Math.round\" scripts/lib/compute/load-neighbourhoods.js"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The publisher's vocabulary is DOMAIN DATA in compute, named here rather than made configurable: the characteristic labels (INCOME_CHARACTERISTICS, PCT_CHARACTERISTIC and every family / tenure / education / immigrant / minority / language row the pivot matches), `CONSTRUCTION_PERIODS`, `PERIOD_MAP` (the stored `period_of_construction` vocabulary), the format-2 id-row markers `'Neighbourhood Number'` / `'Neighbourhood ID'`, the suppression tokens `'...'` / `'x'` / `'F'` in `parseNumeric`, and the `Name (ID)` header regex in `parseColumnHeader`. The XLSX shape is hard-wired in the runner's `acquire.js parseXlsx`: sheet[0], header row 1, `includeEmpty`, the `''` fill and `_${n}` for null headers (the csv hard-wired-options precedent). A City relabel — renaming a characteristic row, the neighbourhood id column, or the id-row marker — makes this pivot match nothing and ZEROES a column silently, with no error and no check row: the only alarm is F2's planned `census_rows_matched` floor (N-D10). Read any surprising all-null census column as a publisher relabel first.",
+      "measured": {
+        "value": {
+          "characteristic_labels": "every row in buildLookup",
+          "construction_periods": 8,
+          "period_map_entries": 8,
+          "suppression_tokens": ["...", "x", "F"],
+          "id_row_markers": ["Neighbourhood Number", "Neighbourhood ID"],
+          "sheet_index": 0,
+          "header_row": 1
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"CONSTRUCTION_PERIODS\\|PERIOD_MAP\\|Neighbourhood Number\\|Neighbourhood ID\" scripts/lib/compute/load-neighbourhoods.js scripts/lib/step/acquire.js"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "`census_rows_matched` = 31 is NORMAL, not a defect. It is the count of census characteristic rows `buildLookup` matched (the legacy INFO audit row `matchedRows`, now `acquired.lookups[\"ckan:nbhd-2021-census-profile\"].stats.matched_rows`), carried so the audit table keeps its row rather than going silent. It is declared `severity:\"INFO\"` / `blocking:false` / `limit:\"viol == 0\"` and never gates; N-D10 records that a WARN floor (`neighbourhoods_census_rows_matched_min` = 31) is deferred to ④ F2, deliberately not folded here.",
+      "measured": {
+        "value": {
+          "census_rows_matched": 31,
+          "severity": "INFO",
+          "declared_check": "census_rows_matched",
+          "fix": "F2"
+        },
+        "date": "2026-09-28",
+        "query": "node scripts/load-neighbourhoods.js (PRE golden 2026-09-28, sources chain)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The 14 census columns declare `on_empty:\"preserve_null\"`: a suppressed, absent or ÷0 cell keeps the STORED value rather than writing NULL. This is the legacy COALESCE / absent-row semantics reproduced exactly — legacy pushed only non-null values into its 8 UPDATEs (a nid entry was created lazily) and the bulk-5 arm was literally `COALESCE(v.col, n.col)`, so a cell the source omitted left the table value untouched (N-D2/N-D14). The census fold is PROVEN data-identical: 14 cols × 158 rows = 2,212 cells, legacy cast vs stored byte-identical 2,212/2,212 on both paths (Fold CF-5).",
+      "measured": {
+        "value": {
+          "census_columns": 14,
+          "on_empty": "preserve_null",
+          "cells_compared": 2212,
+          "cells_identical": 2212,
+          "legacy_form": "COALESCE(v.col, n.col)"
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"on_empty\" scripts/load-neighbourhoods.descriptor.json"
+      },
+      "why": "Legacy kept the stored value when a cell was omitted; writing NULL instead would ERASE a good stored census value on a partial source, a silent regression the golden would not catch because the live source has 0 omitted cells. preserve_null keeps the merge additive, matching the legacy write the goldens were captured against."
+    }
+  ],
+  "suspicious_if": [
+    {
+      "what": "`boundaries_loaded` < 158 (the shared `sources_neighbourhoods_floor`, FAIL) is the catastrophic-load detector. More specific: `boundary_rows_inserted` > 0 on an UNCHANGED CKAN sha256 (`b0cb5807…0233`) means a KEY RE-FORMAT — the source bytes did not move, so a new boundary row means AREA_SHORT_CODE moved or the feature count grew, not a routine change (the insert path is dead on live input, N-D1). And `census_rows_matched` dropping below 31 is a silent publisher relabel: the pivot matched fewer characteristic rows, so a census column is likely zeroing while every FAIL check still reads 0.",
+      "measured": {
+        "value": {
+          "boundaries_loaded_floor": 158,
+          "severity": "FAIL",
+          "unchanged_geojson_sha256": "b0cb5807…0233",
+          "unchanged_xlsx_sha256": "9a3c3729…45eb",
+          "census_rows_matched_expected": 31
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"sources_neighbourhoods_floor\\|boundaries_loaded\" scripts/load-neighbourhoods.descriptor.json scripts/seeds/logic_variables.json"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Two carried blind spots. (1) N-D20 — `geom` is a guard term, so a geom that drifted from its `geometry` derivation is rewritten on the next run (legacy never healed it; N-D18's census-only trigger is subsumed); 0 drift today. (2) N-D14 — a table row whose `neighbourhood_id` is ABSENT from this run's GeoJSON gets no census write at all, because the upsert only touches primary (GeoJSON-derived) rows; the legacy keyed its census UPDATEs on every matched id. Exposure is 0 (ids equal 158/158 across GeoJSON, XLSX and DB).",
+      "measured": {
+        "value": {
+          "census_only_change_rewrites_geom": true,
+          "geom_drift_rows_today": 0,
+          "rows_absent_from_geojson": 0,
+          "ids_equal_across_sources": "158/158",
+          "fix": "post-conversion (N-D18)"
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"N-D18\\|N-D14\" scripts/load-neighbourhoods.descriptor.json"
+      }
+    }
+  ],
+  "limitations": [
+    {
+      "what": "N-D16 — acquisition has NO retry (execution.network.retries 0, legacy parity): a transient CKAN 502 fails the run rather than retrying. The sole cloud failure in the ledger (run 34769829628, 2026-09-13) halted at 17/28 on an un-retried GET. N-D10 — `census_rows_matched` stays INFO and never gates: a publisher relabel that zeroes a census column passes green until ④ F2 adds the WARN floor `neighbourhoods_census_rows_matched_min`. Both are deferred to ④ (F1, F2) by design, not folded into this conversion.",
+      "measured": {
+        "value": {
+          "retries": 0,
+          "cloud_run_halted": "34769829628 (2026-09-13)",
+          "census_rows_matched_severity": "INFO",
+          "fixes": ["F1", "F2"]
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"retries\\|on_head_error\" scripts/load-neighbourhoods.descriptor.json"
+      }
+    }
+  ],
+  "fences": [
+    {
+      "const": "Pipeline Rehab P2 mkdir-before-download is retired with downloadFile",
+      "value": "acquisition is the runner's acquire.js (download + format-specific parse); acquire.js owns mkdtemp, and the pre-conversion loader's `fs.mkdirSync(path.dirname(destPath))` in downloadFile is gone",
+      "incident": "Pipeline Rehab P2 (2026-08-03): the legacy downloadFile opened its write stream into the gitignored data/ dir, which does not exist on a fresh CI checkout, BEFORE the loader's only mkdirSync ran — a fresh runner crashed on the download. The converted step never touches data/: the local cache is retired (N-D5) and acquire.js's mkdtemp owns the temp dir, so the ordering hazard cannot recur. src/tests/sources-loader-mkdir.logic.test.ts's listing of load-neighbourhoods.js is removed with the why.",
+      "commit": "pending (batch-2 row 3.8 ②)",
+      "lock_test": "src/tests/sources-loader-mkdir.logic.test.ts"
+    },
+    {
+      "const": "the §7.6 UNNEST batch note survives as write.js batching",
+      "value": "the legacy `Reference: §7.6 UNNEST batch pattern` comment (single-statement UNNEST insert) is gone; the class-A guarded upsert built by scripts/lib/step/write.js does the batching, one declared statement",
+      "incident": "The pre-conversion loader collected all features into parallel arrays and issued one UNNEST INSERT to make the write O(1) round-trips instead of O(features). The converted step declares `write_inventory.statements: 1`; write.js chunks the multi-row VALUES insert (158 rows fit one statement), so the batching intent is preserved by the library rather than by an inline comment that would rot against the frozen shell.",
+      "commit": "pending (batch-2 row 3.8 ②)",
+      "lock_test": "src/tests/steps/neighbourhoods/violations.test.ts"
+    },
+    {
+      "const": "the WF3 2026-05-08 FK-join guidance (`n.id = p.neighbourhood_id`) is UNAFFECTED",
+      "value": "this step never writes `id` (it is not among the descriptor's declared columns; the serial default fills it); consumers keep joining `neighbourhoods.id` to `permits.neighbourhood_id`",
+      "incident": "WF3 2026-05-08 established the FK-join guidance for Spec 57's consumers: lead-detail-query.ts, lead-inspect-query.ts and permits/[id]/route.ts join on `n.id = p.neighbourhood_id`. Because `neighbourhood_id` is the class-A key and `id` is a serial never projected by this step, the key-shift cohort (I-arm, `neighbourhood_id += 100000`) leaves every `id`-based FK intact — the guidance holds unchanged and is fenced here so a future re-key of the write cannot silently break it.",
+      "commit": "pending (batch-2 row 3.8 ②)",
+      "lock_test": "src/tests/steps/neighbourhoods/violations.test.ts"
+    }
+  ]
+}

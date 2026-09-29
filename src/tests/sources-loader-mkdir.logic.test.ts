@@ -8,8 +8,8 @@
 // zip download at :137 precedes its only mkdirSync at :142, which creates
 // extractDir, not data/). Result: every scheduled chain-sources run ENOENTs
 // on the first loader step.
-// (Three of the four are since re-homed onto the runner's acquire.js — see
-// the RE-HOMED notes above LOADERS; load-neighbourhoods.js remains.)
+// (All four are since re-homed onto the runner's acquire.js — see the RE-HOMED
+// notes above LOADERS; the fence itself is kept, re-homed, below.)
 //
 // These tests EXECUTE each loader's real `downloadFile()` source (extracted
 // verbatim — the loaders are `pipeline.run()` scripts, so requiring them
@@ -43,9 +43,15 @@ const os = require('os') as typeof import('os');
 // `data/3d-massing-wgs84/` cache, M-D10) — `scripts/lib/step/acquire.js`
 // downloads into its own mkdtemp directory for the shapefile_zip format too.
 // Same successor lock (step-library.logic.test.ts acquisition battery).
-const LOADERS = [
-  'load-neighbourhoods.js',
-];
+// load-neighbourhoods.js RE-HOMED (batch-2 row 3.8, commit ②, 2026-09-28) — the
+// LAST of the four: its frozen shell has no `downloadFile()` either (the `data/`
+// cache is retired, N-D5), and `scripts/lib/step/acquire.js` downloads into its
+// own `fs.mkdtempSync` directory for the geojson + xlsx formats too.
+//
+// LOADERS is kept (now empty) so a future legacy loader re-joins this fence by
+// name — the RUNNING loader list once pinned here is exhausted, and an empty
+// list must register zero tests rather than a vacuous green.
+const LOADERS: string[] = [];
 
 /**
  * Extract the loader's downloadFile() function source and instantiate it with
@@ -114,7 +120,11 @@ function instantiateDownloadFile(loaderFile: string, onStreamError: (err: Error)
   ) => Promise<string>;
 }
 
-describe.each(LOADERS)('%s — downloadFile() on a fresh checkout (no data/)', (loaderFile) => {
+// Guarded: with every loader re-homed, LOADERS is empty and an unguarded
+// describe.each would register zero tests — a vacuous green. Keep the fence
+// silent, not green-by-accident, until a legacy loader re-joins by name.
+if (LOADERS.length > 0) {
+  describe.each(LOADERS)('%s — downloadFile() on a fresh checkout (no data/)', (loaderFile) => {
   it('creates the missing destination directory itself and lands the file (ENOENT on fresh clone otherwise)', async () => {
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-mkdir-'));
     const destPath = path.join(tmpRoot, 'data', 'download.bin');
@@ -136,6 +146,48 @@ describe.each(LOADERS)('%s — downloadFile() on a fresh checkout (no data/)', (
       expect(fs.readFileSync(destPath, 'utf-8')).toBe('payload');
     } finally {
       fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+  });
+}
+
+// ── P2 mkdir fence — RE-HOMED onto the acquisition seam (batch-2 row 3.8) ──
+//
+// The fence is not dropped, it MOVED. Pre-conversion each loader's own
+// `downloadFile()` had to mkdir its destination directory (the fresh-checkout
+// ENOENT documented above). Post-conversion NO loader file downloads anything:
+// the shared seam scripts/lib/step/acquire.js creates the destination directory
+// itself (`fs.mkdtempSync`) and names every declared format's file, so the
+// "no ENOENT on a fresh checkout" guarantee is now owned in exactly one place.
+// These two locks pin that ownership: (a) the seam really does mkdtemp + name
+// the geojson/xlsx payloads, and (b) none of the four ex-loaders retains the
+// write path the fence was originally about.
+
+describe('P2 mkdir fence — re-homed onto the acquisition seam', () => {
+  const acquireSource = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/lib/step/acquire.js'), 'utf-8'
+  );
+
+  it('acquire.js makes its own temp directory and names every declared download format', () => {
+    // The seam does mkdtemp instead of writing into the gitignored `data/`.
+    expect(acquireSource).toContain('fs.mkdtempSync(');
+    // geojson (load-neighbourhoods primary boundary source) + xlsx (its lookup).
+    expect(acquireSource).toContain('source.geojson');
+    expect(acquireSource).toContain('source.xlsx');
+  });
+
+  it('no ex-loader retains downloadFile() or fs.createWriteStream()', () => {
+    for (const loaderFile of [
+      'load-neighbourhoods.js',
+      'load-massing.js',
+      'load-parcels.js',
+      'load-address-points.js',
+    ]) {
+      const src = fs.readFileSync(
+        path.resolve(__dirname, '../../scripts', loaderFile), 'utf-8'
+      );
+      expect(src, `${loaderFile} must not carry downloadFile()`).not.toContain('function downloadFile(');
+      expect(src, `${loaderFile} must not carry fs.createWriteStream(`).not.toContain('fs.createWriteStream(');
     }
   });
 });

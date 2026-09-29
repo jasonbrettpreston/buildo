@@ -1,0 +1,124 @@
+{
+  "contract_version": 1,
+  "step": "neighbourhoods",
+  "source": "docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md §9.2 (row 3.8 ② POST compare) + scripts/load-neighbourhoods.descriptor.json deviations[]",
+  "note": "steady pairs (sources, standalone): table_state neighbourhoods 158 rows content_hash 9b111a6a18a701666746bfd2ceee0bdb and all 9 invariants BYTE-IDENTICAL PRE→POST; verdict PASS both; both sources' live bytes = the PRE digests (md5 3d3895fe…/6ffe6838…, 2,141,269 B / 1,763,175 B; full sha256 b0cb5807…/9a3c3729… re-downloaded after each POST). Forced pair (forced/pre.json vs forced/post.json) differs ONLY where N-D1 says — and, after commit ③'s geom guard (N-D20), where N-D20 says: with the 5 new rows' geom NULLed AND the 5 Q rows' geom re-translated 1e-4 the converted table hashes to c486a1f3…, the legacy forced end state, so N-D1 + N-D20 are the only differences.",
+  "diffs": [
+    {
+      "key": "meta[].external",
+      "why": "N-D12: deriveMeta names the two declared external ids (ckan:neighbourhoods-4326 and ckan:nbhd-2021-census-profile); the legacy emitMeta named none."
+    },
+    {
+      "key": "meta[].reads.Census XLSX",
+      "why": "N-D12: legacy read labels \"income/tenure/demographics\" were categories, not fields; the external ids replace them."
+    },
+    {
+      "key": "meta[].reads.City GeoJSON",
+      "why": "N-D12: same; the GeoJSON is now the declared external ckan:neighbourhoods-4326 (the legacy emitMeta carried no read entry for it)."
+    },
+    {
+      "key": "meta[].writes.neighbourhoods[]",
+      "why": "The declared write columns add created_at and census_year (db_default columns the descriptor declares); the 18 legacy columns are unchanged, same order."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "N-D5/N-D19/progress-cadence: legacy download/progress/Step 1/Step 2/Load complete lines (and the standalone \"Using cached …\" lines) are gone; the runner logs its target line, the two `acquired …` lines and completed-in."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone only: the legacy wrote no pipeline_runs row outside a chain; the runner records its own completed row (library behaviour)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "Additive declared rows: duplicate_key_count, null_geometry_count, boundary_rows_inserted (0 on the steady pairs; 5 WARN on the forced pair = the 5 I-arm inserts, N-D1) and the library sys_maintenance_neighbourhoods_vacuum_analyze row (N-D9)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "has_postgis retired (N-D4); its row position now holds bad_key_count (N-D6)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].order_guarantee",
+      "why": "The three pre_write refusal rows carry their declared order_guarantee (anchor \"Pre-write refusals\", Spec 57)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "buildAuditTable tags each row's origin (check); legacy rows had none."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "has_postgis INFO → bad_key_count PASS (N-D4/N-D6); forced pair: boundary_rows_inserted WARN (N-D1)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "Declared bounds rendered: `value_min 158` (sources_neighbourhoods_floor, was \">= 158\") and `viol == 0` (was null)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "has_postgis \"yes\" → bad_key_count 0 (N-D4/N-D6)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "Forced pair only: PASS → WARN, row-derived from boundary_rows_inserted = 5 (N-D1/N-D11)."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps on every converted step; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner meta key: the 4 resolved logic variables in force for this run (sources_neighbourhoods_floor, neighbourhoods_download_timeout_ms, neighbourhoods_dead_tuple_ratio_warn_max, neighbourhoods_maintenance_timeout_minutes); legacy emitted none."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "Runner meta key: the staleness gate decision ({gated_skip:false, reason:\"loaded\"} — no staleness trigger, every run loads as legacy did)."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner meta key: which ledger owns the pipeline_runs row (owned standalone / chain_owned in-chain); library behaviour, legacy emitted none."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner meta key (RUNNER_META_KEYS) the library stamps; the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner meta key: the declared terminal reached (loaded; loaded_with_warnings on the forced pair); legacy had no terminal vocabulary."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "Runner meta key the library stamps; forced pair only ([\"boundary_rows_inserted: 5\"], N-D1) — the steady pairs emit none and the legacy emitted none at all."
+    },
+    {
+      "key": "summary.records_meta.has_postgis",
+      "why": "N-D4: retired; the precondition is guards.requires postgis (fail)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "Library counters: null on the converted runs (parcels/address_points/massing POST goldens read null identically); legacy literal 158 (N-D3)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "N-D2/N-D3: steady 158 → 0 (legacy rewrote 158 rows ×8 UPDATEs on an unchanged source); forced 158 → 25 (N 5 + G 5 + C 10 + Q 5; the 5 Q rows are now healed since the geom guard names geom, N-D20)."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "Forced pair only, N-D3: legacy literal 0 → the real 5 I-arm inserts."
+    },
+    {
+      "key": "invariants[].value",
+      "why": "Forced pair only, N-D1/N-D20: geom_null 5→0, geom_types MULTIPOLYGON 158→163, geom_equals_geometry_derivation 153→163 (the 5 new rows' geom is written on INSERT, N-D1, and the 5 Q rows are now healed, N-D20); id_key_map_hash differs by construction (serial ids of the new rows, §8)."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "Forced pair only, N-D1/N-D20: c486a1f3… → eaec22cc…; with the new rows' geom NULLed and the Q rows re-translated the converted table hashes to c486a1f3… exactly (N-D1 + N-D20 only)."
+    }
+  ]
+}

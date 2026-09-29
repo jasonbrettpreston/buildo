@@ -617,8 +617,9 @@ describe('Incremental Processing Guards', () => {
   // src/tests/steps/parcels/violations.test.ts instead.
   // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
   // 2026-09-27) — same treatment; asserted in src/tests/steps/massing/violations.test.ts.
+  // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
+  // 2026-09-28) — same treatment; asserted in src/tests/steps/neighbourhoods/violations.test.ts.
   const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
-    'load-neighbourhoods.js',
     'load-wsib.js',
   ];
 
@@ -719,7 +720,7 @@ describe('PIPELINE_SUMMARY convention', () => {
     'load-permits.js',
     'load-coa.js',
     // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): the library emits PIPELINE_SUMMARY.
-    'load-neighbourhoods.js',
+    // load-neighbourhoods.js RE-HOMED (batch-2 row 3.8 ②, 2026-09-28): the library emits PIPELINE_SUMMARY.
     'extract-builders.js',
     'classify-permits.js',
     'classify-scope.js',
@@ -938,7 +939,7 @@ describe('PIPELINE_META convention', () => {
     'load-permits.js',
     'load-coa.js',
     // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): PIPELINE_META is derived from the descriptor (M-D6).
-    'load-neighbourhoods.js',
+    // load-neighbourhoods.js RE-HOMED (batch-2 row 3.8 ②, 2026-09-28): PIPELINE_META is derived from the descriptor (N-D12).
     'load-wsib.js',
     'extract-builders.js',
     'classify-permits.js',
@@ -1730,12 +1731,19 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
     expect(descriptor.counters.records_updated!.scoped_by).toEqual(['permit_num', 'revision_num', 'parcel_id']);
   });
 
-  it('load-neighbourhoods: records_updated is boundary count, not census characteristic rows', () => {
-    const content = src('load-neighbourhoods.js');
-    // Must NOT use profileUpdates (census rows matched) as records_updated
-    expect(content).not.toMatch(/records_updated\s*:\s*profileUpdates/);
+  // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
+  // 2026-09-28): the records_updated = boundaryCount semantic (never the census
+  // characteristic-row count) is now a DECLARED field, like the link_parcels lock above.
+  it('load-neighbourhoods: records_updated is boundary count, not census characteristic rows (fence kept, re-homed onto the descriptor at ②)', () => {
+    const descriptor = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../scripts/load-neighbourhoods.descriptor.json'), 'utf-8'),
+    ) as { checks: Array<{ id: string }>; counters: Record<string, { source: string; scoped_by: string }> };
+    // The counter says what it counts: the boundary row (written.updated), scoped by the
+    // boundary key — NOT the census characteristic rows legacy mismatched it against.
+    expect(descriptor.counters.records_updated!.source).toBe('written.updated');
+    expect(descriptor.counters.records_updated!.scoped_by).toBe('neighbourhood_id');
     // census data must remain visible as a named audit row
-    expect(content).toContain('census_rows_matched');
+    expect(descriptor.checks.map((c) => c.id)).toContain('census_rows_matched');
   });
 });
 

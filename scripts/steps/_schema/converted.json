@@ -90,6 +90,7 @@
     "scripts/load-address-points.js",
     "scripts/load-parcels.js",
     "scripts/load-centreline.js",
-    "scripts/load-massing.js"
+    "scripts/load-massing.js",
+    "scripts/load-neighbourhoods.js"
   ]
 }

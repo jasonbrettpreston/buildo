@@ -1,0 +1,130 @@
+{
+  "_why": "Six-feature GeoJSON FeatureCollection pinning the legacy loadBoundaries() property contract: AREA_SHORT_CODE as the neighbourhood id source, AREA_LONG_CODE as the AREA_NAME fallback, and the three skip branches (id key 0, id key absent, name absent). Geometry is a tiny valid MultiPolygon near -79.4,43.7 so the legacy INSERT geometry column accepts it without PostGIS. SPEC LINK: docs/specs/01-pipeline/57_source_neighbourhoods.md, docs/specs/01-pipeline/123_step_opt_assessment_validation.md §4.5 (legacy oracle, not source-text).",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_SHORT_CODE": "1",
+        "AREA_NAME": "Alpha"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_SHORT_CODE": "2",
+        "AREA_LONG_CODE": "Beta Long"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_SHORT_CODE": "3",
+        "AREA_NAME": "Gamma"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_SHORT_CODE": "0",
+        "AREA_NAME": "Zero"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_NAME": "NoKey"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "AREA_SHORT_CODE": "4"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.4, 43.7],
+              [-79.399, 43.7],
+              [-79.399, 43.7005],
+              [-79.4, 43.7005],
+              [-79.4, 43.7]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -2362,7 +2362,13 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // max_height_m, estimated_stories, geom). Same disposition as RV-D5/EH-D4: declaring it
     // moves enrich_parcels' own seam pairs and staleness gating, out of scope for a
     // conversion that must not change enrich_parcels' behaviour.
-    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines', 'massing', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6
+    // WIDENED AGAIN at the batch-2 row 3.8 cutover (2026-09-28): neighbourhoods became a CONVERTED
+    // producer, so the ledger can now see enrich_parcels' long-standing read of
+    // neighbourhoods (n.id, avg_household_income, geom, name — scripts/lib/compute/enrich-parcels.js:
+    // the pocket-lookup LATERAL join and the neighbourhood_build_norms join). Same disposition as
+    // RV-D5/EH-D4/massing: declaring it moves enrich_parcels' own seam pairs and staleness gating,
+    // out of scope for a conversion that must not change enrich_parcels' behaviour.
+    enrich_parcels: { missing: ['enrich_heritage', 'enrich_ravines', 'massing', 'neighbourhoods', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6 + 3.8
     // NEW at the batch-2 row 3.7 cutover (2026-09-24): parcels becoming a CONVERTED producer
     // makes the ledger's column-overlap derivation newly VISIBLE for every OTHER converted
     // step whose compute reads the `parcels` table directly but has never declared a
