@@ -16,8 +16,13 @@
 //   3. a FRESH `running` row survives                         — the fence: reconcile's own
 //                                                               in-chain row is seconds old
 //   4. the report prints when there is nothing to reap        — claim #85
-//   5. the threshold is honoured                              — the one knob, both directions
+//   5. run_stranded_after_minutes is honoured                 — a logic variable, both directions;
+//                                                               out-of-bounds throws before the lock;
+//                                                               a missing row → seed default + FAIL row
 //   6. published_batch_rollback reports `not_armed`           — §7.4's ownerless half, visible
+//   7. the ONE stranded rule (WF2 one-reaper-rule)            — fresh heartbeat spared, stale reaped,
+//                                                               2 h floor kept, chain row spared under a
+//                                                               live child, heartbeat_window_margin WARN
 //
 // Run: BUILDO_TEST_DB=1 npx vitest run src/tests/db/reconcile-runs.db.test.ts
 
@@ -121,17 +126,51 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
 
   const metric = (rows: AuditRow[], name: string): AuditRow | undefined => rows.find((r) => r.metric === name);
 
-  async function seedRun(suffix: string, ageMinutes: number, status = 'running'): Promise<number> {
+  async function seedRun(
+    suffix: string,
+    ageMinutes: number,
+    status = 'running',
+    heartbeatAgeMinutes: number | null = null,
+    pipelineName?: string,
+  ): Promise<number> {
     const res = await pool!.query<{ id: number }>(
-      `INSERT INTO pipeline_runs (pipeline, started_at, status)
-       VALUES ($1, NOW() - ($2 * INTERVAL '1 minute'), $3) RETURNING id`,
-      [`${FX}:${suffix}`, ageMinutes, status],
+      `INSERT INTO pipeline_runs (pipeline, started_at, status, records_meta)
+       VALUES ($1, NOW() - ($2 * INTERVAL '1 minute'), $3,
+               CASE WHEN $4::int IS NULL THEN NULL
+                    ELSE jsonb_build_object('last_heartbeat_at', NOW() - ($4::int * INTERVAL '1 minute')) END)
+       RETURNING id`,
+      [pipelineName ?? `${FX}:${suffix}`, ageMinutes, status, heartbeatAgeMinutes],
     );
     return res.rows[0]!.id;
   }
 
+  // The two reaper logic variables (WF2 one-reaper-rule). Every test starts from
+  // the seed defaults so the rule is deterministic; afterAll restores them.
+  const STRANDED_KEY = 'run_stranded_after_minutes';
+  const FRESH_KEY = 'run_heartbeat_fresh_minutes';
+  /** Fixture `*_heartbeat_minutes` key for the heartbeat_window_margin case. */
+  const HB_FX_KEY = 'reconcile_fx_heartbeat_minutes';
+
+  async function setVar(key: string, value: number): Promise<void> {
+    await pool!.query(
+      `INSERT INTO logic_variables (variable_key, variable_value) VALUES ($1, $2)
+       ON CONFLICT (variable_key) DO UPDATE SET variable_value = EXCLUDED.variable_value, updated_at = NOW()`,
+      [key, value],
+    );
+  }
+
+  async function deleteVar(key: string): Promise<void> {
+    await pool!.query(`DELETE FROM logic_variables WHERE variable_key = $1`, [key]);
+  }
+
+  async function resetRule(): Promise<void> {
+    await setVar(STRANDED_KEY, 120);
+    await setVar(FRESH_KEY, 30);
+    await deleteVar(HB_FX_KEY);
+  }
+
   beforeEach(async () => {
-    await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline LIKE $1`, [`${FX}:%`]);
+    await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline LIKE $1 OR pipeline = $2`, [`${FX}:%`, `chain_${FX}`]);
     // Deterministic baseline: park any OTHER `running` row so the counts below
     // measure this suite's fixtures and nothing else. Safe only because of the
     // loopback + opt-in guard above.
@@ -140,10 +179,12 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
         WHERE status = 'running' AND pipeline NOT LIKE $1`,
       [`${FX}:%`],
     );
+    await resetRule();
   });
 
   afterAll(async () => {
-    await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline LIKE $1`, [`${FX}:%`]);
+    await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline LIKE $1 OR pipeline = $2`, [`${FX}:%`, `chain_${FX}`]);
+    await resetRule();
     await pool!.end();
   });
 
@@ -217,12 +258,13 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
     // that has nothing to do with this step; pinning the prefix still catches a
     // row this step silently stops emitting.
     const names = run.rows.map((r) => r.metric);
-    expect(names.slice(0, 6)).toEqual([
+    expect(names.slice(0, 7)).toEqual([
       'stranded_reaped',
       'stranded_remaining',
       'oldest_stranded_minutes',
       'runs_still_live',
-      'threshold_minutes',
+      'stranded_after_minutes',
+      'heartbeat_fresh_minutes',
       'published_batch_rollback',
     ]);
     expect(metric(run.rows, 'stranded_reaped')?.value).toBe(0);
@@ -231,22 +273,25 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
     expect(run.recordsTotal).toBe(0);
   });
 
-  it('honours RECONCILE_STRANDED_AFTER_MINUTES, in both directions', async () => {
-    await seedRun('threshold', 30);
+  it('honours the run_stranded_after_minutes logic variable, in both directions', async () => {
+    await seedRun('threshold', 45);
 
-    // 60-minute threshold: a 30-minute-old row is still live.
-    const lenient = runScript({ RECONCILE_STRANDED_AFTER_MINUTES: '60' });
-    expect(metric(lenient.rows, 'threshold_minutes')?.value).toBe(60);
+    // 60-minute floor: a 45-minute-old row with no heartbeat is still live.
+    await setVar(STRANDED_KEY, 60);
+    const lenient = runScript();
+    expect(metric(lenient.rows, 'stranded_after_minutes')?.value).toBe(60);
+    expect(metric(lenient.rows, `rule_source_${STRANDED_KEY}`)?.status).toBe('INFO');
     expect(metric(lenient.rows, 'stranded_reaped')?.value).toBe(0);
     let res = await pool!.query<{ status: string }>(
       `SELECT status FROM pipeline_runs WHERE pipeline = $1`, [`${FX}:threshold`],
     );
     expect(res.rows[0]!.status).toBe('running');
 
-    // 10-minute threshold: the same row is now stranded. Same fixture, one env
-    // var apart — so a green here cannot be green-because-it-never-looked.
-    const strict = runScript({ RECONCILE_STRANDED_AFTER_MINUTES: '10' });
-    expect(metric(strict.rows, 'threshold_minutes')?.value).toBe(10);
+    // 30-minute floor (the seed minimum): same fixture, one variable apart — so a
+    // green here cannot be green-because-it-never-looked.
+    await setVar(STRANDED_KEY, 30);
+    const strict = runScript();
+    expect(metric(strict.rows, 'stranded_after_minutes')?.value).toBe(30);
     expect(metric(strict.rows, 'stranded_reaped')?.value).toBe(1);
     res = await pool!.query<{ status: string }>(
       `SELECT status FROM pipeline_runs WHERE pipeline = $1`, [`${FX}:threshold`],
@@ -254,14 +299,32 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
     expect(res.rows[0]!.status).toBe('crashed');
   });
 
-  it('refuses a nonsense threshold before acquiring the lock', async () => {
+  it('refuses an out-of-bounds logic variable before acquiring the lock — zero rows reaped', async () => {
+    const id = await seedRun('oob', 180);
+    await setVar(STRANDED_KEY, 5); // seed min is 30
     const r = spawnSync('node', [SCRIPT], {
-      env: { ...childEnv, RECONCILE_STRANDED_AFTER_MINUTES: '0' } as unknown as NodeJS.ProcessEnv,
+      env: childEnv as unknown as NodeJS.ProcessEnv,
       encoding: 'utf8',
       timeout: 45_000,
     });
     expect(r.status).not.toBe(0);
-    expect(`${r.stdout}${r.stderr}`).toMatch(/strandedAfterMinutes|greater than or equal to 1/i);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/strandedAfterMinutes|greater than or equal to 30/i);
+    const after = await pool!.query<{ status: string }>(`SELECT status FROM pipeline_runs WHERE id = $1`, [id]);
+    expect(after.rows[0]!.status).toBe('running');
+  });
+
+  it('a MISSING logic-variable row reaps on the seed default and turns the verdict red, naming the key', async () => {
+    const id = await seedRun('missing-var', 180);
+    await deleteVar(FRESH_KEY);
+    const run = runScript();
+    expect(run.status, `exit ${run.status}\n${run.stderr}`).toBe(0);
+    const src = metric(run.rows, `rule_source_${FRESH_KEY}`);
+    expect(src?.status).toBe('FAIL');
+    expect(String(src?.value)).toContain(FRESH_KEY);
+    expect(metric(run.rows, 'heartbeat_fresh_minutes')?.value).toBe(30);
+    expect(run.verdict).toBe('FAIL');
+    const after = await pool!.query<{ status: string }>(`SELECT status FROM pipeline_runs WHERE id = $1`, [id]);
+    expect(after.rows[0]!.status).toBe('crashed');
   });
 
   it('reports published_batch rollback as `not_armed` while the S4 table is absent (§7.4)', async () => {
@@ -290,5 +353,98 @@ describe.skipIf(!dbAvailable())('reconcile-runs — the Step-0 reaper (Spec 122 
       { pipeline: `${FX}:already-completed`, status: 'completed' },
       { pipeline: `${FX}:already-failed`, status: 'failed' },
     ]);
+  });
+
+  // ── The ONE stranded rule (WF2 one-reaper-rule, folds A2/A3) ──
+  const statusOf = async (id: number): Promise<string> =>
+    (await pool!.query<{ status: string }>(`SELECT status FROM pipeline_runs WHERE id = $1`, [id])).rows[0]!.status;
+
+  it('spares a 3 h row with a FRESH heartbeat (5 min) — counted, and no stranded_remaining FAIL', async () => {
+    // RED before the rule: the wall-clock-only reaper crashed this row.
+    const id = await seedRun('fresh-hb', 180, 'running', 5);
+    const run = runScript();
+    expect(await statusOf(id)).toBe('running');
+    expect(metric(run.rows, 'spared_fresh_heartbeat')?.value).toBe(1);
+    // A spared row is live, not stranded — runs_still_live counts it (only fixture row).
+    expect(metric(run.rows, 'runs_still_live')?.value).toBe(1);
+    expect(metric(run.rows, 'stranded_reaped')?.value).toBe(0);
+    expect(metric(run.rows, 'stranded_remaining')?.value).toBe(0);
+    expect(metric(run.rows, 'stranded_remaining')?.status).toBe('INFO');
+  });
+
+  it('reaps a 3 h row whose heartbeat is STALE (45 min) — branch named', async () => {
+    const id = await seedRun('stale-hb', 180, 'running', 45);
+    const run = runScript();
+    expect(await statusOf(id)).toBe('crashed');
+    expect(metric(run.rows, 'reaped_stale_heartbeat')?.value).toBe(1);
+    expect(metric(run.rows, 'reaped_no_heartbeat')?.value).toBe(0);
+    const msg = await pool!.query<{ error_message: string }>(
+      `SELECT error_message FROM pipeline_runs WHERE id = $1`, [id],
+    );
+    expect(msg.rows[0]!.error_message).toMatch(/stale heartbeat/);
+  });
+
+  it('keeps the 2 h floor: a 40 min row with a 45 min-old heartbeat is NOT reaped', async () => {
+    const id = await seedRun('floor', 40, 'running', 45);
+    const run = runScript();
+    expect(await statusOf(id)).toBe('running');
+    expect(metric(run.rows, 'stranded_reaped')?.value).toBe(0);
+  });
+
+  it('no heartbeat: reaped at 3 h (branch named), spared at 1 h', async () => {
+    const old = await seedRun('nohb-old', 180);
+    const young = await seedRun('nohb-young', 60);
+    const run = runScript();
+    expect(await statusOf(old)).toBe('crashed');
+    expect(await statusOf(young)).toBe('running');
+    expect(metric(run.rows, 'reaped_no_heartbeat')?.value).toBe(1);
+    expect(metric(run.rows, 'reaped_stale_heartbeat')?.value).toBe(0);
+  });
+
+  it('spares a chain row while a child step row has a fresh heartbeat; reaps it without one', async () => {
+    // RED before the rule: the parent chain row was crashed under a live child.
+    const chain = await seedRun('', 180, 'running', null, `chain_${FX}`);
+    const child = await seedRun('chainstep', 180, 'running', 5);
+    let run = runScript();
+    expect(await statusOf(chain)).toBe('running');
+    expect(await statusOf(child)).toBe('running');
+    expect(metric(run.rows, 'spared_chain_live_child')?.value).toBe(1);
+    expect(metric(run.rows, 'spared_fresh_heartbeat')?.value).toBe(1);
+    expect(metric(run.rows, 'stranded_remaining')?.value).toBe(0);
+
+    // The child finishes; the chain row has no live child left and is reaped.
+    await pool!.query(`UPDATE pipeline_runs SET status = 'completed', completed_at = NOW() WHERE id = $1`, [child]);
+    run = runScript();
+    expect(await statusOf(chain)).toBe('crashed');
+    expect(metric(run.rows, 'spared_chain_live_child')?.value).toBe(0);
+  });
+
+  it('heartbeat_window_margin WARNs when fresh < 2 × the largest *_heartbeat_minutes, INFO otherwise', async () => {
+    // Baseline assumes the seeded *_heartbeat_minutes are all ≤ 15 (defaults are 5).
+    let run = runScript();
+    expect(metric(run.rows, 'heartbeat_window_margin')?.status).toBe('INFO');
+    await setVar(HB_FX_KEY, 20); // 2 × 20 = 40 > fresh 30
+    run = runScript();
+    const row = metric(run.rows, 'heartbeat_window_margin');
+    expect(row?.status).toBe('WARN');
+    expect(String(row?.value)).toContain('max_heartbeat=20');
+  });
+
+  it('treats a MALFORMED heartbeat as no heartbeat — reaped via that branch, run does not error', async () => {
+    // RED before the guard: `'garbage'::timestamptz` aborted the whole reap transaction.
+    const id = await seedRun('garbage-hb', 180);
+    await pool!.query(
+      `UPDATE pipeline_runs SET records_meta = jsonb_build_object('last_heartbeat_at', 'garbage') WHERE id = $1`,
+      [id],
+    );
+    const run = runScript();
+    expect(run.status, `exit ${run.status}\n${run.stderr}`).toBe(0);
+    expect(await statusOf(id)).toBe('crashed');
+    expect(metric(run.rows, 'reaped_no_heartbeat')?.value).toBe(1);
+    expect(metric(run.rows, 'reaped_stale_heartbeat')?.value).toBe(0);
+    const msg = await pool!.query<{ error_message: string }>(
+      `SELECT error_message FROM pipeline_runs WHERE id = $1`, [id],
+    );
+    expect(msg.rows[0]!.error_message).toMatch(/no heartbeat/);
   });
 });
