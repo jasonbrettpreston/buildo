@@ -327,6 +327,114 @@ async function downloadArchive(ctxFetch, url, destPath, timeoutMs, algorithm) {
   }
 }
 
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+/**
+ * Escape every regex metacharacter so a glob `*` can be the only wildcard. `(` and `)`
+ * are in the class because the legacy scan's stem test is a RegExp built from a filename
+ * stem (RE-FREEZE #28).
+ */
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Resolve a repo-relative glob to the NEWEST matching local file — the legacy
+ * `scripts/load-wsib.js` :94-100 `data/` scan semantics, promoted into the seam.
+ *
+ * RE-FREEZE #28 / INGESTOR prerequisite 0fs: the loader used to `readdirSync` a fixed
+ * directory, filter on an extension and a case-insensitive stem regex, then take the
+ * lexicographically last name (`.sort().pop()`) — which for the date-stamped archives the
+ * pipeline uses IS the newest. The final `.ext` compares case-SENSITIVELY (legacy
+ * `f.endsWith('.csv')`); the stem case-insensitively (legacy `/^…/i`).
+ *
+ * The pattern is deliberately narrow: a `dir/basename` pair, `/`-separated, with `*`
+ * wildcards only in the basename (any number). `**`, `?`, `[` and `\\` are refused rather
+ * than roughly interpreted, and `path` traversal (`..`, absolute paths, Windows drive
+ * letters) is refused outright — the caller resolves a KNOWN repo-relative location, not
+ * an arbitrary user path.
+ *
+ * Returns `null` when the directory is missing (the legacy `fs.existsSync(dataDir)` guard;
+ * `/data` is absent in the cloud) or nothing matches — acquireExternal turns that into the
+ * declared tier-1 skip `no_source_file`. Unsafe patterns throw by name.
+ *
+ * @param {string} pattern - e.g. `'data/BusinessClassificationDetails*.csv'`
+ * @param {string} [repoRoot=REPO_ROOT] - injectable for tests
+ * @returns {{absPath: string, relPath: string}|null}
+ */
+function resolveLocalSource(pattern, repoRoot = REPO_ROOT) {
+  if (typeof pattern !== 'string' || pattern.length === 0) {
+    throw new Error(`resolveLocalSource: the external's path pattern must be a non-empty string (got ${JSON.stringify(pattern)})`);
+  }
+  if (path.isAbsolute(pattern) || /^[A-Za-z]:/.test(pattern)) {
+    throw new Error(`resolveLocalSource: pattern must be repo-relative, not an absolute path: ${pattern}`);
+  }
+  if (pattern.split('/').includes('..')) {
+    throw new Error(`resolveLocalSource: pattern must not contain '..' path segments: ${pattern}`);
+  }
+  if (pattern.includes('**') || pattern.includes('?') || pattern.includes('[') || pattern.includes('\\')) {
+    throw new Error(`resolveLocalSource: unsupported glob syntax in path pattern (only '*' in the basename is allowed; '**', '?', '[' and '\\' are refused): ${pattern}`);
+  }
+
+  const dir = path.posix.dirname(pattern);
+  const base = path.posix.basename(pattern);
+  const dot = base.lastIndexOf('.');
+  const stem = dot === -1 ? base : base.slice(0, dot);
+  const ext = dot === -1 ? '' : base.slice(dot);
+  // A `*` in the directory or the extension would match nothing (both are compared
+  // literally below) and turn a typo into a permanent green `no_source_file` skip.
+  if (dir.includes('*') || ext.includes('*')) {
+    throw new Error(`resolveLocalSource: '*' is allowed only in the basename stem of the path pattern, not in its directory or extension: ${pattern}`);
+  }
+  const absDir = path.join(repoRoot, dir);
+  if (!fs.existsSync(absDir)) return null;
+
+  const stemRe = new RegExp('^' + stem.split('*').map(escapeRegExp).join('.*') + '$', 'i');
+
+  const names = fs.readdirSync(absDir).filter((n) => {
+    if (ext ? !n.endsWith(ext) : false) return false;
+    return stemRe.test(ext ? n.slice(0, n.length - ext.length) : n);
+  });
+  if (names.length === 0) return null;
+
+  const name = names.sort().pop();
+  return {
+    absPath: path.join(absDir, name),
+    relPath: dir === '.' ? name : `${dir}/${name}`,
+  };
+}
+
+/**
+ * Stream-copy a LOCAL file into the temp root, hashing it on the way through.
+ *
+ * This mirrors `downloadArchive`'s `hashThrough` shape (FENCE 0b230472 — that function's
+ * body is never touched by this addition) so the two arms of the seam return the same
+ * object shape. The only difference is the source: `fs.createReadStream` instead of
+ * `Readable.fromWeb(res.body)`, and no response to read validators off.
+ *
+ * The COPY is what makes the snapshot trustworthy: the hash is computed over the bytes
+ * that land at `destPath`, and the parser downstream reads `destPath` — so hash and
+ * parsed bytes are identical even if the source file changes mid-run. Hashing the source
+ * in place and then parsing it separately would not give that.
+ *
+ * @param {string} srcPath - absolute path of the local source
+ * @param {string} destPath - absolute path inside the temp root
+ * @param {string} algorithm - digest algorithm for `crypto.createHash`
+ * @returns {Promise<{archivePath: string, contentHash: string, bytesDownloaded: number, lastModified: null, etag: null, attempts: number}>}
+ */
+async function copyLocalFile(srcPath, destPath, algorithm) {
+  const hash = crypto.createHash(algorithm);
+  let bytes = 0;
+  await streamPipeline(
+    fs.createReadStream(srcPath),
+    async function* hashThrough(source) {
+      for await (const chunk of source) { hash.update(chunk); bytes += chunk.length; yield chunk; }
+    },
+    fs.createWriteStream(destPath),
+  );
+  return { archivePath: destPath, contentHash: hash.digest('hex'), bytesDownloaded: bytes, lastModified: null, etag: null, attempts: 1 };
+}
+
 /**
  * DOWNLOAD WITH RETRIES (INGESTOR prerequisite 0q, 2026-09-24) — the retry loop the
  * legacy loaders ran by hand, promoted into the seam.
@@ -700,6 +808,10 @@ function buildSkipReEmitMeta({ skeleton, prior, pins }) {
 async function acquireExternal({
   ctxFetch, log, tag, slug, external, descriptor, config, prior, timeoutMs,
   keyProperty, keyColumn, coerceKey, forced, preAcquisitionGate, emitSkeleton,
+  // 0fs (RE-FREEZE #28): the root a `kind:"filesystem"` external's `path` resolves
+  // against. Absent = resolveLocalSource's own repo-root default (the runner passes
+  // nothing); tests pass a temp directory.
+  repoRoot,
 }) {
   // ── 0w: A LOOKUP IS XLSX-ONLY, AND AN XLSX IS LOOKUP-ONLY (2026-09-28) ──────────
   // The TWO new declarations (`role: "lookup"`, `format: "xlsx"`) are one axis spelled
@@ -737,10 +849,18 @@ async function acquireExternal({
   // path runs. Only a DECLARATION can decide this (Rule 10): the library owns the WARN row
   // (`§headErrorRows`), and a step-declared check over `acquired.head_error` could not —
   // a forgotten check would proceed silently.
+  // ── 0fs: A FILESYSTEM EXTERNAL HAS NO HEAD (RE-FREEZE #28) ─────────────────────
+  // `kind:"filesystem"` + `path` names an operator-dropped local file. It is resolved
+  // HERE (newest match by name, the legacy load-wsib data/ scan) and carries no HTTP
+  // validators, so the tier-1 gate sees nulls exactly as a validator-less publisher
+  // would. `local === null` (no match, no directory) becomes the declared tier-1 skip
+  // `no_source_file` below. Url externals take the unchanged HEAD path.
+  const isLocal = external.kind === 'filesystem';
+  const local = isLocal ? resolveLocalSource(external.path, repoRoot) : null;
   let head;
   let headError = null;
   try {
-    head = await headValidators(ctxFetch, external.url, timeoutMs);
+    head = isLocal ? { lastModified: null, etag: null } : await headValidators(ctxFetch, external.url, timeoutMs);
   } catch (err) {
     if (external.on_head_error !== 'warn_row') throw err;
     headError = err.message;
@@ -773,7 +893,15 @@ async function acquireExternal({
   // construction check), so reaching here with `isLookup` means "ungated by declaration".
   // The reason string is a DISTINCT value — not `no_post_acquisition_trigger` — so an
   // operator reading the row sees WHY nothing was gated.
-  const tier1 = isLookup ? { skip: false, reason: 'lookup_ungated' } : preAcquisitionGate(head);
+  // 0fs: an absent local file is a DECLARED skip, decided before the gate is consulted
+  // (so neither force_run nor an interrupted-retraction force can turn it into a load;
+  // the runner refuses the interrupted case by name). It flows through the tier-1 skip
+  // return below unchanged: base block, nothing downloaded, DS4 re-emit.
+  const tier1 = isLookup
+    ? { skip: false, reason: 'lookup_ungated' }
+    : (isLocal && !local)
+      ? { skip: true, reason: 'no_source_file' }
+      : preAcquisitionGate(head);
   if (tier1.skip) {
     log.info(tag, `pre-acquisition gate: skip (${tier1.reason}) — nothing downloaded`);
     return {
@@ -793,9 +921,13 @@ async function acquireExternal({
     // at 0w). Path only — `downloadArchive` is byte-identical for all four, and the
     // bytes are hashed as they land on either branch (FENCE 0b230472).
     const destPath = path.join(tmpRoot, ({ csv: 'source.csv', geojson: 'source.geojson', xlsx: 'source.xlsx' })[external.format] || 'source.zip');
-    const dl = await downloadWithRetries(ctxFetch, external.url, destPath, timeoutMs, algorithm, {
-      ...resolveRetryPolicy(descriptor, config), log, tag,
-    });
+    // 0fs: a resolved local file is COPIED into the temp root while it is hashed (the
+    // same streamed hash as a download), so tier-2 and every format arm read the copy.
+    const dl = isLocal
+      ? await copyLocalFile(local.absPath, destPath, algorithm)
+      : await downloadWithRetries(ctxFetch, external.url, destPath, timeoutMs, algorithm, {
+        ...resolveRetryPolicy(descriptor, config), log, tag,
+      });
     const acquired = {
       ...base,
       last_modified: dl.lastModified || head.lastModified,
@@ -805,6 +937,9 @@ async function acquireExternal({
       source_dataset_version: dl.contentHash,
       bytes_downloaded: dl.bytesDownloaded,
       download_attempts: dl.attempts,
+      // 0fs: which operator-dropped file this run read — absent (not null) for a url
+      // external, so a pre-0fs acquired block is key-identical (golden-neutral).
+      ...(isLocal ? { source_path: local.relPath } : {}),
     };
     const tier2 = isLookup
       ? { skip: false, reason: 'lookup_ungated' }
@@ -900,6 +1035,8 @@ module.exports = {
   headValidators,
   downloadArchive,
   downloadWithRetries,
+  resolveLocalSource,
+  copyLocalFile,
   extractArchive,
   locateShapefile,
   parseShapefile,

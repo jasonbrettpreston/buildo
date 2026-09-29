@@ -1967,7 +1967,7 @@
                     "x-frozen": true
                   },
                   "format": {
-                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. exactly the external `runIngestPhase` will actually acquire (`externals.find(e => typeof e.url === 'string' && e.url.length > 0)`). A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD.",
+                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD.",
                     "enum": [
                       "shapefile_zip",
                       "csv",
@@ -2033,6 +2033,20 @@
                   },
                   "url": {
                     "type": "string"
+                  },
+                  "path": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0fs (2026-09-28, Spec 122 §8 RE-FREEZE #28, detail 122a §A17). For kind \"filesystem\" ONLY: a repo-relative glob naming an operator-dropped local file (literal directory + `*` wildcards in the basename; absolute paths, `..`, `**`, `?` and `[` are refused by name). acquire.js resolveLocalSource picks the newest match BY NAME (sort, last wins — the legacy load-wsib data/ scan), matching the basename case-insensitively except its final extension. No HEAD is sent; the file is stream-copied and hashed into the temp root, then parsed by the declared `format` arm. No match (or no directory) is the declared tier-1 skip `no_source_file`, which lands the step's `skip_gated` terminal whose id contains `no_source_file`.",
+                    "type": "string",
+                    "minLength": 1,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "rung (a) reuse `url` with a file:// scheme — needs a fetch shim and a HEAD with no meaning for a local file",
+                        "rung (a') keep the argv --file seam — a per-invocation input no descriptor can express (R-AZ)",
+                        "rung (a'') an environment variable path — a per-deploy hidden input (Rule 1: nothing hidden)",
+                        "rung (e) compute reads the file — compute I/O is banned (Rule 2)"
+                      ],
+                      "why": "load_wsib's source is an annual manual download placed in data/; a declared repo-relative glob is the only rung that makes that input descriptor data, with absence a declared skip rather than a crash or a silent no-op"
+                    }
                   },
                   "license": {
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The publisher's licence URL. It was a module constant read by exactly one audit row (`dataset_source_license`); as descriptor data the acquisition seam can hand it to the compute on the SKIP path too, where no download happened and no constant would have been reachable.",
@@ -2122,7 +2136,7 @@
                     }
                   },
                   {
-                    "x-rule": "`format` is REQUIRED, but only per RECORD-BEARING external — the one `runIngestPhase` actually acquires (`kind: \"http_file\"` with a non-empty `url`). A `kind: \"http_api\"` entry or a `url`-less documentation entry (assert_schema's shared reference list) never reaches the download+parse seam `format` selects a parser for, so it declares no payload format — nothing hidden, because nothing was ever fetched.",
+                    "x-rule": "`format` is REQUIRED, but only per RECORD-BEARING external — the one `runIngestPhase` actually acquires (`kind: \"http_file\"` with a non-empty `url`; a `kind: \"filesystem\"` external carrying a `path` is required to declare `format` by its own 0fs rule below). A `kind: \"http_api\"` entry or a `url`-less documentation entry (assert_schema's shared reference list) never reaches the download+parse seam `format` selects a parser for, so it declares no payload format — nothing hidden, because nothing was ever fetched.",
                     "if": {
                       "properties": {
                         "kind": {
@@ -2142,6 +2156,57 @@
                       "required": [
                         "format"
                       ]
+                    }
+                  },
+                  {
+                    "x-rule": "0fs (RE-FREEZE #28): a `path` is a filesystem external's payload location. It requires kind \"filesystem\" and a declared `format`, and forbids `url` (one source per external) and role \"lookup\" (lookups stay url-fetched xlsx).",
+                    "if": {
+                      "required": [
+                        "path"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "filesystem"
+                        },
+                        "role": {
+                          "not": {
+                            "const": "lookup"
+                          }
+                        }
+                      },
+                      "not": {
+                        "required": [
+                          "url"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "x-rule": "0fs converse (G2): a filesystem external is always path-bearing and never url-bearing; a pathless one would be declared and never read.",
+                    "if": {
+                      "properties": {
+                        "kind": {
+                          "const": "filesystem"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "path"
+                      ],
+                      "not": {
+                        "required": [
+                          "url"
+                        ]
+                      }
                     }
                   }
                 ]
@@ -4317,6 +4382,62 @@
           },
           "counters": {
             "const": "none"
+          }
+        }
+      }
+    },
+    {
+      "x-profile": "0fs (RE-FREEZE #28, G6): a descriptor with a path-bearing external must declare execution.shape \"ingest\"; isIngestStep's url fallback (scripts/lib/step/index.js) would otherwise route it to the ASSERT path, where nothing is acquired or written.",
+      "if": {
+        "type": "object",
+        "properties": {
+          "inputs": {
+            "type": "object",
+            "properties": {
+              "reads": {
+                "type": "object",
+                "properties": {
+                  "externals": { "type": "array", "contains": { "type": "object", "required": ["path"] } }
+                },
+                "required": ["externals"]
+              }
+            },
+            "required": ["reads"]
+          }
+        },
+        "required": ["inputs"]
+      },
+      "then": {
+        "properties": {
+          "execution": { "type": "object", "required": ["shape"], "properties": { "shape": { "const": "ingest" } } }
+        }
+      }
+    },
+    {
+      "x-profile": "0fs (RE-FREEZE #28, G1): an INGESTOR declaring guards.srid \"none\" is the declared no-geometry arm (runIngestPhase skips validateGeometries only then), so its writes bind no wkb_geometry column and declare no geometry_kind.",
+      "if": {
+        "type": "object",
+        "properties": {
+          "identity": { "type": "object", "properties": { "archetype": { "const": "INGESTOR" } }, "required": ["archetype"] },
+          "guards": { "type": "object", "properties": { "srid": { "const": "none" } }, "required": ["srid"] }
+        },
+        "required": ["identity", "guards"]
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "properties": {
+              "writes": {
+                "items": {
+                  "not": {
+                    "anyOf": [
+                      { "required": ["geometry_kind"] },
+                      { "properties": { "columns": { "contains": { "properties": { "bind": { "const": "wkb_geometry" } }, "required": ["bind"] } } }, "required": ["columns"] }
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       }

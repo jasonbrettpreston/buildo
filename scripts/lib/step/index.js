@@ -692,7 +692,32 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // mis-declared descriptor still costs no network, exactly as the `writes.length` guard
   // and the `shapeRecord` format check refuse above the HEAD. The throw names the ids
   // because ids are what the reader must go and fix.
-  const urled = descriptor.inputs.reads.externals.filter((e) => typeof e.url === 'string' && e.url.length > 0);
+  // ── WHAT COUNTS AS AN EXTERNAL AT ALL (0fs, RE-FREEZE #28, 2026-09-28) ─────────────
+  // ⚠️ A `kind:"filesystem"` external with a non-empty `path` is a FIRST-CLASS EXTERNAL:
+  // its `path` (a repo-relative pattern, `*` wildcards in the basename only) is the payload location and the
+  // ONLY source of that external — the acquisition seam resolves it locally and never
+  // touches the network (Part A). It therefore joins the candidate set split into
+  // primary/lookups below exactly as a url-bearing one does. The three refusals that
+  // follow close the CF-2 class ("declared, never fetched, green verdict") for the
+  // descriptors that carry these fields: they live here, ABOVE the first HEAD/acquire
+  // call, so a mis-declared step costs no network and no pool slot. The loader validates
+  // the same rules, but a loader-bypassing (hand-built) descriptor reaches this runner
+  // too, and the schema item rules are what back these checks — so they are enforced
+  // here by name, not assumed.
+  const hasUrl = (e) => typeof e.url === 'string' && e.url.length > 0;
+  const hasPath = (e) => e.kind === 'filesystem' && typeof e.path === 'string' && e.path.length > 0;
+  for (const e of descriptor.inputs.reads.externals) {
+    if (Object.prototype.hasOwnProperty.call(e, 'path') && (hasUrl(e) || e.kind !== 'filesystem')) {
+      throw new Error(`${tag} the external "${e.id}" declares a path with ${hasUrl(e) ? 'a url' : `kind "${String(e.kind)}"`}: a path is a kind "filesystem" payload location and the ONLY source of its external (0fs).`);
+    }
+    if (e.role === 'lookup' && hasPath(e)) {
+      throw new Error(`${tag} the external "${e.id}" is role "lookup" with a path: lookups are url-fetched xlsx side-sources; a local lookup is not supported (0fs).`);
+    }
+    if (!hasUrl(e) && !hasPath(e)) {
+      throw new Error(`${tag} the external "${e.id}" carries neither a url nor a filesystem path, so this INGESTOR would declare it and never read it (0fs refusal, the CF-2 class).`);
+    }
+  }
+  const urled = descriptor.inputs.reads.externals.filter((e) => hasUrl(e) || hasPath(e));
   const primaries = urled.filter((e) => e.role === undefined || e.role === 'primary');
   const lookups = urled.filter((e) => e.role === 'lookup');
   if (primaries.length !== 1) {
@@ -705,6 +730,16 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       } Multiple primaries are a runtime refusal, not a schema cap (Fold CF-3): 3.4 load_heritage lifts this throw by binding each primary to its own write target.`);
   }
   const external = primaries[0];
+  // 0fs (G3): an absent operator file must land ITS OWN terminal, never a fallback one.
+  if (typeof external.path === 'string' && external.path.length > 0) {
+    const hasNoSourceTerminal = (Array.isArray(descriptor.terminals) ? descriptor.terminals : [])
+      .some((t) => t.kind === 'skip_gated' && typeof t.id === 'string' && t.id.includes('no_source_file'));
+    if (!hasNoSourceTerminal) {
+      throw new Error(`${tag} the external "${external.id}" is a filesystem path primary, so an absent file skips with `
+        + 'reason "no_source_file" — declare a terminals[] entry of kind "skip_gated" whose id contains "no_source_file" '
+        + '(e.g. "skipped_no_source_file"); without it selectTerminal would fall back to an unrelated skip terminal.');
+    }
+  }
   // ⚠️ EVERY EXTERNAL THAT CARRIES A RECORD OWES A SHAPE, DECLARED BEFORE THE FIRST
   // NETWORK CALL. Both parsers hand back the publisher's per-feature data verbatim —
   // `parseCsv` as the row object, `parseShapefile` (since 0f) as the DBF properties on
@@ -934,7 +969,16 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
 
   const gate = result.tier1.skip ? result.tier1 : result.tier2;
   if (gate.skip) {
-    const signal = result.tier1.skip ? 'source_validator' : 'content_hash';
+    const noSourceFile = result.tier1.skip && result.tier1.reason === 'no_source_file';
+    // 0fs (A3, fail closed): a pending interrupted retraction must be healed by a real
+    // load. Landing a COMPLETED skip here would become the new own_last_completed row
+    // and erase the evidence that a full reload is owed.
+    if (noSourceFile && interruptedRetraction.interrupted) {
+      throw new Error(`${tag} an interrupted prior run (id ${interruptedRetraction.row.id}) requires a full reload, but `
+        + `the filesystem external "${external.id}" resolved to no file (no_source_file). Refusing to record a completed `
+        + 'skip that would erase the interrupted state — drop the source file and re-run.');
+    }
+    const signal = noSourceFile ? 'no_source_file' : (result.tier1.skip ? 'source_validator' : 'content_hash');
     return {
       skipped: true,
       reason: gate.reason,
@@ -1079,7 +1123,15 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // Read-only SQL, and it ran before the write in the pre-conversion loader too
   // (`pool.query(VALIDATION_SQL)` at 33786d1a:scripts/load-ravines.js:422). Its counters
   // are what L8 measures, which is why the pre_write gate sits immediately below it.
-  const validated = await write.validateGeometries(pool, plan, kept, compute.validatorCounterDelta, { log, tag });
+  // 0fs (RE-FREEZE #28): the DECLARED no-geometry arm. Both conditions are required —
+  // a plan with no wkb_geometry bind that did NOT declare srid "none" still reaches
+  // validateGeometries and its named throw (a forgotten bind is a defect, not a mode).
+  // derived_columns is structurally [] here: buildWritePlan throws DerivedMeasureError
+  // for a derived measure with no geometry column.
+  const noGeometry = plan.geometry_columns.length === 0 && descriptor.guards && descriptor.guards.srid === 'none';
+  const validated = noGeometry
+    ? { carried: kept, repaired: 0, collectionExtracted: 0, skipped: 0, skippedKeys: [], invalidStored: 0 }
+    : await write.validateGeometries(pool, plan, kept, compute.validatorCounterDelta, { log, tag });
 
   // ── COLUMN-NULL COUNTERS (INGESTOR prerequisite 0o, filed
   // docs/reports/review_followups.md "2026-09-24 — batch-2 row 3.7 ... commit ②")

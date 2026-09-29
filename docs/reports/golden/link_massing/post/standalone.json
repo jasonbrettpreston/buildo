@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-massing.js",
   "chain": "none",
-  "git_head": "004ae73321dda2cefc5890cb4883e044bd9dc322",
+  "git_head": "43056856768a918283dd6589e76118287f14aa33",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,18 +11,18 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 15197,
+      "duration_ms": 10823,
       "code_version": "v2-building-centroid-in-parcel",
       "building_footprints_count": "427077",
       "full_mode": false,
       "full_mode_reason": "incremental:no_full_arg",
-      "parcels_processed": 1396,
+      "parcels_processed": 1395,
       "parcels_linked": 0,
       "buildings_matched": 0,
       "buildings_upserted": 0,
       "matches_centroid_in_parcel": 0,
       "matches_nearest": 0,
-      "no_match_count": 1396,
+      "no_match_count": 1395,
       "config": {
         "massing_shed_threshold_sqm": 20,
         "massing_garage_max_sqm": 60,
@@ -36,13 +36,14 @@
       "terminal": "linked_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "004ae73321dda2cefc5890cb4883e044bd9dc322",
+      "code_sha": "43056856768a918283dd6589e76118287f14aa33",
       "pool_errors": 0,
       "checks_failed": 0,
-      "checks_warned": 3,
+      "checks_warned": 4,
       "warnings": [
         "nearest_footprint_gt_lot_count: {\"centroid_in_parcel\":13000,\"centroid_in_parcel_pct\":3.4064,\"nearest\":47466,\"nearest_pct\":45.8237,\"of_primary_links\":{\"centroid_in_parcel\":381638,\"nearest\":103584}}",
         "shared_primary_buildings: {\"buildings\":65340,\"parcels_affected\":166678}",
+        "linked_parcel_null_centroid_count: 15",
         "borrowed_primary_links: 101858"
       ],
       "audit_table": {
@@ -98,7 +99,7 @@
           },
           {
             "metric": "parcels_processed",
-            "value": 1396,
+            "value": 1395,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check"
@@ -129,7 +130,7 @@
           },
           {
             "metric": "no_match",
-            "value": 1396,
+            "value": 1395,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check"
@@ -144,10 +145,10 @@
           {
             "metric": "link_rate",
             "value": {
-              "link_rate_pct": 99.7131,
-              "unlinked_pct": 0.2869,
+              "link_rate_pct": 99.7164,
+              "unlinked_pct": 0.2836,
               "linked_parcels": 485222,
-              "parcels_with_centroid": 486618
+              "parcels_with_centroid": 486602
             },
             "threshold": "pct <= 50",
             "status": "PASS",
@@ -251,7 +252,7 @@
           },
           {
             "metric": "parcels_with_centroid",
-            "value": 486618,
+            "value": 486602,
             "threshold": "value_min 0",
             "status": "INFO",
             "source": "invariant"
@@ -265,9 +266,9 @@
           },
           {
             "metric": "linked_parcel_null_centroid_count",
-            "value": 0,
+            "value": 15,
             "threshold": "viol == 0",
-            "status": "PASS",
+            "status": "WARN",
             "source": "plausibility"
           },
           {
@@ -285,7 +286,7 @@
           },
           {
             "metric": "sys_pb_unique_pairs_violations_duration_ms",
-            "value": 353,
+            "value": 219,
             "threshold": null,
             "status": "INFO"
           },
@@ -297,31 +298,31 @@
           },
           {
             "metric": "sys_pb_distinct_parcels_duration_ms",
-            "value": 186,
+            "value": 142,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_parcels_with_centroid_duration_ms",
-            "value": 259,
+            "value": 258,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_nearest_share_pct_duration_ms",
-            "value": 98,
+            "value": 43,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_linked_parcel_null_centroid_count_duration_ms",
-            "value": 1799,
+            "value": 801,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_borrowed_primary_links_duration_ms",
-            "value": 175,
+            "value": 293,
             "threshold": null,
             "status": "INFO"
           },
@@ -333,7 +334,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 17496,
+            "value": 11969,
             "threshold": null,
             "status": "INFO"
           }
@@ -380,16 +381,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_massing]\",\"msg\":\"[link_massing] target: link_massing (descriptor.database) → database=postgres user=postgres migrations=245 (floor 81)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_massing]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → INCREMENTAL (incremental:no_full_arg)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":15197,\"code_version\":\"v2-building-centroid-in-parcel\",\"building_footprints_count\":\"427077\",\"full_mode\":false,\"full_mode_reason\":\"incremental:no_full_arg\",\"parcels_processed\":1396,\"parcels_linked\":0,\"buildings_matched\":0,\"buildings_upserted\":0,\"matches_centroid_in_parcel\":0,\"matches_nearest\":0,\"no_match_count\":1396,\"config\":{\"massing_shed_threshold_sqm\":20,\"massing_garage_max_sqm\":60,\"massing_nearest_max_distance_m\":50,\"link_massing_link_rate_fail_pct\":50,\"link_massing_centroid_confidence\":0.95,\"link_massing_nearest_confidence\":0.6,\"link_massing_mass_retraction_ratio_fail_pct\":0.05,\"link_massing_rows_changed_ratio_warn_pct\":0.5},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"004ae73321dda2cefc5890cb4883e044bd9dc322\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":3,\"warnings\":[\"nearest_footprint_gt_lot_count: {\\\"centroid_in_parcel\\\":13000,\\\"centroid_in_parcel_pct\\\":3.4064,\\\"nearest\\\":47466,\\\"nearest_pct\\\":45.8237,\\\"of_primary_links\\\":{\\\"centroid_in_parcel\\\":381638,\\\"nearest\\\":103584}}\",\"shared_primary_buildings: {\\\"buildings\\\":65340,\\\"parcels_affected\\\":166678}\",\"borrowed_primary_links: 101858\"],\"audit_table\":{\"phase\":0,\"name\":\"Building Footprint Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"incremental\",\"reason\":\"incremental:no_full_arg\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"structure_thresholds\",\"value\":{\"shed_below_sqm\":20,\"garage_max_sqm\":60},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"empty_source_guard\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE the retraction runs whenever the upstream corpus is empty\",\"guarantee\":\"The full-mode retraction must abort BEFORE the retraction runs whenever the upstream corpus is empty, or it would delete all 520,492 links and rebuild nothing.\"}},{\"metric\":\"parcels_processed\",\"value\":1396,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"run_matched\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_centroid_in_parcel\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_nearest_fallback\",\"value\":{\"links\":0,\"max_distance_m\":50},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":1396,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcel_buildings_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":99.7131,\"unlinked_pct\":0.2869,\"linked_parcels\":485222,\"parcels_with_centroid\":486618},\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"multi_primary_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"confidence_vocabulary\",\"value\":{\"off_domain\":0,\"domain\":[0.95,0.6]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nearest_footprint_gt_lot_count\",\"value\":{\"nearest\":47466,\"centroid_in_parcel\":13000,\"of_primary_links\":{\"nearest\":103584,\"centroid_in_parcel\":381638},\"nearest_pct\":45.8237,\"centroid_in_parcel_pct\":3.4064},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"shared_primary_buildings\",\"value\":{\"buildings\":65340,\"parcels_affected\":166678},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"mass_retraction_ratio\",\"value\":{\"retracted\":0,\"rebuilt\":0,\"unrestored_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rows_changed_ratio\",\"value\":{\"scanned\":0,\"changed\":0,\"ratio\":0},\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"pb_unique_pairs_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"pb_rows\",\"value\":520628,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"pb_distinct_parcels\",\"value\":485222,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"parcels_with_centroid\",\"value\":486618,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"nearest_share_pct\",\"value\":19.9,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"linked_parcel_null_centroid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"borrowed_primary_links\",\"value\":101858,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"retired_var_row_present:link_massing_grid_degrees\",\"value\":\"\\\"link_massing_grid_degrees\\\" (retired 2026-08-28, LM-D7) still has a live logic_variables row — an operator-editable knob with zero effect\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"WARN\"},{\"metric\":\"sys_pb_unique_pairs_violations_duration_ms\",\"value\":353,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_rows_duration_ms\",\"value\":73,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_distinct_parcels_duration_ms\",\"value\":186,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_with_centroid_duration_ms\",\"value\":259,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_nearest_share_pct_duration_ms\",\"value\":98,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_parcel_null_centroid_count_duration_ms\",\"value\":1799,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_borrowed_primary_links_duration_ms\",\"value\":175,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":17496,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"centroid_lat\",\"centroid_lng\",\"geom\"],\"building_footprints\":[\"id\",\"geom\",\"centroid_lat\",\"centroid_lng\",\"footprint_area_sqm\"],\"parcel_buildings\":[\"parcel_id\"]},\"writes\":{\"parcel_buildings\":[\"is_primary\",\"parcel_id\",\"building_id\",\"structure_type\",\"match_type\",\"confidence\",\"linked_at\"]}}\n\n[link_massing] completed in 17.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_massing]\",\"msg\":\"[link_massing] target: link_massing (descriptor.database) → database=postgres user=postgres migrations=245 (floor 81)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_massing]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → INCREMENTAL (incremental:no_full_arg)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":10823,\"code_version\":\"v2-building-centroid-in-parcel\",\"building_footprints_count\":\"427077\",\"full_mode\":false,\"full_mode_reason\":\"incremental:no_full_arg\",\"parcels_processed\":1395,\"parcels_linked\":0,\"buildings_matched\":0,\"buildings_upserted\":0,\"matches_centroid_in_parcel\":0,\"matches_nearest\":0,\"no_match_count\":1395,\"config\":{\"massing_shed_threshold_sqm\":20,\"massing_garage_max_sqm\":60,\"massing_nearest_max_distance_m\":50,\"link_massing_link_rate_fail_pct\":50,\"link_massing_centroid_confidence\":0.95,\"link_massing_nearest_confidence\":0.6,\"link_massing_mass_retraction_ratio_fail_pct\":0.05,\"link_massing_rows_changed_ratio_warn_pct\":0.5},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"43056856768a918283dd6589e76118287f14aa33\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"warnings\":[\"nearest_footprint_gt_lot_count: {\\\"centroid_in_parcel\\\":13000,\\\"centroid_in_parcel_pct\\\":3.4064,\\\"nearest\\\":47466,\\\"nearest_pct\\\":45.8237,\\\"of_primary_links\\\":{\\\"centroid_in_parcel\\\":381638,\\\"nearest\\\":103584}}\",\"shared_primary_buildings: {\\\"buildings\\\":65340,\\\"parcels_affected\\\":166678}\",\"linked_parcel_null_centroid_count: 15\",\"borrowed_primary_links: 101858\"],\"audit_table\":{\"phase\":0,\"name\":\"Building Footprint Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"incremental\",\"reason\":\"incremental:no_full_arg\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"structure_thresholds\",\"value\":{\"shed_below_sqm\":20,\"garage_max_sqm\":60},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"empty_source_guard\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE the retraction runs whenever the upstream corpus is empty\",\"guarantee\":\"The full-mode retraction must abort BEFORE the retraction runs whenever the upstream corpus is empty, or it would delete all 520,492 links and rebuild nothing.\"}},{\"metric\":\"parcels_processed\",\"value\":1395,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"run_matched\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_centroid_in_parcel\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_nearest_fallback\",\"value\":{\"links\":0,\"max_distance_m\":50},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":1395,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcel_buildings_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":99.7164,\"unlinked_pct\":0.2836,\"linked_parcels\":485222,\"parcels_with_centroid\":486602},\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"multi_primary_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"confidence_vocabulary\",\"value\":{\"off_domain\":0,\"domain\":[0.95,0.6]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nearest_footprint_gt_lot_count\",\"value\":{\"nearest\":47466,\"centroid_in_parcel\":13000,\"of_primary_links\":{\"nearest\":103584,\"centroid_in_parcel\":381638},\"nearest_pct\":45.8237,\"centroid_in_parcel_pct\":3.4064},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"shared_primary_buildings\",\"value\":{\"buildings\":65340,\"parcels_affected\":166678},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"mass_retraction_ratio\",\"value\":{\"retracted\":0,\"rebuilt\":0,\"unrestored_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rows_changed_ratio\",\"value\":{\"scanned\":0,\"changed\":0,\"ratio\":0},\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"pb_unique_pairs_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"pb_rows\",\"value\":520628,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"pb_distinct_parcels\",\"value\":485222,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"parcels_with_centroid\",\"value\":486602,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"nearest_share_pct\",\"value\":19.9,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"linked_parcel_null_centroid_count\",\"value\":15,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"borrowed_primary_links\",\"value\":101858,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"retired_var_row_present:link_massing_grid_degrees\",\"value\":\"\\\"link_massing_grid_degrees\\\" (retired 2026-08-28, LM-D7) still has a live logic_variables row — an operator-editable knob with zero effect\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"WARN\"},{\"metric\":\"sys_pb_unique_pairs_violations_duration_ms\",\"value\":219,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_rows_duration_ms\",\"value\":73,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_distinct_parcels_duration_ms\",\"value\":142,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_with_centroid_duration_ms\",\"value\":258,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_nearest_share_pct_duration_ms\",\"value\":43,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_parcel_null_centroid_count_duration_ms\",\"value\":801,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_borrowed_primary_links_duration_ms\",\"value\":293,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":11969,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"centroid_lat\",\"centroid_lng\",\"geom\"],\"building_footprints\":[\"id\",\"geom\",\"centroid_lat\",\"centroid_lng\",\"footprint_area_sqm\"],\"parcel_buildings\":[\"parcel_id\"]},\"writes\":{\"parcel_buildings\":[\"is_primary\",\"parcel_id\",\"building_id\",\"structure_type\",\"match_type\",\"confidence\",\"linked_at\"]}}\n\n[link_massing] completed in 12.0s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2064,
+      "id": 2107,
       "pipeline": "link_massing",
       "status": "completed_with_warnings",
-      "started_at": "2026-09-28T12:44:15.095Z",
-      "completed_at": "2026-09-28T12:44:32.548Z",
-      "duration_ms": 17497,
+      "started_at": "2026-09-29T11:31:09.149Z",
+      "completed_at": "2026-09-29T11:31:21.084Z",
+      "duration_ms": 11970,
       "records_total": 0,
       "records_new": 0,
       "records_updated": 0,
@@ -404,11 +405,12 @@
           "link_massing_rows_changed_ratio_warn_pct": 0.5,
           "link_massing_mass_retraction_ratio_fail_pct": 0.05
         },
-        "code_sha": "004ae73321dda2cefc5890cb4883e044bd9dc322",
+        "code_sha": "43056856768a918283dd6589e76118287f14aa33",
         "terminal": "linked_with_warnings",
         "warnings": [
           "nearest_footprint_gt_lot_count: {\"centroid_in_parcel\":13000,\"centroid_in_parcel_pct\":3.4064,\"nearest\":47466,\"nearest_pct\":45.8237,\"of_primary_links\":{\"centroid_in_parcel\":381638,\"nearest\":103584}}",
           "shared_primary_buildings: {\"buildings\":65340,\"parcels_affected\":166678}",
+          "linked_parcel_null_centroid_count: 15",
           "borrowed_primary_links: 101858"
         ],
         "full_mode": false,
@@ -463,7 +465,7 @@
               }
             },
             {
-              "value": 1396,
+              "value": 1395,
               "metric": "parcels_processed",
               "source": "check",
               "status": "INFO",
@@ -494,7 +496,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 1396,
+              "value": 1395,
               "metric": "no_match",
               "source": "check",
               "status": "INFO",
@@ -509,10 +511,10 @@
             },
             {
               "value": {
-                "unlinked_pct": 0.2869,
-                "link_rate_pct": 99.7131,
+                "unlinked_pct": 0.2836,
+                "link_rate_pct": 99.7164,
                 "linked_parcels": 485222,
-                "parcels_with_centroid": 486618
+                "parcels_with_centroid": 486602
               },
               "metric": "link_rate",
               "source": "check",
@@ -616,7 +618,7 @@
               "threshold": "value_min 0"
             },
             {
-              "value": 486618,
+              "value": 486602,
               "metric": "parcels_with_centroid",
               "source": "invariant",
               "status": "INFO",
@@ -630,10 +632,10 @@
               "threshold": "value_max 100"
             },
             {
-              "value": 0,
+              "value": 15,
               "metric": "linked_parcel_null_centroid_count",
               "source": "plausibility",
-              "status": "PASS",
+              "status": "WARN",
               "threshold": "viol == 0"
             },
             {
@@ -650,7 +652,7 @@
               "threshold": "no logic_variables row for a retired name"
             },
             {
-              "value": 353,
+              "value": 219,
               "metric": "sys_pb_unique_pairs_violations_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -662,31 +664,31 @@
               "threshold": null
             },
             {
-              "value": 186,
+              "value": 142,
               "metric": "sys_pb_distinct_parcels_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 259,
+              "value": 258,
               "metric": "sys_parcels_with_centroid_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 98,
+              "value": 43,
               "metric": "sys_nearest_share_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1799,
+              "value": 801,
               "metric": "sys_linked_parcel_null_centroid_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 175,
+              "value": 293,
               "metric": "sys_borrowed_primary_links_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -698,7 +700,7 @@
               "threshold": null
             },
             {
-              "value": 17496,
+              "value": 11969,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -707,18 +709,18 @@
           "phase": 0,
           "verdict": "WARN"
         },
-        "duration_ms": 15197,
+        "duration_ms": 10823,
         "pool_errors": 0,
         "chain_run_id": null,
         "code_version": "v2-building-centroid-in-parcel",
         "checks_failed": 0,
-        "checks_warned": 3,
-        "no_match_count": 1396,
+        "checks_warned": 4,
+        "no_match_count": 1395,
         "parcels_linked": 0,
         "matches_nearest": 0,
         "full_mode_reason": "incremental:no_full_arg",
         "buildings_matched": 0,
-        "parcels_processed": 1396,
+        "parcels_processed": 1395,
         "buildings_upserted": 0,
         "building_footprints_count": "427077",
         "matches_centroid_in_parcel": 0
@@ -726,7 +728,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2063,
+  "pipeline_runs_max_id_before": 2106,
   "table_state": [
     {
       "table": "parcel_buildings",
@@ -751,7 +753,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcel_buildings": 858
+    "parcel_buildings": 877
   },
   "table_specs": {
     "parcel_buildings": {
@@ -786,7 +788,7 @@
     },
     {
       "name": "parcels_with_centroid",
-      "value": "486618"
+      "value": "486602"
     },
     {
       "name": "nearest_share_pct",
@@ -794,7 +796,7 @@
     },
     {
       "name": "linked_parcel_null_centroid_count",
-      "value": "0"
+      "value": "15"
     },
     {
       "name": "borrowed_primary_links",
@@ -888,7 +890,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1396
+              "value": 1395
             },
             {
               "metric": "run_matched",
@@ -919,7 +921,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1396
+              "value": 1395
             },
             {
               "metric": "parcel_buildings_written",
@@ -934,10 +936,10 @@
               "status": "PASS",
               "threshold": "pct <= 50",
               "value": {
-                "link_rate_pct": 99.7131,
+                "link_rate_pct": 99.7164,
                 "linked_parcels": 485222,
-                "parcels_with_centroid": 486618,
-                "unlinked_pct": 0.2869
+                "parcels_with_centroid": 486602,
+                "unlinked_pct": 0.2836
               }
             },
             {
@@ -1041,7 +1043,7 @@
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
-              "value": 486618
+              "value": 486602
             },
             {
               "metric": "nearest_share_pct",
@@ -1053,9 +1055,9 @@
             {
               "metric": "linked_parcel_null_centroid_count",
               "source": "plausibility",
-              "status": "PASS",
+              "status": "WARN",
               "threshold": "viol == 0",
-              "value": 0
+              "value": 15
             },
             {
               "metric": "borrowed_primary_links",
@@ -1077,7 +1079,7 @@
         "buildings_matched": 0,
         "buildings_upserted": 0,
         "checks_failed": 0,
-        "checks_warned": 3,
+        "checks_warned": 4,
         "code_version": "v2-building-centroid-in-parcel",
         "config": {
           "link_massing_centroid_confidence": 0.95,
@@ -1094,14 +1096,15 @@
         "ledger_row": "owned",
         "matches_centroid_in_parcel": 0,
         "matches_nearest": 0,
-        "no_match_count": 1396,
+        "no_match_count": 1395,
         "parcels_linked": 0,
-        "parcels_processed": 1396,
+        "parcels_processed": 1395,
         "pool_errors": 0,
         "terminal": "linked_with_warnings",
         "warnings": [
           "nearest_footprint_gt_lot_count: {\"centroid_in_parcel\":13000,\"centroid_in_parcel_pct\":3.4064,\"nearest\":47466,\"nearest_pct\":45.8237,\"of_primary_links\":{\"centroid_in_parcel\":381638,\"nearest\":103584}}",
           "shared_primary_buildings: {\"buildings\":65340,\"parcels_affected\":166678}",
+          "linked_parcel_null_centroid_count: 15",
           "borrowed_primary_links: 101858"
         ]
       },
@@ -1204,7 +1207,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1396
+                "value": 1395
               },
               {
                 "metric": "run_matched",
@@ -1235,7 +1238,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1396
+                "value": 1395
               },
               {
                 "metric": "parcel_buildings_written",
@@ -1250,10 +1253,10 @@
                 "status": "PASS",
                 "threshold": "pct <= 50",
                 "value": {
-                  "link_rate_pct": 99.7131,
+                  "link_rate_pct": 99.7164,
                   "linked_parcels": 485222,
-                  "parcels_with_centroid": 486618,
-                  "unlinked_pct": 0.2869
+                  "parcels_with_centroid": 486602,
+                  "unlinked_pct": 0.2836
                 }
               },
               {
@@ -1357,7 +1360,7 @@
                 "source": "invariant",
                 "status": "INFO",
                 "threshold": "value_min 0",
-                "value": 486618
+                "value": 486602
               },
               {
                 "metric": "nearest_share_pct",
@@ -1369,9 +1372,9 @@
               {
                 "metric": "linked_parcel_null_centroid_count",
                 "source": "plausibility",
-                "status": "PASS",
+                "status": "WARN",
                 "threshold": "viol == 0",
-                "value": 0
+                "value": 15
               },
               {
                 "metric": "borrowed_primary_links",
@@ -1393,7 +1396,7 @@
           "buildings_matched": 0,
           "buildings_upserted": 0,
           "checks_failed": 0,
-          "checks_warned": 3,
+          "checks_warned": 4,
           "code_version": "v2-building-centroid-in-parcel",
           "config": {
             "link_massing_centroid_confidence": 0.95,
@@ -1410,14 +1413,15 @@
           "ledger_row": "owned",
           "matches_centroid_in_parcel": 0,
           "matches_nearest": 0,
-          "no_match_count": 1396,
+          "no_match_count": 1395,
           "parcels_linked": 0,
-          "parcels_processed": 1396,
+          "parcels_processed": 1395,
           "pool_errors": 0,
           "terminal": "linked_with_warnings",
           "warnings": [
             "nearest_footprint_gt_lot_count: {\"centroid_in_parcel\":13000,\"centroid_in_parcel_pct\":3.4064,\"nearest\":47466,\"nearest_pct\":45.8237,\"of_primary_links\":{\"centroid_in_parcel\":381638,\"nearest\":103584}}",
             "shared_primary_buildings: {\"buildings\":65340,\"parcels_affected\":166678}",
+            "linked_parcel_null_centroid_count: 15",
             "borrowed_primary_links: 101858"
           ]
         },
@@ -1468,7 +1472,7 @@
       },
       {
         "name": "parcels_with_centroid",
-        "value": "486618"
+        "value": "486602"
       },
       {
         "name": "nearest_share_pct",
@@ -1476,7 +1480,7 @@
       },
       {
         "name": "linked_parcel_null_centroid_count",
-        "value": "0"
+        "value": "15"
       },
       {
         "name": "borrowed_primary_links",
@@ -1496,7 +1500,7 @@
       }
     ],
     "reason": "zero writes on 0 table(s) []; drift_declared (not counted as proof) on [parcel_buildings]",
-    "txid_before_run2": 2863858,
+    "txid_before_run2": 2907759,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -1510,5 +1514,5 @@
     "scripts/link-massing.js",
     "scripts/link-massing.notes.json"
   ],
-  "lib_fingerprint": "7aa5f2c53b8039ff35c897155f781666f63dd2152e83f5f5def7cf6c5a9a2439"
+  "lib_fingerprint": "d5ea5f58abfd2358211b16f5ca3c227e5fe75d78423fc4e90cdacd8377fc6649"
 }

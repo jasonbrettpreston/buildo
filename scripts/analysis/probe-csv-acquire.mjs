@@ -14,6 +14,9 @@
 // USAGE:
 //   node scripts/analysis/probe-csv-acquire.mjs --url=<csv url> --key=<key_property> [--bom] [--relax-quotes]
 //   node --max-old-space-size=2048 scripts/analysis/probe-csv-acquire.mjs --url=... --key=...
+//   node scripts/analysis/probe-csv-acquire.mjs --file=<local csv path> --key=<key_property> [--bom]
+//     (0fs, RE-FREEZE #28: a `kind:"filesystem"` external — the local file is stream-copied
+//     and hashed through the runner's own `copyLocalFile`, then parsed by `parseCsv`)
 //
 // Reusable: any CSV external (address_points, parcels, load_wsib) can be probed by
 // pointing `--url`/`--key`/`--bom`/`--relax-quotes` at its descriptor's `external.url` /
@@ -28,21 +31,22 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 // The runner's OWN acquisition functions — not a reimplementation. A probe that measures
 // a different code path than the one the runner actually runs would measure nothing.
-const { downloadArchive, parseCsv } = require('../lib/step/acquire.js');
+const { downloadArchive, copyLocalFile, parseCsv } = require('../lib/step/acquire.js');
 
 const MEMORY_SAMPLE_INTERVAL_MS = 500;
 
 function parseArgs(argv) {
-  const args = { bom: false, relaxQuotes: false, url: null, key: null };
+  const args = { bom: false, relaxQuotes: false, url: null, file: null, key: null };
   for (const raw of argv) {
     if (raw === '--bom') args.bom = true;
     else if (raw === '--relax-quotes') args.relaxQuotes = true;
     else if (raw.startsWith('--url=')) args.url = raw.slice('--url='.length);
+    else if (raw.startsWith('--file=')) args.file = raw.slice('--file='.length);
     else if (raw.startsWith('--key=')) args.key = raw.slice('--key='.length);
   }
-  if (!args.url || !args.key) {
+  if ((!args.url === !args.file) || !args.key) {
     throw new Error(
-      'usage: probe-csv-acquire.mjs --url=<csv url> --key=<key_property> [--bom] [--relax-quotes]',
+      'usage: probe-csv-acquire.mjs --url=<csv url> | --file=<local csv path> --key=<key_property> [--bom] [--relax-quotes]',
     );
   }
   return args;
@@ -60,18 +64,21 @@ function identityCoerceKey(raw) {
 }
 
 async function main() {
-  const { url, key, bom, relaxQuotes } = parseArgs(process.argv.slice(2));
+  const { url, file, key, bom, relaxQuotes } = parseArgs(process.argv.slice(2));
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-csv-acquire-'));
   const destPath = path.join(tmpRoot, 'source.csv');
   const maxOldSpaceFlag =
     (process.execArgv || []).find((a) => a.startsWith('--max-old-space-size')) || null;
 
   try {
-    process.stderr.write(`[probe-csv-acquire] downloading ${url} -> ${destPath}\n`);
+    process.stderr.write(`[probe-csv-acquire] ${file ? `copying ${file}` : `downloading ${url}`} -> ${destPath}\n`);
     const dlStart = Date.now();
     // `fetch` is global on Node >=18; this is the same `ctxFetch` shape the runner hands
-    // `downloadArchive` in production (a plain fetch, not a mock).
-    const dl = await downloadArchive(fetch, url, destPath, 120000, 'md5');
+    // `downloadArchive` in production (a plain fetch, not a mock). A `--file` source goes
+    // through `copyLocalFile`, the 0fs filesystem arm `acquireExternal` runs.
+    const dl = file
+      ? await copyLocalFile(path.resolve(file), destPath, 'md5')
+      : await downloadArchive(fetch, url, destPath, 120000, 'md5');
     const downloadSeconds = (Date.now() - dlStart) / 1000;
     process.stderr.write(
       `[probe-csv-acquire] downloaded ${dl.bytesDownloaded} bytes in ${downloadSeconds.toFixed(1)}s ` +
@@ -111,7 +118,8 @@ async function main() {
     const heapLimitBytes = v8.getHeapStatistics().heap_size_limit;
 
     const result = {
-      url,
+      url: url || null,
+      file: file || null,
       key_property: key,
       csv_options: { bom, relax_quotes: relaxQuotes },
       bytes_downloaded: dl.bytesDownloaded,
