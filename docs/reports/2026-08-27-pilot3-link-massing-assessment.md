@@ -536,12 +536,12 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 74 PRE capture(s) across 22 converted step(s) all tracked + clean (git can restore every reference) |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 76 PRE capture(s) across 23 converted step(s) all tracked + clean (git can restore every reference) |
 | 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
 | 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 22 converted slug(s) — 14 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
-| 26 | (registry) | PASS | COUNTER-ROOT: 53 declared counter source(s) across 18 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
-| 27 | (registry) | PASS | ROW-ERROR-GATE: 6 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 23 converted slug(s) — 15 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 56 declared counter source(s) across 19 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 7 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
 | 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
 | 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
 | 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
@@ -552,8 +552,8 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
 | 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 277 definition row(s) checked, 13 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (14 ledger-allowed, 4 outputs:"none" vacuous) |
-| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 70 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
-| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 22 step(s) checked — every diff-explanation channel accounted for |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 73 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 23 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 30 finding(s), all ledger-allowed (30) |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 
@@ -564,13 +564,12 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 - compare ran: true · diffs found: 466 · unexplained: 0
 
 ### Test suite (item iii)
-- 1725/1727 passed (suite success=false)
-- harvested: 33 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 1771/1772 passed (suite success=false)
+- harvested: 35 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (2):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -589,7 +588,7 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=link runner=runLinkPhase: no staleness.ledgerGatedSkip early-return on this path; calls staleness.selectMode unconditionally, which folds detectInterruptedRetraction internally · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5961B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=70991B notes=17213B checks=19 rows records_meta=5951B (newest post/ capture) |
 
 **Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 

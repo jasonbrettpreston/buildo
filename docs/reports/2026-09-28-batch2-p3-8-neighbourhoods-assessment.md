@@ -556,7 +556,7 @@ R-PACE-1 compressed-form marker, §0 header).
 ### 6.1 Defect ledger
 
 **PIN in wrong form — never fix inside the conversion (Spec 121 §4.3 / Spec 123 §3.1); each F-commit is
-separate and RED→GREEN.** **Every id `N-D1`…`N-D19` appears EXACTLY once below** (19 rows = the distinct
+separate and RED→GREEN.** **Every id `N-D1`…`N-D20` appears EXACTLY once below** (20 rows = the distinct
 `N-D<n>` ids found by `grep -o "N-D[0-9]*"` on the plan, `sort -u`) — no id number is skipped by the plan, and
 no behaviour is invented for a missing id. Vocabulary: `Kind` ∈ {`deviation`, `limitation`}; `Disposition` ∈
 {`knowingly-retired`, `pinned-wrong-form`, `data-identical`, `stronger`, `F-commit`}; `Lands` ∈ {`②`, `③`,
@@ -590,12 +590,13 @@ initials [READ `scripts/analysis/step-validate.mjs` `defectPrefixFor`: `neighbou
 | **N-D17** | a null-geometry feature — the `UPDATE` arm's `` `geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)` `` **throws** `invalid GeoJSON representation` on the jsonb `'null'`; the `INSERT` arm stores `geometry = 'null'::jsonb` ⇒ the run FAILS | deviation | `pinned-wrong-form` | OPEN · **PIN** (declared deviation at ②) | **0 exposure** — **0/158** null geometries [MEASURED plan §2, Fold CF-8]. Converted parser skips + counts `null_geometry_count`; refusal **preserved** as a `pre_write` **FAIL** `viol == 0` + `order_guarantee` (Spec 57) — **no silent skip** | **②** | plan §11 (orchestrator fold) + Fold CF-8 |
 | **N-D18** | a census-only change fires the merged guard, whose `SET` also rewrites `` `, geom = ST_SetSRID(ST_GeomFromGeoJSON(EXCLUDED.geometry::text), 4326)` `` — the legacy leaves `geom` alone on a census `UPDATE` ⇒ a geom-drifted row with a census change **heals under converted only** | deviation | `pinned-wrong-form` | OPEN · **PIN** (declared deviation at ②) | **0 rows today** — `ST_SetSRID(ST_GeomFromGeoJSON(geometry::text),4326) = geom` **158/158** [MEASURED Fold CF-5]; fix post-conversion. **Cohort arms C and Q MUST be DISJOINT** (stated in `cohort.json`) | **②** | plan §11 (orchestrator fold) + Fold CF-5 (completing CF-4/CF-6/CF-8) |
 | **N-D19** | the HEAD is **new network surface** — the legacy issues a bare `` `get(url, (response) => {` `` with NO HEAD; converted `acquireExternal` HEADs every url'd external, so with `on_head_error` absent (`fail_step`) a HEAD-only 5xx **FAILS a run legacy would have completed** | deviation | `pinned-wrong-form` | OPEN · **PIN** (declared deviation at ②) | **0 exposure** on local runs (never HEADed) [MEASURED Fold H-5]. ② declares `on_head_error:"warn_row"` on BOTH externals (WARN row `head_error` + proceed = closest parity to "no HEAD") — moved out of F1 | **②** | plan §14 Fold H-5 (Op-Model seat) |
+| **N-D20** | the legacy boundary guard compared name/geometry only, never the step-written `geom` — `` `WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name` `` ⇒ a geom that drifted from its geometry derivation never healed (the parcels 9,855-NULL-geom class) | deviation | `stronger` | OPEN · **PIN** (declared deviation at ③) | **0 exposure** (derived = stored **158/158**); forced cohort Q arm: legacy 5/5 NOT healed, converted 5/5 healed [MEASURED 2026-09-28]. Orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines precedent; class lock `src/tests/steps/geometry-guard-coverage.logic.test.ts`): `geom` joins `guard_columns` | **③** | orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines precedent) |
 
 **Closing line.** **④ F1 (N-D16) and ④ F2 (N-D10) are separate post-conversion commits, each RED→GREEN.** **No
-id is `PENDING orchestrator`** — the plan resolved every one of `N-D1`…`N-D19` (§2 / §11 / §13 / §14):
-`N-D1/2/3/4/5/6/7/8/9/11/12/13/14/15/17/18/19` are **deviations** landing at ② (carried with `adjudicated_by`),
+id is `PENDING orchestrator`** — the plan resolved every one of `N-D1`…`N-D20` (§2 / §11 / §13 / §14):
+`N-D1/2/3/4/5/6/7/8/9/11/12/13/14/15/17/18/19/20` are **deviations** landing at ② (carried with `adjudicated_by`),
 `N-D10` + `N-D16` are **limitations** landing at **④ F2 / ④ F1**. **No `N-D` id number is skipped by the
-plan** (`grep -o "N-D[0-9]*"` → **19** distinct ids, all transcribed above; no invented behaviour).
+plan** (`grep -o "N-D[0-9]*"` → **20** distinct ids, all transcribed above; no invented behaviour).
 
 ### 6.2 Cross-step findings (not this step's defects)
 
@@ -851,6 +852,24 @@ with the Fold CF-5/CF-6 amendments]:
   standalone ledger row, forced-pair invariants). `step-validate --fast`: 16/17, hard-stop no, five words PASS.
 - **Runtime:** converted run 4.9 s (legacy PRE ~4.3 s), within the declared 5m budget.
 
+### 9.3 Commit ③ — geom guard (N-D20) recapture (MEASURED 2026-09-28)
+
+- **Ruling + class lock:** the boundary guard now names `geom` alongside `name`/`geometry` and the 14 census
+  columns (N-D20). Orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines precedent), locked
+  as a class in `src/tests/steps/geometry-guard-coverage.logic.test.ts`.
+- **Steady POST recaptured** (`sources`, `standalone`, `--overwrite`): the new guard term fires on nothing —
+  stored geom = derivation on **158/158** — so both captures are normalised-IDENTICAL to the ② POST, table
+  `9b111a6a…`; two-run proof 0 writes (strict).
+- **Forced post + `sources.forced` recaptured:** new 5 / updated **25** (N 5 + G 5 + C 10 + **Q 5 now healed**;
+  legacy Q 5/5 unhealed), table `eaec22cc74680a4d8f87dabe317a7502`. With the 5 new rows' geom NULLed AND the
+  5 Q rows' geom re-translated 1e-4 the table hashes to `c486a1f3…` = the legacy end state ⇒ **N-D1 + N-D20 are
+  the only differences**. Diffs vs the ② forced run: `records_updated` 20→25,
+  `geom_equals_geometry_derivation` 158→163, the table hash, and `id_key_map_hash` (serial). CKAN sha256
+  re-verified `b0cb5807…`/`9a3c3729…` (no republication). Restore **9b111a6a / b6d78983 / 158** after each run.
+- **Cohort script:** `scripts/analysis/neighbourhoods-cohort-differential.js` gained `--overwrite` (recapture
+  in place rather than refuse on an existing capture) and the side-dependent Q expectation (healed under the
+  converted guard's new `geom` term, unhealed under the legacy guard).
+
 ---
 
 ## 10. Red suite (PH-7)
@@ -960,12 +979,12 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 | G3 | 1 | 2 | table rows=31 vocab-hit rows=2 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 19 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=22 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
+| G6 | 3 | 3 | 20 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=3 it-count=23 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=22 |
-| G-shape | PASS | — | file-clean=null compute-clean=true |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=23 |
+| G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
@@ -981,12 +1000,12 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
-| 22 | (registry) | PASS | GOLD-PRE-FRESH: 74 PRE capture(s) across 22 converted step(s) all tracked + clean (git can restore every reference) |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
-| 25 | (registry) | PASS | ARCHETYPE-PARITY: 22 converted slug(s) — 14 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
-| 26 | (registry) | PASS | COUNTER-ROOT: 53 declared counter source(s) across 18 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
-| 27 | (registry) | PASS | ROW-ERROR-GATE: 6 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 22 | (registry) | PASS | GOLD-PRE-FRESH: 76 PRE capture(s) across 23 converted step(s) all tracked + clean (git can restore every reference) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: not applicable (0 pending slugs declare the compressed form) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: not applicable (0 pending slugs whose archetype is eligible) |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 23 converted slug(s) — 15 compared against a retained census row (all agree), 8 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 56 declared counter source(s) across 19 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 7 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
 | 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
 | 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
 | 30 | (registry) | PASS | EMITS-EQUIV (gate C): 58 emits drift(s) checked, all closed (58 ledger-allowed, 0 from declared==emitted) |
@@ -1009,11 +1028,12 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 - compare ran: true · diffs found: 94 · unexplained: 0
 
 ### Test suite (item iii)
-- 1754/1754 passed (suite success=true)
+- 1771/1772 passed (suite success=false)
 - harvested: 35 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -1032,7 +1052,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 3 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=35014B notes=13368B checks=6 rows records_meta=2287B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=36196B notes=13193B checks=6 rows records_meta=2237B (newest post/ capture) |
 
 **Enforced-green: 13/14** · not-run: 0 · vacuous: 0
 

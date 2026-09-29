@@ -725,6 +725,32 @@ describe('row 3.8 — D11 the lock-skip WARN terminal: B15 (GREEN at ②; the le
   });
 });
 
+describe('row 3.8 — D12 geom is a guard term (N-D20, WF3 2026-09-28 class lock)', () => {
+  it('D12 — the guard compares `neighbourhoods.geom IS DISTINCT FROM EXCLUDED.geom` and .guard_columns carries geom, so a geom-only drift heals on any run (orchestrator ruling; the legacy L3 guard compared name/geometry only)', () => {
+    const d = loadDescriptor();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS write codegen
+    const writeLib = require(path.join(REPO_ROOT, 'scripts/lib/step/write.js')) as {
+      buildWritePlan: (w: unknown, dd: unknown) => { upsertSqlFor: (n: number) => string; guard_columns: string[] };
+    };
+    const plan = writeLib.buildWritePlan(writes(d)[0], d);
+    // N-D20: `geom` is a step-written wkb_geometry column (D8) and, per the WF3
+    // 2026-09-28 geometry-guard-coverage class lock, a DERIVED geometry column must be a
+    // guard term — else a display/derivation drift is invisible to the write guard and never
+    // re-derives (parcels D2 / address_points / load_ravines precedent).
+    expect(plan.guard_columns, 'guard_columns must carry geom').toContain('geom');
+    const sql = plan.upsertSqlFor(1);
+    // legacy L3/L4: the boundary guard is `WHERE neighbourhoods.name IS DISTINCT FROM
+    // EXCLUDED.name OR neighbourhoods.geometry IS DISTINCT FROM ...` (:152-156) — it compares
+    // name and geometry jsonb but NEVER geom, so a geom-only drift never healed.
+    expect(sql).toContain(`${WRITE_TABLE}.geom IS DISTINCT FROM EXCLUDED.geom`);
+    const deviations = (d as Record<string, unknown>).deviations as Array<{ from: string }>;
+    expect(
+      deviations.some((x) => x.from.startsWith('N-D20')),
+      'the descriptor must carry the N-D20 deviation',
+    ).toBe(true);
+  });
+});
+
 // ===========================================================================
 // The commit-① report itself — plain `it`: GREEN today (part A1 landed it).
 // ===========================================================================

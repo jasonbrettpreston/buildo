@@ -2,7 +2,7 @@
   "contract_version": 1,
   "step": "neighbourhoods",
   "source": "docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md §9.2 (row 3.8 ② POST compare) + scripts/load-neighbourhoods.descriptor.json deviations[]",
-  "note": "steady pairs (sources, standalone): table_state neighbourhoods 158 rows content_hash 9b111a6a18a701666746bfd2ceee0bdb and all 9 invariants BYTE-IDENTICAL PRE→POST; verdict PASS both; both sources' live bytes = the PRE digests (md5 3d3895fe…/6ffe6838…, 2,141,269 B / 1,763,175 B; full sha256 b0cb5807…/9a3c3729… re-downloaded after each POST). Forced pair (forced/pre.json vs forced/post.json) differs ONLY where N-D1 says, proven by query (post table with the 5 new rows' geom NULLed = c486a1f3…, the legacy forced end state).",
+  "note": "steady pairs (sources, standalone): table_state neighbourhoods 158 rows content_hash 9b111a6a18a701666746bfd2ceee0bdb and all 9 invariants BYTE-IDENTICAL PRE→POST; verdict PASS both; both sources' live bytes = the PRE digests (md5 3d3895fe…/6ffe6838…, 2,141,269 B / 1,763,175 B; full sha256 b0cb5807…/9a3c3729… re-downloaded after each POST). Forced pair (forced/pre.json vs forced/post.json) differs ONLY where N-D1 says — and, after commit ③'s geom guard (N-D20), where N-D20 says: with the 5 new rows' geom NULLed AND the 5 Q rows' geom re-translated 1e-4 the converted table hashes to c486a1f3…, the legacy forced end state, so N-D1 + N-D20 are the only differences.",
   "diffs": [
     {
       "key": "meta[].external",
@@ -106,7 +106,7 @@
     },
     {
       "key": "summary.records_updated",
-      "why": "N-D2/N-D3: steady 158 → 0 (legacy rewrote 158 rows ×8 UPDATEs on an unchanged source); forced 158 → 20 (N 5 + G 5 + C 10; Q untouched)."
+      "why": "N-D2/N-D3: steady 158 → 0 (legacy rewrote 158 rows ×8 UPDATEs on an unchanged source); forced 158 → 25 (N 5 + G 5 + C 10 + Q 5; the 5 Q rows are now healed since the geom guard names geom, N-D20)."
     },
     {
       "key": "summary.records_new",
@@ -114,11 +114,11 @@
     },
     {
       "key": "invariants[].value",
-      "why": "Forced pair only, N-D1: geom_null 5→0, geom_types MULTIPOLYGON 158→163, geom_equals_geometry_derivation 153→158 (the 5 new rows' geom is written on INSERT); id_key_map_hash differs by construction (serial ids of the new rows, §8)."
+      "why": "Forced pair only, N-D1/N-D20: geom_null 5→0, geom_types MULTIPOLYGON 158→163, geom_equals_geometry_derivation 153→163 (the 5 new rows' geom is written on INSERT, N-D1, and the 5 Q rows are now healed, N-D20); id_key_map_hash differs by construction (serial ids of the new rows, §8)."
     },
     {
       "key": "table_state[].content_hash",
-      "why": "Forced pair only, N-D1: c486a1f3… → 2762a3fb…; with the 5 new rows' geom NULLed the converted table hashes to c486a1f3… exactly (cohort witness \"N-D1-only\"), so geom on those 5 rows is the ONLY difference."
+      "why": "Forced pair only, N-D1/N-D20: c486a1f3… → eaec22cc…; with the new rows' geom NULLed and the Q rows re-translated the converted table hashes to c486a1f3… exactly (N-D1 + N-D20 only)."
     }
   ]
 }

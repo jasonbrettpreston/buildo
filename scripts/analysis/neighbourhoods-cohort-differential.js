@@ -435,7 +435,9 @@ async function run(args) {
     const stepPath = path.relative(REPO_ROOT, resolveRepoPath(args.step)) || args.step;
     const argv = [
       '-r', 'dotenv/config', 'scripts/analysis/capture-step-golden.js',
-      `--step=${stepPath}`, '--chain=sources', `--out=${resolveRepoPath(args.out)}`,
+      // A re-run of an already-committed side is a deliberate recapture, not an accident
+      // (git history restores the prior one); the harness guard stays in force for every other caller.
+      `--step=${stepPath}`, '--chain=sources', '--overwrite', `--out=${resolveRepoPath(args.out)}`,
       `--tables=${TABLE}`, `--table-columns=${TABLE}:${PROJ.join(',')}`, `--table-order=${TABLE}:${KEY}`,
       '--invariants=docs/reports/golden/neighbourhoods/invariants.json',
     ];
@@ -523,8 +525,10 @@ async function run(args) {
     );
     console.log(`[differential:${side}] witness shifted keys still present: ${shiftedStill}/${cohort.I.length} (expect ${cohort.I.length})`);
 
-    // The converted guard names name/geometry/…census, so N, G and C must all be healed;
-    // Q (geom only) is in NEITHER guard, so it must NOT be healed.
+    // N, G and C must all be healed on BOTH sides. The Q arm (geom-only 1e-4 translate) is
+    // the guard-composition witness, and its expectation is SIDE-DEPENDENT (N-D20): the
+    // LEGACY guard (side `pre`) is name/geometry only, so Q is NOT healed; the CONVERTED
+    // guard ALSO names `geom` (N-D20), so the converted step HEALS Q.
     const healed = {};
     for (const arm of ['N', 'G', 'C']) {
       healed[arm] = (await pool.query(hashSql(`WHERE ${KEY} = ANY($1::int[])`), [cohort[arm]])).rows[0].h;
@@ -533,7 +537,7 @@ async function run(args) {
     const qUnhealed = Number(
       (await pool.query(`SELECT count(*)::int AS n FROM ${TABLE} WHERE ${KEY} = ANY($1::int[]) AND ST_AsBinary(geom) <> ST_AsBinary(${DERIVED_GEOM})`, [cohort.Q])).rows[0].n,
     );
-    console.log(`[differential:${side}] witness Q not healed: ${qUnhealed}/${cohort.Q.length} geom rows still ≠ ${DERIVED_GEOM} (expect ${cohort.Q.length})`);
+    console.log(`[differential:${side}] witness Q not healed: ${qUnhealed}/${cohort.Q.length} geom rows still ≠ ${DERIVED_GEOM} (expect ${side === 'pre' ? cohort.Q.length : '0 — N-D20 heals geom-only drift'})`);
 
     const negAfter = (await pool.query(hashSql(`WHERE ${KEY} = ANY($1::int[])`), [cohort.negative_control])).rows[0].h;
     console.log(`[differential:${side}] witness negative_control hash: ${negAfter} ${negAfter === cohort.arm_hashes.negative_control ? '(arm_hash OK)' : '(ARM HASH MISMATCH)'}`);
@@ -548,33 +552,47 @@ async function run(args) {
     // non-NULL (no cast, no added parentheses) and only the 5 new rows' text becomes NULL.
     let nd1OnlyHash = null; let nd1OnlyOk = true;
     if (side === 'post') {
-      // hash the post-run table with geom NULLed on exactly the new I-arm rows (ids not in the before-image)
+      // hash a table rebuilt from the post-run state: geom NULLed on exactly the new I-arm
+      // rows (ids not in the before-image), and geom RE-TRANSLATED 1e-4 on exactly the Q rows.
+      // N-D1+N-D20: the LEGACY end state carries BOTH diffs. N-D1 leaves the new rows' geom
+      // NULL. N-D20: the legacy guard (name/geometry) never fires on the Q arm, so the legacy
+      // Q rows' geom keeps the perturbation's 1e-4 translate — while the CONVERTED step has
+      // healed them (`geom` joined the converted guard), so on a healed Q row geom = its
+      // derivation = the baseline geom (ST_AsBinary(geom) = ST_AsBinary(geometry-derived),
+      // 158/158 by --derive's `geom_ok` premise) and translating it again reproduces the
+      // legacy Q state EXACTLY. The hash must still equal forced/pre.json's table
+      // content_hash — the same ROW()/md5 formula as hashSql(), so the rebuild is exact.
       const newIds = newRows.map((r) => Number(r.id));
-      const proj = PROJ.map((c) => (c === 'geom' ? `CASE WHEN id = ANY($1::int[]) THEN NULL ELSE geom END` : c)).join(', ');
-      nd1OnlyHash = (await pool.query(`SELECT md5(string_agg(ROW(${proj})::text, '|' ORDER BY ${KEY})) AS h FROM ${TABLE}`, [newIds])).rows[0].h;
+      const proj = PROJ.map((c) => (c === 'geom'
+        ? `CASE WHEN id = ANY($1::int[]) THEN NULL WHEN ${KEY} = ANY($2::int[]) THEN ST_Translate(geom, 1e-4, 1e-4) ELSE geom END`
+        : c)).join(', ');
+      nd1OnlyHash = (await pool.query(`SELECT md5(string_agg(ROW(${proj})::text, '|' ORDER BY ${KEY})) AS h FROM ${TABLE}`, [newIds, cohort.Q])).rows[0].h;
       const preCapture = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'docs/reports/golden/neighbourhoods/forced/pre.json'), 'utf8'));
       const legacyHash = preCapture.table_state[0].content_hash;
       nd1OnlyOk = nd1OnlyHash === legacyHash;
-      console.log(`[differential:${side}] witness N-D1-only: post table with the ${newIds.length} new rows' geom NULLed = ${nd1OnlyHash} ${nd1OnlyOk ? '== legacy forced end state (OK)' : `!= legacy forced end state ${legacyHash} (MISMATCH)`}`);
+      console.log(`[differential:${side}] witness N-D1+N-D20-only: post table with the ${newIds.length} new rows' geom NULLed and the ${cohort.Q.length} Q rows' geom re-translated = ${nd1OnlyHash} ${nd1OnlyOk ? '== legacy forced end state (OK)' : `!= legacy forced end state ${legacyHash} (MISMATCH)`}`);
     }
 
     const healedAll = ['N', 'G', 'C'].every((arm) => healed[arm] === cohort.arm_hashes[arm]);
     if (side === 'pre') {
       console.log(`[differential:${side}] counters records_total=${summary.records_total} (expect 158)`);
     } else {
-      console.log(`[differential:${side}] counters records_new=${summary.records_new} (expect ${cohort.I.length}), records_updated=${summary.records_updated} (expect 20)`);
+      console.log(`[differential:${side}] counters records_new=${summary.records_new} (expect ${cohort.I.length}), records_updated=${summary.records_updated} (expect ${cohort.N.length + cohort.G.length + cohort.C.length + cohort.Q.length} — N+G+C+Q, the converted guard now names geom (N-D20), so Q is healed)`);
     }
 
     asserted = newRows.length === cohort.I.length
       && shiftedStill === cohort.I.length
       && healedAll
-      && qUnhealed === cohort.Q.length
+      // The Q witness is SIDE-DEPENDENT (N-D20): the legacy guard (name/geometry) leaves
+      // geom-only drift, the converted guard also names geom and heals it.
+      && qUnhealed === (side === 'pre' ? cohort.Q.length : 0)
       && negAfter === cohort.arm_hashes.negative_control
       && nd1OnlyOk // true on the pre side (the N-D1-only witness only runs post); the required POST claim
       && (side === 'pre'
         ? newGeomNull === cohort.I.length && Number(summary.records_total) === 158
         : newGeomNull === 0 && newGeomDerived === newRows.length
-          && Number(summary.records_new) === cohort.I.length && Number(summary.records_updated) === 20);
+          && Number(summary.records_new) === cohort.I.length
+          && Number(summary.records_updated) === cohort.N.length + cohort.G.length + cohort.C.length + cohort.Q.length);
     console.log(asserted ? '[differential] PASS' : '[differential] FAIL');
   } catch (err) {
     console.error(`[differential:${side}] ERROR: ${err.message}`);

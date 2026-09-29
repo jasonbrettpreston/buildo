@@ -55,8 +55,8 @@
           {"name":"census_year","vocabulary":"none","written":"db_default","bind":"value"}
         ],
         "write_discipline": {
-          "class": "guarded_upsert", "guard": "is_distinct_from", "guard_columns": ["name", "geometry", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"], "scope": "none", "expected_change_ratio": ">= 0", "idempotent_rerun": "zero_writes", "txn_scope": "step",
-          "why": { "text": "Legacy UNNEST batch INSERT ... ON CONFLICT (neighbourhood_id) DO UPDATE SET with the boundary guard `WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name` plus, in the same statement now, the 8 census UPDATEs and the bulk 5-pct arm [READ scripts/load-neighbourhoods.js, anchors `ON CONFLICT (neighbourhood_id) DO UPDATE SET` and `IS DISTINCT FROM EXCLUDED.name`]. The census columns carry on_empty preserve_null because legacy keeps the stored value when the source omits one (absent rows keep stored; the bulk arm is literally `COALESCE(v.married_pct, n.married_pct)`), folding 5 autocommit UPDATEs into ONE guarded upsert (N-D2).", "liveness": { "kind": "file", "ref": "src/tests/steps/neighbourhoods/violations.test.ts" } }
+          "class": "guarded_upsert", "guard": "is_distinct_from", "guard_columns": ["name", "geometry", "geom", "avg_household_income", "median_household_income", "avg_individual_income", "low_income_pct", "tenure_owner_pct", "tenure_renter_pct", "period_of_construction", "couples_pct", "lone_parent_pct", "married_pct", "university_degree_pct", "immigrant_pct", "visible_minority_pct", "english_knowledge_pct"], "scope": "none", "expected_change_ratio": ">= 0", "idempotent_rerun": "zero_writes", "txn_scope": "step",
+          "why": { "text": "Legacy UNNEST batch INSERT ... ON CONFLICT (neighbourhood_id) DO UPDATE SET with the boundary guard `WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name` plus, in the same statement now, the 8 census UPDATEs and the bulk 5-pct arm [READ scripts/load-neighbourhoods.js, anchors `ON CONFLICT (neighbourhood_id) DO UPDATE SET` and `IS DISTINCT FROM EXCLUDED.name`]. The census columns carry on_empty preserve_null because legacy keeps the stored value when the source omits one (absent rows keep stored; the bulk arm is literally `COALESCE(v.married_pct, n.married_pct)`), folding 5 autocommit UPDATEs into ONE guarded upsert (N-D2). \\\"geom\\\" is a guard term (WF3 2026-09-28 geometry-guard-coverage class lock; parcels D2 / address_points / load_ravines precedent): a stored geom that drifted from its geometry derivation is rewritten (N-D20).﻿", "liveness": { "kind": "file", "ref": "src/tests/steps/neighbourhoods/violations.test.ts" } }
         },
         "retract": "none",
         "replay": "idempotent_upsert",
@@ -426,7 +426,7 @@
     {
       "from": "N-D18 — legacy census UPDATE never touched geom",
       "why": {
-        "text": "A census-only change now fires the merged guard and its SET also rewrites `geom = EXCLUDED.geom`, so a geom-drifted row with a census change heals under the converted form only; 0 rows today (derived geom = stored 158/158), pinned wrong-form and fixed post-conversion.",
+        "text": "A census-only change now fires the merged guard and its SET also rewrites `geom = EXCLUDED.geom`, so a geom-drifted row with a census change heals under the converted form only; 0 rows today (derived geom = stored 158/158), pinned wrong-form and fixed post-conversion. Since N-D20 the geom drift heals on ANY run regardless of a census change, so N-D18's census-only trigger is subsumed.",
         "liveness": { "kind": "table", "ref": "neighbourhoods" }
       },
       "adjudicated_by": "Fold CF-5",
@@ -439,6 +439,15 @@
         "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
       },
       "adjudicated_by": "Fold H-5 (Op-Model seat)",
+      "date": "2026-09-28"
+    },
+    {
+      "from": "N-D20 — the legacy boundary guard `WHERE neighbourhoods.name IS DISTINCT FROM EXCLUDED.name` never compared geom, so a geom-only drift never healed",
+      "why": {
+        "text": "The converted guard includes the step-written wkb_geometry column `geom` (class lock src/tests/steps/geometry-guard-coverage.logic.test.ts), so a row whose stored geom drifted from its `geometry` derivation is rewritten with the derived geom. Exposure 0 (derived = stored 158/158); the forced cohort's Q arm witnesses it (legacy 5/5 not healed, converted 5/5 healed).",
+        "liveness": { "kind": "file", "ref": "src/tests/steps/geometry-guard-coverage.logic.test.ts" }
+      },
+      "adjudicated_by": "orchestrator ruling 2026-09-28 (parcels D2 + address_points/load_ravines guard precedent)",
       "date": "2026-09-28"
     },
     {

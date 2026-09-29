@@ -114,7 +114,7 @@
   ],
   "blind_spots": [
     {
-      "what": "Two carried blind spots. (1) N-D18 — a CENSUS-ONLY change also rewrites `geom` from `geometry`, because the merged guard fires and the SET also writes `geom = EXCLUDED.geom`; the legacy census UPDATEs never touched geom, so a geom-drifted row heals under the converted form only. Exposure is 0 today (a fresh derivation equals the stored geom on 158/158), pinned wrong-form and fixed post-conversion. (2) N-D14 — a table row whose `neighbourhood_id` is ABSENT from this run's GeoJSON gets no census write at all, because the upsert only touches primary (GeoJSON-derived) rows; the legacy keyed its census UPDATEs on every matched id. Exposure is 0 (ids equal 158/158 across GeoJSON, XLSX and DB).",
+      "what": "Two carried blind spots. (1) N-D20 — `geom` is a guard term, so a geom that drifted from its `geometry` derivation is rewritten on the next run (legacy never healed it; N-D18's census-only trigger is subsumed); 0 drift today. (2) N-D14 — a table row whose `neighbourhood_id` is ABSENT from this run's GeoJSON gets no census write at all, because the upsert only touches primary (GeoJSON-derived) rows; the legacy keyed its census UPDATEs on every matched id. Exposure is 0 (ids equal 158/158 across GeoJSON, XLSX and DB).",
       "measured": {
         "value": {
           "census_only_change_rewrites_geom": true,
