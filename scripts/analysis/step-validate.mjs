@@ -1318,6 +1318,65 @@ function isGoldPreKnownGap(slug, invocationKeyStr) {
   return GOLD_PRE_KNOWN_GAPS.some((g) => g.slug === slug && invocationKey(g) === invocationKeyStr);
 }
 
+/**
+ * R-BD (Spec 124 §5; amends Spec 122 §5.3 / R-C / G8). A PRE capture with a
+ * retired input argv (load_wsib `--file <csv>`, WS-D4) stands in for key
+ * `chain::<declared args>` ONLY when: (a) same chain, args = declared + ONE
+ * [flag, path] pair, flag verbatim in a `deviations[].from`; (b) exactly one
+ * filesystem external whose `path` basename matches; (c) every table_state
+ * content_hash equals the paired POST's. No md5 clause; `--full` never.
+ */
+const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function filesystemPatternMatchesBasename(pattern, basename) {
+  // Mirrors acquire.js resolveLocalSource: stem case-INSENSITIVE, `.ext` case-SENSITIVE.
+  const base = path.posix.basename(pattern);
+  const dot = base.lastIndexOf('.');
+  const stem = dot === -1 ? base : base.slice(0, dot);
+  const ext = dot === -1 ? '' : base.slice(dot);
+  if (ext && !basename.endsWith(ext)) return false;
+  const stemRe = new RegExp('^' + stem.split('*').map(escRe).join('.*') + '$', 'i');
+  return stemRe.test(ext ? basename.slice(0, basename.length - ext.length) : basename);
+}
+export function retiredInputPreMatch(invocation, preDoc, postDoc, descriptor) {
+  const no = (reason) => ({ match: false, reason });
+  if (!preDoc || String(preDoc.chain) !== invocation.chain) return no('chain');
+  const args = Array.isArray(preDoc.args) ? preDoc.args.map(String) : [];
+  const declared = invocation.args.map(String);
+  if (args.length !== declared.length + 2) return no('args');
+  const fsExternals = ((descriptor && descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.externals) || [])
+    .filter((e) => e && e.kind === 'filesystem');
+  if (fsExternals.length !== 1 || typeof fsExternals[0].path !== 'string') return no('externals');
+  const froms = ((descriptor && descriptor.deviations) || []).map((d) => (d && typeof d.from === 'string' ? d.from : ''));
+  let pairOk = false;
+  for (let i = 0; i + 1 < args.length && !pairOk; i += 1) {
+    const rest = [...args.slice(0, i), ...args.slice(i + 2)];
+    if (rest.length !== declared.length || !rest.every((a, j) => a === declared[j])) continue;
+    const flag = args[i];
+    if (!/^--?[A-Za-z]/.test(flag)) continue;
+    const flagRe = new RegExp('(?<![\\w-])' + escRe(flag) + '(?![\\w-])');
+    if (!froms.some((f) => flagRe.test(f))) continue;
+    const basename = args[i + 1].split(/[\\/]/).pop() || '';
+    if (filesystemPatternMatchesBasename(fsExternals[0].path, basename)) pairOk = true;
+  }
+  if (!pairOk) return no('pair');
+  const preTs = preDoc.table_state;
+  const postTs = postDoc && String(postDoc.chain) === invocation.chain ? postDoc.table_state : null;
+  if (!Array.isArray(preTs) || !Array.isArray(postTs) || preTs.length === 0 || preTs.length !== postTs.length) return no('table_state');
+  const postByTable = new Map(postTs.map((t) => [t && t.table, t && t.content_hash]));
+  const same = preTs.every((t) => t && typeof t.content_hash === 'string' && t.content_hash.length > 0 && postByTable.get(t.table) === t.content_hash);
+  return same ? { match: true, reason: 'R-BD' } : no('content_hash');
+}
+export function computePreInvocationsMissing(slug, invocations, preDocs, postDocs, descriptor) {
+  const keyOf = (d) => invocationKey({ chain: String(d.chain), args: d.args || [] });
+  const preKeys = new Set(preDocs.filter(Boolean).map(keyOf));
+  const postByKey = new Map(postDocs.filter(Boolean).map((d) => [keyOf(d), d]));
+  return invocations
+    .filter((inv) => !preKeys.has(invocationKey(inv)))
+    .filter((inv) => !preDocs.some((d) => d && retiredInputPreMatch(inv, d, postByKey.get(invocationKey(inv)), descriptor).match))
+    .map(invocationKey)
+    .filter((key) => !isGoldPreKnownGap(slug, key));
+}
+
 function checkCaptures(row, descriptorInfo, computePath, report) {
   const manifest = loadManifest();
   const findings = { invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
@@ -1343,12 +1402,17 @@ function checkCaptures(row, descriptorInfo, computePath, report) {
   // invocation has a pre-image at all. `preInvocationsMissing` excludes any
   // row pinned in `GOLD_PRE_KNOWN_GAPS` (declared, cited, both-directions —
   // removing the pin without also taking the capture makes this red again).
+  // Spec 124 R-BD: a PRE doc captured with a retired input argv mapped to the
+  // descriptor's one declared filesystem input (content_hash-equal to the
+  // paired POST) also counts as present — see `retiredInputPreMatch`.
   const presAll = capturesIn(row.slug, 'pre');
-  const preKeys = new Set(presAll.filter((p) => p.doc).map((p) => invocationKey({ chain: String(p.doc.chain), args: p.doc.args || [] })));
-  findings.preInvocationsMissing = invocations
-    .filter((inv) => !preKeys.has(invocationKey(inv)))
-    .map(invocationKey)
-    .filter((key) => !isGoldPreKnownGap(row.slug, key));
+  findings.preInvocationsMissing = computePreInvocationsMissing(
+    row.slug,
+    invocations,
+    presAll.map((p) => p.doc).filter(Boolean),
+    posts.map((p) => p.doc).filter(Boolean),
+    descriptorInfo && descriptorInfo.descriptor,
+  );
 
   let expected = null;
   if (descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath))) {
