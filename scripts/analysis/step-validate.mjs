@@ -2054,6 +2054,11 @@ function fastInvariants(rows, converted, pending) {
   // the generator's R-AP invariant reserves a real-JS-file exemption for
   // `runner_owned` only). Allowed only by a `{gate:'I', item:'census:<slug>'}`
   // ledger row; an ORPHAN row (its row since landed) is RED too (R-X).
+  // CLOSED 2026-09-29 (operator ruling R4): the 8 now carry census rows authored
+  // from an INDEPENDENT source — a blind classification of the legacy script at
+  // its pre-cutover SHA (`legacy_citation`, locked by
+  // src/tests/census-legacy-citation.infra.test.ts) — and their 8 `census:<slug>`
+  // ledger rows were deleted in the same commit, so #35 passes with none.
   // `scripts/analysis/gates/registries.mjs` owns the answer set.
   {
     const census = JSON.parse(readFileSync(path.join(REPO_ROOT, REGISTRIES_CENSUS_REL_PATH), 'utf8'));

@@ -6,7 +6,7 @@
     "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). FIXER-pass note (same day): commit 7d807c0b's gate-K checks (G7 scoreG7 tightening) knocked link_massing from 14/17 to 10/17 same-day, briefly requiring a 4th score row here (`scripts/analysis/gates/score-floor.mjs --list` reproduced it) — but the SAME FIXER commit also closed link_massing's genuine G8 unexplained-diffs finding (a DB-restore `row_count` shift, §7c of its assessment report), which alone raised the score to 16/17 — at/above the floor again. That 4th row was therefore added AND immediately deleted (R-X: never leave an orphan) in the same commit; only the original 3 rows below remain.",
     "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X). NOTE (FIXER pass, same day): `link_massing` genuinely needed only ONE new diff explained (a fresh G8 `table_state[].row_count` finding, DB-restore centroid regain) while its OTHER 469 diffs still rely on THIS blanket row's report-substring fallback — authoring `explained-diffs.json` with only that one key and deleting this row (as fast invariant #40 demands the moment the file exists at all) would have broken those 469 unrelated, already-explained diffs. Measured live: it did (469 unexplained after the row was removed). Fixed via the legacy report-citation channel instead (the assessment report now names `row_count` with the measured why) — this row stays until a FULL `explained-diffs.json` covering every one of link_massing's diff keys lands, which is its own, larger remediation commit, not this one.",
     "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture.",
-    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment, permanently absent from step-archetype-census.json by the file's own documented design) + 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them.",
+    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment) — DELETED 2026-09-29 by operator ruling R4: those 8 slugs now carry census rows authored blind from the legacy script at its pre-cutover SHA (legacy_citation, locked by src/tests/census-legacy-citation.infra.test.ts), so the rows would be #35 orphans. Remaining: 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them.",
     "Gate K rows (2026-09-26, FIXER pass) — commit 7d807c0b's own gate-K rows covered only 18 of the 20 converted steps; `link_massing` and `link_neighbourhoods` were left unledgered, which is a SLUG-SCOPE mistake, not a sanctioned exemption: they are PREVIOUSLY CONVERTED steps (both in converted.json), never the genuinely in-development INGESTOR slugs `load_centreline`/`massing`/`neighbourhoods` (not yet converted, never appear in this ledger or in a live `--all` run) that the 2026-09-26 OPERATOR DIRECTION forward-hard-enforces with NO ledger rows permitted (§1). The 2 rows below close that gap under scope item 3 (deferred, dated, MED/LOW — same disposition as every other gate-K row), and `src/tests/gate-score-floor.infra.test.ts`'s own `RBA_NO_LEDGER_EXEMPT` test-level bypass (which had hard-coded these SAME two slugs as an unsanctioned exception, conflating them with the in-development ingestor names) is removed in the same commit — Spec 124 §5 R-BA: ledger rows are the ONLY sanctioned exception."
   ],
   "contract_version": 1,
@@ -1687,86 +1687,6 @@
       "item": "lib_fingerprint",
       "disposition": "pending_recapture",
       "why": "measured 2026-09-26 (WF2 gate G, fast invariant #39) — every golden POST capture predates lib_fingerprint stamping (capture-step-golden.js); a legacy \"missing\" state, ledger-allowable per Fold GC-4",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "assert_schema",
-      "item": "census:assert_schema",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "load_ravines",
-      "item": "census:load_ravines",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "link_massing",
-      "item": "census:link_massing",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "link_wsib",
-      "item": "census:link_wsib",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "link_parcel_addresses",
-      "item": "census:link_parcel_addresses",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "compute_centroids",
-      "item": "census:compute_centroids",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "link_parcels",
-      "item": "census:link_parcels",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "refresh_snapshot",
-      "item": "census:refresh_snapshot",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #35) — converted before the 2026-09-15 R-AO retention amendment; no pre-cutover archetype exists in step-archetype-census.json's history to retain. Inventing an entries[] row would fabricate a second copy of descriptor.identity.archetype (the file's own header comment forbids exactly that); an exemptions[] row does not fit either (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned only, enforced by generate-conversion-roadmap.mjs). Permanent by design, tracked here rather than in the census file itself.",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"

@@ -204,23 +204,22 @@ describe('gate I — registry coverage (#33-#36)', () => {
       expect(out.violations).toEqual([]);
     });
 
-    it('T5c: LIVE — the census-file predicate still finds the 8 pilots missing (by DESIGN, not landed there)', () => {
+    it('T5c: LIVE — the census-file predicate finds ZERO converted slugs missing (R4 landed the 8 pilots, 2026-09-29)', () => {
       const census = readJson(reg.CENSUS_REL_PATH);
       const out = reg.censusParity(reg.loadConvertedSlugs(REPO_ROOT), census);
-      // Measured 2026-09-26: the 8 pilots converted before the 2026-09-15 R-AO
-      // retention amendment have NO pre-cutover archetype anywhere in this
-      // file's git history — inventing an entries[] row would fabricate a
-      // second copy of descriptor.identity.archetype (the file's own header
-      // comment forbids exactly that), and an exemptions[] row does not fit
-      // (Spec 124 R-AP reserves a real-JS-file exemption for runner_owned
-      // only). Closed instead via 8 dated {gate:'I', item:'census:<slug>'}
-      // ledger rows (see T5d) — the census FILE intentionally stays as-is.
-      const missing = new Set(out.violations.map((v) => v.slug));
-      const expected = new Set([
-        'assert_schema', 'load_ravines', 'link_massing', 'link_wsib',
-        'link_parcel_addresses', 'compute_centroids', 'link_parcels', 'refresh_snapshot',
-      ]);
-      expect(missing).toEqual(expected);
+      // History: measured 2026-09-26, the 8 pilots converted before the
+      // 2026-09-15 R-AO retention amendment (assert_schema, load_ravines,
+      // link_massing, link_wsib, link_parcel_addresses, compute_centroids,
+      // link_parcels, refresh_snapshot) had NO census row and were closed via 8
+      // dated {gate:'I', item:'census:<slug>'} ledger rows, on the ground that
+      // any row would be a second copy of descriptor.identity.archetype.
+      // Operator ruling R4 (2026-09-29) KNOWINGLY retires that fence: the rows
+      // are now authored from an INDEPENDENT source (a blind classification of
+      // the legacy script at its pre-cutover SHA, carried in legacy_citation and
+      // locked by census-legacy-citation.infra.test.ts), and the 8 ledger rows
+      // are deleted in the same commit (else T5d reports them as orphans).
+      expect(out.violations).toEqual([]);
+      expect(out.pass).toBe(true);
     });
 
     it('T5d: LIVE — every #35 census gap has a gate-I ledger row, and there are zero orphans', () => {

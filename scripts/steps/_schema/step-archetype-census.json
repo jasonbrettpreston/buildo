@@ -22,8 +22,24 @@
     "assert_data_bounds ASSERT @58c35378, assert_engine_health RECORDER @331f97ad). This",
     "census was authored 2026-09-10 as \"the currently-unconverted files\", so the other",
     "eight were ALREADY converted and never had a row; inventing one would fabricate the",
-    "exact second copy the paragraph above forbids. Those eight carry no row and #25's",
-    "census arm reads not-applicable for them. Every cutover from batch 2 on retains its own.",
+    "exact second copy the paragraph above forbids. Those eight carried no row and #25's",
+    "census arm read not-applicable for them. Every cutover from batch 2 on retains its own.",
+    "",
+    "AMENDED 2026-09-29 (operator ruling R4, .cursor/programme_ledger_to_zero_active_task.md",
+    "§6b, with the Regression Guardian's 4 conditions): the eight now HAVE rows (batch",
+    "\"C1\", status \"converted\"), authored from an INDEPENDENT source, not the descriptor —",
+    "a blind classification of each LEGACY script at its pre-conversion SHA (the parent of",
+    "the step's frozen-shape commit), made against the Spec 122 §1.10 profiles and the",
+    "evidence base §16.1 before the descriptor's identity.archetype was read. Each row's",
+    "`legacy_citation` carries that SHA, the script path, the cutover date and a one-line",
+    "rationale; src/tests/census-legacy-citation.infra.test.ts locks that the cited SHA is",
+    "neither the cutover commit nor the descriptor-add commit and that the cited blob is the",
+    "pre-conversion script. All eight agreed with their descriptors. HONEST LIMIT: the",
+    "classification is blind to the descriptor, NOT to the spec — Spec 122 §1.10's own table",
+    "(ported from the evidence base) already names these eight steps' archetypes, and some",
+    "conversion commit subjects name them too; the rows are independent of the descriptor,",
+    "not of that shared upstream classification. The 8 `census:<slug>` gate-I ledger rows",
+    "that allowed their absence (fast invariant #35) are deleted in the same commit.",
     "",
     "archetype is one of the 8 canonical Spec 122 §1.10 values, or the literal string",
     "\"UNDECLARED\" — a real, explicit row, never a silently-absent one. The `sources`",
@@ -475,6 +491,126 @@
       "reason": "RETAINED at cutover per Spec 124 R-AO - and this is the row R-AO exists for. MEASURED across every commit that ever carried it: the census read ASSERT from its creation (9f2afcb6, 2026-09-10) through 6bf28e88 (2026-09-14), was CORRECTED to RECORDER at 331f97ad (the same commit that reverted batch1 I3 from the compressed form to the full nine-commit form, because RECORDER had one member and R-PACE-1 was therefore ineligible), and was deleted at 65c92d7f. The retained value is the corrected one, RECORDER, matching the descriptor PH-0 measured; the four-day ASSERT window is recorded here so the cost of the provisional value is not lost with the row.",
       "status": "converted",
       "converted_at": "65c92d7f"
+    },
+    {
+      "slug": "assert_schema",
+      "file": "scripts/quality/assert-schema.js",
+      "archetype": "ASSERT",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 1 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "dc89a6f8",
+      "legacy_citation": {
+        "sha": "7518399160b767439c70c4593d50e22d930e563b",
+        "path": "scripts/quality/assert-schema.js",
+        "cutover_date": "2026-08-25",
+        "rationale": "Fetches CKAN metadata / CSV headers / GeoJSON keys / HEAD for upstream sources, compares against expected-column lists and reports FAIL on drift; writes no data table (only its own pipeline_runs ledger row) — produces a verdict, not data."
+      }
+    },
+    {
+      "slug": "load_ravines",
+      "file": "scripts/load-ravines.js",
+      "archetype": "INGESTOR",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 2 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "efb0d885",
+      "legacy_citation": {
+        "sha": "062e272a34482ade66fa15023cb51a0cbdf95ad9",
+        "path": "scripts/load-ravines.js",
+        "cutover_date": "2026-08-25",
+        "rationale": "Downloads the CKAN zipped shapefile (HEAD validator + md5 content-hash gate via source-version), parses it, upserts ravines ON CONFLICT (source_id) with source_dataset_version, and DELETEs departed source_ids — acquires bytes from outside the DB and owns a version token."
+      }
+    },
+    {
+      "slug": "link_massing",
+      "file": "scripts/link-massing.js",
+      "archetype": "LINK",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 3 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "68b8e361",
+      "legacy_citation": {
+        "sha": "87e5019c939daca0311af6b5e6295894302ff653",
+        "path": "scripts/link-massing.js",
+        "cutover_date": "2026-08-28",
+        "rationale": "Point-in-polygon / nearest-≤50m geometric predicate between parcel centroids and building footprints; upserts the parcel_buildings junction and retracts stale links (DELETE FROM parcel_buildings for the rescanned parcel set, is_primary reset)."
+      }
+    },
+    {
+      "slug": "link_wsib",
+      "file": "scripts/link-wsib.js",
+      "archetype": "MATCHER",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 4 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "903fe5a7",
+      "legacy_citation": {
+        "sha": "ee9aaa60ff2a6a85eef07c901cb88d2b7d8c5ff3",
+        "path": "scripts/link-wsib.js",
+        "cutover_date": "2026-08-28",
+        "rationale": "3-tier name-match cascade (exact trade, exact legal, pg_trgm fuzzy at the operator-tunable wsib_fuzzy_match_threshold); sets wsib_registry.linked_entity_id/match_confidence and flips a second table's business field entities.is_wsib_registered=true (+ contact copy); no un-match path — matches irreversible."
+      }
+    },
+    {
+      "slug": "link_parcel_addresses",
+      "file": "scripts/link-parcel-addresses.js",
+      "archetype": "MATERIALIZER",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 5 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "1ad007f8",
+      "legacy_citation": {
+        "sha": "a93efe6ada4b714144655db0b0f3562cd4e5fa50",
+        "path": "scripts/link-parcel-addresses.js",
+        "cutover_date": "2026-08-29",
+        "rationale": "No subject predicate: rescans every parcel WHERE geom IS NOT NULL in PK batches, INSERT…SELECT ST_Within into parcel_address_points ON CONFLICT DO NOTHING; no UPDATE, no DELETE, no retraction — a cache table materialized from two inputs, not a retracting link."
+      }
+    },
+    {
+      "slug": "compute_centroids",
+      "file": "scripts/compute-centroids.js",
+      "archetype": "BACKFILL",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in C1 pilot 6 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "d9057a54",
+      "legacy_citation": {
+        "sha": "c44a4c076ac606f1232a0484262e8755d9f64cdc",
+        "path": "scripts/compute-centroids.js",
+        "cutover_date": "2026-08-29",
+        "rationale": "Input and output are the same table: UPDATE parcels SET centroid_lat/lng from parcels.geom/geometry, scoped WHERE … centroid_lat IS NULL (cursor-paged) — write-once, never refreshes an existing centroid."
+      }
+    },
+    {
+      "slug": "link_parcels",
+      "file": "scripts/link-parcels.js",
+      "archetype": "LINK",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in pilot 7 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "a4d80a26",
+      "legacy_citation": {
+        "sha": "37b15d3b14b80af425a3b4ab18294d14b0ef1774",
+        "path": "scripts/link-parcels.js",
+        "cutover_date": "2026-08-30",
+        "rationale": "Address-bridge / exact / num+name / spatial (centroid ≤100m, point-in-polygon upgrade) cascade; upserts the permit_parcels junction ON CONFLICT DO UPDATE, retracts ghost links (DELETE FROM permit_parcels) and stamps permits.parcel_linked_at — a junction writer with retraction."
+      }
+    },
+    {
+      "slug": "refresh_snapshot",
+      "file": "scripts/refresh-snapshot.js",
+      "archetype": "RECORDER",
+      "batch": "C1",
+      "reason": "AUTHORED post-hoc per operator ruling R4 (2026-09-29): converted in pilot 8 before the R-AO retention amendment, so no pre-cutover row existed; archetype classified blind from the legacy script at legacy_citation.sha, never copied from the descriptor.",
+      "status": "converted",
+      "converted_at": "32eec17f",
+      "legacy_citation": {
+        "sha": "4b1e172237f4f58d893b29bdc8f1320cc01480e7",
+        "path": "scripts/refresh-snapshot.js",
+        "cutover_date": "2026-09-03",
+        "rationale": "Re-runs counting queries across permits/CoA/sources and upserts one data_quality_snapshots row ON CONFLICT (snapshot_date); asserts nothing — audit_table verdict hardcoded 'PASS'. Records state, does not gate or derive per-row data."
+      }
     }
   ],
   "exemptions": [

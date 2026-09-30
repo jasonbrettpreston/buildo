@@ -76,8 +76,8 @@
         },
         "batch": {
           "type": "string",
-          "enum": ["C4", "C5", "C6", "pending"],
-          "description": "The roadmap batch this file belongs to. \"pending\" is reserved for the ONE file registered in converted.json's pending[] (enrich-parcels.js) — tracked here, not double-counted against the 55 unconverted total."
+          "enum": ["C1", "C4", "C5", "C6", "pending"],
+          "description": "The roadmap batch this file belongs to. \"C1\" = a C1 pilot (pilots 1-8), used only by the eight status:\"converted\" rows authored post-cutover under operator ruling R4 (2026-09-29). \"pending\" is reserved for the ONE file registered in converted.json's pending[] (enrich-parcels.js) — tracked here, not double-counted against the 55 unconverted total."
         },
         "reason": {
           "type": "string",
@@ -87,12 +87,24 @@
         "status": {
           "type": "string",
           "enum": ["converted"],
-          "description": "RETENTION (Spec 124 §5 R-AO, added 2026-09-15). Absent = a remaining/pending row, the original shape. `\"converted\"` = the row was RETAINED through cutover instead of deleted. Before this, commit 9 DELETED a slug's census row, which made fast invariant #25 ARCHETYPE-PARITY unreachable for its own founding case: with no row left, `censusArchetype` is null for every converted slug and a valid-but-wrong archetype passes silently (proved by swapping `load_ravines` to ASSERT — still PASS). A retained row's `archetype` is the census's OWN pre-cutover value and MUST NOT be re-derived from the descriptor: the whole point is that #25 compares two independently-authored facts. The generator enforces both directions — a `\"converted\"` row whose file is not in converted.json throws, and a row with no `status` whose file IS converted throws."
+          "description": "RETENTION (Spec 124 §5 R-AO, added 2026-09-15). Absent = a remaining/pending row, the original shape. `\"converted\"` = the row was RETAINED through cutover instead of deleted. Before this, commit 9 DELETED a slug's census row, which made fast invariant #25 ARCHETYPE-PARITY unreachable for its own founding case: with no row left, `censusArchetype` is null for every converted slug and a valid-but-wrong archetype passes silently (proved by swapping `load_ravines` to ASSERT — still PASS). A retained row's `archetype` is the census's OWN pre-cutover value and MUST NOT be re-derived from the descriptor: the whole point is that #25 compares two independently-authored facts. AMENDED 2026-09-29 (operator ruling R4): a converted row MAY instead be authored POST-cutover, for a slug converted before this retention rule existed (the eight C1 pilots, batch \"C1\"), but only from an independent source — a blind classification of the LEGACY script at its pre-cutover SHA, recorded in `legacy_citation` — never copied from the descriptor. src/tests/census-legacy-citation.infra.test.ts locks that citation. The generator enforces both directions — a `\"converted\"` row whose file is not in converted.json throws, and a row with no `status` whose file IS converted throws."
         },
         "converted_at": {
           "type": "string",
           "minLength": 7,
           "description": "The commit-9 cutover SHA this row was converted at (short or full). Required whenever `status` is `\"converted\"`, forbidden otherwise — a retention claim carries the commit that makes it checkable."
+        },
+        "legacy_citation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha", "path", "cutover_date", "rationale"],
+          "properties": {
+            "sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$", "description": "The pre-conversion commit whose blob of `path` was classified (the parent of the step's frozen-shape conversion commit)." },
+            "path": { "type": "string", "pattern": "^scripts/.*\\.js$", "description": "The legacy script classified — equals the row's `file`." },
+            "cutover_date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Date of the converted_at cutover commit." },
+            "rationale": { "type": "string", "minLength": 20, "description": "What the legacy script reads/writes/does that makes it this archetype." }
+          },
+          "description": "Operator ruling R4 (2026-09-29): the independent provenance of a converted row authored POST-cutover — the legacy script at its pre-cutover SHA, classified blind before the descriptor's identity.archetype was read. Optional; present only on the eight C1-pilot rows. Locked by src/tests/census-legacy-citation.infra.test.ts (Guardian condition 4)."
         },
         "spec_diff": {
           "const": "N-A",

@@ -17,6 +17,9 @@
 //       `step-archetype-census.json` `entries[]` row or an `exemptions[]` row.
 //       This is #25 ARCHETYPE-PARITY's missing-row arm: #25 answers "does the
 //       retained row AGREE", this answers "does a row EXIST to agree with".
+//       Live gap count 0 since operator ruling R4 (2026-09-29): the 8 pre-R-AO
+//       pilots gained rows authored blind from their legacy scripts
+//       (`legacy_citation`), and their `census:<slug>` ledger rows were deleted.
 //   (4) #36 `checkDefectIdUniqueness` — a KNOWN-DEFECT id is DEFINED by a table
 //       row whose FIRST cell is exactly that id (a prose mention is a
 //       CITATION). A cross-file MIRROR is legal (measured 2026-09-27: the
