@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §4.4 ("a rule without a lock is
-// not yet a rule") + §5 register rows R-AR, R-AR.1, R-AS, R-AU, R-AV, R-AZ
+// not yet a rule") + §5 register rows R-AR, R-AR.1, R-AS, R-AU, R-AV, R-AZ, R-BF
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §4.4 (a checker ships a
 // fixture proving it fires)
 //
@@ -329,5 +329,60 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
       const withExtra = [...expected, 'src/components/admin/SomeUnexpectedFile.tsx'].sort();
       expect(withExtra).not.toEqual(expected);
     });
+  });
+});
+
+// R-BF (operator ruling 2026-09-30) — the §4.4 lock is an HONESTY lock, both directions: Spec 122
+// §6.6.1(c) reads `NOT MET` IF AND ONLY IF `scripts/analysis/step-validate.mjs` carries no
+// witness-gate marker. The Phase 1 WITNESS gate (#44, `.cursor/wf2_registry_truth_active_task.md`)
+// must carry RBF_WITNESS_MARKER verbatim; landing it without flipping the spec status to MET
+// (a stale status), or flipping the status without it (an overstated spec), is RED.
+const RBF_WITNESS_MARKER = 'R-BF WITNESS GATE (#44)';
+
+/** §6.6.1's body: from its `#### 6.6.1` heading to the next heading of any level. */
+function rBfSection(spec122: string): string | null {
+  const start = spec122.search(/^#### 6\.6\.1 /m);
+  if (start < 0) return null;
+  const rest = spec122.slice(spec122.indexOf('\n', start) + 1);
+  const end = rest.search(/^#{1,4} /m);
+  return end < 0 ? rest : rest.slice(0, end);
+}
+
+/** true iff §6.6.1(c) declares exactly one status and it matches the validator's marker. */
+function rBfStatusHonest(spec122: string, validatorSrc: string): boolean {
+  const section = rBfSection(spec122);
+  if (!section) return false;
+  const notMet = /\*\*\(c\) Status: NOT MET\b/.test(section);
+  const met = /\*\*\(c\) Status: MET\b/.test(section);
+  if (notMet === met) return false;
+  const marker = validatorSrc.includes(RBF_WITNESS_MARKER);
+  return notMet === !marker;
+}
+
+describe('R-BF — registry + cross-step ledger truth: the status line is honest (operator ruling 2026-09-30)', () => {
+  const SPEC_124 = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '124_step_standard_policy.md');
+  const SPEC_122 = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '122_pipeline_step_optimization.md');
+  const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts', 'analysis', 'step-validate.mjs');
+  const fx = (status: string): string =>
+    `x\n### 6.6 y\n#### 6.6.1 Registry and ledger truth\n**(c) Status: ${status} (measured).** z\n## 7. next\n`;
+  const WITH = `// ${RBF_WITNESS_MARKER}\n`;
+  const WITHOUT = '// no gate yet\n';
+
+  it('fixture: NOT MET + no marker -> honest', () => expect(rBfStatusHonest(fx('NOT MET'), WITHOUT)).toBe(true));
+  it('fixture: MET + marker -> honest', () => expect(rBfStatusHonest(fx('MET'), WITH)).toBe(true));
+  it('fixture: MET + no marker -> RED (an overstated spec)', () => expect(rBfStatusHonest(fx('MET'), WITHOUT)).toBe(false));
+  it('fixture: NOT MET + marker -> RED (a stale status)', () => expect(rBfStatusHonest(fx('NOT MET'), WITH)).toBe(false));
+
+  it('Spec 124 §5 has an R-BF row that cites Spec 122 §6.6.1', () => {
+    const row = fs.readFileSync(SPEC_124, 'utf8').match(/^\| R-BF \|[^\n]*$/m);
+    expect(row, 'R-BF register row').toBeTruthy();
+    expect(row?.[0]).toContain('Spec 122 §6.6.1');
+  });
+
+  it('live: Spec 122 §6.6.1(c) status matches step-validate.mjs witness marker', () => {
+    const spec122 = process.env.RBF_SPEC122_OVERRIDE
+      ? fs.readFileSync(process.env.RBF_SPEC122_OVERRIDE, 'utf8')
+      : fs.readFileSync(SPEC_122, 'utf8');
+    expect(rBfStatusHonest(spec122, fs.readFileSync(STEP_VALIDATE, 'utf8'))).toBe(true);
   });
 });
