@@ -2436,6 +2436,23 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-21"
+    },
+    {
+      "id": "GEN-TARGET-FILES",
+      "spec": "124 §5 R-BE; 122 §4.1, §6",
+      "title": "Generated step Target Files + npm run step:registry + the step-edit PreToolUse hook",
+      "promised": "Every sources step's owned files (the computeSourceFingerprint inputs + src/tests/steps/<slug>/), data tables (with their CREATE migration), ledger upstream/downstream and consumer-registry rows are GENERATED into a block under each census owner_specs spec's ### Target Files (plus a chain-members block in Specs 41-44), drift-checked at pre-commit, one home per path; #43 OWNER-SPEC-DIFF reads census owner_specs and ignores generated-only spec diffs; npm run step:registry and a PreToolUse hook show the same sub-list before a step is changed.",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-09-30 (WF2 .cursor/wf2_generated_target_files_active_task.md): scripts/analysis/gates/step-registry.mjs (derivation wrapper over capture-step-golden.js + ledger.js), scripts/analysis/gates/generated-blocks.mjs (the one marker syntax), scripts/analysis/generate-target-files.mjs (write / --check / --self-test / --print), scripts/analysis/step-registry.mjs (npm run step:registry), scripts/hooks/step-registry-context.{sh,mjs} (.claude/settings.json PreToolUse Read|Edit|Write). --check is its own .husky/pre-commit line after the template-freeze check, locked by src/tests/hooks-composition.infra.test.ts; cutover-generators.json regenerates it before system-map; generate-lineage-docs --refresh re-runs it. Measured: 126 derived files, 72 absent from the system map before, 0 after; 20 specs carry blocks. Red-first: src/tests/step-registry.logic.test.ts, src/tests/generate-target-files.infra.test.ts (ledger-edge and consumer-row drift RED), src/tests/step-registry-hook.logic.test.ts, src/tests/owner-spec-diff.{logic,infra}.test.ts, src/tests/gate-spec-diff.infra.test.ts.",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf2_generated_target_files_active_task.md"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-09-30"
     }
   ]
 }

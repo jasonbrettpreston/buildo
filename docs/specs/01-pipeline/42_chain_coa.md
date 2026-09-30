@@ -139,26 +139,32 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:chain-members:coa -->
+<!-- do not hand-edit: npm run target-files regenerates this block from manifest.chains.coa -->
+- `assert_schema` — `scripts/quality/assert-schema.js`
+- `coa` — `scripts/load-coa.js`
+- `assert_coa_freshness` — `scripts/quality/assert-coa-freshness.js`
+- `link_coa_to_parcels` — `scripts/link-coa-to-parcels.js`
+- `enrich_coa_zoning` — `scripts/enrich-permits.js`
+- `classify_coa_scope` — `scripts/classify-coa-scope.js`
+- `classify_coa_trades` — `scripts/classify-coa-trades.js`
+- `compute_coa_cost_estimates` — `scripts/compute-coa-cost-estimates.js`
+- `link_coa` — `scripts/link-coa.js`
+- `refresh_snapshot` — `scripts/refresh-snapshot.js`
+- `assert_data_bounds` — `scripts/quality/assert-data-bounds.js`
+- `assert_engine_health` — `scripts/quality/assert-engine-health.js`
+- `classify_lifecycle_phase` — `scripts/classify-lifecycle-phase.js`
+- `assert_lifecycle_phase_distribution` — `scripts/quality/assert-lifecycle-phase-distribution.js`
+- `compute_phase_calibration` — `scripts/compute-phase-calibration.js`
+- `assert_global_coverage` — `scripts/quality/assert-global-coverage.js`
+<!-- /generated:chain-members:coa -->
 - `scripts/manifest.json` (coa chain array)
 - `scripts/lib/address.js` (shared street name normalizer)
 - `scripts/load-coa.js`, `scripts/link-coa.js`
 - `migrations/061_street_name_normalized.sql`
 - `scripts/quality/assert-coa-freshness.js`
 - **Retired (Phase G), files deleted — listed so the retirement stays greppable, NOT as current targets:** `scripts/create-pre-permits.js` and `scripts/quality/assert-pre-permit-aging.js` were removed with the pre-permit placeholder (§6.5 step 18, §6.11 Phase G). Neither slug is in `manifest.chains.coa`; the design record for why they existed and why they went is §6.
-- Remaining `chains.coa` steps, listed explicitly so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14):
-- `scripts/quality/assert-schema.js` — step 1 `assert_schema`
-- `scripts/link-coa-to-parcels.js` — step 4 `link_coa_to_parcels`
-- `scripts/enrich-permits.js` — step 5 `enrich_coa_zoning`
-- `scripts/classify-coa-scope.js` — step 6 `classify_coa_scope`
-- `scripts/classify-coa-trades.js` — step 7 `classify_coa_trades`
-- `scripts/compute-coa-cost-estimates.js` — step 8 `compute_coa_cost_estimates`
-- `scripts/refresh-snapshot.js` — step 10 `refresh_snapshot`
-- `scripts/quality/assert-data-bounds.js` — step 11 `assert_data_bounds`
-- `scripts/quality/assert-engine-health.js` — step 12 `assert_engine_health`
-- `scripts/classify-lifecycle-phase.js` — step 13 `classify_lifecycle_phase`
-- `scripts/quality/assert-lifecycle-phase-distribution.js` — step 14 `assert_lifecycle_phase_distribution`
-- `scripts/compute-phase-calibration.js` — step 15 `compute_phase_calibration`
-- `scripts/quality/assert-global-coverage.js` — step 16 `assert_global_coverage`
+- Every `chains.coa` step is listed by the generated chain-members block above (from `manifest.chains.coa`, in chain order), so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14; the hand list it replaces retired by the generated-Target-Files WF2, 2026-09-30).
 
 ### Out-of-Scope Files
 - `src/lib/coa/linker.ts` — TypeScript API path (governed by CoA linking step spec)

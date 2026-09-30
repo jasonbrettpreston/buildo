@@ -233,11 +233,27 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
 ## 6. Operating Boundaries
 
 ### Target Files
-- `scripts/lib/parcel-cost.js` (pure — engine + local line→field map + `area_confidence` + SOLAR/BAS-UNDERPIN; since batch-2 row 2.4 it takes its tunables through a REQUIRED `opts.config`, §2.8; since batch-2 row 2.5 it also takes a REQUIRED `opts.lines`, exporting `mergeCostLines`), `scripts/lib/parcel-cost-cols.js` (the §2.5/§2.10 column contract — a dependency-free leaf shared by this step and `enrich-permits.js`'s §4D propagator), `scripts/compute-parcel-cost-estimates.js` (**advisory lock `117`**, not 88 — 88 is taken by `classify-permits.js`; Spec 47 §A.5. A Spec 122 §5.1 frozen shell since batch-2 row 2.4: the behaviour lives in `scripts/compute-parcel-cost-estimates.descriptor.json` + `scripts/lib/compute/compute-parcel-cost-estimates.js`, both owned by Spec 122's Operating Boundaries globs), `scripts/manifest.json` (sources chain, after `enrich_parcels` before `refresh_snapshot`), `scripts/enrich-permits.js` (`COST_PROP_COLS` propagation), `scripts/quality/assert-global-coverage.js` (Spec 49 rows × 3 surfaces), `scripts/analysis/wf3-cost-coherence-sanity.js` + `scripts/analysis/wf3-sample-full-dump.js` (non-step engine consumers, also pass `opts.lines` since batch-2 row 2.5).
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `compute_parcel_cost_estimates` — ENRICHER · converted · owner specs: 88
+  - `scripts/compute-parcel-cost-estimates.js`
+  - `scripts/compute-parcel-cost-estimates.descriptor.json`
+  - `scripts/lib/compute/compute-parcel-cost-estimates.js`
+  - `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`
+  - data: `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `logic_variables` reads (migrations/092_control_panel.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - upstream: enrich_parcels · parcels
+  - downstream: assert_parcel_sanity
+  - consumers: none
+<!-- /generated:target-files -->
+- `scripts/lib/parcel-cost.js` (pure — engine + local line→field map + `area_confidence` + SOLAR/BAS-UNDERPIN; since batch-2 row 2.4 it takes its tunables through a REQUIRED `opts.config`, §2.8; since batch-2 row 2.5 it also takes a REQUIRED `opts.lines`, exporting `mergeCostLines`), `scripts/lib/parcel-cost-cols.js` (the §2.5/§2.10 column contract — a dependency-free leaf shared by this step and `enrich-permits.js`'s §4D propagator), `scripts/manifest.json` (sources chain, after `enrich_parcels` before `refresh_snapshot`), `scripts/enrich-permits.js` (`COST_PROP_COLS` propagation), `scripts/analysis/wf3-cost-coherence-sanity.js` + `scripts/analysis/wf3-sample-full-dump.js` (non-step engine consumers, also pass `opts.lines` since batch-2 row 2.5).
 - `migrations/NNN` — `archetype_cost_rates` table + seed; `parcels` cost/FSI cols; `permits`+`coa_applications` cost/FSI cols. `migrations/248_parcel_cost_lines.sql` (batch-2 row 2.5 — the editable half of the §2.3 line catalogue, §2.8).
 - `docs/specs/_contracts.json` (`parcel_cost_model` group — non-tunable constants + seed-migration literal lock), `contracts.infra.test.ts`, `scripts/seeds/logic_variables.json`.
 - `src/lib/admin/control-panel.ts`, `src/features/admin-controls/components/PricingCard.tsx` (+ `RatesGrid.tsx`, `LinesGrid.tsx`) — the admin editor for `archetype_cost_rates`/`parcel_cost_lines`; owned primarily by Spec 86, cross-referenced here as the R-AU closing surface (§2.8 as-built below).
-- `src/tests/db/pricing-tables.db.test.ts`, `src/tests/parcel-cost.logic.test.ts` / `-propagation` / `-line-keys`, `src/tests/steps/compute_parcel_cost_estimates/**`.
+- `src/tests/db/pricing-tables.db.test.ts`, `src/tests/parcel-cost.logic.test.ts` / `-propagation` / `-line-keys`.
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/compute-parcel-cost-estimates.js` — **advisory lock `117`**, not 88 — 88 is taken by `classify-permits.js`; Spec 47 §A.5. A Spec 122 §5.1 frozen shell since batch-2 row 2.4: the behaviour lives in `scripts/compute-parcel-cost-estimates.descriptor.json` + `scripts/lib/compute/compute-parcel-cost-estimates.js`, both owned by Spec 122's Operating Boundaries globs
 
 ### Out-of-Scope Files
 - **P2 (separate phase):** `neighbourhood_*_norms` `structure_family` schema + the shared family-aware accessor + the 5 norm read-sites + R2 (`optimal-config.js` realized-FSI wiring) + R4 (comp family filter). This spec's P1 uses *current* `opt_coa_gfa`.
@@ -252,6 +268,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
 - `enrich-parcels.js` — chain-sequencing reference only (`scripts/manifest.json`: "after `enrich_parcels` before `refresh_snapshot`"); zoning/max-build behavior is owned by Spec 65
 - `classify-permits.js` — advisory-lock-number footnote only (lock 88 predates the spec-number convention); no dependency on its classification logic
 - `refresh-snapshot.js` — chain-sequencing reference only (runs immediately after this spec's step)
+- `scripts/quality/assert-global-coverage.js` (Spec 49 rows × 3 surfaces) — this spec adds its cost-model coverage rows; its owner is Spec 49 (census `owner_specs`)
 
 ## 7. Phasing
 **P1** cost engine + rates + propagation (this spec) → **P2** family-aware reads + R2 detached `opt_coa` + R4 type-aware comparables → **P3** products + breakdown. See `.cursor/active_task.md` for the phase execution plans.

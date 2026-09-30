@@ -269,13 +269,28 @@ This script emits **no `audit_table.columns`**, so FreshnessTimeline renders its
 ## 6. Operating Boundaries
 
 ### Target Files
-- `scripts/quality/assert-global-coverage.js` (new)
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `assert_global_coverage` — ASSERT · converted · owner specs: 49
+  - `scripts/quality/assert-global-coverage.js`
+  - `scripts/quality/assert-global-coverage.descriptor.json`
+  - `scripts/lib/compute/assert-global-coverage.js`
+  - `src/tests/steps/assert_global_coverage/violations.test.ts`
+  - data: none in the cross-step ledger
+  - upstream: none
+  - downstream: none
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta audit_table)
+<!-- /generated:target-files -->
 - `migrations/101_logic_variables_coverage_thresholds.sql` (new — seed data only)
 - `scripts/manifest.json` (register + wire into permits + coa chains)
 - `docs/specs/pipeline/41_chain_permits.md` (add step 27)
 - `docs/specs/pipeline/42_chain_coa.md` (add step 12)
 - `src/tests/assert-global-coverage.infra.test.ts` (new)
 - `src/components/FreshnessTimeline.tsx` (metric-row render path — no change needed; rows are `{metric,value,threshold,status}`)
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/quality/assert-global-coverage.js` (new)
 
 ### Out-of-Scope Files
 - Any script being PROFILED — this script only reads their output, never modifies them

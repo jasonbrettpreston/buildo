@@ -96,19 +96,37 @@ emitMeta writes — all `parcels` table columns including LEGACY 5 (still writte
 - **Relies on:** `pipeline_system.md` (SDK), `scripts/lib/address-normalizers.js` (shared normalizer ensures JOIN-key consistency with Spec 54)
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `parcels` — INGESTOR · converted · owner specs: 55
+  - `scripts/load-parcels.js`
+  - `scripts/load-parcels.descriptor.json`
+  - `scripts/load-parcels.notes.json`
+  - `scripts/lib/compute/load-parcels.js`
+  - `src/tests/steps/parcels/row-conservation.test.ts`
+  - `src/tests/steps/parcels/violations.test.ts`
+  - data: `parcels` writes (migrations/011_parcels.sql)
+  - upstream: none
+  - downstream: assert_parcel_sanity · compute_centroids · compute_parcel_cost_estimates · enrich_centreline · enrich_heritage · enrich_parcels · enrich_ravines · link_massing · link_neighbourhoods · link_parcel_addresses · link_parcels
+  - consumers: assert_data_bounds (records_meta audit_table) · parcels (records_meta parcels_load)
+<!-- /generated:target-files -->
+- `scripts/lib/parcels-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`EXPECTED_PARCEL_COLUMNS`) — its `0.10` null-address literal is a `assert-schema.descriptor.json` `fingerprint_inputs` entry, so it is NOT touched by this conversion (Rule 3 externalizes the boundary as a config value on the compute side instead; see the descriptor's `null_address_pct` check).
+- `scripts/lib/address-normalizers.js` — the shared JOIN-key normalizer, also consumed by Spec 54's loader.
+- `scripts/lib/safe-math.js` — shared safe arithmetic helpers (area/frontage/depth math, irregularity ratio).
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/db/load-parcels-geom-guard.db.test.ts`, `src/tests/steps/geometry-guard-coverage.logic.test.ts`
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
 - `scripts/load-parcels.js` — this spec defines the parcels loader's contract (§2/§3); as of batch-2 row 3.7 (commit ③, 2026-09-24) it is the §5.1 frozen shell only (`module.exports = pipeline.step(descriptor, compute)`) — see "As-built" below.
 - `scripts/load-parcels.descriptor.json` — the step's declared contract (Spec 122 §5.1).
 - `scripts/load-parcels.notes.json` — the descriptor's prose sidecar.
 - `scripts/lib/compute/load-parcels.js` — the step's compute (shaping, checks).
-- `scripts/lib/parcels-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`EXPECTED_PARCEL_COLUMNS`) — its `0.10` null-address literal is a `assert-schema.descriptor.json` `fingerprint_inputs` entry, so it is NOT touched by this conversion (Rule 3 externalizes the boundary as a config value on the compute side instead; see the descriptor's `null_address_pct` check).
-- `scripts/lib/address-normalizers.js` — the shared JOIN-key normalizer, also consumed by Spec 54's loader.
-- `scripts/lib/safe-math.js` — shared safe arithmetic helpers (area/frontage/depth math, irregularity ratio).
 - `src/tests/steps/parcels/**` — the step's violations suite.
-- `scripts/quality/assert-schema.js` — this spec pins `EXPECTED_PARCEL_COLUMNS` to its own frozen 4-column CSV set (§2).
 
 ### Cross-Spec Dependencies
 - `scripts/enrich-parcels.js` — this spec is the parcels-schema SoT for enrichment-written columns but explicitly disclaims owning the write logic (§2: "NOT load-parcels").
 - `scripts/compute-centroids.js` — downstream step that fills `centroid_lat`/`centroid_lng` when missing (§2/§3); its own contract lives elsewhere.
+- `scripts/quality/assert-schema.js` — this spec pins `EXPECTED_PARCEL_COLUMNS` to its own frozen 4-column CSV set (§2). — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 </constraints>
 
 ---

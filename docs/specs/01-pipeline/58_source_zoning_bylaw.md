@@ -397,12 +397,19 @@ Every test file MUST include the SPEC LINK header.
 ## 5. Operating Boundaries
 
 ### Target Files
-- `scripts/load-zoning.js`
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `load_zoning` — INGESTOR · unconverted · owner specs: 58
+  - `scripts/load-zoning.js`
+  - data: `zoning_building_setback_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` writes (migrations/164_zoning_bylaw_tables.sql)
+  - upstream: none
+  - downstream: enrich_parcels
+  - consumers: none
+<!-- /generated:target-files -->
 - `scripts/lib/zoning-attr-drift.js`
 - `scripts/lib/geometry-validator.js`
 - `migrations/NNN_zoning_bylaw_tables.sql` (10 tables + GIST + CHECK + non-spatial indexes — NO `zoning_exceptions` per D6)
 - `scripts/manifest.json` entry for `load_zoning`
-- Edit to `scripts/quality/assert-schema.js` adding 10 zoning resource URL checks
 - Edit to `docs/specs/01-pipeline/43_chain_sources.md` adding `load_zoning` step
 - Edit to `scripts/seeds/logic_variables.json` adding `road_overlay_distance_m` (default 5; **MUST be used with `::geography` cast per F-C2**)
 - `docs/runbook/58_zoning_first_deploy_spike.md`
@@ -426,6 +433,7 @@ Every test file MUST include the SPEC LINK header.
 - `scripts/load-permits.js` — chain-sequencing context only (`load_zoning` completes before WF2 `enrich-parcels` runs, §1); permits/coa columns are written by the future `enrich-permits.js` WF3, not this loader.
 - `scripts/load-parcels.js` — join target only; `parcels` columns are written by the future `enrich-parcels.js` (already Out-of-Scope Files above), not this loader.
 - **Spec 67** (`67_maxbuild_bylaw_derivation.md`) — MaxBuild derivation methodology + scenarios; traces every by-law input it uses back to this spec's tables (§2) and mirrors §13 (generator-asserted byte-equality).
+- Edit to `scripts/quality/assert-schema.js` adding 10 zoning resource URL checks — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 
 ### Consumer Dep
 - **Spec 55** (`source_parcels`) — `enrich-parcels.js` (future spec) spatially joins parcels against this spec's tables. Not a direct dep of Spec 58.

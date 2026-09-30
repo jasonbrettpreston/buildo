@@ -22,6 +22,8 @@ Read tool calls in a single message:
 | `docs/specs/01-pipeline/47_pipeline_script_protocol.md` | **Mandatory** — §R1-R12 skeleton, advisory lock, emitSummary, emitMeta |
 | `docs/specs/00-architecture/01_database_schema.md` | Current schema |
 
+**Before changing a step, run `npm run step:registry -- <slug>`; every row must be READ (touched Y/N, behaviour impact, registration, owner spec updated same commit).** (Its DECLARED half is the step's generated Target Files sub-list in its owner spec(s); the PreToolUse hook shows it on the first read/edit of a step file each session.)
+
 **AI-operator docs (lazy-Read, generated):** `docs/reference/logic-variables-registry.md` (every logic var → default/bounds/consumers, `npm run logic-vars-docs`) · `docs/reference/data-lineage-map.md` (column → producer → consumers, `npm run lineage-docs`) · `docs/runbook/README.md` (runbook + one-off script index + deploy-ordering rules).
 
 ---

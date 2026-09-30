@@ -272,9 +272,91 @@ dedicated test files went unnamed.
 ## 4. Operating Boundaries
 
 ### Target Files
-- `scripts/geocode-permits.js`, `scripts/link-parcels.js`, `scripts/link-neighbourhoods.js`
-- `scripts/link-massing.js`, `scripts/link-wsib.js`, `scripts/link-coa.js`
-- `scripts/create-pre-permits.js`, `scripts/refresh-snapshot.js`
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `assert_schema` — ASSERT · converted · owner specs: 60
+  - `scripts/quality/assert-schema.js`
+  - `scripts/quality/assert-schema.descriptor.json`
+  - `scripts/quality/assert-schema.notes.json`
+  - `scripts/lib/compute/assert-schema.js`
+  - `src/tests/steps/assert_schema/violations.test.ts`
+  - data: `pipeline_runs` writes (migrations/033_pipeline_runs.sql)
+  - upstream: none
+  - downstream: none
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta checks_failed)
+- `geocode_permits` — ENRICHER · converted · owner specs: 60
+  - `scripts/geocode-permits.js`
+  - `scripts/geocode-permits.descriptor.json`
+  - `scripts/geocode-permits.notes.json`
+  - `scripts/lib/compute/geocode-permits.js`
+  - `src/tests/steps/geocode_permits/violations.test.ts`
+  - data: `address_points` reads (migrations/018_address_points.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - upstream: address_points · permits
+  - downstream: link_coa · link_neighbourhoods · link_parcels
+  - consumers: src/components/FreshnessTimeline.tsx (audit_metric geocode_coverage)
+- `link_parcels` — LINK · converted · owner specs: 60
+  - `scripts/link-parcels.js`
+  - `scripts/link-parcels.descriptor.json`
+  - `scripts/link-parcels.notes.json`
+  - `scripts/lib/compute/link-parcels.js`
+  - `src/tests/steps/link_parcels/violations.test.ts`
+  - data: `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` writes (migrations/012_permit_parcels.sql); `permits` reads (migrations/001_permits.sql)
+  - upstream: address_points · compute_centroids · geocode_permits · link_parcel_addresses · parcels · permits
+  - downstream: compute_cost_estimates · enrich_permits
+  - consumers: link_parcels (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
+- `link_neighbourhoods` — LINK · converted · owner specs: 60
+  - `scripts/link-neighbourhoods.js`
+  - `scripts/link-neighbourhoods.descriptor.json`
+  - `scripts/link-neighbourhoods.notes.json`
+  - `scripts/lib/compute/link-neighbourhoods.js`
+  - `src/tests/steps/link_neighbourhoods/violations.test.ts`
+  - data: `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - upstream: geocode_permits · neighbourhoods · parcels · permits
+  - downstream: compute_storey_norms
+  - consumers: link_neighbourhoods (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
+- `link_wsib` — MATCHER · converted · owner specs: 60 · 46
+  - `scripts/link-wsib.js`
+  - `scripts/link-wsib.descriptor.json`
+  - `scripts/link-wsib.notes.json`
+  - `scripts/lib/compute/link-wsib.js`
+  - `src/tests/steps/link_wsib/violations.test.ts`
+  - data: `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
+  - upstream: builders · load_wsib
+  - downstream: none
+  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn)
+- `refresh_snapshot` — RECORDER · converted · owner specs: 60
+  - `scripts/refresh-snapshot.js`
+  - `scripts/refresh-snapshot.descriptor.json`
+  - `scripts/refresh-snapshot.notes.json`
+  - `scripts/lib/compute/refresh-snapshot.js`
+  - `src/tests/steps/refresh_snapshot/violations.test.ts`
+  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
+  - upstream: compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · link_coa_to_parcels
+  - downstream: none
+  - consumers: none
+- `assert_data_bounds` — ASSERT · converted · owner specs: 60
+  - `scripts/quality/assert-data-bounds.js`
+  - `scripts/quality/assert-data-bounds.descriptor.json`
+  - `scripts/lib/compute/assert-data-bounds.js`
+  - `src/tests/steps/assert_data_bounds/missing-table-guard.test.ts`
+  - `src/tests/steps/assert_data_bounds/violations.test.ts`
+  - data: `address_points` reads (migrations/018_address_points.sql); `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permits` reads (migrations/001_permits.sql); `pipeline_runs` writes (migrations/033_pipeline_runs.sql)
+  - upstream: none
+  - downstream: none
+  - consumers: src/app/api/admin/control-panel/resync/route.ts (records_meta audit_table) · src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)
+- `assert_engine_health` — RECORDER · converted · owner specs: 60
+  - `scripts/quality/assert-engine-health.js`
+  - `scripts/quality/assert-engine-health.descriptor.json`
+  - `scripts/lib/compute/assert-engine-health.js`
+  - `src/tests/steps/assert_engine_health/violations.test.ts`
+  - data: `engine_health_snapshots` writes (migrations/051_engine_health_snapshots.sql); `pg_stat_user_tables` reads (no CREATE migration)
+  - upstream: none
+  - downstream: none
+  - consumers: assert_engine_health (records_meta records_updated) · assert_engine_health (records_meta tables_checked)
+<!-- /generated:target-files -->
+- `scripts/link-coa.js`
+- `scripts/create-pre-permits.js`
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/geocode-permits.infra.test.ts`
 
 ### Cross-Spec Dependencies
 - **Consumed by:** `chain_permits.md`, `chain_coa.md`, `chain_sources.md`
@@ -283,4 +365,5 @@ dedicated test files went unnamed.
 - `load-permits.js` — referenced only as the `permits` table's other writer (`create-pre-permits.js`'s PRE- row INSERT shares the table, not the script); not governed here.
 - `load-address-points.js` — sources-chain step whose `address_points` table `geocode-permits.js` reads; referenced as context, not governed here.
 - `load-wsib.js` — sources-chain step named as `link-wsib.js`'s annual-cadence upstream refresh trigger; referenced as context, not governed here.
+- `scripts/link-massing.js` — named in this spec's shared-link prose; its owner is Spec 56 (census `owner_specs`)
 </constraints>

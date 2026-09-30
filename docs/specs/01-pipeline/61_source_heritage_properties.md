@@ -458,11 +458,25 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `load_heritage` — INGESTOR · unconverted · owner specs: 61
+  - `scripts/load-heritage.js`
+  - data: `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
+  - upstream: none
+  - downstream: enrich_heritage
+  - consumers: none
+- `enrich_heritage` — ENRICHER · converted · owner specs: 61
+  - `scripts/enrich-heritage.js`
+  - `scripts/enrich-heritage.descriptor.json`
+  - `scripts/lib/compute/enrich-heritage.js`
+  - `src/tests/steps/enrich_heritage/violations.test.ts`
+  - data: `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - upstream: load_heritage · parcels
+  - downstream: enrich_parcels
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
+<!-- /generated:target-files -->
 
-- `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock ~~62~~ **61** as built, L4)
-- `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock ~~63~~ **62** as built, L4b. **As of batch-2 row 2.2 this is the 38-line frozen Spec 122 shell** — see the two files below)
-- `scripts/enrich-heritage.descriptor.json` (batch-2 row 2.2 — this step declared as data: identity/lock, `inputs.reads`, the write target + `write_discipline`, `staleness` (H-A1 (a) Layer-2), `guards.requires`, `execution.enrich_hooks`, the 10 `checks[]`, 4 `invariants[]`, 3 `plausibility[]`, `config.logic_variables[]` + `config.retired[]`, `deviations[]`, `limitations[]`, `terminals[]`)
-- `scripts/lib/compute/enrich-heritage.js` (batch-2 row 2.2 — the §11.1 join SQL, `readHeritageContract` (the §9 / SRID / non-empty HALT), the coverage + per-zone query, and the check observers; nothing else)
 - `scripts/analysis/enrich-heritage-cohort-differential.js` + `docs/reports/golden/enrich_heritage/differential/cohort.json` (batch-2 row 2.2 — the committed-perturbation differential; re-runnable against the LOCAL dev DB only)
 - `scripts/enrich-permits.js` (NEW or extended; heritage step inside; advisory lock ~~64~~ **66** as built, L4c)
 - `migrations/NNN_create_heritage_tables.sql` (M-1: extension + function + 2 tables + indexes)
@@ -473,15 +487,20 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - `docs/specs/01-pipeline/43_chain_sources.md` (edit: load_heritage AFTER load_parcels; enrich_heritage AFTER link_parcels)
 - `docs/specs/01-pipeline/41_chain_permits.md` + `docs/specs/01-pipeline/42_chain_coa.md` (edits for heritage propagation step)
 - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 (lock registry: add 62, 63, 64)
-- `scripts/quality/assert-schema.js` (heritage CKAN URL reachability + OBJECTID/HCD_NO attribute + STATUS/HCD_TYPE allowed values)
-- `scripts/quality/assert-data-bounds.js` (heritage_properties row count >= 8000 lower bound; heritage_districts >= 20)
 - `scripts/quality/assert-entity-tracing.js` (heritage_* fields to coverage grid)
-- `scripts/quality/assert-global-coverage.js` (parcels.is_heritage_designated coverage row)
 - `scripts/manifest.json` (3 chain arrays updated)
 - `scripts/seeds/logic_variables.json` (~~7 heritage_* keys~~ per §12.3a — as built: the loader's own keys plus the **10 `enrich_heritage_*` keys** added at batch-2 row 2.2; `heritage_point_match_radius_m` is declared RETIRED)
 - `src/tests/load-heritage.{logic,infra}.test.ts`, `src/tests/enrich-heritage.{logic,infra}.test.ts`, `src/tests/db/migration-N-heritage.db.test.ts`
-- `src/tests/enrich-heritage-418.logic.test.ts` + `src/tests/db/enrich-heritage-418.db.test.ts` (the #418 skip locks, re-pointed at the H-A1 (a) Layer-2 predicate), `src/tests/db/enrich-heritage-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof), `src/tests/steps/enrich_heritage/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
+- `src/tests/enrich-heritage-418.logic.test.ts` + `src/tests/db/enrich-heritage-418.db.test.ts` (the #418 skip locks, re-pointed at the H-A1 (a) Layer-2 predicate), `src/tests/db/enrich-heritage-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof)
 - `docs/runbook/source_heritage_first_deploy_spike.md` (Spec 48 §3.7)
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `src/tests/steps/enrich_heritage/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
+- `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock ~~62~~ **61** as built, L4)
+- `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock ~~63~~ **62** as built, L4b. **As of batch-2 row 2.2 this is the 38-line frozen Spec 122 shell** — see the two files below)
+- `scripts/enrich-heritage.descriptor.json` (batch-2 row 2.2 — this step declared as data: identity/lock, `inputs.reads`, the write target + `write_discipline`, `staleness` (H-A1 (a) Layer-2), `guards.requires`, `execution.enrich_hooks`, the 10 `checks[]`, 4 `invariants[]`, 3 `plausibility[]`, `config.logic_variables[]` + `config.retired[]`, `deviations[]`, `limitations[]`, `terminals[]`)
+- `scripts/lib/compute/enrich-heritage.js` (batch-2 row 2.2 — the §11.1 join SQL, `readHeritageContract` (the §9 / SRID / non-empty HALT), the coverage + per-zone query, and the check observers; nothing else)
 
 ### Out of scope
 
@@ -504,6 +523,9 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - `scripts/load-permits.js` — referenced only for goal/context (§1 Goal) and the shared M-3 migration note (§8e); not modified by this spec.
 - `scripts/enrich-ravines.js` — referenced only for chain-ordering context between `enrich_zoning`/`enrich_ravines`/`enrich_heritage` (§ H-v1.1.4); not modified by this spec.
 - `scripts/link-parcels.js` — referenced only for chain-ordering context (`enrich_heritage` AFTER `link_parcels`, § H-v1.1.4); not modified by this spec.
+- `scripts/quality/assert-schema.js` (heritage CKAN URL reachability + OBJECTID/HCD_NO attribute + STATUS/HCD_TYPE allowed values) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-data-bounds.js` (heritage_properties row count >= 8000 lower bound; heritage_districts >= 20) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-global-coverage.js` (parcels.is_heritage_designated coverage row) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 
 ---
 

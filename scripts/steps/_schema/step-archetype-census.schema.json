@@ -51,6 +51,13 @@
           "type": "string",
           "minLength": 1,
           "description": "What the exemption covers / does not cover, e.g. \"out of the JS step standard; stays on its own runner\"."
+        },
+        "owner_specs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^docs/specs/[0-9a-z_-]+/[0-9]+[a-z]?_[a-z0-9_]+[.]md$" },
+          "description": "Spec 124 (WF2 generated Target Files, 2026-09-29, ruling D2). The spec(s) that OWN this step: each gets the step's generated sub-list inside its `<!-- generated:target-files -->` block (scripts/analysis/generate-target-files.mjs), and fast invariant #43 OWNER-SPEC-DIFF reads its owner set from here (entries AND exemptions), no longer from the system map. Declared DATA, never inferred from a spec's prose. Required (by the generator, not this schema) for every converted/pending row and every sources-chain row; absent on rows outside the generated scope."
         }
       }
     },
@@ -114,6 +121,13 @@
           "type": "string",
           "minLength": 20,
           "description": "Why the owner specs need no diff (>= 20 chars, mirrored by NA_REASON_MIN in scripts/analysis/gates/owner-spec-diff.mjs). Requires spec_diff."
+        },
+        "owner_specs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^docs/specs/[0-9a-z_-]+/[0-9]+[a-z]?_[a-z0-9_]+[.]md$" },
+          "description": "Spec 124 (WF2 generated Target Files, 2026-09-29, ruling D2). The spec(s) that OWN this step: each gets the step's generated sub-list inside its `<!-- generated:target-files -->` block (scripts/analysis/generate-target-files.mjs), and fast invariant #43 OWNER-SPEC-DIFF reads its owner set from here (entries AND exemptions), no longer from the system map. Declared DATA, never inferred from a spec's prose. Required (by the generator, not this schema) for every converted/pending row and every sources-chain row; absent on rows outside the generated scope."
         }
       },
       "dependencies": {

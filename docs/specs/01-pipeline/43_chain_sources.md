@@ -266,36 +266,67 @@ empty) passes no flag at all.
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `reconcile` — runner-owned · runner_owned · owner specs: 43
+  - `scripts/reconcile-runs.js`
+  - edges: not in the cross-step ledger snapshot (declared files only)
+- `compute_centroids` — BACKFILL · converted · owner specs: 43
+  - `scripts/compute-centroids.js`
+  - `scripts/compute-centroids.descriptor.json`
+  - `scripts/compute-centroids.notes.json`
+  - `scripts/lib/compute/compute-centroids.js`
+  - `src/tests/steps/compute_centroids/runtime.logic.test.ts`
+  - `src/tests/steps/compute_centroids/sabotage.logic.test.ts`
+  - `src/tests/steps/compute_centroids/violations.test.ts`
+  - data: `parcels` reads+writes (migrations/011_parcels.sql)
+  - upstream: parcels
+  - downstream: link_massing · link_parcels
+  - consumers: none
+- `assert_parcel_sanity` — ASSERT · converted · owner specs: 43
+  - `scripts/quality/assert-parcel-sanity.js`
+  - `scripts/quality/assert-parcel-sanity.descriptor.json`
+  - `scripts/lib/compute/assert-parcel-sanity.js`
+  - `src/tests/steps/assert_parcel_sanity/violations.test.ts`
+  - data: `parcels` reads (migrations/011_parcels.sql)
+  - upstream: compute_parcel_cost_estimates · enrich_parcels · parcels
+  - downstream: none
+  - consumers: src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)
+<!-- /generated:target-files -->
+<!-- generated:chain-members:sources -->
+<!-- do not hand-edit: npm run target-files regenerates this block from manifest.chains.sources -->
+- `reconcile` — `scripts/reconcile-runs.js`
+- `assert_schema` — `scripts/quality/assert-schema.js`
+- `address_points` — `scripts/load-address-points.js`
+- `geocode_permits` — `scripts/geocode-permits.js`
+- `parcels` — `scripts/load-parcels.js`
+- `load_ravines` — `scripts/load-ravines.js`
+- `load_heritage` — `scripts/load-heritage.js`
+- `load_centreline` — `scripts/load-centreline.js`
+- `link_parcel_addresses` — `scripts/link-parcel-addresses.js`
+- `compute_centroids` — `scripts/compute-centroids.js`
+- `link_parcels` — `scripts/link-parcels.js`
+- `enrich_ravines` — `scripts/enrich-ravines.js`
+- `enrich_heritage` — `scripts/enrich-heritage.js`
+- `enrich_centreline` — `scripts/enrich-centreline.js`
+- `massing` — `scripts/load-massing.js`
+- `link_massing` — `scripts/link-massing.js`
+- `neighbourhoods` — `scripts/load-neighbourhoods.js`
+- `link_neighbourhoods` — `scripts/link-neighbourhoods.js`
+- `load_wsib` — `scripts/load-wsib.js`
+- `link_wsib` — `scripts/link-wsib.js`
+- `load_zoning` — `scripts/load-zoning.js`
+- `enrich_parcels` — `scripts/enrich-parcels.js`
+- `compute_parcel_cost_estimates` — `scripts/compute-parcel-cost-estimates.js`
+- `assert_global_coverage` — `scripts/quality/assert-global-coverage.js`
+- `assert_parcel_sanity` — `scripts/quality/assert-parcel-sanity.js`
+- `refresh_snapshot` — `scripts/refresh-snapshot.js`
+- `assert_data_bounds` — `scripts/quality/assert-data-bounds.js`
+- `assert_engine_health` — `scripts/quality/assert-engine-health.js`
+<!-- /generated:chain-members:sources -->
 - `scripts/manifest.json` (`chains.sources` array + the `link_massing`/`enrich_parcels` `chain_args.sources` overrides)
-- Every script in the manifest `chains.sources` array, listed explicitly so the generated system map carries an owner row for each step (Spec 123 G0; WF2 2026-09-14 — the prior "all N scripts" prose was invisible to `npm run system-map`):
-- `scripts/reconcile-runs.js` — step 1 `reconcile`
-- `scripts/quality/assert-schema.js` — step 2 `assert_schema`
-- `scripts/load-address-points.js` — step 3 `address_points`
-- `scripts/geocode-permits.js` — step 4 `geocode_permits`
-- `scripts/load-parcels.js` — step 5 `parcels`
-- `scripts/load-ravines.js` — step 6 `load_ravines`
-- `scripts/load-heritage.js` — step 7 `load_heritage`
-- `scripts/load-centreline.js` — step 8 `load_centreline`
-- `scripts/link-parcel-addresses.js` — step 9 `link_parcel_addresses`
-- `scripts/compute-centroids.js` — step 10 `compute_centroids`
-- `scripts/link-parcels.js` — step 11 `link_parcels`
-- `scripts/enrich-ravines.js` — step 12 `enrich_ravines`
-- `scripts/enrich-heritage.js` — step 13 `enrich_heritage`
-- `scripts/enrich-centreline.js` — step 14 `enrich_centreline`
-- `scripts/load-massing.js` — step 15 `massing`
-- `scripts/link-massing.js` — step 16 `link_massing`
-- `scripts/load-neighbourhoods.js` — step 17 `neighbourhoods`
-- `scripts/link-neighbourhoods.js` — step 18 `link_neighbourhoods`
-- `scripts/load-wsib.js` — step 19 `load_wsib`
-- `scripts/link-wsib.js` — step 20 `link_wsib`
-- `scripts/load-zoning.js` — step 21 `load_zoning`
-- `scripts/enrich-parcels.js` — step 22 `enrich_parcels`
-- `scripts/compute-parcel-cost-estimates.js` — step 23 `compute_parcel_cost_estimates`
-- `scripts/quality/assert-global-coverage.js` — step 24 `assert_global_coverage`
-- `scripts/quality/assert-parcel-sanity.js` — step 25 `assert_parcel_sanity`
-- `scripts/refresh-snapshot.js` — step 26 `refresh_snapshot`
-- `scripts/quality/assert-data-bounds.js` — step 27 `assert_data_bounds`
-- `scripts/quality/assert-engine-health.js` — step 28 `assert_engine_health`
+- Every script in the manifest `chains.sources` array is listed by the generated chain-members block above (from `manifest.chains.sources`, in chain order), so the generated system map carries an owner row for each step (Spec 123 G0; WF2 2026-09-14). The generated target-files block above it lists this spec's OWN steps (census `owner_specs`: `reconcile`, `compute_centroids`, `assert_parcel_sanity`) with their files, data and edges; every other sources step is listed in full in its owner spec (generated-Target-Files WF2, 2026-09-30).
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/chain.logic.test.ts`, `src/tests/parcels.logic.test.ts`, `src/tests/neighbourhood.logic.test.ts`, `src/tests/massing.logic.test.ts`, `src/tests/wsib.logic.test.ts`, `src/tests/geocoding.logic.test.ts`
 
 ### Out-of-Scope Files
 - `src/lib/parcels/`, `src/lib/spatial/` — TypeScript API paths

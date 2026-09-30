@@ -2461,10 +2461,28 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
 ## 11. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `enrich_parcels` — ENRICHER · converted · owner specs: 65 · 67 · 78
+  - `scripts/enrich-parcels.js`
+  - `scripts/enrich-parcels.descriptor.json`
+  - `scripts/enrich-parcels.notes.json`
+  - `scripts/lib/compute/enrich-parcels.js`
+  - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`
+  - `src/tests/steps/enrich_parcels/violations.test.ts`
+  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_building_setback_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
+  - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · load_zoning · massing · neighbourhoods · parcels
+  - downstream: assert_parcel_sanity · compute_parcel_cost_estimates
+  - consumers: none
+<!-- /generated:target-files -->
 - `scripts/lib/max-build.js` — as-built constants + generators (`SETBACK_DEFAULTS`, `COVERAGE_DEFAULTS`, `buildSetbackCase`, `buildCoverageCase`, `buildSideCountCase`, `MAX_BUILD_COLS`) — documented here, owned by Spec 65
-- `scripts/lib/compute/enrich-parcels.js` — `buildMaxBuildSql` (max-build pass) and `buildEnrichmentSql` (zoning pass writing `bylaw_*`) — documented here, owned by Spec 65
 - `scripts/seeds/logic_variables.json` — the max-build / zoning-pass tunables of §3.3
 - PLANNED (plan Steps 2–8, not created): new `migrations/` for NF-1..NF-16 (parcels + permits/coa mirrors), `buildRearSetbackCase` / `buildSideSetbackCase` / `buildBuildingLengthCase` / `buildBuildingDepthCase` / `buildLandscapingCase` in `scripts/lib/max-build.js`, `src/tests/factories.ts`, `scripts/analysis/parcel-sanity-audit.js` bounds
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/max-build.logic.test.ts`, `src/tests/db/enrich-parcels-maxbuild.db.test.ts`, `src/tests/db/enrich-parcels-maxbuild-corner.db.test.ts`, `src/tests/db/enrich-parcels-clamp.db.test.ts`, `src/tests/enrich-permits-maxbuild.logic.test.ts`, `src/tests/optimal-config.logic.test.ts`
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/lib/compute/enrich-parcels.js` — `buildMaxBuildSql` (max-build pass) and `buildEnrichmentSql` (zoning pass writing `bylaw_*`) — documented here, owned by Spec 65
 
 ### Out-of-Scope Files
 - `scripts/load-zoning.js` and the zoning source tables — Spec 58

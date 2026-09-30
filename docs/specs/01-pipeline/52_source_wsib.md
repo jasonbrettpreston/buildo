@@ -75,7 +75,15 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
 ## 5. Operating Boundaries
 
 ### Target Files
-- `scripts/load-wsib.js`
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `load_wsib` — INGESTOR · unconverted · owner specs: 52
+  - `scripts/load-wsib.js`
+  - data: `wsib_registry` writes (migrations/040_wsib_registry.sql)
+  - upstream: none
+  - downstream: link_wsib
+  - consumers: none
+<!-- /generated:target-files -->
 
 ### Out-of-Scope Files
 - `scripts/link-wsib.js` — governed by step spec

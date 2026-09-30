@@ -85,7 +85,6 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - `scripts/extract-entities.js` — Replaces extract-builders.js
 - `scripts/enrich-builders.js` — Target entities table
 - `scripts/enrich-web-search.js` — Target entities table
-- `scripts/link-wsib.js` — linked_entity_id
 - `scripts/load-permits.js` — Inline entity upsert
 - `scripts/load-coa.js` — Inline entity upsert
 - `src/components/FreshnessTimeline.tsx` — PIPELINE_REGISTRY update
@@ -112,5 +111,6 @@ Replace the fragmented `builders` table with a unified `entities` hub and `entit
 - Modifies **Spec 35 (WSIB Registry)** — linked_entity_id replaces linked_builder_id.
 - Relies on **Spec 12 (CoA Integration)** — CoA applicant extraction.
 - `scripts/extract-builders.js` — legacy step this spec's `extract-entities.js` replaces; referenced only as the data-migration source for the `builders` → `entities` cutover, not governed here.
+- `scripts/link-wsib.js` — linked_entity_id — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 
 </constraints>

@@ -28,6 +28,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'node:child_process';
 // Commit 4 (WF1 cross-step ledger, Spec 122 §6, tier 2) — the "## Upstream
 // sets" section below is DERIVED via the same stepUpstreams/slugForms the
 // unconverted steps and staleness.js's deriveLedgerSlugs already share (§11
@@ -271,6 +272,13 @@ async function main() {
   let snapshot;
   if (REFRESH) {
     snapshot = await refresh();
+    // The committed snapshot is an INPUT of the generated Target Files blocks
+    // (plan §1.7) — a --refresh can move the ledger edges, so regenerate them now.
+    const tf = spawnSync(process.execPath, [path.join(ROOT, 'scripts/analysis/generate-target-files.mjs')], { stdio: 'inherit' });
+    if (tf.status !== 0) {
+      console.error('✗ generate-target-files.mjs failed after --refresh — run `npm run target-files` and commit the specs with the snapshot');
+      process.exitCode = 1;
+    }
   } else {
     if (!fs.existsSync(SNAPSHOT_PATH)) {
       console.error(`✗ Missing snapshot ${path.relative(ROOT, SNAPSHOT_PATH)} — run \`npm run lineage-docs -- --refresh\` (needs DB) first.`);
