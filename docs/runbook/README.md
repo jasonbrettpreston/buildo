@@ -301,21 +301,33 @@ migration, never the exclusion list, unless Spec 114 §2 is amended first.
 ## 5. WSIB annual refresh (registry + contact enrichment)
 
 The Ontario WSIB contractor registry is a MANUAL annual download — there is no stable URL,
-so the scheduled `chain_sources` `load_wsib` step SKIPs (PASS + instructions row) on runners
-(Spec 52). Cloud state as of 2026-07-29: 121,116 Class G rows (2026-03-05 snapshot), 0 contacts.
+so the scheduled `chain_sources` `load_wsib` step lands the COMPLETED skip
+`skipped_no_source_file` on runners when no `data/BusinessClassificationDetails*.csv` exists
+(the legacy SKIP PASS + instructions row, now a first-class terminal — Spec 52/124, decision
+D1(A), batch-2 row 3.5 ②). The step has no `--file` argument any more: the sole source is the
+declared filesystem external `data/BusinessClassificationDetails*.csv` (newest match by name).
+Cloud state as of 2026-07-29: 121,116 Class G rows (2026-03-05 snapshot), 0 contacts.
 
-1. Download the Business Classification CSV from wsib.ca (annual).
+1. Download the Business Classification CSV from wsib.ca (annual), then SAVE it into `data/` of
+   the tree that will run the load — the glob only matches `BusinessClassificationDetails*.csv`,
+   and the newest by name wins.
 2. From a machine with cloud credentials in `.env` (WF3 cloud-parity FIX 2, 2026-09-03:
    `createPool()` no longer defaults PG_HOST/PG_PORT/PG_DATABASE — an unprefixed
    invocation now THROWS naming the missing vars rather than silently hitting the
    local Docker DB; use the explicit cloud-target prefix):
    ```
    SUPABASE_CA_CERT_PATH=scripts/certs/supabase-ca.pem PG_HOST= DATABASE_URL=$SUPABASE_DATABASE_URL \
-     node -r dotenv/config scripts/load-wsib.js --file "data/BusinessClassificationDetails(YYYY).csv"
+     node -r dotenv/config scripts/load-wsib.js
    ```
    — keeps all of Class G (builders AND trades: G1/G3/G4/G5/G6), computes `is_gta` per-row
    (this also repairs the 2026-03 all-false `is_gta` state that blocks the enrichment queue),
-   and never overwrites previously-enriched contact columns (Spec 46 edge case).
+   and never overwrites previously-enriched contact columns (Spec 46 edge case). Confirm the
+   file the run picked in the audit table's `wsib_source_file` row (its value is the `data/`
+   path; on the `skipped_no_source_file` skip the row is absent and `wsib_load_skipped` reads
+   `no_source_file`) and read the counts in the `wsib_load` block. The FIRST converted
+   load of the 2025 file updates ≈47,040 rows (the WS-D5 `is_gta` repair) and trips the admin
+   funnel's `records_total [0,500]` bound once — both expected; a re-drop of the same file
+   writes 0 (the guard).
 3. Serper contact enrichment IN THE CLOUD: GitHub → Actions → `chain-wsib` → Run workflow.
    Requires the `SERPER_API_KEY` repo secret (real API spend — Spec 46 "on-demand,
    cost-sensitive"). Each dispatch processes ≤ `ENRICH_LIMIT` (manifest: 6000) rows and

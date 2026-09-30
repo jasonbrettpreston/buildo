@@ -1,0 +1,11 @@
+Legal name,Trade name,Mailing Address,Predominant class,NAICS code,Description,Class/subclass,Description,Business size
+Acme Construction Inc.,Acme Build,"100 King St W, TORONTO ON",G1,236110,NAICS-236110-TEXT,G1,SUBCLASS-G1-TEXT,Small Business
+Beta Paving Ltd,,"5 Main St, Sudbury ON",F2,237310,NAICS-237310-TEXT,G5,SUBCLASS-G5-TEXT,Medium Business
+Gamma Foods Corp,,"9 Bay St, Toronto ON",A1,311000,NAICS-311000-TEXT,A1,SUBCLASS-A1-TEXT,Small Business
+   ,No Name Trade,"1 Elm St, Mississauga ON",G2,238110,NAICS-238110-TEXT,G2,SUBCLASS-G2-TEXT,Small Business
+INC.,,"3 Oak St, Brampton ON",G2,238120,NAICS-238120-TEXT,G2,SUBCLASS-G2-TEXT,Small Business
+Delta Builders Limited,,"2 Queen St, Oakville ON",F1,238130,NAICS-238130-TEXT,G3,SUBCLASS-G3-TEXT,Small Business
+DELTA BUILDERS LTD.,Delta Two,"2 Queen St, Oakville ON",G3,238140,NAICS-238140-TEXT,G3,SUBCLASS-G3-TEXT,Large Business
+Delta Builders,Delta Three,"2 Queen St, Oakville ON",G4,238150,NAICS-238150-TEXT,G4,SUBCLASS-G4-TEXT,Small Business
+,,"7 Pine St, Ajax ON",A2,311100,NAICS-311100-TEXT,A2,SUBCLASS-A2-TEXT,Small Business
+Epsilon Reno Inc,,,G5,238990,NAICS-238990-TEXT,G5,SUBCLASS-G5-TEXT,Small Business

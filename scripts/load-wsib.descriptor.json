@@ -1,0 +1,789 @@
+{
+  "identity": {
+    "name": "load_wsib",
+    "display_name": "WSIB Registry Ingestion",
+    "owner": "data",
+    "description": "Loads the operator-dropped Ontario WSIB Business Classification Details CSV (annual manual download; data/BusinessClassificationDetails*.csv, 2025 file 64,164,918 B / 345,416 rows) into wsib_registry: Class G only, deduped on (legal_name_normalized, mailing_address) preferring the G-predominant row, class-A guarded upsert over 13 columns, one step-scoped transaction, no retraction. First no-geometry INGESTOR (0fs). An absent file is the declared skip skipped_no_source_file.",
+    "lock": 97,
+    "why_lock": {
+      "text": "Spec 47 §A.5 lock registry row 97; the legacy ADVISORY_LOCK_ID = 97 (legacy :84) wrapped the whole run in withAdvisoryLock (:135), and the library now acquires it from identity.lock. The frozen shell keeps ADVISORY_LOCK_ID = 97 as a §5.4 source-text constant, asserted equal by src/tests/pipeline-advisory-lock.infra.test.ts. The lock holds across parse, write and score so two loads never interleave on wsib_registry.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "52",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "local:wsib-business-classification-details",
+          "kind": "filesystem",
+          "path": "data/BusinessClassificationDetails*.csv",
+          "format": "csv",
+          "key_property": "Legal name",
+          "cache": "none",
+          "csv_options": {
+            "bom": true,
+            "relax_quotes": false
+          }
+        }
+      ]
+    },
+    "expect_nonempty": false,
+    "on_missing": "run"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "wsib_registry",
+        "key": [
+          "legal_name_normalized",
+          "mailing_address"
+        ],
+        "key_sql_type": "TEXT",
+        "columns": [
+          {
+            "name": "legal_name",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "trade_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "legal_name_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "trade_name_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "mailing_address",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "predominant_class",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "naics_code",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "naics_description",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "subclass",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "subclass_description",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "business_size",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "is_gta",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "last_seen_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "trade_name",
+            "trade_name_normalized",
+            "predominant_class",
+            "naics_code",
+            "naics_description",
+            "subclass",
+            "subclass_description",
+            "business_size",
+            "is_gta"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Class A. The legacy issued ONE statement shape, INSERT ... ON CONFLICT (legal_name_normalized, mailing_address) DO UPDATE SET <9 guard cols + last_seen_at> WHERE <9 cols> IS DISTINCT FROM (legacy :224-252), with no DELETE or TRUNCATE anywhere. guard_columns is that same set of 9 (L7); last_seen_at is written on a changed row but never compared, so a re-run of the same file writes 0 rows — with last_seen_at in the guard every run would rewrite ~121K rows (the LS018 class). legal_name is written \"insert_only\" because the legacy SET list omits it (legacy :232-241): a conflict never rewrites the raw legal name. The legacy wrapped each 5,000-key flush in its own withTransaction (:201); the library wraps all insert batches in ONE step transaction (txn_scope step, address_points Fold B3 precedent) — declared in deviations[].",
+            "liveness": {
+              "kind": "table",
+              "ref": "wsib_registry"
+            }
+          }
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly one write statement reaches wsib_registry: the batched guarded upsert. There is no departure DELETE (retract none) and no staging replace. wsib_registry has no *_dataset_version / *_when_enriched lineage column, so outputs.invalidates is []. link_wsib reads the table by COUNT (upstream_ledger trigger) and by name/address for matching; row identity is unchanged by this conversion.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "none",
+    "trigger": "none",
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "wsib_registry",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enabled RLS on wsib_registry with ZERO policies (relrowsecurity=true, 0 policies, pipeline role rolbypassrls=true [MEASURED plan §1b]). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS — indistinguishable from an unchanged file. The bypass is the precondition, checked before the parse and declared fail-loud.",
+          "liveness": {
+            "kind": "table",
+            "ref": "wsib_registry"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "10m",
+    "txn_scope": "step",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "needs_disk_mb": 128,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A source row the step refuses to carry is counted and the load continues: a row that is G on neither Predominant class nor Class/subclass (legacy :289-292, now shapeRecord reason \"non_g\") and a row whose Legal name normalizes to null (legacy :294-299, now the library bad_key_count). The tolerance is bounded by the declared wsib_no_name_skip_rate check; no bare percentage literal survives here (Rule 3).",
+      "liveness": {
+        "kind": "check",
+        "ref": "wsib_no_name_skip_rate"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured (feature_count, bad_key_count, column_nulls, the gate decision), so a check that throws is a library defect, not an upstream condition — it must redden the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-wsib.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "wsib_load_skipped",
+      "kind": "freshness",
+      "expect": {
+        "reports": "the gate decision that ended the run, or null on a full load"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy chain-skip emitted an INFO status=SKIPPED row plus current_file/file_date/reason/instructions (legacy :98-116) so an operator could tell a skip from a load. Converted: an absent data/BusinessClassificationDetails*.csv lands skipped_no_source_file and THIS row carries the gate reason (no_source_file) in its detail; null on a load. LPA-D4 (step-conformance): a step with a skip_gated terminal must declare >=1 when:\"pre\" check, or a gated skip narrows the audit table to sys_* rows and the reason is never persisted. INFO: descriptive, never gates.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "wsib_source_file",
+      "kind": "freshness",
+      "expect": {
+        "reports": "the operator-dropped data/ file this run read (acquired.source_path)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The successor of the legacy INFO audit rows source_file (legacy :384) and current_file (chain skip, :102): resolveLocalSource picks the newest data/BusinessClassificationDetails*.csv by name and sets acquired.source_path (acquire.js:942), but the library persists no acquired field into records_meta, so without this row no ledger record says WHICH annual file loaded. Purely descriptive (INFO, violations 0, never gates); a post check, so the absent-file skip (whose reason wsib_load_skipped carries) does not score it. file_date (file mtime) stays retired as non-deterministic.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "wsib_unique_class_g",
+      "kind": "bound",
+      "expect": {
+        "of": "unique Class G keys kept after the dedupe (feature_count)",
+        "direction": "min"
+      },
+      "limit": "value_min 110000",
+      "limit_from_config": "load_wsib_unique_class_g_warn_min",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy audit row unique_class_g WARNed when < 110000 (legacy :387, threshold \">= 110000\"). value_min reads the compute-reported value (feature_count = unique Class G keys after the dedupe = legacy seenKeys.size) against the config-substituted floor: 110000 PASSes, 109999 WARNs — the same boundary as the legacy `<` test (① L11, D12). The literal is externalized to load_wsib_unique_class_g_warn_min (seed 110000, Rule 3). 2025 file: 121,116 [MEASURED]. WARN, blocking:false — the legacy never failed the run on it.",
+        "liveness": {
+          "kind": "table",
+          "ref": "wsib_registry"
+        }
+      }
+    },
+    {
+      "id": "wsib_no_name_skip_rate",
+      "kind": "bound",
+      "expect": {
+        "of": "bad-key rows over kept unique keys plus bad-key rows",
+        "direction": "max"
+      },
+      "limit": "pct <= 1",
+      "limit_from_config": "load_wsib_no_name_skip_warn_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy skip_no_name_rate = skipped_no_name / (unique_class_g + skipped_no_name) * 100, WARN when >= 1 (legacy :378-392). The compute reports the PERCENTAGE as value (never a 0/1 flag — .cursor/wf3_skip_rate_never_fails_active_task.md) with the legacy one-decimal string as detail; numerator = acquired.bad_key_count, denominator = feature_count + bad_key_count. The bound is externalized to load_wsib_no_name_skip_warn_pct (seed 1). The pct grammar has no strict form: exactly 1.0% PASSes where the legacy WARNed — the declared deviation WS-D9 (deviations[8]) with zero measure (0 no-name rows in the 2025 file); restored when the library gains a strict pct comparator (fleet follow-up, next library batch). WS-D7: bad_key also counts a nameless NON-G row (0 on the 2025 file).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      }
+    },
+    {
+      "id": "wsib_null_address_count",
+      "kind": "invariant",
+      "expect": {
+        "null_mailing_address_rows": 0
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "WS-D6. migrations/040_wsib_registry.sql declares mailing_address VARCHAR(500) NULLABLE inside UNIQUE(legal_name_normalized, mailing_address): a NULL address never conflicts, so such a row would insert a duplicate on every reload (the legacy binds a blank cell as NULL, ① L10). Latent: 0 NULL addresses [MEASURED plan §3]. violations = acquired.column_nulls.mailing_address (the runner counts null/\"\" per declared column on the carried rows). WARN, blocking:false: an additive observation the legacy never made; the load still happens. Fix, if ruled: ④b.",
+        "liveness": {
+          "kind": "table",
+          "ref": "wsib_registry"
+        }
+      }
+    },
+    {
+      "id": "records_unchanged",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rows the file carried but the guarded upsert left untouched (a re-run's zero-writes)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Row conservation made visible (② output panel F1, load_massing records_unchanged precedent): the guarded upsert's MEASURED no-op count written.unchanged (scripts/lib/step/conservation.js asserts rows_read = skips + inserted + updated + unchanged). The legacy had no such row; the wsib_load block carries only inserted/updated. 2025 file: 74,076 = 121,116 kept - 0 inserted - 47,040 updated [DERIVED from the ② golden counters; the recapture measures it]. A run that measured no write (the absent-file skip) reports null, never a fabricated 0. Descriptive only (INFO, violations 0, never gates).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      }
+    },
+    {
+      "id": "duplicate_key_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "shaped rows superseded by the G-preference dedupe on legal_name_normalized|mailing_address"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Row conservation made visible (② output panel F1, load_massing duplicate_key_count precedent): acquired.duplicate_key_count = the rows compute.dedupeBySourceId superseded (a repeated legal_name_normalized|mailing_address key; the G-predominant row wins, WS-D2). The legacy counted these silently inside its seenKeys/pendingMap dedupe. 2025 file: 12,244 [MEASURED plan row conservation: 345,416 = 212,056 non_g + 0 bad_key + 12,244 duplicates + 121,116]. Not measured (the absent-file skip) reports null. Descriptive only (INFO, violations 0, never gates); a raw count, so viol == 0 is the limit form and no limit_from_config is declared.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "wsib_load",
+      "type": "object",
+      "consumers": [],
+      "skeleton": {
+        "duration_ms": 0,
+        "total_csv_rows": 0,
+        "unique_class_g": 0,
+        "records_inserted": 0,
+        "records_updated": 0,
+        "skipped_non_g": 0,
+        "skipped_no_name": 0
+      }
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx"
+      ],
+      "skeleton": {
+        "phase": 11,
+        "name": "WSIB Registry Ingestion",
+        "verdict": "PASS",
+        "rows": []
+      }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the argv `--file <csv>` input seam, the chain-context data/ scan + SKIPPED PASS summary, and the standalone \"Usage\"/\"File not found\" throws (legacy :87-133)",
+      "why": {
+        "text": "WS-D4 / operator decision D1(A). Legacy: the chain passed no --file, so every chain run SKIPPED (last 6 ledger runs records_total 0 [MEASURED plan §3]) with INFO rows status/current_file/file_date/reason/instructions (:98-116); standalone without --file threw Usage (:127), and a missing path threw File not found (:131-133). Converted: externals[0] kind filesystem + path data/BusinessClassificationDetails*.csv resolved by the 0fs resolveLocalSource with the SAME scan semantics (stem case-insensitive, .csv case-sensitive, newest by sort().pop()); an absent file lands skipped_no_source_file (COMPLETED) in chain AND standalone. Behaviour change: a file dropped in data/ now LOADS in the chain (the cloud has no data/, so it skips exactly as before). The instructions move to load-wsib.notes.json; the resolved file is recorded by the INFO check row wsib_source_file (detail = acquired.source_path; the library does not persist acquired fields). Spec 124 R-AZ (no argv seam).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "operator decision D1(A) (.cursor/batch2_load_wsib_active_task.md §Operator decisions), 2026-09-27",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the legacy first-row CSV header check (legacy :274-284), expected as a descriptor required_columns check (plan §2 row 2)",
+      "why": {
+        "text": "The library exposes no CSV header list on ctx.acquired, so the check stays in compute.shapeRecord (per record; same \"Schema drift: missing column\" message; the run fails before the write). Per-record equals first-row on the 2025 file: 0/345,416 records lack any of the 3 columns [MEASURED 2026-09-29 parseCsv scan, every record carries all 8 keys]. A file missing the Legal name column throws the same message from compute.coerceKey at the key seam (the library parses the key before shapeRecord), so every missing required header fails before the write, as the legacy did (panel F3, test D17; measured: 0 rows written, ledger row finalized failed). Follow-up: library header exposure (not scripts/lib/step in this commit — 0x in flight).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      },
+      "adjudicated_by": "orchestrator ruling 2026-09-29 (row 3.5 ② rulings: header check stays in compute as a declared deviation)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the G-preference replacement scoped to the current 5,000-key flush window (legacy :309, WS-D2)",
+      "why": {
+        "text": "Legacy: the G-preference replacement ran only inside ONE 5,000-row flush window (pendingMap, :309-319); when a window flushed, its keys moved into seenKeys and every later duplicate of a flushed key was dropped unseen (`if (seenKeys.has(dedupeKey)) return;`) — first-seen won ACROSS windows, even when the later row was G-predominant. Converted: compute.dedupeBySourceId runs over the whole parsed array with the same preference (replace a kept row only when it is not G-predominant and the newcomer is) — a strict widening of the legacy window to the whole file, observable only when a not-G-predominant (subclass-G) row is kept first and a G-predominant duplicate of the same key arrives after a legacy flush boundary. Window-vs-global delta on the 2025 file = 0 keys [MEASURED plan §2 row 5], so the success-path rows are identical; the INFO check duplicate_key_count records every superseded row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      },
+      "adjudicated_by": "plan §3 WS-D2 (.cursor/batch2_load_wsib_active_task.md), operator-authorized 2026-09-27",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "one withTransaction per 5,000-key flush (legacy :198-259, :324-333, :345-347)",
+      "why": {
+        "text": "Fold B3 precedent (address_points). The library executeWrite wraps ALL insert batches in ONE step-scoped transaction, so execution.txn_scope and write_discipline.txn_scope declare step. Atomicity-window widening only: a mid-run failure used to leave the committed flushes persisted; converted is all-or-nothing. A successful run writes the same rows.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "plan §2 row 7 (.cursor/batch2_load_wsib_active_task.md); address_points Fold B3 precedent",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the in-script batching literals DEDUP_FLUSH_SIZE 5000 (:186), BATCH 2000 (:200), the 65000-parameter guard (:220) and the 50000-row progress modulo (:335)",
+      "why": {
+        "text": "Retired with the library whole-array path: write.js sizes each INSERT by pipeline.maxRowsPerInsert(columnsPerRow) (13 columns), so execution.batch is \"none\" and no per-step stride remains. No logic variable is declared for them: none governs a pass/fail bound, and a knob with no reader is a dead declaration (address_points commit 9 precedent).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "plan §5 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the streaming csv-parse loop with bounded pendingMap memory (B4, fence c5ced678)",
+      "why": {
+        "text": "The INGESTOR runner acquires the CSV as a WHOLE ARRAY (0b) and dedupes in memory. MEASURED on the real 2025 file by the 0fs G4 heap probe: 345,416 rows, peak heap 172.04 MB of 4288, RSS 328.85 MB, 6.02 s (commit 84609e06) — the whole-array model is measured-safe, so the B4 fence intent (bounded memory) holds by measurement, not by a flush window.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/probe-csv-acquire.mjs"
+        }
+      },
+      "adjudicated_by": "plan §11 note + 0fs G4 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the standalone self-inserted pipeline_runs row and its try/finally finalize (Commit E 1ffa7478, legacy :143-182, :422-444)",
+      "why": {
+        "text": "The runner owns the ledger row in both modes (ledger.js: standalone opens and finalizes; in a chain run-chain.js owns it). The Commit E fence — a run that ends must never leave its row running — is preserved by the runner finalize on every terminal, including a thrown compute; src/tests/db/load-wsib-finalize.db.test.ts is re-pointed to the converted invocation.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "plan §2 row 14 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the flat records_meta keys duration_ms/total_csv_rows/unique_class_g/records_inserted/records_updated/skipped_non_g/skipped_no_name and the legacy INFO audit rows source_file/file_date/total_csv_rows/records_inserted/records_updated/skipped_non_g/skipped_no_name (legacy :383-407)",
+      "why": {
+        "text": "The seven keys move, same names, into ONE emits[] block wsib_load (parcels_load precedent). 0 readers of the flat keys outside one source-text test (chain.logic.test.ts) [MEASURED plan §1c]. The INFO rows become the wsib_load block + the library sys rows; source_file becomes the INFO check row wsib_source_file (detail = acquired.source_path); file_date (file mtime) is retired as non-deterministic. skipped_non_g = acquired.shaped_skipped_by_reason.non_g, skipped_no_name = acquired.bad_key_count (WS-D7 attribution).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      },
+      "adjudicated_by": "plan §2 row 11 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the legacy no-name-rate WARN boundary `skipNoNameRate >= 1` (legacy :392)",
+      "why": {
+        "text": "The pct grammar (verdict.js PCT_RE) has only <= and >=; with <= the verdict PASSes at exactly 1.0% where the legacy WARNed. Zero measure: 0 no-name rows in the 2025 file [MEASURED plan §7]. WS-D9 (declared deviation): legacy WARN at >= 1.0; converted PASS at exactly 1.0; 0 rows affected on the 2025 file; restored when the library gains a strict pct comparator (pct < limit — filed for the next library batch, RE-FREEZE). The compute reports value only (no violations field, Q1 doctrine); test D11 pins the EVALUATED verdict PASS at exactly 1.0 and WARN at 1.5.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "address_points WF3 2026-09-28 pct-boundary precedent",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the post-load DB stats query COUNT(*)/linked/with_trade/class_count (legacy :363-372)",
+      "why": {
+        "text": "Log-only: its result reached only pipeline.log.info, never records_meta or an audit row. Retired rather than ported — compute may not issue SQL (compute-shape) and no consumer read it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      },
+      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "the hand-written emitMeta source/target column lists (legacy :121-124, :373-376)",
+      "why": {
+        "text": "PIPELINE_META is derived from the descriptor columns by the library. The legacy target list omitted is_gta (a written column); the derived list includes it. The source list becomes the declared external.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "plan §2 row 12 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    },
+    {
+      "from": "no null-address observation (legacy)",
+      "why": {
+        "text": "Additive: check wsib_null_address_count (WS-D6, viol == 0, WARN) adds one audit row the legacy never emitted. 0 NULL addresses today [MEASURED plan §3], so it reads PASS.",
+        "liveness": {
+          "kind": "check",
+          "ref": "wsib_null_address_count"
+        }
+      },
+      "adjudicated_by": "plan §3 WS-D6 (.cursor/batch2_load_wsib_active_task.md)",
+      "date": "2026-09-29"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "WS-D1 CARRIED: csv-parse columns:true keeps only the LAST of the two Description headers, so naics_description holds SUBCLASS text and subclass_description is NULL on every row; scripts/enrich-wsib.js whitelists those subclass strings, so the fix must move both in one commit (decision D3).",
+      "measured": "COUNT(DISTINCT naics_description) = COUNT(DISTINCT subclass) = 27 vs 142 NAICS codes; subclass_description NULL 121,116/121,116 [MEASURED plan §3]",
+      "check_id": "none"
+    },
+    {
+      "what": "WS-D6: a NULL mailing_address never conflicts in UNIQUE(legal_name_normalized, mailing_address), so such a row would duplicate on each reload.",
+      "measured": "0 NULL addresses [MEASURED plan §3]; migrations/040_wsib_registry.sql mailing_address nullable",
+      "check_id": "wsib_null_address_count"
+    },
+    {
+      "what": "WS-D3: records_total = inserted + updated, not rows read; rows read are acquired.rows_read and wsib_load.total_csv_rows.",
+      "measured": "legacy :397-399; ① L9",
+      "check_id": "none"
+    },
+    {
+      "what": "WS-D7: the library counts a nameless row as bad_key BEFORE the G filter, so a nameless non-G row moves from skipped_non_g (legacy) to skipped_no_name.",
+      "measured": "nonGnoName = 0 on the 2025 file [MEASURED plan §3]",
+      "check_id": "wsib_no_name_skip_rate"
+    },
+    {
+      "what": "No staleness gate: every run with a file present re-parses all rows; a re-drop of the same file costs a parse and 0 writes (the guard). A content-hash skip would be a behaviour change (a skip is not a load) — follow-up.",
+      "measured": "staleness.trigger none; 0fs heap probe 6.02 s / 345,416 rows",
+      "check_id": "none"
+    },
+    {
+      "what": "Vocabulary limits carried verbatim: is_gta is a case-insensitive SUBSTRING match over 25 GTA names (e.g. Miltonvale contains milton), and the suffix strip runs twice only.",
+      "measured": "211 rows still end in INC|LTD|CORP|LIMITED [MEASURED plan §9]; ① L4",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "load-wsib.notes.json",
+    "entries": 6
+  },
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture. Class A (guarded_upsert, retract none): no retraction, no scoped delete; a kill mid-run leaves either nothing (the step transaction rolled back) or the fully committed upsert. No force_full_on_next_run obligation (that binds retract_when full_only / retract all). The legacy committed per 5,000-key flush, so a mid-run kill left a partial load; converted is all-or-nothing.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The before-image mechanism mirrors a retraction scope predicate as a SELECT; this step declares retract none with write_discipline.scope none, so there is nothing to capture.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 66,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated",
+      "scoped_by": "legal_name_normalized"
+    },
+    "records_new": {
+      "source": "written.inserted",
+      "scoped_by": "legal_name_normalized"
+    },
+    "records_updated": {
+      "source": "written.updated",
+      "scoped_by": "legal_name_normalized"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "load_wsib_unique_class_g_warn_min",
+        "min": 0,
+        "max": 10000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_wsib_no_name_skip_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 11
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "skipped_no_source_file",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": {
+        "wsib_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "0fs (RE-FREEZE #28, 122a §A17): resolveLocalSource found no data/BusinessClassificationDetails*.csv (no data/ directory — the cloud — or no match), so acquire.js returns the tier-1 skip no_source_file before any gate; nothing parsed, nothing written, and the runner-owned ledger row lands COMPLETED. Successor of the legacy chain-skip SKIPPED PASS (legacy :89-125). runIngestPhase refuses (vii) a filesystem path primary without this terminal. Only when:\"pre\" checks score on this path.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "wsib_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The file parsed and the guarded upsert committed; inserted/updated split by RETURNING (xmax = 0). A re-drop of the same file is this terminal with 0 inserted / 0 updated (the guard).",
+        "liveness": {
+          "kind": "table",
+          "ref": "wsib_registry"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "wsib_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared WARN check tripped (wsib_unique_class_g below the floor, wsib_no_name_skip_rate above the bound, or wsib_null_address_count > 0) with no FAIL; the load still happened — legacy verdict WARN (legacy :394, :411).",
+        "liveness": {
+          "kind": "check",
+          "ref": "wsib_unique_class_g"
+        }
+      }
+    },
+    {
+      "id": "failed_schema_drift",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "compute.shapeRecord throws \"Schema drift: missing column \\\"<col>\\\". Found: ...\" when a record lacks Legal name / Predominant class / Mailing Address — the legacy first-row header check (legacy :274-284) kept inside the compute because the library exposes no CSV header list (declared deviation; follow-up). The throw aborts before the write; the runner finalizes its ledger row failed (Commit E fence). A missing Legal name column throws the same message earlier, from compute.coerceKey while acquire.js parses the key (panel F3). Measured 2026-09-29 (fake-pool full run): the run throws, 0 rows are written and the ledger row is finalized failed carrying the message; like every fail_error terminal this one is DECLARED, not stamped — a thrown run records no terminal id.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-wsib.js"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Copying or parsing the local CSV threw (acquire.js copyLocalFile / parseCsv). The temp copy is removed on this path; no write attempted.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 97 held by another process. The legacy withAdvisoryLock returned silently when not acquired (legacy :447 `if (!lockResult.acquired) return;`); the library emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

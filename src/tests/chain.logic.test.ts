@@ -619,9 +619,11 @@ describe('Incremental Processing Guards', () => {
   // 2026-09-27) — same treatment; asserted in src/tests/steps/massing/violations.test.ts.
   // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
   // 2026-09-28) — same treatment; asserted in src/tests/steps/neighbourhoods/violations.test.ts.
-  const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE = [
-    'load-wsib.js',
-  ];
+  // load-wsib.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.5, commit ②,
+  // 2026-09-29) — same treatment; asserted in
+  // src/tests/steps/load_wsib/violations.test.ts.
+  // (the list is now empty; the loop is kept so a future loader re-joins it by name)
+  const SOURCES_LOADERS_REQUIRING_AUDIT_TABLE: string[] = [];
 
   for (const script of SOURCES_LOADERS_REQUIRING_AUDIT_TABLE) {
     it(`${script} emits audit_table in records_meta`, () => {
@@ -655,11 +657,17 @@ describe('Incremental Processing Guards', () => {
     });
   }
 
-  it('load-wsib.js has unique_class_g threshold in audit_table', () => {
-    const scriptPath = path.resolve(__dirname, '../../scripts/load-wsib.js');
-    const content = fs.readFileSync(scriptPath, 'utf-8');
-    expect(content).toContain('unique_class_g');
-    expect(content).toMatch(/>=\s*110000/);
+  // RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.5 ②, 2026-09-29): the
+  // unique-Class-G floor is a declared check in the descriptor, not a literal.
+  it('load_wsib declares the unique_class_g floor as a configured check (was: the >= 110000 literal in load-wsib.js)', () => {
+    const descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/load-wsib.descriptor.json'), 'utf-8'));
+    const check = descriptor.checks.find((c: { id: string }) => c.id === 'wsib_unique_class_g');
+    expect(check).toBeDefined();
+    expect(check.limit_from_config).toBe('load_wsib_unique_class_g_warn_min');
+    expect(check.limit).toMatch(/^value_min 110000$/);
+    expect(check.severity).toBe('WARN');
+    const seeds = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8'));
+    expect(seeds.load_wsib_unique_class_g_warn_min.default).toBe(110000);
   });
 
   // RE-HOMED (Spec 122 §5.1 conversion, C1 pilot 6, 2026-08-29): compute-centroids.js
@@ -940,7 +948,7 @@ describe('PIPELINE_META convention', () => {
     'load-coa.js',
     // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): PIPELINE_META is derived from the descriptor (M-D6).
     // load-neighbourhoods.js RE-HOMED (batch-2 row 3.8 ②, 2026-09-28): PIPELINE_META is derived from the descriptor (N-D12).
-    'load-wsib.js',
+    // load-wsib.js RE-HOMED (batch-2 row 3.5 ②, 2026-09-29): PIPELINE_META is derived from the descriptor (deviation 11).
     'extract-builders.js',
     'classify-permits.js',
     'classify-scope.js',

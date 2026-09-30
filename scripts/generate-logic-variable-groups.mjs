@@ -325,6 +325,13 @@ const GROUP_ORDER = [
     ]
   },
   {
+    "label": "WSIB Registry",
+    "keys": [
+      "load_wsib_unique_class_g_warn_min",
+      "load_wsib_no_name_skip_warn_pct"
+    ]
+  },
+  {
     "label": "Parcel-Address Bridge",
     "keys": [
       "link_parcel_addresses_batch_size",
