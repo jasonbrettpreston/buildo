@@ -779,9 +779,57 @@ export function checkCutoverPrereqs(convertedSlugs, items, descriptorsBySlug = {
   return violations;
 }
 
+/**
+ * DECLARED defect-prefix overrides, slug -> prefix. The initials convention
+ * below collides whenever two slugs share initials: `load_wsib` and
+ * `link_wsib` both resolve to `LW`, so G6 scored `link_wsib`'s `LW-D1..22` as
+ * `load_wsib`'s (measured 2026-09-29, batch-2 row 3.5 ②). An entry here is the
+ * DECLARED prefix for that slug (operator-approved 2026-09-29);
+ * `checkDefectPrefixCollisions` (fast invariant #42) fails any new collision.
+ */
+export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS' });
+
 /** The estate's initials convention (AS/LR/LM/LW/LPA) — one letter per underscore-separated word, uppercased. */
-function defectPrefixFor(slug) {
+export function defectPrefixFor(slug, overrides = DEFECT_PREFIX_OVERRIDES) {
+  if (Object.prototype.hasOwnProperty.call(overrides, slug)) return overrides[slug];
   return slug.split('_').map((w) => w[0].toUpperCase()).join('');
+}
+
+/**
+ * DEFECT-PREFIX-UNIQUE predicate (fast invariant #42, Spec 123 §6 G6 ledger /
+ * Spec 124 §5 R-BA closed answers, 2026-09-29). PURE — takes the slugs to
+ * check plus the override map; grouping and comparison only, no I/O.
+ *
+ * The estate's initials convention (see `defectPrefixFor`) maps two distinct
+ * slugs onto the SAME prefix whenever their initials agree (`load_wsib` and
+ * `link_wsib` -> `LW`), which silently makes one step score another's ledger
+ * rows. Every prefix claimed by >=2 distinct slugs is therefore a collision;
+ * the fix is to declare a distinct prefix for one of them in
+ * `DEFECT_PREFIX_OVERRIDES`.
+ *
+ * @param {string[]} slugs
+ * @param {Record<string, string>} [overrides]
+ * @returns {{pass:boolean, blockedSlugs:string[], detail:string}}
+ */
+export function checkDefectPrefixCollisions(slugs, overrides = DEFECT_PREFIX_OVERRIDES) {
+  const unique = [...new Set(slugs)];
+  const byPrefix = new Map();
+  for (const slug of unique) {
+    const prefix = defectPrefixFor(slug, overrides);
+    if (!byPrefix.has(prefix)) byPrefix.set(prefix, []);
+    byPrefix.get(prefix).push(slug);
+  }
+  const groups = [...byPrefix.entries()]
+    .filter(([, groupSlugs]) => groupSlugs.length >= 2)
+    .map(([prefix, groupSlugs]) => ({ prefix, slugs: [...groupSlugs].sort() }));
+  const blockedSlugs = groups.flatMap((g) => g.slugs).sort();
+  return {
+    pass: groups.length === 0,
+    blockedSlugs,
+    detail: groups.length
+      ? `DEFECT-PREFIX-UNIQUE: ${groups.length} collision(s): ${groups.map((g) => `"${g.prefix}" <- ${g.slugs.join(' + ')}`).join('; ')} — declare a distinct prefix for one slug in DEFECT_PREFIX_OVERRIDES (scripts/analysis/step-validate.mjs)`
+      : `DEFECT-PREFIX-UNIQUE: ${unique.length} slug(s), every defect prefix unique`,
+  };
 }
 
 /**
@@ -2335,6 +2383,25 @@ function fastInvariants(rows, converted, pending) {
     });
   }
 
+  // 42. DEFECT-PREFIX-UNIQUE (Spec 123 §6 G6, Spec 124 §5 R-BA, operator-approved
+  // 2026-09-29, batch-2 row 3.5 ②) — every converted AND pending slug in the
+  // registry must resolve to a distinct defect prefix, or G6 scores one step's
+  // defect-ledger rows as another's (load_wsib/link_wsib both "LW" until
+  // DEFECT_PREFIX_OVERRIDES declared load_wsib -> "WS"). Closed answer: unique,
+  // or FAIL naming both slugs and the override fix. No ledger allowance.
+  {
+    // The WHOLE registry (every converted + pending slug), never the --step subset in `rows`:
+    // a collision is between two steps, so checking one slug alone is vacuous.
+    const prefixes42 = checkDefectPrefixCollisions(buildRegistry().map((r) => r.slug));
+    results.push({
+      id: 42,
+      slug: '(registry)',
+      pass: prefixes42.pass,
+      blockedSlugs: prefixes42.blockedSlugs,
+      detail: prefixes42.detail,
+    });
+  }
+
   return results;
 }
 
@@ -2539,7 +2606,8 @@ function parseDefectLedgerRow(line, expectedPrefix) {
   return parsed;
 }
 
-function defectLedgerRowsFor(row) {
+/** G6's ledger reader: every defect-ledger.md row under `row.prefix` (the slug's defectPrefixFor, overrides included). Exported for src/tests/step-validate-defect-prefix.logic.test.ts. */
+export function defectLedgerRowsFor(row) {
   const text = readFileSync(DEFECT_LEDGER_PATH, 'utf8');
   const lines = text.split('\n').filter((l) => l.startsWith('| ') && l.slice(2).trim().startsWith(`${row.prefix}-D`));
   return lines.map((l) => parseDefectLedgerRow(l, row.prefix));

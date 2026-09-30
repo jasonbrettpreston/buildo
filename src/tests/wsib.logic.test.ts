@@ -1,5 +1,5 @@
 /**
- * SPEC LINK: docs/specs/35_wsib_registry.md
+ * SPEC LINK: docs/specs/01-pipeline/52_source_wsib.md
  *
  * Logic tests for WSIB registry integration: CSV parsing, name normalization,
  * matching logic, and data transformation.
@@ -8,32 +8,24 @@ import { describe, it, expect } from 'vitest';
 import { createMockWsibRegistryEntry, createMockBuilder } from './factories';
 
 // ---------------------------------------------------------------------------
-// Name normalization — mirrors normalizeBuilderName() in extract-builders.js
+// Name normalization — the loader's coerceKey (byte-identical to the legacy
+// normalizeName). ONE resolver: this test drives the shipped compute, not a copy.
 // ---------------------------------------------------------------------------
 
-const SUFFIXES = [
-  'INCORPORATED', 'CORPORATION', 'LIMITED', 'COMPANY',
-  'INC\\.?', 'CORP\\.?', 'LTD\\.?', 'CO\\.?', 'LLC\\.?', 'L\\.?P\\.?',
-];
-const SUFFIX_PATTERN = new RegExp(`\\s*\\b(${SUFFIXES.join('|')})\\s*$`, 'i');
-
-function normalizeName(name: string | null): string | null {
-  if (!name || !name.trim()) return null;
-  let n = name.toUpperCase().trim();
-  n = n.replace(/\s+/g, ' ');
-  n = n.replace(SUFFIX_PATTERN, '').trim();
-  n = n.replace(SUFFIX_PATTERN, '').trim();
-  n = n.replace(/[.,;]+$/, '').trim();
-  return n || null;
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute (batch-2 row 3.5 ②: one resolver, not a mirror)
+const wsibCompute = require('../../scripts/lib/compute/load-wsib.js') as {
+  coerceKey: (raw: unknown) => string | null;
+  shapeRecord: (record: Record<string, string>, seam: unknown) => Record<string, unknown> | string;
+};
+const normalizeName = (name: string | null): string | null => wsibCompute.coerceKey(name);
 
 // ---------------------------------------------------------------------------
-// Class G filtering
+// Class G filtering — the shapeRecord `non_g` reason (G on predominant OR subclass).
 // ---------------------------------------------------------------------------
 
-function isClassG(predominantClass: string, subclass: string): boolean {
-  return predominantClass.startsWith('G') || subclass.startsWith('G');
-}
+const G_BASE: Record<string, string> = { 'Legal name': 'X Co', 'Trade name': '', 'Mailing Address': '', 'Predominant class': '', 'NAICS code': '', Description: '', 'Class/subclass': '', 'Business size': '' };
+const isClassG = (predominantClass: string, subclass: string): boolean =>
+  wsibCompute.shapeRecord({ ...G_BASE, 'Predominant class': predominantClass, 'Class/subclass': subclass }, {}) !== 'non_g';
 
 // ---------------------------------------------------------------------------
 // WSIB status string

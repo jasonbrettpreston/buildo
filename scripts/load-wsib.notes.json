@@ -1,0 +1,128 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-wsib.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 6,",
+    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap. It",
+    "lives here because the descriptor schema's root is additionalProperties:false",
+    "and has no fences category (Spec 120 §14.0)."
+  ],
+  "expected_shape": [
+    {
+      "what": "In the cloud (a checkout with no `data/` dir) and on every run where no file has been dropped, EVERY run is the COMPLETED skip: the declared terminal `skipped_no_source_file` (kind `skip_gated`, status `completed`) fires because the one declared filesystem external `data/BusinessClassificationDetails*.csv` matches 0 files (0fs), so the audit table carries only the `wsib_load_skipped` row with reason `no_source_file` (the post check `wsib_source_file` is not scored) and the step writes no wsib_registry row — but it IS a real run: the runner opens its ledger row (:5456) and takes advisory lock 97 (:5464) before acquisition (scripts/lib/step/index.js, the ledger open precedes the lock), then finalizes the row COMPLETED with terminal skipped_no_source_file. A LOAD is never a property of the step itself: it happens only when an operator drops a file into `data/` of the running tree and the chain (or a bare `node scripts/load-wsib.js`) then finds it. This is the legacy chain-skip (:89-126, `26f3ecfc`) re-expressed as a first-class terminal, so the SKIPPED audit summary with `records_total: 0` is normal output and not a failure.",
+      "measured": {
+        "value": {
+          "legacy_chain_runs_records_total_0": 6
+        },
+        "date": "2026-09-27",
+        "query": "SELECT records_total FROM pipeline_runs WHERE pipeline='load_wsib' ORDER BY started_at DESC LIMIT 6"
+      }
+    }
+  ],
+  "constants": [
+    {
+      "what": "The publisher's vocabulary is DOMAIN DATA living in compute, named here and deliberately NOT lifted into `config.logic_variables[]` — Rule 4: these are strings, not tunables, so an admin knob over any of them would rewrite what the step means rather than shift a bound (gate E). The required header columns (the schema-drift fence) are exactly 3: `Legal name`, `Predominant class`, `Mailing Address`. The Class G prefix is `G` — a row is Class-G when EITHER its predominant class OR its subclass starts with `G` (construction), and only then is it kept; everything else is skipped as `non_g`. The 10 legal SUFFIXES stripped by `coerceKey` — `INCORPORATED`, `CORPORATION`, `LIMITED`, `COMPANY`, `INC\\.?`, `CORP\\.?`, `LTD\\.?`, `CO\\.?`, `LLC\\.?`, `L\\.?P\\.?` — are applied TWICE (a second pass catches double suffixes such as `Foo Co. Ltd.`), before trailing punctuation is stripped. The 25 GTA municipality names are matched as case-insensitive SUBSTRINGS of the mailing address for `is_gta`: toronto, scarborough, etobicoke, north york, east york, mississauga, brampton, caledon, markham, vaughan, richmond hill, king city, aurora, newmarket, stouffville, georgina, oakville, burlington, milton, halton hills, ajax, pickering, oshawa, whitby, clarington. A publisher relabel or an address-format change here silently re-classifies rows with no error: read a surprising `is_gta` or a suddenly-non-G `non_g` spike as vocabulary drift first.",
+      "measured": {
+        "value": {
+          "required_headers": 3,
+          "suffixes": 10,
+          "gta_cities": 25
+        },
+        "date": "2026-09-28",
+        "query": "grep -n SUFFIXES\\|GTA_CITIES scripts/lib/compute/load-wsib.js"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The write is a class-A GUARDED upsert keyed on (legal_name_normalized, mailing_address): 9 guard columns — `IS DISTINCT FROM` per column plus `RETURNING (xmax = 0)` — so an unchanged row is not rewritten, and `last_seen_at` is the ONE unguarded column, written only when the row actually CHANGED (it is the run's DB clock, not a content field). A re-drop of the SAME file is therefore inserted 0 / updated 0: that is the healthy no-op, not a silent failure. Dedupe within a run keeps the FIRST row per (source id) key, with one exception: if a later row is G-predominant and the kept one is not, the later G-predominant row REPLACES it (the `7338b009` rule — Class G is the whole point of the filter, so it must win the key; fence below). On the live 2025 input these are the conservation figures: 121,116 unique keys against 12,244 duplicates, 212,056 non-G rows filtered out, 345,416 source rows total.",
+      "measured": {
+        "value": {
+          "unique_keys_2025": 121116,
+          "duplicates_2025": 12244,
+          "non_g_2025": 212056,
+          "rows_2025": 345416
+        },
+        "date": "2026-09-28",
+        "query": "parseCsv over BusinessClassificationDetails(2025).csv (plan §7 row conservation)"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "The FIRST converted load of the 2025 file updates ≈47,040 rows where the stored `is_gta` is FALSE but the recomputed value is TRUE. This is NORMAL and expected: those rows predate migration 066, which added `is_gta`, so they carry the column's default `false`; the guard sees the value change and rewrites them once. Every later re-drop of the same file writes 0 (the guard has settled). The same first load trips the admin funnel bound on `records_total` (the `load_wsib` row in src/lib/admin/funnel.ts expects `records_total` within [0, 500]) exactly once, because a real load reports 121,116 records while the skip reports 0 — read a one-off funnel warning on the first converted load as this, not as a regression.",
+      "measured": {
+        "value": {
+          "stale_is_gta_rows": 47040,
+          "total_rows": 121116
+        },
+        "date": "2026-09-28",
+        "query": "plan §3 WS-D5 (stale is_gta=false rows predate migration 066)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "D1(A): the input is ONE declared filesystem external `data/BusinessClassificationDetails*.csv` — the legacy chain-skip glob (:94-97), newest match by name — instead of the legacy `--file <path>` argument. WHY: Spec 124 R-AZ retires per-invocation seams; a descriptor cannot hand a path through a flag, and the compressed form has exactly one source, so the glob IS the source. COST, stated plainly: a file dropped into `data/` now loads in the chain, where the legacy would have skipped — the chain is no longer inert when a file is present. Related: the required-header check stays in COMPUTE (`REQUIRED_COLUMNS`, deviation 2), because the header names are publisher vocabulary the compute must own to raise the legacy `Schema drift` message, not a descriptor field. Defect prefix: load_wsib's defect-ledger ids are WS-D<n>, DECLARED in scripts/analysis/step-validate.mjs DEFECT_PREFIX_OVERRIDES (operator-approved 2026-09-29) — the slug-initials convention gives \"LW\", which is link_wsib's prefix (LW-D1..22), and fast invariant #42 DEFECT-PREFIX-UNIQUE now fails any such collision.",
+      "measured": {
+        "value": {
+          "declared_external": "data/BusinessClassificationDetails*.csv",
+          "selection": "newest by name",
+          "legacy_flag": "--file",
+          "header_check_seat": "compute (deviation 2)"
+        },
+        "date": "2026-09-28",
+        "query": "grep -n \"BusinessClassificationDetails\\\\|REQUIRED_COLUMNS\" scripts/load-wsib.descriptor.json scripts/lib/compute/load-wsib.js"
+      },
+      "why": "Spec 124 R-AZ forbids per-invocation seams, so the file the step reads must be a declared external rather than a runtime argument; folding the legacy --file path into the glob keeps the operator workflow (drop the annual file into data/) without inventing a flag the runner cannot pass."
+    }
+  ],
+  "how_to_investigate": [
+    {
+      "what": "The ANNUAL REFRESH runbook (moved from the legacy `instructions` audit row, legacy :116). Step 1: download `BusinessClassificationDetails(YYYY).csv` from wsib.ca (the 2025 file is 64,164,918 bytes) and save it into the `data/` dir of the running tree — the glob only sees files named `BusinessClassificationDetails*.csv`. Step 2: run the sources chain, or `node scripts/load-wsib.js` with NO arguments. Step 3: read the `wsib_source_file` row of the audit table (its value is the data/ file the run picked; absent on a skip) and the `wsib_load` block for the inserted/updated/skipped counters. In the cloud there is no `data/` dir: the file must be uploaded to the runner's checkout first (runbook docs/runbook/README.md §5), or the run will legitimately skip.",
+      "measured": {
+        "value": {
+          "file_2025_bytes": 64164918
+        },
+        "date": "2026-09-28",
+        "query": "legacy :116 instructions row + data/ scan :94-104 (84402d3f)"
+      }
+    }
+  ],
+  "fences": [
+    {
+      "const": "Commit E — the try/finally finalize fence",
+      "value": "a stranded `running` ledger row must not wedge the gate: the finalize block is runner-owned, so the step never writes its own terminal ledger row; the shell relies on pipeline.step's runner to close the run on every path",
+      "incident": "Commit E (1ffa7478, 2026-08-16, \"fix(52_source_wsib): B3 output fold E - orphan running row wedges the gate\"): the legacy loader opened its `running` row inside `withAdvisoryLock` and could exit before finalizing it, leaving a `running` row that made `link_wsib`'s ledger gate see an in-flight upstream forever. The converted step hands finalization to the runner (preserved-in-runner), so the orphan state cannot recur.",
+      "commit": "1ffa7478",
+      "lock_test": "src/tests/db/load-wsib-finalize.db.test.ts"
+    },
+    {
+      "const": "B4 — the memory cap / whole-array parse",
+      "value": "the legacy `DEDUP_FLUSH_SIZE` batch flush (:184-188) is deliberately retired: the converted step parses the whole array through the shared library path (one declared statement), not a streaming flush loop. The heap probe measured a 172.04 MB peak / 328.85 MB RSS on the live 2025 file, comfortably inside the runner's budget, which is what makes the retirement safe.",
+      "incident": "B4 (c5ced678, 2026-04-02, \"B4 memory overflow migration — 3 scripts to streaming\"): the legacy script was migrated to a streaming flush to cap peak memory on the 64 MB CSV. Re-homing the parse onto the SDK's whole-array library path means the flush constant is gone; the source-text lock that pinned it is re-homed here so a future re-introduction of a streaming arm cannot silently diverge from the conversion.",
+      "commit": "c5ced678",
+      "lock_test": "src/tests/pipeline-sdk.logic.test.ts"
+    },
+    {
+      "const": "G-subclass replacement in dedupe",
+      "value": "`dedupeBySourceId` keeps the first row per key UNLESS a later row is G-predominant and the kept row is not, in which case the G-predominant row wins the key — the `pendingMap` rule (:188, :311-317) restored by 7338b009",
+      "incident": "7338b009 (2026-04-02, \"review fixes — counter skip bug, G-subclass replacement\") restored a rule a prior Set-based migration had lost: when duplicate source ids disagreed about Class G, the first-seen row could be non-G and the G-predominant row dropped, silently losing a construction firm. The converted compute preserves the rule; the lock pins it so a future rewrite of dedupe cannot regress to first-wins.",
+      "commit": "7338b009",
+      "lock_test": "src/tests/steps/load_wsib/violations.test.ts"
+    },
+    {
+      "const": "is_gta + migration 066",
+      "value": "`is_gta` is a derived column computed by case-insensitive substring match over the 25 GTA municipality names (`GTA_CITIES` / `isGTA`, ba3ad8a2), never a Serper queue filter applied downstream; the column itself was added by migration 066, so pre-066 rows carry the default `false` until a load heals them",
+      "incident": "ba3ad8a2 (2026-04-03, \"WSIB is_gta column + GTA-only enrichment filter\") introduced `is_gta` and migration 066 added the stored column so Serper enrichment could be restricted to GTA firms. Because the column is a stored value, a change to the city list does not retroactively re-classify rows — it only heals the rows a guarded upsert touches, which is why the stale-is_gta cohort above is normal. The lock pins the derived-column rule so enrichment cannot be narrowed by re-deriving it elsewhere.",
+      "commit": "pending (batch-2 row 3.5 ②)",
+      "lock_test": "src/tests/steps/load_wsib/violations.test.ts"
+    }
+  ]
+}

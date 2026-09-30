@@ -961,7 +961,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   it('#174 pgTAP carries schema assertions only — N/A: no pgTAP file references link_wsib/wsib_registry outside migration DDL tests', () => {
     const pgtapDir = abs('supabase/tests');
     if (!fs.existsSync(pgtapDir)) return;
-    const files = walk(pgtapDir).filter((f) => /wsib/i.test(f));
+    const files = walk(pgtapDir).filter((f) => /wsib/i.test(path.basename(f)));
     for (const f of files) {
       const src = fs.readFileSync(f, 'utf8');
       expect(/results_eq|SELECT\s+count\(\*\)\s*=\s*\d+\s+FROM\s+wsib_registry\s+WHERE\s+match_confidence/i.test(src), `${f}: a pgTAP file asserts a VALUE, not schema`).toBe(false);

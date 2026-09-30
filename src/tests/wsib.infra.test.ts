@@ -79,9 +79,28 @@ describe('WSIB Registry Infrastructure', () => {
       expect(fs.existsSync(scriptPath)).toBe(true);
     });
 
-    it('load-wsib.js requires --file flag', () => {
-      const content = fs.readFileSync(path.resolve(__dirname, '../../scripts/load-wsib.js'), 'utf-8');
-      expect(content).toContain('--file');
+    // RE-HOMED (batch-2 row 3.5 ②, 2026-09-29) — the `--file` argv seam is retired
+    // (Spec 124 R-AZ, WS-D4, decision D1(A)); the ONE input is now declared data:
+    // `externals[0]` of scripts/load-wsib.descriptor.json, resolved by
+    // scripts/lib/step/acquire.js resolveLocalSource; same intent — the step cannot
+    // run without naming its CSV.
+    it('load_wsib declares its CSV input as a filesystem external (was: requires --file flag)', () => {
+      const descriptor = JSON.parse(
+        fs.readFileSync(path.resolve(__dirname, '../../scripts/load-wsib.descriptor.json'), 'utf-8'),
+      );
+      const externals = descriptor.inputs.reads.externals;
+      expect(externals).toHaveLength(1);
+      expect(externals[0].kind).toBe('filesystem');
+      expect(externals[0].path).toBe('data/BusinessClassificationDetails*.csv');
+      expect(externals[0].format).toBe('csv');
+      expect(externals[0].url).toBeUndefined();
+      // The frozen shell's header comment NAMES the retired seam in prose
+      // ("The `--file <csv>` argument ... are RETIRED"), so the assertion is on the
+      // CODE, not the comment: the shell no longer reads process.argv at all.
+      const shell = fs.readFileSync(path.resolve(__dirname, '../../scripts/load-wsib.js'), 'utf-8');
+      const shellCode = shell.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      expect(shellCode).not.toContain('--file');
+      expect(shellCode).not.toContain('process.argv');
     });
 
     it('link-wsib.js supports --dry-run', () => {

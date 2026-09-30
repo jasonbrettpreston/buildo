@@ -5277,6 +5277,26 @@
       "group": "Source Ingestion"
     }
   },
+  "load_wsib_unique_class_g_warn_min": {
+    "default": 110000,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.5, INGESTOR) — WARN floor on the number of unique Class G (legal_name_normalized, mailing_address) keys a WSIB load keeps after the dedupe (acquired.feature_count). 110000 = the pre-externalization literal (legacy scripts/load-wsib.js:387 `gRowCount < 110000 ? 'WARN' : 'PASS'`, threshold '>= 110000'); the 2025 file yields 121,116. WARN, blocking:false. Compared by the verdict's value_min arm (110000 PASSes, 109999 WARNs — the legacy boundary). on_invalid fail (gate B). CONSUMED by load_wsib (scripts/lib/compute/load-wsib.js wsib_unique_class_g, via checks[].limit_from_config).",
+    "min": 0,
+    "max": 10000000,
+    "admin": {
+      "group": "WSIB Registry"
+    }
+  },
+  "load_wsib_no_name_skip_warn_pct": {
+    "default": 1,
+    "type": "number",
+    "description": "Spec 124 Rule 3 (row 3.5, INGESTOR) — WARN ceiling, in percent (0–100), on rows with no usable legal name (acquired.bad_key_count) over kept unique keys plus those rows. 1 = the pre-externalization literal (legacy scripts/load-wsib.js:392 `skipNoNameRate >= 1 ? 'WARN' : 'PASS'`). Compared by the verdict's pct <= arm against the reported percentage; exactly 1.0 now PASSes (declared boundary delta, 0 no-name rows in the 2025 file). on_invalid fail (gate B). CONSUMED by load_wsib (scripts/lib/compute/load-wsib.js wsib_no_name_skip_rate, via checks[].limit_from_config).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "WSIB Registry"
+    }
+  },
   "load_centreline_download_retry_backoff_ms": {
     "default": 0,
     "type": "number",

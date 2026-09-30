@@ -1112,7 +1112,7 @@ describe('Pipeline SDK', () => {
       'load-coa.js',
       // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
       // 2026-09-28) — same treatment, same successor lock (step-conformance.infra.test.ts).
-      'load-wsib.js',
+      // load-wsib.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.5, commit ②, 2026-09-29) — same treatment, same successor lock (step-conformance.infra.test.ts at ③; the row 3.5 violations suite D1 until then).
       // load-massing.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.6, commit ②,
       // 2026-09-27) — same treatment, same successor lock (step-conformance.infra.test.ts).
       'classify-permits.js',
@@ -2107,20 +2107,25 @@ describe('Pipeline SDK', () => {
       expect(content).toMatch(/streamQuery|for await/);
     });
 
-    // load-wsib.js: dedup Map must flush in batches, not accumulate all rows
-    it('load-wsib.js flushes dedup batch periodically (not unbounded accumulation)', () => {
-      const content = fsB4.readFileSync(path.join(scriptDirB4, 'load-wsib.js'), 'utf-8');
-      // Must have a batch flush inside the parsing section (not just the initial declaration)
-      // Look for seen.clear() or a DEDUP_FLUSH_SIZE constant that triggers periodic upsert+clear
-      expect(content).toMatch(/seen\.clear\(\)|DEDUP_FLUSH/);
+    // load-wsib.js RE-HOMED (batch-2 row 3.5 ②, 2026-09-29): the B4 fence c5ced678 streamed the CSV
+    // and flushed a bounded pendingMap to cap memory; the INGESTOR runner now acquires the WHOLE
+    // array (0b) and dedupes in memory, so there is no flush window and no stream to pause. The
+    // bounded-memory INTENT is not dropped, it is MEASURED instead of asserted structurally: the
+    // 0fs G4 heap probe on the real 64 MB 2025 file (345,416 rows) peaked at 172.04 MB heap /
+    // 328.85 MB RSS (commit 84609e06), which the descriptor declares in its deviations[]. Same
+    // intent — no unbounded accumulation — proven by measurement on the real file.
+    it('load_wsib: the bounded-memory flush is knowingly retired for the measured whole-array parse (fence c5ced678, was: DEDUP_FLUSH source lock)', () => {
+      const compute = fsB4.readFileSync(path.join(scriptDirB4, 'lib/compute/load-wsib.js'), 'utf-8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      expect(compute).not.toMatch(/DEDUP_FLUSH|pendingMap|seenKeys|createReadStream|\.pause\(\)/);
+      const d = JSON.parse(fsB4.readFileSync(path.join(scriptDirB4, 'load-wsib.descriptor.json'), 'utf-8'));
+      const entry = d.deviations.find((x: unknown) =>
+        JSON.stringify(x).includes('c5ced678') && JSON.stringify(x).includes('172.04 MB'));
+      expect(entry, 'the B4 fence must be re-homed as a declared, measured deviation').toBeTruthy();
     });
   });
 
   describe('B22: early-exit scripts must still emit summary and meta', () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const fs2 = require('fs');
-      const scriptDir2 = path.resolve(__dirname, '../../scripts');
-
       it('link_neighbourhoods still emits summary + meta on the zero-eligible path (fence bd9e67ab, re-homed onto the declaration at conversion)', () => {
         // RE-HOMED (batch-2 I4, 2026-09-16). The hand-written early-exit block that emitted a
         // duplicate summary + meta pair — with its OWN copy of the phase expression, which is
@@ -2136,17 +2141,27 @@ describe('Pipeline SDK', () => {
         expect(d.sharing.varies_by_chain.phase).toEqual({ permits: 8, sources: 10 });
       });
 
-      it('load-wsib.js emits summary/meta when no --file arg in chain context', () => {
-        const source = fs2.readFileSync(path.join(scriptDir2, 'load-wsib.js'), 'utf-8');
-        // When running in a chain without --file, the script must gracefully skip
-        // with emitSummary/emitMeta instead of process.exit(1)
-        const noFileIdx = source.indexOf('--file');
-        expect(noFileIdx).toBeGreaterThan(-1);
-        // There must be an emitSummary call in the no-file/chain-skip path
-        // (before any process.exit or as an alternative path)
-        const chainSkipBlock = source.slice(0, source.indexOf('process.exit'));
-        expect(chainSkipBlock).toMatch(/emitSummary/);
-        expect(chainSkipBlock).toMatch(/emitMeta/);
+      // load-wsib.js RE-HOMED (batch-2 row 3.5 ②, 2026-09-29). The hand-written chain-skip block that
+      // emitted its own summary + meta and then returned (fence 26f3ecfc) is gone: the runner emits
+      // summary + meta for EVERY declared terminal, so a skip is no longer a second code path wearing
+      // a declaration. The absent-file case is the 0fs `no_source_file` tier-1 skip, declared as the
+      // COMPLETED terminal `skipped_no_source_file` and executed end-to-end by
+      // src/tests/ingest-prereq-0fs-fullrun.logic.test.ts T7c. The same intent — a missing file is a
+      // clean, explained skip, never a crash or a silent no-op — is asserted on the declaration.
+      it('load_wsib: an absent source file is a DECLARED completed skip with a pre check that says why (fence 26f3ecfc, was: --file chain-skip source text)', () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor
+        const d = require('../../scripts/load-wsib.descriptor.json');
+        const terminal = d.terminals.find((x: { id: string }) => x.id === 'skipped_no_source_file');
+        expect(terminal, 'the absent-file outcome must be a DECLARED terminal').toBeTruthy();
+        expect(terminal.kind).toBe('skip_gated');
+        expect(terminal.status).toBe('completed');
+        expect(terminal.records_meta.audit_table).toBe('object');
+        // LPA-D4: a skip_gated terminal must carry >=1 when:"pre" check, or the gate reason is never persisted
+        const preCheck = d.checks.find((c: { id: string; when?: string }) => c.id === 'wsib_load_skipped');
+        expect(preCheck, 'the skip reason must be carried by a declared check').toBeTruthy();
+        expect(preCheck.when).toBe('pre');
+        const external = d.inputs.reads.externals[0];
+        expect(external.kind).toBe('filesystem');
       });
   });
 

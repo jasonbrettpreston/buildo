@@ -1,0 +1,120 @@
+{
+  "contract_version": 1,
+  "step": "load_wsib",
+  "source": "docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md §9 (row 3.5 ② PRE/POST compare) + scripts/load-wsib.descriptor.json deviations[]",
+  "note": "Both pairs (sources, standalone): table_state wsib_registry 121,116 rows, 13-column projection content_hash 9d0c2316ea47dedc36679612bd1bd733 BYTE-IDENTICAL PRE→POST; verdict PASS both; counters records_total/new/updated 47040/0/47040 both (the natural forced change: the WS-D5 stale is_gta rows, restored to the backup hash 1b93ccfe04c997fbc710a3e3146a80ef before every run). Source identity: PRE read data/BusinessClassificationDetails(2025).csv via --file; POST resolved the same file via the data/ glob and logged md5 9fc9adbf… / 64,164,918 bytes (= the verified operator file). POST two-run proof: run 2 rewrote 0 rows.",
+  "diffs": [
+    {
+      "key": "step",
+      "why": "PRE runs the byte copy of the legacy loader (scripts/load-wsib-legacy-pre.js = scripts/load-wsib.js @ 43056856, sha256 4f8ebd51…, the ① fixture); POST runs the converted frozen shell scripts/load-wsib.js."
+    },
+    {
+      "key": "meta[].external",
+      "why": "deviation 11: the library derives PIPELINE_META from the descriptor and names the declared external id local:wsib-business-classification-details; the legacy hand-written emitMeta named none."
+    },
+    {
+      "key": "meta[].reads.WSIB CSV",
+      "why": "deviation 11: the legacy source label \"WSIB CSV\" (a hand-typed column list) is replaced by the declared external; no reader consumes PIPELINE_META reads by label."
+    },
+    {
+      "key": "meta[].writes.wsib_registry[]",
+      "why": "deviation 11: the derived write list is the descriptor's 13 columns and INCLUDES is_gta, which the legacy hand-written target list omitted although the legacy upsert wrote it (legacy :123/:375 vs :228)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "deviations 5/6/10: the legacy Source:/Flushed 5000 rows/progress/Parsing complete/Load complete/DB stats log lines are retired with the streaming flush window and the log-only stats query; the runner logs its target line, one `acquired 345416 feature(s) (64164918 bytes, md5 …)` line and completed-in."
+    },
+    {
+      "key": "pipeline_runs[].records_updated",
+      "why": "Standalone only, deviation 7: the legacy self-finalized its own row with records_total/records_new only (records_updated left 0); the runner-owned ledger row records all three counters (47040 updated)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta",
+      "why": "Standalone only, deviation 7: the legacy finalize UPDATE wrote no records_meta; the runner-owned ledger row stores the full records_meta (wsib_load block, audit_table, terminal, gate, config)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "deviations 8/12 + check set: the legacy nine INFO/WARN rows (source_file, file_date, total_csv_rows, unique_class_g, records_inserted, records_updated, skipped_non_g, skipped_no_name, skip_no_name_rate) become the seven declared check rows (five + the two ② output-panel F1 INFO rows records_unchanged and duplicate_key_count) plus the library sys_* rows; the row count differs (PRE 11, POST 9)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "Row renames: source_file→wsib_source_file (value = acquired.source_path), unique_class_g→wsib_unique_class_g, skip_no_name_rate→wsib_no_name_skip_rate, new wsib_load_skipped (pre, LPA-D4) and wsib_null_address_count (WS-D6, additive), new records_unchanged and duplicate_key_count at positions 5/6 (② output-panel F1: row conservation made visible, INFO post viol == 0); file_date retired (non-deterministic mtime); the count rows move into the wsib_load block."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "Follows the metric renames/reorder: each position now carries its declared check's reported value (source path, 121116, \"0.0%\", 0; F1 rows: records_unchanged 74076 = 121116 - 0 inserted - 47040 updated, duplicate_key_count 12244 = the plan §7 conservation duplicates, both MEASURED in the 2026-09-30 POST captures) instead of the legacy row at that position."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "The library renders the declared limit in force (value_min 110000, pct <= 1, viol == 0) where the legacy printed its own literal strings (\">= 110000\", \"< 1%\", null); values are config-substituted from load_wsib_unique_class_g_warn_min / load_wsib_no_name_skip_warn_pct."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "The library stamps each declared check row with source: \"check\" (the sys_* rows carry none); the legacy hand-built rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "Follows the reorder: e.g. position 2 was the legacy INFO total_csv_rows row and is now the wsib_unique_class_g check row (PASS); every check row is PASS or INFO on these runs, so the verdict is PASS both sides."
+    },
+    {
+      "key": "summary.records_meta.wsib_load",
+      "why": "deviation 8: the seven legacy flat keys regrouped, same names and same values (345416 rows, 121116 unique, 0 inserted, 47040 updated, 212056 non-G, 0 no-name), into ONE declared emits[] block wsib_load."
+    },
+    {
+      "key": "summary.records_meta.total_csv_rows",
+      "why": "deviation 8: moved into wsib_load.total_csv_rows (same value 345416); 0 readers of the flat key [MEASURED grep]."
+    },
+    {
+      "key": "summary.records_meta.unique_class_g",
+      "why": "deviation 8: moved into wsib_load.unique_class_g (same value 121116); 0 readers of the flat key [MEASURED grep]."
+    },
+    {
+      "key": "summary.records_meta.records_inserted",
+      "why": "deviation 8: moved into wsib_load.records_inserted (same value 0); the run counters are records_new/records_total."
+    },
+    {
+      "key": "summary.records_meta.records_updated",
+      "why": "deviation 8: moved into wsib_load.records_updated (same value 47040); the run counter records_updated carries it too."
+    },
+    {
+      "key": "summary.records_meta.skipped_non_g",
+      "why": "deviation 8: moved into wsib_load.skipped_non_g (same value 212056, from shaped_skipped_by_reason.non_g)."
+    },
+    {
+      "key": "summary.records_meta.skipped_no_name",
+      "why": "deviation 8 + WS-D7: moved into wsib_load.skipped_no_name (same value 0, from bad_key_count)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner meta key: the declared terminal the run landed (loaded); the legacy had no terminal vocabulary."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "Runner meta key: the acquisition gate decision ({reason: loaded, gated_skip: false}); an absent file would read no_source_file."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner meta key: the resolved logic variables in force (load_wsib_unique_class_g_warn_min 110000, load_wsib_no_name_skip_warn_pct 1), stamped by the library (Nothing Hidden)."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner meta key: who owns the pipeline_runs row (chain vs owned), deviation 7."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner meta key: the pool error counter the library records on every run (0)."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner meta key: the row-derived check tally the library stamps (all)."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner meta key: the row-derived failed-check count the library stamps (0)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner meta key: the row-derived warned-check count the library stamps (0)."
+    }
+  ]
+}

@@ -533,6 +533,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // listed above; these are the three new neighbourhoods-owned knobs.
   'neighbourhoods_download_timeout_ms', 'neighbourhoods_dead_tuple_ratio_warn_max',
   'neighbourhoods_maintenance_timeout_minutes',
+  // batch-2 row 3.5 load_wsib (Rule 3, 2026-09-29) — the two legacy audit literals
+  // (110000 unique-Class-G floor, 1% no-name ceiling) externalized; admin group "WSIB Registry".
+  'load_wsib_unique_class_g_warn_min', 'load_wsib_no_name_skip_warn_pct',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
