@@ -425,11 +425,26 @@ The envelope this spec consumes is **computed** by Spec 65 §4 and **derived / e
 ## 2. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `enrich_parcels` — ENRICHER · converted · owner specs: 65 · 67 · 78
+  - `scripts/enrich-parcels.js`
+  - `scripts/enrich-parcels.descriptor.json`
+  - `scripts/enrich-parcels.notes.json`
+  - `scripts/lib/compute/enrich-parcels.js`
+  - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`
+  - `src/tests/steps/enrich_parcels/violations.test.ts`
+  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_building_setback_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
+  - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · load_zoning · massing · neighbourhoods · parcels
+  - downstream: assert_parcel_sanity · compute_parcel_cost_estimates
+  - consumers: none
+<!-- /generated:target-files -->
 - `scripts/load-permits.js` (occupancy ingest), `scripts/lib/build-norms.js` (NEW, pure),
   `scripts/compute-build-norms.js` (NEW, Mutator), `scripts/manifest.json` (chain wiring),
   `migrations/198_permits_occupancy_columns.sql`, `migrations/199_neighbourhood_build_norms.sql`,
   `docs/specs/_contracts.json` (`build_norms` group), `docs/runbook/permit_occupancy_first_deploy.md`.
 - `scripts/enrich-permits.js` — §4D wires `OPT_COMP_PROP_COLS`, `assertOptConfigColumns`, and the per-run propagation audit rows into this script (otherwise Spec 66)
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/optimal-config.logic.test.ts`
 
 ### Out-of-Scope Files
 - `scripts/enrich-parcels.js` and the parcel new-fields / degrade-retire pass — **Phase 3**.

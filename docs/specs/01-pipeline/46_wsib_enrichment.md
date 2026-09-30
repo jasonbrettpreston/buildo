@@ -143,10 +143,27 @@ only"), `wsib_registry` row count and content unaffected (121,116, unchanged). S
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `link_wsib` — MATCHER · converted · owner specs: 60 · 46
+  - `scripts/link-wsib.js`
+  - `scripts/link-wsib.descriptor.json`
+  - `scripts/link-wsib.notes.json`
+  - `scripts/lib/compute/link-wsib.js`
+  - `src/tests/steps/link_wsib/violations.test.ts`
+  - data: `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
+  - upstream: builders · load_wsib
+  - downstream: none
+  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn)
+<!-- /generated:target-files -->
 - `scripts/enrich-wsib.js` (new)
 - `scripts/manifest.json` (wsib chain array, enrich_wsib_registry entry)
-- `scripts/link-wsib.js` (contact copy on link)
 - `migrations/063_wsib_contacts.sql`
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/chain.logic.test.ts`, `src/tests/quality.logic.test.ts`
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/link-wsib.js` (contact copy on link)
 
 ### Out-of-Scope Files
 - `scripts/load-wsib.js` — WSIB CSV loading (governed by 52_source_wsib.md)

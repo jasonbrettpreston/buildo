@@ -86,15 +86,44 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
 - **Relies on:** `pipeline_system.md` (SDK)
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `massing` — INGESTOR · converted · owner specs: 56
+  - `scripts/load-massing.js`
+  - `scripts/load-massing.descriptor.json`
+  - `scripts/load-massing.notes.json`
+  - `scripts/lib/compute/load-massing.js`
+  - `src/tests/steps/massing/violations.test.ts`
+  - data: `building_footprints` writes (migrations/023_building_footprints.sql)
+  - upstream: none
+  - downstream: enrich_parcels · link_massing
+  - consumers: massing (records_meta massing_load) · src/components/FreshnessTimeline.tsx (records_meta audit_table)
+- `link_massing` — LINK · converted · owner specs: 56
+  - `scripts/link-massing.js`
+  - `scripts/link-massing.descriptor.json`
+  - `scripts/link-massing.notes.json`
+  - `scripts/lib/compute/link-massing.js`
+  - `src/tests/steps/link_massing/metamorphic.test.ts`
+  - `src/tests/steps/link_massing/nearest-determinism.test.ts`
+  - `src/tests/steps/link_massing/rung1-inline-wkt.test.ts`
+  - `src/tests/steps/link_massing/violations.test.ts`
+  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_buildings` writes (migrations/024_parcel_buildings.sql); `parcels` reads (migrations/011_parcels.sql)
+  - upstream: compute_centroids · massing · parcels
+  - downstream: compute_cost_estimates · enrich_parcels
+  - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
+<!-- /generated:target-files -->
+- `scripts/seeds/logic_variables.json` — the six massing keys: `massing_skip_rate_max_pct`, `massing_batch_error_rate_max_pct`, `massing_story_height_m`, `massing_download_timeout_ms`, `building_footprints_dead_tuple_ratio_warn_max`, `building_footprints_maintenance_timeout_minutes` (`sources_building_footprints_floor` is shared with assert_data_bounds).
+- `scripts/analysis/probe-shapefile-acquire.mjs` — batch-2 row 3.6 P-M memory/key probe: measures the massing shapefile through the runner's own `acquire.js` acquisition seam (read-only; opt-in one SELECT under `--db`) ahead of the `load-massing.js` conversion (Fold SF-7, WF2 row 3.6).
+- `scripts/analysis/massing-cohort-differential.js` — batch-2 row 3.6 R-AS forced-change cohort differential (Spec 124 R-AS): derives + commits the D/U/E forced-change cohort and runs the pre/post proof through `capture-step-golden.js`, restore-always (Fold SF-7, Fold SF-5).
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
 - `scripts/load-massing.js` — this spec defines the massing loader's contract (§2/§3). `[as-built 2026-09-27, row 3.6 ②]` Spec 122 §5.1 frozen shell, lock 56.
 - `scripts/load-massing.descriptor.json` — the step declared as data (class A `guarded_upsert`, `geometry_srid`/`geometry_repair`/`derived_from_geometry`, checks, invariants, maintenance).
 - `scripts/load-massing.notes.json` — the prose sidecar (8 entries + fences).
 - `scripts/lib/compute/load-massing.js` — the domain logic only (`coerceKey`, `shapeRecord`, dedupe, checks).
 - `src/tests/steps/massing/**` — the row-3.6 violations suite + fixtures.
-- `scripts/seeds/logic_variables.json` — the six massing keys: `massing_skip_rate_max_pct`, `massing_batch_error_rate_max_pct`, `massing_story_height_m`, `massing_download_timeout_ms`, `building_footprints_dead_tuple_ratio_warn_max`, `building_footprints_maintenance_timeout_minutes` (`sources_building_footprints_floor` is shared with assert_data_bounds).
 - `scripts/link-massing.js` — this spec defines the `--full` gate's DATA/CODE signals, decision logic and empty-source guard (§3).
-- `scripts/analysis/probe-shapefile-acquire.mjs` — batch-2 row 3.6 P-M memory/key probe: measures the massing shapefile through the runner's own `acquire.js` acquisition seam (read-only; opt-in one SELECT under `--db`) ahead of the `load-massing.js` conversion (Fold SF-7, WF2 row 3.6).
-- `scripts/analysis/massing-cohort-differential.js` — batch-2 row 3.6 R-AS forced-change cohort differential (Spec 124 R-AS): derives + commits the D/U/E forced-change cohort and runs the pre/post proof through `capture-step-golden.js`, restore-always (Fold SF-7, Fold SF-5).
 
 ### Cross-Spec Dependencies
 - `scripts/load-permits.js` — the `permits`-chain run (no `--full`) is referenced only as context for the gate decision (§3); this spec does not define its contract.

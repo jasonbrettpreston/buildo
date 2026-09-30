@@ -22,6 +22,7 @@
     { "id": "consumer-registry", "kind": "cmd", "argv": ["node", "scripts/analysis/gates/consumer-registry.mjs", "--write"], "does": "scripts/steps/_schema/consumer-registry.json (gate D)" },
     { "id": "conversion-roadmap", "kind": "cmd", "argv": ["node", "scripts/violations/generate-conversion-roadmap.mjs"], "does": "docs/reports/generated/122-conversion-roadmap.md" },
     { "id": "programme-backlog", "kind": "cmd", "argv": ["node", "scripts/violations/generate-programme-backlog.mjs"], "does": "docs/reports/generated/122-programme-backlog.md" },
+    { "id": "target-files", "kind": "cmd", "argv": ["node", "scripts/analysis/generate-target-files.mjs"], "does": "the generated Target Files blocks in every owner spec + the chain-members blocks (census owner_specs + ledger + consumer registry) — before system-map, which reads them" },
     { "id": "system-map", "kind": "cmd", "argv": ["node", "scripts/generate-system-map.mjs"], "does": "docs/specs/00-architecture/00_system_map.md" },
     { "id": "scorecards", "kind": "cmd", "argv": ["node", "scripts/analysis/step-validate.mjs", "--all", "--write"], "on_fail": "report", "does": "every assessment report's generated scorecard (the long run — minutes); exits 1 (reported, not thrown) while assert_schema's POST goldens are stale from the probe-list move above — recapture, then re-run this entry" }
   ]

@@ -87,6 +87,37 @@ describe('gate J1 — specDiffDecision (pure core)', () => {
     const body = specDiff.messageBody('subject\n# comment\n\ntrailer line');
     expect(body).toEqual(['', 'trailer line']);
   });
+
+  // -------------------------------------------------------------------------
+  // Amendment 3 (WF2 generated Target Files, 2026-09-29) — the GENERATED docs
+  // do not count as "the spec moved": the system map is regenerated, never
+  // authored, and a spec whose only staged change lies inside its
+  // `<!-- generated:* -->` blocks was refreshed by the generator, not edited
+  // by hand. Only a hand edit OUTSIDE those blocks satisfies Rule 13.
+  // -------------------------------------------------------------------------
+  it('T8 the generated system map is not a spec move', () => {
+    const r = specDiff.specDiffDecision([DESCRIPTOR, 'docs/specs/00-architecture/00_system_map.md'], MSG('feat: x'));
+    expect(r.status).toBe('red');
+  });
+
+  it('T9 a spec whose only change is inside its generated blocks is not a spec move', () => {
+    const r = specDiff.specDiffDecision(
+      [DESCRIPTOR, 'docs/specs/01-pipeline/55_source_parcels.md'],
+      MSG('feat: x'),
+      () => false,
+    );
+    expect(r.status).toBe('red');
+  });
+
+  it('T10 the same spec with a hand edit outside the blocks is a spec move', () => {
+    expect(
+      specDiff.specDiffDecision([DESCRIPTOR, 'docs/specs/01-pipeline/55_source_parcels.md'], MSG('feat: x'), () => true).status,
+    ).toBe('spec_staged');
+    // The 2-argument form keeps the pre-Amendment-3 default: every staged spec counts.
+    expect(
+      specDiff.specDiffDecision([DESCRIPTOR, 'docs/specs/01-pipeline/55_source_parcels.md'], MSG('feat: x')).status,
+    ).toBe('spec_staged');
+  });
 });
 
 // ===========================================================================

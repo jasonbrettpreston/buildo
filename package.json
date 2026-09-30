@@ -36,6 +36,8 @@
     "step-shape": "node scripts/hooks/check-step-shape.mjs",
     "step:validate": "node scripts/analysis/step-validate.mjs",
     "cutover": "node scripts/analysis/cutover.mjs",
+    "step:registry": "node scripts/analysis/step-registry.mjs",
+    "target-files": "node scripts/analysis/generate-target-files.mjs",
     "cloud:pre": "node -r dotenv/config scripts/analysis/cloud-pre-dispatch.mjs",
     "churn-complexity": "node scripts/analysis/step-churn-complexity.mjs",
     "spec:split-check": "node scripts/analysis/spec-split-check.mjs",

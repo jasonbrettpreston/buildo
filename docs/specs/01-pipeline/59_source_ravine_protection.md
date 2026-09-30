@@ -463,29 +463,51 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `load_ravines` — INGESTOR · converted · owner specs: 59
+  - `scripts/load-ravines.js`
+  - `scripts/load-ravines.descriptor.json`
+  - `scripts/load-ravines.notes.json`
+  - `scripts/lib/compute/load-ravines.js`
+  - `src/tests/steps/load_ravines/violations.test.ts`
+  - data: `ravines` writes (migrations/167_create_ravines_table.sql)
+  - upstream: none
+  - downstream: enrich_ravines
+  - consumers: enrich_ravines (records_meta ravine_load)
+- `enrich_ravines` — ENRICHER · converted · owner specs: 59
+  - `scripts/enrich-ravines.js`
+  - `scripts/enrich-ravines.descriptor.json`
+  - `scripts/lib/compute/enrich-ravines.js`
+  - `src/tests/steps/enrich_ravines/violations.test.ts`
+  - data: `parcels` reads+writes (migrations/011_parcels.sql); `ravines` reads (migrations/167_create_ravines_table.sql)
+  - upstream: load_ravines · parcels
+  - downstream: enrich_parcels
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
+<!-- /generated:target-files -->
 
-- `scripts/load-ravines.js` (NEW — Spec 47 skeleton; advisory lock 59)
-- `scripts/enrich-ravines.js` (NEW — sibling per L6; advisory lock 60 per L4b)
 - `migrations/NNN_create_ravines_table.sql` (NEW — M-1; planar + geography GIST per L13)
 - `migrations/NNN_parcels_ravine_columns.sql` (NEW — M-2; SEPARATE from Spec 58's zoning columns migration per L11; includes `ravine_dataset_version_when_enriched`)
 - `migrations/NNN_permits_coa_ravine_columns.sql` (NEW — M-3)
 - `docs/specs/01-pipeline/43_chain_sources.md` (edit — add `load_ravines` step after `parcels` slug; `enrich_ravines` after `link_parcels` slug)
-- `scripts/quality/assert-schema.js` (edit — validate CKAN URL + OBJECTID attribute)
-- `scripts/quality/assert-data-bounds.js` (edit — add `ravines` row-count bounds, e.g., `>= 500` lower bound to catch catastrophic load failure) *(R2 Independent HIGH-4 fold)*
 - `scripts/lib/geometry-validator.js` (NEW or reuse from Spec 58 implementation — shared ST_MakeValid + ST_CollectionExtract helper) *(R2 Independent HIGH-4 fold)*
 - `scripts/lib/safe-math.js` (existing — required per Spec 47 §16 B5; banned raw parseInt/parseFloat) *(R2 Independent HIGH-4 fold)*
 - `scripts/manifest.json` (edit — add `source-ravines` + `enrich-ravines` slugs with read/write columns)
 - `src/tests/load-ravines.{logic,infra}.test.ts`, `src/tests/enrich-ravines.{logic,infra}.test.ts`, `src/tests/db/migration-N-ravines.db.test.ts`
-- `src/tests/db/enrich-ravines.skip.db.test.ts` (the #418 skip locks, re-pointed at the Layer-2 scope predicate), `src/tests/db/enrich-ravines-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof), `src/tests/steps/enrich_ravines/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
+- `src/tests/db/enrich-ravines.skip.db.test.ts` (the #418 skip locks, re-pointed at the Layer-2 scope predicate), `src/tests/db/enrich-ravines-kill-mid-run.db.test.ts` (NEW — the shared-transaction atomicity proof)
 - `docs/runbook/source_ravines_first_deploy_spike.md` (NEW per Spec 48 §3.7)
 - `scripts/seeds/logic_variables.json` — the 8 `enrich_ravines_*` keys this spec's thresholds and bounds are seeded from (batch-2 row 2.1; table in the Implementation reconciliation section above).
+- `scripts/enrich-permits.js` — this spec defines the ravine step's multi-parcel propagation rule and lock requirement (§8e, §11.2).
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `src/tests/steps/enrich_ravines/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
+- `scripts/load-ravines.js` (NEW — Spec 47 skeleton; advisory lock 59)
+- `scripts/enrich-ravines.js` (NEW — sibling per L6; advisory lock 60 per L4b)
 - `scripts/load-ravines.js` — this spec defines the ravines loader's contract (§3 Behavioral Contract, §9 Producer/Consumer Contract).
 - `scripts/enrich-ravines.js` — this spec defines the sibling enrichment script's contract (§8d, §11.1). **As of batch-2 row 2.1 this is the frozen Spec 122 shell** — see the two files below.
 - `scripts/enrich-ravines.descriptor.json` — this step declared as data: `staleness` (the Layer-2 scope), the write target + `write_discipline`, `guards.requires`, the 7 `checks[]`, 3 `invariants[]`, 4 `plausibility[]`, `config.logic_variables[]`, `deviations[]`, `limitations[]`, `terminals[]`.
 - `scripts/lib/compute/enrich-ravines.js` — the §11.1 join SQL (the materialized-centroid LATERAL form, #413), `readRavineContract` (the §9 / SRID / empty-source HALT), the coverage query and the check observers; nothing else.
-- `scripts/enrich-permits.js` — this spec defines the ravine step's multi-parcel propagation rule and lock requirement (§8e, §11.2).
-- `scripts/quality/assert-schema.js` — this spec defines the new ravines CKAN URL + OBJECTID checks to add (§8c deliverable table).
-- `scripts/quality/assert-data-bounds.js` — this spec defines the new `>= 500` ravines row-count lower bound to add (§8c deliverable table).
 
 ### Out-of-Scope Files
 
@@ -509,6 +531,10 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
 - `scripts/load-permits.js` — referenced only for schema-as-built context (intro); not modified by this spec.
 - `scripts/load-parcels.js` — referenced only for chain-ordering context (`load_ravines` AFTER `parcels` slug, §8c) and migration-numbering context; not modified by this spec.
 - `scripts/link-parcels.js` — referenced only for chain-ordering context (`enrich_ravines` AFTER `link_parcels` slug, §8d); not modified by this spec.
+- `scripts/quality/assert-schema.js` (edit — validate CKAN URL + OBJECTID attribute) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-data-bounds.js` (edit — add `ravines` row-count bounds, e.g., `>= 500` lower bound to catch catastrophic load failure) *(R2 Independent HIGH-4 fold)* — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-schema.js` — this spec defines the new ravines CKAN URL + OBJECTID checks to add (§8c deliverable table). — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-data-bounds.js` — this spec defines the new `>= 500` ravines row-count lower bound to add (§8c deliverable table). — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 
 ---
 

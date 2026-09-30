@@ -294,11 +294,23 @@ Every test file carries the `SPEC LINK` header.
 ## 6. Operating Boundaries
 
 ### Target Files
-- `scripts/enrich-parcels.js` (NEW; v1.1 adds the max-build second pass)
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `enrich_parcels` — ENRICHER · converted · owner specs: 65 · 67 · 78
+  - `scripts/enrich-parcels.js`
+  - `scripts/enrich-parcels.descriptor.json`
+  - `scripts/enrich-parcels.notes.json`
+  - `scripts/lib/compute/enrich-parcels.js`
+  - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`
+  - `src/tests/steps/enrich_parcels/violations.test.ts`
+  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_building_setback_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
+  - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · load_zoning · massing · neighbourhoods · parcels
+  - downstream: assert_parcel_sanity · compute_parcel_cost_estimates
+  - consumers: none
+<!-- /generated:target-files -->
 - `scripts/lib/zoning-precedence.js` (NEW)
 - `scripts/lib/max-build.js` (NEW v1.1 — setback table, constants, `MAX_BUILD_COLS`, SQL fragments)
 - `scripts/enrich-permits.js` (v1.1 — max-build §8e propagation; otherwise Spec 66)
-- `scripts/quality/assert-global-coverage.js` (v1.1 — max-build INFO rows)
 - `scripts/one-time/backfill-parcels-zoning-index.js` (NEW)
 - `migrations/165_parcels_zoning_columns.sql` (NEW)
 - `migrations/185_parcels_max_build_columns.sql` (NEW v1.1)
@@ -315,6 +327,10 @@ Every test file carries the `SPEC LINK` header.
 - `src/tests/factories.ts` — parcel factory zoning fields
 - 3 test files (§5)
 - `scripts/compute-storey-norms.js` — §8 SN-1–SN-4 define its derivation formula (percentile aggregation, `STOREY_NORM_MIN_SAMPLE`/`STOREY_CLAMP_MAX` thresholds) and audit rows
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/enrich-parcels.js` (NEW; v1.1 adds the max-build second pass)
 
 ### Out-of-Scope Files
 - `scripts/enrich-permits.js` / `permits` + `coa_applications` columns — Spec 58 WF3 (separate spec)
@@ -333,4 +349,5 @@ Every test file carries the `SPEC LINK` header.
 - `load-neighbourhoods.js` — §8 C2 spatial-joins `parcels` against `neighbourhoods` loaded by this script
 - `classify-permits.js` — §8 SN-1 only references chain sequencing ("permits chain after `classify_permits`"); trade classification is owned by Spec 80
 - **Spec 67** (`67_maxbuild_bylaw_derivation.md`) — derivation methodology + scenario catalogue for §4's max-build envelope (explains/derives; this spec stays the as-built owner)
+- `scripts/quality/assert-global-coverage.js` (v1.1 — max-build INFO rows) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 </constraints>

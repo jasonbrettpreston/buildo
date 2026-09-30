@@ -163,6 +163,7 @@
     },
     {
       "slug": "compute_parcel_cost_estimates",
+      "owner_specs": ["docs/specs/01-pipeline/88_parcel_cost_model.md"],
       "file": "scripts/compute-parcel-cost-estimates.js",
       "archetype": "ENRICHER",
       "batch": "pending",
@@ -207,6 +208,7 @@
     },
     {
       "slug": "enrich_centreline",
+      "owner_specs": ["docs/specs/01-pipeline/62_source_centreline.md"],
       "file": "scripts/enrich-centreline.js",
       "archetype": "ENRICHER",
       "batch": "C5",
@@ -214,6 +216,7 @@
     },
     {
       "slug": "enrich_heritage",
+      "owner_specs": ["docs/specs/01-pipeline/61_source_heritage_properties.md"],
       "file": "scripts/enrich-heritage.js",
       "archetype": "ENRICHER",
       "batch": "pending",
@@ -237,6 +240,7 @@
     },
     {
       "slug": "enrich_ravines",
+      "owner_specs": ["docs/specs/01-pipeline/59_source_ravine_protection.md"],
       "file": "scripts/enrich-ravines.js",
       "archetype": "ENRICHER",
       "batch": "pending",
@@ -274,6 +278,7 @@
     },
     {
       "slug": "geocode_permits",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/geocode-permits.js",
       "archetype": "ENRICHER",
       "batch": "pending",
@@ -297,6 +302,7 @@
     },
     {
       "slug": "link_neighbourhoods",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/link-neighbourhoods.js",
       "archetype": "LINK",
       "batch": "pending",
@@ -313,6 +319,7 @@
     },
     {
       "slug": "address_points",
+      "owner_specs": ["docs/specs/01-pipeline/54_source_address_points.md"],
       "file": "scripts/load-address-points.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -322,6 +329,7 @@
     },
     {
       "slug": "load_centreline",
+      "owner_specs": ["docs/specs/01-pipeline/62_source_centreline.md"],
       "file": "scripts/load-centreline.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -338,6 +346,7 @@
     },
     {
       "slug": "load_heritage",
+      "owner_specs": ["docs/specs/01-pipeline/61_source_heritage_properties.md"],
       "file": "scripts/load-heritage.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -345,6 +354,7 @@
     },
     {
       "slug": "massing",
+      "owner_specs": ["docs/specs/01-pipeline/56_source_massing.md"],
       "file": "scripts/load-massing.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -354,6 +364,7 @@
     },
     {
       "slug": "neighbourhoods",
+      "owner_specs": ["docs/specs/01-pipeline/57_source_neighbourhoods.md"],
       "file": "scripts/load-neighbourhoods.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -363,6 +374,7 @@
     },
     {
       "slug": "parcels",
+      "owner_specs": ["docs/specs/01-pipeline/55_source_parcels.md"],
       "file": "scripts/load-parcels.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -379,6 +391,7 @@
     },
     {
       "slug": "load_wsib",
+      "owner_specs": ["docs/specs/01-pipeline/52_source_wsib.md"],
       "file": "scripts/load-wsib.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -386,6 +399,7 @@
     },
     {
       "slug": "load_zoning",
+      "owner_specs": ["docs/specs/01-pipeline/58_source_zoning_bylaw.md"],
       "file": "scripts/load-zoning.js",
       "archetype": "INGESTOR",
       "batch": "C5",
@@ -428,6 +442,7 @@
     },
     {
       "slug": "assert_parcel_sanity",
+      "owner_specs": ["docs/specs/01-pipeline/43_chain_sources.md"],
       "file": "scripts/quality/assert-parcel-sanity.js",
       "archetype": "ASSERT",
       "batch": "pending",
@@ -458,6 +473,7 @@
     },
     {
       "slug": "enrich_parcels",
+      "owner_specs": ["docs/specs/01-pipeline/65_enrich_parcels.md", "docs/specs/01-pipeline/67_maxbuild_bylaw_derivation.md", "docs/specs/01-pipeline/78_optimal_lot_configuration.md"],
       "file": "scripts/enrich-parcels.js",
       "archetype": "ENRICHER",
       "batch": "pending",
@@ -467,6 +483,7 @@
     },
     {
       "slug": "assert_global_coverage",
+      "owner_specs": ["docs/specs/01-pipeline/49_data_completeness_profiling.md"],
       "file": "scripts/quality/assert-global-coverage.js",
       "archetype": "ASSERT",
       "batch": "pending",
@@ -476,6 +493,7 @@
     },
     {
       "slug": "assert_data_bounds",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/quality/assert-data-bounds.js",
       "archetype": "ASSERT",
       "batch": "pending",
@@ -485,6 +503,7 @@
     },
     {
       "slug": "assert_engine_health",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/quality/assert-engine-health.js",
       "archetype": "RECORDER",
       "batch": "pending",
@@ -494,6 +513,7 @@
     },
     {
       "slug": "assert_schema",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/quality/assert-schema.js",
       "archetype": "ASSERT",
       "batch": "C1",
@@ -509,6 +529,7 @@
     },
     {
       "slug": "load_ravines",
+      "owner_specs": ["docs/specs/01-pipeline/59_source_ravine_protection.md"],
       "file": "scripts/load-ravines.js",
       "archetype": "INGESTOR",
       "batch": "C1",
@@ -524,6 +545,7 @@
     },
     {
       "slug": "link_massing",
+      "owner_specs": ["docs/specs/01-pipeline/56_source_massing.md"],
       "file": "scripts/link-massing.js",
       "archetype": "LINK",
       "batch": "C1",
@@ -539,6 +561,7 @@
     },
     {
       "slug": "link_wsib",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md", "docs/specs/01-pipeline/46_wsib_enrichment.md"],
       "file": "scripts/link-wsib.js",
       "archetype": "MATCHER",
       "batch": "C1",
@@ -554,6 +577,7 @@
     },
     {
       "slug": "link_parcel_addresses",
+      "owner_specs": ["docs/specs/01-pipeline/54_source_address_points.md"],
       "file": "scripts/link-parcel-addresses.js",
       "archetype": "MATERIALIZER",
       "batch": "C1",
@@ -569,6 +593,7 @@
     },
     {
       "slug": "compute_centroids",
+      "owner_specs": ["docs/specs/01-pipeline/43_chain_sources.md"],
       "file": "scripts/compute-centroids.js",
       "archetype": "BACKFILL",
       "batch": "C1",
@@ -584,6 +609,7 @@
     },
     {
       "slug": "link_parcels",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/link-parcels.js",
       "archetype": "LINK",
       "batch": "C1",
@@ -599,6 +625,7 @@
     },
     {
       "slug": "refresh_snapshot",
+      "owner_specs": ["docs/specs/01-pipeline/60_shared_steps.md"],
       "file": "scripts/refresh-snapshot.js",
       "archetype": "RECORDER",
       "batch": "C1",
@@ -630,6 +657,7 @@
     },
     {
       "slug": "reconcile",
+      "owner_specs": ["docs/specs/01-pipeline/43_chain_sources.md"],
       "file": "scripts/reconcile-runs.js",
       "reason": "runner_owned",
       "ruling": "Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — grounded in Spec 122 §4 (RUNNER owns reconcile), §7.3 concern row 4 (\"Reconcile the previous run | RUNNER | nothing declared\") and §7.4 A3 (a reconcile step at the head of manifest.chains.sources)",

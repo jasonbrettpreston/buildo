@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-BB (OWNER-SPEC-DIFF, fast invariant #43)
 // SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md §7 row 9(b)
 
-// A converted.json append must touch every owner spec the system map names for that
+// A converted.json append must touch every owner spec the census `owner_specs` names for that
 // script, or its census row carries spec_diff "N-A" + spec_diff_reason (>= 20 chars).
 // Replaces the commit-body "N-A" convention.
 
@@ -15,17 +15,17 @@ import {
   NA_REASON_MIN,
 } from '../../scripts/analysis/gates/owner-spec-diff.mjs';
 
-const MAP = [
-  '| # | Spec File | Feature | Implementation | Tests | Status |',
-  '|---|---|---|---|---|---|',
-  '| 43 | `01-pipeline/43_chain_sources.md` | Sources | `scripts/b.js`, `scripts/c.js` | `t` | Done |',
-  '| 62 | `01-pipeline/62_x.md` | X | `scripts/b.js` | `t` | Done |',
-  '| 27 | `archive/27_old.md` | Old | `scripts/b.js` | `t` | Done |',
-  '| 90 | `docs/reference/90_ref.md` | Ref | `scripts/c.js` | `t` | Done |',
-  '| 91 | `01-pipeline/91_y.md` | Y | `scripts/bb.js` | `t` | Done |',
-].join('\n');
 const S43 = 'docs/specs/01-pipeline/43_chain_sources.md';
 const S62 = 'docs/specs/01-pipeline/62_x.md';
+
+// Census rows: `entries[]` and `exemptions[]` alike carry `owner_specs`; the system map no
+// longer feeds #43 at all.
+const CENSUS = [
+  { slug: 'b', file: 'scripts/b.js', owner_specs: [S43, S62] },
+  { slug: 'c', file: 'scripts/c.js', owner_specs: ['docs/reference/90_ref.md', S43] },
+  { slug: 'r', file: 'scripts/r.js', reason: 'runner_owned', owner_specs: [S43] },
+  { slug: 'u', file: 'scripts/u.js' },
+];
 
 const readRepoFile = (rel: string): string =>
   fs.readFileSync(path.resolve(__dirname, '../../', rel), 'utf8');
@@ -39,19 +39,30 @@ describe('owner-spec-diff (fast invariant #43)', () => {
     expect(convertedFilesOf({})).toEqual([]);
   });
 
-  it('2. ownerSpecsFor matches only the literal backticked token (archive skipped, bb.js not matched)', () => {
-    expect(ownerSpecsFor('scripts/b.js', MAP)).toEqual([S43, S62]);
+  it('2. ownerSpecsFor reads census owner_specs (entries and exemptions); no substring match', () => {
+    expect(ownerSpecsFor('scripts/b.js', CENSUS)).toEqual([S43, S62]);
+    expect(ownerSpecsFor('scripts/r.js', CENSUS)).toEqual([S43]);
+    expect(ownerSpecsFor('scripts/u.js', CENSUS)).toEqual([]);
+    expect(ownerSpecsFor('scripts/bb.js', CENSUS)).toEqual([]);
   });
 
-  it('3. ownerSpecsFor uses an as-is docs/ cell and prefixes everything else (panel I-3)', () => {
-    expect(ownerSpecsFor('scripts/c.js', MAP)).toEqual(['docs/reference/90_ref.md', S43]);
+  it('3. ownerSpecsFor returns the declared paths sorted and unique', () => {
+    expect(ownerSpecsFor('scripts/c.js', CENSUS)).toEqual(['docs/reference/90_ref.md', S43]);
   });
 
-  it('4. ownerSpecsFor on the real system map resolves both specs for enrich-centreline.js', () => {
-    const text = readRepoFile('docs/specs/00-architecture/00_system_map.md');
-    expect(ownerSpecsFor('scripts/enrich-centreline.js', text)).toEqual([
-      'docs/specs/01-pipeline/43_chain_sources.md',
+  it('4. ownerSpecsFor on the real census resolves declared owner specs', () => {
+    const doc = JSON.parse(readRepoFile('scripts/steps/_schema/step-archetype-census.json'));
+    const rows = [...doc.entries, ...doc.exemptions];
+    expect(ownerSpecsFor('scripts/enrich-centreline.js', rows)).toEqual([
       'docs/specs/01-pipeline/62_source_centreline.md',
+    ]);
+    expect(ownerSpecsFor('scripts/reconcile-runs.js', rows)).toEqual([
+      'docs/specs/01-pipeline/43_chain_sources.md',
+    ]);
+    expect(ownerSpecsFor('scripts/enrich-parcels.js', rows)).toEqual([
+      'docs/specs/01-pipeline/65_enrich_parcels.md',
+      'docs/specs/01-pipeline/67_maxbuild_bylaw_derivation.md',
+      'docs/specs/01-pipeline/78_optimal_lot_configuration.md',
     ]);
   });
 
@@ -60,8 +71,7 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: ['scripts/a.js'],
       headConverted: ['scripts/a.js', 'scripts/b.js'],
       changedPaths: [S43, S62, 'scripts/steps/_schema/converted.json'],
-      systemMapText: MAP,
-      censusEntries: [],
+      censusEntries: CENSUS,
       mode: 'staged',
       error: null,
     });
@@ -77,8 +87,7 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: ['scripts/a.js'],
       headConverted: ['scripts/a.js', 'scripts/b.js'],
       changedPaths: [S43],
-      systemMapText: MAP,
-      censusEntries: [],
+      censusEntries: CENSUS,
       mode: 'staged',
       error: null,
     });
@@ -93,7 +102,6 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: ['scripts/a.js'],
       headConverted: ['scripts/a.js', 'scripts/b.js'],
       changedPaths: [],
-      systemMapText: MAP,
       censusEntries: [
         {
           file: 'scripts/b.js',
@@ -113,7 +121,6 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: ['scripts/a.js'],
       headConverted: ['scripts/a.js', 'scripts/b.js'],
       changedPaths: [],
-      systemMapText: MAP,
       censusEntries: [
         { file: 'scripts/b.js', spec_diff: 'N-A', spec_diff_reason: 'too short' },
       ],
@@ -129,8 +136,7 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: [],
       headConverted: ['scripts/zzz.js'],
       changedPaths: [],
-      systemMapText: MAP,
-      censusEntries: [],
+      censusEntries: CENSUS,
       mode: 'staged',
       error: null,
     });
@@ -141,7 +147,6 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: [],
       headConverted: ['scripts/zzz.js'],
       changedPaths: [],
-      systemMapText: MAP,
       censusEntries: [
         {
           file: 'scripts/zzz.js',
@@ -160,8 +165,7 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: ['scripts/a.js'],
       headConverted: ['scripts/a.js'],
       changedPaths: [],
-      systemMapText: MAP,
-      censusEntries: [],
+      censusEntries: CENSUS,
       mode: 'staged',
       error: null,
     });
@@ -176,8 +180,7 @@ describe('owner-spec-diff (fast invariant #43)', () => {
       baseConverted: [],
       headConverted: [],
       changedPaths: [],
-      systemMapText: MAP,
-      censusEntries: [],
+      censusEntries: CENSUS,
     });
     expect(res.pass).toBe(false);
     expect(res.detail).toContain('unreadable');
@@ -201,6 +204,46 @@ describe('owner-spec-diff (fast invariant #43)', () => {
     expect(body).not.toContain('checkOwnerSpecDiff');
 
     expect(src).toContain('converted: convertedFilesOf(parsed)');
+  });
+
+  it('13. owners are the UNION of the base and staged census (F1: a cutover cannot re-point its own owners)', () => {
+    const S124 = 'docs/specs/01-pipeline/124_step_standard_policy.md';
+    const bypass = checkOwnerSpecDiff({
+      baseConverted: [],
+      headConverted: ['scripts/x.js'],
+      changedPaths: [S124],
+      baseCensusEntries: [{ file: 'scripts/x.js', owner_specs: [S62] }],
+      censusEntries: [{ file: 'scripts/x.js', owner_specs: [S124] }],
+      mode: 'staged',
+      error: null,
+    });
+    expect(bypass.pass).toBe(false);
+    expect(bypass.detail).toContain(S62);
+
+    const satisfied = checkOwnerSpecDiff({
+      baseConverted: [],
+      headConverted: ['scripts/x.js'],
+      changedPaths: [S124, S62],
+      baseCensusEntries: [{ file: 'scripts/x.js', owner_specs: [S62] }],
+      censusEntries: [{ file: 'scripts/x.js', owner_specs: [S124] }],
+      mode: 'staged',
+      error: null,
+    });
+    expect(satisfied.pass).toBe(true);
+  });
+
+  it('14. a row absent from the base census uses the staged owner_specs', () => {
+    const S124 = 'docs/specs/01-pipeline/124_step_standard_policy.md';
+    const res = checkOwnerSpecDiff({
+      baseConverted: [],
+      headConverted: ['scripts/x.js'],
+      changedPaths: [S124],
+      baseCensusEntries: [],
+      censusEntries: [{ file: 'scripts/x.js', owner_specs: [S124] }],
+      mode: 'staged',
+      error: null,
+    });
+    expect(res.pass).toBe(true);
   });
 
   it('NA_REASON_MIN is 20', () => {

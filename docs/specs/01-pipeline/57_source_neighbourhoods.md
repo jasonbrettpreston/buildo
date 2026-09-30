@@ -86,14 +86,31 @@ A NON-NUMERIC key still throws at acquisition (`/positive integer/`, legacy halt
 - **Relies on:** `pipeline_system.md` (SDK)
 
 ### Target Files
-- `scripts/load-neighbourhoods.js` — this spec defines the neighbourhoods loader's contract (§2/§3). `[as-built 2026-09-28, row 3.8 ②]` Spec 122 §5.1 frozen shell, lock 57.
-- `scripts/load-neighbourhoods.descriptor.json` — the step declared as data (class A `guarded_upsert`, the two externals, the 14 `preserve_null` census columns, the three `pre_write` refusals, maintenance). `[as-built 2026-09-28, row 3.8 ②]`
-- `scripts/load-neighbourhoods.notes.json` — the prose sidecar the descriptor's `interpretation` points at (8 entries). `[as-built 2026-09-28, row 3.8 ②]`
-- `scripts/lib/compute/load-neighbourhoods.js` — the domain logic only (`coerceKey`, `shapeRecord`, `buildLookup`, `dedupeBySourceId`, the checks in descriptor order). `[as-built 2026-09-28, row 3.8 ②]`
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `neighbourhoods` — INGESTOR · converted · owner specs: 57
+  - `scripts/load-neighbourhoods.js`
+  - `scripts/load-neighbourhoods.descriptor.json`
+  - `scripts/load-neighbourhoods.notes.json`
+  - `scripts/lib/compute/load-neighbourhoods.js`
+  - `src/tests/steps/neighbourhoods/violations.test.ts`
+  - data: `neighbourhoods` writes (migrations/013_neighbourhoods.sql)
+  - upstream: none
+  - downstream: enrich_parcels · link_neighbourhoods
+  - consumers: src/components/FreshnessTimeline.tsx (records_meta audit_table)
+<!-- /generated:target-files -->
 - `src/lib/leads/lead-detail-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/lib/leads/lead-inspect-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/app/api/permits/[id]/route.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `scripts/analysis/neighbourhoods-cohort-differential.js` — batch-2 row 3.8 R-AS forced-change cohort differential (Spec 124 R-AS): derives + commits the I/N/G/C/Q key-shift cohort (no pre-existing row is ever deleted — every row is FK-referenced by `id`) and runs the pre/post proof through `capture-step-golden.js`, restore-always (WF2 row 3.8 ①).
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/neighbourhoods-fk-join.infra.test.ts`, `src/tests/db/neighbourhoods-fk-join.db.test.ts`
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/load-neighbourhoods.js` — this spec defines the neighbourhoods loader's contract (§2/§3). `[as-built 2026-09-28, row 3.8 ②]` Spec 122 §5.1 frozen shell, lock 57.
+- `scripts/load-neighbourhoods.descriptor.json` — the step declared as data (class A `guarded_upsert`, the two externals, the 14 `preserve_null` census columns, the three `pre_write` refusals, maintenance). `[as-built 2026-09-28, row 3.8 ②]`
+- `scripts/load-neighbourhoods.notes.json` — the prose sidecar the descriptor's `interpretation` points at (8 entries). `[as-built 2026-09-28, row 3.8 ②]`
+- `scripts/lib/compute/load-neighbourhoods.js` — the domain logic only (`coerceKey`, `shapeRecord`, `buildLookup`, `dedupeBySourceId`, the checks in descriptor order). `[as-built 2026-09-28, row 3.8 ②]`
 
 ### Cross-Spec Dependencies
 - `scripts/load-permits.js` — referenced only for the `n.id = p.neighbourhood_id` JOIN guidance (§2); this spec does not define its contract.

@@ -96,11 +96,42 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
 - **Relies on:** `pipeline_system.md` (SDK), `pipeline_observability.md` §3.6 (audit_table)
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `address_points` — INGESTOR · converted · owner specs: 54
+  - `scripts/load-address-points.js`
+  - `scripts/load-address-points.descriptor.json`
+  - `scripts/load-address-points.notes.json`
+  - `scripts/lib/compute/load-address-points.js`
+  - `src/tests/steps/address_points/post-conversion-fixes.logic.test.ts`
+  - `src/tests/steps/address_points/row-conservation.test.ts`
+  - `src/tests/steps/address_points/violations.test.ts`
+  - data: `address_points` writes (migrations/018_address_points.sql)
+  - upstream: none
+  - downstream: geocode_permits · link_parcel_addresses · link_parcels
+  - consumers: address_points (records_meta address_points_load) · assert_data_bounds (records_meta audit_table)
+- `link_parcel_addresses` — MATERIALIZER · converted · owner specs: 54
+  - `scripts/link-parcel-addresses.js`
+  - `scripts/link-parcel-addresses.descriptor.json`
+  - `scripts/link-parcel-addresses.notes.json`
+  - `scripts/lib/compute/link-parcel-addresses.js`
+  - `src/tests/steps/link_parcel_addresses/metamorphic.test.ts`
+  - `src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts`
+  - `src/tests/steps/link_parcel_addresses/violations.test.ts`
+  - data: `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` writes (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql)
+  - upstream: address_points · parcels
+  - downstream: link_parcels
+  - consumers: none
+<!-- /generated:target-files -->
+- `scripts/lib/address-points-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`hasCoordinateSource`) and the ONLY `fingerprint_inputs` entry of `assert-schema.descriptor.json`; previously unregistered anywhere in the system map (registry gap closed at commit 9).
+- Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/step-library.logic.test.ts`
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
 - `scripts/load-address-points.js` — this spec defines the address points loader's contract (§2/§3); as of batch-2 row 3.1 (commit 9, 2026-09-24) it is the §5.1 frozen shell only (`module.exports = pipeline.step(descriptor, compute)`) — see "As-built" below.
 - `scripts/load-address-points.descriptor.json` — the step's declared contract (Spec 122 §5.1).
 - `scripts/load-address-points.notes.json` — the descriptor's prose sidecar.
 - `scripts/lib/compute/load-address-points.js` — the step's compute (shaping, checks, `validatorCounterDelta`).
-- `scripts/lib/address-points-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`hasCoordinateSource`) and the ONLY `fingerprint_inputs` entry of `assert-schema.descriptor.json`; previously unregistered anywhere in the system map (registry gap closed at commit 9).
 - `src/tests/steps/address_points/**` — the step's violations suite.
 - `scripts/link-parcel-addresses.js` — this spec defines the `parcel_address_points` bridge populator's contract (§2 Bridge table).
 

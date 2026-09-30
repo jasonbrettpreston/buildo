@@ -12,6 +12,10 @@
  *             any `*.descriptor.json` (a contract- or step-shaped change).
  *   NOT TRIGGERED → exit 0 (nothing to say).
  *   `spec_staged` — some staged path is `docs/specs/**.md` → exit 0 (the spec moved).
+ *                   Two carve-outs (Amendment 3 of the generated-Target-Files WF2):
+ *                   the generated `00_system_map.md` never counts, and a spec whose
+ *                   only staged change lies inside its `<!-- generated:* -->` blocks
+ *                   was refreshed by the generator, not moved by hand.
  *   `declared_NA` — the message BODY (after the subject, `#` comment lines
  *                   excluded) carries `Spec-diff: N-A <why>` with a why of ≥ 10
  *                   non-space characters → exit 0 (a written, non-trivial why).
@@ -28,6 +32,7 @@
 
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { outsideMarkerChanged } from '../analysis/gates/generated-blocks.mjs';
 
 /** A staged path that makes the spec-diff rule apply (Rule 13's trigger set). */
 export const TRIGGER_RES = [
@@ -35,8 +40,12 @@ export const TRIGGER_RES = [
   /^scripts\/lib\/compute\//,
   /\.descriptor\.json$/,
 ];
-/** A staged path that satisfies the rule by moving the spec itself. */
-export const SPEC_RE = /^docs\/specs\/.+\.md$/;
+/**
+ * A staged path that satisfies the rule by moving the spec itself.
+ * The generated `00_system_map.md` is EXCLUDED: it is regenerated, never authored, so
+ * its presence in a commit is never the author moving the spec (Amendment 3).
+ */
+export const SPEC_RE = /^docs\/specs\/(?!00-architecture\/00_system_map\.md$).+\.md$/;
 /** `Spec-diff: N-A <why>` with a why of at least 10 non-space characters. */
 export const N_A_RE = /^Spec-diff: N-A (\S.*)$/;
 const MIN_WHY = 10;
@@ -58,13 +67,15 @@ export function messageBody(messageText) {
  * The single source of truth: does this commit owe a `Spec-diff:` declaration?
  * @param {string[]} stagedPaths staged file paths (repo-relative)
  * @param {string} messageText the full commit-msg file contents
+ * @param {(path: string) => boolean} [specTouched] true when the staged spec's text
+ *   outside its generated blocks differs from HEAD (default: every staged spec counts)
  * @returns {{status:'not_triggered'|'spec_staged'|'declared_NA'|'red', triggers:string[]}}
  */
-export function specDiffDecision(stagedPaths, messageText) {
+export function specDiffDecision(stagedPaths, messageText, specTouched = () => true) {
   const paths = Array.isArray(stagedPaths) ? stagedPaths : [];
   const triggers = paths.filter(isTrigger);
   if (triggers.length === 0) return { status: 'not_triggered', triggers: [] };
-  if (paths.some((p) => SPEC_RE.test(p))) return { status: 'spec_staged', triggers };
+  if (paths.some((p) => SPEC_RE.test(p) && specTouched(p))) return { status: 'spec_staged', triggers };
   const declared = messageBody(messageText).some((l) => {
     const m = l.match(N_A_RE);
     return !!m && m[1].trim().length >= MIN_WHY;
@@ -76,6 +87,22 @@ export function specDiffDecision(stagedPaths, messageText) {
 export function stagedPaths() {
   const out = execFileSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMRD'], { encoding: 'utf8' });
   return out.split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * `git show <rev>:<path>`, or `null` when that blob does not exist / git fails — an
+ * added or deleted file, and so a real change, for callers like `outsideMarkerChanged`.
+ * An empty `rev` uses the index form `:path` (the staged blob).
+ * @param {string} rev a revision, or `''` for the index
+ * @param {string} p the repo-relative path
+ * @returns {string|null}
+ */
+export function gitShowOrNull(rev, p) {
+  try {
+    return execFileSync('git', ['show', `${rev}:${p}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  } catch {
+    return null;
+  }
 }
 
 function main(argv) {
@@ -93,7 +120,11 @@ function main(argv) {
     process.exitCode = 2;
     return;
   }
-  const { status, triggers } = specDiffDecision(stagedPaths(), messageText);
+  const { status, triggers } = specDiffDecision(
+    stagedPaths(),
+    messageText,
+    (p) => outsideMarkerChanged(gitShowOrNull('HEAD', p), gitShowOrNull('', p)),
+  );
   if (status !== 'red') return;
   process.stderr.write(
     'SPEC-DIFF (gate J, Spec 124 Rule 13) — this commit changes the step contract but neither stages a spec nor declares why none is needed.\n'

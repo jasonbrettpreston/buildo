@@ -212,6 +212,22 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     const tampered = PRE_COMMIT.replace(/VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src\/tests\/steps\/ --run \|\| exit 1/, 'true');
     expect(stripComments(tampered)).not.toMatch(/vitest src\/tests\/steps\/ --run/);
   });
+
+  // WF2 generated Target Files, Amendment 1 (2026-09-29): the drift check is its OWN pre-commit
+  // line — `fastInvariants()` is never reached by a spec-, census- or snapshot-only commit
+  // (step-validate --staged returns early), so it cannot live there.
+  it('GREEN — runs the generated Target Files drift check right after the template-freeze check (Amendment 1)', () => {
+    const code = stripComments(PRE_COMMIT);
+    const at = code.indexOf('node scripts/analysis/generate-target-files.mjs --check');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeGreaterThan(code.indexOf('generate-template-freeze.mjs --check'));
+    expect(at).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+  });
+
+  it('RED — a tampered pre-commit with the Target Files drift check stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/generate-target-files\.mjs --check && \\\n\s*/, '');
+    expect(stripComments(tampered)).not.toContain('generate-target-files.mjs --check');
+  });
 });
 
 // ---------------------------------------------------------------------------

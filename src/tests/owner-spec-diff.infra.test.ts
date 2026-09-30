@@ -24,6 +24,7 @@ const CLI = path.join(REPO_ROOT, 'scripts/analysis/cutover.mjs');
 
 const ENV_ALLOW = ['PATH', 'Path', 'SystemRoot', 'SYSTEMROOT', 'ComSpec', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA'];
 let fixture = '';
+const allFixtures: string[] = [];
 function env(): NodeJS.ProcessEnv {
   const e: Record<string, string | undefined> = {};
   for (const k of ENV_ALLOW) if (process.env[k] !== undefined) e[k] = process.env[k];
@@ -44,7 +45,9 @@ function cutover() {
   return spawnSync(process.execPath, [CLI, '--step=b', `--repo=${fixture}`], { cwd: fixture, env: env(), encoding: 'utf8' });
 }
 afterAll(() => {
-  if (fixture && fixture.startsWith(os.tmpdir())) fs.rmSync(fixture, { recursive: true, force: true });
+  for (const dir of allFixtures) {
+    if (dir && dir.startsWith(os.tmpdir())) fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 const judge = () => checkOwnerSpecDiff(readCommitChangeSet(fixture));
@@ -57,24 +60,19 @@ const CENSUS_REL = 'scripts/steps/_schema/step-archetype-census.json';
 describe('owner-spec-diff after a fixture cutover — both directions', () => {
   it('seeds the fixture and `npm run cutover` registers the slug and names owner specs #43 and #62', () => {
     fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'osd-'));
+    allFixtures.push(fixture);
     put('scripts/manifest.json', JSON.stringify({ scripts: { a: { file: 'scripts/a.js' }, b: { file: 'scripts/b.js' } } }));
     put(CONV, JSON.stringify({ contract_version: 1, pending: [{ file: 'scripts/b.js', registers_at: 'commit ③', stage: 'shape_clean' }], converted: ['scripts/a.js'] }, null, 2) + '\n');
     put(CENSUS_REL, JSON.stringify({
       entries: [
         { slug: 'a', file: 'scripts/a.js', archetype: 'LINK', batch: 'C5', reason: 'r' },
-        { slug: 'b', file: 'scripts/b.js', archetype: 'INGESTOR', batch: 'C5', reason: 'Spec 122 §1.10 declared' },
+        { slug: 'b', file: 'scripts/b.js', archetype: 'INGESTOR', batch: 'C5', reason: 'Spec 122 §1.10 declared', owner_specs: [S43, S62] },
       ],
       exemptions: [],
     }, null, 2) + '\n');
     put('scripts/analysis/cutover-generators.json', JSON.stringify({ generators: [{ id: 'register', kind: 'builtin', does: 'r' }, { id: 'census', kind: 'builtin', does: 'c' }] }));
-    put('docs/specs/00-architecture/00_system_map.md', [
-      '| # | Spec File | Feature | Implementation | Tests | Status |',
-      '|---|---|---|---|---|---|',
-      '| 43 | `01-pipeline/43_chain_sources.md` | Sources | `scripts/a.js`, `scripts/b.js` | `t` | Done |',
-      '| 62 | `01-pipeline/62_b.md` | B | `scripts/b.js` | `t` | Done |',
-    ].join('\n') + '\n');
     put(S43, '# 43\n');
-    put(S62, '# 62\n');
+    put(S62, '# 62\n### Target Files\n<!-- generated:target-files -->\n- x\n<!-- /generated:target-files -->\n');
     git('init', '-q');
     git('config', 'core.autocrlf', 'false');
     git('add', '-A');
@@ -93,6 +91,15 @@ describe('owner-spec-diff after a fixture cutover — both directions', () => {
     expect(res.pass).toBe(false);
     expect(res.blockedFiles).toEqual(['scripts/b.js']);
     expect(res.detail).toContain(S43);
+    expect(res.detail).toContain(S62);
+  });
+
+  it('RED: a generated-only diff to an owner spec is not a touch', () => {
+    const before = fs.readFileSync(path.join(fixture, S62), 'utf8');
+    put(S62, before.replace('- x\n', '- y\n'));
+    git('add', S62);
+    const res = judge();
+    expect(res.pass).toBe(false);
     expect(res.detail).toContain(S62);
   });
 
@@ -131,5 +138,44 @@ describe('owner-spec-diff after a fixture cutover — both directions', () => {
     const res = judge();
     expect(res.pass).toBe(true);
     expect(res.detail).toContain('1 file(s) appended');
+  });
+});
+
+const S62_BASE = 'docs/specs/01-pipeline/62_a.md';
+const S124 = 'docs/specs/01-pipeline/124_step_standard_policy.md';
+
+describe('owner-spec-diff F1 — the HEAD census owners still bind (real git)', () => {
+  it('RED: re-pointing a row’s owner_specs at the staged census cannot hide the HEAD owner', () => {
+    fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'osd-f1-'));
+    allFixtures.push(fixture);
+
+    put(CONV, JSON.stringify({ contract_version: 1, pending: [], converted: ['scripts/a.js'] }) + '\n');
+    put(CENSUS_REL, JSON.stringify({
+      entries: [{ slug: 'x', file: 'scripts/x.js', archetype: 'LINK', batch: 'C5', reason: 'r', owner_specs: [S62_BASE] }],
+      exemptions: [],
+    }) + '\n');
+    put(S62_BASE, '# 62\n');
+    put(S124, '# 124\n');
+    git('init', '-q');
+    git('config', 'core.autocrlf', 'false');
+    git('add', '-A');
+    git('commit', '-q', '-m', 'seed');
+
+    put(CONV, JSON.stringify({ contract_version: 1, pending: [], converted: ['scripts/a.js', 'scripts/x.js'] }) + '\n');
+    put(CENSUS_REL, JSON.stringify({
+      entries: [{ slug: 'x', file: 'scripts/x.js', archetype: 'LINK', batch: 'C5', reason: 'r', owner_specs: [S124] }],
+      exemptions: [],
+    }) + '\n');
+    fs.appendFileSync(path.join(fixture, S124), '\nAs-built.\n');
+    git('add', '-A');
+
+    const res = judge();
+    expect(res.pass).toBe(false);
+    expect(res.blockedFiles).toEqual(['scripts/x.js']);
+    expect(res.detail).toContain(S62_BASE);
+
+    fs.appendFileSync(path.join(fixture, S62_BASE), '\nAs-built.\n');
+    git('add', S62_BASE);
+    expect(judge().pass).toBe(true);
   });
 });

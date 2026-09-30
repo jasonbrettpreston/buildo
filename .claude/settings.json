@@ -25,6 +25,16 @@
             "command": "node scripts/hooks/check-active-task.mjs"
           }
         ]
+      },
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/hooks/step-registry-context.sh",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [

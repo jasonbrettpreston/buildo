@@ -479,16 +479,30 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 ## 5. Operating Boundaries
 
 ### Target Files
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `load_centreline` — INGESTOR · converted · owner specs: 62
+  - `scripts/load-centreline.js`
+  - `scripts/load-centreline.descriptor.json`
+  - `scripts/load-centreline.notes.json`
+  - `scripts/lib/compute/load-centreline.js`
+  - `src/tests/steps/load_centreline/config-literals.logic.test.ts`
+  - `src/tests/steps/load_centreline/violations.test.ts`
+  - data: `toronto_centreline` writes (migrations/173_create_toronto_centreline.sql)
+  - upstream: none
+  - downstream: enrich_centreline
+  - consumers: enrich_centreline (records_meta centreline_load) · load_centreline (records_meta centreline_load.features_updated)
+- `enrich_centreline` — ENRICHER · unconverted · owner specs: 62
+  - `scripts/enrich-centreline.js`
+  - data: `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
+  - upstream: load_centreline · parcels
+  - downstream: enrich_parcels
+  - consumers: none
+<!-- /generated:target-files -->
 
-- `scripts/load-centreline.js` (**[as-built 2026-09-24, row 3.2 ②]** frozen shell, Spec 122 §5.1 — `pipeline.step(descriptor, compute)`; advisory lock 63; ~~NEW; Spec 47 R1-R12 skeleton~~ *(superseded — the R1-R12 skeleton is now library-owned, §3.1 as-built note)*)
-- `scripts/load-centreline.descriptor.json` (**[as-built ②]** new — the step declared as data: write target, checks, terminals, config, deviations, limitations)
-- `scripts/load-centreline.notes.json` (**[as-built ②]** new — the interpretation entries a reader walks to make sense of an audit table row)
-- `scripts/lib/compute/load-centreline.js` (**[as-built ②]** new — the pure domain logic: L25 classifier, F13 column guard, drift math, dedupe, dataset-age staleness, the frozen §9 `buildLoadMeta` producer block)
 - `scripts/lib/source-version.js` (**[as-built ②]** the tier-1/tier-2 skip-check gate + skip re-emit, called via the library's `scripts/lib/step/{staleness,acquire}.js`, not from the step body)
 - `scripts/lib/config-loader.js` (**[as-built ②]** fleet lib; no longer used by load_centreline — config is `config.logic_variables` resolved through `ctx.config`, LC-D3)
 - `scripts/lib/geometry-validator.js` (**[as-built ②]** not used by load_centreline — the library validator `write.validateGeometries` with `geometry_kind: "line"` performs the same ST_MakeValid/ST_CollectionExtract repair)
-- `src/tests/steps/load_centreline/violations.test.ts` (**[as-built ②]** new)
-- `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 64)
 - `scripts/enrich-permits.js` (extended per L28; Spec 61 creates the file; Spec 62 appends `applyCentrelineEnrichment` function)
 - `migrations/NNN_create_toronto_centreline.sql` (M-1: table + GIST index + `normalize_address_number()` + `address_match_status()`)
 - `migrations/NNN_parcels_centreline_columns.sql` (M-2; SEPARATE from Spec 58/59/61 per L11)
@@ -499,18 +513,24 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - `docs/specs/01-pipeline/41_chain_permits.md` + `docs/specs/01-pipeline/42_chain_coa.md` (edits for centreline propagation step)
 - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 (lock registry: add 63 + 64 + footnote per §5.2 exception).
 - **`src/tests/pipeline-advisory-lock.infra.test.ts` (MANDATORY EDIT per F-S1 — R3 SPEC Independent CRIT-1, confidence 97):** add `'scripts/load-centreline.js': 63` AND `'scripts/enrich-centreline.js': 64` to the **hardcoded `LOCK_ID_REGISTRY` TypeScript constant**. The earlier "H-v1.3.8 safety check" wording assumed a regex-based parser of §A.5; that assumption is FACTUALLY WRONG — the test does NOT parse §A.5 at all. It uses an explicit `LOCK_ID_REGISTRY` constant and the test at line ~200 (`'registry covers every JS script in the manifest'`) WILL FAIL after `manifest.json` adds the two new scripts UNTIL `LOCK_ID_REGISTRY` is updated in the test file. This is a CI-failure-at-implementation bug; the implementing WF MUST edit this file in the same diff that adds the two scripts to `manifest.json`.
-- `scripts/quality/assert-schema.js` (centreline CKAN URL + 40-column attribute schema check)
-- `scripts/quality/assert-data-bounds.js` (`toronto_centreline >= centreline_min_feature_count` lower bound; threshold from `logic_variables.json`)
 - `scripts/quality/assert-entity-tracing.js` (centreline_* fields to coverage grid)
-- `scripts/quality/assert-global-coverage.js` (`parcels.is_corner_lot` coverage threshold)
 - `scripts/manifest.json` (chain arrays updated)
 - `scripts/seeds/logic_variables.json` (**[as-built ②]** 8 `load_centreline_*` keys per §12.3a — ~~5 keys~~ *(superseded, LC-D3)* — **[as-built C2, gate E]** +2: `load_centreline_round_scale`, `load_centreline_max_detail_keys`)
 - `scripts/lib/units.js` (**[as-built C2]** read-only: `MS_PER_DAY` for the dataset-age WARN — Spec 124 §5 R-BA gate E closed answer #3)
 - `scripts/lib/step/write.js` (**[as-built ③]** read-only here: `executeStagingReplace`, the class-C executor, INGESTOR prerequisite 0h)
 - `scripts/lib/step/acquire.js` / `scripts/lib/step/staleness.js` / `scripts/lib/step/index.js` (**[as-built ③]** read-only here: shared INGESTOR runner — prerequisites 0p/0q/0r)
-- `src/tests/steps/load_centreline/config-literals.logic.test.ts` (**[as-built C2]** gate E literal locks)
 - `src/tests/load-centreline.{logic,infra}.test.ts`, `src/tests/enrich-centreline.{logic,infra}.test.ts`, `src/tests/db/migration-N-centreline.db.test.ts`
 - `docs/runbook/source_centreline_first_deploy_validation.md` (NOT §3.7 ledger-writer spike per L21; 7-day post-deploy convergence pattern)
+
+### Step-file notes
+*Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
+- `scripts/load-centreline.js` (**[as-built 2026-09-24, row 3.2 ②]** frozen shell, Spec 122 §5.1 — `pipeline.step(descriptor, compute)`; advisory lock 63; ~~NEW; Spec 47 R1-R12 skeleton~~ *(superseded — the R1-R12 skeleton is now library-owned, §3.1 as-built note)*)
+- `scripts/load-centreline.descriptor.json` (**[as-built ②]** new — the step declared as data: write target, checks, terminals, config, deviations, limitations)
+- `scripts/load-centreline.notes.json` (**[as-built ②]** new — the interpretation entries a reader walks to make sense of an audit table row)
+- `scripts/lib/compute/load-centreline.js` (**[as-built ②]** new — the pure domain logic: L25 classifier, F13 column guard, drift math, dedupe, dataset-age staleness, the frozen §9 `buildLoadMeta` producer block)
+- `src/tests/steps/load_centreline/violations.test.ts` (**[as-built ②]** new)
+- `scripts/enrich-centreline.js` (NEW; sibling per L6; advisory lock 64)
+- `src/tests/steps/load_centreline/config-literals.logic.test.ts` (**[as-built C2]** gate E literal locks)
 
 ### Out of scope
 
@@ -537,6 +557,9 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - `scripts/enrich-ravines.js` — referenced only for the 4-parcels-writer cross-WF serialization ordering (§L11); not modified by this spec.
 - `scripts/enrich-heritage.js` — referenced only for chain-ordering context (`enrich_centreline` AFTER `enrich_heritage`, §L22); not modified by this spec.
 - `scripts/link-parcels.js` — referenced only for the 4-parcels-writer cross-WF serialization ordering (§L11); not modified by this spec.
+- `scripts/quality/assert-schema.js` (centreline CKAN URL + 40-column attribute schema check) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-data-bounds.js` (`toronto_centreline >= centreline_min_feature_count` lower bound; threshold from `logic_variables.json`) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
+- `scripts/quality/assert-global-coverage.js` (`parcels.is_corner_lot` coverage threshold) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 
 ---
 

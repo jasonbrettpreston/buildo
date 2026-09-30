@@ -111,6 +111,7 @@ describe('builtin registry edits — surgical, EOL-preserving, idempotent', () =
 // ---------------------------------------------------------------------------
 const ENV_ALLOW = ['PATH', 'Path', 'SystemRoot', 'SYSTEMROOT', 'ComSpec', 'TEMP', 'TMP', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA'];
 let fixture = '';
+const allFixtures: string[] = [];
 function env(): NodeJS.ProcessEnv {
   const e: Record<string, string | undefined> = {};
   for (const k of ENV_ALLOW) if (process.env[k] !== undefined) e[k] = process.env[k];
@@ -131,12 +132,13 @@ function cutover() {
   return spawnSync(process.execPath, [CLI, '--step=b', `--repo=${fixture}`], { cwd: fixture, env: env(), encoding: 'utf8' });
 }
 afterAll(() => {
-  if (fixture && fixture.startsWith(os.tmpdir())) fs.rmSync(fixture, { recursive: true, force: true });
+  for (const dir of allFixtures) if (dir.startsWith(os.tmpdir())) fs.rmSync(dir, { recursive: true, force: true });
 });
 
 describe('npm run cutover on a fixture slug', () => {
   it('first run registers + regenerates and prints each change; the second run changes 0 files', () => {
     fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'cutover-'));
+    allFixtures.push(fixture);
     put('scripts/manifest.json', JSON.stringify({ scripts: { a: { file: 'scripts/a.js' }, b: { file: 'scripts/b.js' } } }));
     put('scripts/steps/_schema/converted.json', CONVERTED_CRLF);
     put('scripts/steps/_schema/step-archetype-census.json', CENSUS);
@@ -159,7 +161,9 @@ describe('npm run cutover on a fixture slug', () => {
     expect(first.stdout).toContain('census: changed scripts/steps/_schema/step-archetype-census.json');
     expect(first.stdout).toContain('gen: changed generated.txt');
     expect(first.stdout).toContain('3 file(s) changed');
-    expect(first.stdout, 'panel I-1: a repo with no system map still exits 0 and says so').toContain('system map absent');
+    // panel I-1 (re-pointed by the generated-Target-Files WF2, Amendment 3): #43's owner set now comes
+    // from census owner_specs, not the system map; a row declaring none still exits 0 and says so.
+    expect(first.stdout, 'panel I-1: a step with no declared owner specs still exits 0 and says so').toContain('NONE declared in census owner_specs');
 
     const second = cutover();
     expect(second.status, second.stderr).toBe(0);
@@ -181,6 +185,26 @@ describe('npm run cutover on a fixture slug', () => {
     expect(r.stdout).toContain('red: FAILED (on_fail report — continuing)');
     expect(r.stdout).toContain('after: changed after.txt');
     expect(r.stdout).toContain('FAILED (reported): red');
+  });
+
+  it('panel I-1 / F2: a repo with no census still exits 0 and says census absent', () => {
+    fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'cutover-'));
+    allFixtures.push(fixture);
+    put('scripts/manifest.json', JSON.stringify({ scripts: { a: { file: 'scripts/a.js' }, b: { file: 'scripts/b.js' } } }));
+    put('scripts/steps/_schema/converted.json', JSON.stringify({
+      contract_version: 1,
+      pending: [{ file: 'scripts/b.js', registers_at: 'commit ③', stage: 'shape_clean' }],
+      converted: ['scripts/a.js'],
+    }, null, 2) + '\n');
+    put('scripts/analysis/cutover-generators.json', JSON.stringify({ generators: [{ id: 'register', kind: 'builtin', does: 'r' }, { id: 'census', kind: 'builtin', does: 'c' }] }));
+    git('init', '-q');
+    git('config', 'core.autocrlf', 'false');
+    git('add', '-A');
+    git('commit', '-q', '-m', 'seed');
+
+    const r = cutover();
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toContain('census absent');
   });
 
   it('a slug that is neither pending nor converted is refused before anything runs', () => {

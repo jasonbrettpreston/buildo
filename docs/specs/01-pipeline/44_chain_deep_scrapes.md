@@ -365,6 +365,16 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 ## 6. Operating Boundaries
 
 ### Target Files
+<!-- generated:chain-members:deep_scrapes -->
+<!-- do not hand-edit: npm run target-files regenerates this block from manifest.chains.deep_scrapes -->
+- `inspections` — `scripts/aic-orchestrator.py`
+- `classify_inspection_status` — `scripts/classify-inspection-status.js`
+- `assert_network_health` — `scripts/quality/assert-network-health.js`
+- `refresh_snapshot` — `scripts/refresh-snapshot.js`
+- `assert_data_bounds` — `scripts/quality/assert-data-bounds.js`
+- `assert_engine_health` — `scripts/quality/assert-engine-health.js`
+- `assert_staleness` — `scripts/quality/assert-staleness.js`
+<!-- /generated:chain-members:deep_scrapes -->
 - `scripts/manifest.json` (deep_scrapes chain array)
 - `scripts/aic-scraper-nodriver.py` — nodriver CDP scraper
 - `scripts/aic-orchestrator.py` — multi-worker orchestrator
@@ -378,10 +388,7 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - `scripts/tests/` — pytest harness for the Python pipeline scripts
 - `scripts/classify-inspection-status.js`
 - `scripts/quality/assert-network-health.js`, `scripts/quality/assert-staleness.js`
-- `scripts/quality/assert-data-bounds.js` — §4 "Data bounds (assert_data_bounds, deep_scrapes scope)" is this file's owning subsection; the script itself is fan-out shared with the permits/coa/sources chains (Specs 41/42/43), not deep_scrapes-exclusive (batch1 I2 PH-0, 2026-09-12)
-- Remaining `chains.deep_scrapes` steps, listed explicitly so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14):
-- `scripts/refresh-snapshot.js` — step 4 `refresh_snapshot`
-- `scripts/quality/assert-engine-health.js` — step 6 `assert_engine_health`
+- Every `chains.deep_scrapes` step is listed by the generated chain-members block above (from `manifest.chains.deep_scrapes`, in chain order), so the generated system map carries an owner row for each (Spec 123 G0; WF2 2026-09-14; the hand list it replaces retired by the generated-Target-Files WF2, 2026-09-30).
 
 ### Out-of-Scope Files
 - `scripts/poc-aic-scraper-v2.js` — legacy JS scraper (deprecated)
@@ -404,4 +411,5 @@ self-documenting threshold string + row-derived WARN verdict on a small probe mi
 - `classify-lifecycle-phase.js` — permits/coa-chain step named as the consumer for which `enriched_status` is not a dirty key; referenced as context, not governed here.
 - `scripts/quality/assert-lifecycle-phase-distribution.js` — coa-chain step named as a row-grained consumer justifying the `enriched_status` write grain; referenced as context, not governed here.
 - `scripts/quality/assert-global-coverage.js` — fan-out-shared step whose `enriched_status_status_scope_drift`/`_retighten` WARN pair is named as the standing guard for the smear rule; the check's own contract lives in Spec 49/the chain specs, not governed here.
+- `scripts/quality/assert-data-bounds.js` — §4 "Data bounds (assert_data_bounds, deep_scrapes scope)" is this file's owning subsection; the script itself is fan-out shared with the permits/coa/sources chains (Specs 41/42/43), not deep_scrapes-exclusive (batch1 I2 PH-0, 2026-09-12) — moved from Target Files: owned by another spec (census `owner_specs`), which now lists it in its generated block
 </constraints>
