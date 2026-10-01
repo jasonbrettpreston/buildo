@@ -462,11 +462,23 @@ async function upsertHcd(client, insertable, datasetVersion, runAt) {
 // ===========================================================================
 
 /**
+ * Legacy force seam (operator ruling 2026-10-01, zoning O2 precedent): with
+ * HERITAGE_FORCE_RELOAD=1 a skip decision is overridden to "load"; unset, the decision is
+ * returned unchanged (byte-identical). Same key as the converted descriptor's
+ * override.force_run, so the PRE and POST golden captures force identically.
+ */
+function applyForceReload(decision, force) {
+  if (!force || !decision || !decision.skip) return decision;
+  return { ...decision, skip: false, reason: 'forced' };
+}
+
+/**
  * Load one dataset end-to-end (skip-check → download → parse → drift → validate
  * → upsert → delete). Pushes NO audit rows (main() owns the named rows); returns
  * the per-dataset sub-block + counters so main() derives the verdict.
  */
 async function loadDataset(pool, ds, config, priorSub, runAt, nowMs) {
+  const forceReload = process.env.HERITAGE_FORCE_RELOAD === '1';
   const acceptDrift = process.env.HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT === '1';
   const acceptMassDelete = process.env.HERITAGE_ACCEPT_MASS_DELETE === '1';
   const priorFeatureCount = priorSub ? safeParseIntOrNull(priorSub.feature_count) : null;
@@ -479,7 +491,7 @@ async function loadDataset(pool, ds, config, priorSub, runAt, nowMs) {
     return { outcome: 'failed', failReason: `head:${err.message}`, sub: skeletonSub(), ageDays: null };
   }
   const ageDays = ageDaysFrom(nowMs, headInfo.lastModified || (priorSub && priorSub.last_modified));
-  const skip = skipCheckDecision({ lastModified: headInfo.lastModified, etag: headInfo.etag, priorSub });
+  const skip = applyForceReload(skipCheckDecision({ lastModified: headInfo.lastModified, etag: headInfo.etag, priorSub }), forceReload);
   if (skip.skip) {
     // DEC-K: carry prior feature_count + validators + drift_check_passed; zero the deltas.
     return {
@@ -506,7 +518,7 @@ async function loadDataset(pool, ds, config, priorSub, runAt, nowMs) {
     validators = { lastModified: dl.lastModified || headInfo.lastModified, etag: dl.etag || headInfo.etag };
     // TIER-2 (Phase B B1 / D3): tier-1 said "changed" on metadata; the bytes may still be
     // identical. Per-dataset, like every other heritage decision. Returned after the finally.
-    tier2 = sourceVersion.contentHashDecision({ contentHash, priorMeta: priorSub });
+    tier2 = applyForceReload(sourceVersion.contentHashDecision({ contentHash, priorMeta: priorSub }), forceReload);
     if (!tier2.skip) {
       const extractDir = path.join(tmpRoot, 'ext');
       await extractZip(dl.zipPath, extractDir);
@@ -678,6 +690,7 @@ async function main(pool) {
     const acceptMassDelete = process.env.HERITAGE_ACCEPT_MASS_DELETE === '1';
     if (acceptDrift) push('heritage_override_feature_count_drift_present', true, 'WARN');
     if (acceptMassDelete) push('heritage_override_mass_delete_present', true, 'WARN');
+    if (process.env.HERITAGE_FORCE_RELOAD === '1') push('heritage_override_force_reload_present', true, 'WARN');
 
     // Prior run (chain-scoped name; per-dataset sub-blocks under heritage_load;
     // started_at DESC standardized in the lib — Phase B B1).
@@ -805,4 +818,5 @@ module.exports = {
   classifyRegisterStatus,
   classifyHcdType,
   locateShapefile,
+  applyForceReload,
 };
