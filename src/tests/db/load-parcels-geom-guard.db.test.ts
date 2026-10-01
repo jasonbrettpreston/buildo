@@ -23,6 +23,8 @@
 // (92ee03b9 (b) DEC-FENCE2), a moved parcel still writes and still NULLs the stamps
 // (92ee03b9 (a)), and the same GeoJSON re-serialised still writes nothing (6e058be5).
 //
+// WF3 lot-size 2026-10-01 (T-h..T-k): lot_size_sqm/sqft/source declare on_empty:preserve_null — a NULL parse never erases a stored lot.
+//
 // Skipped unless BUILDO_TEST_DB=1 / DATABASE_URL is set (setup-testcontainer).
 
 import path from 'node:path';
@@ -149,6 +151,33 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
       [KEY],
     );
     return rows[0]!;
+  }
+
+  /** The three lot columns the WF3 lot-size guard owns, as stored (WF3 2026-10-01, T-h..T-k). */
+  async function lotOf(client: { query: (sql: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> }): Promise<Record<string, unknown>> {
+    // NUMERIC arrives from pg as a string ('250.00'); cast so the assertions compare numbers.
+    const { rows } = await client.query(
+      'SELECT lot_size_sqm::float8 AS lot_size_sqm, lot_size_sqft::float8 AS lot_size_sqft, lot_size_source FROM parcels WHERE parcel_id = $1',
+      [KEY],
+    );
+    return rows[0]!;
+  }
+
+  /**
+   * Seed the STORED lot columns directly. `inRollback` seeds through the plan (which binds
+   * `lot_size_sqm: 100` and no lot_size_source), and the stored state a case needs is not
+   * always a value the plan itself can write — a legacy `geom_backfill`/NULL-source row,
+   * which is the whole point of the guard. Kept inside the same transaction, so ROLLBACK
+   * discards it (WF3 2026-10-01, T-h..T-k).
+   */
+  async function setLot(
+    client: { query: (sql: string, values?: unknown[]) => Promise<unknown> },
+    lot: { lot_size_sqm: number | null; lot_size_sqft: number | null; lot_size_source: string | null },
+  ): Promise<void> {
+    await client.query(
+      'UPDATE parcels SET lot_size_sqm = $2, lot_size_sqft = $3, lot_size_source = $4 WHERE parcel_id = $1',
+      [KEY, lot.lot_size_sqm, lot.lot_size_sqft, lot.lot_size_source],
+    );
   }
 
   /** Every test body's frame: connect, BEGIN, seed the step's own insert, roll back, release. */
@@ -286,6 +315,94 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
       expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
       expect(stamps.heritage_dataset_version_when_enriched).toBe('hv1');
       expect(stamps.centreline_dataset_version_when_enriched).toBe('cv1');
+    });
+  });
+
+  it('T-h [GREEN] WF3 lot-size 2026-10-01: a NULL-parse incoming row never erases a stored lot — 0 rows, stored lot/sqft/source unchanged', async () => {
+    await inRollback(async (client) => {
+      // The P12-A1 geom_backfill shape (mig 214) the legacy loader wiped: a stored lot with a
+      // source stamp and a KNOWN geometry. `stated_area_raw` is NOT declared preserve_null, so
+      // the incoming row really carries the publisher's retraction to 'unknown'.
+      await setLot(client, { lot_size_sqm: 250, lot_size_sqft: 2690.98, lot_size_source: 'geom_backfill' });
+
+      const returned = await upsert(
+        client,
+        rowFor(G1, await wkbOf(client, G1), {
+          stated_area_raw: 'unknown',
+          lot_size_sqm: null,
+          lot_size_sqft: null,
+          lot_size_source: null,
+        }),
+      );
+      expect(returned, 'a NULL parse is not a change: every lot guard term is (EXCLUDED IS NOT NULL AND …)').toBe(0);
+
+      const lot = await lotOf(client);
+      expect(lot.lot_size_sqm).toBe(250);
+      expect(lot.lot_size_sqft).toBe(2690.98);
+      expect(lot.lot_size_source).toBe('geom_backfill');
+    });
+  });
+
+  it('T-i [GREEN] WF3 lot-size 2026-10-01: a stated value supersedes a stored backfill — 1 row, source becomes \'stated\'', async () => {
+    await inRollback(async (client) => {
+      await setLot(client, { lot_size_sqm: 250, lot_size_sqft: 2690.98, lot_size_source: 'geom_backfill' });
+
+      const returned = await upsert(
+        client,
+        rowFor(G1, await wkbOf(client, G1), {
+          stated_area_raw: '300',
+          lot_size_sqm: 300,
+          lot_size_sqft: 3229.17,
+          lot_size_source: 'stated',
+        }),
+      );
+      expect(returned, 'a non-NULL stated lot differs from the stored one: the preserve_null guard term fires').toBe(1);
+
+      const lot = await lotOf(client);
+      expect(lot.lot_size_sqm).toBe(300);
+      expect(lot.lot_size_sqft).toBe(3229.17);
+      expect(lot.lot_size_source).toBe('stated');
+    });
+  });
+
+  it('T-j [GREEN] WF3 lot-size 2026-10-01: an identical lot with source NULL (the 6,631 legacy rows) is WRITTEN so its source can be stamped — 1 row, source \'stated\'', async () => {
+    await inRollback(async (client) => {
+      // The 6,631 legacy rows: a stored lot the loader wrote before lot_size_source existed.
+      await setLot(client, { lot_size_sqm: 300, lot_size_sqft: 3229.17, lot_size_source: null });
+
+      const returned = await upsert(
+        client,
+        rowFor(G1, await wkbOf(client, G1), {
+          stated_area_raw: '300',
+          lot_size_sqm: 300,
+          lot_size_sqft: 3229.17,
+          lot_size_source: 'stated',
+        }),
+      );
+      expect(returned, "lot_size_sqm is unchanged, but lot_size_source's own guard term (stored NULL IS DISTINCT FROM 'stated') fires").toBe(1);
+
+      const lot = await lotOf(client);
+      expect(lot.lot_size_sqm).toBe(300);
+      expect(lot.lot_size_sqft).toBe(3229.17);
+      expect(lot.lot_size_source).toBe('stated');
+    });
+  });
+
+  it('T-k [GREEN] WF3 lot-size 2026-10-01: the stated write is IDEMPOTENT — re-running T-i\'s incoming row returns 0 rows', async () => {
+    await inRollback(async (client) => {
+      const incoming = rowFor(G1, await wkbOf(client, G1), {
+        stated_area_raw: '300',
+        lot_size_sqm: 300,
+        lot_size_sqft: 3229.17,
+        lot_size_source: 'stated',
+      });
+      expect(await upsert(client, incoming), 'T-i\'s first application writes').toBe(1);
+      expect(await upsert(client, incoming), 'a byte-identical rerun of the stated row is a no-op (idempotent_rerun: zero_writes)').toBe(0);
+
+      const lot = await lotOf(client);
+      expect(lot.lot_size_sqm).toBe(300);
+      expect(lot.lot_size_sqft).toBe(3229.17);
+      expect(lot.lot_size_source).toBe('stated');
     });
   });
 });
