@@ -276,6 +276,32 @@ dispatch.
    step 5 have completed. Note in the run record that disk stays at its grown size by
    design (Supabase compute can downgrade; storage cannot shrink).
 
+## 3d. Local DB: shared-memory exhaustion (`sys_dsm_capacity`, Spec 30 §4.1a)
+
+**Symptom:** a local chain step dies mid-query with `could not resize shared memory segment
+"/PostgreSQL.…" to N bytes: No space left on device` (2026-09-30: `link_parcel_addresses`,
+24 min into a `sources` run).
+**Cause:** the local Supabase container `supabase_db_Buildo` has a 64 MB `/dev/shm`
+(`docker inspect supabase_db_Buildo --format '{{.HostConfig.ShmSize}}'` → `67108864`) and
+`dynamic_shared_memory_type = posix` puts parallel-query shared memory there.
+**Fix** (then re-run the chain):
+
+```bash
+docker exec supabase_db_Buildo psql -U supabase_admin -d postgres -c "ALTER SYSTEM SET dynamic_shared_memory_type = 'mmap'"
+docker restart supabase_db_Buildo
+docker exec supabase_db_Buildo psql -U postgres -d postgres -c "show dynamic_shared_memory_type"   # → mmap
+```
+
+**Guard:** `run-chain.js` Phase 0 emits a `sys_dsm_capacity` row. Local Supabase target
+(loopback host, port = `supabase/config.toml` `[db].port`) on `posix` → FAIL and the chain
+refuses to start, naming this command; any other local target on `posix` (CI/test
+containers) → WARN; a remote target → INFO (its `/dev/shm` is UNVERIFIED).
+**Persistence:** the setting is written to `postgresql.auto.conf` on the named volume
+`supabase_db_Buildo`, so it survives `docker restart` and `supabase stop`/`start`. It is
+lost when the volume is deleted (`supabase stop --no-backup`, per its `--help`); whether
+`supabase db reset` recreates the volume is UNVERIFIED — after either, the Phase 0 row will
+FAIL and name the fix.
+
 ## 4. pgTAP RLS suite (release-gating, Spec 114 §10)
 
 **What:** `supabase/tests/rls_class_a.test.sql` / `rls_class_b.test.sql` /
