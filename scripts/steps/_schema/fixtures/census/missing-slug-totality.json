@@ -358,7 +358,7 @@
       "slug": "load_wsib",
       "file": "scripts/load-wsib.js",
       "archetype": "INGESTOR",
-      "batch": "C5",
+      "batch": "pending",
       "reason": "Spec 122 §1.10 declared"
     },
     {

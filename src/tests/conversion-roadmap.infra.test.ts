@@ -289,7 +289,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // row flipped batch "C5" -> "pending", the same move enrich_heritage made at its commit 1.
     // 1 -> 0 at the row 2.4 CUTOVER (commit 3, 2026-09-21): the row is RETAINED with
     // `status: "converted"` (Spec 124 R-AO) rather than deleted, same as every prior cutover.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at batch-2 row 3.5 ①+② (load_wsib, b0f9d6db): converted.json pending[] gained
+    // load_wsib but its census row stayed "C5" (generate-conversion-roadmap.mjs threw); the
+    // row now reads "pending", same move as rows 2.2/2.4. Returns to 0 at load_wsib ③.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });

@@ -89,7 +89,7 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
 ### Target Files
 <!-- generated:target-files -->
 <!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
-- `load_wsib` — INGESTOR · unconverted · owner specs: 52
+- `load_wsib` — INGESTOR · pending · owner specs: 52
   - `scripts/load-wsib.js`
   - `scripts/load-wsib.descriptor.json`
   - `scripts/load-wsib.notes.json`

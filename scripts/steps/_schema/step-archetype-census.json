@@ -394,7 +394,7 @@
       "owner_specs": ["docs/specs/01-pipeline/52_source_wsib.md"],
       "file": "scripts/load-wsib.js",
       "archetype": "INGESTOR",
-      "batch": "C5",
+      "batch": "pending",
       "reason": "Spec 122 §1.10 declared"
     },
     {
