@@ -16,6 +16,7 @@
 // No DB, no network, no docker: every pool is a fake `{ query: async (sql) => ({ rows }) }`.
 
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import child_process from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -114,6 +115,14 @@ function tmpDir(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
+// The preload path AS IT MUST APPEAR inside the quoted NODE_OPTIONS value.
+// NODE_OPTIONS parses a quoted value with backslash escapes, so the emitted path is
+// forward-slashed on every platform (the RED test below executes a real child to prove
+// the string is not just cosmetic). Asserting the raw PRELOAD_PATH text was the hole.
+function nodeOptionsPreload(harness: HarnessModule): string {
+  return `--require "${harness.PRELOAD_PATH.split(path.sep).join('/')}"`;
+}
+
 describe('sql-witness harness — traceEnv (contract: child env carries the tracer, caller env untouched)', () => {
   it('RED: sets BUILDO_SQL_TRACE and appends --require PRELOAD_PATH to NODE_OPTIONS', () => {
     const input: Record<string, string | undefined> = { PG_HOST: '127.0.0.1' };
@@ -121,14 +130,14 @@ describe('sql-witness harness — traceEnv (contract: child env carries the trac
 
     expect(out.BUILDO_SQL_TRACE).toBe('/tmp/buildo-trace');
     expect(out.NODE_OPTIONS).toContain('--require');
-    expect(out.NODE_OPTIONS).toContain(`"${H.PRELOAD_PATH}"`);
+    expect(out.NODE_OPTIONS).toContain(nodeOptionsPreload(H));
     expect(out.PG_HOST).toBe('127.0.0.1');
   });
 
   it('RED: appends to an existing NODE_OPTIONS value without clobbering it', () => {
     const out = H.traceEnv({ NODE_OPTIONS: '--max-old-space-size=4096' }, '/tmp/buildo-trace');
     expect(out.NODE_OPTIONS!.startsWith('--max-old-space-size=4096')).toBe(true);
-    expect(out.NODE_OPTIONS).toContain(`--require "${H.PRELOAD_PATH}"`);
+    expect(out.NODE_OPTIONS).toContain(nodeOptionsPreload(H));
   });
 
   it('RED: does not mutate the input env object', () => {
@@ -145,10 +154,27 @@ describe('sql-witness harness — traceEnv (contract: child env carries the trac
     expect(H.PRELOAD_PATH.endsWith(path.join('scripts', 'lib', 'sql-witness', 'trace-preload.cjs'))).toBe(true);
   });
 
+  it('RED: the generated NODE_OPTIONS actually loads the preload in a real child (forward slashes only)', () => {
+    // MEASURED bug: Node parses a QUOTED NODE_OPTIONS value with backslash escapes, so
+    // `--require "C:\Users\…\trace-preload.cjs"` degrades to `C:UsersUser…` and the child
+    // dies with `Cannot find module` before it runs. Asserting the STRING was never enough.
+    const dir = tmpDir('trace-');
+    const env = H.traceEnv(process.env, dir);
+
+    const child = child_process.spawnSync(process.execPath, ['-e', "console.log('preload-ok')"], {
+      env: env as NodeJS.ProcessEnv,
+      encoding: 'utf8',
+    });
+
+    expect(child.status, `the traced child must actually load the preload via NODE_OPTIONS — asserting the string is not enough${child.stderr ? `\nstderr: ${child.stderr}` : ''}`).toBe(0);
+    expect(child.stdout).toContain('preload-ok');
+    expect(env.NODE_OPTIONS).not.toContain('\\');
+  });
+
   it('GREEN control: an empty env yields exactly the two tracer keys', () => {
     const out = H.traceEnv({}, '/tmp/empty');
     expect(out.BUILDO_SQL_TRACE).toBe('/tmp/empty');
-    expect(out.NODE_OPTIONS).toBe(`--require "${H.PRELOAD_PATH}"`);
+    expect(out.NODE_OPTIONS).toBe(nodeOptionsPreload(H));
   });
 });
 

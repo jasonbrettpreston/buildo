@@ -53,7 +53,8 @@ function sortedUnique(xs) {
 function traceEnv(env, traceDir) {
   const out = Object.assign({}, env || {});
   out.BUILDO_SQL_TRACE = traceDir;
-  out.NODE_OPTIONS = `${(out.NODE_OPTIONS || '')} --require "${PRELOAD_PATH}"`.trim();
+  // NODE_OPTIONS treats backslashes in a quoted value as escapes — a Windows path must be forward-slashed.
+  out.NODE_OPTIONS = `${(out.NODE_OPTIONS || '')} --require "${PRELOAD_PATH.split(path.sep).join('/')}"`.trim();
   return out;
 }
 
