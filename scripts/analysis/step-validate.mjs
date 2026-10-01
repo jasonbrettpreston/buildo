@@ -5658,8 +5658,8 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
 // `docs/reports/witness/<slug>/<pre|post>/<invocation>.trace.json`. Returns
 // null when the row has no descriptor on disk (nothing for the gate to read —
 // an early ① pending step); otherwise a `{ answer, rows, hardStop }` from
-// evaluateWitness. `converted` status is REPORT-ONLY (gate make forever
-// false), so `hardStop` is only ever true for a `pending` slug.
+// evaluateWitness. `converted` status is REPORT-ONLY (never hard-stops until
+// P1-C8/C9), so `hardStop` is only ever true for a `pending` slug.
 // ---------------------------------------------------------------------------
 function witnessFor(row, descriptorInfo, computePath) {
   const witnessRoot = path.join(REPO_ROOT, 'docs', 'reports', 'witness', row.slug);

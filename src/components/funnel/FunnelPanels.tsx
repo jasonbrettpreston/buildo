@@ -225,7 +225,7 @@ function ExternalBadge({ label, cols }: { label: string; cols?: string[] | undef
   );
 }
 
-/** Renders exact columns from live pipeline_meta — no fallback to full schema */
+/** Renders exact columns from the declared pipeline_meta — no fallback to full schema */
 function LiveColumnCard({ tableName, cols, label, color }: {
   tableName: string; cols: string[]; label: string; color: 'blue' | 'emerald';
 }) {
@@ -265,9 +265,7 @@ export interface PipelineMeta {
 export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
   desc: StepDescription; dbSchemaMap?: Record<string, string[]> | undefined; pipelineMeta?: PipelineMeta | null | undefined;
 }) {
-  // Live pipeline_meta is the single source of truth for reads/writes.
-  // It comes from PIPELINE_META emitted by each script and stored in
-  // pipeline_runs.records_meta.pipeline_meta after every run.
+  // pipeline_meta = the step's DECLARED reads/writes (for converted steps it is deriveMeta(descriptor), re-emitted each run — not an observation). Observed lineage is the SQL witness trace (docs/reports/witness/<slug>/…, Spec 122 §6.6.1); it reaches this panel only with chain-run tracing (registry-truth D21). Stored in pipeline_runs.records_meta.pipeline_meta after every run.
   const hasLiveMeta = !!(pipelineMeta?.reads || pipelineMeta?.writes);
   const isExternal = (s: string) => !dbSchemaMap?.[s];
 
@@ -290,7 +288,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
     );
   }
 
-  // Live data flow from pipeline_meta
+  // Declared data flow from pipeline_meta
   const readTables = Object.keys(pipelineMeta!.reads ?? {});
   const writeTables = Object.keys(pipelineMeta!.writes ?? {});
 
@@ -298,7 +296,7 @@ export function DataFlowTile({ desc, dbSchemaMap, pipelineMeta }: {
     <div className="accordion-tile bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <h4 className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Data Flow</h4>
-        <span className="text-[8px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded px-1 py-0.5">Live Meta</span>
+        <span className="text-[8px] font-medium text-violet-600 bg-violet-50 border border-violet-200 rounded px-1 py-0.5">Declared (descriptor)</span>
       </div>
       <p className="text-xs text-gray-600 mb-3">{desc.summary}</p>
 
