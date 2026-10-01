@@ -118,8 +118,36 @@ function unionColumns(...maps) {
   return sortColumns(out);
 }
 
-/** The sibling trace path of a golden JSON path (same directory). */
+// The golden tree every gate scan walks for `*.json` captures, and the witness
+// tree traces are written to instead.
+const GOLDEN_ROOT_RE = /^(.*[\\/])?docs[\\/]reports[\\/]golden[\\/]/;
+
+/**
+ * The trace path for a golden JSON path.
+ *
+ * Traces must live OUTSIDE the golden dirs: every golden-dir reader lists
+ * `*.json` (scripts/analysis/step-validate.mjs `capturesIn` and the GOLD-PRE
+ * scan, scripts/analysis/gates/captures.mjs, gates/consumer-registry.mjs,
+ * gates/emits-equiv.mjs, src/tests/golden-fingerprint.infra.test.ts). A
+ * `<invocation>.trace.json` sitting beside a golden would be read as a capture
+ * by G8/GOLD-PRE/gate C/D, turning every converted step stale. So a golden path
+ * under `docs/reports/golden/<slug>/<sub>/<file>.json` maps to the parallel
+ * witness tree `docs/reports/witness/<slug>/<sub>/<file>.trace.json` — the same
+ * `docs/reports/witness/` root the plan already uses for fixture records.
+ * Any other path (e.g. a tmp dir in tests) keeps the old behaviour: the trace
+ * sits beside it.
+ */
 function tracePathFor(goldenOutPath) {
+  const normalised = String(goldenOutPath).replace(/\\/g, '/');
+  const m = GOLDEN_ROOT_RE.exec(normalised);
+  if (m) {
+    const slash = normalised.indexOf('docs/reports/golden/');
+    const prefix = normalised.slice(0, slash);
+    const rest = normalised.slice(slash + 'docs/reports/golden/'.length);
+    const sep = String(goldenOutPath).indexOf('\\') !== -1 ? '\\' : '/';
+    const witnessRel = `${prefix}docs/reports/witness/${rest.replace(/\.json$/, '')}.trace.json`;
+    return sep === '\\' ? witnessRel.replace(/\//g, '\\') : witnessRel;
+  }
   const dir = path.dirname(goldenOutPath);
   const base = path.basename(goldenOutPath, '.json');
   return path.join(dir, `${base}.trace.json`);

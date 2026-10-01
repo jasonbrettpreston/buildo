@@ -490,19 +490,36 @@ describe('sql-witness assemble — header copies meta and sums tracer_self_ms (c
   });
 });
 
-describe('sql-witness assemble — tracePathFor maps a golden path to its sibling trace (contract: sibling path)', () => {
-  it('RED: sources.json becomes sources.trace.json in the same directory', () => {
-    const out = A.tracePathFor('docs/reports/golden/parcels/post/sources.json');
-    expect(out).toBe(
-      path.join('docs', 'reports', 'golden', 'parcels', 'post', 'sources.trace.json'),
+describe('sql-witness assemble — tracePathFor maps a golden path into the witness tree (contract: traces outside golden dirs)', () => {
+  it('RED: a golden path maps into docs/reports/witness/, never back into the golden dir', () => {
+    const out = A.tracePathFor(
+      path.join('docs', 'reports', 'golden', 'parcels', 'post', 'sources.json'),
     );
+    expect(out).toBe(
+      path.join('docs', 'reports', 'witness', 'parcels', 'post', 'sources.trace.json'),
+    );
+    // LOCK: every golden reader lists `*.json`; a trace inside the golden tree
+    // would be misread as a capture, so the mapped path must never contain it.
+    expect(out.replace(/\\/g, '/')).not.toContain('reports/golden');
   });
 
-  it('GREEN control: a standalone.json golden maps to standalone.trace.json', () => {
-    const out = A.tracePathFor('docs/reports/golden/parcels/pre/standalone.json');
-    expect(out).toBe(
-      path.join('docs', 'reports', 'golden', 'parcels', 'pre', 'standalone.trace.json'),
+  it('GREEN control: a standalone.json golden maps into the witness tree', () => {
+    const out = A.tracePathFor(
+      path.join('docs', 'reports', 'golden', 'parcels', 'pre', 'standalone.json'),
     );
+    expect(out).toBe(
+      path.join('docs', 'reports', 'witness', 'parcels', 'pre', 'standalone.trace.json'),
+    );
+    expect(out.replace(/\\/g, '/')).not.toContain('reports/golden');
+  });
+
+  it('RED: a non-golden path (tmp dir) keeps the beside-the-file fallback', () => {
+    const out = A.tracePathFor(path.join('/tmp', 'buildo-witness-', 'post', 'sources.json'));
+    expect(out).toBe(path.join('/tmp', 'buildo-witness-', 'post', 'sources.trace.json'));
+  });
+
+  it('GREEN control: the fallback also fires for a bare filename with no directory', () => {
+    expect(A.tracePathFor('standalone.json')).toBe('standalone.trace.json');
   });
 });
 
