@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  parseStatedArea,
   sqmToSqft,
   mToFt,
   estimateLotDimensions,
@@ -23,42 +22,7 @@ import {
 } from '@/lib/parcels/address';
 import { createMockParcel } from './factories';
 
-// ---------------------------------------------------------------------------
-// STATEDAREA parsing
-// ---------------------------------------------------------------------------
-describe('parseStatedArea', () => {
-  it('parses a valid area string', () => {
-    expect(parseStatedArea('17366.998291 sq.m')).toBeCloseTo(17366.998291);
-  });
-
-  it('parses area with no space before unit', () => {
-    expect(parseStatedArea('500.00sq.m')).toBeCloseTo(500.0);
-  });
-
-  it('returns null for zero area', () => {
-    expect(parseStatedArea('0 sq.m')).toBeNull();
-  });
-
-  it('returns null for empty string', () => {
-    expect(parseStatedArea('')).toBeNull();
-  });
-
-  it('returns null for null input', () => {
-    expect(parseStatedArea(null)).toBeNull();
-  });
-
-  it('returns null for invalid format (no unit)', () => {
-    expect(parseStatedArea('12345')).toBeNull();
-  });
-
-  it('returns null for missing number', () => {
-    expect(parseStatedArea('sq.m')).toBeNull();
-  });
-
-  it('returns null for negative value string', () => {
-    expect(parseStatedArea('-100 sq.m')).toBeNull();
-  });
-});
+// parseStatedArea retired from src/lib (WF3 lot-size 2026-10-01): the single parser is scripts/lib/compute/load-parcels.js, locked in src/tests/steps/parcels/violations.test.ts.
 
 // ---------------------------------------------------------------------------
 // Unit conversions

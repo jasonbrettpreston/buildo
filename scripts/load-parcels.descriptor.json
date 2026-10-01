@@ -57,8 +57,9 @@
           { "name": "street_name_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
           { "name": "street_type_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
           { "name": "stated_area_raw", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "lot_size_sqm", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "lot_size_sqft", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "lot_size_sqm", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
+          { "name": "lot_size_sqft", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
+          { "name": "lot_size_source", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
           { "name": "frontage_m", "vocabulary": "none", "written": "step", "bind": "value" },
           { "name": "frontage_ft", "vocabulary": "none", "written": "step", "bind": "value" },
           { "name": "depth_m", "vocabulary": "none", "written": "step", "bind": "value" },
@@ -73,6 +74,7 @@
           "guard": "is_distinct_from",
           "guard_columns": [
             "lot_size_sqm",
+            "lot_size_source",
             "feature_type",
             "address_number",
             "linear_name_full",
@@ -363,6 +365,24 @@
           "ref": "scripts/lib/step/index.js"
         }
       }
+    },
+    {
+      "id": "stated_area_unparsed",
+      "kind": "field_coverage",
+      "expect": { "reports": "non-empty STATEDAREA values parseStatedArea refused (unknown / None / zero / negative / unrecognised shape)" },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "WF3 lot-size 2026-10-01 (Spec 55:56). Counted via the shapeRecord tag `stated_area_unparsed` (acquired.shaped_tags). Before the fix a bare-number STATEDAREA silently became NULL on ~10.1K parcels; this row makes any unparsed shape visible every run. INFO (descriptive; baseline ~1.66K unknown/zero rows). Also the D1 visibility row: a material publisher retraction to 'unknown' shows as a jump here while preserve_null keeps the last stated lot.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-parcels.js"
+        }
+      }
     }
   ],
   "invariants": "none",
@@ -447,6 +467,18 @@
       },
       "adjudicated_by": "orchestrator ruling, plan D4 / address_points plan D-8",
       "date": "2026-09-24"
+    },
+    {
+      "from": "the pre-conversion lot columns: sq.m-only STATEDAREA parse and lot_size_sqm/lot_size_sqft = EXCLUDED (a NULL parse overwrote any stored lot); lot_size_source never written",
+      "why": {
+        "text": "WF3 lot-size 2026-10-01 (review_followups #76; Spec 55:56-57 amended). (a) parseStatedArea also accepts bare numbers as m² and '<n> sq.ft' converted — measured: 98.5% of 10,121 bare values within 5% of ST_Area(geom::geography), 0% if read as sq.ft. (b) lot_size_sqm, lot_size_sqft and the newly written lot_size_source declare on_empty:preserve_null, so a NULL parse never erases a stored lot (the P12-A1 geom_backfill, mig 214, was wiped this way on ~8.4K rows on 2026-09-24's legacy-loader capture); a stated value supersedes and stamps lot_size_source='stated'. Accepted consequence (panel D1): if the publisher later retracts STATEDAREA, the last stated value is kept and lot_size_source still reads 'stated' (= last-stated, may be stale vs stated_area_raw); the stated_area_unparsed row counts it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "operator authorization 2026-10-01 + plan panel (Integration C1, Regression Guardian D1) [READ .cursor/wf3_parcels_lot_size_wipe_active_task.md]",
+      "date": "2026-10-01"
     }
   ],
   "limitations": [
