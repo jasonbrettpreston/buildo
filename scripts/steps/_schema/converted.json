@@ -67,9 +67,7 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [
-    { "file": "scripts/load-wsib.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.5 (load_wsib, INGESTOR 7th member, class A guarded_upsert, one operator-dropped CSV -> one target, COMPRESSED per R-PACE-1; library prerequisite 0fs (RE-FREEZE #28) landed at 84609e06). ① lands the assessment + red suite + red evidence; ② the descriptor/compute/shell/notes/seeds + PRE/POST goldens (natural is_gta repair as the forced change) (stage -> shape_clean); ③ registers, per Spec 124 R-K.", "declared": "2026-09-29", "stage": "shape_clean" }
-  ],
+  "pending": [],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
@@ -93,6 +91,7 @@
     "scripts/load-parcels.js",
     "scripts/load-centreline.js",
     "scripts/load-massing.js",
-    "scripts/load-neighbourhoods.js"
+    "scripts/load-neighbourhoods.js",
+    "scripts/load-wsib.js"
   ]
 }
