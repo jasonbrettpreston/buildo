@@ -102,7 +102,7 @@ node scripts/run-chain.js <chain_id> [run_id] [--force]
 
 1. Reads chain definition from `manifest.json`
 2. Inserts `pipeline_runs` row with `status='running'` for the chain
-3. **Phase 0 Pre-Flight Health Gate:** Queries `pg_stat_user_tables` for all chain tables' dead tuple ratio. Emits Phase 0 `audit_table` with `sys_db_bloat_*` metrics. Stored in chain `records_meta.pre_flight_audit`.
+3. **Phase 0 Pre-Flight Health Gate:** Queries `pg_stat_user_tables` for all chain tables' dead tuple ratio. Emits Phase 0 `audit_table` with `sys_db_bloat_*` metrics. Stored in chain `records_meta.pre_flight_audit`. Also emits `sys_dsm_capacity` — the one blocking row: a local Supabase target on `posix` DSM refuses the chain (Spec 30 §4.1a).
 4. For each step in sequence:
    a. Check for cancellation (`pipeline_runs.status = 'cancelled'`)
    b. Check if step is disabled — a step is disabled for the current chain iff a row exists with `enabled = FALSE AND (chain_id IS NULL OR chain_id = <current_chain>)` (see §3.1.1)

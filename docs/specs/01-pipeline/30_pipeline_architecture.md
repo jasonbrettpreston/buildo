@@ -193,6 +193,20 @@ The `pre_flight_audit` with `sys_db_bloat_*` metrics is always stored in the cha
 
 ⚠️ **The unarmed threshold has now been crossed in production (WF3 EP-D17, 2026-09-10).** `parcels` measured `dead_ratio` **0.697** on run 34506962436 (`pipeline_runs` 4566/4588) — well past the >50% FAIL row above — and, per this section's own design, chain execution continued (warn logged, no abort). This is not a contradiction of the design above; it is the trigger case §4.1 has always described but never yet exercised at this magnitude. Two structural gaps this crossing exposed, both filed rather than fixed inside EP-D17's own WF3 (operator ruling 2026-09-10: no scope creep into `run-chain.js`'s Phase 0 itself): (1) **Phase 0 samples only at CHAIN START**, before any step has run — a table the CHAIN ITSELF bloats mid-run (as `enrich_parcels`' own pass 4 does to `parcels`) can never be caught by this gate; the FAIL that would fire is always one run late, read by the NEXT chain's Phase 0 rather than the run that caused it. (2) The six literals feeding this table (`DEAD_TUPLE_RATIO`, `SEQ_SCAN_RATIO`, `SEQ_SCAN_MIN_ROWS`, `PING_PONG_RATIO` in `assert-engine-health.js`; `BLOAT_WARN_THRESHOLD`/`BLOAT_ABORT_THRESHOLD` here in `run-chain.js`) are hard-coded, against Rule 3 — filed HIGH in `docs/reports/review_followups.md`, deferred to a WF2 on these two unconverted steps (no descriptor exists yet for either, so `config.logic_variables[]` has nowhere to live). EP-D17's own fix does not arm this gate; it adds an INTERIM, in-step guard that runs mid-chain instead of waiting for the tail: a declared `parcels_dead_tuple_ratio` plausibility bound + a library-owned `execution.maintenance` executor (`scripts/lib/step/plausibility.js` `runMaintenance`) that VACUUMs `parcels` right after `enrich_parcels`' own write phases, before the NEXT step (or the next chain's Phase 0) ever reads the bloated state.
 
+### 4.1a Local shared-memory capacity row — the one blocking Phase 0 row (WF3 2026-09-30)
+
+Phase 0 also emits `sys_dsm_capacity` (`scripts/lib/preflight-dsm.js` `buildDsmCapacityRow`, fed by `SHOW dynamic_shared_memory_type` and the pool's target as `createPool` resolves it):
+
+| Target | `dynamic_shared_memory_type` | Status | Chain Execution |
+|--------|------------------------------|--------|-----------------|
+| Loopback host on the `supabase/config.toml` `[db].port` (local Supabase) | `posix` | FAIL | **Refused** — no step runs; `error_message` = `Pre-flight refused (sys_dsm_capacity): …` with the fix command |
+| Same | anything else (`mmap`) | PASS | Continues |
+| Other loopback target (CI/test containers) | `posix` | WARN | Continues |
+| Non-loopback (cloud) | any | INFO — `/dev/shm` capacity UNVERIFIED | Continues |
+| Any | `SHOW` failed | WARN (`unreadable`) | Continues |
+
+**Why this row blocks when bloat does not:** the failure is certain and late — the local container's 64 MB `/dev/shm` cannot hold the parallel-query DSM of the big link queries, and the run died 24 minutes in (`link_parcel_addresses`, `could not resize shared memory segment … No space left on device`); with `mmap` the same step passed in 71.9 s (run 2168). The refusal is row-derived: `findBlockingPreflightRow` returns the first FAIL among `BLOCKING_PREFLIGHT_METRICS` (only `sys_dsm_capacity`); bloat FAIL rows never block (§4.1). The rule is binary (no tunable threshold, so no logic variable). Fix + persistence notes: `docs/runbook/README.md` §3d. Tests: `src/tests/preflight-dsm.logic.test.ts`.
+
 ### 4.2 PostGIS Dual-Path (B10/B11/B12)
 
 Spatial scripts (link-massing, link-neighbourhoods, link-parcels, link-coa-to-parcels, compute-centroids) detect PostGIS availability at runtime:
@@ -342,6 +356,7 @@ state it per-site"* lives HERE, not in `tasks/lessons.md` — the per-site gate 
 ### Target Files
 - `scripts/lib/pipeline.js` — the SDK (single source of truth for pool, transactions, telemetry)
 - `scripts/run-chain.js` — the orchestrator (chain execution, bloat gate, step tracking)
+- `scripts/lib/preflight-dsm.js` — Phase 0 `sys_dsm_capacity` row builder (§4.1a)
 - `scripts/manifest.json` — script registry (chains, telemetry declarations)
 - `eslint.config.mjs` — pipeline lint rules
 - `ruff.toml` — Python lint rules

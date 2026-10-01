@@ -19,6 +19,7 @@ const { StringDecoder } = require('string_decoder');
 const path = require('path');
 const fs = require('fs');
 const { descriptorPathFor } = require('./lib/step/seam');
+const { buildDsmCapacityRow, findBlockingPreflightRow, loadSupabaseDbPort, resolveDsmTarget } = require('./lib/preflight-dsm');
 
 // ---------------------------------------------------------------------------
 // Main
@@ -670,6 +671,28 @@ async function run() {
   } catch (err) {
     pipeline.log.warn('[run-chain]', `Pre-flight health check failed: ${err.message}`);
   }
+
+  // WF3 2026-09-30, Spec 30 §4.1a: this is the ONE blocking Phase-0 row. The local Supabase DB
+  // runs posix DSM against a 64 MB /dev/shm and killed link_parcel_addresses after 24 min
+  // ("could not resize shared memory segment ... No space left on device"); see the
+  // review_followups "shared memory segment" row for the originating incident.
+  let dsmType = null;
+  try {
+    const dsmRes = await pool.query('SHOW dynamic_shared_memory_type');
+    dsmType = dsmRes.rows[0]?.dynamic_shared_memory_type ?? null;
+  } catch (err) {
+    pipeline.log.warn('[run-chain]', `Pre-flight DSM check failed: ${err.message}`);
+  }
+  const dsmTarget = resolveDsmTarget(process.env);
+  const dsmRow = buildDsmCapacityRow({
+    dsmType,
+    isLocal: dsmTarget.isLocal,
+    port: dsmTarget.port,
+    supabasePort: loadSupabaseDbPort(path.resolve(__dirname, '..')),
+  });
+  preFlightRows.push(dsmRow);
+  if (dsmRow.status === 'FAIL') preFlightVerdict = 'FAIL';
+  else if (dsmRow.status === 'WARN' && preFlightVerdict === 'PASS') preFlightVerdict = 'WARN';
   // Store Phase 0 in chain records_meta (available to dashboard)
   const preFlightAudit = {
     phase: 0,
@@ -677,13 +700,18 @@ async function run() {
     verdict: preFlightVerdict,
     rows: preFlightRows,
   };
-  pipeline.log.info('[run-chain]', `Pre-Flight: ${preFlightVerdict} (${preFlightRows.length} tables checked)`);
+  pipeline.log.info('[run-chain]', `Pre-Flight: ${preFlightVerdict} (${preFlightRows.length} rows checked)`);
 
-  // Phase 0 is warn-only — never blocks chain execution.
+  // Phase 0 bloat rows are warn-only — they never block (Spec 30 §4.1); sys_dsm_capacity is the one blocking row (§4.1a).
   // Dead tuples from prior runs are expected (MVCC); autovacuum handles cleanup.
   // The pre_flight_audit is stored in chain records_meta for dashboard visibility.
-  if (preFlightVerdict === 'FAIL') {
+  if (preFlightRows.some((r) => r.metric.startsWith('sys_db_bloat_') && r.status === 'FAIL')) {
     pipeline.log.warn('[run-chain]', 'Pre-flight bloat WARNING: dead tuple ratio exceeds 50% on some tables. Consider running VACUUM.', { preFlightRows });
+  }
+  // Spec 30 §4.1a — a FAIL on a BLOCKING_PREFLIGHT_METRICS row refuses the chain (row-derived).
+  const preFlightBlock = findBlockingPreflightRow(preFlightRows);
+  if (preFlightBlock) {
+    pipeline.log.error('[run-chain]', `Pre-flight REFUSED (${preFlightBlock.metric}): ${preFlightBlock.message}`);
   }
 
   // Soft time-budget self-stop (Spec 115 §2.2, WF3 2026-08-09) — generalizes the deep-scrapes
@@ -700,6 +728,7 @@ async function run() {
   for (let i = 0; i < steps.length; i++) {
     const slug = steps[i];
     const stepLabel = `[${i + 1}/${steps.length}] ${slug}`;
+    if (preFlightBlock) { failedStep = slug; break; } // §4.1a refusal — no step runs
 
     // Check if chain was cancelled between steps. PRECEDENCE (Guardian 2026-08-09): the cancel
     // check runs BEFORE the budget check — an explicit human cancellation must win over a
@@ -1086,15 +1115,17 @@ async function run() {
   // invisible, and a third of coa runs are already WARN for other reasons (status can't distinguish).
   // B2 (N-6 folded): the defer arm gets the same treatment — meta alone is invisible until B6 wires
   // admin surfaces, so the human-readable string carries the step + scope + threshold.
-  const chainError = failedStep
-    ? `Stopped at step: ${failedStep}`
-    : deferredStep
-      ? `Deferred to full at step ${deferredStep} (scope ${deferMarkerInfo?.scope_count} >= threshold ${deferMarkerInfo?.threshold})`
-      : budgetStopped
-        ? `Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — ${budgetSkippedSteps.length} downstream step(s) skipped`
-        : gateSkipped
-          ? '0 new records — downstream steps skipped'
-          : null;
+  const chainError = preFlightBlock
+    ? `Pre-flight refused (${preFlightBlock.metric}): ${preFlightBlock.message}`
+    : failedStep
+      ? `Stopped at step: ${failedStep}`
+      : deferredStep
+        ? `Deferred to full at step ${deferredStep} (scope ${deferMarkerInfo?.scope_count} >= threshold ${deferMarkerInfo?.threshold})`
+        : budgetStopped
+          ? `Soft time budget reached (${budgetStopElapsedMin}m >= ${chainBudgetMinutes}m) — ${budgetSkippedSteps.length} downstream step(s) skipped`
+          : gateSkipped
+            ? '0 new records — downstream steps skipped'
+            : null;
 
   // Include step verdicts + pre-flight audit in chain records_meta for drill-down
   const metaObj = {};
