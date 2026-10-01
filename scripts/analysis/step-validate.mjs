@@ -263,6 +263,7 @@ import {
 } from './gates/registries.mjs';
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
+import { evaluateWitness, selfTest as witnessSelfTest } from './gates/witness.mjs';
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -5651,9 +5652,80 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
   return results;
 }
 
+// ---------------------------------------------------------------------------
+// Gate #44 WITNESS (Spec 122 §6.6.1; P1-C3c2) — per-slug trace-vs-descriptor
+// read. Traces live OUTSIDE the golden dirs (assemble.cjs `tracePathFor`):
+// `docs/reports/witness/<slug>/<pre|post>/<invocation>.trace.json`. Returns
+// null when the row has no descriptor on disk (nothing for the gate to read —
+// an early ① pending step); otherwise a `{ answer, rows, hardStop }` from
+// evaluateWitness. `converted` status is REPORT-ONLY (gate make forever
+// false), so `hardStop` is only ever true for a `pending` slug.
+// ---------------------------------------------------------------------------
+function witnessFor(row, descriptorInfo, computePath) {
+  const witnessRoot = path.join(REPO_ROOT, 'docs', 'reports', 'witness', row.slug);
+  const descriptorOnDisk = descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath));
+  if (!descriptorOnDisk) return null;
+
+  const readTraces = (sub) => {
+    const dir = path.join(witnessRoot, sub);
+    const out = {};
+    if (!existsSync(dir)) return out;
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith('.trace.json')) continue;
+      const invocation = f.slice(0, -'.trace.json'.length);
+      const abs = path.join(dir, f);
+      try {
+        out[invocation] = JSON.parse(readFileSync(abs, 'utf8'));
+      } catch {
+        out[invocation] = { errors: ['FAIL:INPUT:unreadable-trace'] };
+      }
+    }
+    return out;
+  };
+
+  const postTraces = readTraces('post');
+  const preTraces = readTraces('pre');
+
+  let explainedDiffs = [];
+  const explainedPath = path.join(GOLDEN_ROOT, row.slug, 'explained-diffs.json');
+  if (existsSync(explainedPath)) {
+    try {
+      const doc = JSON.parse(readFileSync(explainedPath, 'utf8'));
+      if (doc && Array.isArray(doc.diffs)) {
+        explainedDiffs = doc.diffs.map((d) => d && d.key).filter((k) => typeof k === 'string');
+      }
+    } catch {
+      explainedDiffs = [];
+    }
+  }
+
+  let currentFingerprint;
+  try {
+    currentFingerprint = harness.computeSourceFingerprint({
+      step: row.relFile,
+      descriptorPath: descriptorInfo.descriptorPath,
+      notesPath: harness.notesPathFor(descriptorInfo.descriptor, descriptorInfo.descriptorPath),
+      computePath,
+    }).source_fingerprint;
+  } catch {
+    return { answer: `FAIL:INPUT:${row.slug}:fingerprint`, rows: [`FAIL:INPUT:${row.slug}:fingerprint`], hardStop: row.stage === 'pending' };
+  }
+
+  return evaluateWitness({
+    slug: row.slug,
+    descriptor: descriptorInfo.descriptor,
+    status: row.stage === 'pending' ? 'pending' : 'converted',
+    currentFingerprint,
+    postTraces,
+    preTraces,
+    explainedDiffs,
+  });
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   selfTest();
+  { const w = witnessSelfTest(); if (!w.ok) throw new Error(`self-test FAILED (#44 WITNESS): ${w.detail}`); }
   if (opts.selfTestOnly) {
     console.log('[step-validate] self-test PASSED');
     return;
@@ -5726,6 +5798,7 @@ async function main() {
       console.error(`[step-validate] WARNING: no assessment report found for ${row.slug} — scorecard gates that read the report will read as empty/0`);
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
+    const witness44 = witnessFor(row, descriptorInfo, computePath);
     const p3 = measureP3Footprint(row, descriptorInfo);
     // matrix computed BEFORE the scorecard (Rule 13 hard-stop wiring, WF3
     // commit 4) — computeScorecard now folds an unpinned enforced-red matrix
@@ -5743,6 +5816,15 @@ async function main() {
 
     console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}\n\`\`\`\n`);
     console.log(block);
+
+    if (witness44) {
+      const reportOnly = row.stage === 'pending' ? '' : ', report-only';
+      console.log(`[step-validate] #44 WITNESS ${row.slug} (${row.stage}${reportOnly}): ${witness44.answer}`);
+      if (witness44.rows.length > 1) {
+        for (const r of witness44.rows.slice(0, 20)) console.log(`  - ${r}`);
+        if (witness44.rows.length > 20) console.log(`  … +${witness44.rows.length - 20} more`);
+      }
+    }
 
     const blockingForRow = blockingItemsFor(row.slug, programmeItemsAll);
     if (blockingForRow.length) {
@@ -5771,6 +5853,7 @@ async function main() {
       console.log(`[step-validate] ${row.slug}: hard-stop scored but NOT gating — only its report/tests are staged, not its code (--staged doc-only rule)`);
     }
     if (sc.hardStop && isBlocking) anyHardStop = true;
+    if (witness44 && witness44.hardStop && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 WITNESS failed for pending slug ${row.slug}`); }
     summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking, fiveWord });
   }
 

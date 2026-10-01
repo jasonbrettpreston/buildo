@@ -572,3 +572,38 @@ describe('gate #44 — module source hygiene (slice A)', () => {
     expect(src).not.toContain('R-BF WITNESS GATE');
   });
 });
+
+// ===========================================================================
+// 15. step-validate wiring lock (P1-C3c2) — gate #44 is imported, self-tested,
+// reads the witness tree, and its hard stop is guarded by witness44.hardStop.
+// The C9 marker string must NOT appear yet.
+// ===========================================================================
+const STEP_VALIDATE_PATH = path.join(process.cwd(), 'scripts/analysis/step-validate.mjs');
+
+describe('gate #44 — step-validate wiring (P1-C3c2)', () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(STEP_VALIDATE_PATH, 'utf8');
+  });
+
+  it('imports evaluateWitness from ./gates/witness.mjs', () => {
+    expect(src).toContain("from './gates/witness.mjs'");
+    expect(src).toContain('evaluateWitness(');
+  });
+
+  it('runs the gate self-test in main()', () => {
+    expect(src).toContain('witnessSelfTest()');
+  });
+
+  it('reads the witness tree (docs/reports/witness)', () => {
+    expect(src).toContain('docs/reports/witness');
+  });
+
+  it('guards the hard stop with witness44.hardStop', () => {
+    expect(src).toContain('witness44.hardStop');
+  });
+
+  it('does NOT contain the string R-BF WITNESS GATE (lands at P1-C9)', () => {
+    expect(src).not.toContain('R-BF WITNESS GATE');
+  });
+});
