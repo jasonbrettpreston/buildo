@@ -192,7 +192,7 @@ empty) passes no flag at all.
 
 11. **Quality assertions** — three assert steps run AFTER the enrich+cost cascade so they read FINAL values:
     - `assert_global_coverage` (Spec 49): gated `zoning_class`, residential-with-building-scoped max-build/opt coverage floors (WARN<88/FAIL<75), `parcel_cost_menu` gate, INFO population/distribution rows.
-    - `assert_parcel_sanity` (value-CORRECTNESS, this item; coverage↔sanity boundary Spec 49 §2): zone-aware BOUNDS + cross-field INVARIANTS + per-zone DISTRIBUTION; `gate:true` physical-impossibility/mislink checks FAIL the chain, known residuals WARN.
+    - `assert_parcel_sanity` (value-CORRECTNESS, this item; coverage↔sanity boundary Spec 49 §2): zone-aware BOUNDS + cross-field INVARIANTS + per-zone DISTRIBUTION; `gate:true` physical-impossibility/mislink checks FAIL the chain, known residuals WARN. Lot bound (WF3 2026-10-01): `lot_size_out_of_range` flags an out-of-range lot only when its own polygon does not corroborate it (tolerance `parcel_sanity_lot_geom_tolerance_ratio`); geometrically-real slivers/parks are counted INFO (`_geom_backed`); `lot_size_stated_vs_geom` (INFO) watches stated lots that disagree with their polygon. The former `feature_type` COMMON/CONDO exclusion covered every parcel (COMMON = ordinary parcel) and left the check inert.
     - `assert_data_bounds`: magnitude floors (address_points ≥500K / parcels ≥460K / building_footprints ≥400K — catastrophic-load detectors), duplicate IDs, lot-size/height outliers, neighbourhoods ≥158, ravines/heritage/centreline floors.
 
 ### Outputs
