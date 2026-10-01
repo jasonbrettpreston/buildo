@@ -59,6 +59,32 @@ const isCursorArg = (arg0: unknown): boolean =>
 const fakeQueryFor = (arg0: unknown) =>
   (isCursorArg(arg0) ? arg0 : Promise.resolve({ rowCount: 3, rows: [] })) as unknown;
 
+// The arguments the preload's wrapper actually FORWARDED to the underlying
+// `original` query. This is the pass-through seam: whatever ends up here is
+// exactly what a real `pg` client would have received (and hence what it would
+// send to Postgres). A dropped/extra argument here is the 42P02 bug.
+const forwarded: unknown[][] = [];
+
+const lastForwarded = (): unknown[] => forwarded[forwarded.length - 1] ?? [];
+
+// Callback-style fake: `pg` invokes the trailing callback with (err, result).
+// The wrapper must forward a callable in the caller's slot; when invoked it must
+// delegate to the caller's own callback with the same (err, result).
+const fakeQueryWithCB = (args: unknown[]): unknown => {
+  if (isCursorArg(args[0])) return args[0];
+  const cb = args.filter((a) => typeof a === 'function').pop();
+  if (typeof cb === 'function') {
+    (cb as (err: unknown, result: unknown) => unknown)(null, { rowCount: 3, rows: [] });
+    return undefined;
+  }
+  return fakeQueryFor(args[0]);
+};
+
+// Full-fidelity call: forwards EVERY argument the caller passed (the existing
+// `callQuery` helper truncates at 2 args and cannot express the callback forms).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const callQueryFull = (client: any, ...args: unknown[]) => client.query(...args);
+
 // One call site for every kind of client call the tracer must survive.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const callQuery = (client: any, arg0: unknown, arg1?: unknown) =>
@@ -94,7 +120,10 @@ beforeAll(async () => {
     // wrapper, so the tracer wraps the fake: its pass-through assertion is
     // `=====` the fake's own promise, not a connection result.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (pg.Client.prototype as any).query = (...args: unknown[]) => fakeQueryFor(args[0]);
+    (pg.Client.prototype as any).query = function (...args: unknown[]) {
+      forwarded.push(args.slice());
+      return fakeQueryWithCB(args);
+    };
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     tracer = require(PRELOAD_PATH) as TracePreload;
@@ -106,6 +135,7 @@ beforeAll(async () => {
 beforeEach(() => {
   if (loadError) throw loadError;
   tracer._reset();
+  forwarded.length = 0;
 });
 
 afterAll(() => {
@@ -367,5 +397,96 @@ describe('sql-witness tracer — double-wrap guard (contract: wrap ONCE, symbol-
     const calls = tracer2._state().statements.reduce((n, s) => n + s.count, 0);
     expect(calls).toBe(2);
     expect(origQuery).toBeUndefined();
+  });
+});
+
+// The 42P02 regression lock. `query()` has SIX documented call forms and the
+// wrapper must be a pure pass-through for each: the underlying query receives
+// EXACTLY the caller's argument list, with only the callback swapped for one
+// that delegates to the caller's callback with the same (err, result). The
+// pre-existing suite only exercised the promise form, which is why an off-by-one
+// in the callback index (dropping `values`, or dropping `text`) shipped.
+describe('pass-through: the wrapped query receives EXACTLY the caller\'s arguments', () => {
+  it('(a) query(text, values) → underlying sees [text, values] (length 2)', () => {
+    const client = new pg.Client();
+    callQueryFull(client, 'SELECT $1', [1]);
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(2);
+    expect(seen[0]).toBe('SELECT $1');
+    expect(seen[1]).toEqual([1]);
+  });
+
+  it('(b) query(text, values, cb) → underlying sees [text, values, fn] (length 3) and cb fires once', () => {
+    const client = new pg.Client();
+    let cbCalls = 0;
+    let cbArgs: unknown[] = [];
+    const cb = (...args: unknown[]) => {
+      cbCalls += 1;
+      cbArgs = args;
+    };
+
+    callQueryFull(client, 'SELECT $1', [1], cb);
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(3);
+    expect(seen[0]).toBe('SELECT $1');
+    expect(seen[1]).toEqual([1]);
+    expect(typeof seen[2]).toBe('function');
+    expect(cbCalls).toBe(1);
+    expect(cbArgs[0]).toBeNull();
+    expect(cbArgs[1]).toEqual({ rowCount: 3, rows: [] });
+  });
+
+  it('(c) query(text, cb) → underlying sees [text, fn] (length 2)', () => {
+    const client = new pg.Client();
+    let cbCalls = 0;
+    const cb = () => {
+      cbCalls += 1;
+    };
+
+    callQueryFull(client, 'SELECT 1', cb);
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(2);
+    expect(seen[0]).toBe('SELECT 1');
+    expect(typeof seen[1]).toBe('function');
+    expect(cbCalls).toBe(1);
+  });
+
+  it('(d) query(config) → underlying sees [config] (length 1)', () => {
+    const client = new pg.Client();
+    const config = { text: 'SELECT $1', values: [1] };
+    callQueryFull(client, config);
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(1);
+    expect(seen[0]).toEqual(config);
+  });
+
+  it('(e) query(config, values, cb) → underlying sees [config, values, fn] (length 3), values preserved', () => {
+    const client = new pg.Client();
+    let cbCalls = 0;
+    const cb = () => {
+      cbCalls += 1;
+    };
+
+    callQueryFull(client, { text: 'SELECT $1' }, [1], cb);
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(3);
+    expect(seen[0]).toEqual({ text: 'SELECT $1' });
+    expect(seen[1]).toEqual([1]);
+    expect(typeof seen[2]).toBe('function');
+    expect(cbCalls).toBe(1);
+  });
+
+  it('(f) query(text) → underlying sees [text] (length 1)', () => {
+    const client = new pg.Client();
+    callQueryFull(client, 'SELECT 1');
+
+    const seen = lastForwarded();
+    expect(seen.length).toBe(1);
+    expect(seen[0]).toBe('SELECT 1');
   });
 });

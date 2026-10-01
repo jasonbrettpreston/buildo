@@ -152,7 +152,6 @@ async function writeTraceFromDir({ traceDir, pool, catalog, meta, outPath }) {
   const ndjsonTexts = entries.map((name) => fs.readFileSync(path.join(traceDir, name), 'utf8'));
   const resolvedCatalog = catalog || (await snapshotCatalog(pool));
   const trace = await assembleTrace({ ndjsonTexts, catalog: resolvedCatalog, meta: meta || {} });
-  process.stderr.write(`DEBUG_TOUCHED ${JSON.stringify(trace.touched)}\n`);
   const tracePath = tracePathFor(outPath);
   fs.mkdirSync(path.dirname(tracePath), { recursive: true });
   fs.writeFileSync(tracePath, `${JSON.stringify(trace, null, 2)}\n`);

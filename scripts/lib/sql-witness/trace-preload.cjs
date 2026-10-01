@@ -140,24 +140,32 @@ function book(fn) {
 // Pass-through wrapper: same `this`, same args, same return value. Only a
 // promise's resolution is observed (rowCount on the side).
 function wrapQuery(original) {
-  return function tracedQuery(arg0, arg1, arg2, arg3) {
+  return function tracedQuery(...args) {
     return book(() => {
-      const args = [arg1, arg2, arg3];
-      const cbIndex = args.findIndex((a) => typeof a === 'function');
+      // Find the FIRST function argument — the callback slot. Its index is into
+      // the CALLER's own argument list (0 = text/config), never into a shifted
+      // copy: an off-by-one here silently drops `values` (→ Postgres 42P02) or
+      // drops `text` entirely.
+      let cbIndex = -1;
+      for (let i = 1; i < args.length; i += 1) {
+        if (typeof args[i] === 'function') {
+          cbIndex = i;
+          break;
+        }
+      }
       const cb = cbIndex === -1 ? undefined : args[cbIndex];
       const promiseStyle = cb === undefined;
-      const entry = record(arg0, promiseStyle ? arg1 : undefined, this);
+      const entry = record(args[0], promiseStyle ? args[1] : cbIndex >= 2 ? args[1] : undefined, this);
 
-      let outCb = cb;
+      // Copy the caller's argument list verbatim; replace ONLY the callback with
+      // a delegating shim. Every other argument keeps its slot and identity.
+      const out = args.slice();
       if (!promiseStyle) {
-        outCb = function tracedCallback(err, result) {
+        out[cbIndex] = function tracedCallback(err, result) {
           if (!err) addRowCount(entry, result);
           return cb.apply(this, arguments);
         };
       }
-
-      const out = [arg0, arg1, arg2, arg3].slice(0, cbIndex === -1 ? 2 : cbIndex + 1);
-      if (!promiseStyle) out[out.length - 1] = outCb;
       const ret = original.apply(this, out);
 
       if (promiseStyle && ret && typeof ret.then === 'function' && typeof ret.catch === 'function') {
