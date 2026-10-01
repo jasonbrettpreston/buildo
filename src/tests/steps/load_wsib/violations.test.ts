@@ -785,12 +785,12 @@ describe('row 3.5 — D10 the write (flipped GREEN at ②)', () => {
 });
 
 describe('row 3.5 — D11 the no-name skip rate (flipped GREEN at ②)', () => {
-  it('D11 — wsib_no_name_skip_rate reports the percentage only; the EVALUATED verdict is PASS at exactly 1.0 (WS-D9 declared deviation: legacy WARNed at >= 1.0), WARN above, PASS below (flipped GREEN at ②)', () => {
+  it('D11 — wsib_no_name_skip_rate reports the percentage only; the EVALUATED verdict is PASS at exactly 1.0 (WS-D9 declared deviation: legacy WARNed at >= 1.0), FAIL above (WS-D10, Spec 124 R-AX), PASS below (flipped GREEN at ②)', () => {
     const d = loadDescriptor(); // the ① RED reason was MISSING ARTIFACT scripts/load-wsib.descriptor.json
     const c = checkById(d, 'wsib_no_name_skip_rate');
     // Gate A (plan §8) — the bound comes from the registered logic variable, never a literal.
     expect(c.limit_from_config).toBe('load_wsib_no_name_skip_warn_pct');
-    expect(c.severity).toBe('WARN');
+    expect(c.severity, 'WS-D10 — the bound on_row_error:"skip" cites must be FAIL (R-AX)').toBe('FAIL');
     // Q1 doctrine (verdict.js :146-152, :177): the compute reports `value` — the PERCENTAGE
     // (1.0 / 1.5 / 0.5) — and NEVER a 0/1 `violations` flag; `checkRow` is the only comparator.
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
@@ -810,13 +810,13 @@ describe('row 3.5 — D11 the no-name skip rate (flipped GREEN at ②)', () => {
     expect(at[0]![1]!.value).toBe(1);
     expect('violations' in at[0]![1]!).toBe(false);
     expect(verdictOf(c, at[0]![1]!, cfg)).toBe('PASS');
-    // 3 / (197 + 3) * 100 = 1.5 ⇒ above the inclusive bound ⇒ WARN.
+    // 3 / (197 + 3) * 100 = 1.5 ⇒ above the inclusive bound ⇒ FAIL (WS-D10).
     const over = driveCheck('wsib_no_name_skip_rate', {
       acquired: { bad_key_count: 3, feature_count: 197 },
       config: cfg,
     });
     expect(over[0]![1]!.value).toBe(1.5);
-    expect(verdictOf(c, over[0]![1]!, cfg)).toBe('WARN');
+    expect(verdictOf(c, over[0]![1]!, cfg)).toBe('FAIL');
     // 1 / (199 + 1) * 100 = 0.5 ⇒ under the bound ⇒ PASS.
     const under = driveCheck('wsib_no_name_skip_rate', {
       acquired: { bad_key_count: 1, feature_count: 199 },
