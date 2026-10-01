@@ -702,6 +702,9 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     const parse = mod.parseStatedArea as (raw: unknown) => number | null;
     const table: Array<[string, number | null]> = [
       ['300.00 sq.m', 300],
+      ['500.00sq.m', 500],
+      ['17366.998291 sq.m', 17366.998291],
+      ['sq.m', null],
       ['412.5', 412.5],
       ['.5', 0.5],
       ['  1200  ', 1200],
