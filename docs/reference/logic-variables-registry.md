@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (622) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (623) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **628** logic variables (622 numeric, 6 JSONB).
+Total: **629** logic variables (623 numeric, 6 JSONB).
 
 ---
 
@@ -558,6 +558,7 @@ Total: **628** logic variables (622 numeric, 6 JSONB).
 | `parcel_sanity_greenspace_tolerance_sqm` | numeric | 0.5 | 0 – 100 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: existing_greenspace_sqm vs lot_size_sqm coherence tolerance (sqm). Ported verbatim from the pre-conversion literal (0.5). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_height_per_storey_max_m` | numeric | 5.5 | 0 – 50 | — | seed | group: Spatial & Massing | assert_parcel_sanity: bylaw_max_height_m / bylaw_max_stories generous-zoning INFO ceiling (never a bug). Ported verbatim from the pre-conversion literal (5.5). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_height_per_storey_min_m` | numeric | 2.5 | 0 – 20 | — | seed | group: Spatial & Massing | assert_parcel_sanity: GATE — bylaw_max_height_m / bylaw_max_stories physical-impossibility floor (the WELD signature). Ported verbatim from the pre-conversion literal (2.5). CONSUMED by assert_parcel_sanity. |
+| `parcel_sanity_lot_geom_tolerance_ratio` | numeric | 0.25 | 0 – 10 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: relative tolerance \|lot_size_sqm - ST_Area(geom)\| / ST_Area(geom) within which a lot is corroborated by its own polygon (WF3 inert lot bound 2026-10-01: 4,004 of 4,030 out-of-range lots agree within 0.25). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_lot_size_max_sqm` | numeric | 100000 | 1000 – 10000000 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: residential lot_size_sqm upper bound (sqm). Ported verbatim from the pre-conversion literal (100000). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_lot_size_min_sqm` | numeric | 40 | 0 – 10000 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: residential lot_size_sqm lower bound (sqm). Ported verbatim from the pre-conversion literal (40). CONSUMED by assert_parcel_sanity. |
 | `parcel_sanity_lowrise_bylaw_fsi_max` | numeric | 1.5 | 0 – 20 | — | seed | group: Data Quality Thresholds | assert_parcel_sanity: lowrise bylaw_max_fsi upper bound (FSI-borrow bug watch). Ported verbatim from the pre-conversion literal (1.5). CONSUMED by assert_parcel_sanity. |
@@ -651,4 +652,4 @@ Total: **628** logic variables (622 numeric, 6 JSONB).
 
 ---
 
-*Generated from 612 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
+*Generated from 613 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*

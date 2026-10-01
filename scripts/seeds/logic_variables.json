@@ -5587,6 +5587,16 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "parcel_sanity_lot_geom_tolerance_ratio": {
+    "default": 0.25,
+    "type": "number",
+    "description": "assert_parcel_sanity: relative tolerance |lot_size_sqm - ST_Area(geom)| / ST_Area(geom) within which a lot is corroborated by its own polygon (WF3 inert lot bound 2026-10-01: 4,004 of 4,030 out-of-range lots agree within 0.25). CONSUMED by assert_parcel_sanity.",
+    "min": 0,
+    "max": 10,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "parcel_sanity_max_build_width_max_m": {
     "default": 30,
     "type": "number",

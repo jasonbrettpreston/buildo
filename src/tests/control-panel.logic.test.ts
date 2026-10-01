@@ -459,14 +459,15 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'engine_health_insp_dead_tuple_fail_pct', 'engine_health_insp_update_insert_fail_ratio',
   'engine_health_dead_tuple_min_rows',
 
-  // batch2 P1.1 (2026-09-18, assert_parcel_sanity) — 35 new parcel_sanity_* variables
+  // batch2 P1.1 (2026-09-18, assert_parcel_sanity) — 36 new parcel_sanity_* variables
+  // (+ parcel_sanity_lot_geom_tolerance_ratio, WF3 inert 2026-10-01)
   // (34 magnitude bounds/coherence tolerances + 3 distribution-scan constants), all
   // ported verbatim from the pre-conversion literal named in each var's own
   // logic_variables.json description (scripts/lib/assert-parcel-sanity-fields.js
   // LOGIC_VAR_DEFS). The 2 already-registered reused vars (max_build_min_dimension_m,
   // mislink_footprint_lot_tol) are NOT re-listed here — they are already present
   // above from enrich_parcels' own conversion, one copy of the policy (Ask A6(a)).
-  'parcel_sanity_lot_size_min_sqm', 'parcel_sanity_lot_size_max_sqm', 'parcel_sanity_max_build_width_max_m', 'parcel_sanity_max_build_length_max_m',
+  'parcel_sanity_lot_size_min_sqm', 'parcel_sanity_lot_size_max_sqm', 'parcel_sanity_lot_geom_tolerance_ratio', 'parcel_sanity_max_build_width_max_m', 'parcel_sanity_max_build_length_max_m',
   'parcel_sanity_lowrise_opt_aor_gfa_max_sqm', 'parcel_sanity_nonlowrise_opt_aor_gfa_max_sqm', 'parcel_sanity_comp_fsi_p50_max', 'parcel_sanity_comp_fsi_p50_min',
   'parcel_sanity_priced_newbuild_min_gfa_sqm', 'parcel_sanity_lowrise_bylaw_fsi_max', 'parcel_sanity_bylaw_fsi_max', 'parcel_sanity_lowrise_coverage_max_pct',
   'parcel_sanity_lowrise_bylaw_height_max_m', 'parcel_sanity_footprint_coverage_max_ratio', 'parcel_sanity_max_build_fsi_max', 'parcel_sanity_coa_fsi_max',

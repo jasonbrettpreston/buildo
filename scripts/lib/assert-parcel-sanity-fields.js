@@ -63,13 +63,14 @@ const REUSED_MAX_BUILD_MIN_DIMENSION_M = 'max_build_min_dimension_m';
 const REUSED_MISLINK_FOOTPRINT_LOT_TOL = 'mislink_footprint_lot_tol';
 
 // ---------------------------------------------------------------------------
-// LOGIC_VAR_DEFS — 35 new (Ask A5: prefix `parcel_sanity_*`, groups `Data Quality
+// LOGIC_VAR_DEFS — 36 new (Ask A5: prefix `parcel_sanity_*`, groups `Data Quality
 // Thresholds` / `Spatial & Massing`, all on_invalid:"fail" — every one is
 // verdict-affecting). Numbers match the plan's tunables census table exactly.
 // ---------------------------------------------------------------------------
 const LOGIC_VAR_DEFS = [
   { name: 'parcel_sanity_lot_size_min_sqm', default: 40, min: 0, max: 10000, group: 'Data Quality Thresholds', description: 'assert_parcel_sanity: residential lot_size_sqm lower bound (sqm). Ported verbatim from the pre-conversion literal (40). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_lot_size_max_sqm', default: 100000, min: 1000, max: 10000000, group: 'Data Quality Thresholds', description: 'assert_parcel_sanity: residential lot_size_sqm upper bound (sqm). Ported verbatim from the pre-conversion literal (100000). CONSUMED by assert_parcel_sanity.' },
+  { name: 'parcel_sanity_lot_geom_tolerance_ratio', default: 0.25, min: 0, max: 10, group: 'Data Quality Thresholds', description: 'assert_parcel_sanity: relative tolerance |lot_size_sqm - ST_Area(geom)| / ST_Area(geom) within which a lot is corroborated by its own polygon (WF3 inert lot bound 2026-10-01: 4,004 of 4,030 out-of-range lots agree within 0.25). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_max_build_width_max_m', default: 30, min: 0, max: 500, group: 'Spatial & Massing', description: 'assert_parcel_sanity: max_build_width_m upper bound (m), RC-measured p995 27.2 / max obs 42.66. Ported verbatim from the pre-conversion literal (30). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_max_build_length_max_m', default: 100, min: 0, max: 1000, group: 'Spatial & Massing', description: 'assert_parcel_sanity: max_build_length_m upper bound (m), RC-measured p995 58.9 / max obs 316.23. Ported verbatim from the pre-conversion literal (100). CONSUMED by assert_parcel_sanity.' },
   { name: 'parcel_sanity_lowrise_opt_aor_gfa_max_sqm', default: 2500, min: 0, max: 100000, group: 'Spatial & Massing', description: 'assert_parcel_sanity: lowrise (RD/RS/RT) opt_aor_gfa_sqm upper bound. Ported verbatim from the pre-conversion literal (2500). CONSUMED by assert_parcel_sanity.' },
@@ -121,7 +122,7 @@ const LOGIC_VAR_DEFS = [
 ];
 
 // ---------------------------------------------------------------------------
-// CHECK_DEFS — the 42 BOUND/INVARIANT checks. `applies`/`bad` are (cfg) => sql
+// CHECK_DEFS — the 42 BOUND/INVARIANT checks (+1 lot_size_stated_vs_geom, WF3 inert 2026-10-01). `applies`/`bad` are (cfg) => sql
 // functions; every literal magnitude a logic variable now governs is read from
 // `cfg[<name>]` via `num()`. `accept` (an array of numeric parcel ids) is
 // descriptor data (Ask A2(a)), spliced verbatim as `id <> ALL(ARRAY[...])`.
@@ -129,13 +130,17 @@ const LOGIC_VAR_DEFS = [
 const CHECK_DEFS = [
   // ---- BOUNDS (zone-aware) ----
   { fam: 'BOUND', id: 'lot_size_out_of_range', sev: 'HIGH', gate: false,
-    why: 'physical (out-of-range lot, any emit state; Option A retired WF3 Phase 1). Bound: parcel_sanity_lot_size_min_sqm / parcel_sanity_lot_size_max_sqm.',
-    applies: () => `lot_size_sqm IS NOT NULL AND feature_type IS DISTINCT FROM 'COMMON' AND feature_type IS DISTINCT FROM 'CONDO'`,
-    bad: (cfg) => `lot_size_sqm < ${num(cfg.parcel_sanity_lot_size_min_sqm, 'parcel_sanity_lot_size_min_sqm')} OR lot_size_sqm > ${num(cfg.parcel_sanity_lot_size_max_sqm, 'parcel_sanity_lot_size_max_sqm')}` },
-  { fam: 'BOUND', id: 'lot_size_out_of_range_common_condo', sev: 'INFO', gate: false,
-    why: 'visibility: COMMON/CONDO out-of-range lots — excluded from the bound by design.',
-    applies: () => `lot_size_sqm IS NOT NULL AND (feature_type = 'COMMON' OR feature_type = 'CONDO')`,
-    bad: (cfg) => `lot_size_sqm < ${num(cfg.parcel_sanity_lot_size_min_sqm, 'parcel_sanity_lot_size_min_sqm')} OR lot_size_sqm > ${num(cfg.parcel_sanity_lot_size_max_sqm, 'parcel_sanity_lot_size_max_sqm')}` },
+    why: 'physical: an out-of-range lot its own polygon does NOT corroborate (WF3 inert 2026-10-01: the former feature_type COMMON/CONDO exclusion covered 100% of parcels — COMMON is an ordinary parcel — so the check was inert; e2baf7b8 D-E 5 intent kept: geometrically-real slivers/parks are excluded by the polygon test, not by category). Bounds: parcel_sanity_lot_size_min_sqm / _max_sqm; tolerance parcel_sanity_lot_geom_tolerance_ratio.',
+    applies: () => `lot_size_sqm IS NOT NULL AND geom IS NOT NULL`,
+    bad: (cfg) => `(lot_size_sqm < ${num(cfg.parcel_sanity_lot_size_min_sqm, 'parcel_sanity_lot_size_min_sqm')} OR lot_size_sqm > ${num(cfg.parcel_sanity_lot_size_max_sqm, 'parcel_sanity_lot_size_max_sqm')}) AND abs(lot_size_sqm - ST_Area(geom::geography)) > ${num(cfg.parcel_sanity_lot_geom_tolerance_ratio, 'parcel_sanity_lot_geom_tolerance_ratio')} * ST_Area(geom::geography)` },
+  { fam: 'BOUND', id: 'lot_size_out_of_range_geom_backed', sev: 'INFO', gate: false,
+    why: 'visibility: out-of-range lots their own polygon corroborates (real slivers / parks) — excluded from the bound by geometry (renamed from _common_condo, WF3 inert 2026-10-01).',
+    applies: () => `lot_size_sqm IS NOT NULL AND geom IS NOT NULL`,
+    bad: (cfg) => `(lot_size_sqm < ${num(cfg.parcel_sanity_lot_size_min_sqm, 'parcel_sanity_lot_size_min_sqm')} OR lot_size_sqm > ${num(cfg.parcel_sanity_lot_size_max_sqm, 'parcel_sanity_lot_size_max_sqm')}) AND abs(lot_size_sqm - ST_Area(geom::geography)) <= ${num(cfg.parcel_sanity_lot_geom_tolerance_ratio, 'parcel_sanity_lot_geom_tolerance_ratio')} * ST_Area(geom::geography)` },
+  { fam: 'BOUND', id: 'lot_size_stated_vs_geom', sev: 'INFO', gate: false,
+    why: 'INFO-first (Spec 48 §3.6): a SOURCE-stated lot that disagrees with its own polygon beyond parcel_sanity_lot_geom_tolerance_ratio (152 residential at 0.25, 2026-10-01; incl. placeholder values like 123456789). Promote to WARN when clean.',
+    applies: () => `lot_size_source = 'stated' AND lot_size_sqm IS NOT NULL AND geom IS NOT NULL`,
+    bad: (cfg) => `abs(lot_size_sqm - ST_Area(geom::geography)) > ${num(cfg.parcel_sanity_lot_geom_tolerance_ratio, 'parcel_sanity_lot_geom_tolerance_ratio')} * ST_Area(geom::geography)` },
   { fam: 'BOUND', id: 'lot_implausible_correctly_excluded', sev: 'INFO', gate: false,
     why: 'visibility: implausible lot -> gated, no cost (not a bug).',
     applies: (cfg) => `lot_size_sqm IS NOT NULL AND (lot_size_sqm < ${num(cfg.parcel_sanity_lot_size_min_sqm, 'parcel_sanity_lot_size_min_sqm')} OR lot_size_sqm > ${num(cfg.parcel_sanity_lot_size_max_sqm, 'parcel_sanity_lot_size_max_sqm')})`,
@@ -165,9 +170,9 @@ const CHECK_DEFS = [
     applies: () => `cost_fb_total IS NOT NULL AND opt_aor_gfa_sqm IS NOT NULL`,
     bad: (cfg) => `opt_aor_gfa_sqm < ${num(cfg.parcel_sanity_priced_newbuild_min_gfa_sqm, 'parcel_sanity_priced_newbuild_min_gfa_sqm')}` },
   { fam: 'BOUND', id: 'max_build_dim_below_floor', sev: 'HIGH', gate: true,
-    why: "D-C clamp: no emitted dim below the viability floor (inert-INFO expected post-fix). Reuses max_build_min_dimension_m (Ask A6(a)) — the same floor enrich-parcels.js's max-build.js clamps to.",
-    applies: (cfg) => `(max_build_width_m IS NOT NULL AND max_build_width_m < ${num(cfg.max_build_min_dimension_m, 'max_build_min_dimension_m')}) OR (max_build_length_m IS NOT NULL AND max_build_length_m < ${num(cfg.max_build_min_dimension_m, 'max_build_min_dimension_m')})`,
-    bad: () => `TRUE` },
+    why: "D-C clamp: no emitted dim below the viability floor (re-scoped WF3 inert 2026-10-01: applies = dims present, so a healthy run is PASS, not inert). Reuses max_build_min_dimension_m (Ask A6(a)) — the same floor enrich-parcels.js's max-build.js clamps to.",
+    applies: () => `max_build_width_m IS NOT NULL OR max_build_length_m IS NOT NULL`,
+    bad: (cfg) => `(max_build_width_m IS NOT NULL AND max_build_width_m < ${num(cfg.max_build_min_dimension_m, 'max_build_min_dimension_m')}) OR (max_build_length_m IS NOT NULL AND max_build_length_m < ${num(cfg.max_build_min_dimension_m, 'max_build_min_dimension_m')})` },
   { fam: 'BOUND', id: 'lowrise_bylaw_fsi_gt_1_5', sev: 'HIGH', gate: false,
     why: 'FSI-borrow bug (RD sliver -> 2.0).',
     applies: () => `(${LOWRISE}) AND bylaw_max_fsi IS NOT NULL`,
