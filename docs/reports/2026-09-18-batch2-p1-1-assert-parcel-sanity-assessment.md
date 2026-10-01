@@ -152,7 +152,7 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 | OBSERVABLE | PASS | PASS |
 | SCALABLE | PASS | PASS |
 | UNDERSTANDABLE | PASS | PASS |
-| ACCURATE | PASS | PASS (3 deferred) |
+| ACCURATE | PASS | PASS (2 deferred) |
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -163,10 +163,10 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 8 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=0 it-count=32 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
+| G7 | 3 | 3 | file=true fences=0 it-count=36 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=32 |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=36 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
@@ -174,10 +174,10 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 | # | Scope | Pass | Detail |
 |---|---|---|---|
 | 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=245 |
-| 2 | assert_parcel_sanity | PASS | 37 declared, missing from seeds: none |
+| 2 | assert_parcel_sanity | PASS | 38 declared, missing from seeds: none |
 | 3 | assert_parcel_sanity | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_parcel_sanity | PASS | SPEC LINK header present=true |
-| 8 | assert_parcel_sanity | PASS | G-4: 37 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | assert_parcel_sanity | PASS | G-4: 38 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 20 | assert_parcel_sanity | PASS | HB-1: execution.shape=null — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 21 | assert_parcel_sanity | PASS | CEIL-1: execution.shape=null — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
@@ -209,17 +209,16 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 573 · unexplained: 0
+- compare ran: true · diffs found: 555 · unexplained: 0
 
 ### Test suite (item iii)
-- 1825/1828 passed (suite success=false)
+- 1834/1836 passed (suite success=false)
 - harvested: 36 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (3):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-wsib.js (slug "load_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/pct-checks-evaluate.logic.test.ts > class lock — every pct-bounded check reports a value, never a flag > no pct-bounded check reports violations() instead of value()
+- failing (2):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -227,7 +226,7 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 37 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 3 | Tunables externalized | enforced-green | G-4: 38 declared, 0 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 4 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -238,7 +237,7 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=77312B notes=0B checks=45 rows records_meta=9880B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=78869B notes=0B checks=46 rows records_meta=10119B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 
