@@ -509,3 +509,64 @@ describe('sql-witness harness — the catalog may be passed in, and canary 9 (co
     expect(arg).toEqual({ tables: ['x'], source: 'arg' });
   });
 });
+
+describe('sql-witness harness — structural lock (P1-C3b5): only run 1 is traced', () => {
+  // SPEC LINK: .cursor/wf2_registry_truth_active_task.md PHASE 1 item 1 "Scope".
+  // The two-run zero-writes proof (`runRerunProof`) must be a RERUN, not a second
+  // trace: tracing run 2 would (a) double the trace cost on the largest steps,
+  // (b) overwrite/duplicate run-1 statements in the assembled doc, and (c) make the
+  // differential depend on the rerun harness rather than on the step. This block
+  // locks that structurally, by reading the harness SOURCE as text — no import, no
+  // DB, no spawn.
+
+  const HARNESS_SRC_PATH = path.join(process.cwd(), 'scripts/analysis/capture-step-golden.js');
+
+  // Slice one function body out of the source: from the declaration token to the next
+  // top-level `async function` / `function` (or EOF, for the last one). The declaration
+  // token itself is excluded, so an occurrence inside a DIFFERENT function's body is
+  // never attributed to this one.
+  function functionBody(src: string, declaration: string): string {
+    const start = src.indexOf(declaration);
+    expect(start, `declaration ${JSON.stringify(declaration)} not found in the harness source`).toBeGreaterThanOrEqual(0);
+    const rest = src.slice(start + declaration.length);
+    const nextDecl = [(rest.indexOf('\nasync function ')), (rest.indexOf('\nfunction '))].filter((i) => i >= 0);
+    const end = nextDecl.length === 0 ? rest.length : Math.min(...nextDecl);
+    return rest.slice(0, end);
+  }
+
+  let SRC = '';
+  beforeAll(() => {
+    SRC = fs.readFileSync(HARNESS_SRC_PATH, 'utf8');
+  });
+
+  it('RED: run 2 is NEVER traced — runRerunProof carries no traceEnv/BUILDO_SQL_TRACE/NODE_OPTIONS', () => {
+    const body = functionBody(SRC, 'async function runRerunProof(');
+
+    expect(body).not.toContain('traceEnv');
+    expect(body).not.toContain('BUILDO_SQL_TRACE');
+    expect(body).not.toContain('NODE_OPTIONS');
+    // …and it DOES spawn the child, so this is a live assertion about a real rerun
+    // rather than a vacuously-empty slice.
+    expect(body).toContain('spawnStep(');
+  });
+
+  it('RED: capture() traces exactly once, and the traced env is the one handed to run 1', () => {
+    const body = functionBody(SRC, 'async function capture(');
+
+    expect(body.split('witness.traceEnv(').length - 1).toBe(1);
+    expect(body).toContain('const runEnv = traceDir ? witness.traceEnv(env, traceDir) : env;');
+    // Run 1's spawn is the one that receives runEnv — the run-2 spawn in
+    // runRerunProof passes plain `env` (locked above by the absence assertion).
+    expect(body).toContain('spawnStep({ scriptPath: step, args, env: runEnv })');
+  });
+
+  it('RED: canary 15 wiring and the --trace-only escape hatch are both present', () => {
+    expect(SRC).toContain('witness.dsmGuard(');
+    expect(SRC).toContain('--trace-only');
+  });
+
+  it('GREEN control: the same slicing helper DOES find traceEnv in capture() (proves the slicer is live)', () => {
+    expect(functionBody(SRC, 'async function capture(')).toContain('traceEnv');
+    expect(functionBody(SRC, 'async function runRerunProof(')).not.toContain('traceEnv');
+  });
+});
