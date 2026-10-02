@@ -115,6 +115,18 @@
     {
       "key": "summary.records_meta.checks_warned",
       "why": "Runner meta key: the row-derived warned-check count the library stamps (0)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "③ recapture 2026-10-01 (operator ruling WS-D10 moved the descriptor, so both POST goldens were recaptured). The ② natural forced change (47,040 WS-D5 stale is_gta rows) was consumed by the 09-30 load, so each ③ arm used a synthetic reversible perturbation instead: is_gta flipped on a deterministic 2,000-row cohort (last_seen_at = max, md5 order), backup _wsib_isgta_bak_20261001; the loader re-derived all 2,000 (verify: 0 rows differ from backup after each arm) and table_state returned to 9d0c2316 — byte-identical to the ② hash. So the counter is 2000, not 47040; the table content is unchanged."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "③ recapture 2026-10-01 (operator ruling WS-D10 moved the descriptor, so both POST goldens were recaptured). The ② natural forced change (47,040 WS-D5 stale is_gta rows) was consumed by the 09-30 load, so each ③ arm used a synthetic reversible perturbation instead: is_gta flipped on a deterministic 2,000-row cohort (last_seen_at = max, md5 order), backup _wsib_isgta_bak_20261001; the loader re-derived all 2,000 (verify: 0 rows differ from backup after each arm) and table_state returned to 9d0c2316 — byte-identical to the ② hash. So the counter is 2000, not 47040; the table content is unchanged."
+    },
+    {
+      "key": "pipeline_runs[].records_total",
+      "why": "Standalone only. ③ recapture 2026-10-01 (operator ruling WS-D10 moved the descriptor, so both POST goldens were recaptured). The ② natural forced change (47,040 WS-D5 stale is_gta rows) was consumed by the 09-30 load, so each ③ arm used a synthetic reversible perturbation instead: is_gta flipped on a deterministic 2,000-row cohort (last_seen_at = max, md5 order), backup _wsib_isgta_bak_20261001; the loader re-derived all 2,000 (verify: 0 rows differ from backup after each arm) and table_state returned to 9d0c2316 — byte-identical to the ② hash. So the counter is 2000, not 47040; the table content is unchanged."
     }
   ]
 }
