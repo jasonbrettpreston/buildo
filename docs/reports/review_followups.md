@@ -4175,3 +4175,11 @@ Root-caused with a temporary debug probe (added and reverted in this session, no
 | MED | **Dead column `parcels.realized_fsi_p90`** — NULL on all 496,510 rows, no writer in scripts/ (read-through only: compute-parcel-cost-estimates.js:150, parcel-cost.js:377 "NULL in P1 — P2 populates"). `assert_parcel_sanity.realized_fsi_p90_out_of_range` reports it as inert-INFO every run (the visible signal; same class as `parcels.on_policy_road`). Populate or retire. | Spec 88 / Spec 78 owner |
 | LOW | **`lot_size_source` ⇔ lot coupling** — 2 parcels violate (1 lot with NULL source; 1 'stated' with NULL lot from raw '0 sq.m'); outside assert_parcel_sanity's residential scope, so not checked there. Route a load_parcels check if it grows. | load_parcels owner |
 | LOW | **Dead-flag detection is blind outside assert_parcel_sanity** — no other converted compute reports a check's population, so a check whose population is silently empty renders a clean PASS and cannot be found from audit rows (WF3 inert lot bound fleet sweep, chain run 2201). Candidate R-BA closed answer: every bound/invariant check reports its population. | Spec 124 / registry-truth |
+
+## 2026-10-02 — WF3 witness-unblock (C1–C3) — declared follow-ups, owner registry-truth slice B
+
+| Sev | Finding | Fix owner |
+|---|---|---|
+| MED | **Gate #44 PRODUCER is whole-text** (`scripts/analysis/gates/witness.mjs` producerRows): a `completed_with_warnings` token anywhere in a text exempts every `status = 'completed'` predicate in it, across statements and CTEs. `source-version.js`'s ledger-gate upstream FILTER (`p.status = 'completed'`, fail-safe by design) passes #44 only because the own-last IN-list in the same text carries the token; R8's negative control proves the dependency. Fix: evaluate PRODUCER per predicate on the parsed AST. | registry-truth slice B |
+| MED | **PRODUCER misses `status IN ('completed')`** — the regex only matches `status = 'completed'`, so an IN-list with the single literal evades it. Fix with the per-predicate AST check above. | registry-truth slice B |
+| LOW | **`SELECT … INTO TEMP` is unhandled by the resolver** — it resolves as a read of the new name; 0 uses in scripts/ today (all temps are `CREATE TEMP TABLE`). | registry-truth slice B |

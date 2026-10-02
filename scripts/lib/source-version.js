@@ -129,7 +129,7 @@ const STYLE_CKAN_METADATA = 'ckan-metadata';
 // 1. Prior-run reader (producer self-history; started_at DESC — see header)
 // ---------------------------------------------------------------------------
 /**
- * Latest completed run's records_meta for a pipeline slug, or null when none
+ * Latest completed (or completed_with_warnings, minus a skip_write preserve-and-WARN run — WF3 C3) run's records_meta for a pipeline slug, or null when none
  * exists (or the row carries no records_meta). Throws on query errors — callers
  * decide whether "reader failed" degrades to "no baseline" (they typically
  * .catch() → warn → null, which classifyOutcome treats as fail-safe LOAD).
@@ -137,7 +137,8 @@ const STYLE_CKAN_METADATA = 'ckan-metadata';
 async function readPriorRunMeta(pool, pipelineName) {
   const res = await pool.query(
     `SELECT records_meta FROM pipeline_runs
-      WHERE pipeline = $1 AND status = 'completed'
+      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')
+        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
       ORDER BY started_at DESC LIMIT 1`,
     [pipelineName],
   );
@@ -306,12 +307,20 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
     throw new Error('[source-version] runLedgerGateDecision requires a non-empty upstreamSlugs array (T2: slug sets are always parameters)');
   }
 
+  // WF3 witness-unblock C3 / O-6: own_last admits a warned completion (minus a skip_write
+  // preserve-and-WARN run, O-8(a)), but the two upstream_since FILTERs below stay on the
+  // bare 'completed' literal ON PURPOSE. They count upstream ACTIVITY, not a baseline: a
+  // warned upstream row counts as non-completed, so the gate RUNs — the fail-safe direction
+  // (E-R2). Widening them was measured (2026-10-01) to flip compute_centroids and
+  // link_parcel_addresses from RUN to SKIP today. Keep this note out of the SQL text: a
+  // status token inside the query would itself satisfy gate #44's PRODUCER pattern.
   const res = await pool.query(
     `WITH own_last AS (
        SELECT started_at, completed_at, records_meta
          FROM pipeline_runs
         WHERE pipeline = ANY($1::text[])
-          AND status = 'completed'
+          AND status IN ('completed', 'completed_with_warnings')
+          AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
         ORDER BY completed_at DESC
         LIMIT 1
      ),
