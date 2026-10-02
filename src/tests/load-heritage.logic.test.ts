@@ -1,11 +1,20 @@
 /**
  * SPEC LINK: docs/specs/01-pipeline/61_source_heritage_properties.md (§8c, §3, §12)
- * Pure-helper unit tests for scripts/load-heritage.js (Spec 61 §8c load path).
+ * Pure-helper unit tests for load_heritage (Spec 61 §8c load path).
+ *
+ * RE-HOMED at batch-2 row 3.4 ② (2026-09-30): the step file is the frozen shell, so the
+ * helpers are asserted at scripts/lib/compute/load-heritage.js, skipCheckDecision at
+ * scripts/lib/step/staleness.js (the library's tier-1 gate, `prior` = the dataset's own
+ * sub-block) and the cascade at scripts/lib/step/verdict.js deriveVerdict. Assertions unchanged.
  */
 import { describe, it, expect } from 'vitest';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const heritage = require('../../scripts/load-heritage.js');
+const heritage = require('../../scripts/lib/compute/load-heritage.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const staleness = require('../../scripts/lib/step/staleness.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const verdict = require('../../scripts/lib/step/verdict.js');
 
 describe('load-heritage — drift math (L7/L7b/L7c)', () => {
   it('computeCountDeltaPct: first run / null prior → 0 (no drift)', () => {
@@ -84,30 +93,30 @@ describe('load-heritage — validation classifier + verdict cascade', () => {
     expect(heritage.validatorCounterDelta('collection_extracted', false)).toEqual({ repaired: 1, collectionExtracted: 1, skipped: 0, carry: true });
     expect(heritage.validatorCounterDelta('skipped_null', true)).toEqual({ repaired: 0, collectionExtracted: 0, skipped: 1, carry: false });
   });
-  it('verdictCascade: row-derived FAIL > WARN > PASS (never parallel boolean)', () => {
-    expect(heritage.verdictCascade([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
-    expect(heritage.verdictCascade([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
-    expect(heritage.verdictCascade([{ status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
-    expect(heritage.verdictCascade([{ status: 'INFO' }])).toBe('PASS'); // INFO is cascade-neutral
+  it('deriveVerdict: row-derived FAIL > WARN > PASS (never parallel boolean; retired here from verdictCascade)', () => {
+    expect(verdict.deriveVerdict([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
+    expect(verdict.deriveVerdict([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
+    expect(verdict.deriveVerdict([{ status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
+    expect(verdict.deriveVerdict([{ status: 'INFO' }])).toBe('PASS'); // INFO is cascade-neutral
   });
 });
 
 describe('load-heritage — per-dataset skip-check (DEC-K)', () => {
   it('no prior sub-block → cannot skip (first-run guard)', () => {
-    expect(heritage.skipCheckDecision({ lastModified: 'x', priorSub: null })).toEqual({ skip: false, reason: 'no_prior_run' });
+    expect(staleness.skipCheckDecision({ lastModified: 'x', prior: null })).toEqual({ skip: false, reason: 'no_prior_run' });
   });
   it('no validators → proceed', () => {
-    expect(heritage.skipCheckDecision({ lastModified: null, etag: null, priorSub: { last_modified: 'x' } }))
+    expect(staleness.skipCheckDecision({ lastModified: null, etag: null, prior: { last_modified: 'x' } }))
       .toEqual({ skip: false, reason: 'no_validators' });
   });
   it('matching last_modified → skip; changed → proceed', () => {
     const priorSub = { last_modified: 'Thu, 21 May 2026 19:34:35 GMT', etag: '"abc"', content_hash: 'h1' };
-    expect(heritage.skipCheckDecision({ lastModified: 'Thu, 21 May 2026 19:34:35 GMT', priorSub }).skip).toBe(true);
-    expect(heritage.skipCheckDecision({ lastModified: 'Fri, 22 May 2026 00:00:00 GMT', priorSub }).skip).toBe(false);
+    expect(staleness.skipCheckDecision({ lastModified: 'Thu, 21 May 2026 19:34:35 GMT', prior: priorSub }).skip).toBe(true);
+    expect(staleness.skipCheckDecision({ lastModified: 'Fri, 22 May 2026 00:00:00 GMT', prior: priorSub }).skip).toBe(false);
   });
   it('etag fallback when last_modified absent', () => {
     const priorSub = { last_modified: null, etag: '"abc"', content_hash: null };
-    expect(heritage.skipCheckDecision({ etag: '"abc"', priorSub }).skip).toBe(true);
+    expect(staleness.skipCheckDecision({ etag: '"abc"', prior: priorSub }).skip).toBe(true);
   });
 });
 

@@ -5297,6 +5297,76 @@
       "group": "WSIB Registry"
     }
   },
+  "load_heritage_dataset_age_warn_years": {
+    "default": 2,
+    "type": "number",
+    "min": 1,
+    "max": 200,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — L9: how many Julian years the OLDER of the two heritage CKAN datasets (register, districts) may sit unchanged upstream before heritage_dataset_age_years escalates from PASS to WARN. 2 = the pre-externalization Zod literal (heritageSkipCheckThresholdYears, scripts/load-heritage.js:52 at 1bc3ffab). It moves a WARN, never a write. on_invalid fail (gate B). CONSUMED by load_heritage (scripts/lib/compute/load-heritage.js heritage_dataset_age_years, via checks[].limit_from_config value_max).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_count_drift_fail_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — L7 feature-count drift bound per dataset: |loaded - prior| / prior above this FAILs at pre_write and that dataset is not written (DEC-K: the other still loads). 0.5 = the pre-externalization Zod literal (heritageAcceptFeatureCountDriftPct). HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT=1 lets the write proceed and never suppresses the FAIL row. on_invalid fail. CONSUMED by load_heritage (heritage_count_drift_pct, via checks[].limit_from_config; also the §9 drift_check_passed field).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_invalid_geometry_fail_pct": {
+    "default": 0.05,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — L8 bound per dataset: features dropped by geometry validation / feature_count above this FAILs at pre_write, before the dataset transaction opens. 0.05 = the pre-externalization Zod literal (heritageInvalidGeometryFailPct). No override. on_invalid fail. CONSUMED by load_heritage (heritage_geometry_skipped_pct, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_mass_delete_fail_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — L7c bound per dataset: departed rows / prior feature_count above this FAILs (scored after the commit, LH-D1 PIN until ④c). 0.5 = the pre-externalization Zod literal (heritageMassDeletePct). HERITAGE_ACCEPT_MASS_DELETE=1 lets the run complete and never suppresses the FAIL row. on_invalid fail. CONSUMED by load_heritage (heritage_mass_delete_pct, via checks[].limit_from_config; also the §9 mass_delete_check_passed field).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_geometry_update_warn_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — L7b bound per dataset: updated rows / prior feature_count above this WARNs (never halts). 0.5 = the pre-externalization Zod literal (heritageDriftGeometryUpdatePct). With LH-D2 (version stamp in the guard) a new CKAN version reads ~1 WARN. on_invalid fail. CONSUMED by load_heritage (heritage_geometry_update_pct, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_download_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 600000,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — AbortController budget for each heritage CKAN call the acquisition seam makes (HEAD + streamed ZIP GET, both datasets). 60000 = the pre-externalization Zod literal (heritageDownloadTimeoutMs) and the descriptor fallback execution.network.timeout. on_invalid fail. CONSUMED by load_heritage (scripts/lib/step/acquire.js, via execution.network.timeout_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_heritage_round_scale": {
+    "default": 1000,
+    "type": "number",
+    "min": 1,
+    "max": 1000000,
+    "description": "Spec 124 Rule 3 (row 3.4, INGESTOR) — display rounding scale of the ratio values in the heritage audit rows and §9 block (Math.round(x * scale) / scale). 1000 = the pre-externalization round3 literal (scripts/load-heritage.js:245-247); the load_centreline_round_scale precedent. Never compared against a bound. on_invalid fail. CONSUMED by load_heritage (scripts/lib/compute/load-heritage.js round3, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "load_centreline_download_retry_backoff_ms": {
     "default": 0,
     "type": "number",

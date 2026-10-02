@@ -1,0 +1,345 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-heritage.js",
+  "chain": "sources",
+  "source_fingerprint": "e51645016bfa366391f043efd8b81ce55d888326e97a145122e86be32e2b61df",
+  "git_head": "721035a35f29ef4c2640c879f62626ec63862900",
+  "header": {
+    "processes": 1,
+    "calls": 32,
+    "distinct": 18,
+    "utility": 11,
+    "tracer_self_ms": 217.054,
+    "wall_ms": 110627
+  },
+  "statements": [
+    {
+      "fingerprint": "319ea3ece49da25b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_properties": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "36792c4b7d22fd4c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 29,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "37c2010a3787397a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_districts": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 6,
+      "rowCount": 6,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_heritage"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9184be8b14cc7f3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8848,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 644,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c13c44447ade545e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 3,
+      "reads": {
+        "heritage_districts": [
+          "designated_date",
+          "geom",
+          "name",
+          "source_dataset_version"
+        ]
+      },
+      "writes": {
+        "heritage_districts": [
+          "bylaw_no",
+          "designated_date",
+          "geom",
+          "hcd_type",
+          "name",
+          "source_dataset_version",
+          "source_id",
+          "updated_at",
+          "wards"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 4,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ede7ab7788a9e3e9",
+      "kind": "write",
+      "count": 2,
+      "rowCount": 10,
+      "reads": {
+        "heritage_properties": [
+          "address_text",
+          "designated_date",
+          "geom",
+          "source_dataset_version",
+          "status"
+        ]
+      },
+      "writes": {
+        "heritage_properties": [
+          "address_text",
+          "building_type",
+          "bylaw_no",
+          "construction_year",
+          "designated_date",
+          "geom",
+          "htg_conser_name",
+          "reason",
+          "source_dataset_version",
+          "source_id",
+          "status",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "3412:3",
+      "write_fingerprints": [
+        "319ea3ece49da25b",
+        "ede7ab7788a9e3e9"
+      ]
+    },
+    {
+      "client": "3412:4",
+      "write_fingerprints": [
+        "37c2010a3787397a",
+        "c13c44447ade545e"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    },
+    "writes": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    }
+  },
+  "errors": []
+}

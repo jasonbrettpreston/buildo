@@ -1,130 +1,134 @@
 /**
  * SPEC LINK: docs/specs/01-pipeline/61_source_heritage_properties.md (§8c, §9, §12)
- * Source-structure (infra) locks for scripts/load-heritage.js + its wiring —
+ * Source-structure (infra) locks for the converted load_heritage step + its wiring —
  * pins the Spec 61 §8c decisions (DEC-A/C/D/I/K/M) against silent regressions.
+ *
+ * RE-POINTED at batch-2 row 3.4 ② (2026-09-30): the 808-line loader is now the frozen
+ * shell scripts/load-heritage.js + scripts/load-heritage.descriptor.json (declared data)
+ * + scripts/lib/compute/load-heritage.js (domain logic). Each lock below asserts the SAME
+ * fact against its new home; none is dropped.
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const root = join(__dirname, '..', '..');
-const src = () => readFileSync(join(root, 'scripts', 'load-heritage.js'), 'utf8');
+const read = (...p: string[]) => readFileSync(join(root, ...p), 'utf8');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const descriptor = require('../../scripts/load-heritage.descriptor.json');
+const shell = () => read('scripts', 'load-heritage.js');
+const computeSrc = () => read('scripts', 'lib', 'compute', 'load-heritage.js');
+const checkIds = (): string[] => descriptor.checks.map((c: { id: string }) => c.id);
 
-describe('load-heritage.js — advisory lock + slug + version (DEC-A/C/D)', () => {
-  let content: string;
-  beforeAll(() => { content = src(); });
-
-  it('uses ADVISORY_LOCK_ID = 61 (spec-number convention, NOT spec L4=62)', () => {
-    expect(content).toMatch(/ADVISORY_LOCK_ID\s*=\s*61\b/);
-    expect(content).not.toMatch(/ADVISORY_LOCK_ID\s*=\s*62\b/);
+describe('load_heritage — advisory lock + slug + version (DEC-A/C/D)', () => {
+  it('lock 61 (spec-number convention, NOT spec L4=62): shell constant + descriptor identity agree', () => {
+    expect(shell()).toMatch(/ADVISORY_LOCK_ID\s*=\s*61\b/);
+    expect(shell()).not.toMatch(/ADVISORY_LOCK_ID\s*=\s*62\b/);
+    expect(descriptor.identity.lock).toBe(61);
   });
-  it('pipeline.run slug + cross-run name are load_heritage / sources:load_heritage (DEC-C, pre-empts #409)', () => {
-    expect(content).toMatch(/pipeline\.run\('load-heritage'/);
-    expect(content).toMatch(/PIPELINE_NAME\s*=\s*'sources:load_heritage'/);
-    // The spec's stale 'source-heritage' must NOT be used as the pipeline slug / cross-run name
-    // (it legitimately remains the loadMarketplaceConfigs namespace key, as load-ravines uses 'source-ravines').
-    expect(content).not.toMatch(/pipeline\.run\('source-heritage'/);
-    expect(content).not.toMatch(/PIPELINE_NAME\s*=\s*'source-heritage'/);
+  it('slug is load_heritage; the sources chain ledger name is sources:load_heritage (DEC-C, pre-empts #409)', () => {
+    expect(descriptor.identity.name).toBe('load_heritage');
+    expect(Object.keys(descriptor.execution.invocation)).toEqual(['sources']);
+    expect(descriptor.identity.name).not.toBe('source-heritage');
   });
-  it('SPEC_VERSION = 1.1 (consumer §8d L23 pins on it; NOT the §3.1 stale 1.0)', () => {
-    expect(content).toMatch(/SPEC_VERSION\s*=\s*'1\.1'/);
+  it('spec_version 1.1 (consumer §8d L23 pins on it; NOT the §3.1 stale 1.0)', () => {
+    expect(descriptor.identity.spec_version).toBe('1.1');
+    expect(descriptor.emits[0].skeleton.spec_version).toBe('1.1');
   });
-  it('audit_table phase = ADVISORY_LOCK_ID (61), not a hardcoded 60', () => {
-    expect(content).toMatch(/phase:\s*ADVISORY_LOCK_ID/);
-    expect(content).not.toMatch(/phase:\s*60\b/);
+  it('audit_table phase = the lock (61), not a hardcoded 60', () => {
+    expect(descriptor.sharing.varies_by_chain.phase).toEqual({ sources: 61 });
   });
 });
 
-describe('load-heritage.js — frozen records_meta + counters (DEC-D)', () => {
-  let content: string;
-  beforeAll(() => { content = src(); });
-
+describe('load_heritage — frozen records_meta + counters (DEC-D)', () => {
+  const reg = descriptor.emits[0].skeleton.heritage_register;
+  const hcd = descriptor.emits[0].skeleton.heritage_districts;
   it('uses features_* counter names (H-v1.1.3), never polygons_*', () => {
-    expect(content).toMatch(/features_inserted/);
-    expect(content).toMatch(/features_updated/);
-    expect(content).toMatch(/features_deleted/);
-    expect(content).not.toMatch(/polygons_(inserted|updated|deleted)/);
+    for (const sub of [reg, hcd]) {
+      expect(Object.keys(sub)).toEqual(expect.arrayContaining(['features_inserted', 'features_updated', 'features_deleted']));
+    }
+    expect(JSON.stringify(descriptor.emits)).not.toMatch(/polygons_(inserted|updated|deleted)/);
+    expect(computeSrc()).not.toMatch(/polygons_(inserted|updated|deleted)/);
   });
-  it('records_total/new/updated sourced from combined feature/inserted/updated counts', () => {
-    expect(content).toMatch(/records_total:\s*featureCountCombined/);
-    expect(content).toMatch(/records_new:\s*insertedCombined/);
-    expect(content).toMatch(/records_updated:\s*updatedCombined/);
+  it('records_total/new/updated are the combined feature / inserted / updated counts', () => {
+    expect(descriptor.counters.records_total.source).toBe(
+      'records_meta.heritage_load.heritage_register.feature_count + records_meta.heritage_load.heritage_districts.feature_count',
+    );
+    expect(descriptor.counters.records_new.source).toBe('written.inserted');
+    expect(descriptor.counters.records_updated.source).toBe('written.updated');
   });
-  it('heritage_load has per-dataset sub-blocks with the §9 frozen field names (specSub rename)', () => {
-    expect(content).toMatch(/heritage_register:\s*specSub\(reg\.sub,\s*'filtered_out_listed',\s*'unknown_status_count'\)/);
-    expect(content).toMatch(/heritage_districts:\s*specSub\(hcd\.sub,\s*'filtered_out_appeal_study',\s*'unknown_hcd_type_count'\)/);
+  it('heritage_load has per-dataset sub-blocks with the §9 frozen field names (the specSub rename)', () => {
+    expect(Object.keys(reg)).toEqual(expect.arrayContaining(['filtered_out_listed', 'unknown_status_count']));
+    expect(Object.keys(hcd)).toEqual(expect.arrayContaining(['filtered_out_appeal_study', 'unknown_hcd_type_count']));
+    expect(descriptor.inputs.reads.externals.map((e: { id: string }) => e.id)).toEqual(['heritage_register', 'heritage_districts']);
   });
 });
 
-describe('load-heritage.js — audit rows (DEC-I: 10 load-side, no enrich-side; unknown_* WARN)', () => {
-  let content: string;
-  beforeAll(() => { content = src(); });
-
-  it('emits the named LOAD-side rows', () => {
+describe('load_heritage — audit rows (DEC-I: load-side only; unknown_* WARN)', () => {
+  const byId = (id: string) => descriptor.checks.find((c: { id: string }) => c.id === id);
+  it('declares the named LOAD-side rows', () => {
     for (const m of [
       'heritage_register_feature_count', 'heritage_districts_feature_count', 'heritage_filtered_listed_pct',
       'heritage_geometry_skipped_pct', 'heritage_count_drift_pct', 'heritage_mass_delete_pct',
       'heritage_geometry_update_pct', 'heritage_dataset_age_years',
     ]) {
-      expect(content).toContain(`'${m}'`);
+      expect(checkIds()).toContain(m);
     }
   });
-  it('does NOT emit the enrich-side rows (heritage_points_no_parcel_match / permit_type_heritage_disagreement)', () => {
-    expect(content).not.toMatch(/heritage_points_no_parcel_match/);
-    expect(content).not.toMatch(/permit_type_heritage_disagreement/);
+  it('does NOT declare the enrich-side rows (heritage_points_no_parcel_match / permit_type_heritage_disagreement)', () => {
+    expect(checkIds()).not.toContain('heritage_points_no_parcel_match');
+    expect(checkIds()).not.toContain('permit_type_heritage_disagreement');
   });
-  it('unknown_status_count + unknown_hcd_type_count are pushed to audit rows as WARN>0 (reach the cascade)', () => {
-    expect(content).toMatch(/push\('heritage_unknown_status_count',[\s\S]*?'WARN'\s*:\s*'INFO'\)/);
-    expect(content).toMatch(/push\('heritage_unknown_hcd_type_count',[\s\S]*?'WARN'\s*:\s*'INFO'\)/);
+  it('unknown_status_count + unknown_hcd_type_count are WARN rows (reach the cascade)', () => {
+    expect(byId('heritage_unknown_status_count').severity).toBe('WARN');
+    expect(byId('heritage_unknown_hcd_type_count').severity).toBe('WARN');
   });
-  it('heritage_address_coerced_empty_count emitted WARN>0 (DEC-M)', () => {
-    expect(content).toMatch(/push\('heritage_address_coerced_empty_count',[\s\S]*?'WARN'\s*:\s*'INFO'\)/);
+  it('heritage_address_coerced_empty_count is a WARN row (DEC-M)', () => {
+    expect(byId('heritage_address_coerced_empty_count').severity).toBe('WARN');
   });
-  it('duplicate-source-id WARN rows emitted per dataset (review fold)', () => {
-    expect(content).toMatch(/push\('heritage_register_duplicate_source_id_count',\s*reg\.duplicateCount,\s*'WARN'\)/);
-    expect(content).toMatch(/push\('heritage_districts_duplicate_source_id_count',\s*hcd\.duplicateCount,\s*'WARN'\)/);
+  it('duplicate-source-id WARN rows per dataset (review fold)', () => {
+    expect(byId('heritage_register_duplicate_source_id_count').severity).toBe('WARN');
+    expect(byId('heritage_districts_duplicate_source_id_count').severity).toBe('WARN');
   });
-  it('L14 first-run zero-feature guard returns failed (review fold)', () => {
-    expect(content).toMatch(/!priorSub && featureCount === 0/);
-    expect(content).toMatch(/zero_features_first_run/);
+  it('L14 first-run zero-feature guard is a pre_write FAIL (review fold)', () => {
+    expect(byId('heritage_zero_features_first_run')).toMatchObject({ severity: 'FAIL', when: 'pre_write' });
   });
-  it('skip branch re-pins spec_version: SPEC_VERSION after the prior spread (DEC-K / load-ravines BUG-2)', () => {
-    expect(content).toMatch(/\.\.\.\(priorSub \|\| \{\}\),\s*spec_version:\s*SPEC_VERSION/);
+  it('a skip re-pins spec_version after the prior spread (DEC-K / load-ravines BUG-2)', () => {
+    expect(computeSrc()).toMatch(/\.\.\.\(lane\.prior \|\| \{\}\), spec_version: SPEC_VERSION/);
   });
-  it('count-drift + mass-delete FAIL status is threshold-derived (override never suppresses)', () => {
-    expect(content).toMatch(/heritage_count_drift_pct',[\s\S]*?heritageAcceptFeatureCountDriftPct[\s\S]*?'FAIL'\s*:\s*'INFO'/);
-    expect(content).toMatch(/heritage_mass_delete_pct',[\s\S]*?heritageMassDeletePct[\s\S]*?'FAIL'\s*:\s*'INFO'/);
+  it('count-drift + mass-delete FAIL is threshold-derived (config-bound; the override never suppresses)', () => {
+    expect(byId('heritage_count_drift_pct')).toMatchObject({ severity: 'FAIL', limit_from_config: 'load_heritage_count_drift_fail_pct' });
+    expect(byId('heritage_mass_delete_pct')).toMatchObject({ severity: 'FAIL', limit_from_config: 'load_heritage_mass_delete_fail_pct' });
   });
 });
 
-describe('load-heritage.js — geometry + null-safety (DEC-E/M)', () => {
-  let content: string;
-  beforeAll(() => { content = src(); });
-
-  it('inlines §3.5 validation SQL (not geometry-validator.js)', () => {
-    expect(content).toMatch(/POINT_VALIDATION_SQL/);
-    expect(content).toMatch(/POLYGON_VALIDATION_SQL/);
-    expect(content).not.toMatch(/require\([^)]*geometry-validator/);
+describe('load_heritage — geometry + null-safety (DEC-E/M)', () => {
+  const write = (t: string) => descriptor.outputs.writes.find((w: { table: string }) => w.table === t);
+  it('validation is the library point / polygon arms (not geometry-validator.js)', () => {
+    expect(write('heritage_properties').geometry_kind).toBe('point');
+    expect(write('heritage_districts').geometry_kind).toBe('polygon');
+    expect(computeSrc()).not.toMatch(/require\([^)]*geometry-validator/);
+    expect(shell()).not.toMatch(/require\([^)]*geometry-validator/);
   });
-  it('HCD polygons cast via ST_Multi + collection-extract', () => {
-    expect(content).toMatch(/ST_Multi\(COALESCE\(ST_CollectionExtract/);
+  it('both datasets are CKAN externals (the emitMeta CKAN external, now declared data)', () => {
+    for (const e of descriptor.inputs.reads.externals) {
+      expect(e.url).toMatch(/^https:\/\/ckan0\.cf\.opendata\.inter\.prod-toronto\.ca\//);
+    }
+    expect(descriptor.execution.network.egress).toEqual(['ckan0.cf.opendata.inter.prod-toronto.ca']);
   });
-  it('emitMeta passes the CKAN external 3rd arg', () => {
-    expect(content).toMatch(/emitMeta\([\s\S]*\['CKAN'\]\s*,?\s*\)/);
-  });
-  it('uses global fetch (Node built-in), not node-fetch', () => {
-    expect(content).not.toMatch(/require\(['"]node-fetch['"]\)/);
-    expect(content).toMatch(/await fetch\(/);
+  it('the compute reaches no network (fetch is the library acquisition seam)', () => {
+    expect(computeSrc()).not.toMatch(/\bfetch\(/);
+    expect(computeSrc()).not.toMatch(/require\(['"]node-fetch['"]\)/);
   });
   it('#426: register source_id keyed on Folder_Row, NOT the dropped OBJECTID', () => {
-    expect(content).toMatch(/coerceSourceId\(p\.Folder_Row\)/);
-    expect(content).not.toMatch(/coerceSourceId\(p\.OBJECTID\)/);
+    expect(descriptor.inputs.reads.externals[0].key_property).toBe('Folder_Row');
+    expect(descriptor.inputs.reads.externals[0].key_property).not.toBe('OBJECTID');
   });
 });
 
 describe('migration 170 + manifest wiring', () => {
   it('migration 170 creates both tables, the function + extension; bylaw_no/designated_date nullable', () => {
-    const mig = readFileSync(join(root, 'migrations', '170_create_heritage_tables.sql'), 'utf8');
+    const mig = read('migrations', '170_create_heritage_tables.sql');
     expect(mig).toMatch(/CREATE EXTENSION IF NOT EXISTS fuzzystrmatch/);
     expect(mig).toMatch(/CREATE OR REPLACE FUNCTION normalize_address/);
     expect(mig).toMatch(/CREATE TABLE IF NOT EXISTS heritage_properties/);

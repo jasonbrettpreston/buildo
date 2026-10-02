@@ -1,0 +1,202 @@
+{
+  "_why": "Legacy-oracle input for src/tests/steps/load_heritage/violations.test.ts, one row per L25/key/dedupe/sentinel branch.",
+  "heritage_register": [
+    {
+      "properties": {
+        "Folder_Row": "101",
+        "STATUS": "Part IV",
+        "DESIGNATED": "1990-05-01",
+        "ADDRESS": "1 A ST",
+        "CONSTRUCTI": "1900",
+        "BYLAW_NO": "B1",
+        "HTG_CONSER": "H1",
+        "BUILDING_T": "House",
+        "REASON": "R1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.4, 43.7]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "102",
+        "STATUS": "part v ",
+        "DESIGNATED": "1899-11-30",
+        "ADDRESS": "  "
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400001, 43.700001]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "103",
+        "STATUS": "PART IV",
+        "ADDRESS": "3 C ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400002, 43.700002]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "104",
+        "STATUS": "Listed",
+        "ADDRESS": "4 D ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400003, 43.700003]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "105",
+        "STATUS": "Demolished",
+        "ADDRESS": "5 E ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400004, 43.700004]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "abc",
+        "STATUS": "Part IV",
+        "ADDRESS": "6 F ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400005, 43.700005]
+      }
+    },
+    {
+      "properties": {
+        "Folder_Row": "101",
+        "STATUS": "Part V",
+        "ADDRESS": "7 G ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400006, 43.700006]
+      }
+    },
+    {
+      "properties": {
+        "OBJECTID": "999",
+        "STATUS": "Part IV",
+        "ADDRESS": "8 H ST"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-79.400007, 43.700007]
+      }
+    }
+  ],
+  "heritage_districts": [
+    {
+      "properties": {
+        "HCD_NO": 1,
+        "HCD_TYPE": "Designated District",
+        "HCD_NAME": "Alpha HCD",
+        "HCD_DESDAT": "2001-01-01",
+        "HCD_BYLAWN": "BL1",
+        "HCD_WARDS": "10"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-79.4, 43.7],
+            [-79.399, 43.7],
+            [-79.399, 43.701],
+            [-79.4, 43.701],
+            [-79.4, 43.7]
+          ]
+        ]
+      }
+    },
+    {
+      "properties": {
+        "HCD_NO": 2,
+        "HCD_TYPE": "DESIGNATED DISTRICT",
+        "HCD_NAME": "Beta HCD"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-79.402, 43.702],
+              [-79.401, 43.702],
+              [-79.401, 43.703],
+              [-79.402, 43.703],
+              [-79.402, 43.702]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "properties": {
+        "HCD_NO": 3,
+        "HCD_TYPE": "Under Appeal",
+        "HCD_NAME": "C"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-79.404, 43.704],
+            [-79.403, 43.704],
+            [-79.403, 43.705],
+            [-79.404, 43.705],
+            [-79.404, 43.704]
+          ]
+        ]
+      }
+    },
+    {
+      "properties": {
+        "HCD_NO": 4,
+        "HCD_TYPE": "Under Study",
+        "HCD_NAME": "D"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-79.406, 43.706],
+            [-79.405, 43.706],
+            [-79.405, 43.707],
+            [-79.406, 43.707],
+            [-79.406, 43.706]
+          ]
+        ]
+      }
+    },
+    {
+      "properties": {
+        "HCD_NO": 5,
+        "HCD_TYPE": "Proposed",
+        "HCD_NAME": "E"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-79.408, 43.708],
+            [-79.407, 43.708],
+            [-79.407, 43.709],
+            [-79.408, 43.709],
+            [-79.408, 43.708]
+          ]
+        ]
+      }
+    }
+  ]
+}

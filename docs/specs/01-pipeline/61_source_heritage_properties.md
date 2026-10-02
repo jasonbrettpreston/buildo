@@ -11,6 +11,17 @@ Schema as-built: M-1 = migration `170_create_heritage_tables.sql` (`fuzzystrmatc
 
 **Citation drift found while grounding the conversion (EH-D3, recorded not silently fixed):** this spec has no `DEC-E`/`DEC-F`/`DEC-H` ids — those were inherited from the Spec 59 ravines port and are now cited only inside `enrich-heritage.descriptor.json`'s own `why` text; the enrich script's "§3.10 SRID guard" comment pointed at this spec's §3.10 *Edge cases*, which carries no SRID clause (the real clause is **Spec 59 §3.10**); `L14` is a LOADER decision while the enrich-side non-empty HALT is §9 Consumer read protocol step 4; `L24` names `enrich-permits.js`, not `enrich-heritage.js`.
 
+### batch-2 row 3.4 ② (2026-09-30) — `load-heritage.js` converted onto the Spec 122 INGESTOR runner (the first MULTI-PRIMARY member, 0x)
+
+What was an 808-line `pipeline.run` loader is now the frozen shell `scripts/load-heritage.js` (`ADVISORY_LOCK_ID = 61` kept as a §5.4 source-text constant) + `scripts/load-heritage.descriptor.json` (declared data) + `scripts/lib/compute/load-heritage.js` (the L25 vocabulary, key/date/address coercions, the §9 block, one observer per check) + `scripts/load-heritage.notes.json`. Assessment: `docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md` (§11 = the reads evidence table).
+
+- **Two primaries → two targets (0x, RE-FREEZE #29).** `inputs.reads.externals[]` = `heritage_register` (key `Folder_Row`, #426) → `heritage_properties` and `heritage_districts` (key `HCD_NO`) → `heritage_districts`; the external ids ARE the frozen §9 sub-block names. Each dataset has its own tier-1 (`source_validator`) + tier-2 (`content_hash`) gate, its own pre_write gate (L14 `heritage_zero_features_first_run`, L7 `heritage_count_drift_pct`, L8 `heritage_geometry_skipped_pct`) and its own transaction (class B guarded upsert + F-C1-guarded departure DELETE). `on_failure: "fail_row_continue"` on both = DEC-K: a failed dataset lands FAIL rows (`heritage_<id>_load_failed` + the library `primary_failed:<id>`) and the other still loads.
+- **Contract unchanged:** `records_meta.heritage_load` keeps `spec_version "1.1"`, both sub-blocks and every §9 field name; `records_total` = the declared SUM of the two sub-block `feature_count`s (a skipped dataset carries its prior count). Guard columns = the legacy set, version stamp included (LH-D2 PIN).
+- **Seven logic variables** (LH-D4 closed): see §12.3a as-built.
+- **Declared deviations / limitations** (descriptor): LH-D8 (a) standalone status FAILED vs legacy `completed` (chain parity kept), LH-D8 (b) zero skeleton PIN (④b), LH-D11 tally order, LH-D6 standalone ledger name, LH-D9 single-member MultiPoint, LH-D1 post-commit mass delete (④c), LH-D3 `warn_row` (④a). `HERITAGE_FORCE_RELOAD` is the new `override.force_run`.
+- **Force seam parity (operator ruling 2026-10-01).** The legacy loader gained an additive HERITAGE_FORCE_RELOAD=1 seam (451962ac) so the ① PRE capture could force past the per-dataset skip; the converted step declares the same key as override.force_run (both staleness tiers bypassed for both datasets) and a WARN check heritage_override_force_reload_present that reproduces the legacy audit row. Unset, both are byte-identical to normal runs, so the step still loads the City's revised data through the ordinary version check. The legacy seam's lock (src/tests/load-heritage-force-seam.logic.test.ts) is re-pointed at the library path.
+- **Forced-change proof (Spec 124 R-AS).** Because source_dataset_version is a guard column on both targets (LH-D2), a forced run over an unchanged source writes 0 rows; the PRE and POST goldens are therefore taken inside the committed perturbation cohort scripts/analysis/load-heritage-cohort-differential.js (docs/reports/golden/load_heritage/differential/cohort.json): per target a stamp arm (updated), a delete arm (re-inserted), a phantom row (departure-deleted) and a non-guard bylaw_no arm that neither path heals (the LH-D2 guard-composition witness), under an unconditional restore.
+
 ### batch-2 row 2.2 (2026-09-20) — `enrich-heritage.js` converted onto the Spec 122 ENRICHER runner
 
 Commits `94cfe054` → `08f3dabd` → `2240a962` → `c3c36315` (17th converted step, ENRICHER 4/4; R-PACE-1 compressed 3-commit form). What was a 429-line `pipeline.run` script is now a 38-line frozen shell (Spec 122 §5.1, `ADVISORY_LOCK_ID = 62` retained as a §5.4 source-text constant); the behaviour lives in `scripts/enrich-heritage.descriptor.json` (declared data) + `scripts/lib/compute/enrich-heritage.js` (the §11.1 join SQL, the §9/L14-class/SRID contract-read HALT, the coverage query and the check observers) + `scripts/lib/step/` (pool, lock, ledger, config, the shared transaction, the class-N write executor, verdict and emits).
@@ -293,7 +304,7 @@ pipeline.run('source-heritage', async (pool) => {
 
 ### 3.2 Step 0a -- HEAD `Last-Modified` + ETag + content-hash skip-check (L9; 2-year threshold per Phase 0 P0-3)
 
-For each of the two CKAN resources, HEAD the URL and compare validators against prior successful run's cached values. Skip if all unchanged. WARN if missing OR older than 2 years.
+For each of the two CKAN resources, HEAD the URL and compare validators against prior successful run's cached values. Skip PER DATASET (DEC-K): each dataset skips when its own validators (tier 1) or bytes (tier 2) match its own prior sub-block, while the other may still load (corrected as-built at batch-2 row 3.4 ②, LH-D7). WARN if missing OR older than 2 years.
 
 ### 3.3 Step 0b -- Download + unzip + parse
 
@@ -393,12 +404,12 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 
 | Case | Behavior |
 |---|---|
-| HEAD returns 4xx/5xx | FAIL; do not proceed |
+| HEAD returns 4xx/5xx | that dataset FAILs (`heritage_<dataset>_load_failed` + `primary_failed:<id>`) and is not written; the other dataset still loads (DEC-K) |
 | Download fails | FAIL; pipeline_run rollback |
 | Zip malformed | FAIL; abort before transaction |
-| `OBJECTID`/`HCD_NO` non-integer or missing | WARN; skip feature; counted toward `invalid_geometry_skipped` |
+| `Folder_Row` (register, #426) / `HCD_NO` non-integer or missing | WARN; skip feature; counted in `heritage_<dataset>_bad_source_id_count`, NOT `invalid_geometry_skipped` (corrected as-built, LH-D5) |
 | All features invalid | L8 fires; FAIL + abort BEFORE entering withTransaction |
-| Concurrent run attempt | Advisory lock 62 blocks |
+| Concurrent run attempt | Advisory lock 61 held elsewhere: the run self-skips (corrected as-built, LH-D5) |
 | `heritage_register` empty at first run | L14 FAIL |
 | `heritage_register` empty after prior successful run | F-C1 guard preserves prior table; emit WARN |
 
@@ -460,8 +471,12 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 ### Target Files
 <!-- generated:target-files -->
 <!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
-- `load_heritage` — INGESTOR · unconverted · owner specs: 61
+- `load_heritage` — INGESTOR · pending · owner specs: 61
   - `scripts/load-heritage.js`
+  - `scripts/load-heritage.descriptor.json`
+  - `scripts/load-heritage.notes.json`
+  - `scripts/lib/compute/load-heritage.js`
+  - `src/tests/steps/load_heritage/violations.test.ts`
   - data: `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
   - upstream: none
   - downstream: enrich_heritage
@@ -484,6 +499,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - `migrations/NNN_permits_coa_heritage_columns.sql` (M-3)
 - `scripts/lib/geometry-validator.js` (reuse from Spec 58/59 implementation). **v1.1 H-v1.1.5 dependency-risk note:** Spec 58/59 are spec-only as of 2026-05-26; this file does NOT exist yet. If Spec 58/59 implementation has NOT landed when Spec 61 implementation begins, the implementing WF MUST author `scripts/lib/geometry-validator.js` here (mirror Spec 59 §3.5 pattern) so it can be reused by Spec 58/59 implementing WFs later.
 - `scripts/lib/safe-math.js` (existing per Spec 47 §16 B5)
+- `scripts/lib/units.js` (MS_PER_DAY / DAYS_PER_JULIAN_YEAR, batch-2 row 3.4 ②) · `scripts/lib/source-version.js` (the tier-1/tier-2 gate semantics, reached through `scripts/lib/step/{staleness,acquire}.js`) (the second copy of both CKAN URLs lives in assert_schema's own compute, listed by its owner's generated block; §12.5) — registered at row 3.4 ②; `scripts/lib/config-loader.js` is no longer used by the loader (retired at ②)
 - `docs/specs/01-pipeline/43_chain_sources.md` (edit: load_heritage AFTER load_parcels; enrich_heritage AFTER link_parcels)
 - `docs/specs/01-pipeline/41_chain_permits.md` + `docs/specs/01-pipeline/42_chain_coa.md` (edits for heritage propagation step)
 - `docs/specs/01-pipeline/47_pipeline_script_protocol.md` §A.5 (lock registry: add 62, 63, 64)
@@ -497,6 +513,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 ### Step-file notes
 *Moved out of Target Files by the generated-Target-Files WF2 (2026-09-30): the step-owned files are listed by the generated block under Target Files; each note below is the annotation its bullet carried, verbatim.*
 - `src/tests/steps/enrich_heritage/violations.test.ts` (NEW — the per-conversion claim suite, Spec 123 §5.2)
+- `src/tests/steps/load_heritage/violations.test.ts` + `src/tests/steps/load_heritage/fixtures/**` (batch-2 row 3.4 ① — the `load_heritage` conversion red suite, Spec 123 §5.2: 18 legacy-oracle pins over a byte-identical copy of the pre-conversion loader (`fixtures/legacy-load-heritage.js.txt`, evaluated by `fixtures/legacy-harness.ts`) + 14 `it.fails` converted claims that flip at ②; assessment `docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md`)
 - `scripts/load-heritage.js` (NEW; Spec 47 skeleton; advisory lock ~~62~~ **61** as built, L4)
 - `scripts/enrich-heritage.js` (NEW; sibling per L6; advisory lock ~~63~~ **62** as built, L4b. **As of batch-2 row 2.2 this is the 38-line frozen Spec 122 shell** — see the two files below)
 - `scripts/enrich-heritage.descriptor.json` (batch-2 row 2.2 — this step declared as data: identity/lock, `inputs.reads`, the write target + `write_discipline`, `staleness` (H-A1 (a) Layer-2), `guards.requires`, `execution.enrich_hooks`, the 10 `checks[]`, 4 `invariants[]`, 3 `plausibility[]`, `config.logic_variables[]` + `config.retired[]`, `deviations[]`, `limitations[]`, `terminals[]`)
@@ -983,6 +1000,17 @@ DROP FUNCTION IF EXISTS normalize_address(TEXT);
 | `enrich_heritage_phase_timeout_minutes` | 240 | 0–290 | Source Ingestion | NEW — the legacy had no statement/phase timeout at all (operator ruling H-A2 (a); to be re-set from the batch-2 cloud partial run per Spec 124 R-AQ, not from a local figure) |
 
 > **`heritage_point_match_radius_m` is RETIRED, not deleted** — declared in the descriptor's `config.retired[]` (`since: 2026-06-04`, ledger `EH-D3`) per Spec 124 R-A: retirement of a tunable is a declaration, and a retired name still holding a live registry row is a WARN. The §12.3a block above seeded it for a radius match that live validation superseded (`ST_DWithin` over-matched 4× — 6,217 parcels vs 1,549 source points), so it is not consumed by any code path.
+> **As built — the loader's own keys (batch-2 row 3.4 ②, 2026-09-30, LH-D4 closed).** Before ② the loader read `loadMarketplaceConfigs(pool, 'source-heritage')`, which returned none of its knobs (0 of 6 seeded), so the Zod literals ruled. `load-heritage.descriptor.json` now declares seven `config.logic_variables[]`, all `on_invalid: "fail"`, seeded in group **Source Ingestion** with defaults byte-equal to the Zod literals:
+
+| Key | Seed | Bounds | Replaces |
+|---|---|---|---|
+| `load_heritage_dataset_age_warn_years` | 2 | 1–200 | `heritageSkipCheckThresholdYears` (L9) |
+| `load_heritage_count_drift_fail_pct` | 0.5 | 0–1 | `heritageAcceptFeatureCountDriftPct` (L7) |
+| `load_heritage_invalid_geometry_fail_pct` | 0.05 | 0–1 | `heritageInvalidGeometryFailPct` (L8) |
+| `load_heritage_mass_delete_fail_pct` | 0.5 | 0–1 | `heritageMassDeletePct` (L7c) |
+| `load_heritage_geometry_update_warn_pct` | 0.5 | 0–1 | `heritageDriftGeometryUpdatePct` (L7b) |
+| `load_heritage_download_timeout_ms` | 60000 | 1000–600000 | `heritageDownloadTimeoutMs` |
+| `load_heritage_round_scale` | 1000 | 1–1000000 | the `round3` literal |
 
 ### §12.4 Spec 43 + 41 + 42 chain edits
 
@@ -1002,7 +1030,7 @@ DROP FUNCTION IF EXISTS normalize_address(TEXT);
 
 ### §12.5 Quality script edits
 
-- `assert-schema.js`: 2 CKAN URLs reachability + OBJECTID + HCD_NO attribute + STATUS/HCD_TYPE allowed values
+- `assert-schema.js`: 2 CKAN URLs reachability only (as built — no attribute or STATUS/HCD_TYPE checks exist; the URL copy lives in `scripts/lib/compute/assert-schema.js` and must stay byte-equal to the load_heritage descriptor `externals[].url`, pinned by `src/tests/steps/load_heritage/violations.test.ts` D2)
 - `assert-data-bounds.js`: `heritage_properties` count >= 8000; `heritage_districts` count >= 20
 - `assert-entity-tracing.js`: heritage_* fields to coverage grid
 - `assert-global-coverage.js`: `parcels.is_heritage_designated` coverage threshold row

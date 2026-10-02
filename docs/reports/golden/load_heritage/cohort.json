@@ -1,0 +1,15 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "heritage_properties",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_heritage/post/sources.json: the forced-change cohort committed at cfc4f80b rewrote the register through the guarded upsert (descriptor outputs.writes[heritage_properties].write_discipline upsert_scoped_departure_delete, guard_columns geom/status/designated_date/address_text/source_dataset_version) plus the F-C1 guarded departure DELETE, one transaction (LH-D2/LH-D1). The run's own records_meta.heritage_load.heritage_register reads inserted=5 updated=5 deleted=1, so this table alone wrote 10 rows of the capture's records_new 6 + records_updated 7; the step-level counters cannot attribute that to one of this step's two write targets, which is why the cohort names the capture per table (assessment §6.2(e), R-AS; operator ruling E3 2026-10-02)."
+    },
+    {
+      "table": "heritage_districts",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_heritage/post/sources.json: the same forced-change cohort (cfc4f80b) reloaded the districts through their own guarded upsert (descriptor outputs.writes[heritage_districts].write_discipline, guard_columns geom/name/designated_date/source_dataset_version, LH-D2) plus the F-C1 guarded departure DELETE, in the districts' own transaction (DEC-K). The run's own records_meta.heritage_load.heritage_districts reads inserted=1 updated=2 deleted=1, so this table alone wrote 3 rows of the capture's records_new 6 + records_updated 7; the step-level counters cannot attribute that to one of this step's two write targets, which is why the cohort names the capture per table (assessment §6.2(e), R-AS; operator ruling E3 2026-10-02)."
+    }
+  ]
+}

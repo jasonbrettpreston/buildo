@@ -1,0 +1,520 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/load-heritage.js",
+  "chain": "sources",
+  "git_head": "cfc4f80bf5a96b36a8c57c31aaf5329cf4b66971",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 8877,
+    "records_new": 6,
+    "records_updated": 7,
+    "records_meta": {
+      "audit_table": {
+        "phase": 61,
+        "name": "Heritage Properties",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "dataset_source_license",
+            "value": "https://open.toronto.ca/open-data-license/",
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_override_force_reload_present",
+            "value": true,
+            "status": "WARN"
+          },
+          {
+            "metric": "heritage_register_feature_count",
+            "value": 8848,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_districts_feature_count",
+            "value": 29,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_filtered_listed_pct",
+            "value": 0.283,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_geometry_skipped_pct",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_count_drift_pct",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_mass_delete_pct",
+            "value": 0.034,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_geometry_update_pct",
+            "value": 0.069,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_dataset_age_years",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_unknown_status_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_unknown_hcd_type_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "heritage_address_coerced_empty_count",
+            "value": 0,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 114.82,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 77314,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      },
+      "heritage_load": {
+        "spec_version": "1.1",
+        "heritage_register": {
+          "spec_version": "1.1",
+          "source_dataset_version": "37bd232d706be8409f845846474b7c3d",
+          "last_modified": "Tue, 01 Sep 2026 22:16:33 GMT",
+          "etag": "\"1788300993.96-1628240-832049643\"",
+          "content_hash": "37bd232d706be8409f845846474b7c3d",
+          "feature_count": 8848,
+          "features_inserted": 5,
+          "features_updated": 5,
+          "features_deleted": 1,
+          "invalid_geometry_repaired": 0,
+          "invalid_geometry_skipped": 0,
+          "geometry_collection_extracted": 0,
+          "drift_check_passed": true,
+          "mass_delete_check_passed": true,
+          "geometry_update_pct": 0.001,
+          "delete_skipped_empty_guard": false,
+          "skipped_reason": null,
+          "filtered_out_listed": 3484,
+          "unknown_status_count": 0
+        },
+        "heritage_districts": {
+          "spec_version": "1.1",
+          "source_dataset_version": "eb37b1a023ddccff155145a9fdd2e3d1",
+          "last_modified": "Wed, 24 Jun 2026 14:02:36 GMT",
+          "etag": "\"1782309756.859-90942-1038094832\"",
+          "content_hash": "eb37b1a023ddccff155145a9fdd2e3d1",
+          "feature_count": 29,
+          "features_inserted": 1,
+          "features_updated": 2,
+          "features_deleted": 1,
+          "invalid_geometry_repaired": 0,
+          "invalid_geometry_skipped": 0,
+          "geometry_collection_extracted": 0,
+          "drift_check_passed": true,
+          "mass_delete_check_passed": true,
+          "geometry_update_pct": 0.069,
+          "delete_skipped_empty_guard": false,
+          "skipped_reason": null,
+          "filtered_out_appeal_study": 3,
+          "unknown_hcd_type_count": 0
+        },
+        "geometry_update_pct": 0.069,
+        "mass_delete_pct": 0.034
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "ckan:heritage-register-wgs84": [],
+        "ckan:heritage-conservation-districts": []
+      },
+      "writes": {
+        "heritage_properties": [
+          "source_id",
+          "status",
+          "geom",
+          "designated_date",
+          "bylaw_no",
+          "htg_conser_name",
+          "building_type",
+          "reason",
+          "address_text",
+          "construction_year",
+          "source_dataset_version",
+          "created_at",
+          "updated_at"
+        ],
+        "heritage_districts": [
+          "source_id",
+          "name",
+          "hcd_type",
+          "geom",
+          "designated_date",
+          "bylaw_no",
+          "wards",
+          "source_dataset_version",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "external": [
+        "CKAN"
+      ]
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[source-heritage]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[source-heritage]\",\"msg\":\"Loaded 644 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":8877,\"records_new\":6,\"records_updated\":7,\"records_meta\":{\"audit_table\":{\"phase\":61,\"name\":\"Heritage Properties\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"status\":\"INFO\"},{\"metric\":\"heritage_override_force_reload_present\",\"value\":true,\"status\":\"WARN\"},{\"metric\":\"heritage_register_feature_count\",\"value\":8848,\"status\":\"INFO\"},{\"metric\":\"heritage_districts_feature_count\",\"value\":29,\"status\":\"INFO\"},{\"metric\":\"heritage_filtered_listed_pct\",\"value\":0.283,\"status\":\"INFO\"},{\"metric\":\"heritage_geometry_skipped_pct\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"heritage_count_drift_pct\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"heritage_mass_delete_pct\",\"value\":0.034,\"status\":\"INFO\"},{\"metric\":\"heritage_geometry_update_pct\",\"value\":0.069,\"status\":\"INFO\"},{\"metric\":\"heritage_dataset_age_years\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"heritage_unknown_status_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"heritage_unknown_hcd_type_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"heritage_address_coerced_empty_count\",\"value\":0,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":114.82,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":77314,\"threshold\":null,\"status\":\"INFO\"}]},\"heritage_load\":{\"spec_version\":\"1.1\",\"heritage_register\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"37bd232d706be8409f845846474b7c3d\",\"last_modified\":\"Tue, 01 Sep 2026 22:16:33 GMT\",\"etag\":\"\\\"1788300993.96-1628240-832049643\\\"\",\"content_hash\":\"37bd232d706be8409f845846474b7c3d\",\"feature_count\":8848,\"features_inserted\":5,\"features_updated\":5,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.001,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_listed\":3484,\"unknown_status_count\":0},\"heritage_districts\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"last_modified\":\"Wed, 24 Jun 2026 14:02:36 GMT\",\"etag\":\"\\\"1782309756.859-90942-1038094832\\\"\",\"content_hash\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"feature_count\":29,\"features_inserted\":1,\"features_updated\":2,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.069,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_appeal_study\":3,\"unknown_hcd_type_count\":0},\"geometry_update_pct\":0.069,\"mass_delete_pct\":0.034}}}\nPIPELINE_META:{\"reads\":{\"ckan:heritage-register-wgs84\":[],\"ckan:heritage-conservation-districts\":[]},\"writes\":{\"heritage_properties\":[\"source_id\",\"status\",\"geom\",\"designated_date\",\"bylaw_no\",\"htg_conser_name\",\"building_type\",\"reason\",\"address_text\",\"construction_year\",\"source_dataset_version\",\"created_at\",\"updated_at\"],\"heritage_districts\":[\"source_id\",\"name\",\"hcd_type\",\"geom\",\"designated_date\",\"bylaw_no\",\"wards\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"CKAN\"]}\n\n[load-heritage] completed in 77.3s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[source-heritage]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 2215,
+  "table_state": [
+    {
+      "table": "heritage_districts",
+      "row_count": 29,
+      "content_hash": "1f304bd750479e075897bd9b0eeef5ae",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "name",
+        "hcd_type",
+        "geom",
+        "designated_date",
+        "bylaw_no",
+        "wards",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "heritage_properties",
+      "row_count": 8848,
+      "content_hash": "d087e81f2a3c792e1489ff4516c9459b",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "status",
+        "geom",
+        "designated_date",
+        "bylaw_no",
+        "htg_conser_name",
+        "building_type",
+        "reason",
+        "address_text",
+        "construction_year",
+        "source_dataset_version"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "heritage_districts": 39,
+    "heritage_properties": 70
+  },
+  "table_specs": {
+    "heritage_districts": {
+      "columns": [
+        "source_id",
+        "name",
+        "hcd_type",
+        "geom",
+        "designated_date",
+        "bylaw_no",
+        "wards",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "heritage_properties": {
+      "columns": [
+        "source_id",
+        "status",
+        "geom",
+        "designated_date",
+        "bylaw_no",
+        "htg_conser_name",
+        "building_type",
+        "reason",
+        "address_text",
+        "construction_year",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/load-heritage.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Heritage Properties",
+          "phase": 61,
+          "rows": [
+            {
+              "metric": "dataset_source_license",
+              "status": "INFO",
+              "value": "https://open.toronto.ca/open-data-license/"
+            },
+            {
+              "metric": "heritage_override_force_reload_present",
+              "status": "WARN",
+              "value": true
+            },
+            {
+              "metric": "heritage_register_feature_count",
+              "status": "INFO",
+              "value": 8848
+            },
+            {
+              "metric": "heritage_districts_feature_count",
+              "status": "INFO",
+              "value": 29
+            },
+            {
+              "metric": "heritage_filtered_listed_pct",
+              "status": "INFO",
+              "value": 0.283
+            },
+            {
+              "metric": "heritage_geometry_skipped_pct",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "heritage_count_drift_pct",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "heritage_mass_delete_pct",
+              "status": "INFO",
+              "value": 0.034
+            },
+            {
+              "metric": "heritage_geometry_update_pct",
+              "status": "INFO",
+              "value": 0.069
+            },
+            {
+              "metric": "heritage_dataset_age_years",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "heritage_unknown_status_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "heritage_unknown_hcd_type_count",
+              "status": "INFO",
+              "value": 0
+            },
+            {
+              "metric": "heritage_address_coerced_empty_count",
+              "status": "INFO",
+              "value": 0
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "heritage_load": {
+          "geometry_update_pct": 0.069,
+          "heritage_districts": {
+            "content_hash": "eb37b1a023ddccff155145a9fdd2e3d1",
+            "delete_skipped_empty_guard": false,
+            "drift_check_passed": true,
+            "etag": "\"1782309756.859-90942-1038094832\"",
+            "feature_count": 29,
+            "features_deleted": 1,
+            "features_inserted": 1,
+            "features_updated": 2,
+            "filtered_out_appeal_study": 3,
+            "geometry_collection_extracted": 0,
+            "geometry_update_pct": 0.069,
+            "invalid_geometry_repaired": 0,
+            "invalid_geometry_skipped": 0,
+            "last_modified": "Wed, 24 Jun 2026 14:02:36 GMT",
+            "mass_delete_check_passed": true,
+            "skipped_reason": null,
+            "source_dataset_version": "eb37b1a023ddccff155145a9fdd2e3d1",
+            "spec_version": "1.1",
+            "unknown_hcd_type_count": 0
+          },
+          "heritage_register": {
+            "content_hash": "37bd232d706be8409f845846474b7c3d",
+            "delete_skipped_empty_guard": false,
+            "drift_check_passed": true,
+            "etag": "\"1788300993.96-1628240-832049643\"",
+            "feature_count": 8848,
+            "features_deleted": 1,
+            "features_inserted": 5,
+            "features_updated": 5,
+            "filtered_out_listed": 3484,
+            "geometry_collection_extracted": 0,
+            "geometry_update_pct": 0.001,
+            "invalid_geometry_repaired": 0,
+            "invalid_geometry_skipped": 0,
+            "last_modified": "Tue, 01 Sep 2026 22:16:33 GMT",
+            "mass_delete_check_passed": true,
+            "skipped_reason": null,
+            "source_dataset_version": "37bd232d706be8409f845846474b7c3d",
+            "spec_version": "1.1",
+            "unknown_status_count": 0
+          },
+          "mass_delete_pct": 0.034,
+          "spec_version": "1.1"
+        }
+      },
+      "records_new": 6,
+      "records_total": 8877,
+      "records_updated": 7
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "external": [
+          "CKAN"
+        ],
+        "reads": {
+          "ckan:heritage-conservation-districts": [],
+          "ckan:heritage-register-wgs84": []
+        },
+        "writes": {
+          "heritage_districts": [
+            "source_id",
+            "name",
+            "hcd_type",
+            "geom",
+            "designated_date",
+            "bylaw_no",
+            "wards",
+            "source_dataset_version",
+            "created_at",
+            "updated_at"
+          ],
+          "heritage_properties": [
+            "source_id",
+            "status",
+            "geom",
+            "designated_date",
+            "bylaw_no",
+            "htg_conser_name",
+            "building_type",
+            "reason",
+            "address_text",
+            "construction_year",
+            "source_dataset_version",
+            "created_at",
+            "updated_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[source-heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 644 logic variables from control panel\",\"tag\":\"[source-heritage]\"}",
+      "[load-heritage] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "source_id",
+          "name",
+          "hcd_type",
+          "geom",
+          "designated_date",
+          "bylaw_no",
+          "wards",
+          "source_dataset_version"
+        ],
+        "content_hash": "1f304bd750479e075897bd9b0eeef5ae",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 29,
+        "table": "heritage_districts"
+      },
+      {
+        "columns": [
+          "source_id",
+          "status",
+          "geom",
+          "designated_date",
+          "bylaw_no",
+          "htg_conser_name",
+          "building_type",
+          "reason",
+          "address_text",
+          "construction_year",
+          "source_dataset_version"
+        ],
+        "content_hash": "d087e81f2a3c792e1489ff4516c9459b",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 8848,
+        "table": "heritage_properties"
+      }
+    ],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "fc654c5482b32fe51dd32ba39578ceb7658858236e9cbe0a47b63577202a33f9"
+}
