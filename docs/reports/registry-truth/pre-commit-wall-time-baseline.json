@@ -1,0 +1,11 @@
+{
+  "$comment": "Registry-truth Phase 1 P1-C0 (plan .cursor/wf2_registry_truth_active_task.md, slice A). Measurement only, no test applies (fold 6, item 5). Gate #44 is a pure JSON compare over committed trace.json files (SQL resolved once at capture time), so it must add ~0 s to this budget; re-measure at P1-C3 and compare.",
+  "measured_at": "2026-10-02",
+  "git_head": "6ebe1379",
+  "host_load_note": "re-measured with no chain run or test suite active; two read-only planning agents (file reads + SELECT queries) were running. Supersedes the 2026-10-01 loaded upper bound of 350 s (git_head 77bf8cdc).",
+  "method": "append a one-line comment to scripts/analysis/capture-step-golden.js, git add it, time `sh .husky/pre-commit`, then revert the edit and unstage (not committed)",
+  "staged_files": ["scripts/analysis/capture-step-golden.js"],
+  "exit_code": 0,
+  "wall_seconds": 234,
+  "stages": ["check-partial-staging.sh", "step-churn-complexity --check", "generate-template-freeze --check", "generate-target-files --check", "spec-split-check --check", "schema-to-vocab --check", "vitest system-map.infra", "gates/generated-docs", "step-validate --staged --fast", "lint-staged", "validate-migrations.sh", "check-migration-down-comments.sh", "ast-grep-leads.sh", "npm run typecheck", "npm run lint", "vitest related (staged src/scripts sources)"]
+}
