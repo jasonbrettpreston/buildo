@@ -76,7 +76,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     expect(seam.deriveSeamPairs(byName)).toEqual([]);
   });
 
-  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 18 live pairs (up from 17 at the batch-2 row 3.8 neighbourhoods cutover): neighbourhoods ADDS ONE, as the UPSTREAM half of link_neighbourhoods\' already-declared read — neighbourhoods itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points/parcels/massing)', () => {
+  it('the REAL converted registry (every converted.json descriptor — derived, R-AN; a retyped 20-slug list until conversion-simplification item 4) yields 19 live pairs (up from 18 at the batch-2 row 3.5 load_wsib cutover; 17 -> 18 at the row 3.8 neighbourhoods cutover): load_wsib ADDS ONE (as the UPSTREAM half of link_wsib\'s already-declared read); neighbourhoods ADDED ONE, as the UPSTREAM half of link_neighbourhoods\' already-declared read — neighbourhoods itself declares NO inputs.reads.steps (a leaf INGESTOR, like load_ravines/assert_schema/address_points/parcels/massing)', () => {
     const byName = seam.loadConvertedDescriptors();
     // DERIVED from converted.json (R-AN; conversion-simplification item 4): each converted
     // file's own descriptor identity.name, read directly — a cutover needs no edit here.
@@ -257,6 +257,9 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // 'link_parcels' on the downstream half).
       { upstream: 'parcels', downstream: 'link_parcel_addresses' },
       { upstream: 'link_parcel_addresses', downstream: 'link_parcels' },
+      // batch-2 row 3.5 (2026-09-30) — sorts here: 'link_wsib:load_wsib' falls after
+      // 'link_parcels:link_parcel_addresses' and before 'refresh_snapshot:link_massing'.
+      { upstream: 'load_wsib', downstream: 'link_wsib' },
       { upstream: 'link_massing', downstream: 'refresh_snapshot' },
       { upstream: 'link_parcels', downstream: 'refresh_snapshot' },
       { upstream: 'link_wsib', downstream: 'refresh_snapshot' },
@@ -398,6 +401,9 @@ describe('runSeamChecks — one row per derived pair', () => {
   // is ITSELF a member of the 'sources' chain (Spec 43 row 18), so chain-scoping does NOT
   // filter out `neighbourhoods -> link_neighbourhoods` — see the deriveSeamPairs test above for
   // the full derivation. Registry 22 -> 23 descriptors; live pairs/metrics 17 -> 18.
+  // load_wsib (batch2 row 3.5, cut over 2026-09-30) ADDS ONE MORE: link_wsib is ITSELF a
+  // member of the 'sources' chain (Spec 43 row 20), so chain-scoping does NOT filter out
+  // `load_wsib -> link_wsib`. Registry 23 -> 24 descriptors; live pairs/metrics 18 -> 19.
   const EXPECTED_SEAM_METRICS = [
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
@@ -420,6 +426,8 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_address_points_before_link_parcel_addresses',
     'seam_parcels_before_link_parcel_addresses',
     'seam_link_parcel_addresses_before_link_parcels',
+    // batch-2 row 3.5 cutover (2026-09-30) — load_wsib registering resolves link_wsib's declared read.
+    'seam_load_wsib_before_link_wsib',
     'seam_link_massing_before_refresh_snapshot',
     'seam_link_parcels_before_refresh_snapshot',
     'seam_link_wsib_before_refresh_snapshot',

@@ -56,13 +56,15 @@ describe('WF3 D-C max_build_min_dimension_m — four-surface literal parity', ()
     const checks = buildChecks(cfg);
     const c = checks.find((x: { id: string }) => x.id === 'max_build_dim_below_floor');
     expect(c, 'max_build_dim_below_floor check must exist').toBeTruthy();
-    expect(c.applies).toContain(String(seed.max_build_min_dimension_m.default));
+    expect(c.bad).toContain(String(seed.max_build_min_dimension_m.default));
+    // WF3 inert 2026-10-01: applies = dims present; the floor moved into bad (a healthy run is PASS, not inert).
+    expect(c.applies).not.toContain(String(seed.max_build_min_dimension_m.default));
     // Changing the config value changes the resolved SQL — proof it is read, not pinned.
     cfg.max_build_min_dimension_m = seed.max_build_min_dimension_m.default + 1;
     const checks2 = buildChecks(cfg);
     const c2 = checks2.find((x: { id: string }) => x.id === 'max_build_dim_below_floor');
-    expect(c2.applies).toContain(String(seed.max_build_min_dimension_m.default + 1));
-    expect(c2.applies).not.toBe(c.applies);
+    expect(c2.bad).toContain(String(seed.max_build_min_dimension_m.default + 1));
+    expect(c2.bad).not.toBe(c.bad);
   });
 });
 

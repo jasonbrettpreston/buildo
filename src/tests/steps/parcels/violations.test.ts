@@ -48,13 +48,13 @@ const LEGACY_SQL_REL = `${STEP_DIR_REL}/fixtures/legacy-upsert.sql.txt`;
 
 /** Spec 47 §A.5 lock registry row 55 [READ load-parcels.js:218]. */
 const LOCK_ID = 55;
-/** The written table and its 17 named columns + geom = 18 (report §1.2, from the INSERT :297-301). */
+/** The written table and its 18 named columns + geom = 19 (WF3 lot-size 2026-10-01 adds lot_size_source; report §1.2, from the INSERT :297-301). */
 const WRITE_TABLE = 'parcels';
 const WRITE_COLUMNS = [
   'parcel_id', 'feature_type',
   'address_number', 'linear_name_full',
   'addr_num_normalized', 'street_name_normalized', 'street_type_normalized',
-  'stated_area_raw', 'lot_size_sqm', 'lot_size_sqft',
+  'stated_area_raw', 'lot_size_sqm', 'lot_size_sqft', 'lot_size_source',
   'frontage_m', 'frontage_ft', 'depth_m', 'depth_ft',
   'geometry', 'date_effective', 'is_irregular',
   'geom',
@@ -70,9 +70,12 @@ const WRITE_CLASS = 'guarded_upsert';
  * pin (`geometry` the auto-added watched column, NEVER declared) let the write guard see only
  * the raw source, so it converged neither the 9,855 NULL geoms the legacy INSERT left nor the
  * 16 rows the make_valid repair arm would rewrite.
+ *
+ * WF3 lot-size 2026-10-01: `lot_size_source` joins as the second entry (preserve_null guard
+ * form) so a stated value equal to a backfilled one still flips provenance.
  */
 const GUARD_COLUMNS = [
-  'lot_size_sqm', 'feature_type',
+  'lot_size_sqm', 'lot_size_source', 'feature_type',
   'address_number', 'linear_name_full', 'addr_num_normalized',
   'street_name_normalized', 'street_type_normalized', 'date_effective',
   'geometry',
@@ -84,6 +87,13 @@ const PRESERVE_COLUMNS = [
 ];
 /** The one non-text column declared `on_empty:"preserve_null"` (prerequisite 0m follow-on). */
 const PRESERVE_NULL_COLUMN = 'date_effective';
+/**
+ * The FULL `on_empty:"preserve_null"` set (WF3 lot-size 2026-10-01): date_effective plus the
+ * three lot columns. `lot_size_sqm`/`lot_size_sqft` so a NULL parse never overwrites a
+ * geom_backfill value, and `lot_size_source` so a stated value equal to a backfilled one
+ * still flips provenance.
+ */
+const PRESERVE_NULL_COLUMNS = ['date_effective', 'lot_size_sqm', 'lot_size_sqft', 'lot_size_source'];
 /** The CSV_URL literal (:36-37) — inputs.reads.externals[0].url. */
 const CSV_URL_HOST = 'ckan0.cf.opendata.inter.prod-toronto.ca';
 /** The 3 DEC-FENCE2 lineage stamps (report §1.3, #418 + WF2 P11-1) — outputs.invalidates[]. */
@@ -115,8 +125,9 @@ const NEW_CONFIG_VARS = [
 /** The SHARED variable (Rule 3: reuse the existing key, do not mint a second — report §6, PR-D5 pin). */
 const SHARED_FLOOR_VAR = 'sources_parcels_floor';
 /** The declared check ids (Rule 5, report §1.5 auditRows + §2 drift/null-address rows) — the
- *  full seven, in descriptor order (the compute dispatch also carries the two INFO-severity
- *  descriptive rows, geom_parse_failures + shaped_skipped, not just the five gating checks). */
+ *  full eight (WF3 lot-size adds the INFO stated_area_unparsed row), in descriptor order (the
+ *  compute dispatch also carries the INFO-severity descriptive rows, geom_parse_failures +
+ *  shaped_skipped, not just the five gating checks). */
 const CHECK_IDS = [
   'csv_header_drift',
   'null_address_pct',
@@ -125,6 +136,7 @@ const CHECK_IDS = [
   'records_errors',
   'geom_parse_failures',
   'shaped_skipped',
+  'stated_area_unparsed',
 ];
 
 // ---------------------------------------------------------------------------
@@ -330,7 +342,7 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(w[0]!.write_discipline.txn_scope, 'plan D1 — the runner wraps ALL batches in ONE step transaction, declared deviation').toBe('step');
   });
 
-  it('the 17 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geom" (plan D1 REVISED prerequisite 0l; watch column moved to the derived geom, WF3 2026-09-28)', () => {
+  it('the 18 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geom" (plan D1 REVISED prerequisite 0l; watch column moved to the derived geom, WF3 2026-09-28)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
@@ -348,7 +360,7 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     }
   });
 
-  it('columns[] declare on_empty:"preserve" on the five address columns and on_empty:"preserve_null" on date_effective (plan D1 REVISED, prerequisites 0m/0m-follow-on)', () => {
+  it('columns[] declare on_empty:"preserve" on the five address columns and on_empty:"preserve_null" on date_effective + the three lot columns (plan D1 REVISED prerequisites 0m/0m-follow-on; WF3 lot-size 2026-10-01)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns as Array<{ name: string; on_empty?: string }>;
     const byName = new Map(cols.map((c) => [c.name, c.on_empty]));
@@ -356,12 +368,15 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
       expect(byName.get(name), `${name} must declare on_empty:"preserve"`).toBe('preserve');
     }
     expect(byName.get(PRESERVE_NULL_COLUMN), 'date_effective has no empty-string representation — preserve_null, not preserve').toBe('preserve_null');
+    for (const name of PRESERVE_NULL_COLUMNS) {
+      expect(byName.get(name), `${name} must declare on_empty:"preserve_null" (WF3 lot-size 2026-10-01 — a NULL parse never overwrites a backfilled lot / a stated value flips provenance)`).toBe('preserve_null');
+    }
     // No OTHER column declares either mode — this is a per-column axis, not a class-wide switch.
     const declaredOnEmpty = cols.filter((c) => c.on_empty !== undefined).map((c) => c.name).sort();
-    expect(declaredOnEmpty).toEqual([...PRESERVE_COLUMNS, PRESERVE_NULL_COLUMN].sort());
+    expect(declaredOnEmpty).toEqual([...PRESERVE_COLUMNS, ...PRESERVE_NULL_COLUMNS].sort());
   });
 
-  it('guard_columns carry the 9-item DECLARED set (WF3 2026-09-28: the eight legacy columns + `geometry`, the raw jsonb source; `geom` is the tenth RUNTIME term, added automatically, FIRST, via invalidates[].set_null_on_change_of)', () => {
+  it('guard_columns carry the 10-item DECLARED set (WF3 2026-09-28: the eight legacy columns + `geometry`, the raw jsonb source; WF3 lot-size 2026-10-01 adds `lot_size_source`; `geom` is the eleventh RUNTIME term, added automatically, FIRST, via invalidates[].set_null_on_change_of)', () => {
     const d = loadDescriptor();
     const gc = writes(d)[0]!.write_discipline.guard_columns as string[] | 'all_declared';
     expect(Array.isArray(gc), 'guard_columns must be the explicit WHERE-clause set').toBe(true);
@@ -467,17 +482,40 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
    *        `parcels.geom IS DISTINCT FROM EXCLUDED.geom`) — the WHERE's first term + 3 CASE arms;
    *   (b) the WHERE gains `OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry` after the
    *       date_effective term (the raw jsonb source stays a plain structural guard term).
-   * Each replacement must match exactly as often as stated (4 and 1), so any THIRD drift in
-   * either the fixture or the codegen still reddens the comparison. Input: whitespace-normalised.
+   * WF3 lot-size 2026-10-01 — a THIRD declared delta (c): the two lot columns' SET/SET-guard
+   * forms move from `= EXCLUDED.<col>` / `<col> IS DISTINCT FROM EXCLUDED.<col>` to the
+   * preserve_null COALESCE forms, a third SET arm for `lot_size_source` joins, and the WHERE
+   * gains the lot_size_source guard term — the three lot columns declared `preserve_null`.
+   * Each replacement must match exactly as often as stated (4, 1 and the (c) counts), so any
+   * further drift in either the fixture or the codegen still reddens the comparison. Input:
+   * whitespace-normalised.
    */
   function applyWf3Deltas(legacyNorm: string): string {
     const oldWatched = /parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb/g;
     expect((legacyNorm.match(oldWatched) ?? []).length, 'delta (a): 1 WHERE term + 3 CASE arms').toBe(4);
     const dateTerm = normalizeWs('OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)');
     expect(legacyNorm.split(dateTerm).length - 1, 'delta (b): the date_effective term the geometry term follows').toBe(1);
+    // delta (c) — WF3 lot-size 2026-10-01: the two legacy lot SET arms become preserve_null
+    // COALESCEs, a third (lot_size_source) SET arm joins them, and the lot_size_sqm WHERE term
+    // becomes the preserve_null guard form plus a lot_size_source guard term.
+    const lotSet = normalizeWs('lot_size_sqm = EXCLUDED.lot_size_sqm, lot_size_sqft = EXCLUDED.lot_size_sqft,');
+    expect(legacyNorm.split(lotSet).length - 1, 'delta (c): the two legacy lot SET arms').toBe(1);
+    const lotSqmGuard = normalizeWs('OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm');
+    expect(legacyNorm.split(lotSqmGuard).length - 1, 'delta (c): the legacy lot_size_sqm WHERE term').toBe(1);
     return legacyNorm
       .replace(oldWatched, 'parcels.geom IS DISTINCT FROM EXCLUDED.geom')
-      .replace(dateTerm, `${dateTerm} OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry`);
+      .replace(dateTerm, `${dateTerm} OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry`)
+      .replace(
+        lotSet,
+        normalizeWs('lot_size_sqm = COALESCE(EXCLUDED.lot_size_sqm, parcels.lot_size_sqm), '
+          + 'lot_size_sqft = COALESCE(EXCLUDED.lot_size_sqft, parcels.lot_size_sqft), '
+          + 'lot_size_source = COALESCE(EXCLUDED.lot_size_source, parcels.lot_size_source),'),
+      )
+      .replace(
+        lotSqmGuard,
+        normalizeWs('OR (EXCLUDED.lot_size_sqm IS NOT NULL AND parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm) '
+          + 'OR (EXCLUDED.lot_size_source IS NOT NULL AND parcels.lot_size_source IS DISTINCT FROM EXCLUDED.lot_size_source)'),
+      );
   }
 
   /** Extract a fenced fragment from the legacy fixture and assert the SAME normalised text appears
@@ -497,7 +535,11 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
       'heritage_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
       'centreline_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
       'WHERE parcels.geom IS DISTINCT FROM EXCLUDED.geom',
-      'OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm',
+      'lot_size_sqm = COALESCE(EXCLUDED.lot_size_sqm, parcels.lot_size_sqm)',
+      'lot_size_sqft = COALESCE(EXCLUDED.lot_size_sqft, parcels.lot_size_sqft)',
+      'lot_size_source = COALESCE(EXCLUDED.lot_size_source, parcels.lot_size_source)',
+      'OR (EXCLUDED.lot_size_sqm IS NOT NULL AND parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm)',
+      'OR (EXCLUDED.lot_size_source IS NOT NULL AND parcels.lot_size_source IS DISTINCT FROM EXCLUDED.lot_size_source)',
       'OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type',
       'OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)',
       'OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry',
@@ -647,6 +689,76 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.frontage_m).toBeCloseTo(48.2, 1);
     expect(r.depth_m).toBeCloseTo(139.49, 1);
     expect(r.is_irregular, 'a trapezoid: polyArea/mbrArea ratio 0.75 < 0.95').toBe(true);
+  });
+
+  it('WF3 lot-size — parseStatedArea accepts bare numbers as m² and sq.ft converted; never geometry', () => {
+    // WF3 lot-size 2026-10-01 (Spec 55:56-57). The legacy parser (`^([\d.]+)\s*sq\.m`) dropped
+    // the ~10.1K bare-number STATEDAREA values to NULL; a bare number IS a stated area in m²
+    // (98.5% agree with ST_Area(geom::geography)), and `<n> sq.ft` converts via SQM_TO_SQFT.
+    // This test drives the parser TOO — a shapeRecord-only assertion would pass on a compute that
+    // still dropped bare numbers.
+    const mod = loadComputeModule();
+    expect(typeof mod.parseStatedArea, 'the compute must export parseStatedArea so the acceptance rules are unit-drivable').toBe('function');
+    const parse = mod.parseStatedArea as (raw: unknown) => number | null;
+    const table: Array<[string, number | null]> = [
+      ['300.00 sq.m', 300],
+      ['500.00sq.m', 500],
+      ['17366.998291 sq.m', 17366.998291],
+      ['sq.m', null],
+      ['412.5', 412.5],
+      ['.5', 0.5],
+      ['  1200  ', 1200],
+      ['1000 sq.ft', 1000 / 10.7639],
+      ['12 SQ.FT', 12 / 10.7639],
+      ['0', null],
+      ['0 sq.m', null],
+      ['-1.5 sq.m', null],
+      ['1,000', null],
+      ['unknown', null],
+      ['None', null],
+      ['', null],
+    ];
+    for (const [raw, want] of table) {
+      const got = parse(raw);
+      if (want === null) {
+        expect(got, `parseStatedArea(${JSON.stringify(raw)}) must be NULL — no stated area`).toBeNull();
+      } else {
+        expect(got, `parseStatedArea(${JSON.stringify(raw)})`).not.toBeNull();
+        expect(got as number).toBeCloseTo(want, 4);
+      }
+    }
+    expect(parse(null), 'a null cell (column absent) must not throw').toBeNull();
+
+    // shapeRecord carries the provenance column: 'stated' when the parser returned a value,
+    // NULL otherwise — the descriptor's new written column (WF3 lot-size 2026-10-01).
+    const rows = parseCsvFixture(CSV_6ROWS_REL);
+    const stated = shapeRecord()(rows[0] as Record<string, string>) as Shape;
+    expect(stated.lot_size_sqm, 'row 1 STATEDAREA "300.00 sq.m"').toBe(300);
+    expect(stated.lot_size_source, 'a parsed stated lot stamps provenance').toBe('stated');
+    const blank = shapeRecord()(rows[1] as Record<string, string>) as Shape;
+    expect(blank.lot_size_sqm, 'row 2 STATEDAREA is blank').toBeNull();
+    expect(blank.lot_size_source, 'a blank STATEDAREA has no provenance').toBeNull();
+    // The seam proved end-to-end: shapeRecord reads the SAME parser, so a bare number restores.
+    const bare = shapeRecord()({ ...(rows[0] as Record<string, string>), STATEDAREA: '412.5' }) as Shape;
+    expect(bare.lot_size_sqm, 'a bare number is a stated area in m²').toBeCloseTo(412.5, 4);
+    expect(bare.lot_size_sqft, '412.5 m² → sq.ft via SQM_TO_SQFT').toBeCloseTo(4440.11, 2);
+    expect(bare.lot_size_source).toBe('stated');
+  });
+
+  it('WF3 lot-size — shapeRecord tags each STATEDAREA it could not parse (`stated_area_unparsed`), and tags nothing for an accepted or absent value', () => {
+    const rows = parseCsvFixture(CSV_6ROWS_REL);
+    const record = (statedArea: string) => ({ ...(rows[0] as Record<string, string>), STATEDAREA: statedArea });
+    const tagsFor = (statedArea: string): string[] => {
+      const tags: string[] = [];
+      const fn = shapeRecord();
+      fn(record(statedArea), { tag: (t: string) => { tags.push(t); } });
+      return tags;
+    };
+    // Every such row is a silent NULL today — the tag makes an unknown format visible (INFO check).
+    const unknownTags = tagsFor('unknown');
+    expect(unknownTags.filter((t) => t === 'stated_area_unparsed'), 'an unparsable STATEDAREA tags exactly once').toHaveLength(1);
+    expect(tagsFor('300.00 sq.m'), 'an accepted value is not a violation').not.toContain('stated_area_unparsed');
+    expect(tagsFor(''), 'a blank STATEDAREA is absent, not unparsed').not.toContain('stated_area_unparsed');
   });
 
   it('row 3 — a second stated-area-less rectangle: is_irregular false, DATE_EXPIRY blank never triggers the expiry skip', () => {
@@ -828,6 +940,23 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     const c = checkById(d, 'rows_read_floor');
     expect(String(c.limit)).toMatch(/value_min/);
     expect(c.limit_from_config).toBe(SHARED_FLOOR_VAR);
+  });
+
+  it('stated_area_unparsed reports the loader tag count as detail (WF3 lot-size 2026-10-01) — 3 in a fixture ctx, 0 when shaped_tags is absent', () => {
+    // Same shape as shaped_skipped/geom_parse_failures: the INGESTOR's checks read ctx.acquired only
+    // (no DB access), and the count arrives via the `stated_area_unparsed` seam tag the runner collects.
+    const withTags = driveCheck('stated_area_unparsed', {
+      acquired: { shaped_tags: { stated_area_unparsed: 3 } },
+      config: CFG,
+    });
+    expect(withTags).toHaveLength(1);
+    expect(withTags[0]![0]).toBe('stated_area_unparsed');
+    expect(withTags[0]![1].violations, 'an INFO descriptive row never gates').toBe(0);
+    expect(withTags[0]![1].detail).toBe(3);
+
+    const absent = driveCheck('stated_area_unparsed', { acquired: {}, config: CFG });
+    expect(absent[0]![1].violations).toBe(0);
+    expect(absent[0]![1].detail).toBe(0);
   });
 });
 

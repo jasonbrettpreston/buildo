@@ -65,7 +65,8 @@ describe('INGESTOR prerequisite 0t — geometry_repair', () => {
       // parcels upsert re-pinned b9a3cdff3a99858a → 79a43d482e479ba1 by WF3 2026-09-28 (the
       // parcels DESCRIPTOR's guard gained `geometry` and DEC-FENCE2 now watches `geom`; the
       // library and the repair axis are untouched — validation_sql's hash is unchanged).
-      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', '79a43d482e479ba1'],
+      // → 7f537ed6a79d77da by WF3 lot-size 2026-10-01 (6fe38a4f: lot_size_sqm/lot_size_sqft/lot_size_source on_empty:preserve_null + lot_size_source guard term — the declared on_empty axis, not a geometry_repair/derived axis change)
+      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', '7f537ed6a79d77da'],
     ];
     for (const [name, descriptor, validationHash, upsertHash] of cases) {
       const d = descriptor as { outputs: { writes: Array<Record<string, unknown>> } };

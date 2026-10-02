@@ -292,7 +292,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 0 -> 1 at batch-2 row 3.5 ①+② (load_wsib, b0f9d6db): converted.json pending[] gained
     // load_wsib but its census row stayed "C5" (generate-conversion-roadmap.mjs threw); the
     // row now reads "pending", same move as rows 2.2/2.4. Returns to 0 at load_wsib ③.
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the row 3.5 CUTOVER (load_wsib ③, 2026-10-01): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });

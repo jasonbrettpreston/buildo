@@ -4,22 +4,6 @@ export const SQM_TO_SQFT = 10.7639;
 export const M_TO_FT = 3.28084;
 
 /**
- * Parse a STATEDAREA string like "17366.998291 sq.m" into square meters.
- * Returns null if unparseable.
- */
-export function parseStatedArea(raw: string | null | undefined): number | null {
-  if (!raw || !raw.trim()) return null;
-
-  const match = raw.trim().match(/^([\d.]+)\s*sq\.m/i);
-  if (!match) return null;
-
-  const value = parseFloat(match[1]!);
-  if (isNaN(value) || value <= 0) return null;
-
-  return value;
-}
-
-/**
  * Convert square meters to square feet.
  */
 export function sqmToSqft(sqm: number): number {

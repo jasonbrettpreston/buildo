@@ -33,8 +33,8 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
     expect(descriptor.identity.archetype).toBe('ASSERT');
   });
 
-  it('exactly 45 checks[] (42 + S0.3\'s 3), 8 plausibility[], 1 invariants[] (S0.3\'s validate_only on-lot-share row)', () => {
-    expect(descriptor.checks).toHaveLength(45);
+  it('exactly 46 checks[] (42 + S0.3\'s 3, +1 lot_size_stated_vs_geom, WF3 inert 2026-10-01), 8 plausibility[], 1 invariants[] (S0.3\'s validate_only on-lot-share row)', () => {
+    expect(descriptor.checks).toHaveLength(46);
     expect(descriptor.plausibility).toHaveLength(8);
     expect(descriptor.invariants).toHaveLength(1);
     expect(descriptor.invariants[0].id).toBe('existing_structure_onlot_share_low');
@@ -64,14 +64,15 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
     }
   });
 
-  it('37 logic_variables declared (35 new parcel_sanity_* + 2 reused), all on_invalid:"fail" — peel O1 (2026-09-22) RETIRED parcel_sanity_onlot_share_rd_min/_attached_min (declared-but-never-consumed by INVARIANT_ONLOT_SHARE_SQL)', () => {
-    expect(descriptor.config.logic_variables).toHaveLength(37);
+  it('38 logic_variables declared (36 new parcel_sanity_* + 2 reused), all on_invalid:"fail" — peel O1 (2026-09-22) RETIRED parcel_sanity_onlot_share_rd_min/_attached_min (declared-but-never-consumed by INVARIANT_ONLOT_SHARE_SQL)', () => {
+    expect(descriptor.config.logic_variables).toHaveLength(38);
     const names = descriptor.config.logic_variables.map((v: { name: string }) => v.name);
     expect(names).toContain('max_build_min_dimension_m');
     expect(names).toContain('mislink_footprint_lot_tol');
+    expect(names).toContain('parcel_sanity_lot_geom_tolerance_ratio');
     expect(names).not.toContain('parcel_sanity_onlot_share_rd_min');
     expect(names).not.toContain('parcel_sanity_onlot_share_attached_min');
-    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(35);
+    expect(names.filter((n: string) => n.startsWith('parcel_sanity_'))).toHaveLength(36);
     for (const v of descriptor.config.logic_variables) expect(v.on_invalid, v.name).toBe('fail');
   });
 
@@ -163,14 +164,14 @@ describe('assert_parcel_sanity — descriptor generator drift lock (both directi
   });
 });
 
-describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS (facts true today)', () => {
+describe('2. fields sidecar — 42 CHECK_DEFS / 36 LOGIC_VAR_DEFS / 8 DIST_DEFS (facts true today)', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fields = require('../../../../scripts/lib/assert-parcel-sanity-fields.js');
 
-  it('CHECK_DEFS has exactly 45 unique ids (42 + S0.3\'s 3), 13 gates (+1, ravine_constrained_carries_priced_reno)', () => {
-    expect(fields.CHECK_DEFS).toHaveLength(45);
+  it('CHECK_DEFS has exactly 46 unique ids (42 + S0.3\'s 3 + lot_size_stated_vs_geom, WF3 inert 2026-10-01), 13 gates (+1, ravine_constrained_carries_priced_reno)', () => {
+    expect(fields.CHECK_DEFS).toHaveLength(46);
     const ids = fields.CHECK_DEFS.map((c: { id: string }) => c.id);
-    expect(new Set(ids).size).toBe(45);
+    expect(new Set(ids).size).toBe(46);
     expect(fields.CHECK_DEFS.filter((c: { gate: boolean }) => c.gate)).toHaveLength(13);
   });
 
@@ -193,8 +194,8 @@ describe('2. fields sidecar — 42 CHECK_DEFS / 35 LOGIC_VAR_DEFS / 8 DIST_DEFS 
     expect(sibling.id).not.toBe(ravineReno.id);
   });
 
-  it('LOGIC_VAR_DEFS has exactly 35 entries, all prefixed parcel_sanity_ — peel O1 (2026-09-22) RETIRED the S0.3 onlot-share zone floors (0.90/0.50 now baked as documented, non-tunable literals in INVARIANT_ONLOT_SHARE_SQL, never a declared-but-dead logic variable)', () => {
-    expect(fields.LOGIC_VAR_DEFS).toHaveLength(35);
+  it('LOGIC_VAR_DEFS has exactly 36 entries, all prefixed parcel_sanity_ — peel O1 (2026-09-22) RETIRED the S0.3 onlot-share zone floors (0.90/0.50 now baked as documented, non-tunable literals in INVARIANT_ONLOT_SHARE_SQL, never a declared-but-dead logic variable)', () => {
+    expect(fields.LOGIC_VAR_DEFS).toHaveLength(36);
     for (const v of fields.LOGIC_VAR_DEFS) expect(v.name.startsWith('parcel_sanity_'), v.name).toBe(true);
     expect(fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_rd_min')).toBeUndefined();
     expect(fields.LOGIC_VAR_DEFS.find((v: { name: string }) => v.name === 'parcel_sanity_onlot_share_attached_min')).toBeUndefined();
@@ -326,5 +327,68 @@ describe('6. chain wiring (fact, unchanged by this conversion)', () => {
     expect(idx('compute_parcel_cost_estimates')).toBeLessThan(idx('assert_global_coverage'));
     expect(idx('assert_global_coverage')).toBeLessThan(idx('assert_parcel_sanity'));
     expect(idx('assert_parcel_sanity')).toBeLessThan(idx('refresh_snapshot'));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. WF3 inert lot bound (2026-10-01, plan .cursor/wf3_sanity_lot_bound_inert_active_task.md,
+// panel rulings R1-R4). `lot_size_out_of_range` selected NOTHING on every parcel
+// because its `applies` excluded feature_type IN ('COMMON','CONDO') — the WHOLE
+// table (COMMON 492,733 · CONDO 3,777, nothing else). These locks pin the
+// geom-keyed re-key (F1-F3) and the max_build_dim_below_floor re-scope (F4).
+// R1 was WITHDRAWN (ruling correction 2026-10-01, plan §"Ruling correction"):
+// compute reports inert honestly (`inert: true`, verdict.js renders INFO — the
+// declared-severity inert arm never lands; library under scripts/lib/step/** is
+// FROZEN and stays so).
+// ---------------------------------------------------------------------------
+describe('WF3 inert lot bound (2026-10-01)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fields = require('../../../../scripts/lib/assert-parcel-sanity-fields.js') as {
+    CHECK_DEFS: Array<{ id: string; sev: string; gate: boolean; applies: (cfg: Record<string, number>) => string; bad: (cfg: Record<string, number>) => string }>;
+    LOGIC_VAR_DEFS: Array<{ name: string; default: number }>;
+  };
+  const cfg: Record<string, number> = Object.fromEntries(fields.LOGIC_VAR_DEFS.map((v) => [v.name, v.default]));
+  cfg.max_build_min_dimension_m = 3;
+  cfg.mislink_footprint_lot_tol = 0.05;
+  const byId = (id: string) => fields.CHECK_DEFS.find((c) => c.id === id);
+
+  it('(a) no CHECK_DEFS applies()/bad() text mentions feature_type — the COMMON/CONDO exclusion is gone (it excluded 100% of rows: COMMON 492,733 · CONDO 3,777)', () => {
+    for (const def of fields.CHECK_DEFS) {
+      expect(def.applies(cfg), `${def.id} applies()`).not.toContain('feature_type');
+      expect(def.bad(cfg), `${def.id} bad()`).not.toContain('feature_type');
+    }
+  });
+
+  it('(b) lot_size_out_of_range is re-keyed on geometry: applies() is lot+geom, bad() interpolates the tolerance var', () => {
+    const def = byId('lot_size_out_of_range');
+    expect(def, 'lot_size_out_of_range must still be declared').toBeTruthy();
+    expect(def!.applies(cfg)).toContain('geom IS NOT NULL');
+    expect(def!.bad(cfg)).toContain('ST_Area(geom::geography)');
+    expect(def!.bad(cfg)).toContain(String(cfg.parcel_sanity_lot_geom_tolerance_ratio));
+    const looser = { ...cfg, parcel_sanity_lot_geom_tolerance_ratio: 0.5 };
+    expect(def!.bad(looser)).not.toBe(def!.bad(cfg));
+  });
+
+  it('(c) ids renamed/added: _common_condo absent, _geom_backed + lot_size_stated_vs_geom present as INFO', () => {
+    expect(byId('lot_size_out_of_range_common_condo')).toBeUndefined();
+    const geomBacked = byId('lot_size_out_of_range_geom_backed');
+    expect(geomBacked, 'lot_size_out_of_range_geom_backed must be declared').toBeTruthy();
+    expect(geomBacked!.sev).toBe('INFO');
+    const stated = byId('lot_size_stated_vs_geom');
+    expect(stated, 'lot_size_stated_vs_geom must be declared').toBeTruthy();
+    expect(stated!.sev).toBe('INFO');
+    expect(stated!.gate).toBe(false);
+    expect(stated!.applies(cfg)).toContain("lot_size_source = 'stated'");
+    // R4 — the pre-existing accept-list row is untouched.
+    expect(byId('lot_implausible_correctly_excluded'), 'R4: lot_implausible_correctly_excluded stays').toBeTruthy();
+  });
+
+  it('(d) max_build_dim_below_floor: bad() is a real predicate (not TRUE) interpolating the floor var; applies() is dims-present; still a FAIL gate', () => {
+    const def = byId('max_build_dim_below_floor');
+    expect(def, 'max_build_dim_below_floor must be declared').toBeTruthy();
+    expect(def!.bad(cfg)).not.toBe('TRUE');
+    expect(def!.bad(cfg)).toContain(String(cfg.max_build_min_dimension_m));
+    expect(def!.applies(cfg)).not.toContain(String(cfg.max_build_min_dimension_m));
+    expect(def!.gate).toBe(true);
   });
 });

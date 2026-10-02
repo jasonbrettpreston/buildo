@@ -387,6 +387,7 @@ const GROUP_ORDER = [
       "engine_health_dead_tuple_min_rows",
       "parcel_sanity_lot_size_min_sqm",
       "parcel_sanity_lot_size_max_sqm",
+      "parcel_sanity_lot_geom_tolerance_ratio",
       "parcel_sanity_comp_fsi_p50_max",
       "parcel_sanity_comp_fsi_p50_min",
       "parcel_sanity_lowrise_bylaw_fsi_max",

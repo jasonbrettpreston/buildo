@@ -97,17 +97,21 @@ function field(record, name) {
 }
 
 /**
- * `parseStatedArea` (loader :48-55, verbatim): `STATEDAREA` is a display string
- * ("300.00 sq.m"). Anything that is not a positive `sq.m` figure is NULL — never a
- * fallback to the polygon area. `lot_size_sqm` is EXCLUSIVELY this function's output.
+ * `parseStatedArea`: `STATEDAREA` is the SOURCE-stated lot area (Spec 55:56). Accepted
+ * shapes: `<n> sq.m` → n; a bare number `<n>` → n m² (WF3 lot-size 2026-10-01: 10,121
+ * bare values agree with ST_Area within 5% for 98.5%, 0% as sq.ft); `<n> sq.ft` →
+ * n / SQM_TO_SQFT. Anything else, zero or negative is NULL — never a fallback to the
+ * polygon area. shapeRecord's lot_size_sqm is exclusively this function's output; the
+ * STORED column may hold a preserved geom_backfill value (on_empty:preserve_null),
+ * discriminated by lot_size_source.
  */
 function parseStatedArea(raw) {
   if (!raw || !raw.trim()) return null;
-  const match = raw.trim().match(/^([\d.]+)\s*sq\.m/i);
+  const match = raw.trim().match(/^(\d+(?:\.\d+)?|\.\d+)\s*(sq\.m|sq\.ft)?$/i);
   if (!match) return null;
   const value = parseFloat(match[1]);
   if (Number.isNaN(value) || value <= 0) return null;
-  return value;
+  return match[2] && match[2].toLowerCase() === 'sq.ft' ? value / SQM_TO_SQFT : value;
 }
 
 /** `extractRing` (loader :58-63, verbatim): Polygon → its first ring; MultiPolygon → its first part's first ring. */
@@ -375,6 +379,8 @@ function shapeRecord(record, seam) {
 
   const statedAreaRaw = field(src, 'STATEDAREA');
   const lotSizeSqm = parseStatedArea(statedAreaRaw);
+  // WF3 lot-size: a non-empty STATEDAREA the parser refuses is COUNTED, never silent.
+  if (statedAreaRaw && lotSizeSqm == null && typeof facts.tag === 'function') facts.tag('stated_area_unparsed');
   const lotSizeSqft = lotSizeSqm ? Math.round(lotSizeSqm * SQM_TO_SQFT * 100) / 100 : null;
 
   const addressNumber = field(src, 'ADDRESS_NUMBER');
@@ -406,6 +412,7 @@ function shapeRecord(record, seam) {
     stated_area_raw: statedAreaRaw || null,
     lot_size_sqm: lotSizeSqm,
     lot_size_sqft: lotSizeSqft,
+    lot_size_source: lotSizeSqm != null ? 'stated' : null,
     frontage_m: frontageM,
     frontage_ft: frontageM ? Math.round(frontageM * M_TO_FT * 100) / 100 : null,
     depth_m: depthM,
@@ -592,6 +599,13 @@ function shaped_skipped(ctx) {
   ctx.report('shaped_skipped', { violations: 0, detail: n });
 }
 
+/** WF3 lot-size 2026-10-01 — non-empty STATEDAREA values the parser refused (INFO, counted via the shapeRecord tag). */
+function stated_area_unparsed(ctx) {
+  const tags = (ctx.acquired && ctx.acquired.shaped_tags) || {};
+  const n = numberOrNull(tags.stated_area_unparsed) || 0;
+  ctx.report('stated_area_unparsed', { violations: 0, detail: n });
+}
+
 // ---- dispatch ----
 
 /** §5.5 (1) — the dispatch table. Keys are exactly the descriptor's check ids, in DESCRIPTOR ORDER. */
@@ -603,6 +617,7 @@ const CHECKS = {
   records_errors,
   geom_parse_failures,
   shaped_skipped,
+  stated_area_unparsed,
 };
 
 /**

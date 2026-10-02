@@ -227,11 +227,13 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
   // WIDENED AGAIN at the batch-2 row 3.8 cutover (2026-09-28): neighbourhoods registering adds
   // ONE pair (neighbourhoods -> link_neighbourhoods, not involving this step), moving the count
   // 17 -> 18.
-  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11 -> 13 -> 16 -> 17 -> 18 (batch-2 rows 3.7 + 3.6 + 3.8)', () => {
+  // WIDENED AGAIN at the batch-2 row 3.5 cutover (2026-09-30): load_wsib registering adds ONE
+  // pair (load_wsib -> link_wsib, not involving this step), moving the count 18 -> 19.
+  it('[flipped at commit 3] registered in converted.json, the seam-pair registry moved 9 -> 11 -> 13 -> 16 -> 17 -> 18 -> 19 (batch-2 rows 3.7 + 3.6 + 3.8 + 3.5)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seam: any = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
     const registry = seam.loadConvertedDescriptors();
-    expect(seam.deriveSeamPairs(registry).length).toBe(18);
+    expect(seam.deriveSeamPairs(registry).length).toBe(19);
   });
 });
 
