@@ -323,10 +323,41 @@ describe('gate #44 (d) — declared txn_scope vs observed (contract: FAIL:WITNES
 
   it('RED: an autocommit write plus a block yields observed mixed', () => {
     const t = trace({
+      statements: [
+        {
+          fingerprint: 'w1',
+          kind: 'write',
+          count: 1,
+          reads: { parcels: ['id'] },
+          writes: { parcels: ['a', 'b'] },
+          excluded: [],
+          error: null,
+        },
+        {
+          fingerprint: 'r1',
+          kind: 'read',
+          count: 1,
+          reads: { parcels: ['id', 'geom'] },
+          writes: {},
+          excluded: [],
+          error: null,
+        },
+        {
+          fingerprint: 'w2',
+          kind: 'write',
+          count: 1,
+          reads: { parcels: ['id'] },
+          writes: { parcels: ['a', 'b'] },
+          excluded: [],
+          error: null,
+        },
+      ],
       autocommit_writes: ['w2'],
     });
     const out = run({ postTraces: { sources: t } });
     expect(out.rows).toContain('FAIL:WITNESS:sources:d:txn_scope:step:mixed');
+    // ...and the extra REAL write fingerprint is also a (c) row, not a phantom ignore.
+    expect(out.rows).toContain('FAIL:WITNESS:sources:c:statements:1!=2');
   });
 
   it('GREEN control: exactly one block with writes, no autocommit, yields no (d) row', () => {
@@ -584,7 +615,116 @@ describe('gate #44 PRODUCER — a SQL comment never satisfies the pattern (WF3 C
 });
 
 // ===========================================================================
-// 11. hardStop semantics
+// 11. R-BG (Spec 124) — runner-owned ledger writes are NOT step writes
+// A STANDALONE run owns its `pipeline_runs` row, so the real trace carries the ledger
+// INSERT/UPDATE as `kind:'write'` statements whose `writes` is `{}` (pipeline_runs is
+// RUNNER_OWNED → `excluded`). checks (c) and (d) must ignore them.
+// ===========================================================================
+describe('gate #44 — runner-owned ledger writes are not step writes (Spec 124 R-BG)', () => {
+  type FixtureTrace = TraceDoc & {
+    step?: string;
+    chain?: string;
+    transactions?: Array<{ client: string; write_fingerprints: string[] }>;
+  };
+  const fixture = (): FixtureTrace =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(process.cwd(), 'src/tests/fixtures/witness-load-heritage-standalone.trace.json'),
+        'utf8',
+      ),
+    ) as FixtureTrace;
+  // pull a fixture statement out by (unique) fingerprint, preserving its shape.
+  const stmt = (t: FixtureTrace, fingerprint: string): Record<string, unknown> => {
+    const s = (t.statements || []).find((x) => x.fingerprint === fingerprint);
+    if (!s) throw new Error(`fixture has no statement ${fingerprint}`);
+    return s;
+  };
+  // The descriptor declares exactly what the trace's real (non-excluded) step writes touch.
+  const heritageDescriptor = (statements: number) => ({
+    inputs: {
+      reads: {
+        tables: [
+          { table: 'heritage_properties', columns: ['source_id', 'address_text', 'designated_date', 'geom', 'source_dataset_version', 'status'] },
+          { table: 'heritage_districts', columns: ['source_id', 'designated_date', 'geom', 'name', 'source_dataset_version'] },
+        ],
+      },
+    },
+    outputs: {
+      writes: [
+        { table: 'heritage_properties', columns: [{ name: 'source_id' }, { name: 'address_text' }, { name: 'designated_date' }, { name: 'geom' }, { name: 'source_dataset_version' }, { name: 'status' }, { name: 'building_type' }, { name: 'bylaw_no' }, { name: 'construction_year' }, { name: 'htg_conser_name' }, { name: 'reason' }, { name: 'updated_at' }] },
+        { table: 'heritage_districts', columns: [{ name: 'source_id' }, { name: 'designated_date' }, { name: 'geom' }, { name: 'name' }, { name: 'source_dataset_version' }, { name: 'bylaw_no' }, { name: 'hcd_type' }, { name: 'updated_at' }, { name: 'wards' }] },
+      ],
+      write_inventory: { statements },
+    },
+    execution: { txn_scope: 'batch' },
+  });
+  const fpOf = (t: FixtureTrace): string => String(t.source_fingerprint || '');
+  const pass = (trace: FixtureTrace) =>
+    run({
+      slug: 'load_heritage',
+      descriptor: heritageDescriptor(4),
+      currentFingerprint: fpOf(trace),
+      postTraces: { 'scripts/load-heritage.js': trace },
+    });
+
+  it('RED: a standalone trace with 2 runner-owned ledger writes yields no (c) row', () => {
+    const t = fixture();
+    expect(stmt(t, '6447cd32076ed957').excluded).toEqual(['pipeline_runs']);
+    expect(stmt(t, '528151b0515ba432').excluded).toEqual(['pipeline_runs']);
+    expect((t.autocommit_writes || [])).toEqual(['528151b0515ba432', '6447cd32076ed957']);
+    const out = pass(t);
+    expect(out.rows.filter((r) => r.startsWith('FAIL:WITNESS:load_heritage:c:'))).toEqual([]);
+  });
+
+  it('RED: a standalone trace yields no (d) txn_scope row (the ledger writes do not read as mixed)', () => {
+    const out = pass(fixture());
+    expect(out.rows.filter((r) => r.startsWith('FAIL:WITNESS:load_heritage:d:'))).toEqual([]);
+  });
+
+  it('RED: the standalone trace is otherwise clean (the R-BG row grammar, full shape)', () => {
+    const out = pass(fixture());
+    expect(out.answer).toBe('PASS');
+    expect(out.rows).toEqual([]);
+    expect(out.hardStop).toBe(false);
+  });
+
+  it('GREEN control: an extra REAL write fingerprint still yields the (c) row', () => {
+    const t = fixture();
+    t.statements = [
+      ...(t.statements || []),
+      { fingerprint: 'extra-real-write', kind: 'write', count: 1, reads: {}, writes: { heritage_properties: ['updated_at'] }, excluded: [], error: null },
+    ];
+    const out = pass(t);
+    expect(out.rows).toContain('FAIL:WITNESS:load_heritage:c:statements:4!=5');
+  });
+
+  it('GREEN control: a REAL write outside any transaction still derives observed mixed', () => {
+    const t = fixture();
+    // heritage_properties real write joins the autocommit set while the two real transactions remain.
+    t.autocommit_writes = [...(t.autocommit_writes || []), 'ede7ab7788a9e3e9'];
+    const out = pass(t);
+    expect(out.rows).toContain('FAIL:WITNESS:load_heritage:d:txn_scope:batch:mixed');
+  });
+
+  it('GREEN control: a lone ledger write (no step write at all) yields no (c)/(d) rows', () => {
+    const t = fixture();
+    t.statements = [stmt(t, '6447cd32076ed957')];
+    t.transactions = [];
+    t.autocommit_writes = ['6447cd32076ed957'];
+    t.touched = { reads: {}, writes: {} };
+    const out = run({
+      slug: 'load_heritage',
+      descriptor: heritageDescriptor(0),
+      currentFingerprint: fpOf(t),
+      postTraces: { 'scripts/load-heritage.js': t },
+    });
+    expect(out.rows.filter((r) => r.startsWith('FAIL:WITNESS:load_heritage:c:'))).toEqual([]);
+    expect(out.rows.filter((r) => r.startsWith('FAIL:WITNESS:load_heritage:d:'))).toEqual([]);
+  });
+});
+
+// ===========================================================================
+// 12. hardStop semantics
 // ===========================================================================
 describe('gate #44 hardStop — pending vs converted (contract: converted is REPORT-ONLY)', () => {
   const undeclared = (): TraceDoc => {

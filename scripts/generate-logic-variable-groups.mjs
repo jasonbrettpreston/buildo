@@ -514,7 +514,14 @@ const GROUP_ORDER = [
       "massing_download_timeout_ms",
       "building_footprints_maintenance_timeout_minutes",
       "neighbourhoods_download_timeout_ms",
-      "neighbourhoods_maintenance_timeout_minutes"
+      "neighbourhoods_maintenance_timeout_minutes",
+      "load_heritage_dataset_age_warn_years",
+      "load_heritage_count_drift_fail_pct",
+      "load_heritage_invalid_geometry_fail_pct",
+      "load_heritage_mass_delete_fail_pct",
+      "load_heritage_geometry_update_warn_pct",
+      "load_heritage_download_timeout_ms",
+      "load_heritage_round_scale"
     ]
   },
   {

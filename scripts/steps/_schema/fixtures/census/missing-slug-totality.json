@@ -317,8 +317,8 @@
       "slug": "load_heritage",
       "file": "scripts/load-heritage.js",
       "archetype": "INGESTOR",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Spec 122 §1.10 declared; batch-2 row 3.4 conversion IN FLIGHT (commit ①, 2026-09-30) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (two primaries, two targets, class B)"
     },
     {
       "slug": "massing",
