@@ -286,7 +286,7 @@ describe('spec Operating Boundaries — every step a spec names is classified (S
   // 216 undeclared spec->step pairs across 42 specs — the domain specs (54-62, 65/66, 80-88 …) had
   // never declared the steps they govern, so G0's owner lookup was true only for the chain specs.
   // Cross-cutting architecture specs are exempt readers (they name every script by design).
-  const CROSS_CUTTING = new Set(['30', '40', '47', '48', '79', '118', '119', '120', '121', '122', '122a', '123', '124']);
+  const CROSS_CUTTING = new Set(['30', '40', '47', '48', '79', '118', '119', '120', '121', '122', '122a', '123', '124', '124a']);
   const section = (c: string, name: string) => (c.match(new RegExp(`### ${name}[\\s\\S]*?(?=###|## |$)`)) || [''])[0];
 
   it('Operating Boundaries sub-headings are spelled canonically and appear at most once per spec (the generator and this lock read the FIRST exact match only)', () => {
