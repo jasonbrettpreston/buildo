@@ -195,3 +195,63 @@ describe.skipIf(!dbAvailable())('runLedgerGateDecision — Phase B B3 live-DB ca
     expect(d.ownLastRecordsMeta).toEqual({ rates_as_of: '2026-06-01', index_updated_at: '2026-07-01T00:00:00.000Z' });
   });
 });
+
+// ── WF3 witness-unblock C3 (R9, R15 db, R19) — orchestrator runs `npm run test:db` ──
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { readPriorRunMeta } = require('../../../scripts/lib/source-version.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { preWriteSkipRows } = require('../../../scripts/lib/step/index.js');
+
+describe.skipIf(!dbAvailable())('prior-run baseline — admits completed_with_warnings, never another status or a preserve-and-WARN run (WF3 C3)', () => {
+  const OWN_P = 'FX_svprior_own';
+  const UP_P = 'FX_svprior_up';
+  const MARK = { audit_table: { rows: preWriteSkipRows([{ writeSkippedPreWriteWarn: true, failedPreWriteWarn: ['x'] }]) } };
+  let pool: Pool;
+  let anchor: Date;
+  beforeAll(async () => {
+    pool = getTestPool() as Pool;
+    const { rows } = await pool.query('SELECT NOW() AS now');
+    anchor = new Date(rows[0].now);
+  });
+  afterEach(async () => {
+    await pool.query(`DELETE FROM pipeline_runs WHERE pipeline LIKE 'FX_svprior_%'`);
+  });
+  const seed = (status: string, mins: number, recordsMeta: object, finished = true) => insertRun(pool, {
+    pipeline: OWN_P, status, startedAt: minutesAgo(anchor, mins), completedAt: finished ? minutesAgo(anchor, mins - 1) : null, recordsMeta,
+  });
+  const gate = () => runLedgerGateDecision(pool, { ownSlugs: [OWN_P], upstreamSlugs: [UP_P], now: anchor });
+
+  it('R9: a completed_with_warnings run newer than a completed one is the baseline, for both readers', async () => {
+    await seed('completed', 60, { tag: 'T1' });
+    await seed('completed_with_warnings', 50, { tag: 'T2' });
+    expect(await readPriorRunMeta(pool, OWN_P)).toEqual({ tag: 'T2' });
+    expect((await gate()).ownLastRecordsMeta).toEqual({ tag: 'T2' });
+  });
+  it('R9 + R15 db: completed_with_errors, deferred_to_full, failed and running never become the baseline', async () => {
+    await seed('completed', 60, { tag: 'T1' });
+    await seed('completed_with_warnings', 50, { tag: 'T2' });
+    await seed('completed_with_errors', 40, { tag: 'cwe' });
+    await seed('deferred_to_full', 30, { tag: 'defer' });
+    await seed('failed', 20, { tag: 'failed' });
+    await seed('running', 10, { tag: 'running' }, false);
+    expect(await readPriorRunMeta(pool, OWN_P)).toEqual({ tag: 'T2' });
+    expect((await gate()).ownLastRecordsMeta).toEqual({ tag: 'T2' });
+  });
+  it('R19: a marked preserve-and-WARN run is never the baseline, whatever its status (unmarked T2 wins)', async () => {
+    await seed('completed', 60, { tag: 'T1' });
+    await seed('completed_with_warnings', 50, { tag: 'T2' });
+    await seed('completed_with_warnings', 40, { ...MARK, tag: 'T3' });
+    await seed('completed', 30, { ...MARK, tag: 'T4' }); // the chain preserve-arm shape (finalized 'completed')
+    expect(await readPriorRunMeta(pool, OWN_P)).toEqual({ tag: 'T2' });
+    expect((await gate()).ownLastRecordsMeta).toEqual({ tag: 'T2' });
+  });
+  it('O-6 lock: an upstream completed_with_warnings row with changes since own last run still RUNs (fail-safe)', async () => {
+    await seed('completed', 60, { tag: 'T1' });
+    await insertRun(pool, { pipeline: UP_P, status: 'completed_with_warnings', startedAt: minutesAgo(anchor, 10),
+      completedAt: minutesAgo(anchor, 9), recordsNew: 3 });
+    const d = await gate();
+    expect(d.skip).toBe(false);
+    expect(d.reason).toBe('upstream_activity_since_last_run');
+    expect(d.nonCompleted).toBe(1);
+  });
+});

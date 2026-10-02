@@ -506,6 +506,83 @@ describe('gate #44 PRODUCER (canary 7) — pipeline_runs completed-only status f
   });
 });
 
+// 10b. WF3 witness-unblock C1 — (b) honours written:"db_default" in both directions
+describe('gate #44 (b) — written:"db_default" columns (WF3 C1: R1–R3, R17)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const W = require(path.join(process.cwd(), 'scripts/lib/step/write.js'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const A = require(path.join(process.cwd(), 'scripts/lib/sql-witness/assemble.cjs'));
+  type Col = { name: string; written?: string };
+  type Desc = { outputs: { writes: Array<{ table: string; columns: Col[] }> } };
+  const load = (f: string): Desc =>
+    JSON.parse(fs.readFileSync(path.join(process.cwd(), `scripts/${f}.descriptor.json`), 'utf8'));
+  const ndjson = (texts: string[]): string => [
+    { type: 'header', pid: 1, tracer_self_ms: 0, distinct: texts.length, calls: texts.length },
+    ...texts.map((text, i) => ({ type: 'statement', i, text, count: 1, rowCount: 1, clients: [1] })),
+    { type: 'client', id: 1, seq: texts.map((_, i) => [i, 1]) },
+  ].map((l) => JSON.stringify(l)).join('\n') + '\n';
+  const first = (d: Desc): { table: string; columns: Col[] } => {
+    const w = d.outputs.writes[0];
+    if (!w) throw new Error('descriptor declares no write');
+    return w;
+  };
+  const upsert = (d: Desc): string => W.buildWritePlan(first(d), d).upsertSqlFor(1); // 2 args (F-6(b))
+  async function bRows(file: string, slug: string, texts?: (d: Desc) => string[]): Promise<string[]> {
+    const d = load(file);
+    const w = first(d);
+    const t = await A.assembleTrace({
+      ndjsonTexts: [ndjson(texts ? texts(d) : [upsert(d)])],
+      catalog: { [w.table]: w.columns.map((c) => c.name) },
+      meta: { step: slug, chain: 'sources', source_fingerprint: FP, git_head: 'g', wall_ms: 0 },
+    });
+    const out = G.evaluateWitness({ slug, descriptor: d, status: 'pending', currentFingerprint: FP,
+      postTraces: { sources: t }, preTraces: {}, explainedDiffs: [] });
+    return out.rows.filter((r) => r.startsWith(`FAIL:WITNESS:${slug}:b:`));
+  }
+  it('R1 RED: load_ravines generated upsert (db_default created_at untraced) yields no b: row', async () => {
+    expect(await bRows('load-ravines', 'load_ravines')).toEqual([]);
+  });
+  it.each([['load-centreline', 'load_centreline'], ['load-neighbourhoods', 'neighbourhoods'], ['load-massing', 'massing']])(
+    'R17 RED: %s generated upsert yields no b: row', async (file, slug) => {
+      expect(await bRows(file, slug)).toEqual([]);
+    });
+  it('R2 RED: a traced write of the db_default column IS a b: violation', async () => {
+    const rows = await bRows('load-ravines', 'load_ravines',
+      (d) => [upsert(d), 'INSERT INTO ravines (created_at) VALUES (now())']);
+    expect(rows).toContain('FAIL:WITNESS:load_ravines:b:ravines.created_at');
+  });
+  it('R3 scope control: a dropped step column (updated_at) still FAILs b:', async () => {
+    const rows = await bRows('load-ravines', 'load_ravines', (d) => {
+      const cols = first(d).columns.filter((c) => c.written === 'step' && c.name !== 'updated_at').map((c) => c.name);
+      return [`INSERT INTO ravines (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')})`];
+    });
+    expect(rows).toContain('FAIL:WITNESS:load_ravines:b:ravines.updated_at');
+    expect(rows).not.toContain('FAIL:WITNESS:load_ravines:b:ravines.created_at');
+  });
+});
+
+describe('gate #44 PRODUCER — a SQL comment never satisfies the pattern (WF3 C1, O-7: R4)', () => {
+  const producer = (text: string): string[] => {
+    const t = trace();
+    t.statements = [{ fingerprint: 'p1', kind: 'read', count: 1, reads: {}, writes: {}, excluded: ['pipeline_runs'],
+      error: null, text, params: [['sources:load_ravines']] }];
+    return run({ postTraces: { sources: t } }).rows.filter((r) => r.startsWith('FAIL:PRODUCER:'));
+  };
+  const RED = ['FAIL:PRODUCER:sources:sources:load_ravines:status'];
+  it('R4 RED: the token inside a /* */ comment does not exempt a completed-only filter', () => {
+    expect(producer("SELECT records_meta FROM pipeline_runs WHERE status = 'completed' /* completed_with_warnings */")).toEqual(RED);
+  });
+  it('R4 RED: the token inside a -- comment does not exempt it either', () => {
+    expect(producer("SELECT records_meta FROM pipeline_runs WHERE status = 'completed' -- completed_with_warnings\nORDER BY started_at DESC")).toEqual(RED);
+  });
+  it("R4 GREEN control: a -- inside a string literal ('a--b') is text, not a comment", () => {
+    expect(producer("SELECT records_meta FROM pipeline_runs WHERE status = 'completed' AND pipeline <> 'a--b' OR status = 'completed_with_warnings'")).toEqual([]);
+  });
+  it('R4 GREEN control: a -- inside a dollar-quoted body ($t$…$t$) is text', () => {
+    expect(producer("SELECT records_meta FROM pipeline_runs WHERE status = 'completed' AND pipeline <> $t$x--y$t$ OR status = 'completed_with_warnings'")).toEqual([]);
+  });
+});
+
 // ===========================================================================
 // 11. hardStop semantics
 // ===========================================================================

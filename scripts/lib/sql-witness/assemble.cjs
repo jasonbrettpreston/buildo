@@ -182,9 +182,19 @@ async function assembleTrace({ ndjsonTexts, catalog, meta }) {
   const perFileEntries = parsed.map((file) => {
     const pid = file.header && file.header.pid != null ? file.header.pid : 0;
     const byIndex = new Map();
+    const textOfSt = (st) => (typeof st.text === 'string' ? st.text : String(st.text == null ? '' : st.text));
+    // WF3 C2 per-pid pre-pass: temp tables are session-local, so the temps THIS process
+    // creates (any statement, incl. inside multi-statement texts) bind for its statements
+    // only — a name created in pid A gives no exemption in pid B. Detection is the
+    // resolver's own (collectSessionTemps); assemble never parses for temps itself.
+    // Per-pid, not per-connection: an accepted over-approximation (plan F-6(d)).
+    const sessionTemps = new Set();
+    for (const st of file.statements) {
+      for (const name of resolve.collectSessionTemps(textOfSt(st), cat)) sessionTemps.add(name);
+    }
     const entries = file.statements.map((st) => {
-      const text = typeof st.text === 'string' ? st.text : String(st.text == null ? '' : st.text);
-      const r = resolve.resolveStatement(text, cat);
+      const text = textOfSt(st);
+      const r = resolve.resolveStatement(text, cat, { sessionTemps });
       const entry = {
         pid,
         text,

@@ -50,7 +50,7 @@ function declaredTables(descriptor) {
   return set;
 }
 
-/** `outputs.writes[]` → `[{table, cols: string[]}]` with `columns[].name`. */
+/** `outputs.writes[]` → `[{table, cols: string[], dbDefault: Set<string>}]` with `columns[].name`. */
 function declaredWrites(descriptor) {
   const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes)
     ? descriptor.outputs.writes
@@ -61,7 +61,16 @@ function declaredWrites(descriptor) {
     const cols = Array.isArray(w.columns)
       ? w.columns.map((c) => (c && typeof c.name === 'string' ? c.name : null)).filter(Boolean)
       : [];
-    out.push({ table: w.table, cols });
+    // `written: "db_default"` (step.schema.json: a DDL default the step never writes) is
+    // carried so check (b) can honour the declaration in both directions (WF3 C1).
+    const dbDefault = new Set(
+      Array.isArray(w.columns)
+        ? w.columns
+          .filter((c) => c && typeof c.name === 'string' && c.written === 'db_default')
+          .map((c) => c.name)
+        : [],
+    );
+    out.push({ table: w.table, cols, dbDefault });
   }
   return out;
 }
@@ -173,7 +182,12 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace) {
     const tracedCols = new Set(Array.isArray(touched.writes[table]) ? touched.writes[table] : []);
     const declared = declaredWrites(descriptor).find((w) => w.table === table);
     for (const col of declared ? declared.cols : []) {
-      if (!tracedCols.has(col)) rows.push(`FAIL:WITNESS:${slug}:b:${table}.${col}`);
+      // db_default: NOT required in the traced write, and a traced write of it IS a
+      // violation (same row grammar) — the declaration is checked both ways (WF3 C1).
+      const isDbDefault = declared.dbDefault.has(col);
+      if (isDbDefault ? tracedCols.has(col) : !tracedCols.has(col)) {
+        rows.push(`FAIL:WITNESS:${slug}:b:${table}.${col}`);
+      }
     }
   }
 
@@ -226,13 +240,24 @@ function checkOneWay(slug, pre, post, explainedDiffs) {
 const COMPLETED_ONLY_RE = /status\s*=\s*'completed'/i;
 const COMPLETED_ANY_RE = /completed_with_warnings/i;
 
+/**
+ * SQL text with comments blanked (WF3 C1, O-7): a `--` or block comment must not satisfy
+ * the PRODUCER pattern without its intent. String literals ('…', '' escapes) and
+ * dollar-quoted bodies ($tag$…$tag$) are kept verbatim, so a `--` inside them is text.
+ */
+const SQL_TOKEN_RE = /'(?:[^']|'')*'|\$([A-Za-z_][A-Za-z_0-9]*)?\$[\s\S]*?\$\1\$|--[^\n]*|\/\*[\s\S]*?\*\//g;
+function stripSqlComments(text) {
+  return text.replace(SQL_TOKEN_RE, (m) => (m.startsWith('--') || m.startsWith('/*') ? ' ' : m));
+}
+
 function producerRows(slug, trace) {
   const rows = [];
   const statements = Array.isArray(trace && trace.statements) ? trace.statements : [];
   for (const s of statements) {
     if (!s || typeof s.text !== 'string') continue;
-    if (!COMPLETED_ONLY_RE.test(s.text)) continue;
-    if (COMPLETED_ANY_RE.test(s.text)) continue;
+    const text = stripSqlComments(s.text);
+    if (!COMPLETED_ONLY_RE.test(text)) continue;
+    if (COMPLETED_ANY_RE.test(text)) continue;
     const params = Array.isArray(s.params) ? s.params : [];
     const first = Array.isArray(params[0]) && params[0].length > 0 ? params[0][0] : null;
     rows.push(`FAIL:PRODUCER:${slug}:${first ?? '?'}:status`);

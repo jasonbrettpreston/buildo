@@ -32,6 +32,7 @@ const SPEC_FILES: Record<string, string> = {
   '122a': '122a_step_optimization_appendix.md',
   '123': '123_step_opt_assessment_validation.md',
   '124': '124_step_standard_policy.md',
+  '124a': '124a_step_standard_policy_appendix.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {
@@ -198,6 +199,50 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     });
     expect(run.status, `stdout=${run.stdout}`).toBe(1);
     expect(run.stderr).toContain('UNDECLARED MOVE');
+  });
+
+  // Operator ruling "Split to 124a" (2026-10-02): arm (vi) totality runs over EVERY
+  // appendix in APPENDIX_SPECS (122a, 124a), and M08/M09 are the first moves into 124a.
+  // Each test builds its OWN fixture tree — the shared `fixture` above is mutated by
+  // earlier tests in this block.
+  it('RED — a 124a "(moved from ...)" heading with no moves[] row fails --check (arm vi covers every appendix)', () => {
+    const local = makeFixtureTree();
+    fs.appendFileSync(
+      path.join(local.dir, SPEC_FILES['124a']!),
+      '\n\n## Appendix §B99 — Undeclared fixture move (moved from Spec 124 §' + '999) — HISTORICAL\n\nbody\n',
+    );
+    const run = runCli(['--check'], {
+      BUILDO_SPEC_SPLIT_SPEC_DIR: local.relDir,
+      BUILDO_SPEC_SPLIT_MANIFEST_PATH: local.relManifest,
+    });
+    expect(run.status, `stdout=${run.stdout}`).toBe(1);
+    expect(run.stderr).toContain('arm(vi) UNDECLARED MOVE — 124a heading');
+  });
+
+  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; to_spec: string; content_sha256: string | null }[] };
+    const into124a = manifest.moves.filter((m) => m.to_spec === '124a');
+    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09']);
+    for (const m of into124a) expect(m.content_sha256, `${m.id} must carry the hash --refresh recorded`).toMatch(/^[0-9a-f]{64}$/);
+
+    const green = makeFixtureTree();
+    const ok = runCli(['--check'], {
+      BUILDO_SPEC_SPLIT_SPEC_DIR: green.relDir,
+      BUILDO_SPEC_SPLIT_MANIFEST_PATH: green.relManifest,
+    });
+    expect(ok.status, `stderr=${ok.stderr}`).toBe(0);
+
+    const red = makeFixtureTree();
+    const appendixPath = path.join(red.dir, SPEC_FILES['124a']!);
+    const text = fs.readFileSync(appendixPath, 'utf8');
+    expect(text.split('| R-B |').length - 1, 'the tamper target must exist exactly once in M08\'s moved block').toBe(1);
+    fs.writeFileSync(appendixPath, text.replace('| R-B |', '| R-B. |'));
+    const bad = runCli(['--check'], {
+      BUILDO_SPEC_SPLIT_SPEC_DIR: red.relDir,
+      BUILDO_SPEC_SPLIT_MANIFEST_PATH: red.relManifest,
+    });
+    expect(bad.status, `stdout=${bad.stdout}`).toBe(1);
+    expect(bad.stderr).toContain('arm(i) move M08');
   });
 
   it('RED — bad-move-breaks-reader.json: a move whose anchor collides with a declared reader_guards slice fails --check', () => {

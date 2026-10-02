@@ -268,6 +268,32 @@
       "commit": "1a1cf7c3",
       "classification": "HISTORICAL",
       "evidence": "WF2 'runner row-error policy' prerequisite move (2026-09-22): Spec 124 had ~1.2 KB of its 10%-headroom budget remaining and this WF2's own R-AX register row (~2.6 KB) could not land without a move. §R-8 is explicitly retrospective ('after the eighth [pilot]'), carries no 'Enforced by' clause, and matches M06's own criterion ('a regenerated-per-pilot-cutover illustrative snapshot, not one of Rules 1-13's binding policy statements') exactly — it is a dated lessons table, not live policy. The '## §R-8' heading itself is PRESERVED by the stub (this tool's own heading-anchor convention), so every existing 'Spec 124 §R-8' citation still resolves to a real heading."
+    },
+    {
+      "id": "M08",
+      "from_spec": "124",
+      "anchor": "#### Worked examples from pilots 1–3",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B1 — Worked examples from pilots 1–3 (moved from Spec 124 §7) — HISTORICAL, 2026-10-02",
+      "content_sha256": "31b8ae4a4dce831d2da65086247034ffac88aaadc4c3e519b15804dba000cffd",
+      "line_count": 11,
+      "moved_at": "2026-10-02",
+      "commit": "079a9425",
+      "classification": "HISTORICAL",
+      "evidence": "Operator ruling 'Split to 124a' (2026-10-02): the drafted R-BG register row pushed Spec 124 past its arm (iv) byte ceiling. A dated pilot 1-3 illustration of the §7 ladder, no 'Enforced by' clause; the ladder itself stays in place."
+    },
+    {
+      "id": "M09",
+      "from_spec": "124",
+      "anchor": "## §9. Known concerns per archetype (R-T, 2026-08-29 — lifted from the ~~six~~ **nine (corrected 2026-09-10, measured)** pilots' §R Reflections)",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B2 — Known concerns per archetype (moved from Spec 124 §9) — HISTORICAL, 2026-10-02",
+      "content_sha256": "1477817cd85845eb80df892f8b204e73380f9631bb84291d6af2614477cc3b88",
+      "line_count": 16,
+      "moved_at": "2026-10-02",
+      "commit": "079a9425",
+      "classification": "HISTORICAL",
+      "evidence": "Operator ruling 'Split to 124a' (2026-10-02), same move set as M08. Per-pilot archetype caveats (M06/M07 criterion: a pilot-cutover snapshot, not Rules 1-13 policy), no 'Enforced by' clause; the heading stays, so every 'Spec 124 §9' citation still resolves."
     }
   ]
 }
