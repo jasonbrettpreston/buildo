@@ -367,8 +367,8 @@
       "slug": "load_zoning",
       "file": "scripts/load-zoning.js",
       "archetype": "INGESTOR",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Spec 122 §1.10 declared; batch-2 row 3.3 conversion IN FLIGHT (commit ①, 2026-10-02) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (ten primaries, ten targets, all-primaries skip)"
     },
     {
       "slug": "observe_chain",
