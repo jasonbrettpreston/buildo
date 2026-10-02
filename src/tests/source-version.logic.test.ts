@@ -34,8 +34,10 @@ const sv = require('../../scripts/lib/source-version.js');
 // BLOCK rather than the whole records_meta (the library unwraps `emits[0].key`).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ravines = require('../../scripts/lib/step/staleness.js');
+// RE-HOMED at batch-2 row 3.4 ② (2026-09-30): load-heritage.js is the frozen shell; its
+// per-dataset tier-1 gate is the library's (`prior` = the dataset's own sub-block, 0x subKey).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const heritage = require('../../scripts/load-heritage.js');
+const heritage = require('../../scripts/lib/step/staleness.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const zoning = require('../../scripts/load-zoning.js');
 
@@ -61,7 +63,8 @@ const ADOPTION_SUBJECT: Record<string, string[]> = {
   // the subject, in lifecycle order, because the constructs the locks below assert
   // were ONE file before the conversion and are two now.
   'load-ravines.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
-  'load-heritage.js': ['load-heritage.js'],
+  // RE-HOMED at row 3.4 ② (INGESTOR class B, multi-primary 0x): same two library files.
+  'load-heritage.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
   // RE-HOMED at row 3.2 ② (INGESTOR class C): the frozen shell carries no
   // skipCheckDecision/contentHashDecision/readPriorRunMeta of its own any more —
   // same two library files as load-ravines.js.
@@ -149,14 +152,14 @@ describe('skipCheckDecision — ravines-style (validator equality; contentHash N
 
 describe('skipCheckDecision — heritage-style (per-dataset sub-block passed directly)', () => {
   const priorSub = { last_modified: 'Thu, 21 May 2026 19:34:35 GMT', etag: '"abc"', content_hash: 'hh' };
-  it('load-heritage.js wrapper: no prior sub-block → cannot skip (DEC-K first-run guard)', () => {
-    expect(heritage.skipCheckDecision({ lastModified: 'x', priorSub: null })).toEqual({ skip: false, reason: 'no_prior_run' });
+  it('library gate (re-homed from load-heritage.js): no prior sub-block → cannot skip (DEC-K first-run guard)', () => {
+    expect(heritage.skipCheckDecision({ lastModified: 'x', prior: null })).toEqual({ skip: false, reason: 'no_prior_run' });
   });
-  it('load-heritage.js wrapper: no validators → load; matching validators → skip', () => {
-    expect(heritage.skipCheckDecision({ lastModified: null, etag: null, priorSub })).toEqual({ skip: false, reason: 'no_validators' });
-    expect(heritage.skipCheckDecision({ lastModified: priorSub.last_modified, priorSub })).toEqual({ skip: true, reason: 'unchanged_last_modified' });
-    expect(heritage.skipCheckDecision({ etag: '"abc"', priorSub })).toEqual({ skip: true, reason: 'unchanged_etag' });
-    expect(heritage.skipCheckDecision({ lastModified: 'Fri, 22 May 2026 00:00:00 GMT', priorSub }).skip).toBe(false);
+  it('library gate (re-homed from load-heritage.js): no validators → load; matching validators → skip', () => {
+    expect(heritage.skipCheckDecision({ lastModified: null, etag: null, prior: priorSub })).toEqual({ skip: false, reason: 'no_validators' });
+    expect(heritage.skipCheckDecision({ lastModified: priorSub.last_modified, prior: priorSub })).toEqual({ skip: true, reason: 'unchanged_last_modified' });
+    expect(heritage.skipCheckDecision({ etag: '"abc"', prior: priorSub })).toEqual({ skip: true, reason: 'unchanged_etag' });
+    expect(heritage.skipCheckDecision({ lastModified: 'Fri, 22 May 2026 00:00:00 GMT', prior: priorSub }).skip).toBe(false);
   });
 });
 

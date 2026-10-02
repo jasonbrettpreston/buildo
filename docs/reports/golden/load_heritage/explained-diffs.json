@@ -1,0 +1,88 @@
+{
+  "contract_version": 1,
+  "step": "load_heritage",
+  "source": "docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md + scripts/load-heritage.descriptor.json deviations[] + measured --compare 2026-10-02",
+  "note": "MEASURED FACT (2026-10-02, capture-step-golden --compare): table_state is IDENTICAL PRE→POST for BOTH tables on BOTH chains — heritage_districts content_hash 1f304bd750479e075897bd9b0eeef5ae (29 rows) and heritage_properties d087e81f2a3c792e1489ff4516c9459b (8848 rows) in pre/sources, pre/standalone, post/sources and post/standalone. Every listed diff is records_meta / audit-row / log-line shape, explained below. (The md5s 37bd232d…/eb37b1a0… in the acquisition log lines are the downloaded SOURCE files, not table hashes.) PRE = legacy loader + HERITAGE_FORCE_RELOAD seam at cfc4f80b; POST = converted step; both inside the committed forced-change cohort (cfc4f80b), restored to baseline after each run.",
+  "diffs": [
+    {
+      "key": "meta[].external[]",
+      "why": "deviations[] 'the per-dataset emitMeta pipeline.emitMeta({ckan:...: []}, ..., ['CKAN'])': PIPELINE_META is now DERIVED from the descriptor. The legacy literal ['CKAN'] becomes the two declared external ids: external[0] \"CKAN\" -> \"heritage_register\" and external[1] absent -> \"heritage_districts\" (inputs.reads.externals[]). N-D12 / M-D6 precedent; ① decision 1."
+    },
+    {
+      "key": "meta[].reads.ckan:heritage-register-wgs84",
+      "why": "deviations[] 'the per-dataset emitMeta … (ckan:heritage-register-wgs84: [])': the legacy read label was the CKAN resource key; the derived meta keys the read by the declared external id heritage_register, so the legacy key drops out of meta[0].reads. N-D12 precedent."
+    },
+    {
+      "key": "meta[].reads.ckan:heritage-conservation-districts",
+      "why": "deviations[] 'the per-dataset emitMeta … (ckan:heritage-conservation-districts: [])': the legacy read label was the CKAN resource key; the derived meta keys the read by the declared external id heritage_districts, so the legacy key drops out of meta[0].reads. N-D12 precedent."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "Runner log-line format (deviations[] 'loadMarketplaceConfigs(pool, \\'source-heritage\\') … is retired'; LH-D4 closed): the legacy source-heritage 'Loaded 35 trade configs' / 'Loaded 644 logic variables' lines and the bare '[load-heritage] completed in <DUR>' line are gone; the runner logs its own '[load_heritage] target: …' line, one 'acquired N feature(s) (… bytes, md5 …)' line per external (12332 + 32), and '[load_heritage] completed in <DUR>' with the underscore slug."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone chain only: the legacy loader wrote no pipeline_runs row outside a chain; the runner records its own completed row (library behaviour, ledger_row \"owned\" standalone / \"chain_owned\" in-chain) — the same difference the neighbourhoods precedent explains as library behaviour."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "deviations[] 'the audit row set — the legacy pushed the override / bad-id / duplicate / load_failed / load_skipped rows only when they fired': every legacy row is now a declared check emitted on every run, and buildAuditTable tags each row's origin (\"check\"); legacy rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "deviations[] 'the audit row set': each declared check now renders its limit (\"viol == 0\" for the invariant rows, \"pct <= 0.5\" for mass_delete / geometry_update, \"value_max 2\" for the dataset-age WARN from load_heritage_dataset_age_warn_years); the legacy rows rendered no threshold."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "deviations[] 'the audit row set': the legacy push order becomes the declared check order — the override rows first (heritage_override_feature_count_drift_present, heritage_override_mass_delete_present, heritage_override_force_reload_present), then the two load_skipped, then the date / zero-feature / drift / geometry / count rows, so the row INDEX and metric at each index both shift."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "deviations[] 'the audit row set — … and scored non-INFO rows PASS as INFO': the always-emitted rows read PASS at zero (heritage_override_feature_count_drift_present, heritage_override_mass_delete_present, the bad-id / duplicate / geometry rows) where the legacy emitted nothing, and heritage_override_force_reload_present reads WARN because HERITAGE_FORCE_RELOAD stood for this forced cohort."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "deviations[] 'the audit row set': the value column now holds the measured value for EVERY declared row (override flags false, load_skipped null, feature counts 8848 / 29, filtered_listed_pct 0.283, drift 0, geometry_skipped 0, mass_delete 0.034, geometry_update 0.069) instead of only on the rows the legacy happened to push."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "deviations[] 'the audit row set — the legacy pushed … only when they fired': the declared checks emit on every run, so the array is longer than the legacy's (the bad-id, duplicate, load_failed and load_skipped rows are present at zero; the library primary_failed:<id> row is absent because neither dataset failed here)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].order_guarantee",
+      "why": "deviations[] 'the order of L7 and L8 — legacy aborted on count drift BEFORE running the validation SQL': the pre_write rows carry their declared order_guarantee anchor (heritage_zero_features_first_run, HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT, 'abort BEFORE entering withTransaction'); the legacy rows had none."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner-owned records_meta key: the library stamps checks_failed on every converted step from the scored check rows (0 here); the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner-owned records_meta key: 1 here, from the standing HERITAGE_FORCE_RELOAD override row (heritage_override_force_reload_present WARN) — the same reason summary.records_meta.warnings names it; the legacy loader never emitted the key."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "deviations[] 'loadMarketplaceConfigs(pool, \\'source-heritage\\') + the Zod ConfigSchema literals … which also read trade_configurations' (LH-D4 closed): the 7 declared config.logic_variables are resolved by the library into the run record with defaults byte-equal to the Zod literals — load_heritage_{count_drift_fail_pct 0.5, dataset_age_warn_years 2, download_timeout_ms 60000, geometry_update_warn_pct 0.5, invalid_geometry_fail_pct 0.05, mass_delete_fail_pct 0.5, round_scale 1000}; the legacy emitted none."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "Runner-owned records_meta key: the staleness-gate decision for this run — {gated_skip:false, reason:\"multi_primary\"}, i.e. staleness.scope \"none\" with two primaries and the HERITAGE_FORCE_RELOAD override standing, so both datasets loaded; the legacy had no gate vocabulary."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner-owned records_meta key: which ledger owns the pipeline_runs row — \"owned\" standalone / \"chain_owned\" in the sources chain (LH-D6 declared limitation: the standalone ledger name load_heritage is invisible to enrich_heritage, which reads sources:load_heritage); the legacy emitted no such key."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner-owned records_meta key the library stamps on every converted step (0 = no pool-level error on this run); the legacy loader never emitted it."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner-owned records_meta key: the declared terminal reached — \"loaded_with_warnings\", from the standing HERITAGE_FORCE_RELOAD WARN row with no FAIL (descriptor terminals[] loaded_with_warnings); the legacy had no terminal vocabulary."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "Runner-owned records_meta key: [\"heritage_override_force_reload_present: true\"] — the force-reload WARN row this forced cohort stands on (descriptor check heritage_override_force_reload_present, force seam 451962ac, operator ruling 2026-10-01); the legacy emitted no warnings array at all."
+    }
+  ]
+}

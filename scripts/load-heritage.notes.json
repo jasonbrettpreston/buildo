@@ -1,0 +1,70 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-heritage.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 7,",
+    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "",
+    "`fences` is a RECORD block, not prose — it is not counted against the cap."
+  ],
+  "expected_shape": [
+    {
+      "what": "TWO datasets, gated and written independently (DEC-K, 0x multi-primary): the Heritage Register points into heritage_properties and the Heritage Conservation Districts polygons into heritage_districts, each with its own tier-1 (Last-Modified / ETag vs its prior sub-block) and tier-2 (md5 of the bytes) gate, its own pre_write gate and its own transaction. The NORMAL run skips both (CKAN moves a few times a year): records_total = the two carried feature_counts (8,853 = 8,824 + 29 on run 1470), inserted/updated 0, verdict PASS. A moved dataset reloads through the guarded upsert; with LH-D2 its version stamp is in the guard, so a new CKAN version rewrites every row of THAT dataset and heritage_geometry_update_pct reads ~1 WARN.",
+      "measured": {
+        "value": { "run_1470_records_total": 8853, "register_features": 8824, "district_features": 29, "run_1277_geometry_update_pct": 1 },
+        "date": "2026-09-30",
+        "query": "SELECT id, records_total, records_meta->'heritage_load' FROM pipeline_runs WHERE pipeline = 'sources:load_heritage' ORDER BY id DESC LIMIT 2"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The L25 vocabulary is DOMAIN DATA in compute, named here rather than made configurable: register STATUS `listed` → filtered (filtered_out_listed), `part iv` → part_iv, `part v` → part_v_member, anything else → unknown (unknown_status_count, WARN); district HCD_TYPE `under appeal` / `under study` → filtered (filtered_out_appeal_study), `designated district` → designated_district, anything else → unknown (unknown_hcd_type_count, WARN). Both folds are case-insensitive and trimmed (H-v1.1.2). ONE shapeRecord serves both datasets and tells them apart by their own DBF fields (HCD_TYPE / HCD_NO mark a district), because the runner seam carries no external id (① decision 5)."
+    }
+  ],
+  "constants": [
+    {
+      "what": "`1899-11-30` is ArcGIS's null-date sentinel in DESIGNATED / HCD_DESDAT and maps to NULL (vocabulary, not a tunable). The external ids `heritage_register` / `heritage_districts` are the frozen Spec 61 §9 sub-block names (① decision 1), so they depart from the `ckan:` id convention on purpose. MS_PER_DAY and DAYS_PER_JULIAN_YEAR come from scripts/lib/units.js; every numeric bound and the display rounding scale are the seven load_heritage_* logic variables (defaults byte-equal to the legacy Zod literals 2 / 0.5 / 0.05 / 0.5 / 0.5 / 60000 and the round3 scale 1000)."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "heritage_filtered_listed_pct ≈ 0.28 on a register load is NORMAL: Listed properties (not designated) are about a quarter of the raw register and are filtered by L25. On a skip run it reads 0, because a skipped register parsed nothing (legacy parity). The districts' Under Appeal / Under Study filter (3 on the live source) is equally normal.",
+      "measured": {
+        "value": { "register_raw": 12332, "listed": 3484, "kept": 8848, "districts_raw": 32, "districts_filtered": 3 },
+        "date": "2026-09-30",
+        "query": "① assessment §A.F-NET (HEAD + download, parsed with the legacy classifiers)"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "what": "heritage_register_bad_source_id_count > 0 is the #426 canary: CKAN renamed or dropped the Folder_Row key (the Q2 2026 refresh dropped OBJECTID, 78748a36) — every register row would then be refused, the L14 / drift checks fire and the table is preserved. A heritage_<id>_load_failed FAIL beside primary_failed:<id> means that dataset was NOT written; the next enrich_heritage HALTs on its zero skeleton (LH-D8 (b), ④b)."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "LH-D1: the mass-delete FAIL is scored after the dataset's transaction committed, and enrich_heritage reads drift_check_passed only, so a depleted table is enriched over until ④c. LH-D3: a failed prior-run read proceeds as a first run with a WARN row (warn_row, legacy parity) until ④a. LH-D6: a standalone run's ledger name is load_heritage, which the consumer never reads."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Failure posture is legacy parity (on_failure fail_row_continue on BOTH primaries): a dataset whose HEAD, download, parse or pre_write gate fails lands FAIL rows and the other dataset still loads (DEC-K). In the sources chain the step still exits 0 and the chain rolls up completed_with_errors, exactly as before; a standalone run now reads FAILED rather than completed (LH-D8 (a), declared deviation)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "#426 register key Folder_Row",
+      "value": "inputs.reads.externals[heritage_register].key_property = Folder_Row; coerceKey = positive integer",
+      "incident": "78748a36 (2026-06-05): the Q2 2026 CKAN refresh dropped OBJECTID; 12,328 features keyed null → 0 rows, caught by the >= 8000 assert_data_bounds floor. CKAN's September 2026 register re-adds OBJECTID beside Folder_Row (still unique 8,848/8,848); the key stays Folder_Row."
+    },
+    {
+      "const": "tier-2 content-hash gate",
+      "value": "staleness.trigger content_hash @ post_acquisition per dataset (acquire.js streamed md5)",
+      "incident": "0b230472 (2026-08-10): CKAN re-stamps Last-Modified on unchanged bytes; tier 2 skips the parse and re-emits the prior sub-block (DS4)."
+    }
+  ]
+}

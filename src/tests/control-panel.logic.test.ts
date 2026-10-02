@@ -537,6 +537,12 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // batch-2 row 3.5 load_wsib (Rule 3, 2026-09-29) — the two legacy audit literals
   // (110000 unique-Class-G floor, 1% no-name ceiling) externalized; admin group "WSIB Registry".
   'load_wsib_unique_class_g_warn_min', 'load_wsib_no_name_skip_warn_pct',
+  // batch-2 row 3.4 load_heritage (Rule 3, 2026-09-30) — the six legacy Zod knobs + the round3
+  // scale externalized (LH-D4); admin group "Source Ingestion".
+  'load_heritage_dataset_age_warn_years', 'load_heritage_count_drift_fail_pct',
+  'load_heritage_invalid_geometry_fail_pct', 'load_heritage_mass_delete_fail_pct',
+  'load_heritage_geometry_update_warn_pct', 'load_heritage_download_timeout_ms',
+  'load_heritage_round_scale',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
