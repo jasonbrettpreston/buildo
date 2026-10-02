@@ -93,16 +93,46 @@ function touchedOf(trace) {
 }
 
 /**
+ * A STEP write: `kind === 'write'` whose resolver recorded at least one non-excluded relation
+ * (`writes` has ≥ 1 key). A write whose every target was runner-owned/excluded (Spec 124 R-BG:
+ * the runner's own `pipeline_runs` ledger INSERT/UPDATE of a STANDALONE run, `schema_migrations`,
+ * …) carries `writes: {}` and is NOT a step write — same false-positive class as 4cb26dc7. It
+ * must not be counted by check (c) nor derive the observed txn_scope of check (d).
+ */
+function isStepWrite(s) {
+  return !!s && s.kind === 'write' && !!s.writes && typeof s.writes === 'object'
+    && Object.keys(s.writes).length > 0;
+}
+
+/** The fingerprints of a statement list that are step writes, deduped. */
+function stepWriteFingerprints(list) {
+  const fps = new Set();
+  for (const fp of Array.isArray(list) ? list : []) {
+    if (typeof fp === 'string') fps.add(fp);
+  }
+  return fps;
+}
+
+/**
  * (d) observed `txn_scope`, per the contract's closed four-value set. `null` when the trace
- * has no write at all (the caller gates this on "has >= 1 write" before looking).
+ * has no step write at all (the caller gates this on "has >= 1 write" before looking). Since
+ * Spec 124 R-BG the runner's own excluded-only ledger writes are ignored on BOTH sides: they
+ * neither close a transaction block that only ledger writes opened, nor count as autocommit.
  */
 function observedTxnScope(trace) {
+  const statements = Array.isArray(trace && trace.statements) ? trace.statements : [];
+  const stepFps = new Set();
+  for (const s of statements) {
+    if (isStepWrite(s) && typeof s.fingerprint === 'string') stepFps.add(s.fingerprint);
+  }
   const blocks = Array.isArray(trace && trace.transactions) ? trace.transactions : [];
-  const withWrites = blocks.filter(
-    (b) => Array.isArray(b && b.write_fingerprints) && b.write_fingerprints.length > 0,
-  ).length;
+  const withWrites = blocks.filter((b) => {
+    const fps = stepWriteFingerprints(b && b.write_fingerprints);
+    for (const fp of fps) if (stepFps.has(fp)) return true;
+    return false;
+  }).length;
   const autocommit = Array.isArray(trace && trace.autocommit_writes) ? trace.autocommit_writes : [];
-  const hasAuto = autocommit.length > 0;
+  const hasAuto = autocommit.some((fp) => stepFps.has(fp));
   if (withWrites > 0 && hasAuto) return 'mixed';
   if (withWrites >= 2) return 'batch';
   if (withWrites === 1) return 'step';
@@ -191,12 +221,14 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace) {
     }
   }
 
-  // (c) distinct fingerprint count of `kind: 'write'` statements vs write_inventory.statements.
+  // (c) distinct fingerprint count of STEP writes vs write_inventory.statements. A `kind:'write'`
+  // statement whose only targets were excluded (runner-owned ledger etc., Spec 124 R-BG) is not
+  // a step write and is not counted here.
   const declaredCount = declaredStatements(descriptor);
   if (declaredCount !== null) {
     const fp = new Set();
     for (const s of Array.isArray(trace && trace.statements) ? trace.statements : []) {
-      if (s && s.kind === 'write' && typeof s.fingerprint === 'string') fp.add(s.fingerprint);
+      if (isStepWrite(s) && typeof s.fingerprint === 'string') fp.add(s.fingerprint);
     }
     if (fp.size !== declaredCount) {
       rows.push(`FAIL:WITNESS:${slug}:c:statements:${declaredCount}!=${fp.size}`);

@@ -1,0 +1,392 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-heritage.js",
+  "chain": "none",
+  "source_fingerprint": "7364cfc27a13067576718c12887717c5725b2b71b7f38e45c1addbe7ffad1928",
+  "git_head": "cfc4f80bf5a96b36a8c57c31aaf5329cf4b66971",
+  "header": {
+    "processes": 1,
+    "calls": 33,
+    "distinct": 20,
+    "utility": 10,
+    "tracer_self_ms": 76.424,
+    "wall_ms": 81883
+  },
+  "statements": [
+    {
+      "fingerprint": "319ea3ece49da25b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_properties": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "36792c4b7d22fd4c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 29,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "37c2010a3787397a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_districts": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          79300,
+          null,
+          2216,
+          8877,
+          6,
+          7,
+          "{\"heritage_load\":{\"spec_version\":\"1.1\",\"heritage_register\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"37bd232d706be8409f845846474b7c3d\",\"last_modified\":\"Tue, 01 Sep 2026 22:16:33 GMT\",\"etag\":\"\\\"1788300993.96-1628240-832049643\\\"\",\"content_hash\":\"37bd232d706be8409f845846474b7c3d\",\"feature_count\":8848,\"features_inserted\":5,\"features_updated\":5,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.001,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_listed\":3484,\"unknown_status_count\":0},\"heritage_districts\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"last_modified\":\"Wed, 24 Jun 2026 14:02:36 GMT\",\"etag\":\"\\\"1782309756.859-90942-1038094832\\\"\",\"content_hash\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"feature_count\":29,\"features_inserted\":1,\"features_updated\":2,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.069,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_appeal_study\":3,\"unknown_hcd_type_count\":0},\"geometry_update_pct\":0.069,\"mass_delete_pct\":0.034},\"gate\":{\"reason\":\"multi_primary\",\"gated_skip\":false},\"config\":{\"load_heritage_dataset_age_warn_years\":2,\"load_heritage_count_drift_fail_pct\":0.5,\"load_heritage_invalid_geometry_fail_pct\":0.05,\"load_heritage_mass_delete_fail_pct\":0.5,\"load_heritage_geometry_update_warn_pct\":0.5,\"load_heritage_download_timeout_ms\":60000,\"load_heritage_round_scale\":1000},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"cfc4f80bf5a96b36a8c57c31aaf5329cf4b66971\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"heritage_override_force_reload_present: true\"],\"audit_table\":{\"phase\":61,\"name\":\"Heritage Properties\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_override_force_reload_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"heritage_register_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_districts_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_dataset_age_years\",\"value\":0,\"threshold\":\"value_max 2\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_zero_features_first_run\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"zero_features_first_run\",\"guarantee\":\"A zero-feature first run must FAIL before any write — the dataset is refused, the other dataset still loads (DEC-K).\"}},{\"metric\":\"heritage_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"A feature-count drift beyond the bound must stop that dataset before its transaction opens; the override enables the write but never removes the FAIL row.\"}},{\"metric\":\"heritage_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE entering withTransaction\",\"guarantee\":\"More than the bound of features failing geometry validation must abort the dataset before its transaction opens.\"}},{\"metric\":\"heritage_register_feature_count\",\"value\":8848,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_districts_feature_count\",\"value\":29,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_filtered_listed_pct\",\"value\":0.283,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_unknown_status_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_unknown_hcd_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_address_coerced_empty_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_mass_delete_pct\",\"value\":0.034,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_geometry_update_pct\",\"value\":0.069,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":111.94,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":79299,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 6,
+      "rowCount": 6,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "load_heritage",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_heritage"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9184be8b14cc7f3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8848,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 644,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c13c44447ade545e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 3,
+      "reads": {
+        "heritage_districts": [
+          "designated_date",
+          "geom",
+          "name",
+          "source_dataset_version"
+        ]
+      },
+      "writes": {
+        "heritage_districts": [
+          "bylaw_no",
+          "designated_date",
+          "geom",
+          "hcd_type",
+          "name",
+          "source_dataset_version",
+          "source_id",
+          "updated_at",
+          "wards"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ede7ab7788a9e3e9",
+      "kind": "write",
+      "count": 2,
+      "rowCount": 10,
+      "reads": {
+        "heritage_properties": [
+          "address_text",
+          "designated_date",
+          "geom",
+          "source_dataset_version",
+          "status"
+        ]
+      },
+      "writes": {
+        "heritage_properties": [
+          "address_text",
+          "building_type",
+          "bylaw_no",
+          "construction_year",
+          "designated_date",
+          "geom",
+          "htg_conser_name",
+          "reason",
+          "source_dataset_version",
+          "source_id",
+          "status",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "3628:3",
+      "write_fingerprints": [
+        "319ea3ece49da25b",
+        "ede7ab7788a9e3e9"
+      ]
+    },
+    {
+      "client": "3628:3",
+      "write_fingerprints": [
+        "37c2010a3787397a",
+        "c13c44447ade545e"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    },
+    "writes": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    }
+  },
+  "errors": []
+}
