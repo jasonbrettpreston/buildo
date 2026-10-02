@@ -262,6 +262,14 @@ describe('sql-witness resolver — runner-owned relations (contract: RUNNER_OWNE
   it('GREEN control: pipeline_runs is present in RUNNER_OWNED by name', () => {
     expect(R.RUNNER_OWNED.map((e) => e.name)).toContain('pipeline_runs');
   });
+
+  it('RED: schema_migrations (runner DB-target floor, resolve-db.js:268-272) is runner-owned', () => {
+    expect(R.RUNNER_OWNED.some((e) => e.name === 'schema_migrations')).toBe(true);
+
+    const r = R.resolveStatement('SELECT COUNT(*)::int AS n FROM schema_migrations', CAT);
+    expect(r.reads).toEqual({});
+    expect(r.excluded).toEqual(['schema_migrations']);
+  });
 });
 
 describe('sql-witness resolver — DELETE touches without column writes (contract: writes.t = [], key read)', () => {

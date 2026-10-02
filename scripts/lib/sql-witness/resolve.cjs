@@ -20,6 +20,7 @@ const RUNNER_OWNED = Object.freeze([
   { name: 'pipeline_runs', cite: 'scripts/lib/pipeline.js' },
   { name: 'logic_variables', cite: 'scripts/lib/config-loader.js' },
   { name: 'trade_configurations', cite: 'scripts/lib/config-loader.js' },
+  { name: 'schema_migrations', cite: 'scripts/lib/resolve-db.js' },
 ]);
 
 // Schema prefixes that are always system-owned, plus any relation whose bare name
