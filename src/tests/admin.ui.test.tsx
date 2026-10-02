@@ -1046,7 +1046,9 @@ describe('FreshnessTimeline funnel accordion', () => {
     expect(panels).not.toContain('desc.sources');
     expect(panels).not.toContain('desc.reads');
     expect(panels).not.toContain('desc.writes');
-    expect(panels).toContain('Live Meta');
+    expect(panels).toContain('Declared (descriptor)');
+    expect(panels).not.toContain('single source of truth for reads');
+    expect(panels).not.toContain('Live Meta');
     expect(panels).toContain('Awaiting First Run');
     expect(panels).toContain('Data Flow');
     expect(panels).toContain('LiveColumnCard');

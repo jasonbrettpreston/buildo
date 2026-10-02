@@ -372,7 +372,8 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
       if (literals.length > 0) {
         // LITERAL: every direct `ctx.report('<id>', {…})` site in the compute source must report
         // `value:` and none may report `violations:` (evaluateLimit prefers the flag).
-        if (literals.some((l) => /\bviolations\s*:/.test(l) || !/\bvalue\s*:/.test(l))) {
+        // ES shorthand { value, … } is the same property as value: (load_wsib, converted 2026-10-01 bd01e07a).
+        if (literals.some((l) => /\bviolations\s*:/.test(l) || !/\bvalue\s*(:|,|\})/.test(l))) {
           offenders.push(`${stepName}:${check.id}`);
         }
         continue;
@@ -405,8 +406,20 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
         offenders.push(`${stepName}:${check.id} (unresolvable evaluator ${key})`);
         continue;
       }
-      if (/\bviolations\s*:/.test(body) || !/\bvalue\s*:/.test(body)) offenders.push(`${stepName}:${check.id}`);
+      // ES shorthand { value, … } is the same property as value: (load_wsib, converted 2026-10-01 bd01e07a).
+      if (/\bviolations\s*:/.test(body) || !/\bvalue\s*(:|,|\})/.test(body)) offenders.push(`${stepName}:${check.id}`);
     }
     expect(offenders, `pct-bounded checks reporting a 0/1 flag: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  // GREEN control (2026-10-01 bd01e07a): the shorthand-tolerant predicate accepts both the
+  // ES shorthand and the explicit `value:` form, and still rejects a `violations:` flag or a
+  // report literal with no `value` at all. Mirrors the two predicates above (literal + body).
+  it('the value predicate accepts ES shorthand { value, … } and value: v, and rejects violations:/detail-only', () => {
+    const offender = (l: string) => /\bviolations\s*:/.test(l) || !/\bvalue\s*(:|,|\})/.test(l);
+    expect(offender('ctx.report("id", { value, detail: x })')).toBe(false);
+    expect(offender('ctx.report("id", { value: v })')).toBe(false);
+    expect(offender('ctx.report("id", { violations: 1, value: 0 })')).toBe(true);
+    expect(offender('ctx.report("id", { detail: 1 })')).toBe(true);
   });
 });

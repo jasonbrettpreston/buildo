@@ -155,7 +155,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "physical (out-of-range lot, any emit state; Option A retired WF3 Phase 1). Bound: parcel_sanity_lot_size_min_sqm / parcel_sanity_lot_size_max_sqm. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "physical: an out-of-range lot its own polygon does NOT corroborate (WF3 inert 2026-10-01: the former feature_type COMMON/CONDO exclusion covered 100% of parcels — COMMON is an ordinary parcel — so the check was inert; e2baf7b8 D-E 5 intent kept: geometrically-real slivers/parks are excluded by the polygon test, not by category). Bounds: parcel_sanity_lot_size_min_sqm / _max_sqm; tolerance parcel_sanity_lot_geom_tolerance_ratio. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -163,10 +163,10 @@
       }
     },
     {
-      "id": "lot_size_out_of_range_common_condo",
+      "id": "lot_size_out_of_range_geom_backed",
       "kind": "bound",
       "expect": {
-        "metric": "lot_size_out_of_range_common_condo",
+        "metric": "lot_size_out_of_range_geom_backed",
         "loader": "parcel_sanity",
         "family": "BOUND",
         "field": "viol",
@@ -181,7 +181,33 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "visibility: COMMON/CONDO out-of-range lots — excluded from the bound by design. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "visibility: out-of-range lots their own polygon corroborates (real slivers / parks) — excluded from the bound by geometry (renamed from _common_condo, WF3 inert 2026-10-01). Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/parcel-sanity-audit.js"
+        }
+      }
+    },
+    {
+      "id": "lot_size_stated_vs_geom",
+      "kind": "bound",
+      "expect": {
+        "metric": "lot_size_stated_vs_geom",
+        "loader": "parcel_sanity",
+        "family": "BOUND",
+        "field": "viol",
+        "gate": false
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "INFO-first (Spec 48 §3.6): a SOURCE-stated lot that disagrees with its own polygon beyond parcel_sanity_lot_geom_tolerance_ratio (152 residential at 0.25, 2026-10-01; incl. placeholder values like 123456789). Promote to WARN when clean. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -389,7 +415,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "D-C clamp: no emitted dim below the viability floor (inert-INFO expected post-fix). Reuses max_build_min_dimension_m (Ask A6(a)) — the same floor enrich-parcels.js's max-build.js clamps to. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
+        "text": "D-C clamp: no emitted dim below the viability floor (re-scoped WF3 inert 2026-10-01: applies = dims present, so a healthy run is PASS, not inert). Reuses max_build_min_dimension_m (Ask A6(a)) — the same floor enrich-parcels.js's max-build.js clamps to. Ported verbatim from scripts/analysis/parcel-sanity-audit.js CHECKS[] — .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md §1/§2/§6.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/analysis/parcel-sanity-audit.js"
@@ -1756,6 +1782,12 @@
         "name": "parcel_sanity_lot_size_max_sqm",
         "min": 1000,
         "max": 10000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_sanity_lot_geom_tolerance_ratio",
+        "min": 0,
+        "max": 10,
         "on_invalid": "fail"
       },
       {

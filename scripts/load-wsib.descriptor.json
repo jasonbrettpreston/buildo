@@ -321,13 +321,13 @@
       },
       "limit": "pct <= 1",
       "limit_from_config": "load_wsib_no_name_skip_warn_pct",
-      "severity": "WARN",
+      "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "The legacy skip_no_name_rate = skipped_no_name / (unique_class_g + skipped_no_name) * 100, WARN when >= 1 (legacy :378-392). The compute reports the PERCENTAGE as value (never a 0/1 flag — .cursor/wf3_skip_rate_never_fails_active_task.md) with the legacy one-decimal string as detail; numerator = acquired.bad_key_count, denominator = feature_count + bad_key_count. The bound is externalized to load_wsib_no_name_skip_warn_pct (seed 1). The pct grammar has no strict form: exactly 1.0% PASSes where the legacy WARNed — the declared deviation WS-D9 (deviations[8]) with zero measure (0 no-name rows in the 2025 file); restored when the library gains a strict pct comparator (fleet follow-up, next library batch). WS-D7: bad_key also counts a nameless NON-G row (0 on the 2025 file).",
+        "text": "The legacy skip_no_name_rate = skipped_no_name / (unique_class_g + skipped_no_name) * 100, WARN when >= 1 (legacy :378-392). The compute reports the PERCENTAGE as value (never a 0/1 flag — .cursor/wf3_skip_rate_never_fails_active_task.md) with the legacy one-decimal string as detail; numerator = acquired.bad_key_count, denominator = feature_count + bad_key_count. The bound is externalized to load_wsib_no_name_skip_warn_pct (seed 1). The pct grammar has no strict form: exactly 1.0% PASSes where the legacy WARNed — the declared deviation WS-D9 (deviations[8]) with zero measure (0 no-name rows in the 2025 file); restored when the library gains a strict pct comparator (fleet follow-up, next library batch). WS-D7: bad_key also counts a nameless NON-G row (0 on the 2025 file). FAIL since ③ (operator ruling 2026-10-01, Spec 124 R-AX, WS-D10): this check is the bound execution.on_row_error:\"skip\" cites, and R-AX requires the cited bound to be FAIL-severity; the legacy only WARNed.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/load-wsib.js"
@@ -575,6 +575,18 @@
       },
       "adjudicated_by": "plan §3 WS-D6 (.cursor/batch2_load_wsib_active_task.md)",
       "date": "2026-09-29"
+    },
+    {
+      "from": "the legacy no-name skip rate as a WARN (legacy :378-392)",
+      "why": {
+        "text": "WS-D10 (operator ruling 2026-10-01, Spec 124 R-AX / step-validate registry gate #27 ROW-ERROR-GATE). on_row_error:\"skip\" is tolerant, so its cited bound check wsib_no_name_skip_rate is FAIL-severity: a no-name skip rate above load_wsib_no_name_skip_warn_pct now fails the step instead of warning. Measured impact today: zero (skipped_no_name = 0 on the current file; the legacy threshold of 1% is about 1,200 rows). The variable keeps its legacy _warn_ name; a rename is a separate seed migration.",
+        "liveness": {
+          "kind": "check",
+          "ref": "wsib_no_name_skip_rate"
+        }
+      },
+      "adjudicated_by": "operator ruling 2026-10-01 [READ .cursor/batch2_load_wsib_active_task.md]",
+      "date": "2026-10-01"
     }
   ],
   "limitations": [

@@ -76,6 +76,8 @@ const path = require('path');
 const { createResolvedPool } = require('../lib/resolve-db');
 const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, FAIL: RERUN_FAIL } = require('./capture-rerun-proof');
 const { parseFiveWords, captureGuardDecision, sameSessionDecision, prePathFor } = require('./capture-guard');
+const os = require('os');
+const witness = require('./capture-witness');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -797,7 +799,7 @@ function spawnStep({ scriptPath, args, env }) {
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
-async function capture({ step, chain, args, tables, tablesSource, ceiling, tableSpecs = {}, invariantSpec, invariantsFile }) {
+async function capture({ step, chain, args, tables, tablesSource, ceiling, tableSpecs = {}, invariantSpec, invariantsFile, traceDir = null, traceOut = null }) {
   const pool = createResolvedPool({ label: 'capture-step-golden' });
   // Print the target BEFORE running (lessons.md) — assertDbTarget logs database + migrations on
   // the first checkout below; this line names the host even if that first checkout fails.
@@ -808,10 +810,15 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
 
     const env = { ...process.env };
     if (chain === 'none') delete env.PIPELINE_CHAIN; else env.PIPELINE_CHAIN = chain;
+    const dsmRow = await witness.dsmGuard(pool, process.env);
+    console.log(`[capture-step-golden] pre-flight ${dsmRow.metric}: ${dsmRow.status}`);
+    const runEnv = traceDir ? witness.traceEnv(env, traceDir) : env;
     console.log(`[capture-step-golden] spawning: ${runtimeFor(step)} ${step} ${args.join(' ')} ` +
       `(PIPELINE_CHAIN=${chain === 'none' ? '<unset>' : chain}; pipeline_runs max(id) before = ${maxIdBefore})`);
 
-    const child = await spawnStep({ scriptPath: step, args, env });
+    const t0 = Date.now();
+    const child = await spawnStep({ scriptPath: step, args, env: runEnv });
+    const wallMs = Date.now() - t0;
 
     const rowsRes = await pool.query(
       `SELECT id, pipeline, status, started_at, completed_at, duration_ms,
@@ -821,7 +828,22 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
     );
     const table_state = [];
     const table_timing = {};
-    for (const t of tables) {
+    let snapTables = tables;
+    let snapSource = tablesSource;
+    if (traceDir && traceOut) {
+      traceOut.catalog = await witness.snapshotCatalog(pool);
+      traceOut.wall_ms = wallMs;
+      if (tables.length === 0) {
+        const { trace } = await witness.writeTraceFromDir({
+          traceDir,
+          catalog: traceOut.catalog,
+          meta: { step, chain, source_fingerprint: null, git_head: null, wall_ms: wallMs },
+          outPath: path.join(traceDir, 'prelim.json'),
+        });
+        ({ tables: snapTables, source: snapSource } = witness.tablesFromTraceIfNone({ tables, source: tablesSource, trace }));
+      }
+    }
+    for (const t of snapTables) {
       const { record, hash_ms } = await captureTableState(pool, t, ceiling, tableSpecs[t] ?? { columns: null, order: null });
       table_state.push(record);
       table_timing[t] = hash_ms;
@@ -844,7 +866,7 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
       table_state,
       table_timing, // volatile (ms) — recorded at the top level only, never in the normalised form
       table_specs: tableSpecs,
-      tables_source: tablesSource,
+      tables_source: snapSource,
       table_row_ceiling: ceiling,
       invariants,
       invariants_file: invariantsFile ?? null,
@@ -1023,17 +1045,19 @@ async function main() {
   }
 
   if (!opts.step || !opts.chain) {
-    throw new Error('usage: --step=<script> --chain=<chainId|none> [--out=<file>] [--overwrite] [--args=a,b]  |  --compare=<a>,<b>');
+    throw new Error('usage: --step=<script> --chain=<chainId|none> [--out=<file>] [--overwrite] [--args=a,b] [--trace-only]  |  --compare=<a>,<b>');
   }
   const step = String(opts.step);
   if (!fs.existsSync(step)) throw new Error(`step script not found: ${step}`);
   const args = opts.args ? String(opts.args).split(',').filter(Boolean) : [];
+  const traceOnly = opts['trace-only'] === true;
+  if (traceOnly && !opts.out) throw new Error('--trace-only needs --out=<golden path> (the trace is written beside it)');
 
   // Overwrite guard runs BEFORE the child step is spawned (a refused capture
   // must cost seconds, not the step's full runtime — enrich_parcels --full is
   // 45+ minutes). Same decision is re-checked at the write site below, so a
   // file that appears DURING the run is still caught.
-  if (opts.out) {
+  if (opts.out && !traceOnly) {
     const decision = overwriteDecision({ ...captureGitState(opts.out), overwriteFlag: opts.overwrite === true });
     if (!decision.allow) {
       throw new Error(`[capture-step-golden] refusing --out=${opts.out}: ${decision.reason}. Remedy: ${decision.remedy}`);
@@ -1041,7 +1065,7 @@ async function main() {
   }
 
   // Item 2 — capture last: a POST capture needs a five-word PASS first.
-  const isPost = Boolean(opts.out && isPostCapturePath(path.resolve(String(opts.out))));
+  const isPost = Boolean(opts.out && !traceOnly && isPostCapturePath(path.resolve(String(opts.out))));
   if (isPost) {
     const g = postCaptureGuard({ step });
     console.log(`[capture-step-golden] capture-last guard: ${g.slug} ${g.decision.reason}`);
@@ -1078,7 +1102,9 @@ async function main() {
       `order=${s.order ? s.order.join(',') : '<pk>'} (${s.order_source})`);
   }
 
-  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile });
+  const traceDir = opts.out ? fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-trace-')) : null;
+  const traceOut = {};
+  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile, traceDir, traceOut });
   const doc = buildCapture(raw);
   assertCaptureIsValid(doc);
 
@@ -1135,6 +1161,27 @@ async function main() {
   // so a scripts/lib/step/** change marks affected steps pending_recapture
   // without also looking like a source_fingerprint drift).
   doc.lib_fingerprint = computeLibFingerprint();
+
+  if (traceDir) {
+    const { tracePath, trace } = await witness.writeTraceFromDir({
+      traceDir,
+      catalog: traceOut.catalog,
+      meta: {
+        step,
+        chain: doc.chain,
+        source_fingerprint: doc.source_fingerprint ?? null,
+        git_head: gitHead(),
+        wall_ms: traceOut.wall_ms ?? null,
+      },
+      outPath: path.resolve(String(opts.out)),
+    });
+    console.log(`[capture-step-golden] trace: ${trace.statements.length} statement(s), ${trace.errors.length} error(s), tracer ${trace.header.tracer_self_ms} ms -> ${tracePath}`);
+    fs.rmSync(traceDir, { recursive: true, force: true });
+    if (traceOnly) {
+      console.log('[capture-step-golden] --trace-only: golden NOT written');
+      return;
+    }
+  }
 
   const tableLine = doc.table_state
     .map((t) => `${t.table}:${t.row_count}/${t.skipped_reason ?? String(t.content_hash).slice(0, 8)}` +

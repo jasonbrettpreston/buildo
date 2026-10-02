@@ -53,13 +53,14 @@ describe('assert-parcel-sanity.js — frozen shell + descriptor contract', () =>
   // WF3 S0.3 (2026-09-21, Spec 43 step #25) added 3 checks[] rows (existing_structure_
   // shared_with_other_parcel, existing_structure_borrowed_primary, ravine_constrained_
   // carries_priced_reno — 42 -> 45) and 1 validate_only invariants[] entry
+  // WF3 inert 2026-10-01: +1 lot_size_stated_vs_geom (45 -> 46)
   // (existing_structure_onlot_share_low — "none" -> a 1-entry array), per
   // scripts/lib/assert-parcel-sanity-fields.js CHECK_DEFS/INVARIANT_DEFS. plausibility[]
   // (the 8 dist_* rows) is unaffected by S0.3. Pin updated here (pre-push full-suite
   // rejection, 2026-09-22) — this file was not repointed at S0.3's own commit.
-  it('archetype is ASSERT with exactly 45 checks[] (42 + S0.3\'s 3) and 8 plausibility[] rows, 1 validate_only invariant (S0.3\'s existing_structure_onlot_share_low)', () => {
+  it('archetype is ASSERT with exactly 46 checks[] (42 + S0.3\'s 3) and 8 plausibility[] rows, 1 validate_only invariant (S0.3\'s existing_structure_onlot_share_low)', () => {
     expect(DESCRIPTOR.identity.archetype).toBe('ASSERT');
-    expect(DESCRIPTOR.checks).toHaveLength(45);
+    expect(DESCRIPTOR.checks).toHaveLength(46);
     expect(DESCRIPTOR.plausibility).toHaveLength(8);
     expect(Array.isArray(DESCRIPTOR.invariants)).toBe(true);
     const invariants = DESCRIPTOR.invariants as Array<{ id: string }>;
@@ -67,7 +68,7 @@ describe('assert-parcel-sanity.js — frozen shell + descriptor contract', () =>
     expect(invariants[0]?.id).toBe('existing_structure_onlot_share_low');
   });
 
-  it('every checks[] row is blocking:false, when:"post" (Spec 30 §5.4.1 non-halting-by-design, all 45 read FINAL enriched values)', () => {
+  it('every checks[] row is blocking:false, when:"post" (Spec 30 §5.4.1 non-halting-by-design, all 46 read FINAL enriched values)', () => {
     for (const c of DESCRIPTOR.checks) {
       expect(c.blocking, c.id).toBe(false);
       expect(c.when, c.id).toBe('post');
@@ -81,9 +82,9 @@ describe('assert-parcel-sanity.js — frozen shell + descriptor contract', () =>
     }
   });
 
-  it('37 logic_variables declared, strict validation, all on_invalid:"fail"', () => {
+  it('38 logic_variables declared, strict validation, all on_invalid:"fail" (+ parcel_sanity_lot_geom_tolerance_ratio, WF3 inert 2026-10-01)', () => {
     expect(DESCRIPTOR.config.validation).toBe('strict');
-    expect(DESCRIPTOR.config.logic_variables).toHaveLength(37);
+    expect(DESCRIPTOR.config.logic_variables).toHaveLength(38);
     for (const v of DESCRIPTOR.config.logic_variables) expect(v.on_invalid, v.name).toBe('fail');
   });
 
