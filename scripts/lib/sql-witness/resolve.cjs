@@ -112,6 +112,18 @@ function isRangeSubselect(node) {
   return node.subquery !== undefined;
 }
 
+/**
+ * WF3 C2c: bind a `RangeFunction` alias (`unnest(...) AS g(a, b)`) into `funcCols`
+ * (alias -> Set of output column names). With no column list the single output column
+ * is named by the alias (`unnest(x) h` -> h). A derived source: never a catalog read.
+ */
+function addFuncAlias(funcCols, node) {
+  const a = node && node.RangeFunction ? node.RangeFunction.alias : null;
+  if (!a || typeof a.aliasname !== 'string') return;
+  const cols = Array.isArray(a.colnames) ? a.colnames.map(sval).filter((x) => typeof x === 'string') : [a.aliasname];
+  funcCols.set(a.aliasname, new Set(cols));
+}
+
 /** Is this node a CTE (`CommonTableExpr`)? */
 function isCommonTableExpr(node) {
   return typeof node.ctename === 'string';
@@ -152,24 +164,66 @@ function isSystemOwned(schema, relname) {
 }
 
 /**
- * Walk one statement subtree, collecting the RangeVar-derived relations plus the
- * names bound by CTEs / subquery aliases in scope. `derived` names are column
- * sources we must NOT treat as real tables.
+ * Walk ONE scope's own subtree (WF3 C2b): visits every node but never descends into a
+ * nested scope's body — `subselect` (SubLink), `subquery` (RangeSubselect), `ctequery`
+ * (CommonTableExpr). The RangeSubselect / CommonTableExpr node itself IS visited, so its
+ * alias / ctename binds here while its body stays its own scope.
  */
-function collectScope(stmtNode) {
+function walkOwnScope(node, visit) {
+  if (node === null || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    for (const item of node) walkOwnScope(item, visit);
+    return;
+  }
+  visit(node);
+  for (const key of Object.keys(node)) {
+    if (key === 'subselect' || key === 'subquery' || key === 'ctequery') continue;
+    const child = node[key];
+    if (child !== null && typeof child === 'object') walkOwnScope(child, visit);
+  }
+}
+
+/** True if `name` is a derived binding (CTE / subquery alias) of `scope` or any enclosing scope. */
+function boundInChain(scope, name) {
+  for (let s = scope; s !== null && s !== undefined; s = s.parent) {
+    if (s.derived && s.derived.has(name)) return true;
+  }
+  return false;
+}
+
+/**
+ * Collect ONE scope (WF3 C2b): its own real relations plus the names bound by its own
+ * CTEs / subquery aliases. `derived` names are column sources we must NOT treat as real
+ * tables. `parent` is the enclosing scope chain: a RangeVar naming a CTE bound here or in
+ * any enclosing scope (incl. a sibling CTE) is derived — under its alias too (`FROM a z`) —
+ * and a CTE binding beats the `_staging` -> base mapping. A schema-qualified name is never
+ * a CTE. A CTE bound only inside a nested/sibling subquery is not visible here.
+ */
+function collectScope(stmtNode, parent) {
   const relations = []; // real in-scope relations
   const derived = new Set(); // CTE names + subquery aliases (never tables)
   const subselectRels = []; // relation objects that are actually subquery aliases
+  const funcCols = new Map(); // WF3 C2c: function aliases -> their output columns
+  const scope = { relations, derived, subselectRels, funcCols, parent };
 
   const pushRange = (rv) => {
     if (!isRangeVar(rv)) return;
     const alias = rv.alias && typeof rv.alias.aliasname === 'string' ? rv.alias.aliasname : null;
+    if (isSessionTemp(rv.schemaname, rv.relname)) {
+      derived.add(alias || rv.relname);
+      return;
+    }
+    if (!rv.schemaname && boundInChain(scope, rv.relname)) {
+      if (alias) derived.add(alias);
+      return;
+    }
     relations.push(makeRel(rv.relname, rv.schemaname, alias));
   };
 
-  // CTE names + subquery aliases first (they shadow earlier bindings).
-  walk(stmtNode, (node) => {
+  // CTE names + subquery aliases first (they shadow earlier bindings) — own scope only.
+  walkOwnScope(stmtNode, (node) => {
     if (isCommonTableExpr(node)) derived.add(node.ctename);
+    addFuncAlias(funcCols, node);
     if (isRangeSubselect(node)) {
       const alias = node.alias && typeof node.alias.aliasname === 'string' ? node.alias.aliasname : null;
       if (alias) {
@@ -179,11 +233,11 @@ function collectScope(stmtNode) {
     }
   });
 
-  walk(stmtNode, (node) => {
+  walkOwnScope(stmtNode, (node) => {
     if (isRangeVar(node)) pushRange(node);
   });
 
-  return { relations, derived, subselectRels };
+  return scope;
 }
 
 /**
@@ -216,9 +270,12 @@ function isDerived(scope, name) {
  * resolve the outer `UPDATE parcels t`. A `null` scope on the chain is the write
  * target of an UPDATE/INSERT, whose own name/alias binds there.
  */
-function resolveQualified(scope, qualifier) {
+function resolveQualified(scope, qualifier, column) {
   if (isExcludedQualifier(qualifier)) return { derived: true };
   for (let s = scope; s !== null && s !== undefined; s = s.parent) {
+    // WF3 C2c: a function alias binds only its own output columns (`g.nope` stays an error).
+    const fc = s.funcCols ? s.funcCols.get(qualifier) : undefined;
+    if (fc) return column === undefined || fc.has(column) ? { derived: true } : { error: true };
     if (isDerived(s, qualifier)) return { derived: true };
     const rel = aliasMap(s).get(qualifier);
     if (rel) {
@@ -248,6 +305,12 @@ function resolveQualified(scope, qualifier) {
  */
 function resolveUnqualified(scope, column, catalog, writeColumns) {
   for (let s = scope; s !== null && s !== undefined; s = s.parent) {
+    // WF3 C2c: an unqualified function output column is derived, never the lone real relation's.
+    if (s.funcCols) {
+      for (const cols of s.funcCols.values()) {
+        if (cols.has(column)) return { derived: true };
+      }
+    }
     const rels = (s.relations || []).filter((r) => !isDerived(s, r.alias || r.rel));
     if (s === scope) {
       if (rels.length === 1) {
@@ -324,6 +387,39 @@ function isStagingCreate(node, isTemp) {
   return typeof relname === 'string' && relname.endsWith('_staging');
 }
 
+/** WF3 C2 temp rule: `relpersistence 't'` OR schema `pg_temp` (`CREATE TABLE pg_temp.x` parses 'p'). */
+function isTempRel(rv) {
+  return !!rv && (rv.relpersistence === 't' || rv.schemaname === 'pg_temp');
+}
+
+/**
+ * The session temp tables ONE SQL text creates (every statement of it): CREATE TABLE AS or
+ * CREATE TABLE whose relation is a temp (isTempRel), not `*_staging`, and not a catalog table
+ * name (a shadow is never exempt). The single home of temp detection (Spec 122 §10.1 one
+ * resolver): assemble.cjs unions these per pid and passes them back as `opts.sessionTemps`.
+ * Requires init(); never throws (unparseable SQL -> empty set).
+ */
+function collectSessionTemps(sql, catalog) {
+  const out = new Set();
+  const cat = catalog || {};
+  let parsed;
+  try {
+    parsed = parseSync(sql);
+  } catch {
+    return out;
+  }
+  for (const s of (parsed && Array.isArray(parsed.stmts) ? parsed.stmts : [])) {
+    const node = (s && s.stmt) || {};
+    const rv = node.CreateTableAsStmt
+      ? node.CreateTableAsStmt.into && node.CreateTableAsStmt.into.rel
+      : node.CreateStmt ? node.CreateStmt.relation : null;
+    if (!rv || !isRangeVar(rv) || !isTempRel(rv) || rv.relname.endsWith('_staging')) continue;
+    if (Object.prototype.hasOwnProperty.call(cat, rv.relname)) continue;
+    out.add(rv.relname);
+  }
+  return out;
+}
+
 /** Response object skeleton. */
 function result(kind, fingerprint, reads, writes, excluded, error) {
   return {
@@ -336,10 +432,36 @@ function result(kind, fingerprint, reads, writes, excluded, error) {
   };
 }
 
-/** Find the single statement node from parseSync output (contract: one statement). */
-function firstStmt(parsed) {
-  if (!parsed || !Array.isArray(parsed.stmts) || parsed.stmts.length === 0) return null;
-  return parsed.stmts[0].stmt || null;
+/**
+ * Resolve a whole SQL text (contract change, WF3 witness-unblock C2: EVERY statement of a
+ * multi-statement text, not just the first). One statement: byte-identical to before.
+ * Several: reads/writes/excluded are unioned; kind = write > read > utility over the
+ * per-statement kinds; the fingerprint stays the whole-text fingerprint.
+ */
+function resolveCore(sql, catalog) {
+  const parsed = parseSync(sql);
+  const fp = fingerprintSync(sql);
+  const stmts = parsed && Array.isArray(parsed.stmts) ? parsed.stmts : [];
+  if (stmts.length <= 1) return resolveNode(stmts.length === 1 ? stmts[0].stmt || null : null, fp, catalog);
+  const reads = {};
+  const writes = {};
+  const excluded = [];
+  const kinds = new Set();
+  for (const s of stmts) {
+    const r = resolveNode(s.stmt || null, fp, catalog);
+    kinds.add(r.kind);
+    for (const t of Object.keys(r.reads)) {
+      touch(reads, t, null);
+      for (const c of r.reads[t]) touch(reads, t, c);
+    }
+    for (const t of Object.keys(r.writes)) {
+      touch(writes, t, null);
+      for (const c of r.writes[t]) touch(writes, t, c);
+    }
+    for (const e of r.excluded) excluded.push(e);
+  }
+  const kind = kinds.has('write') ? 'write' : kinds.has('read') ? 'read' : 'utility';
+  return result(kind, fp, reads, writes, excluded, null);
 }
 
 /** The lone statement-type key on a node (`{ SelectStmt: {...} }`). */
@@ -384,11 +506,8 @@ function insertColumns(inner) {
   return cols;
 }
 
-/** Resolve Statement: generic over all statement kinds the contract names. */
-function resolveCore(sql, catalog) {
-  const parsed = parseSync(sql);
-  const fp = fingerprintSync(sql);
-  const node = firstStmt(parsed);
+/** Resolve ONE parsed statement node: generic over all statement kinds the contract names. */
+function resolveNode(node, fp, catalog) {
   if (!node) return result('utility', fp, {}, {}, [], null);
   const key = stmtKind(node);
   if (!key) return result('utility', fp, {}, {}, [], null);
@@ -406,6 +525,16 @@ function resolveCore(sql, catalog) {
   // --- CREATE TABLE ... AS SELECT -> write statement ---
   if (key === 'CreateTableAsStmt') {
     const target = inner.into && inner.into.rel ? inner.into.rel : null;
+    // WF3 C2: a session temp (`isTempRel`, not `*_staging`) is no write — its query's reads are
+    // witnessed here. A temp that shadows a catalog table is never silently exempt.
+    const temp = target && isRangeVar(target) && isTempRel(target) && !target.relname.endsWith('_staging');
+    if (temp && Object.prototype.hasOwnProperty.call(catalog, target.relname)) {
+      currentErrors.push(`FAIL:INPUT:temp-shadows:${target.relname}`);
+    } else if (temp) {
+      resolveScope(inner.query, catalog, reads, writes, excluded, true);
+      const touched = Object.keys(reads).length > 0 || excluded.length > 0;
+      return result(touched ? 'read' : 'utility', fp, reads, writes, excluded, null);
+    }
     if (target && isRangeVar(target)) {
       touch(writes, baseTable(target.relname), null);
     }
@@ -449,8 +578,7 @@ function resolveCore(sql, catalog) {
 function resolveScope(scopeNode, catalog, reads, writes, excluded, _topLevel, parent) {
   scopeNode = unwrap(scopeNode);
   if (!scopeNode || typeof scopeNode !== 'object') return;
-  const scope = collectScope(scopeNode);
-  if (parent !== undefined) scope.parent = parent;
+  const scope = collectScope(scopeNode, parent);
 
   // Record FROM/JOIN relations as reads of the table (bare touch).
   for (const rel of scope.relations) {
@@ -470,17 +598,20 @@ function resolveScope(scopeNode, catalog, reads, writes, excluded, _topLevel, pa
 
   // Subqueries (RangeSubselect incl. LATERAL, SubLink: EXISTS / IN / scalar). Each
   // resolves against its own relations first, then this scope outward (the chain).
+  // WF3 C2b: only the IMMEDIATE nested scopes (walkOwnScope never enters a body; each
+  // nested scope descends into its own), over every clause except the WITH list (CTE
+  // bodies resolve in resolveClauseColumns). collectScope no longer gathers nested-scope
+  // relations, so every nested scope must be reached here (sortClause, larg/rarg, ...).
   const descend = (node) => {
-    walk(node, (n) => {
+    walkOwnScope(node, (n) => {
       if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
       const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
       if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
     });
   };
-  for (const k of ['whereClause', 'havingClause', 'targetList']) {
-    if (scopeNode[k] !== undefined) descend(scopeNode[k]);
+  for (const k of Object.keys(scopeNode)) {
+    if (k !== 'withClause' && scopeNode[k] !== null && typeof scopeNode[k] === 'object') descend(scopeNode[k]);
   }
-  if (scopeNode.fromClause !== undefined) descend(scopeNode.fromClause);
 }
 
 /** Walk a clause subtree resolving every ColumnRef in the given scope. */
@@ -536,7 +667,7 @@ function applyColumn(colRef, scope, catalog, reads, writes, excluded, _isWrite) 
   if (names.length >= 2) {
     const column = names[names.length - 1];
     const qualifier = names[names.length - 2];
-    const r = resolveQualified(scope, qualifier);
+    const r = resolveQualified(scope, qualifier, column);
     if (r.derived) return;
     if (r.error) {
       markError(scope, column);
@@ -564,8 +695,14 @@ function markError(scope, column) {
   currentErrors.push(`FAIL:INPUT:column:${column}`);
 }
 
+/** A session temp table of this process (WF3 C2): unqualified or `pg_temp.`; never a catalog shadow. */
+function isSessionTemp(schema, relname) {
+  return (!schema || schema === 'pg_temp') && currentSessionTemps.has(relname);
+}
+
 /** Record a read of `rel` (system-owned -> excluded), optionally a specific column. */
 function recordRead(reads, excluded, rel, column) {
+  if (isSessionTemp(rel.schema, rel.rel)) return; // a session temp is never a read (WF3 C2)
   const table = baseTable(rel.rel);
   if (isSystemOwned(rel.schema, rel.rel) || isSystemOwned(rel.schema, table)) {
     if (excluded.indexOf(rel.rel === table ? rel.rel : rel.rel) === -1) excluded.push(rel.rel);
@@ -576,6 +713,7 @@ function recordRead(reads, excluded, rel, column) {
 
 /** Record a write of `rel` (system-owned -> excluded), optionally specific columns. */
 function recordWrite(writes, excluded, rel, column) {
+  if (isSessionTemp(rel.schema, rel.rel)) return; // a write INTO a session temp is no table write (WF3 C2)
   const table = baseTable(rel.rel);
   if (isSystemOwned(rel.schema, rel.rel) || isSystemOwned(rel.schema, table)) {
     if (excluded.indexOf(rel.rel) === -1) excluded.push(rel.rel);
@@ -588,9 +726,13 @@ function recordWrite(writes, excluded, rel, column) {
 function resolveCtes(inner, catalog, reads, writes, excluded, parent) {
   const wc = inner && inner.withClause;
   if (!wc || !Array.isArray(wc.ctes)) return;
+  // WF3 C2b: sibling CTE names bind inside each CTE body (`b AS (SELECT … FROM a)`), so the
+  // bodies resolve under a root scope carrying every CTE name of this WITH.
+  const names = wc.ctes.map((c) => (c && c.CommonTableExpr ? c.CommonTableExpr.ctename : null)).filter(Boolean);
+  const root = { relations: [], derived: new Set(names), subselectRels: [], parent };
   for (const cte of wc.ctes) {
     const body = cte && cte.CommonTableExpr ? cte.CommonTableExpr.ctequery : null;
-    if (body) resolveScope(body, catalog, reads, writes, excluded, false, parent);
+    if (body) resolveScope(body, catalog, reads, writes, excluded, false, root);
   }
 }
 
@@ -768,8 +910,8 @@ function buildWriteScope(inner, targetRel, writeColumns) {
   const pushRv = (rv) => {
     if (!isRangeVar(rv)) return;
     const alias = rv.alias && typeof rv.alias.aliasname === 'string' ? rv.alias.aliasname : null;
-    // A FROM reference that names a CTE is derived, never a real table.
-    if (scope.derived.has(rv.relname)) {
+    // A FROM reference that names a CTE or a session temp is derived, never a real table.
+    if (scope.derived.has(rv.relname) || isSessionTemp(rv.schemaname, rv.relname)) {
       scope.derived.add(alias || rv.relname);
       return;
     }
@@ -778,6 +920,11 @@ function buildWriteScope(inner, targetRel, writeColumns) {
   const rvKeys = ['usingClause', 'fromClause'];
   for (const k of rvKeys) {
     if (inner[k] !== undefined) walk(inner[k], (n) => { if (isRangeVar(n)) pushRv(n); });
+  }
+  // WF3 C2c: `FROM/USING unnest(...) AS u(a, b)` binds u's columns as a derived source.
+  scope.funcCols = new Map();
+  for (const k of rvKeys) {
+    if (inner[k] !== undefined) walkOwnScope(inner[k], (n) => addFuncAlias(scope.funcCols, n));
   }
 
   const target = targetRel || topRelation(inner, 'relation');
@@ -816,9 +963,18 @@ async function init() {
   return initPromise;
 }
 
-/** resolveStatement(sql, catalog) -> plain result object; never throws on bad SQL. */
-function resolveStatement(sql, catalog) {
+// Session temp tables of the statement's process (WF3 C2, `opts.sessionTemps`): bound like
+// CTE names while one statement resolves; module-level for the same reason as currentErrors.
+let currentSessionTemps = new Set();
+
+/**
+ * resolveStatement(sql, catalog, opts) -> plain result object; never throws on bad SQL.
+ * `opts.sessionTemps` (Set<string>, optional): the session temp tables of this statement's
+ * process (collectSessionTemps) — never a read or a write.
+ */
+function resolveStatement(sql, catalog, opts) {
   const cat = catalog || {};
+  currentSessionTemps = opts && opts.sessionTemps instanceof Set ? opts.sessionTemps : new Set();
   let fp = '';
   try {
     fp = typeof fingerprintSync === 'function' ? fingerprintSync(sql) : '';
@@ -839,8 +995,8 @@ function resolveStatement(sql, catalog) {
   return core;
 }
 
-/** resolveAll(statements, catalog) -> merged sets; errors collected, not thrown. */
-function resolveAll(statements, catalog) {
+/** resolveAll(statements, catalog, opts) -> merged sets; errors collected, not thrown. */
+function resolveAll(statements, catalog, opts) {
   const reads = {};
   const writes = {};
   const excluded = [];
@@ -848,7 +1004,7 @@ function resolveAll(statements, catalog) {
   let utility = 0;
   const list = Array.isArray(statements) ? statements : [];
   for (const sql of list) {
-    const r = resolveStatement(sql, catalog);
+    const r = resolveStatement(sql, catalog, opts);
     if (r.kind === 'utility') utility += 1;
     if (r.error) errors.push(r.error);
     for (const t of Object.keys(r.reads)) {
@@ -875,4 +1031,5 @@ module.exports = {
   RUNNER_OWNED,
   resolveStatement,
   resolveAll,
+  collectSessionTemps,
 };

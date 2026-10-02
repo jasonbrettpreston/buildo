@@ -313,17 +313,57 @@ describe('⑤ — force-full env plumbing', () => {
 
 // ---------------------------------------------------------------------------
 // ⑦e — Producer-completed gates structurally exclude defer rows (g/b).
-// source-version.js:91's `readPriorRunMeta` filters status = 'completed'
-// LITERALLY (not an IN-list) — a 'deferred_to_full' row can never satisfy it
-// by construction, today (vacuously — the status doesn't exist yet) and
-// forever after (structurally, by the literal equality).
+// REPLACED by R15 (WF3 witness-unblock C3, 2026-10-02) — was a source-text lock on the literal
+// `AND status = 'completed'`. Fence kept: a 'deferred_to_full' (or any other non-final) row can
+// never become a baseline. Live-DB half: src/tests/db/source-version-ledger-gate.db.test.ts.
 // ---------------------------------------------------------------------------
-describe('⑦e — producer-completed gates exclude defer rows (g/b, source-version.js:91)', () => {
-  it('readPriorRunMeta filters on the literal status = \'completed\' (not an IN-list a defer status could join)', () => {
-    const src = readFileSync(SOURCE_VERSION_PATH, 'utf8');
-    expect(src).toMatch(/AND status = 'completed'/);
-    expect(src).not.toMatch(/status = ANY\(/);
-    expect(src).not.toMatch(/status IN \(/);
+describe('⑦e — producer-completed gates exclude defer rows (g/b, source-version.js readPriorRunMeta + own_last)', () => {
+  it('R15: status is filtered by the literal set {completed, completed_with_warnings}; upstream_since stays bare (O-6)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sv = require(SOURCE_VERSION_PATH);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pg = require('libpg-query');
+    await pg.loadModule();
+    const sqls: string[] = [];
+    const pool = { query: async (sql: string) => { sqls.push(sql); return { rows: [] }; } };
+    await sv.readPriorRunMeta(pool, 'sources:load_ravines');
+    await sv.runLedgerGateDecision(pool, { ownSlugs: ['sources:x'], upstreamSlugs: ['sources:y'] });
+    type PgNode = Record<string, unknown>;
+    const isObj = (v: unknown): v is PgNode => v !== null && typeof v === 'object' && !Array.isArray(v);
+    const aExprs = (n: unknown, out: PgNode[] = []): PgNode[] => {
+      if (Array.isArray(n)) { for (const x of n) aExprs(x, out); return out; }
+      if (!isObj(n)) return out;
+      if (isObj(n.A_Expr)) out.push(n.A_Expr);
+      for (const v of Object.values(n)) aExprs(v, out);
+      return out;
+    };
+    const str = (v: unknown): string | null => {
+      if (!isObj(v)) return null;
+      if (isObj(v.String) && typeof v.String.sval === 'string') return v.String.sval;
+      if (isObj(v.A_Const) && isObj(v.A_Const.sval) && typeof v.A_Const.sval.sval === 'string') return v.A_Const.sval.sval;
+      return null;
+    };
+    const col = (e: unknown): string | null =>
+      isObj(e) && isObj(e.ColumnRef) && Array.isArray(e.ColumnRef.fields) ? e.ColumnRef.fields.map(str).join('.') : null;
+    const preds = (tree: unknown, column: string): string[] => aExprs(tree)
+      .filter((a) => col(a.lexpr) === column)
+      .map((a) => {
+        const op = Array.isArray(a.name) ? str(a.name[0]) : null;
+        const vals = isObj(a.rexpr) && isObj(a.rexpr.List) && Array.isArray(a.rexpr.List.items)
+          ? a.rexpr.List.items.map(str) : [str(a.rexpr)];
+        return `${String(a.kind)} ${op} ${JSON.stringify(vals)}`;
+      })
+      .sort();
+    const IN_SET = 'AEXPR_IN = ["completed","completed_with_warnings"]';
+    const cte = (sql: string | undefined, name: string): unknown => {
+      const stmt = pg.parseSync(sql ?? '').stmts[0].stmt.SelectStmt;
+      return stmt.withClause.ctes.find((c: PgNode) => isObj(c.CommonTableExpr) && c.CommonTableExpr.ctename === name).CommonTableExpr.ctequery;
+    };
+    expect(sqls.length).toBe(2);
+    expect(preds(pg.parseSync(sqls[0] ?? ''), 'status')).toEqual([IN_SET]);
+    expect(preds(cte(sqls[1], 'own_last'), 'status')).toEqual([IN_SET]);
+    expect(preds(cte(sqls[1], 'upstream_since'), 'p.status')).toEqual(
+      ['AEXPR_OP <> ["completed"]', 'AEXPR_OP = ["completed"]', 'AEXPR_OP = ["running"]'].sort());
   });
 });
 
