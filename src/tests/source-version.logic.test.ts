@@ -347,10 +347,45 @@ describe('readPriorRunMeta — started_at DESC standardization', () => {
     };
     const meta = await sv.readPriorRunMeta(fakePool, 'sources:load_ravines');
     expect(meta).toEqual({ ravine_load: { content_hash: 'h1' } });
-    expect(captured.sql).toMatch(/status = 'completed'/);
+    // WF3 witness-unblock C3: the former `toMatch(/status = 'completed'/)` string half is
+    // REPLACED, not deleted — the fence (latest COMPLETED run by started_at DESC, never
+    // completed_at) is now R8 below (through the real gate #44) + R9/R19 in
+    // src/tests/db/source-version-ledger-gate.db.test.ts (live selection).
     expect(captured.sql).toMatch(/ORDER BY started_at DESC/);
     expect(captured.sql).not.toMatch(/completed_at/);
     expect(captured.params).toEqual(['sources:load_ravines']);
+  });
+  it('R8: the real readPriorRunMeta + runLedgerGateDecision SQL carries no FAIL:PRODUCER at gate #44 (negative control: own_last without the warned status is RED)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const A = require('../../scripts/lib/sql-witness/assemble.cjs');
+    const { pathToFileURL } = await import('node:url');
+    const G = await import(pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/witness.mjs')).href);
+    const sqls: Array<{ text: string; params: unknown[] }> = [];
+    const pool = { query: async (text: string, params: unknown[]) => { sqls.push({ text, params }); return { rows: [] }; } };
+    await sv.readPriorRunMeta(pool, 'sources:load_ravines');
+    await sv.runLedgerGateDecision(pool, { ownSlugs: ['sources:x'], upstreamSlugs: ['sources:y'] });
+    expect(sqls.length).toBe(2);
+    const producerRows = async (texts: Array<{ text: string; params: unknown[] }>): Promise<string[]> => {
+      const lines = [
+        { type: 'header', pid: 1, tracer_self_ms: 0, distinct: texts.length, calls: texts.length },
+        ...texts.map((c, i) => ({ type: 'statement', i, text: c.text, count: 1, rowCount: 0, clients: [1], params: [c.params] })),
+        { type: 'client', id: 1, seq: texts.map((_, i) => [i, 1]) },
+      ];
+      const trace = await A.assembleTrace({ ndjsonTexts: [lines.map((l) => JSON.stringify(l)).join('\n') + '\n'], catalog: {},
+        meta: { step: 'fx', chain: 'sources', source_fingerprint: 'fp', git_head: 'g', wall_ms: 0 } });
+      const out = G.evaluateWitness({ slug: 'fx', descriptor: { inputs: { reads: { tables: [] } }, outputs: { writes: [] } },
+        status: 'pending', currentFingerprint: 'fp', postTraces: { fx: trace }, preTraces: {}, explainedDiffs: [] });
+      return out.rows.filter((r: string) => r.startsWith('FAIL:PRODUCER:'));
+    };
+    expect(await producerRows(sqls)).toEqual([]);
+    // F-4 negative control: remove the warned status from the own_last IN-list ONLY → RED again,
+    // via upstream_since's bare `p.status = 'completed'` (left bare on purpose, O-6).
+    const ledger = sqls[1];
+    if (!ledger) throw new Error('runLedgerGateDecision issued no SQL');
+    const gate = ledger.text;
+    const mutated = gate.replace("status IN ('completed', 'completed_with_warnings')", "status IN ('completed')");
+    expect(mutated).not.toBe(gate);
+    expect(await producerRows([{ text: mutated, params: ledger.params }])).toEqual(['FAIL:PRODUCER:fx:sources:x:status']);
   });
   it('returns null when no completed run exists / records_meta is null', async () => {
     const empty = { query: async () => ({ rows: [] }) };

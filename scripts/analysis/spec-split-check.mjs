@@ -53,7 +53,7 @@
  *   (v)   reader guard      — no declared move's `anchor` string appears inside any
  *         `reader_guards[].slices` entry (a program that slices spec prose by a
  *         heading string must not have that heading pulled out from under it).
- *   (vi)  totality           — every 122a section headed
+ *   (vi)  totality           — every appendix (APPENDIX_SPECS: 122a, 124a) section headed
  *         `(moved from Spec N §x)` has a corresponding `moves[]` row. An undeclared
  *         move is itself RED — the manifest is the one place a move may be recorded.
  *
@@ -116,9 +116,14 @@ export const SPEC_FILES = {
   '122a': '122a_step_optimization_appendix.md',
   123: '123_step_opt_assessment_validation.md',
   124: '124_step_standard_policy.md',
+  // Spec 124's own appendix (operator ruling "Split to 124a", 2026-10-02) — like 122a, a
+  // move DESTINATION only (never a `from_spec`), verified by arms (i)/(ii)/(vi).
+  '124a': '124a_step_standard_policy_appendix.md',
 };
 // The family that shares 122a as a citation-resolution fallback (arm iii).
 const APPENDIX_FAMILY = new Set(['122', '123', '124']);
+// Every appendix a move may land in — arm (vi) totality runs over each one.
+const APPENDIX_SPECS = ['122a', '124a'];
 // Grep roots for citation census (arm iii) — matches the plan's own census scope.
 const CITATION_ROOTS = ['docs', 'src', 'scripts', 'tasks', '.cursor'];
 
@@ -705,9 +710,11 @@ function doCheck() {
     for (const p of checkSystemMapDependencies(specTexts)) problems.push(`arm(v) ${p}`);
   }
 
-  // (vi) totality
-  const { undeclared } = checkTotality(specTexts['122a'], manifest.moves);
-  for (const u of undeclared) problems.push(`arm(vi) UNDECLARED MOVE — 122a heading "${u.text}" has no moves[] row`);
+  // (vi) totality — every appendix in APPENDIX_SPECS (122a, 124a).
+  for (const appendixId of APPENDIX_SPECS) {
+    const { undeclared } = checkTotality(specTexts[appendixId], manifest.moves);
+    for (const u of undeclared) problems.push(`arm(vi) UNDECLARED MOVE — ${appendixId} heading "${u.text}" has no moves[] row`);
+  }
 
   if (problems.length) {
     console.error(`[spec-split-check] DRIFT — ${problems.length} problem(s):`);
