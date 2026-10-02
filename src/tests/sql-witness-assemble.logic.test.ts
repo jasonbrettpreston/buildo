@@ -560,3 +560,72 @@ describe('sql-witness assemble — preTablesFromTrace returns written tables sor
     expect(A.preTablesFromTrace(trace)).toEqual(['parcels']);
   });
 });
+
+// ── WF3 witness-unblock C2 — session temp tables (shared by the two describes below) ──
+const TCAT: Record<string, string[]> = {
+  parcels: ['id', 'parcel_id', 'geom', 'centreline_id'], toronto_centreline: ['centreline_id', 'geom'], permits: ['id', 'status'],
+};
+const CTAS = 'CREATE TEMP TABLE tmp_x ON COMMIT DROP AS SELECT p.parcel_id, c.centreline_id FROM parcels p JOIN toronto_centreline c ON ST_DWithin(p.geom, c.geom, 50)';
+const UPD = 'UPDATE parcels p SET centreline_id = e.centreline_id FROM tmp_x e WHERE p.parcel_id = e.parcel_id';
+const TALLY = 'SELECT COUNT(*) FROM tmp_x';
+const pidFile = (pid: number, texts: string[]): string => ndjson([
+  header(pid, 0, texts.length, texts.length),
+  ...texts.map((text, i) => stmt(i, { text, count: 1, rowCount: 1, clients: [1] })),
+  client(1, texts.map((_, i) => [i, 1] as [number, number])),
+]);
+const assembleTemp = (files: string[]): Promise<TraceDoc> => A.assembleTrace({ ndjsonTexts: files, catalog: TCAT, meta: META });
+const DESC = {
+  inputs: { reads: { tables: [{ table: 'parcels', columns: ['parcel_id', 'geom'] }, { table: 'toronto_centreline', columns: ['centreline_id', 'geom'] }] } },
+  outputs: { writes: [{ table: 'parcels', columns: [{ name: 'centreline_id' }] }], write_inventory: { statements: 1 } },
+  execution: { txn_scope: 'step' },
+};
+async function gateRows(trace: TraceDoc): Promise<string[]> {
+  const { pathToFileURL } = await import('url');
+  const G = await import(pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/witness.mjs')).href);
+  return G.evaluateWitness({ slug: 'fx', descriptor: DESC, status: 'pending', currentFingerprint: META.source_fingerprint,
+    postTraces: { fx: trace }, preTraces: {}, explainedDiffs: [] }).rows;
+}
+
+describe('sql-witness assemble — session temp tables bind per pid (WF3 C2: R7, C-a, C-b)', () => {
+  it('R7 RED: temp CTAS + UPDATE … FROM temp + tally → no tmp_x anywhere, one write fingerprint, gate PASS', async () => {
+    const t = await assembleTemp([pidFile(1, ['BEGIN', CTAS, UPD, TALLY, 'COMMIT'])]);
+    expect(keys(t.touched.reads)).not.toContain('tmp_x');
+    expect(keys(t.touched.writes)).not.toContain('tmp_x');
+    expect(t.statements.filter((s) => s.kind === 'write').length).toBe(1);
+    expect(await gateRows(t)).toEqual([]);
+  });
+  it('C-a GREEN control: a non-temp CTAS still writes its target', async () => {
+    const t = await assembleTemp([pidFile(1, ['CREATE TABLE parcels_copy AS SELECT id FROM permits'])]);
+    expect(keys(t.touched.writes)).toContain('parcels_copy');
+  });
+  it('C-b canary: tmp_x read in a pid that never created it is still a:tmp_x.*', async () => {
+    const t = await assembleTemp([pidFile(1, ['BEGIN', CTAS, UPD, 'COMMIT']), pidFile(2, [TALLY])]);
+    expect(await gateRows(t)).toContain('FAIL:WITNESS:fx:a:tmp_x.*');
+  });
+});
+
+describe('sql-witness assemble — temp shadows and the temp rule (WF3 C2: C-c, R16)', () => {
+  it('C-c RED: CREATE TEMP TABLE parcels (shadows a catalog table) → FAIL:INPUT:temp-shadows, never exempt', async () => {
+    const t = await assembleTemp([pidFile(1, ['CREATE TEMP TABLE parcels AS SELECT id FROM permits', 'UPDATE parcels SET centreline_id = 1'])]);
+    expect(t.errors).toContain('FAIL:INPUT:temp-shadows:parcels');
+    expect(t.touched.writes.parcels).toContain('centreline_id');
+  });
+  it('R16 RED: a schema-qualified shadow (public.parcels) is temp-shadows too', async () => {
+    const t = await assembleTemp([pidFile(1, ['CREATE TEMP TABLE public.parcels AS SELECT id FROM permits'])]);
+    expect(t.errors).toContain('FAIL:INPUT:temp-shadows:parcels');
+  });
+  it('R16 RED: CREATE TABLE pg_temp.x AS … is a temp; a later SELECT … FROM x in the same pid gives no a:x.* row', async () => {
+    const t = await assembleTemp([pidFile(1, ['CREATE TABLE pg_temp.x AS SELECT id FROM permits', 'SELECT id FROM x'])]);
+    expect(keys(t.touched.writes)).not.toContain('x');
+    expect(await gateRows(t)).not.toContain('FAIL:WITNESS:fx:a:x.*');
+  });
+  it('R16 GREEN control: CREATE TEMP TABLE … (LIKE …) stays utility', async () => {
+    const t = await assembleTemp([pidFile(1, ['CREATE TEMP TABLE tmp_y (LIKE parcels)'])]);
+    expect(t.statements.map((s) => s.kind)).toEqual(['utility']);
+  });
+  it('R16 GREEN control: the fingerprint is whole-text, so a 2-write text is ONE write fingerprint', async () => {
+    const t = await assembleTemp([pidFile(1, ["UPDATE parcels SET centreline_id = 1 WHERE id = 1; UPDATE permits SET status = 'x' WHERE id = 2"])]);
+    expect(t.statements.filter((s) => s.kind === 'write').length).toBe(1);
+    expect(keys(t.touched.writes)).toEqual(['parcels', 'permits']);
+  });
+});

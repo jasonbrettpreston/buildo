@@ -95,6 +95,168 @@ describe('sql-witness resolver — staging → base table (contract: staging tab
   });
 });
 
+describe('sql-witness resolver — every statement of a multi-statement text (WF3 C2: R5, R6)', () => {
+  const MCAT: Record<string, string[]> = { ...CAT, ravines: ['id', 'name'], toronto_centreline: ['centreline_id', 'geom'] };
+
+  it('R5 RED: a write behind a leading SELECT is witnessed (kind write, writes ravines.name)', () => {
+    const r = R.resolveStatement("SELECT id FROM parcels WHERE id = 1; UPDATE ravines SET name = 'x' WHERE id = 2", MCAT);
+    expect(r.kind).toBe('write');
+    expect(r.writes.ravines).toEqual(['name']);
+    expect(r.reads.parcels).toContain('id');
+  });
+
+  it('R6 RED: the centreline full-mode text (DROP …; CREATE TEMP … AS SELECT) witnesses its query reads', () => {
+    const r = R.resolveStatement(
+      'DROP TABLE IF EXISTS tmp_centreline_enrich;\nCREATE TEMP TABLE tmp_centreline_enrich AS SELECT p.parcel_id, c.centreline_id FROM parcels p JOIN toronto_centreline c ON ST_DWithin(p.geom, c.geom, 50)',
+      MCAT,
+    );
+    expect(r.reads.parcels).toEqual(sorted(['geom', 'parcel_id']));
+    expect(r.reads.toronto_centreline).toEqual(sorted(['centreline_id', 'geom']));
+  });
+
+  it('GREEN control: one statement keeps its contract; the fingerprint stays whole-text', () => {
+    const one = R.resolveStatement('SELECT 1', MCAT);
+    expect(one.kind).toBe('read');
+    expect(keys(one.reads)).toEqual([]);
+    expect(R.resolveStatement('SELECT 1; SELECT 2', MCAT).fingerprint).not.toBe(one.fingerprint);
+  });
+
+  it('GREEN control: a parse error anywhere in a multi-statement text stays FAIL:INPUT:parse, never a throw', () => {
+    const r = R.resolveStatement('SELECT 1; SELEC x', MCAT);
+    expect(r.error).toMatch(/^FAIL:INPUT:parse:/);
+  });
+});
+
+describe('sql-witness resolver — CTE names bind in nested scopes (WF3 C2b: F1, R20)', () => {
+  const XCAT: Record<string, string[]> = { ...CAT, a: ['id'], pipeline_runs: ['id', 'pipeline', 'status', 'started_at'] };
+  const reads = (sql: string): Record<string, string[]> => R.resolveStatement(sql, XCAT).reads;
+
+  it('F1a RED: a CTE referenced from a scalar SubLink is not a table read', () => {
+    expect(keys(reads('WITH c AS (SELECT started_at FROM pipeline_runs) SELECT id FROM pipeline_runs WHERE started_at > COALESCE((SELECT started_at FROM c), now())'))).toEqual([]);
+  });
+  it('F1b RED: an aliased CTE reference (FROM a z) is derived', () => {
+    expect(keys(reads('WITH a AS (SELECT id FROM parcels) SELECT z.id FROM a z'))).toEqual(['parcels']);
+  });
+  it('F1c RED: a sibling CTE body (b AS (SELECT id FROM a)) does not read a', () => {
+    expect(keys(reads('WITH a AS (SELECT id FROM parcels), b AS (SELECT id FROM a) SELECT id FROM b'))).toEqual(['parcels']);
+  });
+  it('F1d RED: write-statement CTEs bind in sibling bodies and in the INSERT … SELECT', () => {
+    const r = R.resolveStatement('WITH a AS (SELECT id FROM parcels), b AS (SELECT id FROM a) INSERT INTO permits (id) SELECT id FROM b', XCAT);
+    expect(keys(r.reads)).not.toContain('a');
+    expect(keys(r.reads)).not.toContain('b');
+    expect(r.writes.permits).toEqual(['id']);
+  });
+  it('precedence RED: a CTE named *_staging beats the staging→base mapping in a nested scope', () => {
+    expect(keys(reads('WITH parcels_staging AS (SELECT id FROM permits) SELECT id FROM permits WHERE id IN (SELECT id FROM parcels_staging)'))).toEqual(['permits']);
+  });
+  it('R20 GREEN control: a CTE from an EARLIER statement does not hide a later real table a', () => {
+    expect(reads('WITH a AS (SELECT id FROM parcels) SELECT 1; SELECT id FROM a').a).toEqual(['id']);
+  });
+  it('R20 RED: a CTE bound only inside a sibling subquery does not hide the outer real table a', () => {
+    expect(reads('SELECT x.id FROM (WITH a AS (SELECT id FROM parcels) SELECT id FROM a) x JOIN a ON a.id = x.id').a).toContain('id');
+  });
+  it('GREEN control: a top-level CTE stays derived and a plain table stays a read', () => {
+    expect(keys(reads('WITH a AS (SELECT id FROM parcels) SELECT id FROM a'))).toEqual(['parcels']);
+  });
+});
+
+describe('sql-witness resolver — R14: runner ledger SQL has no a:<cte> rows at gate #44 (WF3 C2b)', () => {
+  it('R14 RED: real runLedgerGateDecision + detectInterruptedRetraction SQL → assembleTrace → evaluateWitness: no :a: rows', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sv = require(path.join(process.cwd(), 'scripts/lib/source-version.js'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const st = require(path.join(process.cwd(), 'scripts/lib/step/staleness.js'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const A = require(path.join(process.cwd(), 'scripts/lib/sql-witness/assemble.cjs'));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const linkMassing = require(path.join(process.cwd(), 'scripts/link-massing.descriptor.json')); // declares force_full_on_next_run
+    const { pathToFileURL } = await import('url');
+    const G = await import(pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/witness.mjs')).href);
+
+    const captured: Array<{ text: string; params: unknown[] }> = [];
+    const pool = { query: async (text: string, params: unknown[]) => { captured.push({ text, params }); return { rows: [] }; } };
+    await sv.runLedgerGateDecision(pool, { ownSlugs: ['sources:x'], upstreamSlugs: ['sources:y'] });
+    await st.detectInterruptedRetraction(pool, linkMassing, {});
+    expect(captured.length).toBe(2);
+
+    const lines = [
+      { type: 'header', pid: 1, tracer_self_ms: 0, distinct: captured.length, calls: captured.length },
+      ...captured.map((c, i) => ({ type: 'statement', i, text: c.text, count: 1, rowCount: 0, clients: [1], params: [c.params] })),
+      { type: 'client', id: 1, seq: captured.map((_, i) => [i, 1]) },
+    ];
+    const trace = await A.assembleTrace({
+      ndjsonTexts: [lines.map((l) => JSON.stringify(l)).join('\n') + '\n'],
+      catalog: {},
+      meta: { step: 'fx', chain: 'sources', source_fingerprint: 'fp', git_head: 'g', wall_ms: 0 },
+    });
+    const out = G.evaluateWitness({
+      slug: 'fx', descriptor: { inputs: { reads: { tables: [] } }, outputs: { writes: [] } }, status: 'pending',
+      currentFingerprint: 'fp', postTraces: { fx: trace }, preTraces: {}, explainedDiffs: [],
+    });
+    expect(out.rows.filter((r: string) => r.includes(':a:'))).toEqual([]);
+  });
+});
+
+describe('sql-witness resolver — function-alias column lists bind (WF3 C2c: R21, R22)', () => {
+  type W = { table: string; geometry_kind?: string; columns: Array<{ name: string }> };
+  const geomCases = (): Array<{ label: string; w: W; D: unknown }> => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const rav = require(path.join(process.cwd(), 'scripts/load-ravines.descriptor.json')) as { outputs: { writes: W[] } };
+    const rw = rav.outputs.writes[0]!;
+    const out = [{ label: 'load_ravines', w: rw, D: rav as unknown }];
+    const hp = path.join(process.cwd(), 'scripts/load-heritage.descriptor.json');
+    if (fs.existsSync(hp)) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const her = require(hp) as { outputs: { writes: W[] } };
+      for (const w of her.outputs.writes) out.push({ label: `load_heritage ${w.table}`, w, D: her });
+    } else {
+      // heritage descriptor lives in another worktree: its writes = ravines' write with these kinds
+      out.push({ label: 'heritage_properties (point clone)', w: { ...rw, table: 'heritage_properties', geometry_kind: 'point' }, D: rav });
+      out.push({ label: 'heritage_districts (polygon clone)', w: { ...rw, table: 'heritage_districts', geometry_kind: 'polygon' }, D: rav });
+    }
+    return out;
+  };
+
+  it('R21 RED: the real geometry-guard validation_sql binds s/g/input/validated (no error, no such reads)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const write = require(path.join(process.cwd(), 'scripts/lib/step/write.js')) as {
+      buildWritePlan: (w: unknown, d: unknown) => { validation_sql: string | null };
+    };
+    for (const { label, w, D } of geomCases()) {
+      const sql = write.buildWritePlan(w, D).validation_sql;
+      expect(sql, label).toBeTruthy();
+      const r = R.resolveStatement(sql as string, { [w.table]: w.columns.map((c) => c.name) });
+      expect(r.error, label).toBeNull();
+      for (const k of ['input', 's', 'g', 'validated']) expect(keys(r.reads), label).not.toContain(k);
+    }
+  });
+
+  it('R21 RED: a no-list alias names its single column; UPDATE … FROM unnest binds; a real column beside it still reads', () => {
+    expect(R.resolveStatement('SELECT h.h FROM unnest($1::int[]) h', CAT).error).toBeNull();
+    const u = R.resolveStatement(
+      'UPDATE parcels p SET max_build_stories = u.v FROM unnest($1::int[], $2::int[]) AS u(id, v) WHERE p.id = u.id', CAT);
+    expect(u.error).toBeNull();
+    expect(u.writes.parcels).toEqual(['max_build_stories']);
+    expect(u.reads.parcels).toEqual(expect.arrayContaining(['id']));
+    const j = R.resolveStatement('SELECT p.geom, g.geojson FROM parcels p JOIN unnest($1::text[]) AS g(geojson) ON true', CAT);
+    expect(j.error).toBeNull();
+    expect(keys(j.reads)).toEqual(['parcels']);
+    const q = R.resolveStatement('SELECT geom, geojson FROM parcels p JOIN unnest($1::text[]) AS g(geojson) ON true', CAT);
+    expect(q.reads.parcels).toEqual(['geom']); // geojson is g's column, never parcels'
+  });
+
+  it('R22 control: unknown alias columns still FAIL; a real column beside an unnest alias is still read', () => {
+    expect(R.resolveStatement('SELECT g.nope FROM unnest($1::text[]) AS g(geojson)', CAT).error).toBe('FAIL:INPUT:column:nope');
+    expect(R.resolveStatement('SELECT h.other FROM unnest($1::int[]) h', CAT).error).toBe('FAIL:INPUT:column:other');
+    expect(R.resolveStatement(
+      'SELECT g.parcel_id FROM parcels p JOIN unnest($1::text[]) AS g(geojson) ON true', CAT).error).toBe('FAIL:INPUT:column:parcel_id');
+    const q = R.resolveStatement('SELECT geom, geojson FROM parcels p JOIN unnest($1::text[]) AS g(geojson) ON true', CAT);
+    expect(q.reads.parcels).toEqual(expect.arrayContaining(['geom']));
+  });
+});
+
 describe('sql-witness resolver — utility statements counted and excluded (contract: resolveAll.utility)', () => {
   it('RED: a mixed batch counts 5 utility statements, keeps only permits reads, and no writes', () => {
     const out = R.resolveAll(
