@@ -336,6 +336,17 @@ function skipCheckDecision({ lastModified, etag = null, storedVersion, nowMs }) 
   );
 }
 
+/**
+ * Legacy force seam (zoning O2, operator ruling 2026-09-27; heritage 451962ac precedent):
+ * with ZONING_FORCE_RELOAD=1 every per-layer skip decision becomes "load"; unset, the decision
+ * is returned unchanged (byte-identical). Same key as the converted descriptor's
+ * override.force_run, so the PRE and POST golden captures force identically.
+ */
+function applyForceReload(decision, force) {
+  if (!force || !decision || !decision.skip) return decision;
+  return { ...decision, skip: false, reason: 'forced' };
+}
+
 // ===========================================================================
 // CKAN DataStore helpers
 // ===========================================================================
@@ -575,6 +586,7 @@ async function main(pool) {
     const nowMs = Date.parse(String(runAt));
     const auditRows = [];
     auditRows.push({ metric: 'dataset_source_license', value: LICENSE_URL, status: 'INFO' }); // §6
+    if (process.env.ZONING_FORCE_RELOAD === '1') auditRows.push({ metric: 'zoning_override_force_reload_present', value: true, status: 'WARN' });
 
     // Prior run (started_at DESC standardized in the lib — Phase B B1). Downstream
     // reads (storedVersion / priorMetricValue) expect the row shape { records_meta },
@@ -595,9 +607,10 @@ async function main(pool) {
     const baseVersion = resourceVersions[LAYERS[0].resourceId] || String(runAt);
 
     // Step 0a skip-check: skip iff a prior version exists and EVERY layer is unchanged (R2-12).
-    const decisions = LAYERS.map((l) =>
+    const forceReload = process.env.ZONING_FORCE_RELOAD === '1';
+    const decisions = LAYERS.map((l) => applyForceReload(
       skipCheckDecision({ lastModified: resourceVersions[l.resourceId], etag: null,
-        storedVersion: storedLayerVersions[l.key] ?? storedVersion, nowMs }));
+        storedVersion: storedLayerVersions[l.key] ?? storedVersion, nowMs }), forceReload));
     if (storedVersion && decisions.every((d) => d.skip)) {
       const ageDays = ageDaysFrom(nowMs, storedVersion); // no-op → age of the stored (current prod) version
       auditRows.push({ metric: 'no_op_refresh', value: true, status: 'INFO' });
@@ -736,4 +749,5 @@ module.exports = {
   priorMetricValue,
   skipCheckDecision,
   ageDaysFrom,
+  applyForceReload,
 };
