@@ -259,15 +259,18 @@ function createPool() {
  * @returns {'network'|'timeout'|'parse'|'database'|'file_not_found'|'unknown'}
  */
 function classifyError(err) {
-  if (!(err instanceof Error)) return 'unknown';
+  // A DOMException 'AbortError' from an AbortController is Error-like but,
+  // depending on the runtime, not always `instanceof Error` — classify it
+  // rather than dropping it to 'unknown' (WF3 2026-10-03).
+  if (!(err instanceof Error) && /** @type {any} */ (err)?.name !== 'AbortError') return 'unknown';
   // Only a STRING code can be a SQLSTATE/errno we classify on. A non-string
-  // (a number such as an HTTP 502 status, or an object) is coerced to
-  // `undefined` so the `.startsWith` guards below cannot throw a TypeError
+  // (a number such as an HTTP 502 status or an AbortError's 20, or an object) is
+  // coerced to `undefined` so the `.startsWith` guards below cannot throw a TypeError
   // from inside log.error and mask the step's real fatal error (WF3 2026-10-02).
   const raw = /** @type {unknown} */ (/** @type {any} */ (err).code);
   const code = /** @type {string|undefined} */ (typeof raw === 'string' ? raw : undefined);
   if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'EPIPE') return 'network';
-  if (code === 'ETIMEDOUT' || code === 'ABORT_ERR' || (err.message && err.message.includes('timeout'))) return 'timeout';
+  if (code === 'ETIMEDOUT' || code === 'ABORT_ERR' || err.name === 'AbortError' || (err.message && err.message.includes('timeout'))) return 'timeout';
   if (code === 'ENOENT') return 'file_not_found';
   if (err.name === 'SyntaxError' || (err.message && err.message.includes('JSON'))) return 'parse';
   if (code && (code.startsWith('23') || code.startsWith('42') || code.startsWith('22') || code.startsWith('40'))) return 'database';
