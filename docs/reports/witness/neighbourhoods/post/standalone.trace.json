@@ -1,0 +1,333 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-neighbourhoods.js",
+  "chain": "none",
+  "source_fingerprint": "3191bad8a7d19797b9407ca927d5e8abfe7d505bd197b546a3e9ba30846a1937",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 20,
+    "distinct": 17,
+    "utility": 7,
+    "tracer_self_ms": 25.317,
+    "wall_ms": 6230
+  },
+  "statements": [
+    {
+      "fingerprint": "295268ea529014a0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          5022,
+          null,
+          2233,
+          0,
+          0,
+          0,
+          "{\"boundaries_loaded\":158,\"census_rows_matched\":31,\"duration_ms\":4975,\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_neighbourhoods_floor\":158,\"neighbourhoods_download_timeout_ms\":60000,\"neighbourhoods_dead_tuple_ratio_warn_max\":0.3,\"neighbourhoods_maintenance_timeout_minutes\":15},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":9,\"name\":\"Neighbourhood Boundaries\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"boundaries_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"census_rows_matched\",\"value\":31,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"bad_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"duplicate_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"boundary_rows_inserted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_maintenance_neighbourhoods_vacuum_analyze\",\"value\":0,\"threshold\":0.3,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0 <= 0.3\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5021,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "neighbourhoods",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "736eb2f92abef1ed",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "neighbourhoods": [
+          "avg_household_income",
+          "avg_individual_income",
+          "couples_pct",
+          "english_knowledge_pct",
+          "geom",
+          "geometry",
+          "immigrant_pct",
+          "lone_parent_pct",
+          "low_income_pct",
+          "married_pct",
+          "median_household_income",
+          "name",
+          "period_of_construction",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "university_degree_pct",
+          "visible_minority_pct"
+        ]
+      },
+      "writes": {
+        "neighbourhoods": [
+          "avg_household_income",
+          "avg_individual_income",
+          "couples_pct",
+          "english_knowledge_pct",
+          "geom",
+          "geometry",
+          "immigrant_pct",
+          "lone_parent_pct",
+          "low_income_pct",
+          "married_pct",
+          "median_household_income",
+          "name",
+          "neighbourhood_id",
+          "period_of_construction",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "university_degree_pct",
+          "visible_minority_pct"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:neighbourhoods"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e8a90cfa942410fb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 158,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "708:2",
+      "write_fingerprints": [
+        "736eb2f92abef1ed"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "neighbourhoods": [
+        "avg_household_income",
+        "avg_individual_income",
+        "couples_pct",
+        "english_knowledge_pct",
+        "geom",
+        "geometry",
+        "immigrant_pct",
+        "lone_parent_pct",
+        "low_income_pct",
+        "married_pct",
+        "median_household_income",
+        "name",
+        "neighbourhood_id",
+        "period_of_construction",
+        "tenure_owner_pct",
+        "tenure_renter_pct",
+        "university_degree_pct",
+        "visible_minority_pct"
+      ]
+    },
+    "writes": {
+      "neighbourhoods": [
+        "avg_household_income",
+        "avg_individual_income",
+        "couples_pct",
+        "english_knowledge_pct",
+        "geom",
+        "geometry",
+        "immigrant_pct",
+        "lone_parent_pct",
+        "low_income_pct",
+        "married_pct",
+        "median_household_income",
+        "name",
+        "neighbourhood_id",
+        "period_of_construction",
+        "tenure_owner_pct",
+        "tenure_renter_pct",
+        "university_degree_pct",
+        "visible_minority_pct"
+      ]
+    }
+  },
+  "errors": []
+}

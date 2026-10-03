@@ -1,0 +1,296 @@
+{
+  "trace_version": 1,
+  "step": "scripts\\load-massing.js",
+  "chain": "sources",
+  "source_fingerprint": "786d4d8a39477598b52ae3f6acdaa2b91eb3877a7665787289ecaa869971c460",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 95,
+    "distinct": 18,
+    "utility": 10,
+    "tracer_self_ms": 7365.228,
+    "wall_ms": 265851
+  },
+  "statements": [
+    {
+      "fingerprint": "15f9fafa91dc36bc",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "footprint_area_sqft",
+          "footprint_area_sqm"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "26ccff78d2c8f90e",
+      "kind": "write",
+      "count": 72,
+      "rowCount": 400,
+      "reads": {
+        "building_footprints": [
+          "centroid_lat",
+          "centroid_lng",
+          "geometry",
+          "max_height_m",
+          "min_height_m"
+        ]
+      },
+      "writes": {
+        "building_footprints": [
+          "centroid_lat",
+          "centroid_lng",
+          "elev_z",
+          "estimated_stories",
+          "footprint_area_sqft",
+          "footprint_area_sqm",
+          "geom",
+          "geometry",
+          "max_height_m",
+          "min_height_m",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "295268ea529014a0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:massing"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "a28a4d3a8550ed23",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 427077,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "bfd2daef9182271a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c0f9e1f085ff91a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "source_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "9000:3",
+      "write_fingerprints": [
+        "26ccff78d2c8f90e"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "building_footprints": [
+        "centroid_lat",
+        "centroid_lng",
+        "elev_z",
+        "estimated_stories",
+        "footprint_area_sqft",
+        "footprint_area_sqm",
+        "geom",
+        "geometry",
+        "max_height_m",
+        "min_height_m",
+        "source_id"
+      ]
+    },
+    "writes": {
+      "building_footprints": [
+        "centroid_lat",
+        "centroid_lng",
+        "elev_z",
+        "estimated_stories",
+        "footprint_area_sqft",
+        "footprint_area_sqm",
+        "geom",
+        "geometry",
+        "max_height_m",
+        "min_height_m",
+        "source_id"
+      ]
+    }
+  },
+  "errors": []
+}

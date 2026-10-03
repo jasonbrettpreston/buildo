@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 486 declarable fields
+# The step contract — 20 categories, 494 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,9 +15,9 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 32 | 9 | 0 |
-| 3 | `outputs` | 102 | 30 | 2 |
-| 4 | `staleness` | 25 | 7 | 0 |
+| 2 | `inputs` | 36 | 9 | 0 |
+| 3 | `outputs` | 103 | 31 | 2 |
+| 4 | `staleness` | 28 | 9 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 77 | 16 | 1 |
 | 7 | `checks` | 32 | 7 | 0 |
@@ -45,6 +45,8 @@
 | `?` | execution.shape declared |
 | `INGESTOR` | outputs |
 | `?` | execution.shape declared |
+| `?` | inputs.reads declared |
+| `?` | staleness.skip_scope declared |
 | `INGESTOR` | outputs is object · **if outputs.writes is a predicate ⇒ outputs.writes** |
 | `LINK / MATCHER` | outputs.invalidates min 1 · counters is object |
 | `ENRICHER` | outputs is object · execution is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
@@ -165,10 +167,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, key_property, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, ckan, key_property, cache, cache_why, cache_ttl} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
-| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` | ! |
+| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` · `ckan_datastore` | ! |
 | `reads.externals[].role` | `primary` · `lookup` | ! |
 | `reads.externals[].csv_options` | object {bom, relax_quotes} | — |
 | `reads.externals[].csv_options.bom` | `true` · `false` | † |
@@ -179,6 +181,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals[].on_head_error` | `fail_step` · `warn_row` | ! |
 | `reads.externals[].target` | string | — |
 | `reads.externals[].on_failure` | `abort_step` · `fail_row_continue` · `warn_row_continue` | ! |
+| `reads.externals[].ckan` | object {resource_id, package_url, page_size_from_config} | — |
+| `reads.externals[].ckan.resource_id` | string | † |
+| `reads.externals[].ckan.package_url` | string | † |
+| `reads.externals[].ckan.page_size_from_config` | string | † |
 | `reads.externals[].key_property` | string | — |
 | `reads.externals[].cache` | `none` · `revalidate` · `reuse_if_fresh` · `reuse_if_present` | † ! |
 | `reads.externals[].cache_why` | object {text, liveness} | — |
@@ -194,7 +200,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, geometry_kind} | † |
+| `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, line_validity, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty, derived_from_geometry} | † |
@@ -273,7 +279,8 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].source_key_policy.key_space_migration.why.liveness` | `none` \| object {kind, ref} | † |
 | `writes[].source_key_policy.key_space_migration.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].source_key_policy.key_space_migration.why.liveness.ref` | string | † |
-| `writes[].geometry_kind` | `polygon` · `point` · `line` | ! |
+| `writes[].line_validity` | `length_and_simple` | ! |
+| `writes[].geometry_kind` | `polygon` · `point` · `line` · `multiline` | ! |
 | `cascades` | `none` \| list (min 1) of object {table, owned_by, operation, why} | † |
 | `cascades[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `cascades[].owned_by` | string `^[a-z][a-z0-9_]*$` | † |
@@ -304,12 +311,14 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `scope` | `all` \| `none` \| string | † |
-| `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key, variable} | † |
+| `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key, style, max_age_days_from_config, variable} | † |
 | `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `config_version` · `interval` · `always` | † ! |
 | `trigger[].position` | `pre_acquisition` · `acquisition` · `post_acquisition` · `pre_compute` | † ! |
 | `trigger[].external` | string | — |
 | `trigger[].table` | string `^[a-z_][a-z0-9_]*$` | — |
 | `trigger[].emit_key` | string | — |
+| `trigger[].style` | `validator_equality` · `ckan_metadata` | ! |
+| `trigger[].max_age_days_from_config` | string | — |
 | `trigger[].variable` | string | — |
 | `mode_select` | `skip` · `incremental` · `full` · `defer` · `tri_state` · `none` | † ! |
 | `checkpoint` | `none` \| object {cursor, ordered} | † |
@@ -322,6 +331,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `fingerprint_inputs` | `none` \| list (min 1) of string | † |
 | `logic_version` | `none` \| string | † |
 | `on_fingerprint_change` | `queue` · `run` · `none` | † ! |
+| `skip_scope` | `per_primary` · `all_primaries` | ! |
 | `on_prior_run_error` | `fail_step` · `warn_row` | ! |
 | `on_prior_run_error_why` | object {text, liveness} | — |
 | `on_prior_run_error_why.text` | string | † |

@@ -5634,7 +5634,7 @@ describe('INGESTOR shapefile acquisition — compute.shapeRecord + geometry_kind
   it('T5 — geometryValidationSql(\'line\'): ST_CollectionExtract(repaired, 2) + the single-member '
     + 'collapse, accepts ST_LineString only, never ST_Multi; assertGeometryKind(\'line\') passes, '
     + '\'curve\' throws by name; polygon/point SQL stays byte-identical', () => {
-    expect(writeLib.GEOMETRY_KINDS).toEqual(['polygon', 'point', 'line']);
+    expect(writeLib.GEOMETRY_KINDS).toEqual(['polygon', 'point', 'line', 'multiline']);
     expect(writeLib.GEOMETRY_KIND_EXTRACT_TYPE.line).toBe(2);
     expect(writeLib.GEOMETRY_KIND_ACCEPTED_TYPES.line).toBe("('ST_LineString')");
 

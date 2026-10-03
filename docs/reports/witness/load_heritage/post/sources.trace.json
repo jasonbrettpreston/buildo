@@ -3,14 +3,14 @@
   "step": "scripts/load-heritage.js",
   "chain": "sources",
   "source_fingerprint": "e51645016bfa366391f043efd8b81ce55d888326e97a145122e86be32e2b61df",
-  "git_head": "721035a35f29ef4c2640c879f62626ec63862900",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
   "header": {
     "processes": 1,
-    "calls": 32,
+    "calls": 31,
     "distinct": 18,
-    "utility": 11,
-    "tracer_self_ms": 217.054,
-    "wall_ms": 110627
+    "utility": 10,
+    "tracer_self_ms": 95.807,
+    "wall_ms": 18020
   },
   "statements": [
     {
@@ -177,7 +177,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 644,
+      "rowCount": 663,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -217,7 +217,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 4,
+      "count": 3,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -270,14 +270,14 @@
   ],
   "transactions": [
     {
-      "client": "3412:3",
+      "client": "4260:3",
       "write_fingerprints": [
         "319ea3ece49da25b",
         "ede7ab7788a9e3e9"
       ]
     },
     {
-      "client": "3412:4",
+      "client": "4260:3",
       "write_fingerprints": [
         "37c2010a3787397a",
         "c13c44447ade545e"
