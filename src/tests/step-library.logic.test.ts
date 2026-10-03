@@ -3532,6 +3532,12 @@ describe('STA-3 — the three destructive-reset guards (scripts/lib/step/reset.j
       const manifest = require(join(process.cwd(), 'scripts/manifest.json'));
       expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: true }, manifest, slug: 'link_massing' })).not.toThrow();
     });
+
+    it('link_parcels (WF3 2026-10-02): the real manifest declares chain_args.sources "--full", so a force_full reset is authorized (RED until the manifest carries it)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real committed manifest
+      const manifest = require(join(process.cwd(), 'scripts/manifest.json'));
+      expect(() => stepLib.assertForceFullAuthorized({ overrides: { force_full: true }, manifest, slug: 'link_parcels' })).not.toThrow();
+    });
   });
 
   describe('guard 3 — assertAdvisoryLockAvailable (§4.1② / index.js:2270)', () => {

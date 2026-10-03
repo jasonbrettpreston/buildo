@@ -246,6 +246,24 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/src-sql-ledger\.mjs --check && \\\n\s*/, '');
     expect(stripComments(tampered)).not.toContain('src-sql-ledger.mjs --check');
   });
+
+  // WF3 chain_args generated (2026-10-03, Spec 124 R-AZ): the manifest's chain_args for every CONVERTED
+  // step are derived from the descriptor's execution.invocation; the drift check is its own pre-commit
+  // line after the Target Files and src/ SQL ledger checks.
+  it('GREEN — runs the generated chain_args drift check after the Target Files and src/ SQL ledger checks (R-AZ)', () => {
+    const code = stripComments(PRE_COMMIT);
+    const at = code.indexOf('node scripts/analysis/generate-chain-args.mjs --check');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeGreaterThan(code.indexOf('node scripts/analysis/generate-target-files.mjs --check'));
+    expect(at).toBeGreaterThan(code.indexOf('node scripts/analysis/src-sql-ledger.mjs --check'));
+    expect(at).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+  });
+
+  it('RED — a tampered pre-commit with the chain_args drift check stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/generate-chain-args\.mjs --check && \\\n\s*/, '');
+    expect(tampered).not.toBe(PRE_COMMIT);
+    expect(stripComments(tampered)).not.toContain('generate-chain-args.mjs --check');
+  });
 });
 
 // ---------------------------------------------------------------------------
