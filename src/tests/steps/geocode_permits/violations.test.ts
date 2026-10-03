@@ -47,8 +47,12 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('geocode_permits', __filename);
 
 const STEP_REL = 'scripts/geocode-permits.js';
 const COMPUTE_REL = 'scripts/lib/compute/geocode-permits.js';
@@ -166,12 +170,12 @@ describe('geocode_permits — the class-O lifecycle the golden differential CANN
     expect(plan.clear_sql).toBeTruthy();
 
     const issued: string[] = [];
-    const fakeClient = {
+    const fakeClient = guard.wrap({
       query: async (sql: string) => {
         issued.push((sql.trim().split(/\s+/)[0] ?? '').toUpperCase());
         return { rows: [], rowCount: 0 };
       },
-    };
+    });
 
     // A fixture slug keeps the artifact out of this step's own golden directory; the
     // mechanism under test is the ORDER and the SQL, not the file path.

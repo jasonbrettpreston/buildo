@@ -106,6 +106,7 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - `src/tests/steps/address_points/post-conversion-fixes.logic.test.ts`
   - `src/tests/steps/address_points/row-conservation.test.ts`
   - `src/tests/steps/address_points/violations.test.ts`
+  - `src/tests/steps/address_points/witness-fixture.logic.test.ts`
   - data: `address_points` writes (migrations/018_address_points.sql)
   - upstream: none
   - downstream: geocode_permits · link_parcel_addresses · link_parcels

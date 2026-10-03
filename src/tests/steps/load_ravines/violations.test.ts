@@ -63,8 +63,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('load_ravines', __filename);
 const THIS_FILE_REL = 'src/tests/steps/load_ravines/violations.test.ts';
 const STEP_DIR_REL = 'src/tests/steps/load_ravines';
 
@@ -2081,12 +2085,12 @@ describe('Fold C / LR-D9 — when:"pre_write" aborts BEFORE any write (Spec 59 L
       return { rows: [], rowCount: 0 };
     };
     const run = async (text: string, values?: unknown[]) => { sql.push(text); return answer(text, values); };
-    return {
+    return guard.wrap({
       sql,
       query: run,
       connect: async () => ({ query: run, release: () => {} }),
       wrote: () => sql.some((s) => /INSERT INTO ravines|DELETE FROM ravines/i.test(s)),
-    };
+    });
   }
 
   /**

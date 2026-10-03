@@ -486,6 +486,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
   - `scripts/enrich-heritage.descriptor.json`
   - `scripts/lib/compute/enrich-heritage.js`
   - `src/tests/steps/enrich_heritage/violations.test.ts`
+  - `src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts`
   - data: `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: load_heritage · parcels
   - downstream: enrich_parcels

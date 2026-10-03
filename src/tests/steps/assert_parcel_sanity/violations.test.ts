@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { witnessGuard } from '../_witness-guard';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const SHELL_PATH = path.join(ROOT, 'scripts/quality/assert-parcel-sanity.js');
@@ -20,6 +21,9 @@ const shellSrc = () => fs.readFileSync(SHELL_PATH, 'utf8');
 const stepSchema = require('../../../../scripts/steps/_schema/step.schema.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { validateDescriptor } = require('../../../../scripts/lib/step/validate');
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('assert_parcel_sanity', __filename);
 
 describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () => {
   const descriptor = JSON.parse(fs.readFileSync(DESCRIPTOR_PATH, 'utf8'));
@@ -312,7 +316,7 @@ describe('5. unhappy paths (descriptor-declared facts true at commit 1; runtime 
       ...descriptor,
       config: { ...descriptor.config, logic_variables: [{ name: 'parcel_sanity_totally_unseeded_var_xyz', min: 0, max: 1, on_invalid: 'fail' }] },
     };
-    const fakePool = { query: async () => ({ rows: [] }) };
+    const fakePool = guard.wrap({ query: async () => ({ rows: [] }) });
     await expect(resolveConfig(fakePool, badDescriptor)).rejects.toThrow();
   });
 });

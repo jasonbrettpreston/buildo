@@ -1,0 +1,13 @@
+{
+  "fixture_version": 1,
+  "slug": "assert_parcel_sanity",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/assert_parcel_sanity/violations.test.ts": {
+      "reads": {},
+      "writes": {},
+      "violations": [],
+      "errors": []
+    }
+  }
+}

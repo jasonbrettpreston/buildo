@@ -480,6 +480,7 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
   - `scripts/enrich-ravines.descriptor.json`
   - `scripts/lib/compute/enrich-ravines.js`
   - `src/tests/steps/enrich_ravines/violations.test.ts`
+  - `src/tests/steps/enrich_ravines/witness-fixture.logic.test.ts`
   - data: `parcels` reads+writes (migrations/011_parcels.sql); `ravines` reads (migrations/167_create_ravines_table.sql)
   - upstream: load_ravines · parcels
   - downstream: enrich_parcels

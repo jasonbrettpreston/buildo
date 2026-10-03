@@ -1,0 +1,13 @@
+{
+  "fixture_version": 1,
+  "slug": "load_centreline",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/load_centreline/violations.test.ts": {
+      "reads": {},
+      "writes": {},
+      "violations": [],
+      "errors": []
+    }
+  }
+}

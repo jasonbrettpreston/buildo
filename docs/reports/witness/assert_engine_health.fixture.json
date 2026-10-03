@@ -1,0 +1,38 @@
+{
+  "fixture_version": 1,
+  "slug": "assert_engine_health",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts": {
+      "reads": {
+        "engine_health_snapshots": [
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan",
+          "snapshot_date",
+          "table_name"
+        ]
+      },
+      "writes": {
+        "engine_health_snapshots": [
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan",
+          "snapshot_date",
+          "table_name"
+        ]
+      },
+      "violations": [
+        "a:engine_health_snapshots.snapshot_date",
+        "a:engine_health_snapshots.table_name"
+      ],
+      "errors": []
+    }
+  }
+}

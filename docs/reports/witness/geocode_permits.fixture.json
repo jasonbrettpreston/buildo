@@ -1,0 +1,28 @@
+{
+  "fixture_version": 1,
+  "slug": "geocode_permits",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/geocode_permits/violations.test.ts": {
+      "reads": {
+        "permits": [
+          "geo_id",
+          "geocoded_at",
+          "latitude",
+          "longitude",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "geocoded_at",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "violations": [],
+      "errors": []
+    }
+  }
+}

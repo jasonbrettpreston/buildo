@@ -69,8 +69,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('enrich_parcels', __filename);
 
 const STEP_REL = 'scripts/enrich-parcels.js';
 const DESCRIPTOR_REL = 'scripts/enrich-parcels.descriptor.json';
@@ -2010,7 +2014,8 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
       calls.push({ kind: 'UNEXPECTED: ' + text.slice(0, 80), params });
       return { rows: [], rowCount: 0 };
     };
-    return { query, calls };
+    const handle = guard.wrap({ query });
+    return { query: handle.query, calls };
   }
 
   it('full:true — exactly ONE set-based UPDATE, ZERO buildOptConfigSelectSql/batch calls, regardless of pending count (2,500 parcels across 2 foreign run_ids)', async () => {
@@ -2223,7 +2228,7 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
       }
       return { rows: [], rowCount: 0 };
     };
-    return { query, rowsSnapshot: () => rows.map((r) => ({ ...r })), sql };
+    return guard.wrap({ query, rowsSnapshot: () => rows.map((r) => ({ ...r })), sql });
   }
 
   /** A stream row whose `lot_size_sqm` getter throws on first access — mapRowToEngineInput's
@@ -2420,7 +2425,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     // assignment is visible rather than coincidentally equal.
     const counts = [{ n: 1000 }, { n: 966 }, { n: 7 }];
     let i = 0;
-    const pool = { query: async () => ({ rows: [counts[i++]!] }) };
+    const pool = guard.wrap({ query: async () => ({ rows: [counts[i++]!] }) });
     const passRaw = {
       zoning: { updated: 11, scoped: 1200, ambiguous: 2, fsiSourceNulled: 3, updatedIds: [1, 2] },
       max_build: { updated: 13, zero_link_ghost_cnt: 4, coverage_defaulted_cnt: 5, box_excluded_cnt: 6, heritage_mislink_cnt: 7, ravine_constrained_cnt: 8, updatedIds: [2, 3] },
@@ -2490,7 +2495,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     // zone_class_pct check unevaluable rather than failing).
     let j = 0;
     const zeroCounts = [{ n: 0 }, { n: 0 }, { n: 0 }];
-    const zeroPool = { query: async () => ({ rows: [zeroCounts[j++]!] }) };
+    const zeroPool = guard.wrap({ query: async () => ({ rows: [zeroCounts[j++]!] }) });
     const zeroRes = await ep.computePostPhase(zeroPool, { passRaw: {} });
     expect(zeroRes.matched.zone_class_pct).toBe(0);
     expect(Number.isNaN(zeroRes.matched.zone_class_pct as number)).toBe(false);
@@ -2586,7 +2591,7 @@ describe('counters — the three declared sources resolve against the enrich cou
     };
     const counts = [{ n: 486_530 }, { n: 470_000 }, { n: 0 }];
     let i = 0;
-    const pool = { query: async () => ({ rows: [counts[i++]!] }) };
+    const pool = guard.wrap({ query: async () => ({ rows: [counts[i++]!] }) });
     const res = await ep.computePostPhase(pool, {
       passRaw: { zoning: { updated: 1, updatedIds: [1, 2] }, optimal_config: { genuineIds: new Set([3]) } },
     });
@@ -2651,7 +2656,7 @@ describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driv
       runPass2: (client: { query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, ctx: { scopeWhere: string; full: boolean; clock: { now: () => Date } }, config: Record<string, number>) => Promise<unknown>;
     };
     let capturedSql = '';
-    const client = {
+    const client = guard.wrap({
       query: async (text: string) => {
         if (/^\s*CREATE TEMP TABLE parcel_max_build/.test(text)) { capturedSql = text; return { rows: [] }; }
         if (/^\s*DROP TABLE/.test(text)) return { rows: [] };
@@ -2660,7 +2665,7 @@ describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driv
         if (/^\s*UPDATE parcel_max_build/.test(text) || /massing_enriched_at/.test(text)) return { rows: [], rowCount: 0 };
         return { rows: [], rowCount: 0 };
       },
-    };
+    });
     const config: Record<string, number> = {
       storey_height_m: 3, max_build_min_dimension_m: 3, mislink_footprint_lot_tol: 0.05,
       max_build_lot_min_sqm: 321, max_build_lot_max_sqm: 4321,

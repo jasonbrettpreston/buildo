@@ -12,14 +12,17 @@
 //   FAIL:INPUT:<slug>:<invocation>:<error>          a trace carried errors[] entries
 //   FAIL:STALE:<slug>:<invocation>                  source_fingerprint != currentFingerprint
 //   FAIL:WITNESS:<slug>:a:<table>.<col>|a:<table>.* traced read/write not declared
+//   FAIL:WITNESS:<slug>:a:unwitnessed:<table>.<col>|.*  a declared read touched by no fresh trace and no fixture record (P1-C4a)
 //   FAIL:WITNESS:<slug>:b:<table>[.<col>]           written tables must EQUAL declared write tables
 //   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory
 //   FAIL:WITNESS:<slug>:d:txn_scope:<declared>:<observed>
 //   FAIL:WITNESS:<slug>:g:<key>                     PRE key absent from POST and unexplained
 //   FAIL:PRODUCER:<slug>:<invocation-param>:status  a pipeline_runs read filtered to completed-only
+//   FAIL:FIXTURE:<slug>:<suite>:<item>              a fixture-guard violation (a:<t>.<c>) or input:<error> (P1-C4a)
 //
-// OUT of slice A (never implemented here): check (e), the declared ⊆ witnessed half of (a), and
-// the C9 marker string — a later commit owns those. `status === 'converted'` is REPORT-ONLY until
+// OUT of slice A (still implemented later): check (e) and the C9 marker string — a later commit
+// owns those. The declared ⊆ witnessed half of (a) IS armed here at P1-C4a (it needs a fresh post
+// trace, so a trace-less slug stays UNWITNESSED). `status === 'converted'` is REPORT-ONLY until
 // P1-C8/C9, so `hardStop` is only ever true for a `pending` slug whose rows carry a FAIL:.
 
 const FAIL_PREFIX = 'FAIL:';
@@ -30,7 +33,7 @@ function isWholeTable(cols) {
 }
 
 /** `descriptor.inputs.reads.tables[]` → `[{table, cols: string[]}]`; `*` preserved verbatim. */
-function declaredReads(descriptor) {
+export function declaredReads(descriptor) {
   const tables = descriptor && descriptor.inputs && descriptor.inputs.reads
     ? descriptor.inputs.reads.tables
     : null;
@@ -44,14 +47,14 @@ function declaredReads(descriptor) {
 }
 
 /** Every declared table a write may target: `outputs.writes[].table` ∪ the read tables. */
-function declaredTables(descriptor) {
+export function declaredTables(descriptor) {
   const set = new Set(declaredReads(descriptor).map((r) => r.table));
   for (const w of declaredWrites(descriptor)) set.add(w.table);
   return set;
 }
 
 /** `outputs.writes[]` → `[{table, cols: string[], dbDefault: Set<string>}]` with `columns[].name`. */
-function declaredWrites(descriptor) {
+export function declaredWrites(descriptor) {
   const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes)
     ? descriptor.outputs.writes
     : [];
@@ -157,18 +160,22 @@ function hasWrite(trace) {
 }
 
 /**
- * (a)+(b)+(c)+(d) for ONE post trace. The caller has already skipped a stale trace.
- * @returns {string[]} violation strings, without rows for a trace with no writes at all.
+ * (a) traced ⊆ declared, for reads AND writes alike. Declared columns are the UNION of
+ * `inputs.reads.tables[]` and `outputs.writes[]` — a traced write to a declared column is
+ * declared too (brief §(a)); `*` in a read column list means the whole table.
+ *
+ * @param {unknown} descriptor
+ * @param {{reads?: object, writes?: object}} touched a trace's `touched` map (may be malformed)
+ * @returns {string[]} sorted unique items WITHOUT the `FAIL:WITNESS:<slug>:` prefix:
+ *   `a:<table>.*` for an undeclared table (one per table, not per column),
+ *   `a:<table>.<col>` for a declared table's undeclared column.
  */
-function checkTraceAgainstDescriptor(slug, descriptor, trace) {
-  const rows = [];
-  const touched = touchedOf(trace);
+export function undeclaredItems(descriptor, touched) {
+  const t = touchedOf({ touched });
   const tables = declaredTables(descriptor);
   const reads = declaredReads(descriptor);
+  const items = [];
 
-  // (a) traced ⊆ declared, for reads AND writes alike. Declared columns are the UNION of
-  // `inputs.reads.tables[]` and `outputs.writes[]` — a traced write to a declared column is
-  // declared too (brief §(a)); `*` in a read column list means the whole table.
   const declaredCols = new Map();
   const whole = new Set();
   for (const r of reads) {
@@ -183,18 +190,66 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace) {
     declaredCols.set(w.table, set);
   }
   for (const kind of ['reads', 'writes']) {
-    for (const [table, cols] of Object.entries(touched[kind])) {
+    for (const [table, cols] of Object.entries(t[kind])) {
       if (!tables.has(table)) {
-        rows.push(`FAIL:WITNESS:${slug}:a:${table}.*`); // one row per table, not per column
+        items.push(`a:${table}.*`); // one row per table, not per column
         continue;
       }
       if (whole.has(table)) continue;
       const allowed = declaredCols.get(table) || new Set();
       for (const col of Array.isArray(cols) ? cols : []) {
-        if (!allowed.has(col)) rows.push(`FAIL:WITNESS:${slug}:a:${table}.${col}`);
+        if (!allowed.has(col)) items.push(`a:${table}.${col}`);
       }
     }
   }
+  return [...new Set(items)].sort();
+}
+
+/**
+ * The declared ⊆ witnessed half of (a): every DECLARED READ column absent from the witnessed
+ * union yields an item. A `*` read is witnessed only when its table appears in
+ * `witnessed.reads` OR `witnessed.writes` (a whole-table read covers every column); one column
+ * of a `*`-less read is witnessed when it appears in `witnessed.reads[table] ∪
+ * witnessed.writes[table]`.
+ *
+ * @param {unknown} descriptor
+ * @param {{reads?: Record<string, string[]>, writes?: Record<string, string[]>}} witnessed
+ * @returns {string[]} sorted unique items `a:unwitnessed:<table>.<col>` / `a:unwitnessed:<table>.*`
+ */
+export function unwitnessedItems(descriptor, witnessed) {
+  const w = witnessed && typeof witnessed === 'object' ? witnessed : {};
+  const wReads = w.reads && typeof w.reads === 'object' ? w.reads : {};
+  const wWrites = w.writes && typeof w.writes === 'object' ? w.writes : {};
+  const tablesSeen = new Set([...Object.keys(wReads), ...Object.keys(wWrites)]);
+  const colUnion = (table) => new Set([
+    ...(Array.isArray(wReads[table]) ? wReads[table] : []),
+    ...(Array.isArray(wWrites[table]) ? wWrites[table] : []),
+  ]);
+  const items = [];
+  for (const r of declaredReads(descriptor)) {
+    if (isWholeTable(r.cols)) {
+      if (!tablesSeen.has(r.table)) items.push(`a:unwitnessed:${r.table}.*`);
+      continue;
+    }
+    const seen = colUnion(r.table);
+    for (const col of r.cols) {
+      if (col === '*') continue;
+      if (!seen.has(col)) items.push(`a:unwitnessed:${r.table}.${col}`);
+    }
+  }
+  return [...new Set(items)].sort();
+}
+
+/**
+ * (a)+(b)+(c)+(d) for ONE post trace. The caller has already skipped a stale trace.
+ * @returns {string[]} violation strings, without rows for a trace with no writes at all.
+ */
+function checkTraceAgainstDescriptor(slug, descriptor, trace) {
+  const rows = [];
+  const touched = touchedOf(trace);
+
+  // (a) traced ⊆ declared (see undeclaredItems).
+  for (const item of undeclaredItems(descriptor, touched)) rows.push(`FAIL:WITNESS:${slug}:${item}`);
 
   // (b)+(c)+(d) only when the invocation actually wrote something.
   if (!hasWrite(trace)) return rows;
@@ -302,7 +357,9 @@ function producerRows(slug, trace) {
  *
  * @param {{slug: string, descriptor: unknown, status: 'pending'|'converted',
  *   currentFingerprint: string, postTraces: Record<string, object>,
- *   preTraces: Record<string, object>, explainedDiffs: string[]}} args
+ *   preTraces: Record<string, object>, explainedDiffs: string[],
+ *   fixtureRecords?: Record<string, {reads: object, writes: object,
+ *     violations: string[], errors: string[]}>}} args
  * @returns {{answer: string, rows: string[], hardStop: boolean}}
  */
 export function evaluateWitness({
@@ -313,11 +370,16 @@ export function evaluateWitness({
   postTraces,
   preTraces,
   explainedDiffs,
+  fixtureRecords,
 } = {}) {
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
   const pres = preTraces && typeof preTraces === 'object' ? preTraces : {};
+  const fixtures = fixtureRecords && typeof fixtureRecords === 'object' && !Array.isArray(fixtureRecords)
+    ? fixtureRecords
+    : {};
   const invocations = Object.keys(posts);
   const rows = [];
+  const witnessedTouched = [];
 
   if (invocations.length === 0) {
     // Nothing captured at all: not a FAIL, and nothing else is evaluated.
@@ -334,6 +396,48 @@ export function evaluateWitness({
       }
       rows.push(...checkTraceAgainstDescriptor(slug, descriptor, trace));
       rows.push(...producerRows(slug, trace));
+      witnessedTouched.push(touchedOf(trace));
+    }
+  }
+
+  // (a) declared ⊆ witnessed — ONLY when at least one fresh (non-stale) post trace was
+  // evaluated. witnessed = the column union of those traces' `touched` maps ∪ every fixture
+  // suite's reads/writes, so a column proven read by the fixture guard counts too.
+  if (witnessedTouched.length > 0) {
+    const witnessed = { reads: {}, writes: {} };
+    const merge = (kind, table, cols) => {
+      if (typeof table !== 'string' || !Array.isArray(cols)) return;
+      const set = new Set(witnessed[kind][table] || []);
+      for (const c of cols) if (typeof c === 'string') set.add(c);
+      witnessed[kind][table] = [...set];
+    };
+    for (const t of witnessedTouched) {
+      for (const kind of ['reads', 'writes']) {
+        for (const [table, cols] of Object.entries(t[kind])) merge(kind, table, cols);
+      }
+    }
+    for (const suite of Object.keys(fixtures).sort()) {
+      const rec = fixtures[suite];
+      if (!rec || typeof rec !== 'object') continue;
+      for (const kind of ['reads', 'writes']) {
+        const map = rec[kind] && typeof rec[kind] === 'object' ? rec[kind] : {};
+        for (const [table, cols] of Object.entries(map)) merge(kind, table, cols);
+      }
+    }
+    for (const item of unwitnessedItems(descriptor, witnessed)) {
+      rows.push(`FAIL:WITNESS:${slug}:${item}`);
+    }
+  }
+
+  // FIXTURE GUARD rows — emitted for every suite whether or not the slug has any trace.
+  for (const suite of Object.keys(fixtures).sort()) {
+    const rec = fixtures[suite];
+    if (!rec || typeof rec !== 'object') continue;
+    for (const v of Array.isArray(rec.violations) ? rec.violations : []) {
+      if (typeof v === 'string') rows.push(`FAIL:FIXTURE:${slug}:${suite}:${v}`);
+    }
+    for (const e of Array.isArray(rec.errors) ? rec.errors : []) {
+      if (typeof e === 'string') rows.push(`FAIL:FIXTURE:${slug}:${suite}:input:${e}`);
     }
   }
 

@@ -94,6 +94,7 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `scripts/load-massing.notes.json`
   - `scripts/lib/compute/load-massing.js`
   - `src/tests/steps/massing/violations.test.ts`
+  - `src/tests/steps/massing/witness-fixture.logic.test.ts`
   - data: `building_footprints` writes (migrations/023_building_footprints.sql)
   - upstream: none
   - downstream: enrich_parcels · link_massing

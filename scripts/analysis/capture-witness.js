@@ -85,6 +85,37 @@ async function snapshotCatalog(pool) {
   return out;
 }
 
+/** The committed catalog's repo-relative path (`docs/reports/witness/_catalog.json`). */
+const CATALOG_REL = 'docs/reports/witness/_catalog.json';
+
+/** Provenance string stamped on the committed catalog (the snapshot query `snapshotCatalog` runs). */
+const CATALOG_SOURCE =
+  "information_schema.columns WHERE table_schema = 'public' (scripts/analysis/capture-witness.js snapshotCatalog)";
+
+/**
+ * Write the COMMITTED catalog — the file the fixture guard
+ * (`src/tests/steps/_witness-guard.ts`) resolves unqualified columns / `*` against,
+ * refreshed by every capture from the same snapshot its trace used (Fold 7 ruling 1).
+ * Deterministic: no timestamp; keys sorted and every column array passed through
+ * `sortedUnique` (non-array values are skipped).
+ *
+ * @param {Record<string, string[]>} catalog — `{ table: [cols…] }` (e.g. `snapshotCatalog`)
+ * @param {string} [outPath] — defaults to `<REPO_ROOT>/<CATALOG_REL>`
+ * @returns {{catalogPath: string, tables: number}}
+ */
+function writeCatalog(catalog, outPath = path.join(REPO_ROOT, CATALOG_REL)) {
+  const src = catalog || {};
+  const tables = {};
+  for (const table of Object.keys(src).sort()) {
+    if (!Array.isArray(src[table])) continue;
+    tables[table] = sortedUnique(src[table]);
+  }
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  const doc = { catalog_version: 1, source: CATALOG_SOURCE, tables };
+  fs.writeFileSync(outPath, `${JSON.stringify(doc, null, 2)}\n`);
+  return { catalogPath: outPath, tables: Object.keys(tables).length };
+}
+
 /**
  * Phase-0 DSM gate for a capture: read `dynamic_shared_memory_type`, build the
  * `sys_dsm_capacity` row with the SAME inputs `scripts/run-chain.js` feeds it
@@ -160,8 +191,10 @@ async function writeTraceFromDir({ traceDir, pool, catalog, meta, outPath }) {
 
 module.exports = {
   PRELOAD_PATH,
+  CATALOG_REL,
   traceEnv,
   snapshotCatalog,
+  writeCatalog,
   dsmGuard,
   writeTraceFromDir,
   tablesFromTraceIfNone,

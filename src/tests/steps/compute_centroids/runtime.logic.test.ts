@@ -14,6 +14,7 @@
 // `src/tests/step-library.logic.test.ts`.
 import { describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
+import { witnessGuard } from '../_witness-guard';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS library + this step's real descriptor/compute */
 const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
@@ -21,6 +22,9 @@ const writeLib = require(join(process.cwd(), 'scripts/lib/step/write.js'));
 const DESCRIPTOR = require(join(process.cwd(), 'scripts/compute-centroids.descriptor.json'));
 const compute = require(join(process.cwd(), 'scripts/lib/compute/compute-centroids.js'));
 /* eslint-enable @typescript-eslint/no-require-imports */
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('compute_centroids', __filename);
 
 const BACKLOG_SQL_NEEDLE = 'FROM parcels';
 const UPDATE_SQL_NEEDLE = 'UPDATE parcels SET';
@@ -93,12 +97,12 @@ function backfillPool(opts: PoolOpts = {}) {
     params.push(values ?? []);
     return answer(text);
   };
-  return {
+  return guard.wrap({
     sql,
     params,
     query: record,
     connect: async () => ({ query: record, release: () => {} }),
-  };
+  });
 }
 
 function captureEmissions() {

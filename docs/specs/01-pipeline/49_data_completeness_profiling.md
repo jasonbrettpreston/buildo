@@ -276,6 +276,7 @@ This script emits **no `audit_table.columns`**, so FreshnessTimeline renders its
   - `scripts/quality/assert-global-coverage.descriptor.json`
   - `scripts/lib/compute/assert-global-coverage.js`
   - `src/tests/steps/assert_global_coverage/violations.test.ts`
+  - `src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts`
   - data: none in the cross-step ledger
   - upstream: none
   - downstream: none

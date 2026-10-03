@@ -105,6 +105,7 @@ emitMeta writes — all `parcels` table columns including LEGACY 5 (still writte
   - `scripts/lib/compute/load-parcels.js`
   - `src/tests/steps/parcels/row-conservation.test.ts`
   - `src/tests/steps/parcels/violations.test.ts`
+  - `src/tests/steps/parcels/witness-fixture.logic.test.ts`
   - data: `parcels` writes (migrations/011_parcels.sql)
   - upstream: none
   - downstream: assert_parcel_sanity · compute_centroids · compute_parcel_cost_estimates · enrich_centreline · enrich_heritage · enrich_parcels · enrich_ravines · link_massing · link_neighbourhoods · link_parcel_addresses · link_parcels

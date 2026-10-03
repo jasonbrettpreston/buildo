@@ -1,0 +1,57 @@
+{
+  "fixture_version": 1,
+  "slug": "parcels",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/parcels/witness-fixture.logic.test.ts": {
+      "reads": {
+        "parcels": [
+          "addr_num_normalized",
+          "address_number",
+          "centreline_dataset_version_when_enriched",
+          "date_effective",
+          "feature_type",
+          "geom",
+          "geometry",
+          "heritage_dataset_version_when_enriched",
+          "linear_name_full",
+          "lot_size_source",
+          "lot_size_sqft",
+          "lot_size_sqm",
+          "ravine_dataset_version_when_enriched",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "addr_num_normalized",
+          "address_number",
+          "date_effective",
+          "depth_ft",
+          "depth_m",
+          "feature_type",
+          "frontage_ft",
+          "frontage_m",
+          "geom",
+          "geometry",
+          "is_irregular",
+          "linear_name_full",
+          "lot_size_source",
+          "lot_size_sqft",
+          "lot_size_sqm",
+          "parcel_id",
+          "stated_area_raw",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "violations": [
+        "a:parcels.centreline_dataset_version_when_enriched",
+        "a:parcels.heritage_dataset_version_when_enriched",
+        "a:parcels.ravine_dataset_version_when_enriched"
+      ],
+      "errors": []
+    }
+  }
+}
