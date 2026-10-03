@@ -1,0 +1,110 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/enrich-centreline.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose categories across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations. This file carries 9, and",
+    "descriptor.interpretation.entries must equal that number.",
+    "",
+    "`fences` and `counts` are RECORD blocks, not prose — they are not counted against",
+    "the cap. `fences` carries one row per intent-ledger fence the assessment",
+    "(docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md §4) marks",
+    "preserved-in-compute with its why written here."
+  ],
+  "expected_shape": [
+    {
+      "what": "Most runs are INCREMENTAL, not full and not skip. The producer's source_dataset_version is a content hash that moves only when the street network changes, so on an unchanged day the gate recomputes just the parcels whose stamp is NULL or stale — and the never-linked out-of-range tail keeps that set non-empty forever (EC-D2), so skip is effectively unreachable. The audit table of such a run shows `enrich_centreline_mode = incremental`, the full-only rows as `not measured (mode=incremental)`, and a PASS verdict. A full run happens only when load_centreline brings a new version, on ENRICH_CENTRELINE_FORCE_FULL, or after an interrupted run."
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "`parcels_enriched_count` (= records_updated) counts rows whose derived values OR stamp changed, not parcels examined. A full run against an unchanged network writes only the parcels whose stamp moves; an incremental run writes the stale set minus the parcels whose recompute equals their stored values. `parcels_recomputed` is the stale count the gate measured BEFORE the run, so recomputed minus enriched is the unchanged-on-recompute share, not a failure."
+    },
+    {
+      "what": "`parcels_with_zero_centreline_intersections_pct` is measured only in full mode and against the whole geom-bearing fleet, not the scoped set. A `not measured` value on an incremental run is the carried EC-D1 gap, not a clean bill: the zero-intersection gate has not looked since the last full run."
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "A full run whose corner or through share leaves its plausibility band (centreline_corner_share_* / centreline_through_share_* WARN), or whose zero-intersection pct jumps, while load_centreline reports an unchanged feature count — the join, not the source, moved: check the geography GIST, the proximity / abut variables and the laneway vocabulary before the data."
+    },
+    {
+      "signal": "An incremental run whose `parcels_recomputed` is far above the usual tail size with no new load_parcels geometry — something NULLed the stamps in bulk (a manual reset, a load_parcels fence change); the run is correct but the cause needs a name."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "No row compares the stamp to the version toronto_centreline actually holds. Because the contract reads only the chain-prefixed completed producer row (EC-D10, pinned), a standalone load_centreline load leaves the stamp naming the previous chain load while the table holds the new rows, and every check here stays green.",
+      "detected_by": "none"
+    },
+    {
+      "what": "An address-only parcel edit never re-stales the stamp (EC-D3), so a frontage that the new address would move stays as it was until the next full run; nothing measures how many parcels that affects.",
+      "detected_by": "none"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The three-mode version-skip gate is ported, not retired (plan D1 = (a)).",
+      "why": "The mode, skip_reason and parcels_recomputed are observables Spec 62 §3.11 names, and retiring the gate into the scope predicate (the enrich_heritage H-A1(a) route) would change the full-mode graded rows on every unchanged day. The gate lives in the contract_read hook (same SQL, same order as the legacy) and the pass honours a forced or interrupted run as full."
+    },
+    {
+      "what": "The laneway code, the both-names-NOT-NULL rule and the shared-node rule are vocabulary kept in compute — not Rule 3 tunables.",
+      "why": "Which segment is a lane and what makes two segments different streets are facts about the data model; an operator who could re-point them could silently redefine a corner lot. The distances, angles, cap and sample step ARE tunables and live in logic_variables."
+    },
+    {
+      "what": "The SQL math guards GREATEST(ST_Length(...), 1.0) and LEAST(..., 1.0) stay literal.",
+      "why": "The first is a divisor floor (a zero-length segment must not divide by zero) and the second clamps a line-locate fraction to the segment's end — neither is a threshold anyone would tune, and moving either changes the arithmetic, not a policy."
+    },
+    {
+      "what": "The non-empty toronto_centreline refusal stays at its legacy position, inside the transaction, in full and incremental mode only.",
+      "why": "guards.requires has no non-empty kind, and folding the probe into contract_read would run it on skip too — a second behaviour change on top of EC-D6. Keeping it in the pass makes the probe's reach identical to the legacy's."
+    }
+  ],
+  "known_normal": [
+    {
+      "check_id": "parcels_recomputed",
+      "what": "A steady, non-zero stale count on unchanged days is the never-linked out-of-range tail (plus any newly loaded parcels), not churn (EC-D2). It shrinks only when load_parcels adds or moves parcels near a street."
+    }
+  ],
+  "known_bad": [
+    {
+      "what": "EC-D4: a parcel that moves out of range keeps its old corner / through / frontage / laneway values and a NULL or old stamp, and every incremental run recomputes it without correcting it. Pinned until ④b; the fix resets the values and leaves the stamp NULL."
+    }
+  ],
+  "do_not_reflag": [
+    {
+      "what": "Reduced runs report the L21 gate and the three WARN diagnostics as `not measured` and still land PASS.",
+      "why": "EC-D1, carried by the zero-behaviour-change conversion (Spec 121 §4.3) and pinned by the red suite; ④a grades a table-derived zero-pct every run in its own RED→GREEN commit. The rows are INERT (INFO), never a hidden PASS."
+    },
+    {
+      "what": "guards.requires lists four parcels columns and omits abuts_laneway.",
+      "why": "EC-D5, the legacy TARGET_COLS carried verbatim; ④c adds the fifth column in its own commit."
+    }
+  ],
+  "how_to_investigate": [
+    {
+      "what": "A run whose mode surprises you: `enrich_centreline_mode` + `centreline_source_dataset_version` say what the gate saw. Compare that version with the last completed `sources:load_centreline` row's records_meta.centreline_load.source_dataset_version and the last completed `sources:enrich_centreline` row's records_meta.centreline_enrich.source_dataset_version — equal ⇒ incremental/skip, different ⇒ full. A standalone producer run under the bare slug is invisible to the gate (EC-D10)."
+    },
+    {
+      "what": "A permits/coa chain HALT naming enrich_centreline: enrich_permits' assertCentrelineEnriched needs a `completed` enrich_centreline run newer than the latest parcels load AND stamp coverage at or above centreline_propagation_coverage_min. Read this step's last terminal first — a WARN verdict lands completed_with_warnings on a standalone run, which the consumer does not accept."
+    }
+  ],
+  "fences": [
+    { "const": "the four producer-contract HALTs + the '1.1' pin, BEFORE any transaction", "value": "readCentrelineContract (contract_read hook)", "incident": "§9 DEC-E consumer protocol (c1161f38): never enrich against an unversioned or empty producer — a stamp must name a real, complete load.", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" },
+    { "const": "producer name sources:load_centreline, not the spec literal source-centreline", "value": "PRODUCER_NAME in the compute module", "incident": "The #409 trap (c1161f38): run-chain records chain-prefixed names; reading the spec literal found no row and HALTed. EC-D10 (bare-slug standalone rows) is carried.", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" },
+    { "const": "ST_DWithin over geography, not ST_Intersects", "value": "enrich_centreline_proximity_m", "incident": "WF2 CRITICAL (c1161f38): containment enriched a vanishing share of parcels because centrelines sit metres off the lot polygons; the proximity join restored coverage.", "lock_test": "src/tests/enrich-centreline.infra.test.ts" },
+    { "const": "parcel_segments AS MATERIALIZED + the geom-validity filter", "value": "buildTempSql", "incident": "Read by five CTEs; the validity filter keeps an invalid polygon from aborting the whole statement (c1161f38, F2 precedent).", "lock_test": "src/tests/enrich-centreline.infra.test.ts" },
+    { "const": "both segment names NOT NULL for corner and through (DEC-C)", "value": "buildTempSql parcel_corner_pairs / parcel_parallel_pairs", "incident": "Unnamed laneways within range are not a different street (c1161f38).", "lock_test": "src/tests/enrich-centreline.infra.test.ts" },
+    { "const": "abut-both + opposite sides from ST_PointOnSurface + the degenerate CASE", "value": "enrich_centreline_abut_m, enrich_centreline_through_opposite_tol_deg", "incident": "#431 (4b7f6eb0): the proximity radius alone over-flagged corner and through lots that merely see a second street.", "lock_test": "src/tests/db/migration-174-centreline-enrich.db.test.ts" },
+    { "const": "laneway exclusion LOWER(feature_code_desc) = 'laneway' in both pair CTEs", "value": "buildTempSql seg_is_lane", "incident": "#431-FU (0ebda39a): named rear lanes counted as a second frontage inflated the through share.", "lock_test": "src/tests/enrich-parcels-accessory.logic.test.ts" },
+    { "const": "abuts_laneway = bool_or(seg_is_lane) + the 5th guard disjunct", "value": "buildTempSql parcel_lane, UPDATE_SQL", "incident": "#431-FU2 / Spec 65 Phase 3 (b0c01fe5): the laneway-suite gate downstream reads it.", "lock_test": "src/tests/enrich-parcels-accessory.logic.test.ts" },
+    { "const": "three-mode version-skip gate; reduced runs land completed", "value": "readCentrelineContract + runCentrelineJoinPass", "incident": "P11-1 (b2d7dd4a): a full recompute every run cost the sources chain its biggest step; a lock-SKIP payload would HALT assertCentrelineEnriched (2b7bd46b).", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" },
+    { "const": "scoped build: DROP issued separately, one $1", "value": "DROP_TEMP_SQL + buildTempSql({scoped:true})", "incident": "The extended protocol refuses a multi-statement parameterized query (b2d7dd4a); the builder replaces the .replace() surgery (EC-D7).", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" },
+    { "const": "L30 pair cap by centreline id", "value": "enrich_centreline_pair_cap", "incident": "Cartesian-explosion bound on per-parcel pairs (c1161f38); EC-D9 (by id, not distance) carried.", "lock_test": "src/tests/enrich-centreline.infra.test.ts" },
+    { "const": "preconditions: postgis, three GIST indexes, four columns, two functions, non-empty source", "value": "guards.requires + assertCentrelineNonEmpty", "incident": "DEC-E G2 (c1161f38): refuse a sequential-scan join or a missing migration rather than run for hours; EC-D5 carried.", "lock_test": "src/tests/db/migration-174-centreline-enrich.db.test.ts" },
+    { "const": "frontage P1 name / P2 address range / P3 nearest segment", "value": "buildTempSql parcel_frontage", "incident": "WF2 DEC-B (c1161f38): under proximity there is no overlap length, so P3 is the nearest segment.", "lock_test": "src/tests/db/migration-174-centreline-enrich.db.test.ts" },
+    { "const": "round1(1000·x/t)/10 percentages", "value": "enrich_centreline_round_scale (pctOf)", "incident": "Display rounding of the diagnostics (c1161f38); byte form pinned so the audit value does not drift.", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" }
+  ],
+  "counts": { "open_blind_spots": 2, "unpromoted_suspicious_if": 2 }
+}

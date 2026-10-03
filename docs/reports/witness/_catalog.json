@@ -36,6 +36,28 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261003t0138z": [
+      "address_point_id",
+      "latitude"
+    ],
+    "address_points_retired_bak_20261003": [
+      "addr_num_normalized",
+      "address_class_desc",
+      "address_full",
+      "address_number",
+      "address_point_id",
+      "address_status",
+      "class_family_desc",
+      "geom",
+      "hi_num",
+      "latitude",
+      "linear_name_full",
+      "linear_name_normalized",
+      "lo_num",
+      "longitude",
+      "maint_stage",
+      "place_name"
+    ],
     "admin_audit_log": [
       "action",
       "admin_uid",
@@ -659,6 +681,11 @@
       "computed_at",
       "parcel_id"
     ],
+    "parcel_address_points_retired_bak_20261003": [
+      "address_point_id",
+      "computed_at",
+      "parcel_id"
+    ],
     "parcel_buildings": [
       "building_id",
       "confidence",
@@ -852,6 +879,18 @@
       "is_corner_lot",
       "is_through_lot",
       "primary_frontage_street_name"
+    ],
+    "parcels_centreline_bak_20261003t1441z": [
+      "abuts_laneway",
+      "centreline_dataset_version_when_enriched",
+      "id",
+      "is_corner_lot",
+      "is_through_lot",
+      "primary_frontage_street_name"
+    ],
+    "parcels_cohort_bak_20261002t2344z": [
+      "id",
+      "lot_size_sqm"
     ],
     "permit_history": [
       "changed_at",
@@ -1439,6 +1478,10 @@
       "website"
     ],
     "wsib_registry_cohort_bak_20261002t2315z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261002t2316z": [
       "id",
       "is_gta"
     ],

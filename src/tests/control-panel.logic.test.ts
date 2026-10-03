@@ -104,6 +104,27 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_heritage_phase_timeout_minutes',
   'enrich_heritage_designated_share_plausible_max_pct', // Reality-Check §7 — designated-share ceiling
   'enrich_heritage_designated_count_collapse_floor', // Reality-Check O4-class §7 — designated-count collapse floor
+  // Batch-2 row 3.10 `enrich_centreline` (2026-10-01, commit ②) — 19 vars: 12 legacy literals (Rule 3) +
+  // 3 ENRICHER runner knobs (D3) + 4 D4 corner/through share plausibility bounds.
+  'enrich_centreline_unlinked_warn_pct',
+  'enrich_centreline_unlinked_fail_pct',
+  'enrich_centreline_name_coverage_warn_min_pct',
+  'enrich_centreline_intersection_null_warn_pct',
+  'enrich_centreline_address_null_warn_pct',
+  'enrich_centreline_proximity_m',
+  'enrich_centreline_abut_m',
+  'enrich_centreline_through_opposite_tol_deg',
+  'enrich_centreline_pair_cap',
+  'enrich_centreline_parallel_tol_deg',
+  'enrich_centreline_azimuth_sample_m',
+  'enrich_centreline_round_scale',
+  'enrich_centreline_heartbeat_minutes',
+  'enrich_centreline_lock_timeout_ms',
+  'enrich_centreline_phase_timeout_minutes',
+  'enrich_centreline_corner_share_plausible_min_pct',
+  'enrich_centreline_corner_share_plausible_max_pct',
+  'enrich_centreline_through_share_plausible_min_pct',
+  'enrich_centreline_through_share_plausible_max_pct',
   'step_post_check_statement_timeout_minutes', // WF3 EP-D17 (2026-09-10) — default ceiling for an every_run invariants[]/plausibility[] entry with no declared statement_timeout
   'parcels_dead_tuple_ratio_warn_max', // WF3 EP-D17 (2026-09-10) — WARN bound + execution.maintenance trigger threshold for parcels' pg_stat_user_tables dead_ratio
   'step_post_check_concurrency', // WF3 EP-D17 output-panel fix F7 (2026-09-10) — batch width cap for concurrent invariants[]/plausibility[] entries

@@ -1,0 +1,270 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/enrich-centreline.js",
+  "chain": "none",
+  "git_head": "e77f95bbe6c90aa2746b5b1fa71055772d1854cc",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": null,
+    "records_new": null,
+    "records_updated": 2000,
+    "records_meta": {
+      "audit_table": {
+        "phase": 64,
+        "name": "Parcel centreline enrichment (version-skip)",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "enrich_centreline_mode",
+            "value": "incremental",
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_centreline_skip_reason",
+            "value": "version_unchanged_incremental",
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_recomputed",
+            "value": 18048,
+            "status": "INFO"
+          },
+          {
+            "metric": "parcels_enriched_count",
+            "value": 2000,
+            "status": "INFO"
+          },
+          {
+            "metric": "centreline_source_dataset_version",
+            "value": "1da4549b223eb577a79c57ba1f0f97dc",
+            "status": "INFO"
+          },
+          {
+            "metric": "enrich_centreline_duration_ms",
+            "value": 10771,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 10806,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      },
+      "centreline_enrich": {
+        "spec_version": "1.1",
+        "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+        "mode": "incremental",
+        "skip_reason": "version_unchanged_incremental",
+        "parcels_recomputed": 18048,
+        "parcels_updated": 2000,
+        "completed_at": "2026-10-03T16:03:09.922Z"
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "geom",
+          "centreline_dataset_version_when_enriched"
+        ],
+        "toronto_centreline": [
+          "geom"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name",
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich-centreline]\",\"msg\":\"version unchanged (1da4549b223eb577a79c57ba1f0f97dc) — reduced recompute of 18048 stale parcels (updated 2000)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":2000,\"records_meta\":{\"audit_table\":{\"phase\":64,\"name\":\"Parcel centreline enrichment (version-skip)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"status\":\"INFO\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"status\":\"INFO\"},{\"metric\":\"parcels_recomputed\",\"value\":18048,\"status\":\"INFO\"},{\"metric\":\"parcels_enriched_count\",\"value\":2000,\"status\":\"INFO\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"status\":\"INFO\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":10771,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":10806,\"threshold\":null,\"status\":\"INFO\"}]},\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":18048,\"parcels_updated\":2000,\"completed_at\":\"2026-10-03T16:03:09.922Z\"}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"centreline_dataset_version_when_enriched\"],\"toronto_centreline\":[\"geom\"]},\"writes\":{\"parcels\":[\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"centreline_dataset_version_when_enriched\"]}}\n\n[enrich-centreline] completed in 10.8s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 2249,
+  "table_state": [
+    {
+      "table": "parcels",
+      "row_count": 496510,
+      "ceiling_bypassed": "projected",
+      "content_hash": "baaa7776b49068ff00fc4a656700088e",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name",
+        "abuts_laneway",
+        "centreline_dataset_version_when_enriched"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcels": 1965
+  },
+  "table_specs": {
+    "parcels": {
+      "columns": [
+        "id",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name",
+        "abuts_laneway",
+        "centreline_dataset_version_when_enriched"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.centreline_enrich.completed_at",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/enrich-centreline.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Parcel centreline enrichment (version-skip)",
+          "phase": 64,
+          "rows": [
+            {
+              "metric": "enrich_centreline_mode",
+              "status": "INFO",
+              "value": "incremental"
+            },
+            {
+              "metric": "enrich_centreline_skip_reason",
+              "status": "INFO",
+              "value": "version_unchanged_incremental"
+            },
+            {
+              "metric": "parcels_recomputed",
+              "status": "INFO",
+              "value": 18048
+            },
+            {
+              "metric": "parcels_enriched_count",
+              "status": "INFO",
+              "value": 2000
+            },
+            {
+              "metric": "centreline_source_dataset_version",
+              "status": "INFO",
+              "value": "1da4549b223eb577a79c57ba1f0f97dc"
+            },
+            {
+              "metric": "enrich_centreline_duration_ms",
+              "status": "INFO",
+              "value": 10771
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "centreline_enrich": {
+          "mode": "incremental",
+          "parcels_recomputed": 18048,
+          "parcels_updated": 2000,
+          "skip_reason": "version_unchanged_incremental",
+          "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+          "spec_version": "1.1"
+        }
+      },
+      "records_new": null,
+      "records_total": null,
+      "records_updated": 2000
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "parcels": [
+            "id",
+            "geom",
+            "centreline_dataset_version_when_enriched"
+          ],
+          "toronto_centreline": [
+            "geom"
+          ]
+        },
+        "writes": {
+          "parcels": [
+            "is_corner_lot",
+            "is_through_lot",
+            "primary_frontage_street_name",
+            "abuts_laneway",
+            "centreline_dataset_version_when_enriched"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"version unchanged (1da4549b223eb577a79c57ba1f0f97dc) — reduced recompute of 18048 stale parcels (updated 2000)\",\"tag\":\"[enrich-centreline]\"}",
+      "[enrich-centreline] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "id",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name",
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched"
+        ],
+        "content_hash": "baaa7776b49068ff00fc4a656700088e",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 496510,
+        "table": "parcels"
+      }
+    ],
+    "invariants": []
+  },
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "fc654c5482b32fe51dd32ba39578ceb7658858236e9cbe0a47b63577202a33f9"
+}

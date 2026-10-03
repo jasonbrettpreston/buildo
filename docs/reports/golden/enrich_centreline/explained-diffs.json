@@ -1,0 +1,96 @@
+{
+  "contract_version": 1,
+  "step": "enrich_centreline",
+  "source": "docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md §1.4, §1.5, §6.1, §8.2 P3, §12.1, §12.2 + scripts/enrich-centreline.descriptor.json deviations[] / limitations[] / counters / terminals + measured --compare 2026-10-03",
+  "note": "MEASURED FACT (2026-10-03, PRE legacy + POST converted re-taken under the witness): table_state is IDENTICAL PRE->POST on BOTH chains — parcels 496510 rows, content_hash baaa7776b49068ff00fc4a656700088e (id + the 5 written columns, ORDER BY id) in pre/sources, pre/standalone, post/sources and post/standalone; records_updated 2000, exit_code 0 and verdict PASS on all four; the run is INCREMENTAL (version 1da4549b223eb577a79c57ba1f0f97dc unchanged, 18048 stale parcels recomputed). Every listed diff is records_meta / audit-row / lineage / log-line shape, explained below. 167 raw diffs across sources.json + standalone.json collapse to the 22 normalised keys listed (array indices -> []); post/sources.forced_full.json has no PRE pair and is not compared.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "Additive declared rows: the descriptor's invariants[0] centreline_corner_or_through_has_frontage (0 violations) and the four D4 plausibility rows centreline_{corner,through}_share_{min,max}_pct (11.257 / 1.005, inside bands [8,14] / [0.2,3]) — assessment §12.2 deviation 2. The legacy PRE was captured with no descriptor, so it evaluated no invariants (invariants: [])."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "descriptor deviations[4] + assessment §12.1 reads evidence table: inputs.reads is authored from every column the legacy SQL touches (R1-R9), so the derived lineage lists parcels.{id, geom, address_number, street_name_normalized, is_corner_lot, is_through_lot, primary_frontage_street_name, abuts_laneway, centreline_dataset_version_when_enriched} where the legacy REDUCED-mode emitMeta (:477-483) listed only {id, geom, stamp}; mode-independent lineage."
+    },
+    {
+      "key": "meta[].reads.toronto_centreline[]",
+      "why": "descriptor deviations[4] + assessment §12.1 rows R10-R18: the derived lineage lists the 13 toronto_centreline columns the legacy SQL reads (id, geom, linear_name, linear_name_full, from/to_intersection_id, lo/hi_num_l/r, parity_l/r, feature_code_desc) where the legacy reduced-mode emitMeta listed only geom; the incremental SQL reads the same columns as full."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "Log lines are INCIDENTAL (assessment §6: legacy pipeline.log.info text :504/:516/:600 is not preserved byte-for-byte; the runner logs its own). The legacy 'version unchanged (...) reduced recompute of 18048 stale parcels (updated 2000)' line is replaced by the runner's DB-target line (resolve-db.js), the 'phase centreline_join starting/completed' lines (runEnrichPhase), and the completion tag [enrich-centreline] -> [enrich_centreline]; the same facts are in records_meta.centreline_enrich and the audit rows."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "The runner names the audit table from descriptor identity.display_name (scripts/lib/step/verdict.js buildAuditTable: audit_table.name = descriptor.identity.display_name) = 'Parcel Centreline Enrichment'; the legacy hard-coded the reduced-mode literal 'Parcel centreline enrichment (version-skip)'. Header phase stays 64 (assessment §12.2 deviation 5)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "descriptor deviations[2] 'the legacy audit table shape: ... 6 INFO rows + a literal PASS verdict in reduced modes': one declared checks[] list serves every mode, so an incremental run now carries 13 full-only check rows (not measured), the 6 legacy reduced rows (same values, moved to rows 13-18), then the invariant + 4 plausibility rows — 24 rows vs the legacy 6."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "descriptor deviations[2]: the declared check order puts the 13 full-only checks first (parcels_with_zero_centreline_intersections_pct ... parcels_truncated_pair_count), so the 6 legacy reduced-mode metrics (enrich_centreline_mode ... enrich_centreline_duration_ms) shift from rows 0-5 to rows 13-18 with identical values; the metric at each of indices 0-5 changes."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "descriptor deviations[2]: every row is now a declared check (or invariant / plausibility) and the runner's buildAuditTable tags each row's origin (\"check\"); the legacy reduced-mode rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "descriptor deviations[2]: each declared check renders its bound (\"pct <= 10\" zero-intersection, \"pct >= 90\" name coverage, \"pct <= 50\" intersection-null, \"pct <= 10\" address-null, \"viol == 0\" for the count/INFO rows); the legacy reduced rows rendered no threshold."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "descriptor deviations[2] + limitations[1] (EC-D1 carried, ④a): in a reduced mode the 13 full-only rows are reported INERT with value 'not measured (mode=incremental)'; at indices 0-5 those replace the legacy reduced rows' values, which reappear unchanged at rows 13-18 (incremental, version_unchanged_incremental, 18048, 2000, 1da4549b...)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].warn_threshold",
+      "why": "The L21 zero-intersection check renders its two declared tiers: threshold 'pct <= 10' (legacy WARN at >= 10) and warn_threshold 'pct <= 40' (legacy FAIL at >= 40), from enrich_centreline_unlinked_warn_pct / _unlinked_fail_pct (assessment §6.2); EC-D11 / descriptor deviations[1] covers the inclusive edge. Legacy reduced rows had no tiers."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner-owned records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js): the library stamps checks_failed on every converted step from the scored rows — 0 here; the legacy step never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner-owned records_meta key (RUNNER_META_KEYS): 'all' because the built audit table has no errors and no warnings on this run (every row PASS/INFO); the legacy step never emitted it."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner-owned records_meta key (RUNNER_META_KEYS): 0 here — no WARN row (the frontage invariant and the four share plausibility rows all PASS); the legacy step never emitted it."
+    },
+    {
+      "key": "summary.records_meta.code_version",
+      "why": "emits[] key code_version, stamped by compute buildCentrelineMeta from descriptor staleness.logic_version, which is \"none\" per the registry-truth ruling 8 (operator-authorized) (trigger is 'always', no code_version comparator reads it; mode_select is also \"none\"). The legacy step emitted no code_version key."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner-owned records_meta key: the 19 declared logic variables (15 legacy literals + 4 D4 plausibility bounds, assessment §6.2 + §12.2 deviation 2) resolved by the runner's config.js, defaults byte-equal to the legacy literals (abut_m 13, proximity_m 20, pair_cap 20, ...); the legacy read no logic_variables (descriptor deviations[4], R21) and emitted none."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner-owned records_meta key (LW-D13): which ledger owns the pipeline_runs row — \"owned\" standalone / \"chain_owned\" in the sources chain; assessment §1.5: the legacy wrote no pipeline_runs row of its own, and emitted no such key."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner-owned records_meta key (RUNNER_META_KEYS) the library stamps on every converted step (0 = no pool-level error on this run); the legacy step never emitted it."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner-owned records_meta key: the declared terminal reached — \"enriched\" (descriptor terminals[] enriched, status completed: the phase ran in the gate's mode and no row is above PASS/INFO); the legacy had no terminal vocabulary."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "descriptor counters.records_new: a finite literal 0 rather than the legacy null — the step INSERTs nothing (class N executor refuses INSERT INTO / ON CONFLICT), and null would read as 'not counted' (assessment §1.4: legacy records_new:null)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "descriptor counters.records_total (A4 ruling, ENRICHER precedent, plan Fold A8): matched.compute.parcels_scanned — in incremental mode the stale count the gate measured, 18048 (= parcels_recomputed); the legacy emitted null (assessment §1.4)."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone only (assessment §1.5 + §8.2 P3): the legacy wrote NO pipeline_runs row of its own; the converted runner opens its own row under the bare slug enrich_centreline (openLedgerRow(pool, slug)) and finalizes it completed, which assertCentrelineEnriched accepts. In-chain both are [] (run-chain owns sources:enrich_centreline)."
+    }
+  ]
+}

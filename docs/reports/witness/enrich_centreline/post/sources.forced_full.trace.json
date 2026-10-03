@@ -1,0 +1,495 @@
+{
+  "trace_version": 1,
+  "step": "scripts/enrich-centreline.js",
+  "chain": "sources",
+  "source_fingerprint": "7b5ecb37cf964960c118210fbe23737fc24a289a3be98d9bdfc897a9410db770",
+  "git_head": "e32c1c24175c5d3a41b2084ae2d4177241d0fc33",
+  "header": {
+    "processes": 1,
+    "calls": 46,
+    "distinct": 30,
+    "utility": 13,
+    "tracer_self_ms": 12.072,
+    "wall_ms": 530330
+  },
+  "statements": [
+    {
+      "fingerprint": "09f735b0aa21c003",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1d68338a42630d9f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": [
+          "from_intersection_id",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "28d4a52d23a33271",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "46c7e018cd87d93a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 2000,
+      "reads": {
+        "parcels": [
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched",
+          "id",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6fe0fdbe591bd156",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "centreline_dataset_version_when_enriched",
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "714ab44e34f7f19f",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings') AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:load_centreline",
+            "load_centreline",
+            "load-centreline"
+          ]
+        ],
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ]
+        ]
+      ]
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:enrich_centreline"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "76533998925a04c0",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "parcels": [
+          "geom",
+          "is_through_lot"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "811af1890e340542",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "parcels": [
+          "geom",
+          "is_corner_lot"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 19,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "90e2f780aa5a8a1f",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a47b9456480b80ba",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          null
+        ]
+      ]
+    },
+    {
+      "fingerprint": "abe1cf006362be74",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b2d013e8bdf1613d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "street_name_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c7f851bd2262f131",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_proc"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ce97bb2bc8d71035",
+      "kind": "read",
+      "count": 4,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e16e8cc67fd3f68c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ed10ec11bbfbc432",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f5168ad53ef26d36",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "9668:3",
+      "write_fingerprints": [
+        "46c7e018cd87d93a"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "parcels": [
+        "abuts_laneway",
+        "address_number",
+        "centreline_dataset_version_when_enriched",
+        "geom",
+        "id",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name",
+        "street_name_normalized"
+      ],
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "id",
+        "linear_name",
+        "linear_name_full",
+        "lo_num_l",
+        "lo_num_r",
+        "parity_l",
+        "parity_r",
+        "to_intersection_id"
+      ]
+    },
+    "writes": {
+      "parcels": [
+        "abuts_laneway",
+        "centreline_dataset_version_when_enriched",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name"
+      ]
+    }
+  },
+  "errors": []
+}

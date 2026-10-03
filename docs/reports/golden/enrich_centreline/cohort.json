@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-02T18:34:17.675Z",
+  "generated_at": "2026-10-03T14:51:46.655Z",
   "seed": "ec2-2026-10-02",
   "producer_version": "1.1",
-  "last_enriched_version": "7b86fe74c3fbee4f073e631e3b17dd91",
-  "source_dataset_version": "7b86fe74c3fbee4f073e631e3b17dd91",
-  "stale_count": 16060,
+  "last_enriched_version": "1da4549b223eb577a79c57ba1f0f97dc",
+  "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+  "stale_count": 16048,
   "proximity_m": 20,
   "predicates": {
     "hash": "SELECT md5(string_agg(ROW(\"id\", \"is_corner_lot\", \"is_through_lot\", \"primary_frontage_street_name\", \"abuts_laneway\", \"centreline_dataset_version_when_enriched\")::text, '|' ORDER BY \"id\")) AS h FROM parcels t",
@@ -32,16 +32,16 @@
     ]
   },
   "centreline": {
-    "count": 47318,
-    "min_id": "3360493",
-    "max_id": "3407810",
-    "ids_md5": "e3e5c4773249e55453ab3022dfcd9bc7"
+    "count": 47330,
+    "min_id": "4307081",
+    "max_id": "4354410",
+    "ids_md5": "26daa0c8f91016ebe2bed13ed721fa6c"
   },
   "negative_control": {
-    "count": 16061,
-    "hash": "bc1e653c1abac057421c860d4dafddf8"
+    "count": 16049,
+    "hash": "782f37f410049d33bc6b646d6c901854"
   },
-  "baseline_hash": "e4f74a5b93ba3d467d98a3405edfe9da",
+  "baseline_hash": "baaa7776b49068ff00fc4a656700088e",
   "rows": [
     {
       "id": 186,
@@ -8410,16 +8410,6 @@
         "is_corner_lot": false,
         "is_through_lot": false,
         "primary_frontage_street_name": "Kenhatch Blvd",
-        "abuts_laneway": false
-      }
-    },
-    {
-      "id": 225983,
-      "stratum": "through",
-      "baseline": {
-        "is_corner_lot": false,
-        "is_through_lot": true,
-        "primary_frontage_street_name": "Leeswood Cres",
         "abuts_laneway": false
       }
     },
@@ -18600,6 +18590,16 @@
         "is_corner_lot": true,
         "is_through_lot": false,
         "primary_frontage_street_name": "Valparaiso Ave",
+        "abuts_laneway": false
+      }
+    },
+    {
+      "id": 469681,
+      "stratum": "through",
+      "baseline": {
+        "is_corner_lot": false,
+        "is_through_lot": true,
+        "primary_frontage_street_name": "Mike Myers Dr",
         "abuts_laneway": false
       }
     },

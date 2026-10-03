@@ -15,8 +15,14 @@ const mb = require('../../scripts/lib/max-build.js');
 const ep = require('../../scripts/lib/compute/enrich-parcels.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const eperm = require('../../scripts/enrich-permits.js');
+// RE-POINTED batch-2 row 3.10 commit ② — enrich-centreline.js is a frozen shell; the SQL lives in the compute
+// module, rendered at the SEEDED defaults (byte-equal to the legacy strings, red test B4).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ec = require('../../scripts/enrich-centreline.js');
+const ecCompute = require('../../scripts/lib/compute/enrich-centreline.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ecSeeds = require('../../scripts/seeds/logic_variables.json');
+const ecCfg = Object.fromEntries(Object.entries(ecSeeds).filter(([k]) => k.startsWith('enrich_centreline_')).map(([k, v]) => [k, (v as { default: number }).default]));
+const ec = { BUILD_TEMP_SQL: ecCompute.buildTempSql({ scoped: false }, ecCfg) as string, UPDATE_SQL: ecCompute.UPDATE_SQL as string };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const aj = require('../../scripts/lib/archetypes.js');
 import { ARCHETYPE_GEOM_BASIS as TS_GEOM_BASIS } from '../lib/classification/archetypes';

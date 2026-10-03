@@ -1,0 +1,1390 @@
+{
+  "identity": {
+    "name": "enrich_centreline",
+    "display_name": "Parcel Centreline Enrichment",
+    "owner": "data",
+    "description": "Single-phase ENRICHER: proximity-joins parcels.geom against toronto_centreline (the §11 9-CTE chain, 20 m ST_DWithin over geography) and writes is_corner_lot / is_through_lot / primary_frontage_street_name / abuts_laneway + the producer lineage stamp in ONE set-based join UPDATE behind a 5-column IS DISTINCT FROM guard. The legacy three-mode version-skip gate (WF2 P11-1) is PORTED VERBATIM (plan D1 = (a)): the contract_read hook resolves full / incremental / skip from the producer version, the step's own last stamped version and the stale-parcel count; the pass runs the unscoped build, the stale-scoped build, or nothing.",
+    "lock": 64,
+    "why_lock": {
+      "text": "L4b re-derived: Spec 62's 66 collided with enrich_permits; 64 is the free sibling of load_centreline = 63. Kept textually in the frozen shell per Spec 122 §5.4 so the registry loop (src/tests/pipeline-advisory-lock.infra.test.ts) stays green across the conversion.",
+      "liveness": {
+        "kind": "spec",
+        "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+      }
+    },
+    "spec": "62",
+    "spec_version": "1.1",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "load_centreline",
+          "version_pin": "exact"
+        }
+      ],
+      "tables": [
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "geom",
+            "address_number",
+            "street_name_normalized",
+            "is_corner_lot",
+            "is_through_lot",
+            "primary_frontage_street_name",
+            "abuts_laneway",
+            "centreline_dataset_version_when_enriched"
+          ]
+        },
+        {
+          "table": "toronto_centreline",
+          "columns": [
+            "id",
+            "geom",
+            "linear_name",
+            "linear_name_full",
+            "from_intersection_id",
+            "to_intersection_id",
+            "lo_num_l",
+            "hi_num_l",
+            "parity_l",
+            "lo_num_r",
+            "hi_num_r",
+            "parity_r",
+            "feature_code_desc"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcels",
+        "key": [
+          "id"
+        ],
+        "columns": [
+          {
+            "name": "is_corner_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_through_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "primary_frontage_street_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "abuts_laneway",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "centreline_dataset_version_when_enriched",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "is_corner_lot",
+            "is_through_lot",
+            "primary_frontage_street_name",
+            "abuts_laneway",
+            "centreline_dataset_version_when_enriched"
+          ],
+          "guard_columns_why": {
+            "text": "The verbatim 5-disjunct guard, legacy UPDATE_SQL :261-265 (abuts_laneway joined it with Spec 65 Phase 3 / #431-FU2). The lineage stamp is INSIDE the guard: it is the producer's content-hash source_dataset_version, constant across runs against one load, so a same-version re-run writes 0 rows instead of re-stamping every in-range parcel.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/enrich-centreline.js"
+            }
+          },
+          "scope": "full: every parcel with p.geom IS NOT NULL AND ST_IsValid(p.geom) within the proximity radius of a segment; incremental: the same AND p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1; skip: none",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step"
+        },
+        "retract": "none",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "not_applicable",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [
+      {
+        "table": "parcels",
+        "column": "centreline_dataset_version_when_enriched",
+        "when": "load_parcels' #418 DEC-FENCE2 NULLs the stamp when a parcel's geom changes (scripts/load-parcels.descriptor.json, set_null_on_change_of geom), which makes a moved parcel stale for the next incremental run. An address-only change does NOT re-stale (EC-D3, declared limitation). A load_centreline source_dataset_version change stales every parcel through the mode gate (full mode), not through this column."
+      }
+    ],
+    "publish": "none",
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "Exactly one write statement per full or incremental run — the UPDATE from tmp_centreline_enrich, executed through ctx.joinUpdate; a skip run issues none. The DROP / CREATE TEMP and the tally touch only the session-local temp table.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "valid-geom parcels whose centreline_dataset_version_when_enriched IS DISTINCT FROM the producer's current source_dataset_version (incremental); all valid-geom parcels (full); none (skip)",
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/compute/enrich-centreline.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "The §11 chain is PostGIS end to end (ST_DWithin over geography, ST_Azimuth, ST_PointOnSurface). Ported from the legacy assertPreconditions :344-346 (DEC-E G2).",
+          "liveness": {
+            "kind": "external",
+            "ref": "postgis"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_toronto_centreline_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 173. Legacy :348-350 refused a sequential-scan join without it.",
+          "liveness": {
+            "kind": "column",
+            "ref": "toronto_centreline.geom"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_toronto_centreline_geog_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 175 — the geography GIST that binds the WF2 ST_DWithin(p.geom::geography, c.geom::geography, radius) proximity join; without it the join seq-scans every segment against every parcel. Legacy :351-353.",
+          "liveness": {
+            "kind": "column",
+            "ref": "toronto_centreline.geom"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 039. Legacy :354-356 refused a sequential-scan join without it.",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.geom"
+          }
+        }
+      },
+      {
+        "kind": "function",
+        "name": "normalize_address_number",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 173 (search_path pinned by 225). Legacy :366-372 asserted it with address_match_status; the P2 address-range match depends on it.",
+          "liveness": {
+            "kind": "external",
+            "ref": "normalize_address_number"
+          }
+        }
+      },
+      {
+        "kind": "function",
+        "name": "address_match_status",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 173 — the frontage P2 try-both address-range predicate called twice per segment in parcel_frontage. Legacy :366-372.",
+          "liveness": {
+            "kind": "external",
+            "ref": "address_match_status"
+          }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.is_corner_lot",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 174 — one of the legacy TARGET_COLS :357. EC-D5 carried: the legacy list has 4 columns and omits abuts_laneway (migration 191 postdates the check); this descriptor declares the SAME 4, and ④c adds the 5th.",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.is_corner_lot"
+          }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.is_through_lot",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 174 — second of the legacy TARGET_COLS :357 (EC-D5 carried).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.is_through_lot"
+          }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.primary_frontage_street_name",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 174 — third of the legacy TARGET_COLS :357 (EC-D5 carried).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.primary_frontage_street_name"
+          }
+        }
+      },
+      {
+        "kind": "column",
+        "name": "parcels.centreline_dataset_version_when_enriched",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 174 — fourth of the legacy TARGET_COLS :357; the scope predicate, the guard and countStaleParcels all read it (EC-D5 carried).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.centreline_dataset_version_when_enriched"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "toronto_centreline",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "enrich_centreline_heartbeat_minutes",
+    "lock_timeout_ms_from_config": "enrich_centreline_lock_timeout_ms",
+    "enrich_hooks": {
+      "contract_read": "readCentrelineContract",
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "centreline_join",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "incremental",
+        "invalidator_ref": 0,
+        "timeout_minutes_from_config": "enrich_centreline_phase_timeout_minutes"
+      }
+    ],
+    "budget": "100m",
+    "txn_scope": "step",
+    "txn_budget": "95m",
+    "chunked": false,
+    "statement_timeout": "none",
+    "step_timeout": "240m",
+    "batch": "none",
+    "needs_disk_mb": "none",
+    "partial_fill": "atomic",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every declared check reads a value computePostPhase already measured in the same run; a check that throws is a compute defect, not an upstream data condition, and must redden the run rather than drop its row (the enrich_ravines / enrich_heritage precedent).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "parcels_with_zero_centreline_intersections_pct",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "% of geom-bearing parcels with no centreline segment within the proximity radius (L21) — full mode only; a reduced run reports it not measured (EC-D1)"
+      },
+      "limit": "pct <= 10",
+      "limit_from_config": "enrich_centreline_unlinked_warn_pct",
+      "warn_limit": "pct <= 40",
+      "warn_limit_from_config": "enrich_centreline_unlinked_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "L21 — the step's one verdict driver: a broken join (unbound GIST, SRID drift, an emptied source) shows up as parcels with no segment in range. R-AD 3-tier port of legacy gradeDiagnosticRows :430. EC-D11 (declared deviation): the legacy graded WARN at >= 10 and FAIL at >= 40; the pct grammar is inclusive, so exactly 10.0 / 40.0 read one tier lower here. Measured run 1477: 2.99%.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
+    },
+    {
+      "id": "parcels_invalid_geom_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT(*) WHERE geom IS NOT NULL AND NOT ST_IsValid(geom) — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "F2 — INFO in the legacy (:431): invalid-geom parcels are excluded by the geom-validity filter, so they never corrupt enrichment; a steady-state loader fact, not a per-run alert.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.geom"
+        }
+      }
+    },
+    {
+      "id": "parcels_street_name_normalized_pct",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "% of geom-bearing parcels with street_name_normalized (the frontage P1 input) — full mode only"
+      },
+      "limit": "pct >= 90",
+      "limit_from_config": "enrich_centreline_name_coverage_warn_min_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "F5b / L29 — P1 name-match reliance. Legacy :432 WARN when < 90, else INFO; the ok arm now renders PASS (tier rename, explained diff).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.street_name_normalized"
+        }
+      }
+    },
+    {
+      "id": "centreline_intersection_id_null_pct",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "% of toronto_centreline segments with both intersection ids NULL — full mode only"
+      },
+      "limit": "pct <= 50",
+      "limit_from_config": "enrich_centreline_intersection_null_warn_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "F5c — the corner rule needs shared intersection nodes. Legacy :433 WARN when > 50, else INFO; the ok arm now renders PASS (tier rename, explained diff).",
+        "liveness": {
+          "kind": "column",
+          "ref": "toronto_centreline.from_intersection_id"
+        }
+      }
+    },
+    {
+      "id": "parcels_address_number_null_pct",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "% of geom-bearing parcels with a NULL address_number (the frontage P2 input) — full mode only"
+      },
+      "limit": "pct <= 10",
+      "limit_from_config": "enrich_centreline_address_null_warn_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "G4 / F7 — P2 address-range degradation. Legacy :434 WARN when > 10, else INFO; the ok arm now renders PASS (tier rename, explained diff).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.address_number"
+        }
+      }
+    },
+    {
+      "id": "parcels_is_corner_lot_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels with new_is_corner_lot — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :548).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_corner_lot"
+        }
+      }
+    },
+    {
+      "id": "parcels_is_through_lot_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels with new_is_through_lot — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :549).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_through_lot"
+        }
+      }
+    },
+    {
+      "id": "parcels_abuts_laneway_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels with new_abuts_laneway — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :550, Spec 65 Phase 3 / #431-FU2).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.abuts_laneway"
+        }
+      }
+    },
+    {
+      "id": "parcels_primary_frontage_resolved_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels with a non-NULL frontage name — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :551).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.primary_frontage_street_name"
+        }
+      }
+    },
+    {
+      "id": "parcels_frontage_priority1_match_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels whose frontage came from the P1 name match — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :552).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.primary_frontage_street_name"
+        }
+      }
+    },
+    {
+      "id": "parcels_frontage_priority2_match_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels whose frontage came from the P2 address-range match — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :553).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.primary_frontage_street_name"
+        }
+      }
+    },
+    {
+      "id": "parcels_frontage_priority3_match_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels whose frontage fell to the P3 nearest segment — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :554).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.primary_frontage_street_name"
+        }
+      }
+    },
+    {
+      "id": "parcels_truncated_pair_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "COUNT of temp-table parcels with more segments in range than the pair cap — full mode only"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :555). EC-D9 carried: the cap keeps the first segments by centreline id, not by distance; this row counts how many parcels that affects (run 1477: 29).",
+        "liveness": {
+          "kind": "table",
+          "ref": "toronto_centreline"
+        }
+      }
+    },
+    {
+      "id": "enrich_centreline_mode",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "the mode this run ran in: full | incremental | skip — a STRING value"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the legacy reduced-mode row (:448); now emitted in every mode (additive in full mode, explained diff), so the mode is visible without reading records_meta.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      }
+    },
+    {
+      "id": "enrich_centreline_skip_reason",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "version_and_geometry_unchanged (skip) | version_unchanged_incremental (incremental) | null (full)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the legacy reduced-mode row (:449); null in full mode (additive, explained diff).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      }
+    },
+    {
+      "id": "parcels_recomputed",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "the stale count the gate measured before the run (incremental), 0 (skip), null (full)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the legacy reduced-mode row (:450); null in full mode (additive, explained diff).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.centreline_dataset_version_when_enriched"
+        }
+      }
+    },
+    {
+      "id": "parcels_enriched_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rowCount of the join UPDATE — records_updated's own source"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :451, :556).",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
+    },
+    {
+      "id": "centreline_source_dataset_version",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "the producer source_dataset_version this run stamped — a STRING value"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name (legacy :452, :557). Load-bearing: readLastEnrichedVersion falls back to this audit row when records_meta.centreline_enrich is absent (pre-P11 runs), so it must survive every mode.",
+        "liveness": {
+          "kind": "table",
+          "ref": "pipeline_runs"
+        }
+      }
+    },
+    {
+      "id": "enrich_centreline_duration_ms",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "wall-clock duration of this step's run, in milliseconds"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Ported by name from the legacy Date.now() - t0 row (:453, :558); the runner owns the measurement.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ],
+  "invariants": [
+    {
+      "id": "centreline_corner_or_through_has_frontage",
+      "sql": "SELECT count(*)::int FROM parcels WHERE (is_corner_lot OR is_through_lot) AND primary_frontage_street_name IS NULL",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "invariant",
+      "frequency": "every_run",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-09-30T00:00:00.000Z",
+        "commit": "enrich-centreline-commit-1",
+        "cost_ms": 1500,
+        "sample_n": 1,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
+      },
+      "why": {
+        "text": "Plan Fold A7 (iv): a corner or through lot abuts two NAMED streets (both names NOT NULL), so the frontage resolution always has a candidate. A port error in parcel_frontage or the final SELECT breaks this while every count row stays green. WARN (additive row, never a new FAIL). MEASURED 0 on the local dev DB, 2026-09-30. Fold A7 (iii) is structural in the SQL (new_is_through_lot requires seg_count >= 2) and not table-checkable: parcels stores no segment count.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.primary_frontage_street_name"
+        }
+      }
+    }
+  ],
+  "plausibility": [
+    {
+      "id": "centreline_corner_share_min_pct",
+      "sql": "SELECT (100.0 * COUNT(*) FILTER (WHERE is_corner_lot) / NULLIF(COUNT(*) FILTER (WHERE geom IS NOT NULL), 0))::float FROM parcels",
+      "bound": "value_min 8",
+      "limit_from_config": "enrich_centreline_corner_share_plausible_min_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — a floor on the corner share of the parcel fabric; a collapse below it means the node-share or abut-both rule stopped matching. Measured 11.01%.",
+      "last_measured": {
+        "value": 11.01,
+        "at": "2026-09-30T00:00:00.000Z",
+        "commit": "enrich-centreline-commit-1",
+        "cost_ms": 1500,
+        "sample_n": 1,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
+      },
+      "why": {
+        "text": "Plan §7 / D4 (WARN only, after A7): corner share in [8, 14]% of geom-bearing parcels (4-way + T ceiling ~13%). The #431 over-flag class read 24%; a collapse reads near 0.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_corner_lot"
+        }
+      }
+    },
+    {
+      "id": "centreline_corner_share_max_pct",
+      "sql": "SELECT (100.0 * COUNT(*) FILTER (WHERE is_corner_lot) / NULLIF(COUNT(*) FILTER (WHERE geom IS NOT NULL), 0))::float FROM parcels",
+      "bound": "value_max 14",
+      "limit_from_config": "enrich_centreline_corner_share_plausible_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — the ceiling that catches the #431 over-flag class (the 20 m radius alone read 24%). Measured 11.01%.",
+      "last_measured": {
+        "value": 11.01,
+        "at": "2026-09-30T00:00:00.000Z",
+        "commit": "enrich-centreline-commit-1",
+        "cost_ms": 1500,
+        "sample_n": 1,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
+      },
+      "why": {
+        "text": "Plan §7 / D4: the mirror of centreline_corner_share_min_pct.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_corner_lot"
+        }
+      }
+    },
+    {
+      "id": "centreline_through_share_min_pct",
+      "sql": "SELECT (100.0 * COUNT(*) FILTER (WHERE is_through_lot) / NULLIF(COUNT(*) FILTER (WHERE geom IS NOT NULL), 0))::float FROM parcels",
+      "bound": "value_min 0.2",
+      "limit_from_config": "enrich_centreline_through_share_plausible_min_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — a floor on the through-lot share; a collapse means the parallel / opposite-sides rule stopped matching. Measured 0.96%.",
+      "last_measured": {
+        "value": 0.96,
+        "at": "2026-09-30T00:00:00.000Z",
+        "commit": "enrich-centreline-commit-1",
+        "cost_ms": 1500,
+        "sample_n": 1,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
+      },
+      "why": {
+        "text": "Plan §7 / D4: through share in [0.2, 3]% of geom-bearing parcels.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_through_lot"
+        }
+      }
+    },
+    {
+      "id": "centreline_through_share_max_pct",
+      "sql": "SELECT (100.0 * COUNT(*) FILTER (WHERE is_through_lot) / NULLIF(COUNT(*) FILTER (WHERE geom IS NOT NULL), 0))::float FROM parcels",
+      "bound": "value_max 3",
+      "limit_from_config": "enrich_centreline_through_share_plausible_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "never — the ceiling that catches the #431-FU class (named rear laneways counted as a second frontage read 11.3%). Measured 0.96%.",
+      "last_measured": {
+        "value": 0.96,
+        "at": "2026-09-30T00:00:00.000Z",
+        "commit": "enrich-centreline-commit-1",
+        "cost_ms": 1500,
+        "sample_n": 1,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "manual_timing"
+        }
+      },
+      "why": {
+        "text": "Plan §7 / D4: the mirror of centreline_through_share_min_pct.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.is_through_lot"
+        }
+      }
+    }
+  ],
+  "override": {
+    "force_full": "ENRICH_CENTRELINE_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "centreline_enrich",
+      "type": "object",
+      "consumers": [
+        "enrich_centreline"
+      ]
+    },
+    {
+      "key": "duration_ms",
+      "type": "int",
+      "consumers": [
+        "src/lib/admin/funnel.ts",
+        "src/components/FreshnessTimeline.tsx"
+      ]
+    },
+    {
+      "key": "code_version",
+      "type": "string",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the legacy skip path, which ran NO precondition at all (legacy :503-507)",
+      "why": {
+        "text": "EC-D6 (declared deviation). guards.requires is runner-owned and runs on EVERY invocation, skip included, so a skip run now also refuses a missing extension / index / function / column. The non-empty toronto_centreline probe stays at its legacy POSITION (inside the transaction, full and incremental only — compute assertCentrelineNonEmpty), so the only states that differ are a pathological schema with an unchanged version, which EC-D2 makes unreachable in steady state anyway.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "Plan .cursor/batch2_enrich_centreline_active_task.md §2 row 5 / §3 EC-D6 (operator-authorized 2026-09-29)",
+      "date": "2026-09-30"
+    },
+    {
+      "from": "the legacy L21 grading: WARN at zeroPct >= 10, FAIL at zeroPct >= 40 (legacy gradeDiagnosticRows :430)",
+      "why": {
+        "text": "EC-D11 (declared deviation, the load_wsib WS-D9 precedent). The check grammar's pct comparator is inclusive (`pct <= N`) and has no strict form, so exactly 10.0 reads PASS (legacy WARN) and exactly 40.0 reads WARN (legacy FAIL). Every other value grades identically. Measured run 1477: 2.99%, far from both edges. Restored when the library gains a strict pct comparator (filed with WS-D9).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 §7 rung (b) — declared check/audit-row diff (load_wsib WS-D9 precedent, b0f9d6db)",
+      "date": "2026-09-30"
+    },
+    {
+      "from": "the legacy audit table shape: 16 rows in full mode, 6 INFO rows + a literal PASS verdict in reduced modes (legacy :447-463, :544-558)",
+      "why": {
+        "text": "One declared checks[] list serves every mode: 19 rows. In a reduced mode the 13 full-only rows are reported INERT (render INFO, value 'not measured (mode=…)'), so the row-derived verdict equals the legacy's literal PASS on the same data; EC-D1 (no grading in reduced modes) is CARRIED, not fixed (④a). In full mode the three reduced-only rows (enrich_centreline_mode / _skip_reason / parcels_recomputed) are additive. The WARN-severity diagnostics render PASS (not INFO) when within bound. All explained diffs, recorded in docs/reports/golden/enrich_centreline/explained-diffs.json at capture.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      },
+      "adjudicated_by": "Plan §2 rows 13-14 (operator-authorized 2026-09-29)",
+      "date": "2026-09-30"
+    },
+    {
+      "from": "the legacy's absence of any force-full, heartbeat, lock-timeout or phase deadline (legacy :486-605; manifest supports_full:false)",
+      "why": {
+        "text": "Additive, declared: override.force_full ENRICH_CENTRELINE_FORCE_FULL (the enrich_heritage precedent; needed by the D2 POST full-mode proof over the perturbed cohort), and the ENRICHER-profile heartbeat / lock_timeout / phase deadline (D3 = 240 min, enrich_heritage H-A2 / enrich_ravines parity; the local full run measured 87 min, the cloud 59.6 min). No flag changes the mode of a default run.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "Plan §2 rows 19-20, decision D3 = (a) (operator, 2026-09-29)",
+      "date": "2026-09-30"
+    },
+    {
+      "from": "the legacy emitMeta lineage lists (full :592-598; reduced :477-483)",
+      "why": {
+        "text": "inputs.reads is authored from the READS EVIDENCE TABLE (assessment §12, operator rule 2026-09-30): every table and column the legacy SQL touches, guard / scope / join / order columns included, so it is WIDER than either legacy emitMeta list (full omitted toronto_centreline.id and feature_code_desc, the five guard-read parcels columns and pipeline_runs; reduced listed three parcels columns). Intentional omissions, each covered elsewhere: logic_variables (the legacy read none; the 19 knobs are resolved by the runner's config.js, not by compute SQL); the catalog probes pg_extension / pg_indexes / information_schema.columns / pg_proc (declared as guards.requires); tmp_centreline_enrich (the step's own session-local temp table, ON COMMIT DROP).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      },
+      "adjudicated_by": "Operator new-conversion rule, 2026-09-30 (reads evidence table)",
+      "date": "2026-09-30"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "EC-D10 (PINNED KNOWN DEFECT, operator ruling 2026-09-30): the producer contract reads only `pipeline = 'sources:load_centreline' AND status = 'completed'`, ported verbatim. Converted load_centreline STANDALONE runs are ledgered under the bare slug with `completed_with_warnings`, so they are never read: the stamp can name an older version than the one toronto_centreline holds. In-chain runs are unaffected. The fix belongs to the descriptor-truth programme, not this differential-neutral conversion.",
+      "measured": "dev DB 2026-09-30: the contract reads run 1471 (80496e67…, 2026-07-08) while toronto_centreline holds run 2132's 47,318 rows (7b86fe74…); a scoped recompute of 2,000 parcels against the current table differed on 0 of 2,000.",
+      "check_id": "centreline_source_dataset_version"
+    },
+    {
+      "what": "EC-D1 (carried, ④a): reduced modes (incremental / skip) never grade — the L21 FAIL gate and the three WARN diagnostics are measured in full mode only; their rows are reported not-measured (INFO) otherwise.",
+      "measured": "7 of 17 consecutive producer transitions changed the version on the dev ledger (2026-06-10 … 09-29), so reduced runs are the unchanged-version days.",
+      "check_id": "parcels_with_zero_centreline_intersections_pct"
+    },
+    {
+      "what": "EC-D2 (carried, observability only): skip is unreachable in steady state — the never-stamped out-of-range tail keeps countStaleParcels above zero, so an unchanged-version run is incremental.",
+      "measured": "24,426 stale valid-geom parcels 2026-09-30 (16,060 after one absorption run).",
+      "check_id": "parcels_recomputed"
+    },
+    {
+      "what": "EC-D3 (declared limitation, filed): the stale set is not exactly {new, moved, never-linked}. The #418 fence NULLs the stamp only on a geom change, so a changed address_number / street_name_normalized (the P1/P2 frontage inputs) never re-stales primary_frontage_street_name until the next producer version or ENRICH_CENTRELINE_FORCE_FULL.",
+      "measured": "unmeasurable — parcels has no updated_at (RC-4).",
+      "check_id": "none"
+    },
+    {
+      "what": "EC-D4 (carried, ④b): no retraction. A parcel that leaves the proximity radius keeps its corner / through / frontage / laneway values and its NULL or old stamp; it is recomputed every incremental run and never corrected. A fix must NOT stamp it (stamping destroys the legit-NULL tail signal).",
+      "measured": "6 residue parcels 2026-09-30, all out of range, stale frontage names only (ids 26237, 29145, 56782, 242296, 291715, 318769).",
+      "check_id": "none"
+    },
+    {
+      "what": "EC-D5 (carried, ④c): guards.requires lists the legacy's 4 target columns and omits parcels.abuts_laneway (migration 191 postdates the legacy check).",
+      "measured": "read of legacy TARGET_COLS :357.",
+      "check_id": "none"
+    },
+    {
+      "what": "EC-D9 (carried, filed): the pair cap keeps the first N segments per parcel by centreline id, not by distance — an arbitrary subset for dense parcels.",
+      "measured": "parcels_truncated_pair_count 29 on run 1477.",
+      "check_id": "parcels_truncated_pair_count"
+    },
+    {
+      "what": "RV-L2 class — guards.empty_source is DECLARATIVE: the runner has no non-empty probe kind. The real refusal is compute assertCentrelineNonEmpty, kept at the legacy position (inside the transaction, full and incremental only).",
+      "measured": "grep -n empty_source scripts/lib/step/index.js — zero hits, 2026-09-30.",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "enrich-centreline.notes.json",
+    "entries": 9
+  },
+  "recovery": {
+    "reset": "No TRUNCATE/rebuild mechanism and none is needed — NULLing parcels.centreline_dataset_version_when_enriched for a scoped set of parcels makes the next incremental run recompute exactly those; ENRICH_CENTRELINE_FORCE_FULL recomputes every valid-geom parcel.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "The single write target sits inside ONE shared transaction (execution.txn_scope 'step', phase txn 'shared'), so a run killed mid-statement leaves parcels exactly as it found them — no half-written state (legacy: the same, one withTransaction). runEnrichPhase folds staleness.detectInterruptedRetraction into `full` before the pass runs, and the pass honours it (mode = ctx.full ? 'full' : contract.mode), so the next run is a full recompute.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "recovery.before_image applies to a retraction (outputs.writes[].retract != 'none'); this step's sole write target declares retract:'none' — it only ever stamps values, never clears a row (EC-D4).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/enrich-centreline.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 225,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.parcels_scanned",
+      "scoped_by": "step",
+      "why": {
+        "text": "A4 ruling (ENRICHER precedent) + plan Fold A8: the population this mode scanned — full: valid-geom parcels; incremental: the stale count the gate measured; skip: 0. The legacy emitted null (explained diff).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "scoped_by": "step",
+      "why": {
+        "text": "This step INSERTs nothing — class N's executor refuses INSERT INTO / ON CONFLICT text. A finite literal 0 rather than the legacy null, because null reads as 'not counted' (explained diff).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "scoped_by": "step",
+      "why": {
+        "text": "COUNTER-ROOT: the rowCount of the sole declared write target, owned by the ctx.joinUpdate seam — one-to-one with the legacy records_updated: rowCount.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "enrich_centreline_unlinked_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_unlinked_fail_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_name_coverage_warn_min_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_intersection_null_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_address_null_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_proximity_m",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_abut_m",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_through_opposite_tol_deg",
+        "min": 0,
+        "max": 90,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_pair_cap",
+        "min": 2,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_parallel_tol_deg",
+        "min": 0,
+        "max": 90,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_azimuth_sample_m",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_round_scale",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_heartbeat_minutes",
+        "min": 1,
+        "max": 60,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_lock_timeout_ms",
+        "min": 0,
+        "max": 3600000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_phase_timeout_minutes",
+        "min": 0,
+        "max": 290,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_corner_share_plausible_min_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_corner_share_plausible_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_through_share_plausible_min_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_centreline_through_share_plausible_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 64
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 64 held elsewhere. Row-derived SKIP summary (legacy: the withAdvisoryLock SDK SKIP, :487, :604).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "enriched",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "centreline_enrich": "object"
+      },
+      "why": {
+        "text": "The centreline_join phase ran in whichever mode the gate chose (a skip run included — its pass issues no statement) and no row is above PASS/INFO. Load-bearing: enrich_permits' assertCentrelineEnriched HALTs the permits/coa chains unless a COMPLETED enrich_centreline run post-dates the latest parcels load, so a zero-write run must land here, never on a skip terminal.",
+        "liveness": {
+          "kind": "check",
+          "ref": "parcels_with_zero_centreline_intersections_pct"
+        }
+      }
+    },
+    {
+      "id": "enriched_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "centreline_enrich": "object"
+      },
+      "why": {
+        "text": "The phase ran and at least one non-blocking row is WARN (L21's warn tier, a WARN diagnostic, the frontage invariant or a share plausibility row). Row-derived, never a parallel boolean.",
+        "liveness": {
+          "kind": "check",
+          "ref": "parcels_street_name_normalized_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_check",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "centreline_enrich": "object"
+      },
+      "why": {
+        "text": "L21 FAIL (zero-intersection pct above the fail tier) in a full run — the legacy verdict FAIL from the same row. The write has already committed (the check is post), exactly as the legacy.",
+        "liveness": {
+          "kind": "check",
+          "ref": "parcels_with_zero_centreline_intersections_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_contract_violation",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "readCentrelineContract threw one of the four legacy HALTs (no completed producer run, spec_version != 1.1, features_inserted <= 0, empty source_dataset_version) before any transaction opened — PRESERVED (legacy :318-338).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-centreline.js"
+        }
+      }
+    },
+    {
+      "id": "failed_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "guards.requires found a required extension / index / function / column ABSENT, or the pass found toronto_centreline empty (assertCentrelineNonEmpty) — PRESERVED from the legacy assertPreconditions :343-376 (EC-D6: guards now also run on skip).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared logic_variables[] entry resolved absent or outside its [min,max] under on_invalid:'fail'. hoisted_above_gate:true puts this refusal ABOVE the advisory lock.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      }
+    }
+  ]
+}

@@ -188,6 +188,8 @@ ALTER TABLE parcels
   ADD COLUMN primary_frontage_street_name  TEXT;
 ```
 
+**[as-built ②, EC-D8]** Migration 174 also adds `centreline_dataset_version_when_enriched TEXT` (the lineage stamp the guard and the version-skip gate read), and migration 191 (Spec 65 Phase 3) adds `abuts_laneway BOOLEAN NOT NULL DEFAULT false`. `enrich_centreline` writes all FIVE columns.
+
 ### Permits + CoA additions (§8e M-3)
 
 ```sql
@@ -407,15 +409,15 @@ Data represents a point-in-time snapshot per `source_dataset_version`. Daily-pub
 
 ### 3.11 `enrich_centreline` version-skip gate (WF2 P11-1)
 
-The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost (~92 min). Because centreline is a QUARTERLY source, the vast majority of runs re-derive an unchanged result. The gate makes the recompute proportional to actual change:
+The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost (~92 min). Because the producer's `source_dataset_version` is a content hash that moves only when the network changes, most runs re-derive an unchanged result. **[as-built ②, EC-D8]** Measured on the dev ledger (2026-06-10 … 09-29): 7 of 17 consecutive producer transitions changed the version — neither the DAILY of §2 nor "quarterly". The gate makes the recompute proportional to actual change:
 
 - **Signal:** the producer `source_dataset_version` (from the last completed `sources:load_centreline` run) vs the version the LAST completed `sources:enrich_centreline` run recorded in its `records_meta.centreline_enrich.source_dataset_version` (a bare-run fallback reads the `centreline_source_dataset_version` audit row). The **run row**, never the per-parcel column (which carries a legit-NULL zero-intersection tail + strays).
-- **Unchanged version → row-level scope:** only parcels whose `centreline_dataset_version_when_enriched` is NULL/stale are recomputed. The `load-parcels.js` #418 geometry-change fence (DEC-FENCE2) NULLs that stamp on any moved parcel, so the stale set is exactly {new, moved, never-linked} — the only parcels whose corner/through/frontage/laneway can have changed. **Zero stale → full skip.** (In practice a permanent ~14.5K zero-intersection tail keeps every unchanged run in the *reduced* band rather than a true zero-skip — still seconds, not 92 min.)
+- **Unchanged version → row-level scope:** only parcels whose `centreline_dataset_version_when_enriched` is NULL/stale are recomputed. The `load-parcels.js` #418 geometry-change fence (DEC-FENCE2) NULLs that stamp on any moved parcel, so the stale set is {new, moved, never-linked} — **[as-built ②]** except that an address-only edit never re-stales (EC-D3, declared limitation) — the only parcels whose corner/through/frontage/laneway can have changed. **Zero stale → full skip.** (In practice a permanent ~14.5K zero-intersection tail keeps every unchanged run in the *reduced* band rather than a true zero-skip — still seconds, not 92 min.)
 - **Changed version (or no prior run) → full recompute** and re-stamp (the mode='full' path is unchanged).
 - **Chain-safety (load-bearing):** the reduced and skip paths BOTH emit a `status='completed'` run row with a fresh `completed_at` (Observer-style PASS, `records_updated:0/N`, audit rows `enrich_centreline_mode` + `enrich_centreline_skip_reason`) — explicitly NOT the `withAdvisoryLock` lock-contention SKIP payload. `assertCentrelineEnriched` (enrich-permits §8e L24b/c) HALTs the daily permits/coa chain unless a *completed* enrich_centreline run post-dates the latest load-parcels AND coverage ≥ `centreline_propagation_coverage_min`; the skip preserves the stamps, so both hold.
 - **Spec 48 §3.7 pre-ack:** enrich_centreline is now a *regularly-reduced* step — its `records_updated` will read 0/N (not ~472K) on unchanged runs; that is the designed steady state, not a regression.
 
-> **Filed (not done here):** the §11 magic numbers (20 m proximity / 20-segment cap / 13 m abutment) → logic_variables externalization remains a filed follow-up (non-trivial: seed + Zod + tests). See `docs/reports/review_followups.md`.
+> ~~**Filed (not done here):** the §11 magic numbers … logic_variables externalization remains a filed follow-up.~~ **CLOSED at batch-2 row 3.10 ②:** every §11 number is a `enrich_centreline_*` logic variable (see the As-built — batch-2 row 3.10 ② section).
 
 ---
 
@@ -492,8 +494,12 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
   - upstream: none
   - downstream: enrich_centreline
   - consumers: enrich_centreline (records_meta centreline_load) · load_centreline (records_meta centreline_load.features_updated)
-- `enrich_centreline` — ENRICHER · unconverted · owner specs: 62
+- `enrich_centreline` — ENRICHER · pending · owner specs: 62
   - `scripts/enrich-centreline.js`
+  - `scripts/enrich-centreline.descriptor.json`
+  - `scripts/enrich-centreline.notes.json`
+  - `scripts/lib/compute/enrich-centreline.js`
+  - `src/tests/steps/enrich_centreline/violations.test.ts`
   - data: `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
   - upstream: load_centreline · parcels
   - downstream: enrich_parcels
@@ -594,6 +600,41 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
 - **Operator rulings (2026-09-24, from assessment §5.1):** **Q1** — the spec is corrected to the CODE (LC-D1/LC-D2; the L7b/L7c/dup-id FAIL variance is filed as a separate feature, never folded into a zero-diff conversion). **Q2** — LC-D8 is a declared INFO/WARN check over the runner counter `geometry_collection_extracted` **plus a PIN** (no library option exists to do more). **Q3/0q** — `load_centreline_download_retries`/`_backoff_ms` are the NEW INGESTOR prerequisite-0q knobs (2 retries + 1 first attempt = the legacy 3 attempts, byte-equal; backoff 0 = the legacy's immediate re-attempt), closing the POST-B1-8 item.
 - **Goldens** `docs/reports/golden/load_centreline/{pre,post}/`: `records_new` **47,320** on BOTH sides (and `features_inserted` = `features_deleted` = 47,320 on the as-built-C2 POST recapture). The full PRE↔POST comparison (byte-identical `table_state`/`invariants`/`verdict`/`records_total`/`records_new`/`records_updated`; the 18 `centreline_load` keys byte-identical except `features_deleted`'s documented inter-run coupling; the additive declared-check PASS rows and library-derived keys) is explained in the assessment §9.
 
+## As-built — batch-2 row 3.10 ② enrich_centreline conversion (2026-10-01)
+
+`enrich_centreline` converted onto Spec 122's frozen standard, COMPRESSED ①②③ form (R-PACE-1) — the ENRICHER archetype's
+**4th** member (`enrich_parcels`, `enrich_ravines`, `enrich_heritage` precede it). Commit ② lands the code; captures and
+the ③ cutover (`converted.json` registration) follow. Assessment: `docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md`.
+
+- **Files.** `scripts/enrich-centreline.js` is the 7-statement frozen `pipeline.step()` shell (lock 64 kept as a source-text
+  constant); `scripts/enrich-centreline.descriptor.json`; `scripts/enrich-centreline.notes.json`; `scripts/lib/compute/enrich-centreline.js`.
+- **Write class N `set_based_join_update`** on `parcels`, 5 columns (`is_corner_lot`, `is_through_lot`,
+  `primary_frontage_street_name`, `abuts_laneway`, `centreline_dataset_version_when_enriched`) behind the verbatim 5-disjunct
+  `IS DISTINCT FROM` guard, `retract: "none"` (EC-D4 carried), executed through `ctx.joinUpdate` in ONE shared transaction.
+- **§3.11 version-skip gate PORTED VERBATIM** (plan D1 = (a)): the `contract_read` hook `readCentrelineContract` keeps the four
+  §9 HALTs and resolves `{sourceDatasetVersion, lastVersion, staleCount, mode}` with the legacy SQL in the legacy order; the
+  pass runs the unscoped build (full), DROP + the stale-scoped build (incremental) or nothing (skip); `mode = ctx.full ? 'full' :
+  contract.mode`, so `ENRICH_CENTRELINE_FORCE_FULL` and an interrupted prior run are full. One SQL builder replaces the
+  `.replace()` surgery (EC-D7 / LC-4); at the seeded defaults its output is byte-equal to the legacy strings.
+- **§11 numbers are logic variables** (19, all `on_invalid: "fail"`): `enrich_centreline_{unlinked_warn_pct 10,
+  unlinked_fail_pct 40, name_coverage_warn_min_pct 90, intersection_null_warn_pct 50, address_null_warn_pct 10, proximity_m 20,
+  abut_m 13, through_opposite_tol_deg 45, pair_cap 20, parallel_tol_deg 15, azimuth_sample_m 10, round_scale 10,
+  heartbeat_minutes 5, lock_timeout_ms 1800000, phase_timeout_minutes 240}` + the D4 plausibility bounds
+  `enrich_centreline_{corner,through}_share_plausible_{min,max}_pct` (8/14, 0.2/3). This supersedes §12.3a's never-seeded
+  `centreline_unlinked_parcel_{warn,fail}_pct` / `centreline_parallel_azimuth_threshold_degrees` (EC-D8).
+- **Audit table.** 19 checks serve every mode; full-only diagnostics are reported not-measured (INFO) on a reduced run
+  (EC-D1 carried, ④a). L21 is `pct <= unlinked_warn` / warn `pct <= unlinked_fail`, severity FAIL — exactly 10.0 / 40.0 read
+  one tier lower than the legacy `>=` (EC-D11, declared). One WARN invariant (corner ∨ through ⇒ frontage) and four WARN
+  plausibility rows (corner / through share bands). Audit `phase` stays 64.
+- **`records_meta.centreline_enrich`** is emitted mode-shaped exactly as before (full 15 keys / reduced 7 keys), plus the
+  runner's `duration_ms` and `code_version`. Counters: `records_total` = the population the mode scanned, `records_new` = 0,
+  `records_updated` = the join UPDATE's rowCount (the legacy emitted null/null/rowCount — explained diff).
+- **Defect ledger** (`docs/reports/defect-ledger.md`): EC-D1 · EC-D2 · EC-D3 · EC-D4 · EC-D5 · EC-D9 carried (PIN); EC-D6 and
+  EC-D11 declared deviations; EC-D7 retired by the builder; EC-D8 corrected in THIS spec (§2 additions, §3.11 cadence + the
+  closed externalization note, §8h variable names, §9 keys, §11 5th disjunct, §12.2); **EC-D10** (the producer read sees only
+  the chain-prefixed `completed` row) ported verbatim and PINNED as a known defect by operator ruling 2026-09-30 — its fix
+  belongs to the descriptor-truth programme.
+
 ## 6. License & Attribution
 
 Toronto Open Data Licence v1.0 — attribution required. Citation: "Contains information licensed under the Open Government Licence — Toronto." Source: City of Toronto Geomatics Group.
@@ -643,7 +684,7 @@ Out of pipeline scope. Surfaces `is_corner_lot` + `is_through_lot` + `primary_fr
 
 > Spec 62 v1 captures 3 enrichment fields. If future analytics needs secondary frontage (corner-lot's other street side), separate cross-street width, or one-way direction propagation, a new spec extends. Current schema does NOT support those.
 >
-> **First-deploy convergence (per L21 — NOT §3.7 ledger-writer spike):** L21 thresholds (10% WARN / 40% FAIL on `parcels_with_zero_centreline_intersections`) are provisional. After first prod deploy, the chain producer runs daily for 7 consecutive days; if the metric stabilizes within ±2pp band, thresholds are confirmed. If wider variance, operator adjusts `centreline_unlinked_parcel_warn_pct` / `centreline_unlinked_parcel_fail_pct` in `logic_variables.json`.
+> **First-deploy convergence (per L21 — NOT §3.7 ledger-writer spike):** L21 thresholds (10% WARN / 40% FAIL on `parcels_with_zero_centreline_intersections`) are provisional. After first prod deploy, the chain producer runs daily for 7 consecutive days; if the metric stabilizes within ±2pp band, thresholds are confirmed. If wider variance, operator adjusts `enrich_centreline_unlinked_warn_pct` / `enrich_centreline_unlinked_fail_pct` in `logic_variables.json` (**[as-built ②, EC-D8]** — the `centreline_unlinked_parcel_*` names were never seeded).
 
 ---
 
@@ -724,11 +765,14 @@ pipeline.emitMeta(
 {
   "centreline_enrich": {
     "spec_version":                                       "1.1",
+    "source_dataset_version":                             "<producer version>",
+    "mode":                                               "full",
     "parcels_updated":                                     0,
     "parcels_with_zero_centreline_intersections_count":    0,
     "parcels_with_zero_centreline_intersections_pct":      0.0,
     "parcels_is_corner_lot_true_count":                    0,
     "parcels_is_through_lot_true_count":                   0,
+    "parcels_abuts_laneway_true_count":                    0,
     "parcels_primary_frontage_resolved_count":             0,
     "parcels_frontage_priority1_name_match_count":         0,
     "parcels_frontage_priority2_addrrange_match_count":    0,
@@ -738,6 +782,8 @@ pipeline.emitMeta(
   }
 }
 ```
+
+**[as-built ②, EC-D8]** The block above is the FULL-mode shape (15 keys). An `incremental` or `skip` run emits the reduced shape `{spec_version, source_dataset_version, mode, skip_reason, parcels_recomputed, parcels_updated, completed_at}`; `source_dataset_version` is in BOTH (the version-skip gate reads it next run).
 
 This frozen block enables `enrich-permits.js` L24 startup check (b) to verify the enrich step actually ran successfully (vs F-S5 / R3 SPEC Gemini CRIT-3 — column existence alone is insufficient).
 
@@ -1059,12 +1105,14 @@ UPDATE parcels p
    SET is_corner_lot                = pe.new_is_corner_lot,
        is_through_lot               = pe.new_is_through_lot,
        primary_frontage_street_name = pe.new_primary_frontage_street_name,
+       abuts_laneway                = pe.new_abuts_laneway,   -- [as-built ②] #431-FU2 / Spec 65 Phase 3
        centreline_dataset_version_when_enriched = $1   -- §8d lineage stamp = producer source_dataset_version (§9 step-5)
   FROM parcel_enrichment pe
  WHERE p.id = pe.parcel_id
    AND (p.is_corner_lot                IS DISTINCT FROM pe.new_is_corner_lot
         OR p.is_through_lot            IS DISTINCT FROM pe.new_is_through_lot
         OR p.primary_frontage_street_name IS DISTINCT FROM pe.new_primary_frontage_street_name
+        OR p.abuts_laneway             IS DISTINCT FROM pe.new_abuts_laneway   -- [as-built ②] 5th disjunct (EC-D8)
         OR p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1);
 ```
 
@@ -1166,9 +1214,9 @@ Geometry-derived is authoritative. No declared override (no `permit_type='Corner
 - L23 3-tier startup guard
 - Single UPDATE per §11 (9-CTE chain after F-S7 added `parcel_segments_capped`)
 - IS DISTINCT FROM guard on UPDATE WHERE (per L11)
-- Export `applyCentrelineEnrichment(client, RUN_AT)` self-contained function for `enrich-permits.js` reuse
+- ~~Export `applyCentrelineEnrichment(client, RUN_AT)` self-contained function for `enrich-permits.js` reuse~~ **[as-built ②, EC-D8]** never built: enrich-permits propagates from the parcel columns (§11.1); the converted step exports the compute module (`scripts/lib/compute/enrich-centreline.js`)
 - **F-S12:** single `pipeline.emitSummary` call at success-path end (Spec 47 §R10); MUST emit `records_meta.centreline_enrich` frozen block per §9 (enables `enrich-permits.js` L24 step (b) to verify successful enrich run, not just column existence)
-- **F-S9:** use `validateConfig(logicVars)` wrapper with `safeParse` per Spec 47 §4.2 (NOT `ConfigSchema.parse()`)
+- ~~**F-S9:** use `validateConfig(logicVars)` wrapper with `safeParse` per Spec 47 §4.2 (NOT `ConfigSchema.parse()`)~~ **[as-built ②, EC-D8]** never built in the legacy (every number was a literal); the converted step's 19 `enrich_centreline_*` variables are validated by the runner (`scripts/lib/step/config.js`, `on_invalid: "fail"`)
 
 ### §12.3 Migration files (UP + DOWN)
 

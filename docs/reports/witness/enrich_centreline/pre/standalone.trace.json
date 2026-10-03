@@ -1,0 +1,292 @@
+{
+  "trace_version": 1,
+  "step": "scripts/enrich-centreline.js",
+  "chain": "none",
+  "source_fingerprint": null,
+  "git_head": "e77f95bbe6c90aa2746b5b1fa71055772d1854cc",
+  "header": {
+    "processes": 1,
+    "calls": 22,
+    "distinct": 16,
+    "utility": 8,
+    "tracer_self_ms": 7.56,
+    "wall_ms": 13519
+  },
+  "statements": [
+    {
+      "fingerprint": "09f735b0aa21c003",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "30fffcc1586a4bbf",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "46c7e018cd87d93a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 2000,
+      "reads": {
+        "parcels": [
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched",
+          "id",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "abuts_laneway",
+          "centreline_dataset_version_when_enriched",
+          "is_corner_lot",
+          "is_through_lot",
+          "primary_frontage_street_name"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5668172b49fa1b9a",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs WHERE pipeline = $1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_centreline"
+        ],
+        [
+          "sources:enrich_centreline"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6fe0fdbe591bd156",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "centreline_dataset_version_when_enriched",
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7e20c68440df3857",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2000,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "centreline_dataset_version_when_enriched",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "abe1cf006362be74",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ae7bf354abe0d81b",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "efadfa6a2df223cb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_proc"
+      ],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "5560:2",
+      "write_fingerprints": [
+        "46c7e018cd87d93a"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "parcels": [
+        "abuts_laneway",
+        "address_number",
+        "centreline_dataset_version_when_enriched",
+        "geom",
+        "id",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name",
+        "street_name_normalized"
+      ],
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "id",
+        "linear_name",
+        "linear_name_full",
+        "lo_num_l",
+        "lo_num_r",
+        "parity_l",
+        "parity_r",
+        "to_intersection_id"
+      ]
+    },
+    "writes": {
+      "parcels": [
+        "abuts_laneway",
+        "centreline_dataset_version_when_enriched",
+        "is_corner_lot",
+        "is_through_lot",
+        "primary_frontage_street_name"
+      ]
+    }
+  },
+  "errors": []
+}

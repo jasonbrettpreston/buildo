@@ -211,8 +211,8 @@
       "owner_specs": ["docs/specs/01-pipeline/62_source_centreline.md"],
       "file": "scripts/enrich-centreline.js",
       "archetype": "ENRICHER",
-      "batch": "C5",
-      "reason": "Spec 122 §1.10 declared"
+      "batch": "pending",
+      "reason": "Spec 122 §1.10 declared; batch-2 row 3.10 conversion IN FLIGHT (commit ①, 2026-09-30) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER (class N set_based_join_update)"
     },
     {
       "slug": "enrich_heritage",

@@ -193,7 +193,7 @@
       "slug": "enrich_centreline",
       "file": "scripts/enrich-centreline.js",
       "archetype": "ENRICHER",
-      "batch": "C5",
+      "batch": "pending",
       "reason": "Spec 122 §1.10 declared"
     },
     {

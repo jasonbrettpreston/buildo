@@ -10,8 +10,32 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Pool, PoolClient } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
+// RE-POINTED batch-2 row 3.10 commit ② — enrich-centreline.js is a frozen shell. `ec` is an adapter with the
+// legacy call shapes: enrichCentreline runs the compute pass in FULL mode at the SEEDED defaults (the SQL is
+// byte-equal to the legacy strings, red test B4) with joinUpdate bound to the same client; assertPreconditions
+// probes the descriptor's guards.requires with the runner's own probe + the non-empty source check.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ec = require('../../../scripts/enrich-centreline.js');
+const ecCompute = require('../../../scripts/lib/compute/enrich-centreline.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ecDescriptor = require('../../../scripts/enrich-centreline.descriptor.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ecSeeds = require('../../../scripts/seeds/logic_variables.json');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { probeRequirement } = require('../../../scripts/lib/step/index.js');
+const ecCfg = Object.fromEntries(Object.entries(ecSeeds).filter(([k]) => k.startsWith('enrich_centreline_')).map(([k, v]) => [k, (v as { default: number }).default]));
+const ec = {
+  enrichCentreline: (c: PoolClient, { sourceDatasetVersion }: { sourceDatasetVersion: string }) => ecCompute.runCentrelineJoinPass(c, {
+    full: true, config: ecCfg, onProgress: () => {},
+    contract: { sourceDatasetVersion, lastVersion: null, staleCount: null, mode: 'full' },
+    joinUpdate: async (_ref: number, sql: string, params: unknown[]) => (await c.query(sql, params)).rowCount,
+  }),
+  assertPreconditions: async (c: PoolClient) => {
+    for (const r of ecDescriptor.guards.requires) {
+      if (!(await probeRequirement(c, r)).present) throw new Error(`missing ${r.kind} ${r.name}`);
+    }
+    if ((await c.query('SELECT 1 FROM toronto_centreline LIMIT 1')).rows.length === 0) throw new Error('toronto_centreline is empty');
+  },
+};
 
 const SRC_VER = 'cev1';
 

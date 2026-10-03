@@ -76,8 +76,13 @@ describe('gates from ① — a pending step is evaluated as-converted', () => {
   it('live: step-validate --step=<first pending slug> --fast evaluates the registry gates over converted + that slug', () => {
     const conv = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8'));
     const pending = (conv.pending || []).map((p: string | { file: string }) => (typeof p === 'string' ? p : p.file));
-    if (pending.length === 0) return; // nothing in development — vacuous by construction
-    const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, pending[0].replace(/\.(js|py)$/, '') + '.descriptor.json'), 'utf8'));
+    // R-BA overlays only a pending slug that HAS a descriptor; a `red_suite`-stage entry has none
+    // until its ② (e.g. enrich_centreline at ①, 2026-09-30).
+    const descriptorPaths = pending
+      .map((f: string) => path.join(REPO_ROOT, f.replace(/\.(js|py)$/, '') + '.descriptor.json'))
+      .filter((p: string) => fs.existsSync(p));
+    if (descriptorPaths.length === 0) return; // nothing in development past red_suite — vacuous by construction
+    const descriptor = JSON.parse(fs.readFileSync(descriptorPaths[0]!, 'utf8'));
     const slug = descriptor.identity.name;
     const run = spawnSync(process.execPath, ['scripts/analysis/step-validate.mjs', `--step=${slug}`, '--fast'], {
       cwd: REPO_ROOT, encoding: 'utf8', timeout: 300_000,

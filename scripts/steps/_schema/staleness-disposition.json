@@ -51,6 +51,10 @@
       "disposition": "descriptive",
       "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
     },
+    "scripts/lib/compute/enrich-centreline.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+    },
     "scripts/lib/compute/enrich-heritage.js": {
       "disposition": "descriptive",
       "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."

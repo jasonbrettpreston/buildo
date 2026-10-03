@@ -4517,6 +4517,196 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "enrich_centreline_unlinked_warn_pct": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — L21 PASS ceiling for parcels_with_zero_centreline_intersections_pct (% of geom-bearing parcels with no segment in the proximity radius). Byte-equal to the legacy UNLINKED_WARN_PCT = 10 (scripts/enrich-centreline.js :31). The legacy WARNed at >= 10; the pct grammar is inclusive, so exactly 10.0 now reads PASS (EC-D11, declared). Measured run 1477: 2.99%. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_unlinked_fail_pct": {
+    "default": 40,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — L21 WARN ceiling (above it the row FAILs). Byte-equal to the legacy UNLINKED_FAIL_PCT = 40 (:32); exactly 40.0 now reads WARN, not FAIL (EC-D11). CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_name_coverage_warn_min_pct": {
+    "default": 90,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — F5b / L29 floor for parcels_street_name_normalized_pct (the frontage P1 input); below it the row WARNs. Byte-equal to the legacy NAME_COVERAGE_WARN_PCT = 90 (:33). CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_intersection_null_warn_pct": {
+    "default": 50,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — F5c ceiling for centreline_intersection_id_null_pct (segments with both intersection ids NULL — the corner rule needs shared nodes). Byte-equal to the legacy INTERSECTION_NULL_WARN_PCT = 50 (:34). CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_address_null_warn_pct": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — G4 / F7 ceiling for parcels_address_number_null_pct (the frontage P2 input). Byte-equal to the legacy ADDRESS_NULL_WARN_PCT = 10 (:35). CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_proximity_m": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — WF2 proximity radius (metres, geography) of the parcel-to-segment ST_DWithin join. Byte-equal to the legacy CENTRELINE_PROXIMITY_M = 20 (:39): centrelines sit ~10 m off the lot polygons (probe p90 12.9 m). Changing it changes which segments every parcel sees — a full recompute (ENRICH_CENTRELINE_FORCE_FULL) is needed to apply it to already-stamped parcels. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_abut_m": {
+    "default": 13,
+    "type": "number",
+    "min": 1,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — WF3 #431 abut-both cap (metres): a corner or through lot must lie within this distance of BOTH streets. Byte-equal to the legacy CENTRELINE_ABUT_M = 13 (:48). Needs a forced full run to re-apply. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_through_opposite_tol_deg": {
+    "default": 45,
+    "type": "number",
+    "min": 0,
+    "max": 90,
+    "description": "Batch-2 row 3.10 — WF3 DEC-B opposite-sides tolerance (degrees): a through lot's two streets must bear more than 180 minus this from the parcel's interior point. Byte-equal to the legacy THROUGH_OPPOSITE_TOL_DEG = 45 (:49). Needs a forced full run to re-apply. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_pair_cap": {
+    "default": 20,
+    "type": "number",
+    "min": 2,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — L30 Cartesian-explosion cap: segments kept per parcel (by centreline id — EC-D9) before pairing, and the parcels_truncated_pair_count threshold. Byte-equal to the legacy literal 20 (:107, :398). Needs a forced full run to re-apply. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_parallel_tol_deg": {
+    "default": 15,
+    "type": "number",
+    "min": 0,
+    "max": 90,
+    "description": "Batch-2 row 3.10 — Through-lot parallelism tolerance (degrees): two segments count as parallel when |cos(azimuth gap)| > cos(this). Byte-equal to the legacy cos(radians(15)) (:181). Needs a forced full run to re-apply. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_azimuth_sample_m": {
+    "default": 10,
+    "type": "number",
+    "min": 1,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — Azimuth sample step (metres) along each segment from its closest point to the parcel centroid; rendered as the SQL float literal (10 → 10.0), byte-equal to the legacy (:156, :163, :171, :178). Needs a forced full run to re-apply. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_round_scale": {
+    "default": 10,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "Batch-2 row 3.10 — Display rounding of the four diagnostic percentages: round((100·s·x/t)·s)/s/s, which at s = 10 is byte-equal to the legacy round1(1000·x/t)/10 (:410-412, :539-542) — two decimals. Shapes only what the audit row prints. CONSUMED by scripts/lib/compute/enrich-centreline.js.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_heartbeat_minutes": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "Batch-2 row 3.10 — How often (wall-clock minutes) the ENRICHER runner writes a progress heartbeat while the centreline_join phase holds the shared transaction. REQUIRED on the ENRICHER profile. NEW behaviour (declared): the legacy had no heartbeat. Default mirrors enrich_heritage / enrich_ravines. CONSUMED by the ENRICHER runner (scripts/lib/step/index.js) for scripts/enrich-centreline.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_centreline_lock_timeout_ms": {
+    "default": 1800000,
+    "type": "number",
+    "min": 0,
+    "max": 3600000,
+    "description": "Batch-2 row 3.10 — Bounded, LOUD SET LOCAL lock_timeout (ms) for the shared transaction. REQUIRED on the ENRICHER profile. NEW behaviour (declared): the legacy had none. 0 = disabled. Default mirrors enrich_heritage / enrich_ravines. CONSUMED by the ENRICHER runner (scripts/lib/step/index.js) for scripts/enrich-centreline.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_centreline_phase_timeout_minutes": {
+    "default": 240,
+    "type": "number",
+    "min": 0,
+    "max": 290,
+    "description": "Batch-2 row 3.10 — Wall-clock phase deadline for centreline_join (plan D3 = 240, enrich_heritage H-A2 / enrich_ravines parity), below the platform's 300-minute wall. The full recompute measured 87 min locally and 59.6 min on the cloud; an incremental run takes seconds. NEW behaviour (declared). CONSUMED by the ENRICHER runner (scripts/lib/step/index.js) for scripts/enrich-centreline.js.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_centreline_corner_share_plausible_min_pct": {
+    "default": 8,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — Plan §7 / D4 plausibility floor (WARN) for the is_corner_lot share of geom-bearing parcels (%). Measured 2026-09-30: 11.01%. CONSUMED by scripts/lib/step/plausibility.js (descriptor plausibility[] centreline_corner_share_min_pct).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_corner_share_plausible_max_pct": {
+    "default": 14,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — Plan §7 / D4 plausibility ceiling (WARN) for the is_corner_lot share (%): the 4-way + T ceiling; the #431 over-flag read 24%. Measured 11.01%. CONSUMED by scripts/lib/step/plausibility.js (descriptor plausibility[] centreline_corner_share_max_pct).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_through_share_plausible_min_pct": {
+    "default": 0.2,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — Plan §7 / D4 plausibility floor (WARN) for the is_through_lot share (%). Measured 0.96%. CONSUMED by scripts/lib/step/plausibility.js (descriptor plausibility[] centreline_through_share_min_pct).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_centreline_through_share_plausible_max_pct": {
+    "default": 3,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Batch-2 row 3.10 — Plan §7 / D4 plausibility ceiling (WARN) for the is_through_lot share (%); the #431-FU laneway over-flag read 11.3%. Measured 0.96%. CONSUMED by scripts/lib/step/plausibility.js (descriptor plausibility[] centreline_through_share_max_pct).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "enrich_ravines_distance_plausible_min_magnitude_m": {
     "default": 2000,
     "type": "number",
