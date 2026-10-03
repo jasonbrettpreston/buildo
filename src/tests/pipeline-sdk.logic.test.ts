@@ -910,6 +910,22 @@ describe('Pipeline SDK', () => {
       expect(parsed.error_type).toBe('network');
       spy.mockRestore();
     });
+
+    // WF3 2026-10-03 — an AbortController deadline aborts a download with a
+    // DOMException whose name is 'AbortError' and whose code is the NUMBER 20.
+    // Since 2a6ad275 only STRING codes are classified, so it fell through to
+    // 'unknown'; the `code === 'ABORT_ERR'` branch never matched it.
+    it('WF3 2026-10-03: an Error with name AbortError (numeric code 20) classifies as timeout', () => {
+      const err = new Error('This operation was aborted') as Error & { code?: unknown };
+      err.name = 'AbortError';
+      err.code = 20;
+      expect(pipeline.classifyError(err)).toBe('timeout');
+    });
+
+    it('WF3 2026-10-03: a DOMException AbortError classifies as timeout', () => {
+      const err = new DOMException('This operation was aborted', 'AbortError');
+      expect(pipeline.classifyError(err)).toBe('timeout');
+    });
   });
 
   // -----------------------------------------------------------------------
