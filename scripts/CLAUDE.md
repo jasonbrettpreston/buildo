@@ -137,4 +137,6 @@ Tool call 3 — Agent (subagent_type: "code-reviewer-grounded", isolation: "work
   per item with line numbers for failures."
 ```
 
+**DeepSeek context size:** the CLI refuses prompts over 120K chars (`DEEPSEEK_REVIEW_MAX_CHARS`) — large specs (122, 124) need `--section "<heading text>"` (repeatable) to send only the relevant sections. `--fast` uses deepseek-chat (~20 s) for the cheap lens tier; output streams with progress on stderr and a 15-min deadline (`DEEPSEEK_REVIEW_TIMEOUT_MS`).
+
 Triage: **BUG** → file WF3 before Green Light. **DEFER** → `docs/reports/review_followups.md`.

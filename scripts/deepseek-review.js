@@ -27,7 +27,12 @@ const path = require('path');
 const OpenAI = require('openai');
 const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
 
-const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-reasoner';
+// `--fast` selects deepseek-chat (V3) for a quick lens tier; DEEPSEEK_MODEL overrides both.
+const MODEL = process.env.DEEPSEEK_MODEL || (process.argv.includes('--fast') ? 'deepseek-chat' : 'deepseek-reasoner');
+// 2026-10-03: whole-spec contexts (Spec 122 = 206 KB) plus ~30K reasoning tokens ran past every
+// caller's cap with nothing printed (non-streaming). Bound the prompt and stream with progress.
+const MAX_PROMPT_CHARS = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || 120000;
+const TIMEOUT_MS = Number(process.env.DEEPSEEK_REVIEW_TIMEOUT_MS) || 900000;
 const BASE_URL = 'https://api.deepseek.com';
 
 if (!process.env.DEEPSEEK_API_KEY) {
@@ -51,23 +56,67 @@ async function callDeepSeek(prompt, systemInstruction = null) {
   }
   messages.push({ role: 'user', content: prompt });
 
+  const promptChars = (systemInstruction || '').length + prompt.length;
+  if (promptChars > MAX_PROMPT_CHARS) {
+    throw new Error(
+      `prompt is ${promptChars} chars, over the ${MAX_PROMPT_CHARS} bound — refusing to send (it would run past any caller's cap). ` +
+      'Pass only the relevant part of a large context with --section "<heading text>" (repeatable), ' +
+      'or raise DEEPSEEK_REVIEW_MAX_CHARS deliberately.',
+    );
+  }
+
+  const ctrl = new AbortController();
+  const deadline = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  let text = '';
+  let reasoning = '';
+  let usage = null;
+  let lastTick = Date.now();
   try {
-    const response = await client.chat.completions.create({
-      model: MODEL,
-      messages,
-      // R1 doesn't support temperature/top_p — they're ignored
-    });
-    const durationMs = Date.now() - startMs;
-    const choice = response.choices[0];
-    const text = choice.message.content;
-    // R1 also returns reasoning_content (the chain of thought)
-    const reasoning = choice.message.reasoning_content;
-    const usage = response.usage;
-    return { text, reasoning, durationMs, usage };
+    const stream = await client.chat.completions.create(
+      { model: MODEL, messages, stream: true, stream_options: { include_usage: true } },
+      { signal: ctrl.signal },
+    );
+    for await (const chunk of stream) {
+      const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      if (delta && delta.content) text += delta.content;
+      if (delta && delta.reasoning_content) reasoning += delta.reasoning_content;
+      if (chunk.usage) usage = chunk.usage;
+      if (Date.now() - lastTick > 15000) {
+        lastTick = Date.now();
+        process.stderr.write(`[deepseek-review] ${MODEL} working… reasoning ${reasoning.length} chars, answer ${text.length} chars, ${Math.round((Date.now() - startMs) / 1000)}s\n`);
+      }
+    }
+    return { text, reasoning, durationMs: Date.now() - startMs, usage };
   } catch (err) {
+    if (ctrl.signal.aborted) {
+      console.error(`❌ timed out after ${Math.round(TIMEOUT_MS / 1000)}s (partial answer below)`);
+      if (text) console.log(text);
+      process.exitCode = 1;
+      return { text, reasoning, durationMs: Date.now() - startMs, usage, timedOut: true };
+    }
     console.error('❌ DeepSeek API error:', err.message);
     throw err;
+  } finally {
+    clearTimeout(deadline);
   }
+}
+
+/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level). */
+function extractSections(markdown, wanted) {
+  const lines = markdown.split('\n');
+  const out = [];
+  for (const want of wanted) {
+    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
+    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
+    const level = lines[start].match(/^(#+)/)[1].length;
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i += 1) {
+      const m = lines[i].match(/^(#+)\s/);
+      if (m && m[1].length <= level) { end = i; break; }
+    }
+    out.push(lines.slice(start, end).join('\n'));
+  }
+  return out.join('\n\n');
 }
 
 function readFileOrFail(filePath) {
@@ -104,10 +153,11 @@ async function cmdTest() {
   console.log('\n✅ Connection working');
 }
 
-async function cmdReviewFile(filePath, contextPath = null) {
-  console.log(`🔍 Adversarial review of ${filePath}\n`);
+async function cmdReviewFile(filePath, contextPath = null, sections = []) {
+  console.log(`🔍 Adversarial review of ${filePath} (model: ${MODEL})\n`);
   const code = readFileOrFail(filePath);
-  const context = contextPath ? readFileOrFail(contextPath) : null;
+  const rawContext = contextPath ? readFileOrFail(contextPath) : null;
+  const context = rawContext && sections.length ? extractSections(rawContext, sections) : rawContext;
 
   const systemInstruction = `You are a senior software engineer performing an ADVERSARIAL code review. Your job is to find bugs, edge cases, security issues, and design flaws that the original author may have missed or rationalised away. Be specific. Cite line numbers. Do not be polite — be useful.
 
@@ -250,6 +300,9 @@ Override model with DEEPSEEK_MODEL env var:
 Examples:
   node scripts/deepseek-review.js test
   node scripts/deepseek-review.js review scripts/link-coa.js
+  node scripts/deepseek-review.js review <plan.md> --context <big-spec.md> --section "6.6.1" [--fast]
+    (prompts over DEEPSEEK_REVIEW_MAX_CHARS=120000 are refused — pass --section; output streams;
+     DEEPSEEK_REVIEW_TIMEOUT_MS=900000 deadline; --fast = deepseek-chat)
   node scripts/deepseek-review.js spec docs/specs/03-mobile/75_lead_feed_implementation_guide.md
   node scripts/deepseek-review.js plan
   node scripts/deepseek-review.js plan \\
@@ -271,7 +324,8 @@ Examples:
       }
       const contextIdx = args.indexOf('--context');
       const contextFile = contextIdx !== -1 ? args[contextIdx + 1] : null;
-      await cmdReviewFile(file, contextFile);
+      const sections = args.flatMap((a, i) => (a === '--section' && args[i + 1] ? [args[i + 1]] : []));
+      await cmdReviewFile(file, contextFile, sections);
     } else if (command === 'spec') {
       const file = args[1];
       if (!file) {
