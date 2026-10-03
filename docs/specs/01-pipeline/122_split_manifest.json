@@ -294,6 +294,58 @@
       "commit": "079a9425",
       "classification": "HISTORICAL",
       "evidence": "Operator ruling 'Split to 124a' (2026-10-02), same move set as M08. Per-pilot archetype caveats (M06/M07 criterion: a pilot-cutover snapshot, not Rules 1-13 policy), no 'Enforced by' clause; the heading stays, so every 'Spec 124 §9' citation still resolves."
+    },
+    {
+      "id": "M10",
+      "from_spec": "122",
+      "anchor": "## Six programme rulings — ✅ OPERATOR-RATIFIED 2026-08-23 (round 2)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A20 — Six programme rulings R1–R6 (moved from Spec 122 top-of-file rulings) — HISTORICAL, 2026-10-03",
+      "content_sha256": "a311a8089c283719372c1464f843b85e75452aff16f3ed8a8370b8699a6b16df",
+      "line_count": 13,
+      "moved_at": "2026-10-03",
+      "commit": "cba60e3c",
+      "classification": "HISTORICAL",
+      "evidence": "Registry-truth P1-C8z (D3 budget). Programme-delivery rulings of 2026-08-23 (M01 class)."
+    },
+    {
+      "id": "M11",
+      "from_spec": "122",
+      "anchor": "### The six vocabulary-conflict rulings — ✅ ADJUDICATED 2026-08-23 (operator-delegated)",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A21 — The six vocabulary-conflict rulings V1–V7 (moved from Spec 122 top-of-file rulings) — HISTORICAL, 2026-10-03",
+      "content_sha256": "709d2a23bfbcf9e004ec324bd0c1ade2160a8d7dd5d1142254b912364cbd5fa5",
+      "line_count": 16,
+      "moved_at": "2026-10-03",
+      "commit": "cba60e3c",
+      "classification": "HISTORICAL",
+      "evidence": "Registry-truth P1-C8z. Adjudication record; step.schema.json encodes V1–V7 and is canonical (R2)."
+    },
+    {
+      "id": "M12",
+      "from_spec": "122",
+      "anchor": "### 2.1 Why this rather than Spec 120's runner",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A22 — Why this rather than Spec 120's runner (moved from Spec 122 §2.1) — HISTORICAL, 2026-10-03",
+      "content_sha256": "b47a745496851188ee960e6eb25f1263dbc084be99fb55b83c665a7ee66f9aa2",
+      "line_count": 10,
+      "moved_at": "2026-10-03",
+      "commit": "cba60e3c",
+      "classification": "HISTORICAL",
+      "evidence": "Registry-truth P1-C8z. Comparative rationale versus Spec 120's runner (M05 class)."
+    },
+    {
+      "id": "M13",
+      "from_spec": "122",
+      "anchor": "### 2.2 What this buys that the runner did not",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A23 — What this buys that the runner did not (moved from Spec 122 §2.2) — HISTORICAL, 2026-10-03",
+      "content_sha256": "7009bccb5365d3a985559d0ae38a41217a6554619fcc6da5ca657d3bf5ea16a5",
+      "line_count": 10,
+      "moved_at": "2026-10-03",
+      "commit": "cba60e3c",
+      "classification": "HISTORICAL",
+      "evidence": "Registry-truth P1-C8z. Comparative rationale versus Spec 120's runner (M05 class)."
     }
   ]
 }
