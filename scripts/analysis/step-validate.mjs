@@ -242,6 +242,16 @@ const TEMPLATE_FREEZE_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/templat
 
 const validateLib = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
 const harness = require(path.join(REPO_ROOT, 'scripts/analysis/capture-step-golden.js'));
+// P1-C5 (plan Fold 9 D-B/D-E) — the CROSS-STEP ledger (scripts/lib/ledger.js; not the
+// standard-gates ledger imported below as `loadLedger`). Gate #44 (e) compares each
+// descriptor's inputs.reads.steps with `derivedReadsSteps` over `effectiveLedger()`,
+// built once per process.
+const crossStepLedger = require(path.join(REPO_ROOT, 'scripts/lib/ledger.js'));
+let effectiveLedgerMemo = null;
+function effectiveCrossStepLedger() {
+  if (!effectiveLedgerMemo) effectiveLedgerMemo = crossStepLedger.effectiveLedger();
+  return effectiveLedgerMemo;
+}
 // WF2 §5 R-BA (gate A) — the closed-bound registry + the ONE shared ledger
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
@@ -5725,7 +5735,20 @@ function witnessFor(row, descriptorInfo, computePath) {
     return { answer: `FAIL:INPUT:${row.slug}:fingerprint`, rows: [`FAIL:INPUT:${row.slug}:fingerprint`], hardStop: row.stage === 'pending' };
   }
 
+  // (e) — derived from the effective ledger; a derivation error is a FAIL:INPUT, never a skip.
+  // A descriptor that did not parse has no declared reads to derive from: (e) is then not
+  // evaluated (the descriptor gates already red it), exactly as before this commit.
+  let derivedReadsSteps;
+  if (descriptorInfo.descriptor) {
+    try {
+      derivedReadsSteps = crossStepLedger.derivedReadsSteps(row.slug, descriptorInfo.descriptor, { ledger: effectiveCrossStepLedger() });
+    } catch {
+      return { answer: `FAIL:INPUT:${row.slug}:derived-reads-steps`, rows: [`FAIL:INPUT:${row.slug}:derived-reads-steps`], hardStop: row.stage === 'pending' };
+    }
+  }
+
   return evaluateWitness({
+    derivedReadsSteps,
     slug: row.slug,
     descriptor: descriptorInfo.descriptor,
     status: row.stage === 'pending' ? 'pending' : 'converted',

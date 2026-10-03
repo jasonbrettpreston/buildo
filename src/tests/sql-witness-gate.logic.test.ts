@@ -34,6 +34,7 @@ type EvaluateArgs = {
   postTraces: Record<string, TraceDoc>;
   preTraces: Record<string, TraceDoc>;
   explainedDiffs: string[];
+  derivedReadsSteps?: string[];
 };
 
 type GateModule = {
@@ -822,5 +823,112 @@ describe('gate #44 — step-validate wiring (P1-C3c2)', () => {
 
   it('does NOT contain the string R-BF WITNESS GATE (lands at P1-C9)', () => {
     expect(src).not.toContain('R-BF WITNESS GATE');
+  });
+});
+
+// ===========================================================================
+// 16. gate #44 (e) — reads.steps equals the DERIVED set (P1-C5). RED-first:
+// witness.mjs gains an optional `derivedReadsSteps: string[]`. When given it
+// compares the derived producer set against descriptor.inputs.reads.steps[].step
+// and emits FAIL:WITNESS:<slug>:e:missing:<step> (derived, not declared) and
+// FAIL:WITNESS:<slug>:e:extra:<step> (declared, not derived). (e) is evaluated
+// whether or not post traces exist; absent derivedReadsSteps → no (e) row.
+// ===========================================================================
+describe('gate #44 (e) — reads.steps equals the derived set (contract: FAIL:WITNESS:<slug>:e:missing:<step> | e:extra:<step>)', () => {
+  // The declared-steps variant of the fixture descriptor: reads parcels
+  // id+geom, with inputs.reads.steps taken verbatim from `steps`.
+  function withSteps(steps: string[]) {
+    return {
+      ...makeDescriptor(),
+      inputs: {
+        reads: {
+          tables: [{ table: 'parcels', columns: ['id', 'geom'] }],
+          steps: steps.map((step) => ({ step, version_pin: 'gte' })),
+        },
+      },
+    };
+  }
+
+  it('RED: a derived producer the descriptor omits → e:missing', () => {
+    const out = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'] });
+    expect(out.rows).toContain('FAIL:WITNESS:sources:e:missing:p');
+  });
+
+  it('RED: a declared step nothing derives → e:extra', () => {
+    const out = run({ descriptor: withSteps(['x']), derivedReadsSteps: [] });
+    expect(out.rows).toContain('FAIL:WITNESS:sources:e:extra:x');
+  });
+
+  it('GREEN control: declared == derived → no (e) row, PASS', () => {
+    const out = run({ descriptor: withSteps(['p']), derivedReadsSteps: ['p'] });
+    expect(out.rows.filter((r) => r.includes(':e:'))).toEqual([]);
+    expect(out.answer).toBe('PASS');
+  });
+
+  it('grammar pin: every (e) row is FAIL:WITNESS:<slug>:e:(missing|extra):<step>', () => {
+    const out = run({ descriptor: withSteps(['x', 'y']), derivedReadsSteps: ['p', 'x'] });
+    const eRows = out.rows.filter((r) => r.includes(':e:'));
+    expect(eRows).toEqual([
+      'FAIL:WITNESS:sources:e:extra:y',
+      'FAIL:WITNESS:sources:e:missing:p',
+    ]);
+    for (const r of eRows) {
+      expect(r).toMatch(/^FAIL:WITNESS:[a-z0-9_]+:e:(missing|extra):[a-z0-9_]+$/);
+    }
+  });
+
+  it('absent derivedReadsSteps → no (e) row (existing callers unchanged)', () => {
+    const out = run({ descriptor: withSteps(['x']) });
+    expect(out.rows.filter((r) => r.includes(':e:'))).toEqual([]);
+  });
+
+  it('(e) is evaluated without post traces', () => {
+    const out = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'], postTraces: {} });
+    expect(out.rows).toContain('UNWITNESSED:sources');
+    expect(out.rows).toContain('FAIL:WITNESS:sources:e:missing:p');
+  });
+
+  it('hardStop: (e) hard-stops a pending slug, report-only for a converted slug', () => {
+    const pending = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'], status: 'pending' });
+    expect(pending.hardStop).toBe(true);
+    const converted = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'], status: 'converted' });
+    expect(converted.hardStop).toBe(false);
+  });
+
+  it('load_heritage (the only pending slug) yields zero (e) rows on the effective ledger', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const ledgerLib = require(path.join(process.cwd(), 'scripts/lib/ledger.js'));
+    const desc = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'scripts/load-heritage.descriptor.json'), 'utf8'),
+    );
+    const derived = ledgerLib.derivedReadsSteps('load_heritage', desc, { ledger: ledgerLib.effectiveLedger() });
+    expect(derived).toEqual([]);
+    const out = G.evaluateWitness({
+      slug: 'load_heritage',
+      descriptor: desc,
+      status: 'pending',
+      currentFingerprint: FP,
+      postTraces: {},
+      preTraces: {},
+      explainedDiffs: [],
+      derivedReadsSteps: derived,
+    });
+    expect(out.rows.filter((r) => r.includes(':e:'))).toEqual([]);
+  });
+});
+
+// ===========================================================================
+// 17. step-validate wiring lock (P1-C5) — the (e) inputs (derivedReadsSteps,
+// effectiveLedger) are threaded from step-validate.mjs into the gate.
+// ===========================================================================
+describe('gate #44 (e) — step-validate wiring (P1-C5)', () => {
+  let src: string;
+  beforeAll(() => {
+    src = fs.readFileSync(STEP_VALIDATE_PATH, 'utf8');
+  });
+
+  it('threads derivedReadsSteps and effectiveLedger into the gate', () => {
+    expect(src).toContain('derivedReadsSteps');
+    expect(src).toContain('effectiveLedger');
   });
 });

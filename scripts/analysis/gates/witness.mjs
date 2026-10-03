@@ -17,13 +17,16 @@
 //   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory
 //   FAIL:WITNESS:<slug>:d:txn_scope:<declared>:<observed>
 //   FAIL:WITNESS:<slug>:g:<key>                     PRE key absent from POST and unexplained
+//   FAIL:WITNESS:<slug>:e:missing:<step>|e:extra:<step>  inputs.reads.steps != the derived producer set (P1-C5)
 //   FAIL:PRODUCER:<slug>:<invocation-param>:status  a pipeline_runs read filtered to completed-only
 //   FAIL:FIXTURE:<slug>:<suite>:<item>              a fixture-guard violation (a:<t>.<c>) or input:<error> (P1-C4a)
 //
-// OUT of slice A (still implemented later): check (e) and the C9 marker string — a later commit
+// OUT of slice A (still implemented later): the C9 marker string — a later commit
 // owns those. The declared ⊆ witnessed half of (a) IS armed here at P1-C4a (it needs a fresh post
 // trace, so a trace-less slug stays UNWITNESSED). `status === 'converted'` is REPORT-ONLY until
 // P1-C8/C9, so `hardStop` is only ever true for a `pending` slug whose rows carry a FAIL:.
+// Check (e) lands at P1-C5: report-only for converted slugs, hard for a pending slug (the same
+// hardStop rule), until P1-C9.
 
 const FAIL_PREFIX = 'FAIL:';
 
@@ -353,11 +356,43 @@ function producerRows(slug, trace) {
 }
 
 /**
+ * Gate #44 (e) (plan PHASE 1 item 3(e), Fold 9 D-B/D-E): `inputs.reads.steps` must EQUAL the
+ * derived producer set the caller computes with `scripts/lib/ledger.js derivedReadsSteps` over
+ * `effectiveLedger()` (column level, chain-scoped, declared reads). Pure: the caller hands in the
+ * list. `declared` = unique `descriptor.inputs.reads.steps[].step` strings (missing/malformed →
+ * `[]`); `derivedSet` = unique strings of `derived`.
+ *
+ * @param {unknown} descriptor
+ * @param {string[]} derived the caller-computed derived producer-step set
+ * @returns {string[]} sorted unique items WITHOUT the `FAIL:WITNESS:<slug>:` prefix:
+ *   `e:missing:<p>` for each derived `p` not declared, `e:extra:<s>` for each declared `s`
+ *   not derived.
+ */
+export function readsStepsItems(descriptor, derived) {
+  const steps = descriptor && descriptor.inputs && descriptor.inputs.reads
+    ? descriptor.inputs.reads.steps
+    : null;
+  const declaredSet = new Set();
+  for (const s of Array.isArray(steps) ? steps : []) {
+    if (s && typeof s.step === 'string') declaredSet.add(s.step);
+  }
+  const derivedSet = new Set();
+  for (const d of Array.isArray(derived) ? derived : []) {
+    if (typeof d === 'string') derivedSet.add(d);
+  }
+  const items = [];
+  for (const p of derivedSet) if (!declaredSet.has(p)) items.push(`e:missing:${p}`);
+  for (const s of declaredSet) if (!derivedSet.has(s)) items.push(`e:extra:${s}`);
+  return [...new Set(items)].sort();
+}
+
+/**
  * Gate #44 (slice A) for ONE slug.
  *
  * @param {{slug: string, descriptor: unknown, status: 'pending'|'converted',
  *   currentFingerprint: string, postTraces: Record<string, object>,
  *   preTraces: Record<string, object>, explainedDiffs: string[],
+ *   derivedReadsSteps?: string[],
  *   fixtureRecords?: Record<string, {reads: object, writes: object,
  *     violations: string[], errors: string[]}>}} args
  * @returns {{answer: string, rows: string[], hardStop: boolean}}
@@ -370,6 +405,7 @@ export function evaluateWitness({
   postTraces,
   preTraces,
   explainedDiffs,
+  derivedReadsSteps,
   fixtureRecords,
 } = {}) {
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
@@ -444,6 +480,14 @@ export function evaluateWitness({
   for (const invocation of Object.keys(pres)) {
     if (!Object.prototype.hasOwnProperty.call(posts, invocation)) continue;
     rows.push(...checkOneWay(slug, pres[invocation] || {}, posts[invocation] || {}, explainedDiffs));
+  }
+
+  // (e) reads.steps == derived (P1-C5). Evaluated from declarations, so it runs with or without
+  // post traces; absent input → not evaluated (callers that do not pass it are unchanged).
+  if (Array.isArray(derivedReadsSteps)) {
+    for (const item of readsStepsItems(descriptor, derivedReadsSteps)) {
+      rows.push(`FAIL:WITNESS:${slug}:${item}`);
+    }
   }
 
   const unique = [...new Set(rows)].sort();

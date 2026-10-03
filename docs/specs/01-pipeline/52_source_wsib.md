@@ -97,9 +97,9 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
   - `scripts/load-wsib.notes.json`
   - `scripts/lib/compute/load-wsib.js`
   - `src/tests/steps/load_wsib/violations.test.ts`
-  - data: `wsib_registry` writes (migrations/040_wsib_registry.sql)
+  - data (descriptor): `wsib_registry` writes (migrations/040_wsib_registry.sql)
   - upstream: none
-  - downstream: link_wsib
+  - downstream: assert_data_bounds · link_wsib
   - consumers: src/components/FreshnessTimeline.tsx (records_meta audit_table)
 <!-- /generated:target-files -->
 

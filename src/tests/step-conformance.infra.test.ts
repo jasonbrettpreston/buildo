@@ -2182,6 +2182,9 @@ describe('§5.2 conformance — every converted step', () => {
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const ledger = require(path.join(REPO_ROOT, 'scripts/lib/ledger.js')) as {
   stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined> }) => string[];
+  loadLedger: () => { inchain: Record<string, { reads?: Record<string, string[]> }>; static: Record<string, unknown> };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  derivedReadsSteps: (slug: string, descriptor: any, opts: { ledger: { inchain: Record<string, unknown> }; producers?: string[] }) => string[];
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const seam = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js')) as {
@@ -2308,6 +2311,16 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
    * dependency) and a narrowing (a fix landing) RED, so neither can drift
    * silently. Defect Ledger (`docs/reports/defect-ledger.md`): `link_parcels`
    * = `LDG-D1`, `refresh_snapshot` = `LDG-D2`.
+   *
+   * **RETAINED RATCHET (P1-C5, plan Fold 9 D-C — not a new exemption).** This
+   * block pre-dates gate #44 (e) and is kept unchanged as a ratchet: the exact
+   * `toEqual` lock below still reds on any widening AND any narrowing. Gate #44
+   * (e) — `reads.steps` == the column-level derived set — reproduces EXACTLY
+   * these rows when evaluated on the same input LDG-4 reads (the committed
+   * lineage snapshot, converted producers only): the test after the loop pins
+   * that 1:1. Each P1-C8a descriptor fix narrows its row here in the same
+   * commit; deleting this block is a named P1-C9 precondition (P1-C9 makes
+   * #44 a hard stop for every converted slug, so (e) then carries the lock).
    */
   const KNOWN_GAPS: Record<string, { missing: string[]; extra: string[] }> = {
     // WIDENED at the batch-2 I5 cutover (2026-09-16), and the widening is a MEASUREMENT,
@@ -2401,6 +2414,56 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
       ).toEqual(known.extra.slice().sort());
     });
   }
+
+  it('KNOWN_GAPS is a retained ratchet: gate #44 (e) on the LDG-4 input reproduces exactly its rows (P1-C5)', async () => {
+    const witness = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/gates/witness.mjs')).href)) as {
+      evaluateWitness: (args: Record<string, unknown>) => { rows: string[] };
+    };
+    const raw = ledger.loadLedger();
+    const got: Record<string, { missing: string[]; extra: string[] }> = {};
+    for (const [name, { descriptor }] of Object.entries(byName)) {
+      const row = raw.inchain[name];
+      if (!row) continue;
+      // The LDG-4 input: the consumer's reads are its SNAPSHOT row and only converted
+      // producers / converted declared steps count — exactly ldgConformance's sets.
+      const asLedgerInput = {
+        ...descriptor,
+        inputs: {
+          ...descriptor.inputs,
+          reads: {
+            ...descriptor.inputs.reads,
+            tables: Object.entries(row.reads || {}).map(([table, columns]) => ({ table, columns })),
+            steps: (descriptor.inputs.reads.steps || []).filter((s: { step: string }) => convertedNames.has(s.step)),
+          },
+        },
+      };
+      const derived = ledger.derivedReadsSteps(name, asLedgerInput, { ledger: raw, producers: [...convertedNames] });
+      const eRows = witness
+        .evaluateWitness({
+          slug: name,
+          descriptor: asLedgerInput,
+          status: 'converted',
+          currentFingerprint: '',
+          postTraces: {},
+          preTraces: {},
+          explainedDiffs: [],
+          derivedReadsSteps: derived,
+        })
+        .rows.filter((r) => r.includes(':e:'));
+      if (eRows.length === 0) continue;
+      const tail = (kind: string) =>
+        eRows.filter((r) => r.includes(`:e:${kind}:`)).map((r) => r.slice(r.lastIndexOf(':') + 1)).sort();
+      got[name] = { missing: tail('missing'), extra: tail('extra') };
+    }
+    const norm = (m: Record<string, { missing: string[]; extra: string[] }>) =>
+      Object.fromEntries(
+        Object.keys(m)
+          .sort()
+          .map((k) => [k, { missing: m[k]!.missing.slice().sort(), extra: m[k]!.extra.slice().sort() }]),
+      );
+    expect(Object.keys(got).length).toBe(8);
+    expect(norm(got)).toEqual(norm(KNOWN_GAPS));
+  });
 });
 
 describe('LDG-4 fixture proofs (the cross-check genuinely detects a regression, not vacuous)', () => {

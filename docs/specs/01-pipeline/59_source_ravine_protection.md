@@ -471,7 +471,7 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
   - `scripts/load-ravines.notes.json`
   - `scripts/lib/compute/load-ravines.js`
   - `src/tests/steps/load_ravines/violations.test.ts`
-  - data: `ravines` writes (migrations/167_create_ravines_table.sql)
+  - data (descriptor): `ravines` writes (migrations/167_create_ravines_table.sql)
   - upstream: none
   - downstream: enrich_ravines
   - consumers: enrich_ravines (records_meta ravine_load)
@@ -481,9 +481,9 @@ Validate that `ST_IsValid` + `ST_MakeValid` + `ST_CollectionExtract` are invoked
   - `scripts/lib/compute/enrich-ravines.js`
   - `src/tests/steps/enrich_ravines/violations.test.ts`
   - `src/tests/steps/enrich_ravines/witness-fixture.logic.test.ts`
-  - data: `parcels` reads+writes (migrations/011_parcels.sql); `ravines` reads (migrations/167_create_ravines_table.sql)
+  - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql); `ravines` reads (migrations/167_create_ravines_table.sql)
   - upstream: load_ravines · parcels
-  - downstream: enrich_parcels
+  - downstream: none
   - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
 <!-- /generated:target-files -->
 

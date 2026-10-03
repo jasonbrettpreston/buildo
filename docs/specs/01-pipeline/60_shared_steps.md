@@ -280,7 +280,7 @@ dedicated test files went unnamed.
   - `scripts/quality/assert-schema.notes.json`
   - `scripts/lib/compute/assert-schema.js`
   - `src/tests/steps/assert_schema/violations.test.ts`
-  - data: `pipeline_runs` writes (migrations/033_pipeline_runs.sql)
+  - data (descriptor): `logic_variables` reads (migrations/092_control_panel.sql)
   - upstream: none
   - downstream: none
   - consumers: src/components/FreshnessTimeline.tsx (records_meta checks_failed)
@@ -290,9 +290,9 @@ dedicated test files went unnamed.
   - `scripts/geocode-permits.notes.json`
   - `scripts/lib/compute/geocode-permits.js`
   - `src/tests/steps/geocode_permits/violations.test.ts`
-  - data: `address_points` reads (migrations/018_address_points.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: address_points · permits
-  - downstream: link_coa · link_neighbourhoods · link_parcels
+  - downstream: assert_global_coverage · enrich_parcels · link_coa · link_neighbourhoods · link_parcels
   - consumers: src/components/FreshnessTimeline.tsx (audit_metric geocode_coverage)
 - `link_parcels` — LINK · converted · owner specs: 60
   - `scripts/link-parcels.js`
@@ -301,9 +301,9 @@ dedicated test files went unnamed.
   - `scripts/lib/compute/link-parcels.js`
   - `src/tests/steps/link_parcels/violations.test.ts`
   - `src/tests/steps/link_parcels/witness-fixture.logic.test.ts`
-  - data: `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` writes (migrations/012_permit_parcels.sql); `permits` reads (migrations/001_permits.sql)
-  - upstream: address_points · compute_centroids · geocode_permits · link_parcel_addresses · parcels · permits
-  - downstream: compute_cost_estimates · enrich_permits
+  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` writes (migrations/012_permit_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - upstream: address_points · geocode_permits · link_parcel_addresses · parcels · permits
+  - downstream: assert_data_bounds · assert_global_coverage · compute_cost_estimates · enrich_permits
   - consumers: link_parcels (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
 - `link_neighbourhoods` — LINK · converted · owner specs: 60
   - `scripts/link-neighbourhoods.js`
@@ -312,9 +312,9 @@ dedicated test files went unnamed.
   - `scripts/lib/compute/link-neighbourhoods.js`
   - `src/tests/steps/link_neighbourhoods/violations.test.ts`
   - `src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts`
-  - data: `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
-  - upstream: geocode_permits · neighbourhoods · parcels · permits
-  - downstream: compute_storey_norms
+  - data (descriptor): `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - upstream: geocode_permits · neighbourhoods · permits
+  - downstream: assert_global_coverage · compute_storey_norms
   - consumers: link_neighbourhoods (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
 - `link_wsib` — MATCHER · converted · owner specs: 60 · 46
   - `scripts/link-wsib.js`
@@ -322,9 +322,9 @@ dedicated test files went unnamed.
   - `scripts/link-wsib.notes.json`
   - `scripts/lib/compute/link-wsib.js`
   - `src/tests/steps/link_wsib/violations.test.ts`
-  - data: `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
+  - data (descriptor): `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
   - upstream: builders · load_wsib
-  - downstream: none
+  - downstream: assert_data_bounds · assert_global_coverage
   - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn)
 - `refresh_snapshot` — RECORDER · converted · owner specs: 60
   - `scripts/refresh-snapshot.js`
@@ -333,7 +333,7 @@ dedicated test files went unnamed.
   - `scripts/lib/compute/refresh-snapshot.js`
   - `src/tests/steps/refresh_snapshot/violations.test.ts`
   - `src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts`
-  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
   - upstream: compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · link_coa_to_parcels
   - downstream: none
   - consumers: none
@@ -343,8 +343,8 @@ dedicated test files went unnamed.
   - `scripts/lib/compute/assert-data-bounds.js`
   - `src/tests/steps/assert_data_bounds/missing-table-guard.test.ts`
   - `src/tests/steps/assert_data_bounds/violations.test.ts`
-  - data: `address_points` reads (migrations/018_address_points.sql); `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permits` reads (migrations/001_permits.sql); `pipeline_runs` writes (migrations/033_pipeline_runs.sql)
-  - upstream: none
+  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `entities` reads (migrations/042_entities.sql); `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `ravines` reads (migrations/167_create_ravines_table.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql); `wsib_registry` reads (migrations/040_wsib_registry.sql)
+  - upstream: address_points · backfill_realtor_permit_trades · classify_inspection_status · classify_lifecycle_phase · classify_permit_phase · classify_permits · close_stale_permits · coa · compute_coa_cost_estimates · compute_cost_estimates · create_pre_permits · enrich_coa_zoning · inspections · link_coa · link_parcels · link_wsib · load_wsib · massing · neighbourhoods · parcels · permits
   - downstream: none
   - consumers: src/app/api/admin/control-panel/resync/route.ts (records_meta audit_table) · src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)
 - `assert_engine_health` — RECORDER · converted · owner specs: 60
@@ -353,7 +353,7 @@ dedicated test files went unnamed.
   - `scripts/lib/compute/assert-engine-health.js`
   - `src/tests/steps/assert_engine_health/violations.test.ts`
   - `src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts`
-  - data: `engine_health_snapshots` writes (migrations/051_engine_health_snapshots.sql); `pg_stat_user_tables` reads (no CREATE migration)
+  - data (descriptor): `coa_applications` reads (migrations/009_coa_applications.sql); `engine_health_snapshots` writes (migrations/051_engine_health_snapshots.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `pg_stat_user_tables` reads (no CREATE migration)
   - upstream: none
   - downstream: none
   - consumers: assert_engine_health (records_meta records_updated) · assert_engine_health (records_meta tables_checked)
