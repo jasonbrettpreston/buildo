@@ -477,7 +477,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
   - `scripts/load-heritage.notes.json`
   - `scripts/lib/compute/load-heritage.js`
   - `src/tests/steps/load_heritage/violations.test.ts`
-  - data: `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
+  - data (lineage snapshot, declared not witnessed): `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
   - upstream: none
   - downstream: enrich_heritage
   - consumers: none
@@ -487,9 +487,9 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
   - `scripts/lib/compute/enrich-heritage.js`
   - `src/tests/steps/enrich_heritage/violations.test.ts`
   - `src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts`
-  - data: `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: load_heritage · parcels
-  - downstream: enrich_parcels
+  - downstream: none
   - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
 <!-- /generated:target-files -->
 

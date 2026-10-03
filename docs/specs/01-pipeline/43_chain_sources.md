@@ -279,16 +279,16 @@ empty) passes no flag at all.
   - `src/tests/steps/compute_centroids/runtime.logic.test.ts`
   - `src/tests/steps/compute_centroids/sabotage.logic.test.ts`
   - `src/tests/steps/compute_centroids/violations.test.ts`
-  - data: `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: parcels
-  - downstream: link_massing · link_parcels
+  - downstream: link_massing
   - consumers: none
 - `assert_parcel_sanity` — ASSERT · converted · owner specs: 43
   - `scripts/quality/assert-parcel-sanity.js`
   - `scripts/quality/assert-parcel-sanity.descriptor.json`
   - `scripts/lib/compute/assert-parcel-sanity.js`
   - `src/tests/steps/assert_parcel_sanity/violations.test.ts`
-  - data: `parcels` reads (migrations/011_parcels.sql)
+  - data (descriptor): `parcels` reads (migrations/011_parcels.sql)
   - upstream: compute_parcel_cost_estimates · enrich_parcels · parcels
   - downstream: none
   - consumers: src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)

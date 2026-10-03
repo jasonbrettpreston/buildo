@@ -9,7 +9,7 @@
 // Three sources, three readers, no fourth: `capture-step-golden.js` owns the file derivation
 // (`descriptorPathFor` / `notesPathFor` + the compute-basename rule — the SAME inputs `computeSourceFingerprint`
 // hashes, so the registry can never invent a candidate the lockfile does not), `ledger.js` owns
-// every edge (`loadLedger` / `stepUpstreams` — never a hand-kept upstream array), and
+// every edge (`effectiveLedger` / `stepUpstreams` — never a hand-kept upstream array), and
 // `step-archetype-census.json` owns the ownership/archetype/status row. There is deliberately no
 // shell guessing (no `stepFileCandidates`) and no new scan of `scripts/` for tables.
 //
@@ -31,7 +31,7 @@ export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 const require = createRequire(import.meta.url);
 // ONE DERIVATION (Spec 122 §10): the golden harness is imported, never mirrored.
 const { descriptorPathFor, notesPathFor } = require('../capture-step-golden.js');
-const { loadLedger, stepUpstreams } = require('../../lib/ledger.js');
+const { effectiveLedger, stepUpstreams } = require('../../lib/ledger.js');
 
 const MANIFEST_REL_PATH = 'scripts/manifest.json';
 const CENSUS_REL_PATH = 'scripts/steps/_schema/step-archetype-census.json';
@@ -68,9 +68,10 @@ function readMigrations(root) {
 
 /**
  * Every fact this module derives, loaded ONCE per process: the manifest, the archetype census,
- * the generated consumer registry, the committed cross-step ledger snapshot and the migrations.
- * Nothing here scans `scripts/` for tables or guesses a shell — each field is one registered
- * source's own answer.
+ * the generated consumer registry, the effective cross-step ledger (converted descriptors
+ * overlaid on the committed snapshot, every row source-tagged — P1-C5, plan Fold 9
+ * D-A/D-D) and the migrations. Nothing here scans `scripts/` for tables or guesses a shell —
+ * each field is one registered source's own answer.
  *
  * `env.BUILDO_CONSUMER_REGISTRY_PATH` is a TEST-ONLY override (same shape as `ledger.js`'s
  * `BUILDO_LEDGER_SNAPSHOT_PATH`) resolved against `root`, so a suite can point the registry at a
@@ -89,7 +90,7 @@ export function loadRegistryInputs(root = REPO_ROOT, { env = process.env } = {})
     manifest: readJson(path.join(root, MANIFEST_REL_PATH)),
     census: readJson(path.join(root, CENSUS_REL_PATH)),
     consumerRows: readJson(registryAbs).rows || [],
-    ledger: loadLedger({ env }),
+    ledger: effectiveLedger({ env }),
     migrations: readMigrations(root),
   };
 }
@@ -272,11 +273,11 @@ function upstreamMemo(inputs) {
   return memo;
 }
 
-/** `stepUpstreams(X, {chain, env})`, memoised per `X|chain` — the ledger's own answer, asked once. */
+/** `stepUpstreams(X, {chain, env, ledger: inputs.ledger})`, memoised per `X|chain` — the ledger's own answer, asked once. */
 function upstreamsOf(inputs, slug, chain) {
   const memo = upstreamMemo(inputs);
   const key = `${slug}|${chain}`;
-  if (!memo.has(key)) memo.set(key, stepUpstreams(slug, { chain, env: inputs.env }).slice().sort());
+  if (!memo.has(key)) memo.set(key, stepUpstreams(slug, { chain, env: inputs.env, ledger: inputs.ledger }).slice().sort());
   return memo.get(key);
 }
 
@@ -372,7 +373,8 @@ export function renderStepEntry(row, inputs) {
   const inchain = (inputs && inputs.ledger && inputs.ledger.inchain) || {};
   if (Object.prototype.hasOwnProperty.call(inchain, row.slug)) {
     const data = stepData(row.slug, inputs).map(dataItem);
-    lines.push(`  - data: ${data.length ? data.join('; ') : 'none in the cross-step ledger'}`);
+    const source = inchain[row.slug].source === 'descriptor' ? 'descriptor' : 'lineage snapshot, declared not witnessed';
+    lines.push(`  - data (${source}): ${data.length ? data.join('; ') : 'none in the cross-step ledger'}`);
     const { upstream, downstream } = stepEdges(row.slug, inputs);
     lines.push(`  - upstream: ${joinOrNone(upstream)}`);
     lines.push(`  - downstream: ${joinOrNone(downstream)}`);

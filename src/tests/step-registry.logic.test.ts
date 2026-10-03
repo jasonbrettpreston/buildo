@@ -141,7 +141,7 @@ describe('step-registry — renderStepEntry', () => {
 
 describe('step-registry — stepEdges', () => {
   it('upstream/downstream are the ledger\'s own answer in both directions', () => {
-    const { inchain } = ledger.loadLedger();
+    const { inchain } = ledger.effectiveLedger();
     const { env } = inputs;
 
     for (const row of reg.registryRows(inputs)) {
@@ -150,7 +150,7 @@ describe('step-registry — stepEdges', () => {
 
       const expected = new Set<string>();
       for (const chain of chains) {
-        for (const up of ledger.stepUpstreams(row.slug, { chain, env })) expected.add(up);
+        for (const up of ledger.stepUpstreams(row.slug, { chain, env, ledger: inputs.ledger })) expected.add(up);
       }
       expect(sorted(upstream)).toEqual(sorted([...expected]));
 
@@ -181,6 +181,40 @@ describe('step-registry — stepData', () => {
     const row = rows.find((r) => r.table === 'parcels');
     expect(row).toBeTruthy();
     expect(row!.migration).toBe('migrations/011_parcels.sql');
+  });
+});
+
+describe('step-registry — the effective cross-step ledger (P1-C5, plan Fold 9 D-A/D-D)', () => {
+  const effInputs = inputs.ledger as { inchain: Record<string, { source?: string; reads?: unknown }> };
+  it('RED: inputs.ledger is the effective ledger — every converted row is source-tagged descriptor', () => {
+    const eff = ledger.effectiveLedger();
+    expect(Object.keys(effInputs.inchain).sort()).toEqual(Object.keys(eff.inchain).sort());
+
+    let converted = 0;
+    for (const k of Object.keys(eff.inchain)) {
+      if (eff.inchain[k].source !== 'descriptor') continue;
+      converted += 1;
+      expect(effInputs.inchain[k]?.source).toBe('descriptor');
+      expect(effInputs.inchain[k]?.reads).toEqual(eff.inchain[k].reads);
+    }
+    expect(converted).toBeGreaterThan(0);
+  });
+
+  it('RED: the rendered data line names its source', () => {
+    const rows = reg.registryRows(inputs);
+    const parcels = rows.find((r: { slug: string }) => r.slug === 'parcels');
+    expect(parcels).toBeTruthy();
+    expect(reg.renderStepEntry(parcels!, inputs)).toContain('  - data (descriptor): ');
+
+    let snapshotRows = 0;
+    for (const row of rows) {
+      const entry = effInputs.inchain[row.slug];
+      if (!entry || entry.source !== 'snapshot') continue;
+      snapshotRows += 1;
+      expect(reg.renderStepEntry(row, inputs)).toContain('  - data (lineage snapshot, declared not witnessed): ');
+    }
+    // skip-if-none: the loop above is a no-op when no rendered row is a snapshot row
+    void snapshotRows;
   });
 });
 

@@ -107,9 +107,9 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - `src/tests/steps/address_points/row-conservation.test.ts`
   - `src/tests/steps/address_points/violations.test.ts`
   - `src/tests/steps/address_points/witness-fixture.logic.test.ts`
-  - data: `address_points` writes (migrations/018_address_points.sql)
+  - data (descriptor): `address_points` writes (migrations/018_address_points.sql)
   - upstream: none
-  - downstream: geocode_permits · link_parcel_addresses · link_parcels
+  - downstream: assert_data_bounds · geocode_permits · link_parcel_addresses · link_parcels
   - consumers: address_points (records_meta address_points_load) · assert_data_bounds (records_meta audit_table)
 - `link_parcel_addresses` — MATERIALIZER · converted · owner specs: 54
   - `scripts/link-parcel-addresses.js`
@@ -119,7 +119,7 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - `src/tests/steps/link_parcel_addresses/metamorphic.test.ts`
   - `src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts`
   - `src/tests/steps/link_parcel_addresses/violations.test.ts`
-  - data: `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` writes (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql)
+  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` writes (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql)
   - upstream: address_points · parcels
   - downstream: link_parcels
   - consumers: none
