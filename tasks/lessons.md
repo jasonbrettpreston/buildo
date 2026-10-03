@@ -235,3 +235,8 @@
 - `assert_parcel_sanity.lot_size_out_of_range` excluded `feature_type` COMMON and CONDO "by design" — but those two values are 100% of parcels (COMMON = an ordinary parcel in the Toronto feed), so the check measured nothing for ~2 months. It printed "inert (population 0)" every run, at INFO, so no one acted. Before excluding a category, count it; a check whose population is 0 is a defect, not a pass.
 - An `applies` predicate that IS the failure predicate (`max_build_dim_below_floor`: applies = below floor, bad = TRUE) is inert by construction on healthy data — scope `applies` to the population the check is about.
 - A fix that makes a gate fire by reporting a fake violation from compute is a BYPASS (falsifies the observation); fix the population, and put verdict policy in the verdict layer.
+
+## 2026-10-03 — A secret derived in CI must be masked in the step that derives it; CI logs are scanned before commit
+- `chain-deep-scrapes.yml` extracted `PG_PASSWORD` from `SUPABASE_DATABASE_URL` into `$GITHUB_ENV` and masked it in the NEXT step. The runner prints a step's `env:` block before running it, so the live password appeared in plain text once per run — and a 2026-07-30 commit saved 8 raw run logs into `docs/reports/archive/`, publishing it to the repo.
+- Emit `::add-mask::` inside the deriving step, before the `$GITHUB_ENV` write (locked by `deep-scrapes-workflow.infra.test.ts`).
+- Never commit downloaded CI/run logs without a secret scan against the real `.env` values (counts only, never print the value).

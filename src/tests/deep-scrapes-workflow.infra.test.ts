@@ -188,4 +188,183 @@ describe('chain-deep-scrapes workflow', () => {
       expect(budgetIdx).toBeLessThan(verdictStepIdx);
     });
   });
+
+  /**
+   * MASK BEFORE GITHUB_ENV EXPORT (measured 2026-10-03).
+   *
+   * The step "Derive PG_* connection vars" appends `PG_PASSWORD=...` to
+   * $GITHUB_ENV; the `::add-mask::$PG_PASSWORD` call lived in the NEXT step
+   * ("Mask PG_PASSWORD in logs"). GitHub prints an executed step's `env:` block
+   * BEFORE running its `run:` — so `PG_PASSWORD` sat unmasked in every archived
+   * log of that run, once per run, for a value GitHub's own auto-masking can
+   * never cover (it only knows the whole SUPABASE_DATABASE_URL string).
+   *
+   * The fix shape is: mask INSIDE the same step that exports the secret, before
+   * the write. These locks pin that shape at source level; they cannot prove log
+   * masking (no behavioral harness for a GH runner), only that the two events
+   * coexist in one step in the right order.
+   */
+  describe('secret masking precedes $GITHUB_ENV export (measured leak 2026-10-03)', () => {
+    const SECRET_NAME = /PASSWORD|SECRET|TOKEN/i;
+    const TO_GITHUB_ENV = />>\s*"?\$GITHUB_ENV"?|>>\s*"?\$\{GITHUB_ENV\}"?|appendFileSync\(\s*process\.env\.GITHUB_ENV/;
+
+    interface Step {
+      name: string;
+      run: string;
+    }
+
+    /** Structurally split a workflow's `run:` values off its `steps:` list.
+     *  The repo ships no YAML parser dependency, so this is a minimal
+     *  indent-aware splitter using the universal workflows convention
+     *  (steps at 6 spaces, keys at 8, `name:` list-item form). Sufficient for
+     *  both the real file and the inline fixtures below. */
+    function stepsWithRun(yml: string): Step[] {
+      const lines = yml.split('\n');
+      const out: { name: string; runLines: string[] | null }[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line === undefined) continue;
+        if (line.trim().startsWith('#')) continue;
+        const name = line.match(/^\s+-\s+name:\s*(.+?)\s*$/) ?? line.match(/^\s+name:\s*(.+?)\s*$/);
+        const nameText = name?.[1];
+        if (nameText !== undefined) {
+          out.push({ name: nameText, runLines: null });
+          continue;
+        }
+        const key = line.match(/^(\s*)(run):\s*(.*)$/);
+        const keyIndentText = key?.[1];
+        const inlineText = key?.[3];
+        if (keyIndentText === undefined || inlineText === undefined || out.length === 0) continue;
+        const keyIndent = keyIndentText.length;
+        const inline = inlineText.trim();
+        if (inline && inline !== '>' && inline !== '|' && inline !== '|-' && inline !== '>-' && inline !== '>-') {
+          const last = out[out.length - 1];
+          if (last !== undefined) last.runLines = [inline];
+          continue;
+        }
+        const body: string[] = [];
+        for (let j = i + 1; j < lines.length; j++) {
+          const l = lines[j];
+          if (l === undefined) continue;
+          const indent = l.match(/^\s*/)?.[0].length ?? 0;
+          if (l.trim() !== '' && indent <= keyIndent) break;
+          body.push(l);
+        }
+        const last = out[out.length - 1];
+        if (last !== undefined) last.runLines = body;
+      }
+      const dedented = (ls: string[]) => {
+        const indents = ls.filter((l) => l.trim() !== '').map((l) => l.match(/^\s*/)?.[0].length ?? 0);
+        const min = indents.length ? Math.min(...indents) : 0;
+        return ls.map((l) => l.slice(min)).join('\n');
+      };
+      return out
+        .filter((s): s is { name: string; runLines: string[] } => s.runLines !== null)
+        .map((s) => ({ name: s.name, run: dedented(s.runLines) }));
+    }
+
+    /** Rule 1: any step whose `run` writes a /PASSWORD|SECRET|TOKEN/-named value
+     *  into $GITHUB_ENV must also call `::add-mask::` in that same run, and the
+     *  first mask must precede the first write. */
+    function maskPrecedesEnvWrite(yml: string): string[] {
+      const bad: string[] = [];
+      for (const step of stepsWithRun(yml)) {
+        const writeIdx = step.run.search(TO_GITHUB_ENV);
+        if (writeIdx === -1) continue;
+        // Name and write live on different lines in a real derivation step
+        // (the name is a JS string literal, the write is the appendFileSync
+        // call), so this is step-scoped, not line-scoped.
+        if (!SECRET_NAME.test(step.run)) continue;
+        const maskIdx = step.run.indexOf('::add-mask::');
+        if (maskIdx === -1) bad.push(`${step.name}: exports a secret to $GITHUB_ENV with no ::add-mask::`);
+        else if (maskIdx > writeIdx) bad.push(`${step.name}: ::add-mask:: appears AFTER the $GITHUB_ENV write`);
+      }
+      return bad;
+    }
+
+    /** Rule 2: a step that DISPLAYS a mask is itself the leak point if that
+     *  variable was exported via $GITHUB_ENV by an earlier step (the next step's
+     *  `env:` block is printed before its `run:` executes). */
+    function displayOnlyMaskOfEnvExportedVar(yml: string): string[] {
+      const bad: string[] = [];
+      const exported = new Set<string>();
+      const firstLine = (s: string) => s.split('\n').map((l) => l.trim()).find((l) => l !== '') ?? '';
+      for (const step of stepsWithRun(yml)) {
+        const trimmed = step.run.trim();
+        const maskOnly = trimmed.match(/^echo\s+"::add-mask::\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?"\s*$/);
+        const maskedName = maskOnly?.[1];
+        if (maskedName !== undefined && firstLine(step.run) === trimmed && exported.has(maskedName)) {
+          bad.push(`${step.name}: sole purpose is masking $${maskedName}, exported via $GITHUB_ENV by an earlier step`);
+        }
+        for (const m of step.run.matchAll(/(?:^|\n)\s*([A-Za-z_][A-Za-z0-9_]*)=/g)) {
+          const varName = m[1];
+          if (varName !== undefined && /(>>\s*"?\$(\{)?GITHUB_ENV|appendFileSync\(\s*process\.env\.GITHUB_ENV)/.test(step.run)) exported.add(varName);
+        }
+        for (const m of step.run.matchAll(/['"]([A-Za-z_][A-Za-z0-9_]*)=/g)) {
+          const varName = m[1];
+          if (varName !== undefined && /appendFileSync\(\s*process\.env\.GITHUB_ENV/.test(step.run)) exported.add(varName);
+        }
+      }
+      return bad;
+    }
+
+    it('the Derive PG_* step masks PG_PASSWORD in the SAME run, before the $GITHUB_ENV write', () => {
+      // RED on the current workflow: the mask lives in the NEXT step.
+      const violations = maskPrecedesEnvWrite(yaml);
+      expect(violations, violations.join('\n')).toEqual([]);
+    });
+
+    it('no step exists solely to echo an ::add-mask:: for a variable an earlier step exported', () => {
+      const violations = displayOnlyMaskOfEnvExportedVar(yaml);
+      expect(violations, violations.join('\n')).toEqual([]);
+    });
+
+    // RED self-check fixtures — parsed by the SAME splitter, so a splitter
+    // regression turns these green instead of silently passing the real file.
+    describe('fixtures (RED self-check for the rules above)', () => {
+      it('fires on the mask-in-next-step shape (the measured leak)', () => {
+        const leaky = [
+          'jobs:',
+          '  build:',
+          '    steps:',
+          '      - name: Derive PG_*',
+          '        run: |',
+          "          node -e \"require('fs').appendFileSync(process.env.GITHUB_ENV, 'PG_PASSWORD=' + process.env.PW + '\\\\n')\"",
+          '      - name: Mask PG_PASSWORD',
+          '        run: echo "::add-mask::$PG_PASSWORD"',
+          '',
+        ].join('\n');
+        expect(maskPrecedesEnvWrite(leaky).length).toBeGreaterThan(0);
+        expect(displayOnlyMaskOfEnvExportedVar(leaky).length).toBeGreaterThan(0);
+      });
+
+      it('passes when the mask precedes the write in ONE step', () => {
+        const fixed = [
+          'jobs:',
+          '  build:',
+          '    steps:',
+          '      - name: Derive PG_* and mask',
+          '        run: |',
+          '          echo "::add-mask::$PG_PASSWORD"',
+          "          node -e \"require('fs').appendFileSync(process.env.GITHUB_ENV, 'PG_PASSWORD=' + process.env.PW + '\\\\n')\"",
+          '',
+        ].join('\n');
+        expect(maskPrecedesEnvWrite(fixed)).toEqual([]);
+        expect(displayOnlyMaskOfEnvExportedVar(fixed)).toEqual([]);
+      });
+
+      it('sanity: the splitter actually sees the real workflow steps', () => {
+        const steps = stepsWithRun(yaml);
+        expect(steps.some((s) => /Derive PG_/.test(s.name))).toBe(true);
+        // The mask must be emitted inside the deriving step, right before the
+        // GITHUB_ENV write — not in a later, display-only step.
+        expect(
+          steps.some(
+            (s) => /Derive PG_/.test(s.name) && /::add-mask::/.test(s.run ?? ''),
+          ),
+        ).toBe(true);
+        expect(steps.some((s) => /Mask PG_PASSWORD/.test(s.name))).toBe(false);
+      });
+    });
+  });
 });
