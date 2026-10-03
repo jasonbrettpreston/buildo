@@ -197,9 +197,19 @@ jobs:
 
       - name: Derive PG_* connection vars for aic-orchestrator.py (+ TLS bridge)
         # See the file-header INTEGRATION FINDING above.
+        # PG_PASSWORD is masked HERE, before it is written to $GITHUB_ENV. GitHub only
+        # auto-masks the exact secret it was given (SUPABASE_DATABASE_URL); the password
+        # extracted from it is a different string. The old separate mask step ran one
+        # step later, and the runner prints a step's env: block BEFORE executing it, so
+        # the password appeared in plain text once per run (WF3 2026-10-03, measured in
+        # all 8 archived run logs). Locked by deep-scrapes-workflow.infra.test.ts.
         run: |
           node -e "
             const u = new URL(process.env.SUPABASE_DATABASE_URL);
+            if (u.password) {
+              console.log('::add-mask::' + decodeURIComponent(u.password));
+              console.log('::add-mask::' + u.password);
+            }
             const lines = [
               'PG_HOST=' + u.hostname,
               'PG_PORT=' + (u.port || '5432'),
@@ -212,16 +222,6 @@ jobs:
             require('fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');
           "
         env: *pipeline-env
-
-      - name: Mask PG_PASSWORD in logs (F8 fold 2026-07-20, Security MED)
-        # GitHub only auto-masks the EXACT secret string it was given
-        # (SUPABASE_DATABASE_URL) — PG_PASSWORD, extracted out of it by the
-        # step above and exposed via $GITHUB_ENV starting THIS step, is a
-        # different string as far as the log-masking engine is concerned and
-        # would otherwise appear in plain text if any later step's output
-        # ever echoes it (directly or via a crashing child process). Mask it
-        # explicitly, immediately after it becomes available.
-        run: echo "::add-mask::$PG_PASSWORD"
 
       - name: Allow Chrome sandboxed launch (Ubuntu 24 AppArmor userns restriction)
         # ubuntu-latest (24.04) ships kernel.apparmor_restrict_unprivileged_userns=1,
