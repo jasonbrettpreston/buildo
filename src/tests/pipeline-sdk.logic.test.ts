@@ -850,6 +850,57 @@ describe('Pipeline SDK', () => {
       expect(pipeline.classifyError(new Error('something weird'))).toBe('unknown');
     });
 
+    // WF3 2026-10-02 — classifyError must not crash on a NON-STRING err.code.
+    // Measured: 4 occurrences of `TypeError: code.startsWith is not a function`
+    // thrown from inside log.error (pipeline.js:293, called from run :603 phase
+    // "fatal"), which replaced the step's REAL fatal error in the log + summary.
+    // pg always supplies SQLSTATEs as strings, so a numeric/object code is not a
+    // database error — it must fall through to 'unknown', never throw.
+    it('WF3 2026-10-02: a NUMBER err.code (e.g. an HTTP 502 status) does not throw and classifies as unknown', () => {
+      const err = new Error('bad gateway') as Error & { code?: unknown };
+      err.code = 502;
+      expect(() => pipeline.classifyError(err)).not.toThrow();
+      expect(pipeline.classifyError(err)).toBe('unknown');
+    });
+
+    it('WF3 2026-10-02: a NUMBER err.code of 23505 does not throw (numeric codes are not Postgres SQLSTATEs, which pg always gives as strings)', () => {
+      const err = new Error('unique violation') as Error & { code?: unknown };
+      err.code = 23505;
+      expect(() => pipeline.classifyError(err)).not.toThrow();
+      expect(pipeline.classifyError(err)).toBe('unknown');
+    });
+
+    it('WF3 2026-10-02: a non-string, non-number err.code object does not throw', () => {
+      const err = new Error('weird code shape') as Error & { code?: unknown };
+      err.code = { x: 1 };
+      expect(() => pipeline.classifyError(err)).not.toThrow();
+      expect(pipeline.classifyError(err)).toBe('unknown');
+    });
+
+    // GREEN controls: the string forms must keep classifying exactly as before.
+    it('WF3 2026-10-02 control: string PG 23505 still classifies as database', () => {
+      const err = new Error('unique violation') as Error & { code?: string };
+      err.code = '23505';
+      expect(pipeline.classifyError(err)).toBe('database');
+    });
+
+    it('WF3 2026-10-02 control: string ECONNRESET still classifies as network', () => {
+      const err = new Error('connection reset') as Error & { code?: string };
+      err.code = 'ECONNRESET';
+      expect(pipeline.classifyError(err)).toBe('network');
+    });
+
+    it('WF3 2026-10-02: log.error does not throw on an Error with a numeric code (the real fatal error is not masked)', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const err = new Error('bad gateway') as Error & { code?: unknown };
+      err.code = 502;
+      expect(() => pipeline.log.error('[test]', err, { phase: 'fatal' })).not.toThrow();
+      const parsed = JSON.parse(spy!.mock.calls[0]![0]);
+      expect(parsed.msg).toBe('bad gateway');
+      expect(parsed.error_type).toBe('unknown');
+      spy.mockRestore();
+    });
+
     it('log.error includes error_type field', () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const err: Error & { code?: string } = new Error('conn reset');
@@ -858,6 +909,22 @@ describe('Pipeline SDK', () => {
       const parsed = JSON.parse(spy!.mock.calls[0]![0]);
       expect(parsed.error_type).toBe('network');
       spy.mockRestore();
+    });
+
+    // WF3 2026-10-03 — an AbortController deadline aborts a download with a
+    // DOMException whose name is 'AbortError' and whose code is the NUMBER 20.
+    // Since 2a6ad275 only STRING codes are classified, so it fell through to
+    // 'unknown'; the `code === 'ABORT_ERR'` branch never matched it.
+    it('WF3 2026-10-03: an Error with name AbortError (numeric code 20) classifies as timeout', () => {
+      const err = new Error('This operation was aborted') as Error & { code?: unknown };
+      err.name = 'AbortError';
+      err.code = 20;
+      expect(pipeline.classifyError(err)).toBe('timeout');
+    });
+
+    it('WF3 2026-10-03: a DOMException AbortError classifies as timeout', () => {
+      const err = new DOMException('This operation was aborted', 'AbortError');
+      expect(pipeline.classifyError(err)).toBe('timeout');
     });
   });
 

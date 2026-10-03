@@ -46,8 +46,11 @@
 
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('assert_data_bounds', __filename);
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module, same as assert-data-bounds-halt.db.test.ts
 const computeModule = require(path.join(REPO_ROOT, 'scripts/lib/compute/assert-data-bounds.js')) as {
@@ -70,13 +73,13 @@ function makePool(respond: (sql: string, call: number) => StubResult) {
   const stubs: Stub[] = [];
   return {
     stubs,
-    pool: {
+    pool: guard.wrap({
       query: (sql: string, params?: unknown[]): Promise<StubResult> => {
         const call = stubs.length + 1;
         stubs.push({ sql, params });
         return Promise.resolve(respond(sql, call));
       },
-    },
+    }),
   };
 }
 

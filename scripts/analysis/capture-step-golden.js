@@ -1176,6 +1176,8 @@ async function main() {
       outPath: path.resolve(String(opts.out)),
     });
     console.log(`[capture-step-golden] trace: ${trace.statements.length} statement(s), ${trace.errors.length} error(s), tracer ${trace.header.tracer_self_ms} ms -> ${tracePath}`);
+    const catalogOut = witness.writeCatalog(traceOut.catalog);
+    console.log(`[capture-step-golden] catalog: ${catalogOut.tables} table(s) -> ${catalogOut.catalogPath}`);
     fs.rmSync(traceDir, { recursive: true, force: true });
     if (traceOnly) {
       console.log('[capture-step-golden] --trace-only: golden NOT written');

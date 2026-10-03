@@ -1178,18 +1178,35 @@
         "source_key_policy": {
           "$ref": "#/definitions/sourceKeyPolicy"
         },
+        "line_validity": {
+          "description": "ADDED AT INGESTOR PREREQUISITE 0z1 (2026-10-02). The legacy LineString reject rule of Spec 58 F-M9 (:49, :220): when declared, the validator's inner subquery adds `(ST_Length(geom::geography) > 0 AND ST_IsSimple(geom)) AS line_ok` over the PRE-repair `geom` (legacy's operand, scripts/lib/geometry-validator.js:64-71), `validated` re-exports it, and the CASE gains a FIRST arm `WHEN NOT line_ok THEN 'skipped_degenerate_line'` (first because legacy discards a degenerate line even when it is valid; a NULL line_ok falls through to skipped_null). OPTIONAL; absent = no test. REQUIRES geometry_kind \"multiline\" (the item rule below) and forbids geometry_repair \"none\" — neither has a consumer today (Spec 124 R-AJ): legacy always repairs.",
+          "enum": [
+            "length_and_simple"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "fold F-M9 into multiline (hides behaviour in a family name)",
+              "a declared check that drops the row before the write",
+              "compute ST_IsSimple (PostGIS; pure compute is banned)"
+            ],
+            "why": "a declared reject rule, rendered into the validator's own CASE — the only place the pre-repair geom exists (Rule 10)"
+          }
+        },
         "geometry_kind": {
-          "description": "REQUIRED when any columns[].bind is \"wkb_geometry\" (the item's own allOf below): the geometry family the target column stores, which selects the validator's repair/accept path (polygon: ST_CollectionExtract(…,3)+ST_Multi, accept Polygon/MultiPolygon; point: ST_CollectionExtract(…,1), no ST_Multi, accept Point; line: ST_CollectionExtract(…,2), no ST_Multi, accept LineString). Declared, never sniffed from the payload — a polygon step receiving a point must still count it skipped_unsupported_type.",
+          "description": "REQUIRED when any columns[].bind is \"wkb_geometry\" (the item's own allOf below): the geometry family the target column stores, which selects the validator's repair/accept path (polygon: ST_CollectionExtract(…,3)+ST_Multi, accept Polygon/MultiPolygon; point: ST_CollectionExtract(…,1), no ST_Multi, accept Point; line: ST_CollectionExtract(…,2), no ST_Multi, accept LineString; multiline: ST_Multi(COALESCE(ST_CollectionExtract(repaired, 2), repaired)), accept LineString/MultiLineString, the legacy zoning LineString family (Spec 58 F-M9, Spec 122 §5.1); a true LineString target keeps \"line\"). Declared, never sniffed from the payload — a polygon step receiving a point must still count it skipped_unsupported_type.",
           "enum": [
             "polygon",
             "point",
-            "line"
+            "line",
+            "multiline"
           ],
           "x-frozen": true,
           "x-ruling": {
             "rungs_tried": [
               "rung (a) derive from ST_Dimension of each input geometry at runtime",
-              "rung (a′) read geometry_columns for the target column"
+              "rung (a′) read geometry_columns for the target column",
+              "widen \"line\" to accept Multi (silently changes centreline's accept set)"
             ],
             "why": "runtime derivation silently widens load_ravines' guard (a stray Point would become accepted instead of skipped_unsupported_type — a behaviour change on a converted step with a golden); the catalog read hides the contract in the DB. A per-target declaration keeps Rule 8's per-write-target discipline and makes the accept list reviewable. line added 2026-09-24 for the LineString INGESTORs: toronto_centreline's consumer enrich-centreline.js requires a true LineString."
           }
@@ -1246,6 +1263,49 @@
                 "required": [
                   "why"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "x-rule": "Z-I1 (INGESTOR prerequisite 0z1, Spec 58 F-M9 :49/:220): line_validity is the F-M9 reject rule for the legacy zoning LineString family, so it REQUIRES geometry_kind \"multiline\" and multiline forbids geometry_repair \"none\" — neither has a consumer today (Spec 124 R-AJ), because legacy always repairs. Authored as required+const (a bare const would be satisfied by an ABSENT geometry_kind).",
+          "if": {
+            "required": [
+              "line_validity"
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry_kind": {
+                "const": "multiline"
+              }
+            },
+            "required": [
+              "geometry_kind"
+            ]
+          }
+        },
+        {
+          "x-rule": "Z-I1 converse (INGESTOR prerequisite 0z1): geometry_kind \"multiline\" forbids geometry_repair \"none\". multiline with geometry_repair ABSENT is VALID (all legacy zoning line loads repair).",
+          "if": {
+            "properties": {
+              "geometry_kind": {
+                "const": "multiline"
+              }
+            },
+            "required": [
+              "geometry_kind"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "geometry_repair"
+              ],
+              "properties": {
+                "geometry_repair": {
+                  "const": "none"
+                }
               }
             }
           }
@@ -1968,12 +2028,13 @@
                     "x-frozen": true
                   },
                   "format": {
-                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD.",
+                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD. `\"ckan_datastore\"` (0y, RE-FREEZE #30) = a primary acquired through paginated CKAN `datastore_search`; declared with a `ckan` block and `kind: \"http_api\"`, its bare `url` is the `datastore_search` endpoint, and its `acquired.source_dataset_version` comes from the resource's `package_show` metadata (never a content hash).",
                     "enum": [
                       "shapefile_zip",
                       "csv",
                       "geojson",
-                      "xlsx"
+                      "xlsx",
+                      "ckan_datastore"
                     ],
                     "x-frozen": true,
                     "x-ruling": {
@@ -2099,6 +2160,39 @@
                       "why": "only a declaration can decide whether the library rethrows; the row is library-owned (Rule 10)"
                     }
                   },
+                  "ckan": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0y (RE-FREEZE #30, 2026-10-02). Required iff `format` is \"ckan_datastore\" (item rule Y-I1, brief 7): the CKAN coordinates of ONE primary acquired through paginated `datastore_search`. The external's `url` is the BARE endpoint; the arm builds `${url}?resource_id=${ckan.resource_id}&limit=${page}&offset=${o}`. `package_url` is the full `package_show?id=…` URL used for the resource's version and its 730-day F-M4 force-reload. `page_size_from_config` names a registered config variable holding a positive integer. The resource id is declared ONCE here, never parsed out of the URL.",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "resource_id",
+                      "package_url",
+                      "page_size_from_config"
+                    ],
+                    "properties": {
+                      "resource_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "package_url": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "page_size_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "the geojson arm — its `_id` upsert key exists only in the DataStore (Spec 58 D8 :628), a behaviour change",
+                        "a kind:\"http_api\" sniff — kind is a TRANSPORT enum; 0b refuses inferring the parser from it",
+                        "three flat fields on every external's item",
+                        "compute I/O (banned, Rule 2)"
+                      ],
+                      "why": "the resource's version and page size come from metadata nothing in the payload carries; declaring them once, on the one external that uses them, keeps the resource id in exactly one place (PD#10)"
+                    }
+                  },
                   "key_property": {
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). For a record-bearing external (shapefile .dbf, CSV, GeoJSON properties): the SOURCE-SIDE attribute that becomes `outputs.writes[].key`. Declaring it is what lets a generic parser run without knowing the domain — and it makes an upstream rename (the #426 class) a descriptor diff instead of an undeclared constant inside a loader.",
                     "type": "string"
@@ -2167,7 +2261,7 @@
                     }
                   },
                   {
-                    "x-rule": "`format` is REQUIRED, but only per RECORD-BEARING external — the one `runIngestPhase` actually acquires (`kind: \"http_file\"` with a non-empty `url`; a `kind: \"filesystem\"` external carrying a `path` is required to declare `format` by its own 0fs rule below). A `kind: \"http_api\"` entry or a `url`-less documentation entry (assert_schema's shared reference list) never reaches the download+parse seam `format` selects a parser for, so it declares no payload format — nothing hidden, because nothing was ever fetched.",
+                    "x-rule": "`format` is REQUIRED, but only per RECORD-BEARING external — the one `runIngestPhase` actually acquires (`kind: \"http_file\"` with a non-empty `url`, and (0y, RE-FREEZE #30) a `kind: \"http_api\"` entry declaring `format: \"ckan_datastore\"`, which IS acquired through the paginated CKAN `datastore_search` arm; a `kind: \"filesystem\"` external carrying a `path` is required to declare `format` by its own 0fs rule below). Any OTHER `kind: \"http_api\"` entry, or a `url`-less documentation entry (assert_schema's shared reference list), never reaches the download+parse seam `format` selects a parser for, so it declares no payload format — nothing hidden, because nothing was ever fetched.",
                     "if": {
                       "properties": {
                         "kind": {
@@ -2271,6 +2365,33 @@
                           "role"
                         ]
                       }
+                    }
+                  },
+                  {
+                    "x-rule": "0y (RE-FREEZE #30, Y-I1): `format` \"ckan_datastore\" ⇔ `ckan`; it requires `kind` \"http_api\", a BARE `url` (no ?/# — the arm appends resource_id/limit/offset), and `target` (Y4 is the runtime twin); it FORBIDS `on_head_error` \"warn_row\" (inert with no version, R-AJ). `on_head_error` ABSENT is valid; `ckan` on any other `format` is refused here too.",
+                    "if": {
+                      "anyOf": [
+                        { "required": ["format"], "properties": { "format": { "const": "ckan_datastore" } } },
+                        { "required": ["ckan"] }
+                      ]
+                    },
+                    "then": {
+                      "allOf": [
+                        { "required": ["ckan", "kind", "url", "target"] },
+                        {
+                          "properties": {
+                            "format": { "const": "ckan_datastore" },
+                            "kind": { "const": "http_api" },
+                            "url": { "pattern": "^[^?#]+$" }
+                          }
+                        },
+                        {
+                          "not": {
+                            "properties": { "on_head_error": { "const": "warn_row" } },
+                            "required": ["on_head_error"]
+                          }
+                        }
+                      ]
                     }
                   }
                 ]
@@ -2507,6 +2628,37 @@
                   "signal",
                   "position"
                 ],
+                "allOf": [
+                  {
+                    "x-rule": "0y (RE-FREEZE #30, Y-T1): `style` \"ckan_metadata\" runs the metadata comparison on the CKAN resource's `package_show` version at the PRE-ACQUISITION position, and requires `signal` \"source_validator\", `position` \"pre_acquisition\", `max_age_days_from_config` (F-M4 window) and `emit_key` (prior emit mapping primary id → stored version; zoning: `zoning_layer_versions`). GR-2: `required`+`const` in the `if`, so an ABSENT `style` never matches.",
+                    "if": {
+                      "required": [
+                        "style"
+                      ],
+                      "properties": {
+                        "style": {
+                          "const": "ckan_metadata"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "signal",
+                        "position",
+                        "max_age_days_from_config",
+                        "emit_key"
+                      ],
+                      "properties": {
+                        "signal": {
+                          "const": "source_validator"
+                        },
+                        "position": {
+                          "const": "pre_acquisition"
+                        }
+                      }
+                    }
+                  }
+                ],
                 "properties": {
                   "signal": {
                     "enum": [
@@ -2542,6 +2694,26 @@
                   },
                   "emit_key": {
                     "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The emits[].key in the PRIOR completed run's records_meta this signal compares THIS run's measurement against. code_version compares staleness.logic_version; upstream_ledger compares COUNT(*) over table; config_version compares the named variable's logic_variables.updated_at. Naming the key in the descriptor is what lets ONE generic reader serve every code+data gate — and it is the same key the frozen producer contract already publishes, so the gate and the emit can never drift apart.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "style": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0y (RE-FREEZE #30, 2026-10-02). WHICH skip-check the trigger's pre_acquisition gate runs. Absent = `validator_equality`, today's behaviour. `ckan_metadata` compares the CKAN resource's `package_show` version (zoning R2-11) and, via `max_age_days_from_config`, forces a reload once the stored version is older than that many days (the 730-day F-M4 arm). Schema values are underscored; source-version.js:125-126 maps this to `ckan-metadata` (`STYLE_CKAN_METADATA`). Y-T1 (brief 10) requires `signal` source_validator, `position` pre_acquisition, `max_age_days_from_config` and `emit_key`.",
+                    "enum": [
+                      "validator_equality",
+                      "ckan_metadata"
+                    ],
+                    "x-frozen": true,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "a new `signal` member — signal names WHAT is measured, not WHICH comparison runs on it",
+                        "a boolean `force_reload` — cannot express the 730-day window nor plain equality"
+                      ],
+                      "why": "the axes are independent; naming the STYLE lets ONE decision function serve both, as `skipCheckDecision` takes a style object"
+                    }
+                  },
+                  "max_age_days_from_config": {
+                    "description": "ADDED AT INGESTOR PREREQUISITE 0y (RE-FREEZE #30, 2026-10-02). A logic_variables key holding the F-M4 force-reload window in DAYS, read only when `style` is `ckan_metadata` (Y-T1 makes it required there). The `*_from_config` suffix walker (step-conformance.infra.test.ts) already checks it names a registered variable, so no new lock is owed. A missing or non-finite value throws BY NAME in `staleness.js#allPrimariesDecision` (source-version.js:186-188), never silently gating as validator-equality.",
                     "type": "string",
                     "minLength": 1
                   },
@@ -2662,6 +2834,22 @@
             "none"
           ],
           "x-frozen": true
+        },
+        "skip_scope": {
+          "description": "ADDED AT INGESTOR PREREQUISITE 0y (RE-FREEZE #30, 2026-10-02). WHICH primaries the skip decision covers. Absent means `per_primary` — 0x's behaviour: each primary gates alone against its own prior sub-block, and a sub-skeleton must be an object (rule B6). `all_primaries` makes ONE decision for ALL primaries before any fetch (zoning's R2-12): the library reads the whole prior `records_meta` once, fetches the validators through a per-run cache (ONE `package_show`), builds a single step-level `step_gate` reused on BOTH the skip and the load path, and a skip re-emits the derived top-level contract keys. Declared on a single-primary step it would be inert (R-AJ), so top-level rule M3 requires a targeted external; and any trigger declaring `style` \"ckan_metadata\" requires `all_primaries` (top-level rule M4). Under `all_primaries` the per-call tier-1 narrows every pre-acquisition trigger away.",
+          "enum": [
+            "per_primary",
+            "all_primaries"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "`staleness.scope` — already the REQUIRED which-rows SQL predicate field (0x fact 6) and cannot carry a second meaning",
+              "a boolean `skip_all_primaries` — cannot stay byte-identical for the 7 converted INGESTORs that declare neither key",
+              "per-primary enumeration on each external (the 0x O-1 cut, operator-approved 2026-09-29 to move here)"
+            ],
+            "why": "the skip decision is a property of the WHOLE step (legacy load-zoning.js decides ONCE before any fetch, iff storedVersion && decisions.every(skip)), not of one primary; naming it on `staleness` keeps it adjacent to the triggers it narrows and leaves the absent value equal to today's behaviour"
+          }
         },
         "on_prior_run_error": {
           "description": "§1.6 — the DECLARED posture when the PRIOR-RUN read that feeds every trigger fails (LR-D2, peel 8a). The prior run's emit block is the baseline both gate tiers and every drift ratio compare against, so a failed read is not a neutral event: it silently downgrades the step to \"first run\", which loads unguarded with every ratio 0 BY DEFINITION rather than by measurement. fail_step = the read is load-bearing, refuse. warn_row = proceed with no baseline and say so in a `prior_run_read_failed` audit row — never silently, which is what the pre-conversion `.catch(warn => null)` did. ABSENT means fail_step: the posture may be unstated, but it may not be silent.",
@@ -4534,6 +4722,16 @@
       }
     },
     {
+      "x-profile": "0y (RE-FREEZE #30, M3): `skip_scope` is inert on a single-primary step (R-AJ); if `staleness.skip_scope` is present, at least one external must carry `target`.",
+      "if": { "type": "object", "properties": { "staleness": { "type": "object", "required": ["skip_scope"] } }, "required": ["staleness"] },
+      "then": { "properties": { "inputs": { "type": "object", "properties": { "reads": { "type": "object", "properties": { "externals": { "type": "array", "contains": { "type": "object", "required": ["target"] } } }, "required": ["externals"] } }, "required": ["reads"] } } }
+    },
+    {
+      "x-profile": "0y (RE-FREEZE #30, M4): a trigger with `style` \"ckan_metadata\" decides ONCE for all primaries, so it requires `staleness.skip_scope` \"all_primaries\" (GR-2: `required`+`const`). `skip_scope` with NO `ckan_metadata` trigger is NOT refused here (still M3 + runtime Y2).",
+      "if": { "type": "object", "properties": { "staleness": { "type": "object", "properties": { "trigger": { "type": "array", "contains": { "type": "object", "required": ["style"], "properties": { "style": { "const": "ckan_metadata" } } } } }, "required": ["trigger"] } }, "required": ["staleness"] },
+      "then": { "properties": { "staleness": { "type": "object", "required": ["skip_scope"], "properties": { "skip_scope": { "const": "all_primaries" } } } } }
+    },
+    {
       "x-profile": "INGESTOR — write_discipline + retract + replay + empty_source all required (write_discipline/retract/replay are required on every write globally; what the profile adds is that outputs may not be \"none\"). AMENDED AT BATCH-2 ROW 3.1 c0e (2026-09-23): a write with a `columns[].bind: \"wkb_geometry\"` target REQUIRES a declared `outputs.writes[].geometry_kind`. SCOPED TO THIS PROFILE ON PURPOSE — the requirement is about the VALIDATOR, and only the ingest phase runs `validateGeometries`; a LINK/CASCADE/MATERIALIZER plan binds geometry from a server-side SELECT and never reads the kind, so a step-wide rule would force a fabricated value onto plans whose SQL ignores it (measured: a plan-level throw sent 0 write statements through the LINK dry-run path, REDing LW-D15 and Fold D). The INGESTOR is the archetype whose write is fed by `validateGeometries`, which is exactly the population that must declare the family. Global fields (columns/key/write_discipline/…) stay on the item; only the requirement moves.",
       "if": {
         "properties": {
@@ -4617,7 +4815,8 @@
                             "enum": [
                               "polygon",
                               "point",
-                              "line"
+                              "line",
+                              "multiline"
                             ]
                           }
                         }

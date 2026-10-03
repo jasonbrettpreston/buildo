@@ -5658,9 +5658,22 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
 // `docs/reports/witness/<slug>/<pre|post>/<invocation>.trace.json`. Returns
 // null when the row has no descriptor on disk (nothing for the gate to read —
 // an early ① pending step); otherwise a `{ answer, rows, hardStop }` from
-// evaluateWitness. `converted` status is REPORT-ONLY (never hard-stops until
-// P1-C8/C9), so `hardStop` is only ever true for a `pending` slug.
+// evaluateWitness. Fixture records (`docs/reports/witness/<slug>.fixture.json`,
+// P1-C4a) feed FAIL:FIXTURE rows and the declared ⊆ witnessed half of (a).
+// `converted` status is REPORT-ONLY (never hard-stops until P1-C8/C9), so
+// `hardStop` is only ever true for a `pending` slug.
 // ---------------------------------------------------------------------------
+function readFixtureRecords(slug) {
+  const abs = path.join(REPO_ROOT, 'docs', 'reports', 'witness', `${slug}.fixture.json`);
+  if (!existsSync(abs)) return {};
+  try {
+    const doc = JSON.parse(readFileSync(abs, 'utf8'));
+    return doc && typeof doc.suites === 'object' && doc.suites ? doc.suites : {};
+  } catch {
+    return { '<unreadable>': { reads: {}, writes: {}, violations: [], errors: ['unreadable-fixture-record'] } };
+  }
+}
+
 function witnessFor(row, descriptorInfo, computePath) {
   const witnessRoot = path.join(REPO_ROOT, 'docs', 'reports', 'witness', row.slug);
   const descriptorOnDisk = descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath));
@@ -5685,6 +5698,7 @@ function witnessFor(row, descriptorInfo, computePath) {
 
   const postTraces = readTraces('post');
   const preTraces = readTraces('pre');
+  const fixtureRecords = readFixtureRecords(row.slug);
 
   let explainedDiffs = [];
   const explainedPath = path.join(GOLDEN_ROOT, row.slug, 'explained-diffs.json');
@@ -5719,6 +5733,7 @@ function witnessFor(row, descriptorInfo, computePath) {
     postTraces,
     preTraces,
     explainedDiffs,
+    fixtureRecords,
   });
 }
 

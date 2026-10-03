@@ -1,0 +1,40 @@
+{
+  "fixture_version": 1,
+  "slug": "compute_parcel_cost_estimates",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/compute_parcel_cost_estimates/violations.test.ts": {
+      "reads": {
+        "archetype_cost_rates": [
+          "archetype",
+          "as_of_date",
+          "cost_adjustment_factor",
+          "cost_per_sqm",
+          "escalation_index_base",
+          "updated_at"
+        ],
+        "parcel_cost_lines": [
+          "archetype",
+          "base_confidence",
+          "fit_permitted_values",
+          "id",
+          "updated_at"
+        ],
+        "parcels": [
+          "cost_fb_total",
+          "cost_gut_total",
+          "cur_floor_gfa_sqm",
+          "max_buildable_gfa_sqm",
+          "nan",
+          "parcel_cost_menu",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "violations": [
+        "a:parcels.nan"
+      ],
+      "errors": []
+    }
+  }
+}

@@ -293,7 +293,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // load_wsib but its census row stayed "C5" (generate-conversion-roadmap.mjs threw); the
     // row now reads "pending", same move as rows 2.2/2.4. Returns to 0 at load_wsib ③.
     // 1 -> 0 at the row 3.5 CUTOVER (load_wsib ③, 2026-10-01): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at batch-2 row 3.4 commit ① (load_heritage): its census row flipped batch
+    // "C5" -> "pending" (the enrich_heritage row 2.2 commit 1 move). Returns to 0 at load_heritage ③.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });

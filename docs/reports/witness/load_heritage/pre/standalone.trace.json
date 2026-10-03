@@ -1,0 +1,297 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-heritage.js",
+  "chain": "none",
+  "source_fingerprint": null,
+  "git_head": "cfc4f80bf5a96b36a8c57c31aaf5329cf4b66971",
+  "header": {
+    "processes": 1,
+    "calls": 21,
+    "distinct": 14,
+    "utility": 10,
+    "tracer_self_ms": 96.848,
+    "wall_ms": 33753
+  },
+  "statements": [
+    {
+      "fingerprint": "319ea3ece49da25b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_properties": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "37c2010a3787397a",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "heritage_districts": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6d1fb27da56d506e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 29,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_heritage"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ac6674e4603d0ef6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8848,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 644,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c13c44447ade545e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 3,
+      "reads": {
+        "heritage_districts": [
+          "designated_date",
+          "geom",
+          "name",
+          "source_dataset_version"
+        ]
+      },
+      "writes": {
+        "heritage_districts": [
+          "bylaw_no",
+          "designated_date",
+          "geom",
+          "hcd_type",
+          "name",
+          "source_dataset_version",
+          "source_id",
+          "updated_at",
+          "wards"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ede7ab7788a9e3e9",
+      "kind": "write",
+      "count": 2,
+      "rowCount": 10,
+      "reads": {
+        "heritage_properties": [
+          "address_text",
+          "designated_date",
+          "geom",
+          "source_dataset_version",
+          "status"
+        ]
+      },
+      "writes": {
+        "heritage_properties": [
+          "address_text",
+          "building_type",
+          "bylaw_no",
+          "construction_year",
+          "designated_date",
+          "geom",
+          "htg_conser_name",
+          "reason",
+          "source_dataset_version",
+          "source_id",
+          "status",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "12736:3",
+      "write_fingerprints": [
+        "319ea3ece49da25b",
+        "ede7ab7788a9e3e9"
+      ]
+    },
+    {
+      "client": "12736:3",
+      "write_fingerprints": [
+        "37c2010a3787397a",
+        "c13c44447ade545e"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    },
+    "writes": {
+      "heritage_districts": [
+        "bylaw_no",
+        "designated_date",
+        "geom",
+        "hcd_type",
+        "name",
+        "source_dataset_version",
+        "source_id",
+        "updated_at",
+        "wards"
+      ],
+      "heritage_properties": [
+        "address_text",
+        "building_type",
+        "bylaw_no",
+        "construction_year",
+        "designated_date",
+        "geom",
+        "htg_conser_name",
+        "reason",
+        "source_dataset_version",
+        "source_id",
+        "status",
+        "updated_at"
+      ]
+    }
+  },
+  "errors": []
+}

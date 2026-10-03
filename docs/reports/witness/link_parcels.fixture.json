@@ -1,0 +1,64 @@
+{
+  "fixture_version": 1,
+  "slug": "link_parcels",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/link_parcels/witness-fixture.logic.test.ts": {
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_point_id",
+          "address_status",
+          "linear_name_normalized",
+          "maint_stage"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "addr_num_normalized",
+          "geom",
+          "id",
+          "street_name_normalized",
+          "street_type_normalized"
+        ],
+        "permit_parcels": [
+          "confidence",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "parcel_linked_at",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num",
+          "street_type"
+        ]
+      },
+      "writes": {
+        "permit_parcels": [
+          "confidence",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "parcel_linked_at"
+        ]
+      },
+      "violations": [],
+      "errors": [
+        "FAIL:INPUT:column:permit_num"
+      ]
+    }
+  }
+}

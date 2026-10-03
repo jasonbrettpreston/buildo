@@ -1,0 +1,163 @@
+{
+  "generated_from": "scripts/lib/step/write.js @ 3028d4ba (UNMODIFIED, before 0z1) — line arm geometryValidationSql('INTEGER','line',null,{}), one fixture per call, key 1 (the T9 test's own invocation)",
+  "fixtures": {
+    "a": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -79.4,
+          43.65
+        ],
+        [
+          -79.39,
+          43.66
+        ]
+      ]
+    },
+    "b": {
+      "type": "MultiLineString",
+      "coordinates": [
+        [
+          [
+            -79.4,
+            43.65
+          ],
+          [
+            -79.39,
+            43.66
+          ]
+        ],
+        [
+          [
+            -79.38,
+            43.67
+          ],
+          [
+            -79.37,
+            43.68
+          ]
+        ]
+      ]
+    },
+    "c": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -79.4,
+          43.65
+        ],
+        [
+          -79.4,
+          43.65
+        ]
+      ]
+    },
+    "d": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -79.4,
+          43.65
+        ],
+        [
+          -79.38,
+          43.67
+        ],
+        [
+          -79.4,
+          43.67
+        ],
+        [
+          -79.38,
+          43.65
+        ]
+      ]
+    },
+    "e": {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -79.4,
+              43.65
+            ],
+            [
+              -79.39,
+              43.66
+            ]
+          ]
+        },
+        {
+          "type": "Point",
+          "coordinates": [
+            -79.3,
+            43.7
+          ]
+        }
+      ]
+    },
+    "f": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -79.4,
+            43.65
+          ],
+          [
+            -79.39,
+            43.65
+          ],
+          [
+            -79.39,
+            43.66
+          ],
+          [
+            -79.4,
+            43.65
+          ]
+        ]
+      ]
+    }
+  },
+  "results": {
+    "a": {
+      "source_key": 1,
+      "status": "accepted",
+      "geom_wkb": "0102000000020000009a99999999d953c03333333333d34540295c8fc2f5d853c014ae47e17ad44540",
+      "is_valid_original": true
+    },
+    "b": {
+      "source_key": 1,
+      "status": "skipped_unsupported_type",
+      "geom_wkb": "0105000000020000000102000000020000009a99999999d953c03333333333d34540295c8fc2f5d853c014ae47e17ad44540010200000002000000b81e85eb51d853c0f6285c8fc2d5454048e17a14aed753c0d7a3703d0ad74540",
+      "is_valid_original": true
+    },
+    "c": {
+      "source_key": 1,
+      "status": "skipped_null",
+      "geom_wkb": "010200000000000000",
+      "is_valid_original": false
+    },
+    "d": {
+      "source_key": 1,
+      "status": "accepted",
+      "geom_wkb": "0102000000040000009a99999999d953c03333333333d34540b81e85eb51d853c0f6285c8fc2d545409a99999999d953c0f6285c8fc2d54540b81e85eb51d853c03333333333d34540",
+      "is_valid_original": true
+    },
+    "e": {
+      "source_key": 1,
+      "status": "collection_extracted",
+      "geom_wkb": "0102000000020000009a99999999d953c03333333333d34540295c8fc2f5d853c014ae47e17ad44540",
+      "is_valid_original": true
+    },
+    "f": {
+      "source_key": 1,
+      "status": "skipped_null",
+      "geom_wkb": "010200000000000000",
+      "is_valid_original": true
+    }
+  }
+}

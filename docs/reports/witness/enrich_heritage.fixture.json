@@ -1,0 +1,46 @@
+{
+  "fixture_version": 1,
+  "slug": "enrich_heritage",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts": {
+      "reads": {
+        "heritage_districts": [
+          "designated_date",
+          "geom",
+          "id"
+        ],
+        "heritage_properties": [
+          "designated_date",
+          "geom",
+          "id",
+          "status"
+        ],
+        "parcels": [
+          "addr_num_normalized",
+          "geom",
+          "heritage_dataset_version_when_enriched",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "id",
+          "is_heritage_designated",
+          "street_name_normalized",
+          "street_type_normalized",
+          "zoning_class"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "heritage_dataset_version_when_enriched",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "is_heritage_designated"
+        ]
+      },
+      "violations": [
+        "a:parcels.zoning_class"
+      ],
+      "errors": []
+    }
+  }
+}

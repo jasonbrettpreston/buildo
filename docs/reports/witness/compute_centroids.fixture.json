@@ -1,0 +1,26 @@
+{
+  "fixture_version": 1,
+  "slug": "compute_centroids",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/compute_centroids/runtime.logic.test.ts": {
+      "reads": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "geom",
+          "geometry",
+          "id"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      },
+      "violations": [],
+      "errors": []
+    }
+  }
+}

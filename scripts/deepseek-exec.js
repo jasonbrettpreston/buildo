@@ -42,6 +42,9 @@ const BLOCKED_CODES = new Set([
   'PATH_OUTSIDE_REPO', 'PATH_DENIED', 'SECRET_DENIED',
   'COMMAND_NOT_ALLOWED', 'FLAG_NOT_ALLOWED', 'TOO_LARGE',
   'PATH_NOT_LEDGERED', 'FLAG_REFUSED', 'COMMITTER_BUSY',
+  // WF3 engine-no-commit (2026-10-03): git_commit called without the brief's
+  // `allow_commit: true` (the tool was never offered).
+  'COMMIT_NOT_ALLOWED',
   // Step 9 panel fold, F-CR1: 'NOT_IMPLEMENTED' removed — every tool has a
   // real handler; the code is no longer reachable (exec-tools.js's dead
   // notImplementedHandler fallback was deleted in the same fold).
@@ -345,7 +348,9 @@ async function runEngine(opts = {}) {
   // fold, F-DS7: every declared glob is normalised (leading `./`,
   // backslashes, repeated slashes) once here, so every downstream consumer
   // (write-scope matching, claim-scope overlap) compares the same string.
-  const { writeScope: rawWriteScope } = parseBrief(briefContent);
+  // WF3 engine-no-commit (2026-10-03): `allow_commit` (default false) — when
+  // false, git_commit is never offered to the model and is refused if called.
+  const { writeScope: rawWriteScope, allowCommit } = parseBrief(briefContent);
   const writeScope = rawWriteScope.map(normalizeGlob);
 
   const resolved = resolveProvider(opts.provider, process.env.EXECUTION_PROVIDER);
@@ -406,7 +411,7 @@ async function runEngine(opts = {}) {
         kind: 'run_start', provider, provider_source: providerSource, model, repo_root: repoRoot,
         head_sha: headSha, branch, brief_path: briefAbs, brief_sha256: briefSha256, policy_sha256: policySha256,
         budgets: { max_iterations: maxIterations, max_total_tokens: maxTotalTokens }, engine_version: ENGINE_VERSION,
-        write_scope: writeScope, claim_id: null,
+        write_scope: writeScope, allow_commit: allowCommit, claim_id: null,
       });
       ledger.append({ kind: 'error', code: 'SCOPE_GLOB_UNANCHORED', message: `write_scope glob(s) not directory-anchored: ${unanchored.join(', ')}` });
       ledger.append({
@@ -428,7 +433,7 @@ async function runEngine(opts = {}) {
           kind: 'run_start', provider, provider_source: providerSource, model, repo_root: repoRoot,
           head_sha: headSha, branch, brief_path: briefAbs, brief_sha256: briefSha256, policy_sha256: policySha256,
           budgets: { max_iterations: maxIterations, max_total_tokens: maxTotalTokens }, engine_version: ENGINE_VERSION,
-          write_scope: writeScope, claim_id: null,
+          write_scope: writeScope, allow_commit: allowCommit, claim_id: null,
         });
         ledger.append({
           kind: 'run_end', status: 'claim_conflict', iterations: 0, usage_total: emptyUsage(),
@@ -487,6 +492,7 @@ async function runEngine(opts = {}) {
       budgets: { max_iterations: maxIterations, max_total_tokens: maxTotalTokens },
       engine_version: ENGINE_VERSION,
       write_scope: writeScope,
+      allow_commit: allowCommit,
       claim_id: claimId,
     };
     ledger.append(runStart);
@@ -523,7 +529,7 @@ async function runEngine(opts = {}) {
 
     const startedAt = Date.now();
     const runState = { readState: {} };
-    const tools = createTools({ repoRoot, policy, ledger, runState, runId, model, writeScope });
+    const tools = createTools({ repoRoot, policy, ledger, runState, runId, model, writeScope, allowCommit });
 
     let modelClient = opts.modelClient;
     if (!modelClient) {
@@ -544,8 +550,12 @@ async function runEngine(opts = {}) {
     const systemPrompt = [
       'You are the DeepSeek Execution Engine (SUB-ENG-1) operating on a real git worktree.',
       'You have exactly the tools listed in this turn\'s tool schemas. Every call must include a "reason".',
-      `git_commit.message's first line MUST match this pattern: ${policy.commit_message_pattern}`,
-      'If git_commit returns COMMITTER_BUSY, wait by doing useful verification work (another read-only check) and retry once; if it returns INDEX_DIRTY, stop and report — never try to clear the index.',
+      ...(allowCommit
+        ? [
+          `git_commit.message's first line MUST match this pattern: ${policy.commit_message_pattern}`,
+          'If git_commit returns COMMITTER_BUSY, wait by doing useful verification work (another read-only check) and retry once; if it returns INDEX_DIRTY, stop and report — never try to clear the index.',
+        ]
+        : ['You cannot commit in this run (the brief does not set allow_commit: true): leave your changes uncommitted in the worktree — the orchestrator lands commits.']),
       '',
       briefContent,
     ].join('\n');
@@ -599,7 +609,7 @@ async function runEngine(opts = {}) {
       return {
         status, run_id: runId, ledger_path: ledger.path,
         iterations: iteration, usage_total: usageTotal, tool_calls_total: toolCallsTotal,
-        blocked_total: blockedTotal, commits,
+        blocked_total: blockedTotal, commits, allow_commit: allowCommit,
       };
     }
 

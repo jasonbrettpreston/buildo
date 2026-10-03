@@ -1,0 +1,30 @@
+{
+  "fixture_version": 1,
+  "slug": "enrich_ravines",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/enrich_ravines/witness-fixture.logic.test.ts": {
+      "reads": {
+        "parcels": [
+          "geom",
+          "id",
+          "is_in_ravine_protection_area",
+          "ravine_dataset_version_when_enriched",
+          "ravine_distance_m"
+        ],
+        "ravines": [
+          "geom"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "is_in_ravine_protection_area",
+          "ravine_dataset_version_when_enriched",
+          "ravine_distance_m"
+        ]
+      },
+      "violations": [],
+      "errors": []
+    }
+  }
+}

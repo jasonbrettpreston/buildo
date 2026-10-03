@@ -300,6 +300,7 @@ dedicated test files went unnamed.
   - `scripts/link-parcels.notes.json`
   - `scripts/lib/compute/link-parcels.js`
   - `src/tests/steps/link_parcels/violations.test.ts`
+  - `src/tests/steps/link_parcels/witness-fixture.logic.test.ts`
   - data: `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` writes (migrations/012_permit_parcels.sql); `permits` reads (migrations/001_permits.sql)
   - upstream: address_points · compute_centroids · geocode_permits · link_parcel_addresses · parcels · permits
   - downstream: compute_cost_estimates · enrich_permits
@@ -310,6 +311,7 @@ dedicated test files went unnamed.
   - `scripts/link-neighbourhoods.notes.json`
   - `scripts/lib/compute/link-neighbourhoods.js`
   - `src/tests/steps/link_neighbourhoods/violations.test.ts`
+  - `src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts`
   - data: `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: geocode_permits · neighbourhoods · parcels · permits
   - downstream: compute_storey_norms
@@ -330,6 +332,7 @@ dedicated test files went unnamed.
   - `scripts/refresh-snapshot.notes.json`
   - `scripts/lib/compute/refresh-snapshot.js`
   - `src/tests/steps/refresh_snapshot/violations.test.ts`
+  - `src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts`
   - data: `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
   - upstream: compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · link_coa_to_parcels
   - downstream: none
@@ -349,6 +352,7 @@ dedicated test files went unnamed.
   - `scripts/quality/assert-engine-health.descriptor.json`
   - `scripts/lib/compute/assert-engine-health.js`
   - `src/tests/steps/assert_engine_health/violations.test.ts`
+  - `src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts`
   - data: `engine_health_snapshots` writes (migrations/051_engine_health_snapshots.sql); `pg_stat_user_tables` reads (no CREATE migration)
   - upstream: none
   - downstream: none

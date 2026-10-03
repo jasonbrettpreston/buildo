@@ -149,13 +149,17 @@ export function hookedClient(turns: Turn[], hooks: Record<number, () => void> = 
  * be there, `['**']` is the honest default for a test that isn't exercising
  * scope itself. Pass `{ writeScope: null }` (or `{ writeScope: [] }`) for the
  * NO_WRITE_SCOPE lock, or a narrow glob array for the PATH_OUT_OF_SCOPE lock.
+ * Pass `{ allowCommit: true }` (emits `allow_commit: true`) for a lock that
+ * exercises git_commit itself — WF3 engine-no-commit (2026-10-03): git_commit
+ * is offered ONLY when the brief allows it (default false).
  */
-export function writeBrief(repo: string, opts?: { writeScope?: string[] | null }): string {
+export function writeBrief(repo: string, opts?: { writeScope?: string[] | null; allowCommit?: boolean }): string {
   const briefPath = path.join(repo, 'brief.md');
   const scope = opts && Object.prototype.hasOwnProperty.call(opts, 'writeScope') ? opts.writeScope : ['**'];
+  const commitLine = opts && opts.allowCommit === true ? 'allow_commit: true\n' : '';
   const frontMatter = (scope === null || scope === undefined || scope.length === 0)
     ? ''
-    : `---\nwrite_scope:\n${scope.map((g) => `- ${g}`).join('\n')}\n---\n`;
+    : `---\nwrite_scope:\n${scope.map((g) => `- ${g}`).join('\n')}\n${commitLine}---\n`;
   fs.writeFileSync(briefPath, `${frontMatter}test brief\n`);
   return briefPath;
 }

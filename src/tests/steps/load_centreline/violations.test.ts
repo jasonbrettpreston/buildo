@@ -46,8 +46,11 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('load_centreline', __filename);
 const STEP_DIR_REL = 'src/tests/steps/load_centreline';
 
 const STEP_REL = 'scripts/load-centreline.js';
@@ -419,7 +422,7 @@ describe('row 3.2 — coerceKey and the BIGINT key join (loader :141-146; write.
     expect(plan.validation_sql, 'a line-kind plan MUST carry its validator SQL — the kind selects the repair/accept arm').toContain('unnest($1::BIGINT[])');
     // node-pg's defaults deliver `int8` as a STRING (this repo installs no setTypeParser), so the
     // stub's row keys are the STRINGS below — the join is normalized on BOTH sides, not Number()-ed.
-    const pool = {
+    const pool = guard.wrap({
       query: async () => ({
         rows: [
           { source_key: '60078796', status: 'accepted', is_valid_original: true, geom_wkb: 'W1' },
@@ -427,7 +430,7 @@ describe('row 3.2 — coerceKey and the BIGINT key join (loader :141-146; write.
           { source_key: '30000000', status: 'accepted', is_valid_original: true, geom_wkb: 'W3' },
         ],
       }),
-    };
+    });
     const features = [
       { source_id: 60078796, geojson: '{}' },
       { source_id: 1, geojson: '{}' },

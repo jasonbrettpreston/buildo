@@ -262,7 +262,7 @@ function targetKey(index) {
  * `toronto_centreline.geom` (`GEOMETRY(LineString, 4326)`), whose consumer
  * `enrich-centreline.js` requires a true LineString and never a Multi.
  */
-const GEOMETRY_KINDS = Object.freeze(['polygon', 'point', 'line']);
+const GEOMETRY_KINDS = Object.freeze(['polygon', 'point', 'line', 'multiline']);
 
 /**
  * The declared REPAIR arm (prerequisite 0t, 2026-09-24, Spec 124 Rule 1, Spec 122 §5.1).
@@ -281,13 +281,14 @@ const GEOMETRY_KINDS = Object.freeze(['polygon', 'point', 'line']);
 const GEOMETRY_REPAIRS = Object.freeze(['make_valid', 'none']);
 
 /** The declared geometry families and the ST_CollectionExtract type code each one keeps. */
-const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1, line: 2 });
+const GEOMETRY_KIND_EXTRACT_TYPE = Object.freeze({ polygon: 3, point: 1, line: 2, multiline: 2 });
 
 /** The accepted ST_GeometryType() set per kind — a polygon target refuses a Point, and vice versa. */
 const GEOMETRY_KIND_ACCEPTED_TYPES = Object.freeze({
   polygon: "('ST_Polygon','ST_MultiPolygon')",
   point: "('ST_Point')",
   line: "('ST_LineString')",
+  multiline: "('ST_LineString','ST_MultiLineString')",
 });
 
 /**
@@ -385,6 +386,13 @@ function geometryFinalExpr(geometryKind, repair = 'make_valid') {
   if (geometryKind === 'polygon') {
     return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 3), repaired))';
   }
+  if (geometryKind === 'multiline') {
+    // Legacy zoning LineString family (Spec 58 F-M9, :220): always wrap the multi, exactly
+    // as polygon does. The `line` arm's single-member collapse would turn a MultiLineString
+    // extract back into a LineString and fail the column type; a MultiLineString column
+    // takes both members, so no collapse is wanted here.
+    return 'ST_Multi(COALESCE(ST_CollectionExtract(repaired, 2), repaired))';
+  }
   if (geometryKind === 'line') {
     // LineString: same single-member-collapse shape as point, over extract type 2. A
     // MultiLineString extract stays multi and is counted skipped_unsupported_type by the
@@ -410,7 +418,7 @@ class MissingGeometryKindError extends Error {
     super(`[write_discipline] ${table}: a column declares bind "wkb_geometry" but the write `
       + 'declares no geometry_kind. The geometry family selects the validator repair/accept '
       + 'path (polygon vs point vs line) and is DECLARED, never sniffed from the payload — declare '
-      + '"geometry_kind": "polygon" | "point" | "line" on the write (scripts/steps/_schema/step.schema.json).');
+      + '"geometry_kind": "polygon" | "point" | "line" | "multiline" on the write (scripts/steps/_schema/step.schema.json).');
     this.name = 'MissingGeometryKindError';
   }
 }
@@ -464,6 +472,42 @@ class InvalidGeometryRepairError extends Error {
   }
 }
 
+/**
+ * The declared LINE-VALIDITY arm (0z1, 2026-10-02, Spec 124 Rule 1, Spec 122 §5.1).
+ *
+ * `length_and_simple` reproduces the legacy zoning LineString reject rule (Spec 58 F-M9,
+ * `docs/specs/01-pipeline/58_source_zoning_bylaw.md` :49, :220): the SOURCE geometry must be
+ * non-degenerate AND simple, and a failing row is `discarded`. It is a SECOND, separately
+ * declared fact — never folded into a geometry family name — because it renders different
+ * statement TEXT into the validator's CASE (:geometryValidationSql). ABSENT = no test: every
+ * descriptor that declares nothing keeps the byte-identical text the T0/T2/T5 locks pin.
+ */
+const LINE_VALIDITIES = Object.freeze(['length_and_simple']);
+
+/**
+ * A NAMED runtime backstop: an `outputs.writes[].line_validity` that is not the one declared arm
+ * (Spec 124 Rule 1, Spec 122 §5.1, 0z1). The schema types it `enum: ["length_and_simple"]`, so
+ * reaching this is a descriptor that bypassed the loader — or a caller that built the SQL from an
+ * unvalidated value, which is the only way the interpolated CASE arm could be reached with a
+ * status name nothing declares.
+ */
+class InvalidLineValidityError extends Error {
+  constructor(table, value) {
+    super(`[write_discipline] ${table}: unknown line_validity ${JSON.stringify(value)} `
+      + `(expected ${LINE_VALIDITIES.map((v) => `'${v}'`).join(' or ')}). It selects whether the `
+      + 'validator rejects a degenerate or self-crossing SOURCE line (Spec 58 F-M9) — a rendered '
+      + 'difference in statement text, so it is validated by the schema '
+      + '(scripts/steps/_schema/step.schema.json, "line_validity") and asserted by name here.');
+    this.name = 'InvalidLineValidityError';
+  }
+}
+
+/** Validate a DECLARED line_validity, throwing by name — never a silent "no test". */
+function assertLineValidity(lineValidity, table) {
+  if (!LINE_VALIDITIES.includes(lineValidity)) throw new InvalidLineValidityError(table, lineValidity);
+  return lineValidity;
+}
+
 /** Validate a DECLARED geometry_repair, throwing by name — never a silent make_valid default. */
 function assertGeometryRepair(repair, table) {
   if (!GEOMETRY_REPAIRS.includes(repair)) throw new InvalidGeometryRepairError(table, repair);
@@ -492,7 +536,7 @@ class ValidationKeyMissError extends Error {
   }
 }
 
-const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = 'make_valid', derived = [] } = {}) => {
+const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = 'make_valid', derived = [], lineValidity = null } = {}) => {
   // The polygon arm is BYTE-IDENTICAL to the pre-geometry_kind text (pinned by T2 in
   // step-library.logic.test.ts). The geometry_kind param is additive: an unknown/absent
   // value is asserted before any text is built, so the polygon default is never silent.
@@ -521,6 +565,8 @@ const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = '
   // expression differs: the four statuses, `is_valid_original` and `geom_wkb` keep their
   // meanings, reporting the geometry the caller asked to store.
   assertGeometryRepair(repair, 'geometryValidationSql');
+  // `line_validity` (Spec 58 F-M9; plan 0z1 §3c). Declared-only: absent = no new text.
+  if (lineValidity != null) assertLineValidity(lineValidity, 'geometryValidationSql');
   const repairExpr = repair === 'none' ? 'geom' : 'ST_MakeValid(geom)';
   const finalExpr = geometryFinalExpr(geometryKind, repair);
   const accepted = GEOMETRY_KIND_ACCEPTED_TYPES[geometryKind];
@@ -541,6 +587,16 @@ const geometryValidationSql = (keyType, geometryKind, geometrySrid, { repair = '
   const derivedExprs = derived.map((e) => `,\n           ${derivedMeasureExpr(e)} AS ${e.name}`);
   const derivedNames = derived.map((e) => `,\n    ${e.name}`);
   const derivedSelect = derived.map((e) => `,\n       ${e.name}`);
+  const lineOkExpr = lineValidity == null
+    ? ''
+    : `,
+           (ST_Length(geom::geography) > 0 AND ST_IsSimple(geom)) AS line_ok`;
+  const lineOkName = lineValidity == null ? '' : `,
+    line_ok`;
+  const lineOkArm = lineValidity == null
+    ? ''
+    : `
+         WHEN NOT line_ok                                                     THEN 'skipped_degenerate_line'`;
   return `
 WITH input AS (
   SELECT s.source_key, ${geomExpr} AS geom
@@ -552,16 +608,16 @@ validated AS (
     source_key,
     ST_GeometryType(repaired) AS repaired_type,
     ${finalExpr} AS geom_final,
-    is_valid_original${derivedNames.join('')}
+    is_valid_original${derivedNames.join('')}${lineOkName}
   FROM (
     SELECT source_key,
            ST_IsValid(geom)   AS is_valid_original,
-           ${repairExpr} AS repaired${derivedExprs.join('')}
+           ${repairExpr} AS repaired${derivedExprs.join('')}${lineOkExpr}
       FROM input
   ) s
 )
 SELECT source_key,
-       CASE
+       CASE${lineOkArm}
          WHEN ST_GeometryType(geom_final) IN ${accepted}
               AND NOT ST_IsEmpty(geom_final)
               AND repaired_type = 'ST_GeometryCollection'                       THEN 'collection_extracted'
@@ -721,6 +777,22 @@ function buildWritePlan(writeSpec, descriptor) {
   // it is orthogonal to the family, and a non-validating LINK/CASCADE plan simply never reads
   // it (its `validation_sql` is null and `validateGeometries` is not in the call graph).
   const geometryRepair = writeSpec.geometry_repair ?? 'make_valid';
+  // A DECLARED Source-line validity test (0z1, 2026-10-02, Spec 124 Rule 1, Spec 122 §5.1).
+  // Mirror of `geometryRepair` in every respect that matters here: OPTIONAL (absent ⇒ `null`,
+  // meaning "no test", the byte-identical text), CARRIED on the plan, and validated by the
+  // SCHEMA — with the builder asserting a bad value by name first, because the declared value
+  // renders an extra arm into the validator's CASE, not just a plan field. The schema's Z-I1
+  // (single source of truth: `const "multiline"`) is re-asserted here for a loader-bypassing
+  // descriptor; this adds NO position for a second binding, only the refusal for the one field.
+  const lineValidity = writeSpec.line_validity ?? null;
+  if (lineValidity !== null) assertLineValidity(lineValidity, 'buildWritePlan');
+  // A2 (F17): the line_validity / geometry family coupling. Inserted IMMEDIATELY after the line
+  // that resolves `geometryKind`:
+  //   `  const geometryKind = geometryColumns.length > 0 ? (writeSpec.geometry_kind ?? null) : null;`
+  //   (`scripts/lib/step/write.js:704`, count 1)
+  // both refusals sit AFTER `geometryKind` AND `geometryRepair` are defined:
+  if (lineValidity !== null && geometryKind !== 'multiline') throw new Error('buildWritePlan: line_validity requires geometry_kind "multiline"');
+  if (geometryKind === 'multiline' && geometryRepair === 'none') throw new Error('buildWritePlan: geometry_repair "none" is not allowed with "multiline"');
   // A DECLARED measure of the geometry (prerequisite 0u, Spec 124 Rule 1, Spec 122 §5.1).
   //
   // `columns[].derived_from_geometry` says "this column's value is a measure of the source
@@ -1196,6 +1268,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // read it without re-parsing the SQL. `'make_valid'` when the descriptor declares
     // nothing, which is exactly the pre-0t text.
     geometry_repair: geometryRepair,
+    line_validity: lineValidity,
     // The DECLARED derived measures (prerequisite 0u) — `{name, measure, unit, scale}` in
     // declaration order, EMPTY for every descriptor that declares none. Carried on the plan so
     // `validateGeometries` (which carries each returned value onto the row) and a plan-shape
@@ -1209,7 +1282,7 @@ function buildWritePlan(writeSpec, descriptor) {
     // carries `validation_sql: null` HERE and the missing kind is diagnosed by
     // `validateGeometries` — the one caller that can reach it. LINK/CASCADE plans build and
     // execute with no validator SQL at all, exactly as they did before this field existed.
-    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid, { repair: geometryRepair, derived: derivedColumns }),
+    validation_sql: geometryKind === null ? null : geometryValidationSql(keyType, geometryKind, geometrySrid, { repair: geometryRepair, derived: derivedColumns, lineValidity }),
     key_sql_type: keyType,
     // The single-row form: what the batched statement looks like at rowCount 1.
     upsert_sql: head + valuesGroup(1) + tail,
@@ -2046,9 +2119,12 @@ module.exports = {
   GEOMETRY_KIND_ACCEPTED_TYPES,
   MissingGeometryKindError,
   InvalidGeometryRepairError,
+  InvalidLineValidityError,
   DerivedMeasureError,
   DERIVED_UNIT_FACTOR,
+  LINE_VALIDITIES,
   assertGeometryKind,
+  assertLineValidity,
   InvalidGeometrySridError,
   ValidationKeyMissError,
   WRITTEN_INSERT_ONLY,

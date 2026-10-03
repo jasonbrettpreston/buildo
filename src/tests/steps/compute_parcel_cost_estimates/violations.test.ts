@@ -20,8 +20,12 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this step's descriptor.
+const guard = witnessGuard('compute_parcel_cost_estimates', __filename);
 
 const STEP_REL = 'scripts/compute-parcel-cost-estimates.js';
 const COMPUTE_REL = 'scripts/lib/compute/compute-parcel-cost-estimates.js';
@@ -286,14 +290,14 @@ describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs,
   // cost_by_zone Σ-identity holds trivially and never masks the assertion under test.
   function stubPool(freshRow: Record<string, unknown>, scanned: number) {
     const zoneRows = [{ zone: 'RD', parcels: scanned, menus: 0, empty_menus: 0, p50_cost_fb: null, max_cost_gut: null }];
-    return {
+    return guard.wrap({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       query: async (sql: string): Promise<any> => {
         if (sql.includes('AS pct')) return { rows: [{ pct: 100 }] };
         if (sql.includes('GROUP BY 1')) return { rows: zoneRows };
         return { rows: [freshRow] };
       },
-    };
+    });
   }
 
   async function runPost(freshRow: Record<string, unknown>, scanned = 5) {
@@ -347,7 +351,7 @@ describe('compute_parcel_cost_estimates — CPCE FOLD A2: readCostContract parce
   const ONE_RATE_ROW = [{ archetype: 'FB', cost_per_sqm: 100, cost_adjustment_factor: 1, escalation_index_base: 100 }];
 
   function stubPool(linesRows: unknown[], sigExtra: Record<string, unknown> = {}) {
-    return {
+    return guard.wrap({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       query: async (sql: string): Promise<any> => {
         if (sql.includes('AS rates_as_of')) {
@@ -356,7 +360,7 @@ describe('compute_parcel_cost_estimates — CPCE FOLD A2: readCostContract parce
         if (sql.includes('base_confidence')) return { rows: linesRows };
         return { rows: ONE_RATE_ROW };
       },
-    };
+    });
   }
 
   it('throws naming parcel_cost_lines + migration 248 on zero rows', async () => {

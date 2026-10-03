@@ -10,7 +10,9 @@
  * --derive commits docs/reports/golden/massing/forced/cohort.json: a deterministic
  *   sample of building_footprints rows picked ONLY so that its perturbation is a
  *   valid R-AS forced change:
- *     D = 500 rows that (a) are referenced by NO parcel_buildings row (so the
+ *     D = 200 since 2026-10-02 (operator ruling; was 500 per fold SF-5 — only 227 rows
+ *         qualified after link_massing run 2184).
+ *     D = 200 rows that (a) are referenced by NO parcel_buildings row (so the
  *         DELETE cannot hit parcel_buildings' FK to building_footprints.id, which
  *         has NO cascade), (b) have a stored geom byte-identical to a fresh legacy
  *         re-derivation, (c) have both areas equal to that re-derivation, and
@@ -215,7 +217,7 @@ async function derive(args) {
     // D/U/E MUST stay disjoint, or the DELETE and a +1 UPDATE fight over the same row. Each later
     // set therefore excludes against the ALREADY-CLAMPED members of the earlier ones (never the
     // pre-clamp tail), and every set excludes the --exclude ids (M-D3 churn).
-    const dIds = new Set(clamp(d, 500));
+    const dIds = new Set(clamp(d, 200));
     const u = (await readOnlyQuery(pool, `SELECT bf.${PK} ${baseWhere(uPredicate)} ORDER BY bf.${PK} LIMIT 900`))
       .filter((r) => !excludeSet.has(r[PK]) && !dIds.has(r[PK]));
     const uIds = new Set(clamp(u, 200));
@@ -225,7 +227,7 @@ async function derive(args) {
       .map((r) => r[PK]);
 
     if (negative.length !== 17) throw new Error(`negative control is ${negative.length} rows, expected 17 (NOT ST_IsValid(geom))`);
-    if (d.length < 500) throw new Error(`only ${d.length} drift-free unreferenced rows qualify for D (need 500)`);
+    if (d.length < 200) throw new Error(`only ${d.length} drift-free unreferenced rows qualify for D (need 200)`);
     if (u.length < 200) throw new Error(`only ${u.length} rows qualify for U (need 200)`);
     if (e.length < 50) throw new Error(`only ${e.length} rows qualify for E (need 50)`);
 
@@ -241,7 +243,7 @@ async function derive(args) {
         legacy_geom: LEGACY_GEOM,
         exclude: args.exclude ? `P-M probe duplicate-key groups from ${args.exclude}` : null,
       },
-      D: clamp(d, 500),
+      D: clamp(d, 200),
       U: clamp(u, 200),
       E: clamp(e, 50),
       negative_control: negative,
@@ -365,7 +367,7 @@ async function run(args) {
     // The FIRST summary is the run under test. A POST capture path (golden/<slug>/post/*.json)
     // makes the harness run the step a SECOND time (the two-run zero-writes proof, conversion-
     // simplification item 7), whose summary reads 0/0 by design; `.pop()` read that second run
-    // and failed a genuine 500/200 forced run (measured 2026-09-28, row 3.6 ②).
+    // and failed a genuine 500/200 forced run (measured 2026-09-28, row 3.6 ②) — D lowered to 200 by operator ruling 2026-10-02 (227 qualify after run 2184).
     const summaryLine = out.split('\n').find((l) => l.startsWith('PIPELINE_SUMMARY:'));
     if (!summaryLine) throw new Error('no PIPELINE_SUMMARY line in the harness output');
     const summary = JSON.parse(summaryLine.slice('PIPELINE_SUMMARY:'.length));
@@ -419,7 +421,7 @@ Usage:
       [--step=scripts/load-massing.js] --out=<capture json>
 
   --derive   SELECT-only (READ ONLY txn). Writes ${path.relative(REPO_ROOT, COHORT_PATH)}:
-             D=${'{500}'} unreferenced, geom/area drift-free, valid rows (Fold SF-5);
+             D=${'{200}'} unreferenced, geom/area drift-free, valid rows (Fold SF-5);
              U=200 max_height_m rows (+1, forces stories); E=50 elev_z rows (+1, M-D4 witness);
              negative_control = every NOT ST_IsValid(geom) row (asserted 17); baseline_hash.
              --exclude drops the P-M probe's duplicate-key group source_ids (M-D3 churn) from D/U/E.

@@ -1,0 +1,50 @@
+{
+  "fixture_version": 1,
+  "slug": "address_points",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/address_points/witness-fixture.logic.test.ts": {
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_point_id",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name"
+        ]
+      },
+      "violations": [],
+      "errors": []
+    }
+  }
+}
