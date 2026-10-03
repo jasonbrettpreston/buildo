@@ -335,8 +335,11 @@ const TOOL_SCHEMAS = {
   },
 };
 
-function buildOpenAiSchemas() {
-  return Object.keys(TOOL_SCHEMAS).map((name) => ({
+// WF3 engine-no-commit (2026-10-03): `git_commit` is offered to the model
+// ONLY when the brief declares `allow_commit: true` (§C.6.1) — measured
+// 2026-10-02, the engine committed f9063dce despite a "never commit" brief.
+function buildOpenAiSchemas({ allowCommit = false } = {}) {
+  return Object.keys(TOOL_SCHEMAS).filter((name) => allowCommit || name !== 'git_commit').map((name) => ({
     type: 'function',
     function: {
       name,
@@ -1498,9 +1501,11 @@ async function gitCommitHandler(args, ctx) {
  * §C.1.8's `git_commit` PATH_NOT_LEDGERED check lives at
  * `runState.writtenPaths`, a Set of absolute paths, both populated by
  * write_file/edit_file on success). `runId`/`model` are threaded through for
- * the git_commit trailer and the committer-lock payload.
+ * the git_commit trailer and the committer-lock payload. `allowCommit`
+ * (default false, from the brief's `allow_commit`) gates whether git_commit
+ * is in `schemas` and dispatchable at all.
  */
-function createTools({ repoRoot, policy, ledger, runState, runId, model, committerLockPath, writeScope } = {}) {
+function createTools({ repoRoot, policy, ledger, runState, runId, model, committerLockPath, writeScope, allowCommit = false } = {}) {
   if (!repoRoot) {
     throw new Error('createTools requires repoRoot');
   }
@@ -1523,6 +1528,15 @@ function createTools({ repoRoot, policy, ledger, runState, runId, model, committ
   };
 
   async function dispatch(name, args) {
+    // WF3 engine-no-commit: a git_commit call when the brief did not allow it
+    // (the tool was never offered) is refused before validation or any git
+    // operation — nothing staged, nothing committed.
+    if (name === 'git_commit' && allowCommit !== true) {
+      return {
+        toolResult: { ok: false, error: { code: 'COMMIT_NOT_ALLOWED', message: 'git_commit is not available in this run: the brief does not set allow_commit: true — the orchestrator lands commits' } },
+        duration_ms: 0,
+      };
+    }
     // §C.1.10 — validation happens before ANY handler executes.
     validateArgs(name, args);
     // Every schema-validated tool name has a real handler (the handlers
@@ -1555,7 +1569,7 @@ function createTools({ repoRoot, policy, ledger, runState, runId, model, committ
   }
 
   return {
-    schemas: buildOpenAiSchemas(),
+    schemas: buildOpenAiSchemas({ allowCommit: allowCommit === true }),
     dispatch,
     // exposed for commits 3/4 to register real handlers without a second
     // factory function, and for the fences test suite to introspect.
