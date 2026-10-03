@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-schema.js",
   "chain": "permits",
-  "source_fingerprint": "f01d0b5b2b10c59a1bc0230fc1b4707ec831224ee513b717a149b6a1bbf979cd",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "363c20e390accf17926d26849685793018f0347803a182ea1312d2868a8ded89",
+  "git_head": "9bdb8f30640c90250fe8ca6cb46df79a80722b05",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 9,
     "utility": 4,
-    "tracer_self_ms": 14.769,
-    "wall_ms": 9123
+    "tracer_self_ms": 21.819,
+    "wall_ms": 3385
   },
   "statements": [
     {
@@ -49,7 +49,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 254,
+      "rowCount": 261,
       "reads": {},
       "writes": {},
       "excluded": [
