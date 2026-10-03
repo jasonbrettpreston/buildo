@@ -11,9 +11,12 @@
 // the registry cannot answer, not getting a plausible-looking wrong one.
 //
 // No DB, no writes: the whole answer is the census, the capture-step-golden derivation, the
-// committed cross-step ledger and consumer-registry.json, plus a read-only `git grep` ADVISORY
-// half. The ADVISORY half is INFORMATION, never a gate — its readers are the readers the registry
-// does not own, and its tests are naming collisions, not violations.
+// committed cross-step ledger and consumer-registry.json, plus a read-only ADVISORY half. The
+// ADVISORY half is INFORMATION, never a gate — it is the census row and the tests that name the
+// step (naming collisions, not violations). src/ SQL readers are no longer grepped: they are
+// generated consumer rows (consumer source #5 from `scripts/steps/_schema/src-sql-ledger.json`)
+// shown in the DECLARED `consumers:` line, and the DECLARED vs OBSERVED section compares the
+// effective ledger row with the committed witness traces + fixture records.
 
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -27,6 +30,8 @@ import {
   stepFiles,
   resolveStep,
   renderStepEntry,
+  loadObserved,
+  renderDeclaredVsObserved,
 } from './gates/step-registry.mjs';
 
 /** The ADVISORY reader/test sections print at most this many findings, then a `(+N more)` line. */
@@ -55,44 +60,6 @@ function grepFiles(term, paths, cwd, wordBoundary) {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-}
-
-/** The sorted unique term set: the step's ledger tables plus every consumer-registry `key` it produces. */
-function advisoryTerms(slug, inputs) {
-  const terms = new Set(stepData(slug, inputs).map((row) => row.table));
-  for (const row of inputs.consumerRows || []) {
-    if (row && row.producer === slug && typeof row.key === 'string' && row.key.length > 0) terms.add(row.key);
-  }
-  return [...terms].sort();
-}
-
-/**
- * The undeclared readers of the step's tables and records_meta keys — every file `git grep -l -w -F`
- * names for one of the terms, minus the paths the registry already declares (the step's own
- * `files` and `tests`) and minus `src/tests/` (test fixtures are not runtime readers).
- *
- * One entry per path (the first term that names it wins), sorted by path; `null` when git could not
- * run for ANY term (the caller prints the unavailable line once).
- *
- * @param {string} slug
- * @param {{files: string[], tests: string[]}} declared the step's own declared files and tests
- * @param {object} inputs
- * @returns {Array<{path: string, term: string}>|null}
- */
-function undeclaredReaders(slug, declared, inputs) {
-  const mine = new Set([...declared.files, ...declared.tests]);
-  const found = new Map();
-  for (const term of advisoryTerms(slug, inputs)) {
-    const lines = grepFiles(term, ['scripts', 'src'], inputs.root, true);
-    if (lines === null) return null;
-    for (const file of lines) {
-      if (mine.has(file) || file.startsWith('src/tests/')) continue;
-      if (!found.has(file)) found.set(file, term);
-    }
-  }
-  return [...found.entries()]
-    .map(([file, term]) => ({ path: file, term }))
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
 
 /**
@@ -160,8 +127,11 @@ function writeSection(stdout, rendered) {
 /**
  * The `npm run step:registry -- <slug|path>   (or --step=<slug>)` CLI: one input — a positional
  * argument or the `--step=<v>` alias, resolved through the shared registry derivation — then the
- * DECLARED block (byte-identical to the owner spec's generated block) and the ADVISORY half (census
- * row, undeclared readers, naming tests).
+ * DECLARED block (byte-identical to the owner spec's generated block) and the ADVISORY half (the
+ * census row and the tests that name the step — naming collisions, not violations), then the
+ * DECLARED vs OBSERVED section comparing the effective ledger row with the committed witness
+ * traces + fixture records. (src/ SQL readers are generated consumer rows, shown in the DECLARED
+ * `consumers:` line — never grepped.)
  *
  * A path that resolves to no step prints NOTHING and exits 0 — the registry's refusal to guess is
  * the answer. No input at all also prints nothing and exits 0. Any other argument starting with `-`
@@ -206,14 +176,6 @@ export function main(argv, { stdout = process.stdout, stderr = process.stderr } 
   stdout.write('== ADVISORY ==\n');
   stdout.write(`census: ${JSON.stringify(censusRow(slug, inputs))}\n`);
 
-  stdout.write("undeclared readers (git grep of the step's tables and records_meta keys, outside its declared files):\n");
-  const readers = undeclaredReaders(slug, declared, inputs);
-  if (readers === null) {
-    stdout.write('  (git grep unavailable)\n');
-  } else {
-    writeSection(stdout, readers.map((hit) => `  ${hit.path} (${hit.term})`));
-  }
-
   stdout.write(`tests naming the script or its tables (outside src/tests/steps/${slug}/):\n`);
   const tests = namingTests(slug, declared, inputs);
   if (tests === null) {
@@ -221,6 +183,9 @@ export function main(argv, { stdout = process.stdout, stderr = process.stderr } 
   } else {
     writeSection(stdout, tests.map((file) => `  ${file}`));
   }
+
+  stdout.write('== DECLARED vs OBSERVED ==\n');
+  stdout.write(renderDeclaredVsObserved(slug, inputs, loadObserved(inputs.root, slug)));
 
   return 0;
 }

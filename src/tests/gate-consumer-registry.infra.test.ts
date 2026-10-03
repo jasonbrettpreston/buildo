@@ -84,11 +84,71 @@ describe('gate D — generated consumer registry, present+typed, completeness sc
   });
 
   // -------------------------------------------------------------------------
+  // T2g — the FIVE read FORMS the completeness scan must see (each: an
+  // undeclared key is RED, a RUNNER key is GREEN, comments stay unscanned).
+  // -------------------------------------------------------------------------
+  it('T2g: scanText — the five read FORMS (paren, cast, alias, two-level alias, SQL spaced / #>>) each RED an undeclared key and GREEN a runner key', () => {
+    // paren form.
+    const paren = reg.scanText('f.ts', "const a = (r.records_meta || {}).mystery_a;\n", new Set());
+    expect(paren).toHaveLength(1);
+    expect(paren[0].item).toBe('scan.f.ts.mystery_a');
+    expect(reg.scanText('f.ts', "const a = (r.records_meta ?? {}).checks_failed;\n", new Set())).toEqual([]);
+
+    // cast form.
+    const cast = reg.scanText('f.ts', "const t = (s?.records_meta as Record<string, unknown>)?.mystery_b;\n", new Set());
+    expect(cast).toHaveLength(1);
+    expect(cast[0].item).toBe('scan.f.ts.mystery_b');
+    expect(reg.scanText('f.ts', "const t = (s?.records_meta as Record<string, unknown>)?.checks_failed;\n", new Set())).toEqual([]);
+
+    // alias form (the alias's USE carries the line number, not the declaration).
+    const alias = reg.scanText('f.ts', "const meta = info.records_meta as Record<string, unknown>;\nconst f = meta.mystery_c;\nconst g = meta?.checks_failed;\n", new Set());
+    expect(alias).toHaveLength(1);
+    expect(alias[0].item).toBe('scan.f.ts.mystery_c');
+    expect(alias[0].detail).toContain('f.ts:2');
+
+    // two-level alias: the FIRST level only, never the second.
+    const twoLevel = reg.scanText('f.ts', "const meta = rows[0].records_meta || {};\nconst l = meta.mystery_d.base;\n", new Set());
+    expect(twoLevel).toHaveLength(1);
+    expect(twoLevel[0].item).toBe('scan.f.ts.mystery_d');
+
+    // alias boundary: a redeclaration ends the alias...
+    expect(reg.scanText('f.ts', "const meta = r.records_meta;\nconst meta = other;\nmeta.mystery_e;\n", new Set())).toEqual([]);
+    // ...and an initializer that does NOT end at records_meta is not an alias
+    // (step_completeness is a CHAIN key, so the declaration line itself is GREEN too).
+    expect(reg.scanText('f.ts', "const sc = r.records_meta?.step_completeness;\nsc.deferred_at;\n", new Set())).toEqual([]);
+
+    // property-access guard: `x.meta.mystery_f` is not a use of the alias `meta`.
+    expect(reg.scanText('f.ts', "const meta = r.records_meta;\nx.meta.mystery_f;\n", new Set())).toEqual([]);
+
+    // SQL forms: spaced arrow, `#>>` object key, and no double count with SCAN_RE.
+    const sqlArrow = reg.scanText('f.ts', "SELECT records_meta -> 'mystery_g' FROM t\n", new Set());
+    expect(sqlArrow).toHaveLength(1);
+    expect(sqlArrow[0].item).toBe('scan.f.ts.mystery_g');
+    const sqlHash = reg.scanText('f.ts', "SELECT records_meta #>> '{mystery_h,x}' FROM t\n", new Set());
+    expect(sqlHash).toHaveLength(1);
+    expect(sqlHash[0].item).toBe('scan.f.ts.mystery_h');
+    expect(reg.scanText('f.ts', "SELECT records_meta->>'mystery_i'\n", new Set())).toHaveLength(1);
+
+    // comment lines stay unscanned.
+    expect(reg.scanText('f.ts', "// (r.records_meta || {}).mystery_j\n", new Set())).toEqual([]);
+  });
+
+  // -------------------------------------------------------------------------
+  // T7b — the cast form makes pipeline_meta and telemetry visible; both are
+  // CHAIN keys citing their run-chain writer.
+  // -------------------------------------------------------------------------
+  it('T7b: the cast form makes pipeline_meta and telemetry visible; both are CHAIN keys citing their run-chain writer', () => {
+    expect(reg.CHAIN_META_KEYS.pipeline_meta).toMatch(/^scripts\/run-chain\.js:946 /);
+    expect(reg.CHAIN_META_KEYS.telemetry).toMatch(/^scripts\/run-chain\.js:956 /);
+    expect(reg.scanText('f.ts', "(s?.records_meta as Record<string, unknown>)?.telemetry;\n", new Set())).toEqual([]);
+  });
+
+  // -------------------------------------------------------------------------
   // T3 — the committed registry is FRESH against its four generation sources
   // (funnel.ts + every converted descriptor's emits/counters/trigger) — a
   // drifted registry is RED before either closed-set half even runs.
   // -------------------------------------------------------------------------
-  it('T3: consumer-registry.json is fresh against its four generation sources', () => {
+  it('T3: consumer-registry.json is fresh against its five generation sources', () => {
     const fresh = reg.checkRegistryFresh(REPO_ROOT);
     expect(fresh.fresh).toBe(true);
   });
@@ -244,5 +304,75 @@ describe('gate D — one resolver (the runtime resolveCounterSource, never a mir
     expect(resolveCounterSource(sumSource, { records_meta: metas[0] })).toBe(3);
     expect(resolveCounterSource(sumSource, { records_meta: metas[1] })).toBeNull();
     expect(resolveCounterSource(sumSource, { records_meta: metas[2] })).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// gate D — consumer source #5: src/ SQL readers (kind `table`) + unproduced
+// posture (P1-C6, Fold 14). The static-parsed src/ SQL ledger
+// (`scripts/steps/_schema/src-sql-ledger.json`) supplies one `src_sql` row per
+// (src file read, effective-ledger column writer); a src read whose table has a
+// step writer but whose COLUMN has none is an `unproduced` read, printed and
+// counted on every run. Its posture is REPORT-ONLY until ONE named commit (the
+// FLEET-2 landing commit) flips it hard (UNPRODUCED_POSTURE).
+// ---------------------------------------------------------------------------
+describe('gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14)', () => {
+  const eff = {
+    inchain: {
+      p: { writes: { t: ['a', 'b'] } },
+      q: { writes: { t: ['a'] } },
+      r: { writes: { u: ['z'] } },
+    },
+    src: { 'src/x.ts': { reads: { t: ['a', 'c'], v: ['k'] } } },
+  };
+
+  it('T11a: buildSrcTableRows — one row per (src read column, effective-ledger column writer); unproducedReads names only a step-written table with no column writer', () => {
+    expect(reg.buildSrcTableRows(eff)).toEqual([
+      { consumer: 'src/x.ts', producer: 'p', kind: 'table', key: 't.a', value: 'any', source: 'src_sql' },
+      { consumer: 'src/x.ts', producer: 'q', kind: 'table', key: 't.a', value: 'any', source: 'src_sql' },
+    ]);
+    expect(reg.unproducedReads(eff)).toEqual(['unproduced:src/x.ts:t.c']);
+  });
+
+  it('T11b: rowPresentTyped — a `table` row is GREEN even with no golden index (its closed check is registry freshness)', () => {
+    expect(
+      reg.rowPresentTyped({ consumer: 'src/x.ts', producer: 'p', kind: 'table', key: 't.a', value: 'any', source: 'src_sql' }, null),
+    ).toEqual({ ok: true });
+  });
+
+  it('T11c: UNPRODUCED_POSTURE — report-only, flips hard at ONE named commit, frozen', () => {
+    expect(reg.UNPRODUCED_POSTURE.mode).toBe('report-only');
+    expect(reg.UNPRODUCED_POSTURE.flips_hard_at).toMatch(/FLEET-2 landing commit/);
+    expect(Object.isFrozen(reg.UNPRODUCED_POSTURE)).toBe(true);
+  });
+
+  it('T11d: the posture is the ONLY switch — hard REDs every unproduced read, report-only prints + counts them', () => {
+    const registry = { rows: [] };
+    const hard = reg.allConsumerViolations(registry, REPO_ROOT, {
+      effective: eff,
+      posture: { mode: 'hard', flips_hard_at: 'x' },
+    });
+    expect(hard.map((v: { item: string }) => v.item)).toContain('unproduced.src/x.ts.t.c');
+    const report = reg.allConsumerViolations(registry, REPO_ROOT, {
+      effective: eff,
+      posture: reg.UNPRODUCED_POSTURE,
+    });
+    expect(report.map((v: { item: string }) => v.item)).not.toContain('unproduced.src/x.ts.t.c');
+
+    const contracts = reg.checkConsumerContracts(registry, [], REPO_ROOT, { effective: eff });
+    expect(contracts.detail).toContain('1 unproduced src read(s) (report-only until the FLEET-2 landing commit');
+    expect(contracts.detail).toContain('unproduced:src/x.ts:t.c');
+    expect(contracts.unproduced).toEqual(['unproduced:src/x.ts:t.c']);
+  });
+
+  it('T11e: live — the fresh registry carries src_sql rows from the committed src-sql-ledger × the effective ledger', () => {
+    const fresh = reg.buildRegistry(REPO_ROOT);
+    const src = fresh.rows.filter((r: { source: string }) => r.source === 'src_sql');
+    expect(src.length).toBeGreaterThan(0);
+    for (const row of src) {
+      expect(row.kind).toBe('table');
+      expect(String(row.consumer).startsWith('src/')).toBe(true);
+    }
+    expect(fresh.generated_from).toContain('scripts/steps/_schema/src-sql-ledger.json × effectiveLedger() column writers');
   });
 });

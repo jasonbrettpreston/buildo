@@ -100,7 +100,7 @@ As a business analyst, I need the Ontario Workplace Safety and Insurance Board r
   - data (descriptor): `wsib_registry` writes (migrations/040_wsib_registry.sql)
   - upstream: none
   - downstream: assert_data_bounds · link_wsib
-  - consumers: src/components/FreshnessTimeline.tsx (records_meta audit_table)
+  - consumers: src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 5 columns) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 2 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 3 columns)
 <!-- /generated:target-files -->
 
 ### Out-of-Scope Files

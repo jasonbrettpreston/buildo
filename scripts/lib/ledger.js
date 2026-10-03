@@ -35,6 +35,31 @@ const path = require('path');
 const DEFAULT_SNAPSHOT_PATH = path.resolve(__dirname, '../seeds/lineage-meta-snapshot.json');
 
 /**
+ * The committed src/ static SQL ledger `scripts/analysis/src-sql-ledger.mjs
+ * --write` writes. STATIC-PARSED: each row records SQL the src/ code TEXT
+ * declares, not a statement observed running.
+ */
+const SRC_SQL_LEDGER_PATH = path.resolve(__dirname, '../steps/_schema/src-sql-ledger.json');
+
+/**
+ * The `src` section of the effective ledger — the static-parsed src/ SQL
+ * readers/writers, keyed by repo-relative file, sorted. `not_postgres` files
+ * carry no reads/writes and never enter the section.
+ *
+ * @param {{files?: Record<string, object>}} [srcLedger]
+ * @returns {Record<string, {class: string, reads: object, writes: object, source: string}>}
+ */
+function srcSection(srcLedger) {
+  const files = (srcLedger && srcLedger.files) || {};
+  const section = {};
+  for (const [file, e] of Object.entries(files)) {
+    if (e.class !== 'static' && e.class !== 'interpolated') continue;
+    section[file] = { class: e.class, reads: e.reads || {}, writes: e.writes || {}, source: 'src_static' };
+  }
+  return Object.fromEntries(Object.entries(section).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
+
+/**
  * `BUILDO_LEDGER_SNAPSHOT_PATH` is a TEST-ONLY override (same shape as
  * `step-validate.mjs`'s `BUILDO_PROGRAMME_ITEMS_PATH`) so the unit suite can
  * point `loadLedger`/`stepUpstreams` at a fixture snapshot without mutating
@@ -166,13 +191,24 @@ function invocationChains(descriptor) {
  *
  * `o.descriptors` is a TEST-ONLY injection (mirrors `BUILDO_LEDGER_SNAPSHOT_PATH`)
  * so a unit can supply descriptors WITHOUT touching the committed registry.
+ * `o.srcLedger` is likewise a TEST-ONLY injection for the `src` section.
  *
- * @param {{env?: Record<string,string|undefined>, descriptors?: Record<string, object>}} [opts]
- * @returns {{inchain: Record<string, object>, static: Record<string, object>}}
+ * The returned `src` section's rows are STATIC-PARSED src/ SQL — reads/writes
+ * the code TEXT declares, NOT witnessed. Runtime confirmation is partial; a
+ * `src` row must never be described as witnessed lineage.
+ *
+ * @param {{env?: Record<string,string|undefined>, descriptors?: Record<string, object>, srcLedger?: unknown}} [opts]
+ * @returns {{inchain: Record<string, object>, static: Record<string, object>, src: Record<string, object>}}
  */
 function effectiveLedger(opts) {
   const o = opts || {};
   const base = loadLedger(o);
+  const srcLedger =
+    o.srcLedger !== undefined
+      ? o.srcLedger
+      : fs.existsSync(SRC_SQL_LEDGER_PATH)
+        ? JSON.parse(fs.readFileSync(SRC_SQL_LEDGER_PATH, 'utf8'))
+        : { files: {} };
   const descriptors =
     o.descriptors ||
     Object.fromEntries(
@@ -195,7 +231,7 @@ function effectiveLedger(opts) {
       source: 'descriptor',
     };
   }
-  return { inchain, static: base.static };
+  return { inchain, static: base.static, src: srcSection(srcLedger) };
 }
 
 /**
@@ -257,6 +293,7 @@ function derivedReadsSteps(slug, descriptor, opts) {
 
 module.exports = {
   DEFAULT_SNAPSHOT_PATH,
+  SRC_SQL_LEDGER_PATH,
   snapshotPath,
   loadLedger,
   slugForms,

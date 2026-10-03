@@ -10,7 +10,8 @@
 // `flush()` uses fs.writeFileSync on purpose: it runs from the 'exit' handler,
 // where async writes would not survive process teardown. Every module instance
 // (re-require) shares ONE global state object, so `_state()`/`_reset()`/`flush()`
-// are instance-independent.
+// are instance-independent. The optional caller tag is set only by
+// src/lib/db/sql-trace-caller.ts in test mode; pipeline traces never carry it.
 'use strict';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -22,6 +23,7 @@ const pg = require('pg');
 
 const WRAP_GUARD = Symbol.for('buildo.sql-witness.wrapped');
 const STATE_KEY = Symbol.for('buildo.sql-witness.state');
+const CALLER_KEY = Symbol.for('buildo.sql-witness.caller');
 const NO_TEXT = '\u0000NO_TEXT';
 const NO_TEXT_ERROR = 'FAIL:INPUT:no-text';
 const PIPELINE_RUNS_RE = /pipeline_runs/i;
@@ -117,6 +119,12 @@ function record(arg0, arg1, thisArg) {
   const text = textOf(arg0);
   const entry = entryFor(text === undefined ? NO_TEXT : text);
   noteCall(entry, id);
+  const als = globalThis[CALLER_KEY];
+  const caller = als && typeof als.getStore === 'function' ? als.getStore() : undefined;
+  if (typeof caller === 'string' && caller.length > 0) {
+    if (!entry.callers) entry.callers = [];
+    if (entry.callers.indexOf(caller) === -1) entry.callers.push(caller);
+  }
   if (text === undefined) entry.error = NO_TEXT_ERROR;
   else if (PIPELINE_RUNS_RE.test(text)) paramsOf(arg0, arg1, entry);
   return entry;
@@ -223,6 +231,7 @@ function _state() {
     if (!e) continue;
     const copy = { text: e.text, count: e.count, rowCount: e.rowCount, clients: e.clients.slice() };
     if (e.params) copy.params = e.params;
+    if (e.callers) copy.callers = e.callers.slice();
     if (e.error) copy.error = e.error;
     statements.push(copy);
   }
@@ -246,4 +255,4 @@ if (process.env.BUILDO_SQL_TRACE) {
   wrapOnce();
   process.on('exit', flush);
 }
-module.exports = { flush, _reset, _state };
+module.exports = { flush, _reset, _state, CALLER_KEY };

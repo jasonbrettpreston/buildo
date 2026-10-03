@@ -8,7 +8,7 @@
 // contract a converted step's `records_meta`/`audit_table` participates in, and
 // checks each one against the producer's own golden POST captures.
 //
-// FOUR generation sources (`buildRegistry` — deterministic, sorted):
+// FIVE generation sources (`buildRegistry` — deterministic, sorted):
 //   1. `funnel`   — `src/lib/admin/funnel.ts` `FUNNEL_SOURCES`: an entry with a
 //      declared `auditMetric` becomes one row (consumer = FreshnessTimeline.tsx,
 //      producer = its `statusSlug`, kind `audit_metric`, value `percent`,
@@ -19,6 +19,10 @@
 //      becomes a SELF-consumed row (the step reads its own emitted key back).
 //   4. `trigger`  — a `staleness.trigger[].emit_key` becomes a SELF-consumed row
 //      (the B3 class: a baseline the compute must persist for staleness to see).
+//   5. `src_sql`  — every static-parsed src/ SQL read (`scripts/analysis/src-sql-ledger.mjs`)
+//      × the effective ledger's column writers: one row per writer (kind `table`, key
+//      `<table>.<column>`). A read with no declared writer is an `unproduced` read
+//      (UNPRODUCED_POSTURE).
 //
 // The closed answer set, per registry row whose PRODUCER is a converted step:
 //   present — `records_meta` kind: the key is a top-level key of >=1 POST golden
@@ -35,7 +39,12 @@
 //   until it converts).
 //
 // The COMPLETENESS half (the static half, never the source of rows — `scanConsumers`):
-// every `records_meta(?:\?\.|\.|->>?'|\[')<key>` reference in the closed corpus
+// every `records_meta` read in the closed corpus resolves to a known key — the
+// reference shapes are `records_meta(?:\?\.|\.|->>?'|\[')<key>` plus the five
+// extra FORMS (paren `(r.records_meta || {}).key`, cast `... as Record<...>)?.key`,
+// alias `const meta = ...records_meta...; meta.key`, two-level alias
+// `const l = meta.key.leaf` (FIRST level only), and SQL `-> 'key'` / `#>> '{key,..}'`).
+// Concretely, every such read in the closed corpus
 // (`src/lib/admin/**`, `src/components/**`, `src/app/**`, plus the four named
 // chain scripts) on a line that is not a comment must resolve to RUNNER_META_KEYS
 // (gate C's export), CHAIN_META_KEYS (below — a step-independent key stamped by
@@ -45,7 +54,7 @@
 // this registry does not yet know about (the `tables_checked` case:
 // `step-validate.mjs` reads `assert_engine_health`'s counter with no row).
 //
-// `ledger.mjs` owns the row shape + the match; this file owns the four
+// `ledger.mjs` owns the row shape + the match; this file owns the five
 // generation sources, the closed-set checks, and the completeness scan.
 
 import fs from 'node:fs';
@@ -63,6 +72,23 @@ const require = createRequire(import.meta.url);
 // ONE RESOLVER (Spec 122 §10): the gate imports the runtime's own functions, never a mirror.
 const { RUNNER_META_KEYS, resolveCounterSource } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
 const RUNNER_META_KEYS_SET = new Set(RUNNER_META_KEYS);
+// The src/ SQL-ledger half (consumer source #5): the effective ledger (converted
+// descriptors over the committed snapshot, column-granular writers) is read from
+// `scripts/lib/ledger.js` — the ONE derivation of `writes`, never a mirror.
+const { effectiveLedger } = require(path.join(REPO_ROOT, 'scripts/lib/ledger.js'));
+
+/**
+ * The `unproduced` src read posture. Every unproduced read is printed and
+ * COUNTED on every run — no exception file, no silent skip. The FLEET-2 landing
+ * commit sets `mode: 'hard'` (the ONLY flip), after which each one is a gate-D
+ * violation.
+ * @type {Readonly<{mode: 'report-only' | 'hard', flips_hard_at: string, closes_by: string}>}
+ */
+export const UNPRODUCED_POSTURE = Object.freeze({
+  mode: 'report-only',
+  flips_hard_at: 'the FLEET-2 landing commit (.cursor/wf2_registry_truth_active_task.md, Fold 14 P1-C6)',
+  closes_by: 'declare the column in its producer descriptor (written: step | insert_only | db_default), or drop the read',
+});
 
 export const CONSUMER_REGISTRY_REL_PATH = 'scripts/steps/_schema/consumer-registry.json';
 export const FUNNEL_REL_PATH = 'src/lib/admin/funnel.ts';
@@ -83,6 +109,8 @@ export const CHAIN_META_KEYS = Object.freeze({
   last_heartbeat_at: "scripts/lib/step/index.js:2866 ('last_heartbeat_at', now() — heartbeat ticker SQL)",
   failed_sample: 'scripts/lib/pipeline.js:443 (payload.failed_sample = stats.failed_sample.slice(0, 20))',
   gated_skip: 'scripts/lib/source-version.js:471 (buildSkipGateRecordsMeta: gated_skip: true)',
+  pipeline_meta: 'scripts/run-chain.js:946 (recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta })',
+  telemetry: 'scripts/run-chain.js:956 (recordsMeta = { ...(recordsMeta || {}), telemetry })',
 });
 
 /** Corpus roots the completeness scan walks (Rule 10/R-T closed corpus). */
@@ -95,6 +123,22 @@ const CORPUS_FILES = [
 ];
 const SCAN_EXT_RE = /\.(ts|tsx|js|mjs)$/;
 const SCAN_RE = /records_meta(?:\?\.|\.|->>?'|\[')([a-z_]+)/g;
+
+// The COMPLETENESS scan's extra read FORMS, alongside the regex above — a single
+// line may carry several, so their keys are unioned per line (never double-counted).
+//   PAREN — `(r.records_meta || {}).key` / `(r.records_meta ?? {}).key`
+//   CAST  — `(s?.records_meta as Record<string, unknown>)?.key`
+//   SQL   — `records_meta -> 'key'` and `records_meta #>> '{key,...}'`
+const PAREN_RE = /records_meta\s*(?:\|\||\?\?)\s*\{\}\s*\)\s*(?:\?\.|\.)\s*([a-z_]+)/g;
+const CAST_RE = /records_meta\s+as\s+[^)]*\)\s*(?:\?\.|\.)\s*([a-z_]+)/g;
+const SQL_RE = /records_meta\s*->>?\s*'([a-z_]+)'|records_meta\s*#>>?\s*'\{([a-z_]+)/g;
+// The ALIAS declaration forms (the initializer must END at `records_meta`,
+// optionally `|| {}` / `?? {}` / `as T` / `)`); a later line's `X.key`/`X['key']`
+// then reads a key too, until `X` is redeclared on a line of its own.
+const ALIAS_DECL_RE = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*[^;]*?\brecords_meta\s*(?:(?:\|\||\?\?)\s*\{\}\s*\)?\s*|as\s+[^;()?.\[\]{}]*?)?;?\s*$/;
+const aliasRedecl = (name) => new RegExp(`(?:const|let|var)\\s+${name}\\b`);
+const aliasDotUse = (name) => new RegExp(`(?<![\\w$.])${name}(?:\\?\\.|\\.)([a-z_]+)`, 'g');
+const aliasIdxUse = (name) => new RegExp(`(?<![\\w$.])${name}\\[['"]([a-z_]+)['"]\\]`, 'g');
 
 function walkDir(absDir, out) {
   let entries;
@@ -237,7 +281,75 @@ export function buildTriggerRows(descriptors) {
 
 const rowSortKey = (r) => `${r.consumer}\u0000${r.producer}\u0000${r.kind}\u0000${r.key}\u0000${r.source}`;
 
-/** Build the whole registry, deterministic order, from the four sources. DISK. */
+// ---------------------------------------------------------------------------
+// Source 5 — src/ SQL readers (`src_sql`)
+// ---------------------------------------------------------------------------
+
+/** `true` iff every declared writer row is usable (an object with a `writes` map). */
+const writersOf = (step) => (step && typeof step.writes === 'object' && step.writes) || {};
+
+/**
+ * One `table` row per (static-parsed src/ SQL read column, effective-ledger
+ * column writer). Every `effective.src[file].reads[table]` column that >=1
+ * `effective.inchain` step declares writing becomes one row PER such writer;
+ * the write declaration is COLUMN-granular — for a converted step
+ * `deriveMeta(descriptor).writes` already lists every declared write column,
+ * INCLUDING a `written: "db_default"` one (the ruled channel an id-like
+ * DB-default column resolves through). Sorted file -> table -> column -> slug.
+ * @param {{inchain?: object, src?: object}} effective the effective ledger
+ * @returns {Array<{consumer:string, producer:string, kind:string, key:string, value:string, source:string}>}
+ */
+export function buildSrcTableRows(effective) {
+  const inchain = (effective && effective.inchain) || {};
+  const src = (effective && effective.src) || {};
+  const writers = Object.entries(inchain).map(([slug, row]) => [slug, writersOf(row)]);
+  const rows = [];
+  for (const file of Object.keys(src).sort()) {
+    const reads = src[file] && typeof src[file].reads === 'object' ? src[file].reads || {} : {};
+    for (const table of Object.keys(reads).sort()) {
+      const cols = Array.isArray(reads[table]) ? reads[table] : [];
+      for (const column of [...cols].sort()) {
+        for (const [slug, writes] of writers) {
+          if (Array.isArray(writes[table]) && writes[table].includes(column)) {
+            rows.push({ consumer: file, producer: slug, kind: 'table', key: `${table}.${column}`, value: 'any', source: 'src_sql' });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+/**
+ * Every src/ SQL read whose TABLE is written by >=1 `effective.inchain` step but
+ * whose COLUMN no step declares writing — sorted, unique
+ * `unproduced:<file>:<table>.<column>`. A read of a table NO step writes is not
+ * a step table at all and is never counted here (it belongs to the completeness
+ * scan, not to this posture).
+ * @param {{inchain?: object, src?: object}} effective the effective ledger
+ * @returns {string[]}
+ */
+export function unproducedReads(effective) {
+  const inchain = (effective && effective.inchain) || {};
+  const src = (effective && effective.src) || {};
+  const writerWrites = Object.values(inchain).map((row) => writersOf(row));
+  const out = new Set();
+  for (const file of Object.keys(src).sort()) {
+    const reads = src[file] && typeof src[file].reads === 'object' ? src[file].reads || {} : {};
+    for (const table of Object.keys(reads).sort()) {
+      const cols = Array.isArray(reads[table]) ? reads[table] : [];
+      const tableIsWritten = writerWrites.some((writes) => Object.prototype.hasOwnProperty.call(writes, table));
+      if (!tableIsWritten) continue;
+      for (const column of cols) {
+        const columnIsWritten = writerWrites.some((writes) => Array.isArray(writes[table]) && writes[table].includes(column));
+        if (!columnIsWritten) out.add(`unproduced:${file}:${table}.${column}`);
+      }
+    }
+  }
+  return [...out].sort();
+}
+
+/** Build the whole registry, deterministic order, from the five sources. DISK. */
 export function buildRegistry(repoRoot = REPO_ROOT) {
   const descriptors = loadConvertedDescriptors(repoRoot);
   const funnelEntries = parseFunnelSources(repoRoot);
@@ -246,6 +358,7 @@ export function buildRegistry(repoRoot = REPO_ROOT) {
     ...buildEmitsRows(descriptors),
     ...buildCountersRows(descriptors),
     ...buildTriggerRows(descriptors),
+    ...buildSrcTableRows(effectiveLedger()),
   ].sort((a, b) => (rowSortKey(a) < rowSortKey(b) ? -1 : rowSortKey(a) > rowSortKey(b) ? 1 : 0));
   return {
     contract_version: 1,
@@ -254,6 +367,7 @@ export function buildRegistry(repoRoot = REPO_ROOT) {
       "<converted descriptor>.emits[].consumers",
       '<converted descriptor>.counters[].source',
       '<converted descriptor>.staleness.trigger[]',
+      'scripts/steps/_schema/src-sql-ledger.json × effectiveLedger() column writers',
     ],
     rows,
   };
@@ -355,6 +469,10 @@ export function loadGoldenAuditIndex(dir) {
  * @param {{metaKeys:Set<string>, metrics:Map<string,unknown[]>, metas?:object[]}|null} index
  */
 export function rowPresentTyped(row, index) {
+  // A `table` row exists only where a declared writer exists, so its closed
+  // check is the registry freshness `--check` (a dropped write or a changed read
+  // regenerates the rows) — there is no per-step golden to consult.
+  if (row.kind === 'table') return { ok: true };
   if (!index) return { ok: false, reason: `no golden POST captures for "${row.producer}"` };
   if (row.kind === 'records_meta') {
     // A DOTTED key is a `counters.<slot>.source` path, not a top-level key — resolved
@@ -421,13 +539,33 @@ export function registryViolations(registry, indexes, convertedSlugs) {
 export function scanText(relPath, text, declaredKeysForFile) {
   const violations = [];
   const lines = String(text).split(/\r?\n/);
+  // The alias names a live declaration has established so far (cleared by their
+  // own redeclaration line). A `const X = ...records_meta...` declares one.
+  const liveAliases = new Set();
   lines.forEach((line, i) => {
     const trimmed = line.trim();
     if (trimmed.startsWith('*') || trimmed.startsWith('//')) return;
-    const re = new RegExp(SCAN_RE);
-    let m;
-    while ((m = re.exec(line))) {
-      const key = m[1];
+    // ONE Set per line: a key named by several forms on one line is reported once.
+    const keys = new Set();
+    const add = (re) => {
+      const scan = new RegExp(re.source, re.flags);
+      let m;
+      while ((m = scan.exec(line))) keys.add(m[1] || m[2]);
+    };
+    add(SCAN_RE);
+    add(PAREN_RE);
+    add(CAST_RE);
+    add(SQL_RE);
+    for (const name of liveAliases) {
+      add(aliasDotUse(name));
+      add(aliasIdxUse(name));
+    }
+    // A redeclaration of a live alias name ends it, whether or not this line is
+    // itself a new records_meta alias declaration.
+    for (const name of [...liveAliases]) if (aliasRedecl(name).test(line)) liveAliases.delete(name);
+    const decl = line.match(ALIAS_DECL_RE);
+    if (decl) liveAliases.add(decl[1].replace(/\$/g, '\\$')); // stored regex-escaped (`$` is legal in a JS name)
+    for (const key of keys) {
       if (RUNNER_META_KEYS_SET.has(key)) continue;
       if (Object.prototype.hasOwnProperty.call(CHAIN_META_KEYS, key)) continue;
       if (declaredKeysForFile && declaredKeysForFile.has(key)) continue;
@@ -462,29 +600,58 @@ export function scanConsumers(registry, repoRoot = REPO_ROOT) {
   return violations;
 }
 
-/** Gate D over the whole registry + corpus. An ORPHAN makes `pass` false (R-X). */
-export function allConsumerViolations(registry, repoRoot = REPO_ROOT) {
+/**
+ * Gate D over the whole registry + corpus. An ORPHAN makes `pass` false (R-X).
+ * @param {{rows: object[]}} registry
+ * @param {string} [repoRoot]
+ * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}}} [opts]
+ */
+export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE } = {}) {
   const convertedSlugs = new Set(loadConvertedDescriptors(repoRoot).map((d) => d.identity && d.identity.name));
   const indexes = new Map();
   for (const slug of convertedSlugs) indexes.set(slug, loadGoldenAuditIndex(path.join(repoRoot, GOLDEN_DIR_REL, slug, 'post')));
-  return [
+  const violations = [
     ...registryViolations(registry, indexes, convertedSlugs),
     ...scanConsumers(registry, repoRoot),
   ];
+  if (posture && posture.mode === 'hard') {
+    for (const item of unproducedReads(effective || effectiveLedger())) {
+      const rest = item.slice('unproduced:'.length);
+      const idx = rest.lastIndexOf(':');
+      const file = rest.slice(0, idx);
+      const tableColumn = rest.slice(idx + 1);
+      violations.push({
+        step: '(registry)',
+        item: `unproduced.${file}.${tableColumn}`,
+        detail: `${file} reads ${tableColumn} — no step declares writing it (UNPRODUCED_POSTURE hard)`,
+      });
+    }
+  }
+  return violations;
 }
 
-export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT) {
-  const violations = allConsumerViolations(registry, repoRoot);
+/**
+ * @param {{rows: object[]}} registry
+ * @param {object[]} ledgerRows
+ * @param {string} [repoRoot]
+ * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}}} [opts]
+ */
+export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE } = {}) {
+  const violations = allConsumerViolations(registry, repoRoot, { effective, posture });
+  const unproduced = unproducedReads(effective || effectiveLedger());
   const { unallowed, orphans, allowed } = matchLedger('D', violations, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const where = (v) => `${v.step} ${v.item}`;
+  const unproducedLine = `; ${unproduced.length} unproduced src read(s) (${posture.mode} until ${posture.flips_hard_at}) [${unproduced.join('; ')}]`;
   const detail = (unallowed.length || orphans.length)
     ? `CONSUMER-REGISTRY (gate D): ${unallowed.length} unallowed contract violation(s)`
       + (unallowed.length ? ` [${unallowed.map(where).join('; ')}]` : '')
       + `; ${orphans.length} orphan ledger row(s)` + (orphans.length ? ` [${orphans.map(where).join('; ')}]` : '')
+      + unproducedLine
     : `CONSUMER-REGISTRY (gate D): ${violations.length} contract(s) checked, all closed `
-      + `(${allowed.length} ledger-allowed, ${violations.length - allowed.length} present+typed/excluded)`;
-  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed };
+      + `(${allowed.length} ledger-allowed, ${violations.length - allowed.length} present+typed/excluded)`
+      + unproducedLine;
+  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced };
 }
 
 /** Both halves, disk-backed — what `step-validate.mjs` calls. Also verifies the registry is fresh (`--check`). */

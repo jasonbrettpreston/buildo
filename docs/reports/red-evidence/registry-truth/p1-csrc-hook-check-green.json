@@ -1,0 +1,17 @@
+{
+ "what": "p1-csrc-hook-check",
+ "phase": "green",
+ "impl_state": "implementation present (worktree)",
+ "implementation": [
+  ".husky/pre-commit"
+ ],
+ "tests": [
+  "src/tests/hooks-composition.infra.test.ts"
+ ],
+ "numFailedTests": 0,
+ "numPassedTests": 27,
+ "suite_load_errors": [],
+ "failed": [],
+ "passed_count": 27,
+ "captured_at": "2026-10-03T16:45:42.645Z"
+}

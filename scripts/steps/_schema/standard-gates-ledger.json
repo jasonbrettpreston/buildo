@@ -802,6 +802,16 @@
       "adjudicated_by": "operator"
     },
     {
+      "gate": "D",
+      "step": "(registry)",
+      "item": "scan.src/components/FreshnessTimeline.tsx.engine_health",
+      "disposition": "pending_remediation",
+      "why": "src/components/FreshnessTimeline.tsx:1218 and :1232 read records_meta.engine_health through the alias `const meta = info.records_meta as Record<string, unknown>` (made visible by the P1-C6 alias scan form, 2026-10-03) — assert_engine_health emits it but its emits[] never declares it or this consumer (the gate-C row emits.engine_health is the same root cause)",
+      "closing_brief": "wf2_registry_truth_active_task.md — FLEET-2 landing commit, fold 11 (C-1 declares assert_engine_health emits.engine_health with consumer src/components/FreshnessTimeline.tsx)",
+      "filed": "2026-10-03",
+      "adjudicated_by": "operator (Fold 11 C-1 ruling owns the declaration; row filed by the P1-C6 orchestrator)"
+    },
+    {
       "gate": "E",
       "step": "assert-global-coverage",
       "item": "compute-no-sql-interval-literal@const { rows: [cmRaw] } = await pool.query(`",

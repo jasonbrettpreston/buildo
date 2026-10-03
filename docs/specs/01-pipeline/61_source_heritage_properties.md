@@ -479,7 +479,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
   - `scripts/load-heritage.notes.json`
   - `scripts/lib/compute/load-heritage.js`
   - `src/tests/steps/load_heritage/violations.test.ts`
-  - data (lineage snapshot, declared not witnessed): `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
+  - data (descriptor): `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
   - upstream: none
   - downstream: enrich_heritage
   - consumers: enrich_heritage (records_meta heritage_load) · load_heritage (records_meta heritage_load.heritage_districts.feature_count) · load_heritage (records_meta heritage_load.heritage_register.feature_count)

@@ -1,0 +1,28 @@
+{
+ "what": "p1-c6-scan-forms-source5",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "scripts/analysis/gates/consumer-registry.mjs"
+ ],
+ "tests": [
+  "src/tests/gate-consumer-registry.infra.test.ts"
+ ],
+ "numFailedTests": 10,
+ "numPassedTests": 13,
+ "suite_load_errors": [],
+ "failed": [
+  "gate D — generated consumer registry, present+typed, completeness scan, ledger T2g: scanText — the five read FORMS (paren, cast, alias, two-level alias, SQL spaced / #>>) each RED an undeclared key and GREEN a runner key",
+  "gate D — generated consumer registry, present+typed, completeness scan, ledger T7b: the cast form makes pipeline_meta and telemetry visible; both are CHAIN keys citing their run-chain writer",
+  "gate D — generated consumer registry, present+typed, completeness scan, ledger T3: consumer-registry.json is fresh against its five generation sources",
+  "gate D — generated consumer registry, present+typed, completeness scan, ledger T4: live — every consumer-registry violation has a gate-D ledger row, and zero orphans",
+  "gate D — generated consumer registry, present+typed, completeness scan, ledger T5: readRegistry().rows.length === buildRegistry().rows.length (never hand-edited)",
+  "gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14) T11a: buildSrcTableRows — one row per (src read column, effective-ledger column writer); unproducedReads names only a step-written table with no column writer",
+  "gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14) T11b: rowPresentTyped — a `table` row is GREEN even with no golden index (its closed check is registry freshness)",
+  "gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14) T11c: UNPRODUCED_POSTURE — report-only, flips hard at ONE named commit, frozen",
+  "gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14) T11d: the posture is the ONLY switch — hard REDs every unproduced read, report-only prints + counts them",
+  "gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14) T11e: live — the fresh registry carries src_sql rows from the committed src-sql-ledger × the effective ledger"
+ ],
+ "passed_count": 13,
+ "captured_at": "2026-10-03T16:44:34.851Z"
+}
