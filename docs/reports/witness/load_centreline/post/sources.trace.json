@@ -1,0 +1,358 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-centreline.js",
+  "chain": "sources",
+  "source_fingerprint": "2a241208d39e8a10ce3e1f9640614b693401cbeefb9f711462b11385ba2b5c04",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 35,
+    "distinct": 18,
+    "utility": 9,
+    "tracer_self_ms": 1132.424,
+    "wall_ms": 120143
+  },
+  "statements": [
+    {
+      "fingerprint": "10fad24fafb14d6d",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {
+        "toronto_centreline": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "66e1f603de32abad",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_centreline"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9184be8b14cc7f3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a47b9456480b80ba",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:load_centreline",
+            "load_centreline",
+            "load-centreline"
+          ],
+          null
+        ]
+      ]
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "bda9b1d341d87cda",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "writes": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "eb403895817e1649",
+      "kind": "write",
+      "count": 14,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "8268:3",
+      "write_fingerprints": [
+        "10fad24fafb14d6d",
+        "bda9b1d341d87cda",
+        "eb403895817e1649"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "jurisdiction",
+        "linear_name",
+        "linear_name_dir",
+        "linear_name_full",
+        "linear_name_type",
+        "lo_num_l",
+        "lo_num_r",
+        "oneway_dir_code_desc",
+        "parity_l",
+        "parity_r",
+        "source_dataset_version",
+        "source_id",
+        "to_intersection_id",
+        "updated_at"
+      ]
+    },
+    "writes": {
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "jurisdiction",
+        "linear_name",
+        "linear_name_dir",
+        "linear_name_full",
+        "linear_name_type",
+        "lo_num_l",
+        "lo_num_r",
+        "oneway_dir_code_desc",
+        "parity_l",
+        "parity_r",
+        "source_dataset_version",
+        "source_id",
+        "to_intersection_id",
+        "updated_at"
+      ]
+    }
+  },
+  "errors": []
+}

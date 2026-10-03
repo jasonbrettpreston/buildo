@@ -1,0 +1,169 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-schema.js",
+  "chain": "none",
+  "source_fingerprint": "f01d0b5b2b10c59a1bc0230fc1b4707ec831224ee513b717a149b6a1bbf979cd",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 11,
+    "distinct": 11,
+    "utility": 4,
+    "tracer_self_ms": 7.058,
+    "wall_ms": 3432
+  },
+  "statements": [
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          2306,
+          null,
+          2227,
+          null,
+          null,
+          null,
+          "{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"address_point_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"address_point_coordinate_source\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"source_archives_reachable\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"neighbourhood_id_property\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_resource_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2299,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "assert_schema",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 254,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {},
+    "writes": {}
+  },
+  "errors": []
+}

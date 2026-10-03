@@ -2,6 +2,12 @@
 /**
  * ingestor-forced-cohort — the GENERIC, reviewed, reusable forced-change cohort
  * bracket for the INGESTOR POST recaptures required by gate G #38.
+ *
+ * SCOPE (state it plainly, because the R-AS document is wider than this bracket):
+ * this is the HEAL-THE-COHORT bracket for gate G #38 — it perturbs N rows, runs the
+ * real step and proves the step healed them while reporting a nonzero write count.
+ * It is NOT the R-AS (ii)/(iii) differential. Those are separate instruments; do not
+ * read this file as discharging them.
  * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-AS
  *
  * WHY THIS FILE EXISTS. Gate G #38 needs every converted INGESTOR to carry one
@@ -62,8 +68,9 @@
  *   [--env=K=V …]          extra env for the spawned step (repeatable)
  *   [--capture-arg=<arg> …] passed through to capture-step-golden.js (repeatable)
  *
- * Usage (LOCAL dev DB only — never a shared/cloud target; resolve-db refuses unsafe
- * targets and, per its own contract, no `PG_*` env is read directly here):
+ * Usage (LOCAL dev DB only — never a shared/cloud target; `assertLocalTarget` refuses any
+ * resolved target that is not loopback, on the RESOLVED description, in every connecting
+ * mode, and resolve-db itself has no default target to fall back to):
  *   node scripts/analysis/ingestor-forced-cohort.js --help
  *   node scripts/analysis/ingestor-forced-cohort.js --self-test
  *   node -r dotenv/config scripts/analysis/ingestor-forced-cohort.js --plan \
@@ -97,6 +104,8 @@ const pipeline = require('../lib/pipeline');
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const GOLDEN_ROOT = path.join(REPO_ROOT, 'docs/reports/golden');
 const HARNESS = 'scripts/analysis/capture-step-golden.js';
+/** How many unreachable keys the transcript prints before eliding (the count still prints). */
+const MAX_UNREACHABLE_PRINTED = 10;
 
 /**
  * fx1 (idempotency lens): the BRACKET's own advisory lock.
@@ -140,6 +149,25 @@ const COHORT_LOCK_ID = 902002;
 const TABLE_NAME_RE = /^[a-z_][a-z0-9_]*$/;
 /** The before-image name: `<table>_cohort_bak_<yyyymmddthhmmz>` (lower-case, one rule). */
 const BACKUP_TABLE_RE = /^[a-z_][a-z0-9_]*_cohort_bak_\d{8}t\d{4}z$/;
+/**
+ * F1 (MEDIUM — cloud risk): the ONLY hostnames this bracket may ever connect to.
+ *
+ * `resolve-db`'s chain is DATABASE_URL → SUPABASE_DATABASE_URL → PG_*, and
+ * `SUPABASE_DATABASE_URL` names the CLOUD database. The `expectDatabase` pin in
+ * `makePool` was not enough on its own: BOTH the cloud DB and the local stack present a
+ * database literally called `postgres`, so a machine whose only set var is
+ * `SUPABASE_DATABASE_URL` would pass that pin and this bracket would PERTURB N ROWS OF
+ * PRODUCTION. A cohort bracket must never run there, so the host is checked as well.
+ *
+ * This is a pure predicate over the RESOLVED TARGET DESCRIPTION (`buildoTarget.description`,
+ * already password-redacted by resolve-db), so it holds for every connection path. The
+ * description has TWO shapes and both must be accepted when local:
+ *   - a connection string:  `postgresql://user:pass@127.0.0.1:54322/postgres` (`@host:`)
+ *   - a discrete PG_* form: `127.0.0.1:54322/postgres`                      (`host:port/`)
+ * Hence the `(^|@)` — without the `^` alternative the DISCRETE local form, which carries
+ * no `@`, would be refused and the PG_* path could never run.
+ */
+const LOCAL_HOST_RE = /(^|@)(127\.0\.0\.1|localhost)[:\/]/;
 
 const MODE_KEYS = ['selfTest', 'plan', 'backup', 'run', 'restore'];
 
@@ -163,6 +191,7 @@ function parseArgs(argv) {
     table: null, key: null, column: null, op: null, count: null,
     where: null, order: null, backupTable: null,
     step: null, chain: null, out: null,
+    sourceCsv: null, sourceKey: null,
     env: [], captureArgs: [],
   };
   const setMode = (name) => {
@@ -193,6 +222,7 @@ function parseArgs(argv) {
       table: 'table', key: 'key', column: 'column', op: 'op', count: 'count',
       where: 'where', order: 'order', 'backup-table': 'backupTable',
       step: 'step', chain: 'chain', out: 'out',
+      'source-csv': 'sourceCsv', 'source-key': 'sourceKey',
     }[name];
     if (!slot) throw new Error(`unknown flag --${name} (try --help)`);
     out[slot] = value;
@@ -230,21 +260,83 @@ function validateFlags(args) {
     throw new Error(`--backup-table must match ${BACKUP_TABLE_RE} (got ${JSON.stringify(backupTable)}) — it names a before-image that must be identifiable and disposable (lower-case, <table>_cohort_bak_<yyyymmddthhmmz>)`);
   }
   if (backupTable === table) throw new Error('--backup-table must not be --table itself');
+  // The before-image name must START with `--table` — `<table>_cohort_bak_…`. The regex
+  // above alone would admit `parcels_cohort_bak_…` for `--table=address_points`, i.e. a
+  // before-image frozen from a DIFFERENT table, which the restore would then "verify"
+  // against the wrong rows. The name is the operator's one handle on the image in an
+  // incident, so it must say which table it belongs to.
+  if (!backupTable.startsWith(`${table}_cohort_bak_`)) {
+    throw new Error(`--backup-table must be ${table}_cohort_bak_<yyyymmddthhmmz> (got ${JSON.stringify(backupTable)}) — the before-image name must name the table it came from`);
+  }
+  // The key and the perturbed column are two different roles; the same name in both would
+  // make the perturbation rewrite the join key the restore matches on.
+  if (key === column) throw new Error(`--key and --column must differ (both are ${JSON.stringify(key)})`);
   // The predicate is interpolated into the plan/backup/perturb SQL. A semicolon would
   // make it a multi-statement vector, so refuse it here (the brief's own rule) — the
   // statement must stay a single statement.
   if (String(where).includes(';')) throw new Error('--where must not contain a semicolon');
   if (typeof order !== 'string' || order.trim() === '') throw new Error('--order must be a non-empty SQL order expression');
   if (order.includes(';')) throw new Error('--order must not contain a semicolon');
+  // F4 (LOW): `$` and backtick are the two characters that make a value unsafe to embed in
+  // the RECOVERY COMMAND. `recoveryCommand()` JSON-stringifies `--where`/`--order`/`--op`
+  // into a copy-pasteable shell line printed before the COMMIT and on every failure path;
+  // a `$(…)` or a backtick inside a JSON double-quoted string is still COMMAND-SUBSTITUTED
+  // by the shell the operator pastes it into. These values are SQL predicates/expressions,
+  // so neither character has a legitimate use, and refusing them here keeps the printed
+  // recovery command shell-safe by construction rather than by convention.
+  const shellUnsafe = (n, v) => {
+    if (String(v).includes('$') || String(v).includes('`')) {
+      throw new Error(`--${n} must not contain "$" or a backtick (got ${JSON.stringify(v)}) — these values are reprinted in the recovery command, where the shell would substitute them`);
+    }
+  };
+  shellUnsafe('where', where);
+  shellUnsafe('order', order);
+  shellUnsafe('op', opRaw);
   const count = Number(countRaw);
   if (!Number.isInteger(count) || count <= 0) throw new Error(`--count must be a positive integer (got ${JSON.stringify(countRaw)})`);
   const op = parseOp(opRaw);
+  // The optional source pair (both or neither). Refused BEFORE any DB connect and BEFORE
+  // the run-only block, so `--plan --source-csv=nope.csv` costs seconds and touches no
+  // database. The path is resolved against the repo root and must EXIST: a typo'd path
+  // would otherwise draw the cohort from an empty key set and refuse with the misleading
+  // "only 0 reachable" message instead of naming the missing file.
+  const { sourceCsv, sourceKey } = sourceFlags(args);
+  if (sourceCsv !== null) {
+    const abs = path.resolve(REPO_ROOT, sourceCsv);
+    if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+      throw new Error(`--source-csv ${JSON.stringify(sourceCsv)} does not exist (resolved ${abs}) — pass the path of the source CSV whose keys the cohort must come from`);
+    }
+  }
   if (mode === 'run') {
     const step = need('step', args.step);
     const chain = need('chain', args.chain);
     const out = need('out', args.out);
     if (typeof step !== 'string' || !/^scripts\/.+\.js$/.test(step)) {
       throw new Error(`--step must be a scripts/<name>.js path (got ${JSON.stringify(step)})`);
+    }
+    // F3: a `..` segment lets the regex above be satisfied while the REAL path escapes
+    // `scripts/` — `scripts/../../etc/x.js` matches `^scripts/.+\.js$`. The step is spawned
+    // with `execFileSync('node', …)`, so this is not a shell injection, but it does let the
+    // bracket run arbitrary JS in the repo on the operator's credentials. Resolve it and
+    // require the result to stay under `scripts/`.
+    if (step.split('/').includes('..')) {
+      throw new Error(`--step must not contain a ".." path segment (got ${JSON.stringify(step)})`);
+    }
+    if (!path.resolve(REPO_ROOT, step).startsWith(`${path.join(REPO_ROOT, 'scripts')}${path.sep}`)) {
+      throw new Error(`--step must resolve to a file under scripts/ (got ${JSON.stringify(step)})`);
+    }
+    for (const a of args.captureArgs) {
+      if (typeof a !== 'string' || !a.startsWith('--')) {
+        throw new Error(`--capture-arg must be a --flag[=value] (got ${JSON.stringify(a)})`);
+      }
+      // F3: the harness owns these flags itself (nodeArgv passes --overwrite and the
+      // caller's --out/--step/--chain). A passthrough that re-sets one of them would be
+      // duplicated on the child argv, and argv order — not the harness's parser — would
+      // decide which wins. Refuse rather than rely on last-one-wins.
+      const reowned = ['--step', '--chain', '--out', '--overwrite'];
+      if (reowned.some((f) => a === f || a.startsWith(`${f}=`))) {
+        throw new Error(`--capture-arg must not set ${reowned.join(', ')} — the bracket owns those on the harness argv (got ${JSON.stringify(a)})`);
+      }
     }
     if (typeof chain !== 'string' || chain.trim() === '') throw new Error('--chain must be a non-empty chain id (or none)');
     resolveCaptureOut(out);
@@ -256,6 +348,7 @@ function validateFlags(args) {
   }
   return {
     mode, table, key, column, op, opRaw, count, where, order, backupTable,
+    sourceCsv, sourceKey,
     step: args.step, chain: args.chain, out: args.out, env: args.env, captureArgs: args.captureArgs,
   };
 }
@@ -348,6 +441,22 @@ function cohortSelect(o) {
 /** The eligibility COUNT: how many rows --where selects. Pure. */
 function eligibleCountSql(o) {
   return `SELECT count(*)::int AS n FROM ${o.table} t WHERE ${o.where}`;
+}
+
+/**
+ * The ordered KEY-ONLY read: every key --where selects, in --order order. Pure.
+ *
+ * `bounded` (the unflagged path) keeps `LIMIT count` — the pre-ruling SELECT exactly.
+ * Unbounded (the source-checked path) is the whole eligible population: the cohort can
+ * only be drawn from keys the source still carries, and a `LIMIT count` here would
+ * re-introduce the very re-derivation this path exists to remove (if the first `count`
+ * ordered rows include a retired key, the bracket would need the NEXT reachable key,
+ * which is not in the limited window).
+ */
+function orderedKeysSql(o, { bounded }) {
+  if (!Number.isInteger(o.count) || o.count <= 0) throw new Error(`invalid cohort count ${JSON.stringify(o.count)}`);
+  const limit = bounded ? ` LIMIT ${o.count}` : '';
+  return `SELECT t."${o.key}" FROM ${o.table} t WHERE ${o.where} ORDER BY ${o.order}${limit}`;
 }
 
 /**
@@ -475,7 +584,13 @@ function assertRestoreKeys(keys) {
  */
 function resolveCaptureOut(out) {
   if (typeof out !== 'string' || out.length === 0) throw new Error('--run requires --out=<path under docs/reports/golden/<slug>/[pre|post]/>');
-  const abs = path.isAbsolute(out) ? out : path.join(REPO_ROOT, out);
+  // F3: `path.resolve` — NOT `path.join` — collapses `..` segments. With `path.join` an
+  // absolute `docs/reports/golden/<slug>/golden/../post/x.json` kept its `..` text, and the
+  // `startsWith(root)` / 3-segment checks below graded the UNRESOLVED string rather than the
+  // path the harness would actually write. Resolving first means we validate the real
+  // destination, so `..` can neither hide a location outside the golden root nor fake the
+  // `<slug>/<side>/<name>.json` shape.
+  const abs = path.resolve(REPO_ROOT, out);
   const norm = abs.split('\\').join('/');
   const root = GOLDEN_ROOT.split('\\').join('/');
   if (!norm.startsWith(`${root}/`)) {
@@ -488,6 +603,184 @@ function resolveCaptureOut(out) {
   return abs;
 }
 
+// ── source reachability (the source-checked cohort, operator ruling 2026-10-03) ──
+/**
+ * Parse ONE CSV record starting at `text[i]`, per RFC 4180. Pure. Returns
+ * `{fields, i}` with `i` positioned on the record's terminating newline (or `text.length`).
+ *
+ * Handles the three shapes the source files actually use and that a naive
+ * `split(',')` mangles: a double-QUOTED field containing the delimiter, a `""` escape
+ * for a literal quote inside that field, and CRLF line endings. A character-wise
+ * scanner is used rather than a regex because quote state is not regular when the
+ * delimiter and the quote can both appear inside a field.
+ */
+function parseCsvRecord(text, start) {
+  const fields = [];
+  let i = start;
+  for (;;) {
+    let value = '';
+    if (text[i] === '"') {
+      i += 1;
+      while (i < text.length) {
+        if (text[i] === '"') {
+          if (text[i + 1] === '"') { value += '"'; i += 2; continue; }
+          i += 1;
+          break;
+        }
+        value += text[i];
+        i += 1;
+      }
+    }
+    while (i < text.length && text[i] !== ',' && text[i] !== '\n' && text[i] !== '\r') {
+      value += text[i];
+      i += 1;
+    }
+    fields.push(value);
+    if (text[i] === ',') { i += 1; continue; }
+    break;
+  }
+  if (text[i] === '\r' && text[i + 1] === '\n') i += 2;
+  else if (text[i] === '\r' || text[i] === '\n') i += 1;
+  return { fields, i };
+}
+
+/**
+ * The Set of key values in a CSV with a header row. PURE — the caller reads the bytes.
+ *
+ * `keyColumn` must appear in the header (refused by NAME, not by position, so a
+ * reordered source file still works and a renamed column is caught here rather than
+ * silently producing an empty cohort). Every value is `String()`-ed because the DB
+ * driver hands back a bigint for an integer PK while the CSV always reads text: the
+ * comparison must be by MEANING, never by the driver's transient JS type.
+ *
+ * A UTF-8 BOM on the first header cell is stripped: a BOM-prefixed `\ufeffid` would
+ * otherwise not equal `id`, and the operator's `--source-key=id` would be refused as
+ * "absent from the header" for a file whose header plainly reads `id`.
+ */
+function readSourceKeys(csvText, keyColumn) {
+  if (typeof csvText !== 'string') throw new Error('readSourceKeys: csvText must be a string');
+  if (typeof keyColumn !== 'string' || keyColumn === '') throw new Error('readSourceKeys: keyColumn must be a non-empty string');
+  const text = csvText.charCodeAt(0) === 0xfeff ? csvText.slice(1) : csvText;
+  const header = parseCsvRecord(text, 0).fields;
+  const col = header.indexOf(keyColumn);
+  if (col < 0) {
+    throw new Error(`readSourceKeys: --source-key ${JSON.stringify(keyColumn)} is not a column of the source header (${JSON.stringify(header.join(','))})`);
+  }
+  const keys = new Set();
+  let i = header.length === 0 ? text.length : parseCsvRecord(text, 0).i;
+  while (i < text.length) {
+    const rec = parseCsvRecord(text, i);
+    i = rec.i;
+    // A blank trailing line (a file that ends in a newline) is not a record.
+    if (rec.fields.length === 1 && rec.fields[0] === '') continue;
+    keys.add(String(rec.fields[col] === undefined ? '' : rec.fields[col]));
+  }
+  return keys;
+}
+
+/**
+ * Draw the cohort from keys the source STILL CARRIES. PURE — the caller supplies the
+ * ordered DB keys and the source key set.
+ *
+ * `cohort` = the FIRST `count` keys of `orderedDbKeys` that are in `sourceKeySet`;
+ * `unreachable` = the keys encountered BEFORE the cohort filled that are NOT in the set
+ * (i.e. the rows a perturbation of this cohort would leave stranded: a retired key's DB
+ * row is never revisited by a step whose guard reads the source, so its bracket can
+ * never heal it — the address_points key 16487 failure of 2026-10-03).
+ *
+ * `unreachable` is clipped at the moment the cohort fills: keys after the cut are not
+ * part of this bracket's population, and reporting them would overstate what the run
+ * did not check. Fewer than `count` reachable keys is a refusal, never a short cohort —
+ * a short cohort makes the --run "wrote >= 1" and heal claims describe a population the
+ * source cannot support.
+ */
+function selectCohort(orderedDbKeys, sourceKeySet, count) {
+  if (!Array.isArray(orderedDbKeys)) throw new Error('selectCohort: orderedDbKeys must be an array');
+  if (!(sourceKeySet instanceof Set)) throw new Error('selectCohort: sourceKeySet must be a Set');
+  if (!Number.isInteger(count) || count <= 0) throw new Error(`selectCohort: count must be a positive integer (got ${JSON.stringify(count)})`);
+  const keys = orderedDbKeys.map((k) => String(k));
+  const cohort = [];
+  const unreachable = [];
+  for (const k of keys) {
+    if (cohort.length >= count) break;
+    if (sourceKeySet.has(k)) cohort.push(k);
+    else unreachable.push(k);
+  }
+  if (cohort.length < count) {
+    throw new Error(`selectCohort: only ${cohort.length} of ${keys.length} ordered DB key(s) are present in the source; --count=${count} cannot be drawn from keys the source still carries`);
+  }
+  return { cohort, unreachable };
+}
+
+/**
+ * The DEFAULT (unflagged) source check. PURE.
+ *
+ * The pre-2026-10-03 behaviour is kept for callers that legitimately cannot reach the
+ * source bytes (a historical re-run, a test), but it is no longer SILENT: a key the
+ * source retired cannot be healed by any step whose guard reads that source, and a run
+ * that skipped the check must say so in its transcript. The set is every DB key — so
+ * `unreachable` is empty and the cohort is exactly the first `count` keys, unchanged.
+ */
+function defaultSourceCheck(orderedDbKeys, count) {
+  const { cohort, unreachable } = selectCohort(orderedDbKeys, new Set(orderedDbKeys.map((k) => String(k))), count);
+  return { checked: false, sourcePath: null, sourceKeys: null, cohort, unreachable };
+}
+
+/** The two optional flags: both or neither. Pure (no fs — `--source-csv` existence is checked by the caller). */
+function sourceFlags(args) {
+  const csv = args.sourceCsv === null || args.sourceCsv === undefined || args.sourceCsv === true || args.sourceCsv === '' ? null : args.sourceCsv;
+  const key = args.sourceKey === null || args.sourceKey === undefined || args.sourceKey === true || args.sourceKey === '' ? null : args.sourceKey;
+  if ((csv === null) !== (key === null)) {
+    throw new Error('--source-csv and --source-key must be given together (a source file without the key column, or a key column with no file, would silently decide nothing); pass both or neither');
+  }
+  if (csv !== null && typeof csv !== 'string') throw new Error('--source-csv must be a path');
+  if (key !== null && typeof key !== 'string') throw new Error('--source-key must be a header column name');
+  return { sourceCsv: csv, sourceKey: key };
+}
+
+/**
+ * The `{checked, sourcePath, sourceKeys, cohort, unreachable}` decision for a mode that
+ * has already read the DB's ordered keys. PURE — the caller reads the DB and the file.
+ *
+ * `sourcePath` is `path.resolve`d for the transcript so the operator sees WHICH file was
+ * consulted, not the relative spelling they typed.
+ */
+function sourceCheckedCohort({ orderedDbKeys, count, sourceCsv, sourceKey, sourceCsvText }) {
+  if (sourceCsv === null || sourceCsv === undefined) return defaultSourceCheck(orderedDbKeys, count);
+  if (typeof sourceCsvText !== 'string') throw new Error('sourceCheckedCohort: sourceCsvText is required when sourceCsv is given');
+  const sourceKeys = readSourceKeys(sourceCsvText, sourceKey);
+  const { cohort, unreachable } = selectCohort(orderedDbKeys, sourceKeys, count);
+  return { checked: true, sourcePath: path.resolve(REPO_ROOT, sourceCsv), sourceKeys, cohort, unreachable };
+}
+
+/** The one-line verdict + up to 10 unreachable keys. Pure. Shared by every cohort-using mode. */
+function sourceCheckLines(mode, { checked, sourcePath, cohort, unreachable }) {
+  if (!checked) {
+    return ['[cohort:' + mode + '] cohort NOT checked against the source — a key the source retired cannot be healed'];
+  }
+  const lines = [`[cohort:${mode}] source-checked: ${cohort.length} reachable, ${unreachable.length} unreachable (absent from ${sourcePath})`];
+  if (unreachable.length > 0) {
+    lines.push(`[cohort:${mode}] unreachable key(s), up to ${MAX_UNREACHABLE_PRINTED} of ${unreachable.length}: ${unreachable.slice(0, MAX_UNREACHABLE_PRINTED).join(', ')}`);
+  }
+  return lines;
+}
+
+/**
+ * The cohort SELECT when the cohort keys come from the source check: `key = ANY($1)`
+ * with ALL `--where` matches in `--order` order (NO LIMIT — the keys are a parameter, not
+ * a predicate, so the ORDER and the population are the caller's; keeping `LIMIT` here
+ * would re-introduce the very re-derivation this path exists to avoid).
+ * The key list is passed as a bind array, so nothing is textually interpolated. Pure.
+ *
+ * When the source check is ABSENT the ordered-key read is cohortSelect as before — the
+ * unchanged ordering/limit path.
+ */
+function cohortRowsSql(o, checked, cohortKeys) {
+  if (!checked) return cohortSelect(o);
+  if (!Array.isArray(cohortKeys) || cohortKeys.length === 0) throw new Error('cohortRowsSql: the source-checked cohort must be a non-empty key list');
+  return `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE ${o.where} AND t."${o.key}" = ANY($1) ORDER BY ${o.order}`;
+}
+
 // ── DB plumbing ──────────────────────────────────────────────────────────────
 function requireEnv(name) {
   const v = process.env[name];
@@ -495,12 +788,48 @@ function requireEnv(name) {
   return v;
 }
 
+/**
+ * F1 (MEDIUM — cloud risk). PURE: throw unless the RESOLVED TARGET DESCRIPTION names a
+ * loopback host. See `LOCAL_HOST_RE` for why `expectDatabase` alone was not sufficient.
+ *
+ * The argument is `pool.buildoTarget.description` (resolve-db redacts the password, so
+ * this text is safe to log inside the refusal). Returns the description on success so a
+ * caller can log it, and NEVER inspects the env directly — the whole point is that the
+ * decision is made on what the resolver actually RESOLVED, not on what we hoped it would.
+ */
+function assertLocalTarget(description) {
+  if (typeof description !== 'string' || !LOCAL_HOST_RE.test(description)) {
+    throw new Error(
+      `REFUSING: the resolved DB target ${JSON.stringify(description)} is not a loopback host ` +
+      `(${LOCAL_HOST_RE}). This bracket PERTURBS and RESTORES real rows and is a LOCAL dev ` +
+      `instrument only — a cloud/shared target (e.g. SUPABASE_DATABASE_URL) is NOT acceptable, ` +
+      `even though both databases are named "postgres". Point DATABASE_URL at ` +
+      `127.0.0.1:54322 and re-run, or run without the cloud var set.`,
+    );
+  }
+  return description;
+}
+
+/**
+ * Build the pool and PROVE it is local before returning it. F1.
+ *
+ * The assertion runs immediately after the pool object exists and therefore BEFORE any
+ * mode's first query: `createResolvedPool` is synchronous and pool-less (it wraps
+ * `pool.connect`), so this costs no connection and touches no database. Every connecting
+ * mode — plan/backup/run/restore — goes through here, so there is no path to a query
+ * that skipped it.
+ */
 function makePool(label) {
   // Default migration floor (resolve-db): scripts/migrate.js is the ONE sanctioned floor
   // exemption. This bracket has no reason to run below it. `expectDatabase` pins the
   // target so a half-set PG_* triple cannot silently land on the pre-cutover DB the
   // resolver exists to refuse.
-  return createResolvedPool({ label, expectDatabase: requireEnv('PG_DATABASE') });
+  const pool = createResolvedPool({ label, expectDatabase: requireEnv('PG_DATABASE') });
+  // F1: `expectDatabase: 'postgres'` is satisfied by BOTH the cloud DB and the local one,
+  // so the pin above cannot by itself keep a cloud target out. Refuse anything that is not
+  // loopback, on the RESOLVED description, before the caller can issue a single query.
+  assertLocalTarget(pool.buildoTarget && pool.buildoTarget.description);
+  return pool;
 }
 
 /** Query (optionally parameterized) inside `BEGIN READ ONLY` — `--plan` can never write. */
@@ -533,6 +862,56 @@ function firstSummary(stdout) {
 /** The cohort rows as `[{key, value}]` from a `SELECT key, column` result. Pure. */
 function rowsToKeyValues(rows, key, column) {
   return rows.map((r) => ({ key: r[key], value: r[column] }));
+}
+
+/**
+ * The golden's pre-run state. PURE OF WRITES — reads only. Returns
+ * `{ existed, content }` for a file that exists, or `{ existed: false, content: null }`
+ * for one the harness is about to create. `content` is read as a BUFFER (never `utf8`),
+ * so restoring is a byte-exact write with no re-encoding.
+ */
+function readGoldenState(absPath) {
+  if (typeof absPath !== 'string' || absPath === '') throw new Error('readGoldenState: absPath must be a non-empty string');
+  if (!fs.existsSync(absPath)) return { existed: false, content: null };
+  return { existed: true, content: fs.readFileSync(absPath) };
+}
+
+/**
+ * Put the golden back to its pre-run state. Returns the action taken, or `null` when
+ * nothing needed doing. PURE of decisions — `before` comes from `readGoldenState`.
+ *
+ * The two shapes the brief names:
+ *   - the file EXISTED: write the captured bytes back;
+ *   - the file did NOT exist (untracked, created by the harness on this run): DELETE it,
+ *     so a failed claim leaves no new artifact for the next `git status` to mistake for
+ *     a sanctioned capture.
+ * Restoring is deliberately a no-op in BOTH directions when nothing changed: we do not
+ * delete a pre-existing file that is still identical, and we do not rewrite bytes that are
+ * already there (a pointless mtime bump is a diff-churn hazard).
+ */
+function restoreGoldenState(absPath, before) {
+  if (typeof absPath !== 'string' || absPath === '') throw new Error('restoreGoldenState: absPath must be a non-empty string');
+  if (!before || typeof before !== 'object') throw new Error('restoreGoldenState: before must come from readGoldenState');
+  if (before.existed) {
+    if (!fs.existsSync(absPath)) {
+      fs.writeFileSync(absPath, before.content);
+      return 'recreated';
+    }
+    const current = fs.readFileSync(absPath);
+    if (current.equals(before.content)) return null;
+    fs.writeFileSync(absPath, before.content);
+    return 'rewrote';
+  }
+  if (fs.existsSync(absPath)) {
+    fs.rmSync(absPath);
+    return 'deleted';
+  }
+  return null;
+}
+
+/** The repo-relative spelling of an absolute path, for the transcript. Pure. */
+function toRepoPath(absPath) {
+  return path.relative(REPO_ROOT, absPath).split(path.sep).join('/');
 }
 
 /** The standalone undo an operator can run by hand while the bracket is suspended. Pure. */
@@ -571,8 +950,17 @@ function spawnEnv(o) {
 }
 
 /**
- * Resolve the cohort (the FIRST N eligible keys) and the value set the whole bracket
- * reasons about. Used by --plan, --backup and --run. Reads only.
+ * Resolve the cohort and the value set the whole bracket reasons about. Used by --plan,
+ * --backup and --run. Reads only.
+ *
+ * TWO paths, ONE population decision:
+ *   - WITHOUT `--source-csv`: the cohort is the FIRST N eligible rows by --order
+ *     (`cohortSelect`), unchanged from before this ruling;
+ *   - WITH `--source-csv`/`--source-key`: read EVERY key matching --where in --order
+ *     order (keys only), parse the source CSV once, and draw the cohort with
+ *     `selectCohort` from keys the source STILL CARRIES. The DB rows are then re-read —
+ *     projections only, keyed on the cohort — so `--plan`'s value print and `--backup`'s
+ *     before-image are exactly the keys the bracket will perturb.
  *
  * Refuses when fewer than N rows are eligible — a short cohort would make the --run
  * "wrote >= 1" claim and the heal check describe a population the predicate cannot
@@ -584,13 +972,39 @@ async function resolveCohort(pool, o) {
   if (eligible < o.count) {
     throw new Error(`refusing: ${eligible} row(s) match --where but the cohort is --count=${o.count} — the eligibility predicate cannot support this cohort (widen --where or lower --count)`);
   }
-  const rows = await readOnlyQuery(pool, cohortSelect(o));
-  if (rows.length !== o.count) {
-    throw new Error(`refusing: the cohort SELECT returned ${rows.length} row(s), expected ${o.count} — --order is not deterministic over --where`);
-  }
-  const keys = rows.map((r) => r[o.key]);
+  const sourceInfo = await sourceCheckedFor(pool, o);
+  const keys = sourceInfo.cohort;
   assertRestoreKeys(keys);
-  return { eligible, keys, rows: rowsToKeyValues(rows, o.key, o.column) };
+  const rows = await readOnlyQuery(pool, cohortRowsSql(o, sourceInfo.checked, keys), sourceInfo.checked ? [keys] : undefined);
+  if (rows.length !== keys.length) {
+    throw new Error(`refusing: the cohort SELECT returned ${rows.length} row(s), expected ${keys.length} — --order is not deterministic over --where`);
+  }
+  return { eligible, keys, rows: rowsToKeyValues(rows, o.key, o.column), sourceInfo };
+}
+
+/**
+ * The source-check decision for a mode, reading the DB's ordered keys and (when given) the
+ * source CSV. Reads only. Used by resolveCohort so --plan/--backup/--run all draw the SAME
+ * cohort; --restore derives its keys from the before-image instead (see restore()).
+ */
+async function sourceCheckedFor(pool, o) {
+  if (o.sourceCsv === null || o.sourceCsv === undefined) {
+    // The unflagged path still needs the ordered keys (the WARN line prints reachable/
+    // unreachable for the SAME population the cohort is drawn from), so one bounded
+    // key-only read replaces the projection read cohortSelect would have made.
+    const ordered = (await readOnlyQuery(pool, orderedKeysSql(o, { bounded: true }))).map((r) => r[o.key]);
+    return defaultSourceCheck(ordered, o.count);
+  }
+  const ordered = (await readOnlyQuery(pool, orderedKeysSql(o, { bounded: false }))).map((r) => r[o.key]);
+  const sourceCsvText = fs.readFileSync(path.resolve(REPO_ROOT, o.sourceCsv), 'utf8');
+  return sourceCheckedCohort({
+    orderedDbKeys: ordered, count: o.count, sourceCsv: o.sourceCsv, sourceKey: o.sourceKey, sourceCsvText,
+  });
+}
+
+/** The transcript lines for a mode's source check, appended to `lines`. Pure. */
+function reportSourceCheck(mode, sourceInfo, log) {
+  for (const line of sourceCheckLines(mode, sourceInfo)) log(line);
 }
 
 /** The cohort's CURRENT values, read back by key. Reads only. */
@@ -622,6 +1036,7 @@ async function plan(o) {
     const cohort = await resolveCohort(pool, o);
     const whole = (await readOnlyQuery(pool, hashOf(o)))[0].h;
     console.log(`[cohort:plan] table=${o.table} key=${o.key} column=${o.column} op=${JSON.stringify(o.opRaw)}`);
+    reportSourceCheck('plan', cohort.sourceInfo, console.log);
     console.log(`[cohort:plan] eligible=${cohort.eligible} cohort=${cohort.keys.length} (where ${JSON.stringify(o.where)}; order ${o.order})`);
     console.log(`[cohort:plan] whole-table hash over (${[o.key, o.column].join(', ')}): ${whole}`);
     for (const r of cohort.rows) console.log(`[cohort:plan]   ${o.key}=${r.key} ${o.column}=${JSON.stringify(r.value)}`);
@@ -647,6 +1062,7 @@ async function backup(o) {
       throw new Error(`--backup-table ${o.backupTable} already exists — refusing to overwrite a before-image; pick a fresh <yyyymmddthhmmz> name`);
     }
     const cohort = await resolveCohort(pool, o);
+    reportSourceCheck('backup', cohort.sourceInfo, console.log);
     await pool.query(backupCreateSql(o), [cohort.keys]);
     await pool.query(`ALTER TABLE ${o.backupTable} ADD PRIMARY KEY ("${o.key}")`);
     const copied = await backupCohortValues(pool, o);
@@ -674,7 +1090,16 @@ async function restoreFromBackup(pool, o, keys) {
 }
 
 // ── --restore ─────────────────────────────────────────────────────────────────
-/** The standalone undo. Prints the number of rows restored and the cohort's re-read values. */
+/**
+ * The standalone undo. Prints the number of rows restored and the cohort's re-read values.
+ *
+ * The cohort is the BEFORE-IMAGE's keys, never `resolveCohort`: a restore runs precisely
+ * when the bracket's own draw is suspect (the address_points 16487 incident), and
+ * re-drawing it from `--where`/`--order` would restore a DIFFERENT population on the one
+ * run that must put back exactly what was moved. The `--source-csv` check still runs (the
+ * operator asked for it), but it only REPORTS: a key the source has retired is exactly
+ * the row this mode exists to carry back, so it is listed, not refused.
+ */
 async function restore(o) {
   const pool = makePool('ingestor-forced-cohort:restore');
   console.log(`[cohort:restore] db target: ${pool.buildoTarget.description} (source ${pool.buildoTarget.source})`);
@@ -685,6 +1110,18 @@ async function restore(o) {
     const backupRows = await backupCohortValues(pool, o);
     const keys = backupRows.map((r) => r.key);
     assertRestoreKeys(keys);
+    if (o.sourceCsv !== null && o.sourceCsv !== undefined) {
+      const sourceCsvText = fs.readFileSync(path.resolve(REPO_ROOT, o.sourceCsv), 'utf8');
+      const sourceKeys = readSourceKeys(sourceCsvText, o.sourceKey);
+      reportSourceCheck('restore', {
+        checked: true,
+        sourcePath: path.resolve(REPO_ROOT, o.sourceCsv),
+        cohort: keys.filter((k) => sourceKeys.has(String(k))),
+        unreachable: keys.filter((k) => !sourceKeys.has(String(k))),
+      }, console.log);
+    } else {
+      reportSourceCheck('restore', { checked: false }, console.log);
+    }
     const restored = await restoreFromBackup(pool, o, keys);
     const after = await liveCohortValues(pool, o, keys);
     const check = backupPrecondition({ exists: true, liveValues: after, backupValues: backupRows });
@@ -738,8 +1175,13 @@ function removeSignalHandlers() {
  *   6. assert the claims: the FIRST summary reports >= 1 row written AND every cohort row
  *      is back to its backed-up value;
  *   7. finally: restore the cohort from the before-image when `perturbed`, re-verify,
- *      exit 1 on any failed claim, exit 2 if the restore failed, print the exact
- *      `--restore` command before the COMMIT, and close the pool (no process.exit()).
+ *      exit 1 on any failed claim, exit 2 if the restore failed OR did not verify (the
+ *      re-read mismatched) — once `perturbed`, a restore that is not PROVEN correct is an
+ *      exit-2 condition — print the exact `--restore` command on that path too, and close
+ *      the pool (no process.exit()).
+ *
+ * 0. every connecting mode refuses a non-loopback target FIRST (F1, `assertLocalTarget`,
+ *    called from `makePool`, on the resolved description and before any query).
  */
 async function run(o) {
   // Assembled FIRST, from pure inputs, so a bad --capture-arg refuses before a pool is even
@@ -749,6 +1191,14 @@ async function run(o) {
   console.log(`[cohort:run] db target: ${pool.buildoTarget.description} (source ${pool.buildoTarget.source})`);
   console.log(`[cohort:run] table=${o.table} key=${o.key} column=${o.column} op=${JSON.stringify(o.opRaw)} count=${o.count}`);
   console.log(`[cohort:run] step=${o.step} chain=${o.chain} out=${o.out}`);
+  // The golden's PRE-RUN bytes, captured only for a run that will SPAWN the harness. A
+  // failed claim (any assert/heal failure or a non-zero harness exit) must leave the
+  // repository as it found it: the harness writes --out with --overwrite, so without this
+  // the bracket converts a failed claim into a COMMITTED state change (the 2026-10-03
+  // incident left a 199-row capture in docs/reports/golden/address_points/post/sources.json).
+  // Captured BEFORE makePool so a refusal can never have written anything.
+  const outAbs = resolveCaptureOut(o.out);
+  const goldenBefore = readGoldenState(outAbs);
   let asserted = false;
   let restored = false;
   // A restore in `finally` is only legitimate if THIS run actually wrote the table. Set
@@ -774,6 +1224,7 @@ async function run(o) {
       }
       const cohort = await resolveCohort(pool, o);
       cohortKeys = cohort.keys;
+      reportSourceCheck('run', cohort.sourceInfo, console.log);
       backupRows = await backupCohortValues(pool, o);
       const pre = backupPrecondition({ exists: true, liveValues: cohort.rows, backupValues: backupRows });
       if (!pre.ok) throw new Error(pre.reason);
@@ -874,7 +1325,27 @@ async function run(o) {
       restored = false;
       restoreFailed = true;
     }
+    // F2 (LOW-MED). The check above can also fail WITHOUT throwing: `restoreFromBackup`
+    // returns cleanly and the re-read simply MISMATCHES the before-image (a writer that
+    // touched the cohort after our restore, a backup that went stale, an `IS DISTINCT
+    // FROM` that matched nothing). That path used to fall through to `exit 1` — the code
+    // reserved for "the claim failed but the table is fine" — which told the operator the
+    // opposite of the truth. Once we have PERTURBED, an unverified restore is an exit-2
+    // condition, and the operator needs the recovery command on this path exactly as much
+    // as on the throwing one.
+    if (perturbed && !restored) {
+      restoreFailed = true;
+      console.error(`[cohort:run] the cohort is NOT back to its before-image — recover by hand with: ${recoveryCommand(o)}`);
+    }
     console.log(`[cohort:run] restored: ${restored}`);
+    // The golden restore. `asserted` is true ONLY on a PASS; `restoreFailed` /
+    // `!restored` mean the table itself is suspect. Any of those is a failed claim, and a
+    // failed claim must not leave a capture the harness overwrote: the bracket is not the
+    // instrument that legitimizes a changed golden, so it puts the file back.
+    if (!asserted || restoreFailed || !restored) {
+      const action = restoreGoldenState(outAbs, goldenBefore);
+      if (action) console.log(`[cohort:run] golden restored to its pre-run bytes (${action} ${toRepoPath(outAbs)})`);
+    }
     // Exit 2 is reserved for an unrestorable table — the operator must see a DIFFERENT
     // code for "I could not put it back" than for "the claim failed but it is restored".
     if (restoreFailed) process.exitCode = 2;
@@ -1008,10 +1479,57 @@ function selfTest() {
   throws(() => firstSummary('nothing here'), 'firstSummary accepted output with no summary');
 
   // resolveCaptureOut: the harness's fixed capture locations only.
-  assert(resolveCaptureOut('docs/reports/golden/load_address_points/post/forced.json').endsWith('post/forced.json'), 'resolveCaptureOut rejected a legal post path');
+  assert(resolveCaptureOut('docs/reports/golden/load_address_points/post/forced.json').split('\\').join('/').endsWith('post/forced.json'), 'resolveCaptureOut rejected a legal post path');
   throws(() => resolveCaptureOut('elsewhere/forced.json'), 'resolveCaptureOut accepted a path outside docs/reports/golden');
   throws(() => resolveCaptureOut('docs/reports/golden/load_address_points/forced.json'), 'resolveCaptureOut accepted a missing <side>/ level');
   throws(() => resolveCaptureOut('docs/reports/golden/load_address_points/post/'), 'resolveCaptureOut accepted a directory');
+  // F3: `..` must be collapsed BEFORE the shape checks, so an absolute path that only
+  // LOOKS like it lives in a side directory is refused.
+  // F3: `..` must be collapsed BEFORE the shape checks, so a path that `startsWith` the
+  // golden root only in TEXT form — because a `..` still sits in it — is refused.
+  throws(() => resolveCaptureOut('docs/reports/golden/load_address_points/post/../../../elsewhere/post/f.json'), 'resolveCaptureOut accepted a ".." escape');
+  assert(resolveCaptureOut('docs/reports/golden/load_address_points/post/../post/f.json').split('\\').join('/').endsWith('golden/load_address_points/post/f.json'), 'resolveCaptureOut must resolve ".." before validating');
+
+  // assertLocalTarget (F1): loopback only. Both a connection string and the discrete
+  // `host:port/db` description must pass; a cloud host must be REFUSED even though its
+  // database is also named `postgres` (which the expectDatabase pin cannot distinguish).
+  assert(assertLocalTarget('postgresql://postgres:[REDACTED]@127.0.0.1:54322/postgres') === 'postgresql://postgres:[REDACTED]@127.0.0.1:54322/postgres', 'assertLocalTarget rejected a local 127.0.0.1 connection string');
+  assert(assertLocalTarget('127.0.0.1:54322/postgres') === '127.0.0.1:54322/postgres', 'assertLocalTarget rejected a local discrete PG_* description');
+  assert(assertLocalTarget('postgresql://postgres:[REDACTED]@localhost:5433/postgres') !== null, 'assertLocalTarget rejected a localhost connection string');
+  throws(() => assertLocalTarget('postgresql://postgres:[REDACTED]@db.abc.supabase.co:5432/postgres'), 'assertLocalTarget accepted the CLOUD Supabase host');
+  throws(() => assertLocalTarget('aws-0-eu-west-1.pooler.supabase.com:5432/postgres'), 'assertLocalTarget accepted a cloud pooler description');
+  throws(() => assertLocalTarget('10.0.0.5:5432/postgres'), 'assertLocalTarget accepted a non-loopback private IP description');
+  throws(() => assertLocalTarget('db.abc.supabase.co:5432/postgres'), 'assertLocalTarget accepted a bare cloud host:port description');
+  // The DISCRETE PG_* description carries no `@`; the `^` alternative in LOCAL_HOST_RE is
+  // what makes it pass, so assert both shapes rather than only the connection-string one.
+  assert(LOCAL_HOST_RE.test('127.0.0.1:54322/postgres') === true, 'LOCAL_HOST_RE must accept the discrete local 127.0.0.1 PG_* description');
+  assert(LOCAL_HOST_RE.test('localhost:5432/buildo') === true, 'LOCAL_HOST_RE must accept the discrete localhost PG_* description');
+  assert(LOCAL_HOST_RE.test('10.0.0.5:5432/postgres') === false, 'LOCAL_HOST_RE must refuse a non-loopback private IP description');
+  throws(() => assertLocalTarget(''), 'assertLocalTarget accepted an empty description');
+  throws(() => assertLocalTarget(undefined), 'assertLocalTarget accepted an undefined description');
+  assert(LOCAL_HOST_RE.test('postgresql://u:p@127.0.0.1:54322/postgres') === true && LOCAL_HOST_RE.test('db.abc.supabase.co:5432/postgres') === false, 'LOCAL_HOST_RE does not discriminate loopback from cloud');
+
+  // F3: --capture-arg must not re-set a flag the bracket owns, and --step must not escape
+  // scripts/ with a ".." segment.
+  const captureArgBase = ['--run', '--table=address_points', '--key=id', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z'];
+  throws(() => validateFlags(parseArgs([...captureArgBase, '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json', '--capture-arg=--out=docs/reports/golden/other/post/f.json'])), 'validateFlags accepted --capture-arg=--out');
+  throws(() => validateFlags(parseArgs([...captureArgBase, '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json', '--capture-arg=--overwrite'])), 'validateFlags accepted --capture-arg=--overwrite');
+  throws(() => validateFlags(parseArgs([...captureArgBase, '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json', '--capture-arg=--step=scripts/other.js'])), 'validateFlags accepted --capture-arg=--step');
+  throws(() => validateFlags(parseArgs([...captureArgBase, '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json', '--capture-arg=--chain=other'])), 'validateFlags accepted --capture-arg=--chain');
+  throws(() => validateFlags(parseArgs([...captureArgBase, '--step=scripts/../../etc/passwd.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json'])), 'validateFlags accepted a ".." in --step');
+  assert(validateFlags(parseArgs([...captureArgBase, '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/s/post/f.json', '--capture-arg=--tables=address_points'])) !== null, 'validateFlags rejected a legal --capture-arg passthrough');
+
+  // F4: the shell-unsafe characters that would be substituted inside the printed recovery
+  // command's JSON-quoted values.
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=negate_bool', '--count=1', '--where=name = $(id)', '--order=k', '--backup-table=t_cohort_bak_20261002t1848z'])), 'validateFlags accepted "$(" in --where');
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order="k" || `id`', '--backup-table=t_cohort_bak_20261002t1848z'])), 'validateFlags accepted a backtick in --order');
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=append_text:$(x)', '--count=1', '--where=w', '--order=k', '--backup-table=t_cohort_bak_20261002t1848z'])), 'validateFlags accepted "$(" in --op');
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order=`id`', '--backup-table=t_cohort_bak_20261002t1848z'])), 'validateFlags accepted a backtick in --order alone');
+  assert(validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order=k', '--backup-table=t_cohort_bak_20261002t1848z'])) !== null, 'validateFlags rejected an ordinary shell-safe set of expressions');
+
+  // Nit: --key and --column are distinct roles, and the before-image must name --table.
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=k', '--op=negate_bool', '--count=1', '--where=w', '--order=k', '--backup-table=t_cohort_bak_20261002t1848z'])), 'validateFlags accepted --key === --column');
+  throws(() => validateFlags(parseArgs(['--plan', '--table=t', '--key=k', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order=k', '--backup-table=other_cohort_bak_20261002t1848z'])), 'validateFlags accepted a before-image named for a different table');
 
   // nodeArgv / spawnEnv: the passthrough, and the refusal BEFORE any DB connect.
   const runO = validateFlags(parseArgs(['--run', '--table=address_points', '--key=id', '--column=c', '--op=negate_bool', '--count=1', '--where=w', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/load_address_points/post/f.json', '--env=FOO=bar', '--capture-arg=--tables=address_points']));
@@ -1036,6 +1554,29 @@ function selfTest() {
 
   // recoveryCommand: mentions --restore and the exact before-image name.
   assert(recoveryCommand(o).includes('--restore') && recoveryCommand(o).includes(o.backupTable), 'recoveryCommand does not name --restore and the before-image');
+
+  // RED (drawn BEFORE the implementation): readSourceKeys — a header row, quoted fields
+  // that CONTAIN commas, `""` escapes, and CRLF line endings.
+  const srcKeys = readSourceKeys('id,name\r\n16487,"O\'Brien, Ltd."\r\n16488,"say ""hi"" now"\r\n', 'id');
+  assert(srcKeys instanceof Set, 'readSourceKeys did not return a Set');
+  assert(srcKeys.has('16487') && srcKeys.has('16488'), `readSourceKeys lost a key: ${[...srcKeys].join(',')}`);
+  assert(srcKeys.size === 2, `readSourceKeys counted the quoted comma as a field: size=${srcKeys.size}`);
+  // The quoted field's OWN comma must not split the row, and the header lookup must be by
+  // name, not position (probe with `name` — whose values contain commas — as the key col).
+  const nameKeys = readSourceKeys('id,name\r\n16487,"O\'Brien, Ltd."\r\n', 'name');
+  assert(nameKeys.has("O'Brien, Ltd."), `readSourceKeys did not unquote a comma-bearing field: ${[...nameKeys].join('|')}`);
+  throws(() => readSourceKeys('id,name\r\n1,a\r\n', 'missing'), 'readSourceKeys accepted a keyColumn absent from the header');
+
+  // RED (drawn BEFORE the implementation): selectCohort — the cohort is only reachable
+  // keys; the rest encountered BEFORE it filled are the `unreachable` report.
+  const pick = selectCohort(['1', '2', '16487', '3'], new Set(['2', '3']), 2);
+  assert(pick.cohort.join(',') === '2,3', `selectCohort cohort = ${pick.cohort.join(',')}`);
+  assert(pick.unreachable.join(',') === '1,16487', `selectCohort unreachable = ${pick.unreachable.join(',')}`);
+  // Non-string DB keys (a bigint id) must match a string-keyed source Set — the driver's
+  // transient JS type must not decide reachability.
+  assert(selectCohort([1n, 2n], new Set(['2']), 1).cohort.join(',') === '2', 'selectCohort did not compare a bigint DB key to the string source key set');
+  // Fewer reachable keys than --count is a refusal, never a short cohort.
+  throws(() => selectCohort(['1', '2'], new Set(['1']), 2), 'selectCohort accepted fewer reachable keys than count');
 }
 
 // ── CLI dispatch ─────────────────────────────────────────────────────────────
@@ -1064,8 +1605,8 @@ Shared flags (plan/backup/run/restore):
   --run       Perturb the cohort, spawn the real step through ${HARNESS}, assert
               records_updated (or new+updated) >= 1 AND that every cohort row is back to
               its backed-up value, then restore unconditionally (cohort-scoped).
-              Exit 1 on a failed claim; exit 2 if the restore failed (the exact --restore
-              command is printed before the COMMIT).
+              Exit 1 on a failed claim; exit 2 if the restore failed or did not verify (the exact
+              --restore command is printed before the COMMIT and on every failed-restore path).
   --restore   Put the before-image back and re-verify the cohort.
   --self-test No DB. Asserts the argv/SQL/decision invariants. Prints 'self-test PASSED'.
   --help      This text.
@@ -1073,7 +1614,16 @@ Shared flags (plan/backup/run/restore):
 
 async function main() {
   const argv = process.argv.slice(2);
-  if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) {
+  if (argv.length === 0) {
+    process.stdout.write(HELP);
+    return;
+  }
+  // A bare `--help` prints the text; `--help` ALONGSIDE a mode is accepted but must not
+  // run that mode (the operator asked for the docs), and must not report a mode's success.
+  if (argv.includes('--help') || argv.includes('-h')) {
+    if (argv.some((a) => a !== '--help' && a !== '-h')) {
+      console.log('[cohort] --help given with a mode — printing the help text only; no mode was run.');
+    }
     process.stdout.write(HELP);
     return;
   }
@@ -1093,7 +1643,12 @@ async function main() {
 if (require.main === module) {
   main()
     .then(() => {
-      if (process.argv.includes('--self-test')) console.log('self-test PASSED');
+      // The success banner belongs to a self-test that ACTUALLY RAN. `--help` alone, or
+      // `--help --self-test`, prints the help text and must not claim a PASS it never
+      // computed.
+      if (process.argv.includes('--self-test') && !process.argv.includes('--help') && !process.argv.includes('-h')) {
+        console.log('self-test PASSED');
+      }
     })
     .catch((err) => {
       console.error('[cohort] ERROR:', err.message);
@@ -1105,6 +1660,10 @@ module.exports = {
   COHORT_LOCK_ID,
   TABLE_NAME_RE,
   BACKUP_TABLE_RE,
+  LOCAL_HOST_RE,
+  assertLocalTarget,
+  readSourceKeys,
+  selectCohort,
   parseArgs,
   modeFlag,
   validateFlags,

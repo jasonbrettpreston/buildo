@@ -1,0 +1,278 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-parcels.js",
+  "chain": "sources",
+  "source_fingerprint": "5c9643596acc24cd48059b5dc31cd1d1487d1a155c79146bab147d92df4da9db",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 161,
+    "distinct": 14,
+    "utility": 8,
+    "tracer_self_ms": 9990.204,
+    "wall_ms": 299113
+  },
+  "statements": [
+    {
+      "fingerprint": "36792c4b7d22fd4c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 495496,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:parcels"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7e9953ff29309ce6",
+      "kind": "write",
+      "count": 144,
+      "rowCount": 200,
+      "reads": {
+        "parcels": [
+          "addr_num_normalized",
+          "address_number",
+          "centreline_dataset_version_when_enriched",
+          "date_effective",
+          "feature_type",
+          "geom",
+          "geometry",
+          "heritage_dataset_version_when_enriched",
+          "linear_name_full",
+          "lot_size_source",
+          "lot_size_sqft",
+          "lot_size_sqm",
+          "ravine_dataset_version_when_enriched",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "addr_num_normalized",
+          "address_number",
+          "date_effective",
+          "depth_ft",
+          "depth_m",
+          "feature_type",
+          "frontage_ft",
+          "frontage_m",
+          "geom",
+          "geometry",
+          "is_irregular",
+          "linear_name_full",
+          "lot_size_source",
+          "lot_size_sqft",
+          "lot_size_sqm",
+          "parcel_id",
+          "stated_area_raw",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 5,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "1496:3",
+      "write_fingerprints": [
+        "7e9953ff29309ce6"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "parcels": [
+        "addr_num_normalized",
+        "address_number",
+        "centreline_dataset_version_when_enriched",
+        "date_effective",
+        "depth_ft",
+        "depth_m",
+        "feature_type",
+        "frontage_ft",
+        "frontage_m",
+        "geom",
+        "geometry",
+        "heritage_dataset_version_when_enriched",
+        "is_irregular",
+        "linear_name_full",
+        "lot_size_source",
+        "lot_size_sqft",
+        "lot_size_sqm",
+        "parcel_id",
+        "ravine_dataset_version_when_enriched",
+        "stated_area_raw",
+        "street_name_normalized",
+        "street_type_normalized"
+      ]
+    },
+    "writes": {
+      "parcels": [
+        "addr_num_normalized",
+        "address_number",
+        "date_effective",
+        "depth_ft",
+        "depth_m",
+        "feature_type",
+        "frontage_ft",
+        "frontage_m",
+        "geom",
+        "geometry",
+        "is_irregular",
+        "linear_name_full",
+        "lot_size_source",
+        "lot_size_sqft",
+        "lot_size_sqm",
+        "parcel_id",
+        "stated_area_raw",
+        "street_name_normalized",
+        "street_type_normalized"
+      ]
+    }
+  },
+  "errors": []
+}

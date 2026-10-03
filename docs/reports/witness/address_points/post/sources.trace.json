@@ -1,0 +1,266 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-address-points.js",
+  "chain": "sources",
+  "source_fingerprint": "f175c542aca08d1dade96bfa785ac9a964f2e46b73bc534fd4754bbf95717341",
+  "git_head": "7e852a7ae07d403d281445edc6d81291ad39dd67",
+  "header": {
+    "processes": 1,
+    "calls": 146,
+    "distinct": 14,
+    "utility": 8,
+    "tracer_self_ms": 10985.902,
+    "wall_ms": 255464
+  },
+  "statements": [
+    {
+      "fingerprint": "4884acb6d09f0c44",
+      "kind": "write",
+      "count": 129,
+      "rowCount": 200,
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_point_id",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:address_points"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9184be8b14cc7f3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 525343,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "7824:3",
+      "write_fingerprints": [
+        "4884acb6d09f0c44"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "addr_num_normalized",
+        "address_class_desc",
+        "address_full",
+        "address_number",
+        "address_point_id",
+        "address_status",
+        "class_family_desc",
+        "geom",
+        "hi_num",
+        "latitude",
+        "linear_name_full",
+        "linear_name_normalized",
+        "lo_num",
+        "longitude",
+        "maint_stage",
+        "place_name"
+      ]
+    },
+    "writes": {
+      "address_points": [
+        "addr_num_normalized",
+        "address_class_desc",
+        "address_full",
+        "address_number",
+        "address_point_id",
+        "address_status",
+        "class_family_desc",
+        "geom",
+        "hi_num",
+        "latitude",
+        "linear_name_full",
+        "linear_name_normalized",
+        "lo_num",
+        "longitude",
+        "maint_stage",
+        "place_name"
+      ]
+    }
+  },
+  "errors": []
+}

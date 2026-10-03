@@ -1,0 +1,405 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-centreline.js",
+  "chain": "none",
+  "source_fingerprint": "2a241208d39e8a10ce3e1f9640614b693401cbeefb9f711462b11385ba2b5c04",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 37,
+    "distinct": 20,
+    "utility": 9,
+    "tracer_self_ms": 889.931,
+    "wall_ms": 112943
+  },
+  "statements": [
+    {
+      "fingerprint": "10fad24fafb14d6d",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {
+        "toronto_centreline": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          110980,
+          null,
+          2241,
+          47330,
+          47330,
+          0,
+          "{\"centreline_load\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"last_modified\":\"Fri, 02 Oct 2026 18:14:44 GMT\",\"etag\":\"\\\"1790964884.644-117715801-1305219654\\\"\",\"content_hash\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"feature_count_raw\":64393,\"feature_count_filtered\":47330,\"filtered_out_non_street\":17063,\"filtered_out_federal\":0,\"unknown_feature_code_count\":1,\"unknown_jurisdiction_count\":97,\"features_inserted\":47330,\"features_updated\":0,\"features_deleted\":47330,\"invalid_geometry_skipped\":0,\"delete_skipped_empty_guard\":false,\"f_c1_empty_temp_guard_fired\":false,\"drift_check_passed\":true},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_centreline_dataset_age_warn_days\":7,\"load_centreline_count_drift_fail_pct\":0.5,\"load_centreline_invalid_geometry_fail_pct\":0.05,\"load_centreline_download_timeout_ms\":600000,\"load_centreline_download_retries\":2,\"load_centreline_download_retry_backoff_ms\":0,\"load_centreline_round_scale\":1000,\"load_centreline_max_detail_keys\":50},\"terminal\":\"loaded_preserved_empty_guard\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"warnings\":[\"centreline_unknown_feature_code_count: 1\",\"centreline_unknown_jurisdiction_count: 97\"],\"audit_table\":{\"phase\":63,\"name\":\"Toronto Centreline\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_dataset_age_days\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_feature_count_raw\",\"value\":64393,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_bad_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_unknown_feature_code_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"centreline_unknown_jurisdiction_count\",\"value\":97,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"centreline_duplicate_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_feature_count_filtered\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads.\"}},{\"metric\":\"centreline_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"L8 abort-before-DELETE if invalid >5%\",\"guarantee\":\"Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened).\"}},{\"metric\":\"f_c1_empty_temp_guard_fired_first_run\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched.\"}},{\"metric\":\"f_c1_empty_temp_guard_fired\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage.\"}},{\"metric\":\"centreline_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_features_inserted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_features_deleted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":426.48,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":110977,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "load_centreline",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "66e1f603de32abad",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_centreline"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9184be8b14cc7f3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a47b9456480b80ba",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:load_centreline",
+            "load_centreline",
+            "load-centreline"
+          ],
+          2241
+        ]
+      ]
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "bda9b1d341d87cda",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 47330,
+      "reads": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "writes": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "eb403895817e1649",
+      "kind": "write",
+      "count": 14,
+      "rowCount": 47330,
+      "reads": {},
+      "writes": {
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "jurisdiction",
+          "linear_name",
+          "linear_name_dir",
+          "linear_name_full",
+          "linear_name_type",
+          "lo_num_l",
+          "lo_num_r",
+          "oneway_dir_code_desc",
+          "parity_l",
+          "parity_r",
+          "source_dataset_version",
+          "source_id",
+          "to_intersection_id",
+          "updated_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "4232:3",
+      "write_fingerprints": [
+        "10fad24fafb14d6d",
+        "bda9b1d341d87cda",
+        "eb403895817e1649"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "jurisdiction",
+        "linear_name",
+        "linear_name_dir",
+        "linear_name_full",
+        "linear_name_type",
+        "lo_num_l",
+        "lo_num_r",
+        "oneway_dir_code_desc",
+        "parity_l",
+        "parity_r",
+        "source_dataset_version",
+        "source_id",
+        "to_intersection_id",
+        "updated_at"
+      ]
+    },
+    "writes": {
+      "toronto_centreline": [
+        "feature_code_desc",
+        "from_intersection_id",
+        "geom",
+        "hi_num_l",
+        "hi_num_r",
+        "jurisdiction",
+        "linear_name",
+        "linear_name_dir",
+        "linear_name_full",
+        "linear_name_type",
+        "lo_num_l",
+        "lo_num_r",
+        "oneway_dir_code_desc",
+        "parity_l",
+        "parity_r",
+        "source_dataset_version",
+        "source_id",
+        "to_intersection_id",
+        "updated_at"
+      ]
+    }
+  },
+  "errors": []
+}
