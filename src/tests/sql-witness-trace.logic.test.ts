@@ -20,6 +20,7 @@ type StateEntry = {
   rowCount: number;
   clients: number[];
   params?: unknown[];
+  callers?: string[];
   error?: string;
 };
 
@@ -488,5 +489,66 @@ describe('pass-through: the wrapped query receives EXACTLY the caller\'s argumen
     const seen = lastForwarded();
     expect(seen.length).toBe(1);
     expect(seen[0]).toBe('SELECT 1');
+  });
+});
+
+describe('sql-witness tracer — caller tag (P1-C-src (c))', () => {
+  const CALLER_KEY = Symbol.for('buildo.sql-witness.caller');
+
+  const deleteCallerGlobal = (): void => {
+    delete (globalThis as Record<PropertyKey, unknown>)[CALLER_KEY];
+  };
+
+  it('RED: a statement issued inside the caller AsyncLocalStorage records that caller (once per distinct caller)', async () => {
+    const { AsyncLocalStorage } = await import('node:async_hooks');
+    const als = new AsyncLocalStorage<string>();
+    (globalThis as Record<PropertyKey, unknown>)[CALLER_KEY] = als;
+    try {
+      const client = new pg.Client();
+      await als.run('src/app/api/x/route.ts', () =>
+        callQuery(client, 'SELECT a FROM t'),
+      );
+      await als.run('src/app/api/x/route.ts', () =>
+        callQuery(client, 'SELECT a FROM t'),
+      );
+      await als.run('src/lib/y.ts', () => callQuery(client, 'SELECT a FROM t'));
+
+      expect(entryFor('SELECT a FROM t').callers).toEqual([
+        'src/app/api/x/route.ts',
+        'src/lib/y.ts',
+      ]);
+
+      tracer.flush();
+      const statementLine = readTraceLines().find(
+        (l) => l.type === 'statement' && l.text === 'SELECT a FROM t',
+      );
+      expect(statementLine).toBeDefined();
+      expect(statementLine!.callers).toEqual([
+        'src/app/api/x/route.ts',
+        'src/lib/y.ts',
+      ]);
+    } finally {
+      deleteCallerGlobal();
+    }
+  });
+
+  it('GREEN control: with no caller instance installed, the entry has NO callers key', async () => {
+    deleteCallerGlobal();
+    const client = new pg.Client();
+    await callQuery(client, 'SELECT b FROM t');
+    expect('callers' in entryFor('SELECT b FROM t')).toBe(false);
+  });
+
+  it('GREEN control: an instance with no active store records no callers', async () => {
+    const { AsyncLocalStorage } = await import('node:async_hooks');
+    const als = new AsyncLocalStorage<string>();
+    (globalThis as Record<PropertyKey, unknown>)[CALLER_KEY] = als;
+    try {
+      const client = new pg.Client();
+      await callQuery(client, 'SELECT c FROM t');
+      expect('callers' in entryFor('SELECT c FROM t')).toBe(false);
+    } finally {
+      deleteCallerGlobal();
+    }
   });
 });

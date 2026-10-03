@@ -282,7 +282,7 @@ empty) passes no flag at all.
   - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: parcels
   - downstream: link_massing
-  - consumers: none
+  - consumers: src/lib/leads/lead-inspect-query.ts (table parcels: 2 columns)
 - `assert_parcel_sanity` — ASSERT · converted · owner specs: 43
   - `scripts/quality/assert-parcel-sanity.js`
   - `scripts/quality/assert-parcel-sanity.descriptor.json`

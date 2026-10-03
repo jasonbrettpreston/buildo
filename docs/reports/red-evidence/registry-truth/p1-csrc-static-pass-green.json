@@ -1,0 +1,17 @@
+{
+ "what": "p1-csrc-static-pass",
+ "phase": "green",
+ "impl_state": "implementation present (worktree)",
+ "implementation": [
+  "scripts/analysis/src-sql-ledger.mjs"
+ ],
+ "tests": [
+  "src/tests/src-sql-ledger.logic.test.ts"
+ ],
+ "numFailedTests": 0,
+ "numPassedTests": 16,
+ "suite_load_errors": [],
+ "failed": [],
+ "passed_count": 16,
+ "captured_at": "2026-10-03T16:44:52.294Z"
+}

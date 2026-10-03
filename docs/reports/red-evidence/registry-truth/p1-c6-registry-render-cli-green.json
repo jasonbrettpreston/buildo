@@ -1,0 +1,18 @@
+{
+ "what": "p1-c6-registry-render-cli",
+ "phase": "green",
+ "impl_state": "implementation present (worktree)",
+ "implementation": [
+  "scripts/analysis/gates/step-registry.mjs",
+  "scripts/analysis/step-registry.mjs"
+ ],
+ "tests": [
+  "src/tests/step-registry.logic.test.ts"
+ ],
+ "numFailedTests": 0,
+ "numPassedTests": 21,
+ "suite_load_errors": [],
+ "failed": [],
+ "passed_count": 21,
+ "captured_at": "2026-10-03T16:45:14.183Z"
+}

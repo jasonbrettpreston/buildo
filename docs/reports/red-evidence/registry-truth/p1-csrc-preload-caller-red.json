@@ -1,0 +1,19 @@
+{
+ "what": "p1-csrc-preload-caller",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "scripts/lib/sql-witness/trace-preload.cjs"
+ ],
+ "tests": [
+  "src/tests/sql-witness-trace.logic.test.ts"
+ ],
+ "numFailedTests": 1,
+ "numPassedTests": 27,
+ "suite_load_errors": [],
+ "failed": [
+  "sql-witness tracer — caller tag (P1-C-src (c)) RED: a statement issued inside the caller AsyncLocalStorage records that caller (once per distinct caller)"
+ ],
+ "passed_count": 27,
+ "captured_at": "2026-10-03T16:45:17.210Z"
+}

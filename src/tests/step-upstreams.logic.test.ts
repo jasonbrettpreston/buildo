@@ -24,10 +24,12 @@ const ledger = require('../../scripts/lib/ledger.js') as {
   stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined>; ledger?: { inchain: Record<string, unknown> } }) => string[];
   // P1-C5 (Spec 122 §6; plan Fold 9 D-B): the effective ledger overlays every
   // converted descriptor's derived reads/writes and tags each row's provenance.
-  effectiveLedger: (opts?: { env?: Record<string, string | undefined> }) => {
+  effectiveLedger: (opts?: { env?: Record<string, string | undefined>; srcLedger?: unknown }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     inchain: Record<string, any>;
     static: Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    src: Record<string, any>;
   };
   // P1-C5 (Fold 9 D-C): the column-level, chain-scoped derived reads.steps set.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -305,6 +307,33 @@ describe('P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec
     }
     // (4) static is untouched.
     expect(eff.static).toEqual(raw.static);
+  });
+
+  it('RED: effectiveLedger carries the src/ static SQL ledger as its src section, every row source-tagged src_static; not_postgres files never enter it', () => {
+    const eff = ledger.effectiveLedger({
+      srcLedger: {
+        files: {
+          'src/a.ts': { class: 'static', reads: { permits: ['id'] }, writes: {}, statements: 1 },
+          'src/b.ts': { class: 'interpolated', reads: {}, writes: { permits: ['status'] } },
+          'src/c.ts': { class: 'not_postgres', reason: 'x' },
+        },
+      },
+    });
+    expect(eff.src).toEqual({
+      'src/a.ts': { class: 'static', reads: { permits: ['id'] }, writes: {}, source: 'src_static' },
+      'src/b.ts': { class: 'interpolated', reads: {}, writes: { permits: ['status'] }, source: 'src_static' },
+    });
+    // The src section is a SEPARATE section — it never alters the step rows.
+    expect(eff.inchain).toEqual(ledger.effectiveLedger().inchain);
+  });
+
+  it('RED: the default src section is read from the committed src-sql-ledger.json', () => {
+    const eff = ledger.effectiveLedger();
+    expect(typeof eff.src).toBe('object');
+    for (const row of Object.values(eff.src)) {
+      expect((row as { source: string }).source).toBe('src_static');
+      expect(['static', 'interpolated']).toContain((row as { class: string }).class);
+    }
   });
 
   it("RED: derivedReadsSteps — column-level, chain-scoped, consumer side = the descriptor's declared reads, self excluded", () => {
