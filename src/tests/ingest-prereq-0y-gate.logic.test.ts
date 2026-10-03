@@ -1101,8 +1101,9 @@ describe('0y — converted INGESTORs are untouched by the 0y gate (Regression Gu
     expect(outcome.error.message, 'the 0y gate must not refuse a converted INGESTOR by code').not.toMatch(/0y Y[1-5]/);
   }
 
-  it('the registry declares exactly SEVEN converted INGESTORs (the R1 scope is not vacuous)', () => {
-    expect(convertedIngestors(), 'the R1 lock covers every converted INGESTOR, and there are seven').toHaveLength(7);
+  // 7 -> 8 at batch-2 row 3.4 ③ (load_heritage, 2026-10-03): the INGESTOR joined converted.json.
+  it('the registry declares exactly EIGHT converted INGESTORs (the R1 scope is not vacuous)', () => {
+    expect(convertedIngestors(), 'the R1 lock covers every converted INGESTOR, and there are eight').toHaveLength(8);
   });
 
   it('every converted INGESTOR survives the 0y gate (RED: the five `trigger:"none"` steps die in Y5 today)', async () => {
