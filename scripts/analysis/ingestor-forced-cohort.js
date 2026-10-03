@@ -1493,10 +1493,10 @@ function selfTest() {
   // assertLocalTarget (F1): loopback only. Both a connection string and the discrete
   // `host:port/db` description must pass; a cloud host must be REFUSED even though its
   // database is also named `postgres` (which the expectDatabase pin cannot distinguish).
-  assert(assertLocalTarget('postgresql://postgres:[REDACTED]@127.0.0.1:54322/postgres') === 'postgresql://postgres:[REDACTED]@127.0.0.1:54322/postgres', 'assertLocalTarget rejected a local 127.0.0.1 connection string');
+  assert(assertLocalTarget('postgresql://postgres:fakepw@127.0.0.1:54322/postgres') === 'postgresql://postgres:fakepw@127.0.0.1:54322/postgres', 'assertLocalTarget rejected a local 127.0.0.1 connection string');
   assert(assertLocalTarget('127.0.0.1:54322/postgres') === '127.0.0.1:54322/postgres', 'assertLocalTarget rejected a local discrete PG_* description');
-  assert(assertLocalTarget('postgresql://postgres:[REDACTED]@localhost:5433/postgres') !== null, 'assertLocalTarget rejected a localhost connection string');
-  throws(() => assertLocalTarget('postgresql://postgres:[REDACTED]@db.abc.supabase.co:5432/postgres'), 'assertLocalTarget accepted the CLOUD Supabase host');
+  assert(assertLocalTarget('postgresql://postgres:fakepw@localhost:5433/postgres') !== null, 'assertLocalTarget rejected a localhost connection string');
+  throws(() => assertLocalTarget('postgresql://postgres:fakepw@db.abc.supabase.co:5432/postgres'), 'assertLocalTarget accepted the CLOUD Supabase host');
   throws(() => assertLocalTarget('aws-0-eu-west-1.pooler.supabase.com:5432/postgres'), 'assertLocalTarget accepted a cloud pooler description');
   throws(() => assertLocalTarget('10.0.0.5:5432/postgres'), 'assertLocalTarget accepted a non-loopback private IP description');
   throws(() => assertLocalTarget('db.abc.supabase.co:5432/postgres'), 'assertLocalTarget accepted a bare cloud host:port description');

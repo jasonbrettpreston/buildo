@@ -217,3 +217,37 @@ describe('G4: grep_files child env scrubs DEEPSEEK_* (Spec 08 F-II6)', () => {
     }
   });
 });
+
+// L17 round 2 (3d) — a registered NON-vendor secret (no sk-/AIza/gh*_ shape,
+// so only the real-value registry can catch it) placed in a tool_call
+// argument AND in a tool result never reaches the model.
+describe('G1b: a non-vendor real secret is masked in re-fed args and tool results (§C.1.5, L17)', () => {
+  let repo = '';
+  let ledgerDir = '';
+  let savedSecret: string | undefined;
+  beforeEach(() => {
+    savedSecret = process.env.X_SECRET;
+    repo = makeRepo();
+    ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-g1b-ledger-'));
+  });
+  afterEach(() => {
+    if (savedSecret === undefined) delete process.env.X_SECRET; else process.env.X_SECRET = savedSecret;
+    cleanupTempDir(repo);
+    cleanupTempDir(ledgerDir);
+  });
+
+  it('X_SECRET in a read_file reason and in the file content is absent from seen[1]', async () => {
+    const SECRET = 'xs3cret-Value-9876-QQ';
+    process.env.X_SECRET = SECRET;
+    fs.writeFileSync(path.join(repo, 'carrier.txt'), `value=${SECRET}\n`);
+    const { seen, client } = capturingClient([
+      toolTurn('c1', 'read_file', { path: 'carrier.txt', reason: `check ${SECRET}` }),
+      stopTurn(),
+    ]);
+    await runEngine({ repoRoot: repo, briefPath: writeBrief(repo), provider: 'deepseek', ledgerDir, modelClient: client });
+    const serialized = JSON.stringify(seen[1] ?? []);
+    expect(serialized).toContain('carrier.txt');
+    expect(serialized).not.toContain(SECRET);
+    expect(serialized).toContain('[REDACTED]');
+  });
+});
