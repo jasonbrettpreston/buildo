@@ -289,21 +289,20 @@ function resolveQualified(scope, qualifier, column) {
 }
 
 /**
- * Resolve an unqualified column against the in-scope real relations using the
- * catalog: exactly one real relation -> that table; else the unique relation whose
- * catalog row contains the column; if nothing matches but a derived source is in
- * scope -> ignored; otherwise an error.
- */
-/**
- * Resolve an unqualified column against the scopes on the chain, innermost first.
- * In the innermost scope the catalog disambiguates between multiple relations
- * (exactly one candidate). If the innermost scope cannot place it, each enclosing
- * scope is consulted outward; at an enclosing scope the first relation whose
- * catalog row (or, for the write target, whose declared write columns) contains the
- * column wins. If nothing matches but a derived source is in scope -> ignored;
- * otherwise an error.
+ * Resolve an unqualified column with Postgres's scoping rule: walk the scope chain
+ * innermost -> outward, and at EACH scope count the distinct catalog tables (of the
+ * scope's real relations) that contain the column: exactly 1 -> bind there; more than
+ * 1 -> error (ambiguous, at any scope); 0 -> the write target's declared write columns
+ * may bind it, else continue outward. Two fences (P1-C2):
+ *  (i)  an innermost lone relation with NO catalog row binds immediately (nothing to
+ *       check against);
+ *  (ii) if no scope places the column and the innermost scope had one real relation,
+ *       that relation keeps the credit (executed SQL + stale catalog / output alias
+ *       must not become an error).
+ * Otherwise: ignored when a derived source is in scope (or no relations), else an error.
  */
 function resolveUnqualified(scope, column, catalog, writeColumns) {
+  let lone = null; // fence (ii): the innermost lone relation, credited only if no scope places the column
   for (let s = scope; s !== null && s !== undefined; s = s.parent) {
     // WF3 C2c: an unqualified function output column is derived, never the lone real relation's.
     if (s.funcCols) {
@@ -312,38 +311,29 @@ function resolveUnqualified(scope, column, catalog, writeColumns) {
       }
     }
     const rels = (s.relations || []).filter((r) => !isDerived(s, r.alias || r.rel));
-    if (s === scope) {
-      if (rels.length === 1) {
-        return { table: baseTable(rels[0].rel), schema: rels[0].schema };
-      }
-      const matches = [];
-      const seen = new Set();
-      for (const rel of rels) {
-        const table = baseTable(rel.rel);
-        if (seen.has(table)) continue;
-        seen.add(table);
-        const cols = catalog[table];
-        if (Array.isArray(cols) && cols.indexOf(column) !== -1) {
-          matches.push({ table, schema: rel.schema });
-        }
-      }
-      if (matches.length === 1) return matches[0];
-      if (matches.length > 1) return { error: true };
-    } else {
-      for (const rel of rels) {
-        const table = baseTable(rel.rel);
-        const cols = catalog[table];
-        if (Array.isArray(cols) && cols.indexOf(column) !== -1) {
-          return { table, schema: rel.schema };
-        }
-      }
+    if (s === scope && rels.length === 1) {
+      const only = { table: baseTable(rels[0].rel), schema: rels[0].schema };
+      if (!Array.isArray(catalog[only.table])) return only; // fence (i): uncatalogued
+      lone = only;
     }
+    const matches = [];
+    const seen = new Set();
+    for (const rel of rels) {
+      const table = baseTable(rel.rel);
+      if (seen.has(table)) continue;
+      seen.add(table);
+      const cols = catalog[table];
+      if (Array.isArray(cols) && cols.indexOf(column) !== -1) matches.push({ table, schema: rel.schema });
+    }
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1) return { error: true };
     // The write target of an UPDATE/INSERT binds its own name (and declared
     // write columns); `EXCLUDED` is that same proposed row inside ON CONFLICT.
     if (s.writeTarget && Array.isArray(writeColumns) && writeColumns.indexOf(column) !== -1) {
       return { table: baseTable(s.writeTarget.rel), schema: s.writeTarget.schema };
     }
   }
+  if (lone) return lone;
   if ((scope.relations || []).length === 0 || (scope.derived && scope.derived.size > 0)) return { derived: true };
   return { error: true };
 }
@@ -517,8 +507,8 @@ function resolveNode(node, fp, catalog) {
   const writes = {};
   const excluded = [];
 
-  // --- Utility: transactions, SET/RESET/SHOW, VACUUM/ANALYZE ---
-  if (key === 'TransactionStmt' || key === 'VariableSetStmt' || key === 'VariableShowStmt' || key === 'VacuumStmt' || key === 'AnalyzeStmt') {
+  // --- Utility: transactions, SET/RESET/SHOW, VACUUM/ANALYZE, CREATE INDEX, REINDEX ---
+  if (key === 'TransactionStmt' || key === 'VariableSetStmt' || key === 'VariableShowStmt' || key === 'VacuumStmt' || key === 'AnalyzeStmt' || key === 'IndexStmt' || key === 'ReindexStmt') {
     return result('utility', fp, {}, {}, [], null);
   }
 
@@ -562,12 +552,13 @@ function resolveNode(node, fp, catalog) {
   }
 
   // --- Write statements ---
-  if (key === 'InsertStmt' || key === 'UpdateStmt' || key === 'DeleteStmt' || key === 'MergeStmt') {
+  if (key === 'InsertStmt' || key === 'UpdateStmt' || key === 'DeleteStmt') {
     resolveWrite(key, inner, catalog, reads, writes, excluded);
     return result('write', fp, reads, writes, excluded, null);
   }
 
-  // Unknown statement type: never silently a table touch, but not utility either.
+  // Closed set: any other statement kind (EXPLAIN, DO, CALL, MERGE, TRUNCATE, COPY, …) is refused by name, never a silent utility.
+  currentErrors.push(`FAIL:INPUT:unsupported:${key}`);
   return result('utility', fp, {}, {}, [], null);
 }
 
@@ -736,7 +727,7 @@ function resolveCtes(inner, catalog, reads, writes, excluded, parent) {
   }
 }
 
-/** Resolve INSERT / UPDATE / DELETE / MERGE. */
+/** Resolve INSERT / UPDATE / DELETE. */
 function resolveWrite(key, inner, catalog, reads, writes, excluded) {
   const target = topRelation(inner, key) || (inner.targetList ? null : null);
   resolveCtes(inner, catalog, reads, writes, excluded, null);
@@ -863,13 +854,6 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
     }
     return target;
   }
-
-  // MERGE: writes are managed by the runner elsewhere; touch the target + its reads.
-  const mergeScope = buildWriteScope(inner, null, []);
-  walkExpr(inner, (n) => {
-    if (isColumnRef(n)) applyColumn(n, mergeScope, catalog, reads, writes, excluded, false);
-  });
-  return target;
 }
 
 /**
