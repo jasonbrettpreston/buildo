@@ -682,7 +682,32 @@ function multiPrimaryBinding(descriptor, tag) {
       refuse('B9', `the primary "${e.id}" must be url-bearing, carry no path and not be xlsx (filesystem and lookup arms have no multi-primary consumer; lifting this returns the 0fs A3/G3 refusals to the never-caught set).`);
     }
     const sub = emit && emit.skeleton && emit.skeleton !== 'none' ? emit.skeleton[e.id] : undefined;
-    if (!sub || typeof sub !== 'object') refuse('B6', `emits[0].skeleton["${e.id}"] must be an object: it is the primary's own prior/skip sub-block.`);
+    const allPrimaries = descriptor.staleness && descriptor.staleness.skip_scope === 'all_primaries';
+    // 0y (0y-T14/T16): `skip_scope:"all_primaries"` changes what B6 means. Under that
+    // scope no per-primary sub-block is read or emitted, so B6's object requirement is
+    // not the right fence; what IS the fence is the collision the `:732` narrowing would
+    // hide — `emit.skeleton[id]` silently OVERWRITES a top-level key of an object skeleton
+    // (and it THROWS when `emit.skeleton` is undefined or `emits:"none"`; B6 hid both, so
+    // relaxing B6 without this guard would expose a TypeError, not a refusal).
+    if (allPrimaries) {
+      if (emit && emit.skeleton && emit.skeleton !== 'none' && Object.prototype.hasOwnProperty.call(emit.skeleton, e.id)) refuse('0y G2', `the primary id "${e.id}" collides with a top-level key of emits[0].skeleton; the per-primary narrowing emits: [{ ...emit, skeleton: emit.skeleton[id] }] cannot tell the two apart.`);
+    }
+    if (!allPrimaries && (!sub || typeof sub !== 'object')) refuse('B6', `emits[0].skeleton["${e.id}"] must be an object: it is the primary's own prior/skip sub-block.`);
+    // 0y Y1 (F7): GATED ON THE FORMAT ONLY — a `ckan_datastore`-only arm. Y1 is a
+    // property of the primary's declared format under `all_primaries`.
+    if (allPrimaries && e.format !== 'ckan_datastore') refuse('0y Y1', `skip_scope "all_primaries" declares the primary "${e.id}" as format "${e.format}"; 0y's all-primaries gate is ckan_datastore-only (R-AJ: a non-CKAN primary here has no consumer, and lifting this is its own rung).`);
+    if (allPrimaries) {
+      const ts = (descriptor.staleness && Array.isArray(descriptor.staleness.trigger)) ? descriptor.staleness.trigger : [];
+      const covers = (t) => t && t.position === 'pre_acquisition' && t.style === 'ckan_metadata' && (t.external === undefined || t.external === null || t.external === e.id);
+      if (!ts.some(covers)) refuse('0y Y2', `skip_scope "all_primaries" declares the primary "${e.id}", which no pre_acquisition trigger with style "ckan_metadata" covers (scoped to it, or unscoped).`);
+      for (const t of ts) {
+        if (t && t.position === 'pre_acquisition' && t.style !== 'ckan_metadata') refuse('0y Y2', `under skip_scope "all_primaries" the pre_acquisition trigger (style "${t.style === undefined ? '(absent)' : t.style}") is dropped by the per-primary narrowing; it would be declared and never executed (R-AJ).`);
+      }
+    }
+    if (e.format === 'ckan_datastore') {
+      const ts3 = (descriptor.staleness && Array.isArray(descriptor.staleness.trigger)) ? descriptor.staleness.trigger : [];
+      for (const t of ts3) if (t && t.position === 'post_acquisition' && (t.external === undefined || t.external === null || t.external === e.id)) refuse('0y Y3', `a post_acquisition trigger (style "${t.style === undefined ? '(absent)' : t.style}") reaches the ckan_datastore primary "${e.id}"; 0y's CKAN arm has no content hash, so tier-2 can never fire.`);
+    }
     pairs.push({ external: e, writeSpec: writes.find((w) => w.table === e.target), onFailure: e.on_failure || 'abort_step' });
   }
   for (const w of writes) {
@@ -717,6 +742,34 @@ async function ingestPrimaries(args) {
     }
   }
   await write.assertWritePrivileges(pool, descriptor, { log, tag });
+  const allPrimaries = descriptor.staleness && descriptor.staleness.skip_scope === 'all_primaries';
+  const validatorCache = allPrimaries ? new Map() : undefined;
+  let stepGate = null, priorMeta = null, priorError = null;
+  if (allPrimaries) {
+    const overrides = staleness.resolveOverrides(descriptor);
+    const read = await staleness.readPriorEmitWithPosture(
+      pool, ledgerPipelineName(descriptor, args.chainId), null, staleness.priorRunErrorPosture(descriptor),
+    );
+    priorMeta = read.prior; priorError = read.error;
+    const timeoutMs = acquire.resolveTimeoutMs(descriptor, args.config);
+    const validatorsById = {};
+    for (const { external } of pairs) validatorsById[external.id] = await acquire.ckanResourceValidators(args.fetchImpl, external, timeoutMs, validatorCache);
+    const forced = overrides.force_run === true || (await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId: args.ownRunId })).interrupted;
+    const declared = emitsList(descriptor);
+    const reemitKeys = declared.map((e) => e.key).filter((k) => k !== 'audit_table' && !RUNNER_META_KEYS.includes(k));
+    const emitTypes = Object.fromEntries(declared.map((e) => [e.key, e.type]));
+    const decision = staleness.allPrimariesDecision({ primaries: pairs.map((p) => ({ id: p.external.id })),
+      triggerFor: (id) => { const ts = staleness.triggersAt(descriptor, 'pre_acquisition').filter((t) => t.style === 'ckan_metadata'); return ts.find((t) => t.external === id) || ts.find((t) => t.external === undefined || t.external === null); }, validatorsById, priorMeta, config: args.config,
+      nowMs: args.clockNow.getTime(), forced, reemitKeys, emitTypes });
+    stepGate = { scope: 'all_primaries', reason: decision.reason, decisions: decision.decisions, max_age_days: decision.max_age_days, dataset_version_age_days: decision.dataset_version_age_days };
+    if (decision.skip) {
+      const skippedPrimaries = {};
+      for (const id of pairs.map((p) => p.external.id)) skippedPrimaries[id] = { outcome: 'skipped', reason: decision.decisions[id].reason, last_modified: validatorsById[id].lastModified };
+      const skipEmitMeta = {};
+      for (const k of reemitKeys) skipEmitMeta[k] = priorMeta[k];
+      return { skipped: true, reason: 'unchanged', signal: 'source_validator', acquired: { primaries: skippedPrimaries, step_gate: stepGate, head_error: null }, written: null, prior: priorMeta, priorError, overrides, emitKey: null, emitBlock: null, skipEmitMeta };
+    }
+  }
   const emit = emitsList(descriptor)[0];
   const triggers = descriptor.staleness ? descriptor.staleness.trigger : undefined;
   const results = [];
@@ -729,14 +782,17 @@ async function ingestPrimaries(args) {
       ...descriptor,
       inputs: { ...descriptor.inputs, reads: { ...descriptor.inputs.reads, externals: [external] } },
       outputs: { ...descriptor.outputs, writes: [writeSpec] },
-      emits: [{ ...emit, skeleton: emit.skeleton[id] }],
+      emits: allPrimaries
+        ? (emit ? [{ ...emit, ...(emit.skeleton && typeof emit.skeleton === 'object' ? { skeleton: emit.skeleton[id] } : {}) }] : descriptor.emits)
+        : [{ ...emit, skeleton: emit.skeleton[id] }],
       staleness: Array.isArray(triggers)
-        ? { ...descriptor.staleness, trigger: triggers.filter((t) => t.external === undefined || t.external === null || t.external === id) }
+        ? { ...descriptor.staleness, trigger: triggers.filter((t) => (t.external === undefined || t.external === null || t.external === id) && !(allPrimaries && t.position === 'pre_acquisition')) }
         : descriptor.staleness,
     };
     try {
       const out = await runIngestPhase({
         ...args,
+        validatorCache,
         descriptor: narrowed,
         subKey: id,
         preWriteGate: preWriteGate ? (s) => preWriteGate({ ...s, primary: id }) : null,
@@ -749,7 +805,7 @@ async function ingestPrimaries(args) {
       results.push({ ...base, error: err.message });
     }
   }
-  return aggregatePrimaries(results, { emitKey: emit ? emit.key : null, overrides: staleness.resolveOverrides(descriptor) });
+  return aggregatePrimaries(results, { emitKey: emit ? emit.key : null, overrides: staleness.resolveOverrides(descriptor), allPrimaries, priorMeta, priorError, stepGate });
 }
 
 // ── aggregatePrimaries (0x) ──────────────────────────────────────────────────
@@ -805,10 +861,10 @@ function aggregatePrimaries(results, base) {
   }
   return {
     skipped: false,
-    reason: 'multi_primary',
+    reason: base.stepGate ? base.stepGate.reason : 'multi_primary',
     ...(failedPreWrite.length ? { failedPreWrite } : {}),
     ...(writeSkippedPreWriteWarn ? { writeSkippedPreWriteWarn: true, failedPreWriteWarn } : {}),
-    acquired: { primaries, head_error: headErrors.length ? headErrors.join('; ') : null },
+    acquired: { primaries, head_error: headErrors.length ? headErrors.join('; ') : null, ...(base.stepGate ? { step_gate: base.stepGate } : {}) },
     written: {
       ...sums,
       unchanged: Object.values(byTarget).reduce((n, w) => n + (Number(w && w.unchanged) || 0), 0),
@@ -817,8 +873,8 @@ function aggregatePrimaries(results, base) {
       ...(Object.values(byTarget).some((w) => w && w.write_skipped_pre_write_warn === true) ? { write_skipped_pre_write_warn: true } : {}),
       by_target: byTarget,
     },
-    prior,
-    priorError,
+    prior: base.allPrimaries ? base.priorMeta : prior,
+    priorError: base.allPrimaries ? base.priorError : priorError,
     overrides: overrides === undefined ? base.overrides : overrides,
     emitKey: base.emitKey,
     emitBlock: null,
@@ -927,7 +983,7 @@ function multiPrimarySkipEmit(ingest, computeResult) {
  *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey }) {
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey, validatorCache }) {
   // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
   // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
   // departure DELETE. A second declared target would be acquired for, gated over and then
@@ -945,6 +1001,30 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     throw new Error(`${tag} the INGESTOR archetype drives exactly ONE write target, and this descriptor declares `
       + `${writes.length} (${writes.map((w) => w.table).join(', ') || 'none'}). Only outputs.writes[0] would be `
       + 'written; the rest would be declared, gated over and left empty under a green verdict.');
+  }
+  // 0y Y4/Y5 (I-A7): named refusals, BEFORE any I/O (no `await` runs between here and
+  // `staleness.detectInterruptedRetraction` at :1143, so a refusal costs no pool query).
+  const ckanNoTarget = (descriptor.inputs.reads.externals || [])
+    .filter((e) => e && e.format === 'ckan_datastore' && (typeof e.target !== 'string' || e.target.length === 0));
+  if (ckanNoTarget.length) {
+    throw new Error(`${tag} 0y Y4: the "ckan_datastore" external "${ckanNoTarget[0].id}" declares no "target"; `
+      + 'the CKAN DataStore arm exists for the multi-primary binding, and a targetless primary has no write plan.');
+  }
+  // ⚠️ `staleness.trigger` IS LEGALLY THE STRING `"none"` — an ungated step, stated rather
+  // than implied (staleness.js:81; `triggersAt` reads it as `[]`). FIVE of the seven converted
+  // INGESTORs declare exactly that (load-address-points, load-parcels, load-wsib, load-massing,
+  // load-neighbourhoods), so this read MUST guard like every other reader (`:700`/`:708`/`:1154`,
+  // all `Array.isArray`): an unguarded `.filter` here was a TypeError — `.filter is not a
+  // function` — thrown from this line BEFORE the HEAD, killing every one of those five steps
+  // before their first pool query. The guard is the reader contract, not a nicety.
+  const y5Triggers = Array.isArray(descriptor.staleness && descriptor.staleness.trigger)
+    ? descriptor.staleness.trigger
+    : [];
+  const badStyle = y5Triggers
+    .filter((t) => t && t.style !== undefined && t.style !== null && t.style !== 'validator_equality');
+  if (badStyle.length) {
+    throw new Error(`${tag} 0y Y5: staleness trigger style "${String(badStyle[0].style)}" reached runIngestPhase; `
+      + 'declare no `style` (or "validator_equality") here — a non-default style belongs to the all_primaries gate, which drops these triggers.');
   }
   const writeSpec = writes[0];
   const emit = emitsList(descriptor)[0] || null;
@@ -1242,6 +1322,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     coerceKey: compute.coerceKey,
     forced,
     emitSkeleton: skeleton,
+    // 0y GR-5d: the per-run package_show memo (a Map keyed by URL), created once in
+    // `ingestPrimaries` (brief 21). `undefined` on the single-primary path — the arm then
+    // memoises per call, which is the byte-identical pre-0y behaviour.
+    validatorCache,
     preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
       descriptor,
       validators: { lastModified: head.lastModified, etag: head.etag },
@@ -5634,7 +5718,7 @@ async function runWithPool(runnable, pool, ctx) {
         stepCtx.written = ingest.written;
         stepCtx.prior = ingest.prior;
         stepCtx.overrides = ingest.overrides;
-        stepCtx.gate = { skipped: ingest.skipped, reason: ingest.reason };
+        stepCtx.gate = { skipped: ingest.skipped, reason: ingest.reason, ...(ingest.acquired && ingest.acquired.step_gate ? { step_gate: ingest.acquired.step_gate } : {}) };
         // 0x fold (library counter defect): the run's own elapsed time, exactly as every
         // sibling branch supplies it — before this line every INGESTOR emitted duration_ms 0.
         stepCtx.elapsed_ms = Date.now() - startMs;
@@ -6056,6 +6140,11 @@ async function runWithPool(runnable, pool, ctx) {
         // 0x (OUTPUT-panel fold) — a multi-primary run re-emits each SKIPPED primary's prior
         // sub-block over the compute's block (§multiPrimarySkipEmit); {} for a single primary.
         ...multiPrimarySkipEmit(ingest, computeResult),
+        // 0y (O-A3): the all-primaries skip re-emits ONLY the derived top-level contract keys
+        // (`emits[].key` − `audit_table` − `RUNNER_META_KEYS`), taken from the prior meta by
+        // `ingestPrimaries`. `audit_table` and the runner-owned keys are written by THIS
+        // assembly, below. Absent on every per-primary and single-primary run ⇒ {} .
+        ...(ingest && ingest.skipEmitMeta ? ingest.skipEmitMeta : {}),
         // LG-15 / G-13 — a gated skip re-stamps the SAME self-consumed producer field
         // (`threshold_updated_at`-shaped: whatever the config_version trigger's emit_key
         // names) from the prior run's own block, so the NEXT run's config_version diff

@@ -791,6 +791,194 @@ function buildSkipReEmitMeta({ skeleton, prior, pins }) {
   return sourceVersion.buildSkipReEmitMeta({ skeleton, priorMeta: prior, pins });
 }
 
+// 0y §3b: THE CKAN DataStore ARM'S TIER-1 VALIDATORS (INGESTOR prerequisite 0y, RE-FREEZE #30).
+//
+// A `ckan_datastore` external has no HEAD: the resource's `package_show` metadata IS the
+// validator (legacy load-zoning.js:361-369 — ONE call, `r.last_modified || result.metadata_modified`).
+// `acquireExternal`'s HEAD seam calls this instead of `headValidators` for that format (brief 15).
+//
+// MEMOISED IN `cache` AND NEVER RETRIED (the 0q HEAD analogue): `cache` is ONE `Map` per RUN,
+// created in `ingestPrimaries` (brief 21) and threaded by brief 25, so ten primaries sharing one
+// `package_url` make exactly ONE `package_show` GET (0y-T6 asserts the count AND the Map identity).
+// The PROMISE is stored, not its resolution, so primaries racing the same URL share one GET.
+//
+// `timeoutMs` is the per-request deadline from `resolveTimeoutMs(descriptor, config)` (I-A2).
+// Throws: `package_show <status>` on a non-ok response (the `headValidators` `HEAD <status>`
+// shape), `CKAN package_show: success=false` when the envelope is not `success: true` (legacy
+// text, load-zoning.js:363). Under `all_primaries` the pre-loop lets this throw UNWRAPPED, so
+// the step FAILs by name before ANY `datastore_search` GET and before any write (§3b; operator
+// D3; 0y-T19). Y-I1 forbids `on_head_error: "warn_row"` here, so the HEAD seam's posture catch
+// is unreachable for this format.
+//
+// A resource NOT listed by the package returns `{ lastModified: null, etag: null }` — legacy's
+// `map[id] === undefined` (load-zoning.js:366-367). The ARM, not this function, turns that into
+// the named `resource <id> is not listed by <package_url>` refusal (§3b), so the validators seam
+// stays a pure fetch+mapping.
+//
+// @returns {Promise<{lastModified: string|null, etag: null}>}
+async function ckanResourceValidators(ctxFetch, external, timeoutMs, cache) {
+  const url = external.ckan.package_url;
+  const key = `package_show::${url}`;
+  // ⚠️ THE CACHE HAS A DEFAULT, BECAUSE THE SINGLE-PRIMARY PATH IS REAL. The 0y §3b
+  // comment above `acquireExternal`'s `validatorCache` says it: "UNDEFINED on the
+  // single-primary path (the legacy callers pass nothing)". A lone `ckan_datastore`
+  // primary — a descriptor reaching this arm WITHOUT `skip_scope: "all_primaries"`, so
+  // without the per-run Map `ingestPrimaries` creates — would otherwise throw
+  // `Cannot read properties of undefined (reading 'has')` on the line below: an
+  // undefined-cache crash dressed as a fetch failure. One Map per call is the correct
+  // reading of "no shared cache was handed in": it memoises nothing across calls (the
+  // caller that wants sharing passes ITS Map), and the single-primary arm gets the same
+  // fetch+mapping it would have got with a fresh Map.
+  const validators = cache || new Map();
+  if (!validators.has(key)) {
+    validators.set(key, (async () => {
+      const ctrl = new AbortController();
+      const t = abortTimer(ctrl, timeoutMs);
+      try {
+        const res = await ctxFetch(url, { redirect: 'follow', signal: ctrl.signal });
+        if (!res.ok) throw new Error(`package_show ${res.status}`);
+        const body = await res.json();
+        if (!body || body.success !== true) throw new Error('CKAN package_show: success=false');
+        // The memo holds the package_show RESULT (every listed resource), never ONE resource's
+        // validators: N primaries share one package_url and each must read ITS OWN resource
+        // from the one response (legacy load-zoning.js:366-367 maps every resource by id).
+        return body.result || {};
+      } finally {
+        if (t) clearTimeout(t);
+      }
+    })());
+  }
+  const result = await validators.get(key);
+  const listed = (Array.isArray(result.resources) ? result.resources : [])
+    .find((r) => r && r.id === external.ckan.resource_id);
+  return {
+    lastModified: listed ? (listed.last_modified || result.metadata_modified) : null,
+    etag: null,
+  };
+}
+
+// 0y §3b: THE CKAN DataStore ARM (INGESTOR prerequisite 0y, RE-FREEZE #30).
+// Reached from `acquireExternal` AFTER the tier-1 skip `return` (brief 16) and BEFORE any temp
+// root: no unzip, no download, NO tier-2 (Y3 refuses any post_acquisition trigger reaching a
+// `ckan_datastore` primary — the arm has no content hash). The arm owns its `acquired` block and
+// returns `emitBlock: null` (no skip re-emit at this seam).
+// PAGES: `${url}?resource_id=${id}&limit=${page}&offset=${o}` — legacy's string byte for byte
+// (load-zoning.js:376-377), no sort (ZN-D4, carried). `page` = `config[ckan.page_size_from_config]`,
+// a positive integer or the arm throws by name. CKAN CLAMPS `limit` to 32000, so the loop ALSO
+// checks `result.total` (GR-3): Σ`records.length` !== `total` throws by name, never silent
+// truncation (0y-T7's `{limit:2,total:5}` row).
+// PER RECORD, LEGACY ORDER (GR-5e; load-zoning.js:419-422): null geometry FIRST (count + SKIP, never
+// pushed), THEN the `_id` coercion (count + SKIP); `geojson` built BEFORE `coerceKey`. INVARIANT:
+// `rows_parsed === pushed + null_geometry_count + bad_key_count`.
+// `head.lastModified == null` (resource absent from `package_show`) is the arm's own named refusal —
+// under 0x postures base FAIL / overlay WARN+skip: outcome parity with the legacy String(runAt)
+// TIMESTAMPTZ reject (ZN-D6, §1.5). The row is NEVER written with a NULL version.
+// `record_fields` = `Object.keys` of the FIRST RAW record (before any drop, so ZN-D3 stays
+// carryable), or `null` on an empty source. `pages_fetched`/`record_fields` are ABSENT on other arms
+// (the 0fs `source_path` precedent), so no other descriptor's golden moves.
+// @param {object} args - `{ ctxFetch, log, tag, external, descriptor, config, head, base, tier1,
+//   keyProperty, keyColumn, coerceKey, validatorCache }` — the exact object brief 16 dispatches.
+async function acquireCkanDatastore({
+  ctxFetch, log, tag, external, descriptor, config, head, base, tier1,
+  keyProperty, keyColumn, coerceKey, validatorCache,
+}) {
+  const ckan = external.ckan;
+  const resourceId = ckan.resource_id;
+  const timeoutMs = resolveTimeoutMs(descriptor, config);
+  const { retries, backoffMs } = resolveRetryPolicy(descriptor, config);
+  const page = config[ckan.page_size_from_config];
+  if (!Number.isInteger(page) || page <= 0) {
+    throw new Error(`${tag} external "${external.id}": ckan.page_size_from_config `
+      + `"${ckan.page_size_from_config}" did not resolve to a positive integer (got ${String(page)}).`);
+  }
+  // `head` came from `ckanResourceValidators` (brief 13) via `acquireExternal`'s HEAD seam, which
+  // passed the SAME `resolveTimeoutMs` deadline; a resource the package does not list matches
+  // legacy's `map[id] === undefined` (load-zoning.js:366-367).
+  if (head.lastModified == null) {
+    throw new Error(`${tag} external "${external.id}": resource ${resourceId} is not listed by ${ckan.package_url}`);
+  }
+  const pageUrl = (offset) => `${external.url}?resource_id=${resourceId}&limit=${page}&offset=${offset}`;
+  const getPage = async (offset) => {
+    const target = pageUrl(offset);
+    let lastErr;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      if (attempt > 0 && backoffMs > 0) await new Promise((r) => setTimeout(r, backoffMs * attempt));
+      const ctrl = new AbortController();
+      const t = abortTimer(ctrl, timeoutMs);
+      try {
+        const res = await ctxFetch(target, { redirect: 'follow', signal: ctrl.signal });
+        if (!res.ok) throw new Error(`GET ${res.status} ${res.statusText}`);
+        const body = await res.json();
+        if (!body || body.success !== true) {
+          throw new Error(`CKAN datastore_search: success=false (resource ${resourceId})`);
+        }
+        return body;
+      } catch (err) {
+        lastErr = err;
+      } finally {
+        if (t) clearTimeout(t);
+      }
+    }
+    throw lastErr;
+  };
+  const records = [];
+  let pagesFetched = 0;
+  let bytesDownloaded = 0;
+  let total = null;
+  for (let offset = 0; ; offset += page) {
+    const body = await getPage(offset);
+    pagesFetched++;
+    bytesDownloaded += Buffer.byteLength(JSON.stringify(body));
+    const res = body.result || {};
+    if (Number.isFinite(res.total)) total = res.total;
+    const recs = res.records || [];
+    records.push(...recs);
+    // 0y output-grounder F3: a FULL page whose `offset` the server IGNORED would make the
+    // loop below unbounded (the loop stops ONLY on a short page). Once more than `total`
+    // records have arrived the server is provably ignoring `offset`, so refuse BY NAME
+    // rather than keep asking. The post-loop GR-3 check still holds for every other case.
+    if (Number.isFinite(total) && records.length > total) {
+      throw new Error(`CKAN datastore_search: fetched ${records.length} of ${total} records (resource ${resourceId}) — the server ignored offset`);
+    }
+    if (recs.length < page) break; // legacy stop shape, load-zoning.js:382
+  }
+  if (Number.isFinite(total) && records.length !== total) { // GR-3: CKAN's silent `limit` clamp
+    throw new Error(`CKAN datastore_search: fetched ${records.length} of ${total} records (resource ${resourceId})`);
+  }
+  const recordFields = records.length > 0 ? Object.keys(records[0]) : null;
+  const features = [];
+  let badKeyCount = 0;
+  let nullGeometryCount = 0;
+  const rowsParsed = records.length;
+  for (const rec of records) {
+    if (rec.geometry == null) { nullGeometryCount++; continue; } // legacy order (GR-5e): geometry FIRST
+    const geojson = typeof rec.geometry === 'string' ? rec.geometry : JSON.stringify(rec.geometry);
+    const key = coerceKey(rec[keyProperty], { geojson });
+    if (key == null) { badKeyCount++; continue; }
+    features.push({ [keyColumn]: key, geojson, record: rec });
+  }
+  log.info(tag, `acquired ckan_datastore "${external.id}": ${features.length} feature(s) `
+    + `from ${pagesFetched} page(s) (resource ${resourceId}, version ${head.lastModified})`);
+  return {
+    acquired: {
+      ...base,
+      content_hash: null,
+      source_dataset_version: head.lastModified,
+      bytes_downloaded: bytesDownloaded,
+      feature_count: features.length,
+      bad_key_count: badKeyCount,
+      null_geometry_count: nullGeometryCount,
+      rows_parsed: rowsParsed,
+      pages_fetched: pagesFetched,
+      record_fields: recordFields,
+    },
+    tier1,
+    tier2: { skip: false, reason: 'not_reached' },
+    features,
+    emitBlock: null,
+  };
+}
+
 /**
  * Acquire one declared external.
  *
@@ -812,6 +1000,13 @@ async function acquireExternal({
   // against. Absent = resolveLocalSource's own repo-root default (the runner passes
   // nothing); tests pass a temp directory.
   repoRoot,
+  // 0y §3b (brief 25): the per-run validators cache. The `ingestPrimaries` pre-loop
+  // (`index.js`, brief 21) creates ONE `Map` per run and threads it here; the HEAD
+  // branch (brief 15) memoises each `package_show` fetch in it, so three primaries
+  // sharing a `package_url` issue exactly ONE fetch (GR-5d, asserted on identity by
+  // T6). UNDEFINED on the single-primary path (the legacy callers pass nothing) —
+  // that is the byte-identical path: non-CKAN arms never read it.
+  validatorCache,
 }) {
   // ── 0w: A LOOKUP IS XLSX-ONLY, AND AN XLSX IS LOOKUP-ONLY (2026-09-28) ──────────
   // The TWO new declarations (`role: "lookup"`, `format: "xlsx"`) are one axis spelled
@@ -825,7 +1020,7 @@ async function acquireExternal({
     throw new Error(`${tag} external "${external.id}" declares role "${String(external.role)}" `
       + `with format "${String(external.format)}": a lookup (role "lookup") is xlsx-only `
       + 'and an xlsx (format "xlsx") is lookup-only — declare `role: "lookup"` with '
-      + '`format: "xlsx"`, or a primary feature format ("shapefile_zip", "csv", "geojson") '
+      + '`format: "xlsx"`, or a primary feature format ("shapefile_zip", "csv", "geojson", "ckan_datastore") '
       + 'with no role.');
   }
   // The DS4 contract, built HERE because this is where a gate can fire: a skipped run
@@ -860,7 +1055,17 @@ async function acquireExternal({
   let head;
   let headError = null;
   try {
-    head = isLocal ? { lastModified: null, etag: null } : await headValidators(ctxFetch, external.url, timeoutMs);
+    head = isLocal
+      ? { lastModified: null, etag: null }
+      // 0y §3b: a `ckan_datastore` external's validators are NOT a HEAD — they come from the
+      // resource's `package_show` metadata (`last_modified || metadata_modified`, the legacy
+      // load-zoning.js:366-367 mapping). The call is memoised in `validatorCache` (ONE Map per
+      // run, brief 21) and never retried (the 0q HEAD analogue). Y-I1 forbids
+      // `on_head_error: "warn_row"` on this format, so the same `catch` below is unreachable
+      // for it; the catch is otherwise byte-unchanged.
+      : external.format === 'ckan_datastore'
+        ? await ckanResourceValidators(ctxFetch, external, timeoutMs, validatorCache)
+        : await headValidators(ctxFetch, external.url, timeoutMs);
   } catch (err) {
     if (external.on_head_error !== 'warn_row') throw err;
     headError = err.message;
@@ -911,6 +1116,17 @@ async function acquireExternal({
       features: [],
       emitBlock: skipEmit(tier1.reason),
     };
+  }
+
+  // 0y §3b: the CKAN DataStore arm. It runs AFTER the tier-1 skip return above (so a skipped
+  // run still re-emits the DS4 block and creates NO temp dir) and BEFORE any temp root is
+  // opened — no unzip, no download, NO tier-2 (Y3 refuses any post_acquisition trigger that
+  // reaches a ckan_datastore primary: the arm has no content hash).
+  if (external.format === 'ckan_datastore') {
+    return acquireCkanDatastore({
+      ctxFetch, log, tag, external, descriptor, config, head, base, tier1,
+      keyProperty, keyColumn, coerceKey, validatorCache,
+    });
   }
 
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), `${TMP_PREFIX}${slug}-`));
@@ -999,7 +1215,7 @@ async function acquireExternal({
       };
     } else {
       throw new Error(`${tag} external "${external.id}" declares format "${String(external.format)}", which no parser `
-        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv", "geojson" or "xlsx" (step.schema.json '
+        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv", "geojson", "ckan_datastore" or "xlsx" (step.schema.json '
         + 'inputs.reads.externals[].format), or teach acquire.js the new payload format — an '
         + 'unrecognised value must never fall through to the shapefile parser.');
     }
@@ -1043,6 +1259,11 @@ module.exports = {
   parseCsv,
   parseGeoJson,
   parseXlsx,
+  // 0y §3b: the CKAN DataStore arm and its `package_show` validators (briefs 13/14). Exported
+  // like every other arm (0v `parseGeoJson`, 0w `parseXlsx`, 0fs `copyLocalFile`) so the 0y
+  // acquire suite can call them directly and assert the per-run `validatorCache` identity.
+  ckanResourceValidators,
+  acquireCkanDatastore,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,

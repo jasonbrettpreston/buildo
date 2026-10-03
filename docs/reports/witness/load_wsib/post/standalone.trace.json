@@ -1,0 +1,288 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-wsib.js",
+  "chain": "none",
+  "source_fingerprint": "afbdfe84c68dc5d12be734cd280d30c67107f75a4c747e25a00c9b6bde5ee8db",
+  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "header": {
+    "processes": 1,
+    "calls": 42,
+    "distinct": 15,
+    "utility": 7,
+    "tracer_self_ms": 977.772,
+    "wall_ms": 16661
+  },
+  "statements": [
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          15476,
+          null,
+          2242,
+          200,
+          0,
+          200,
+          "{\"wsib_load\":{\"duration_ms\":15305,\"total_csv_rows\":345416,\"unique_class_g\":121116,\"records_inserted\":0,\"records_updated\":200,\"skipped_non_g\":212056,\"skipped_no_name\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_wsib_unique_class_g_warn_min\":110000,\"load_wsib_no_name_skip_warn_pct\":1},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":11,\"name\":\"WSIB Registry Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"wsib_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"wsib_source_file\",\"value\":\"data/BusinessClassificationDetails(2025).csv\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"wsib_unique_class_g\",\"value\":121116,\"threshold\":\"value_min 110000\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_no_name_skip_rate\",\"value\":\"0.0%\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_null_address_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"records_unchanged\",\"value\":120916,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"duplicate_key_count\",\"value\":12244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":12.93,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":15470,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "load_wsib",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_wsib"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8e0e557d4c86c776",
+      "kind": "write",
+      "count": 25,
+      "rowCount": 200,
+      "reads": {
+        "wsib_registry": [
+          "business_size",
+          "is_gta",
+          "naics_code",
+          "naics_description",
+          "predominant_class",
+          "subclass",
+          "subclass_description",
+          "trade_name",
+          "trade_name_normalized"
+        ]
+      },
+      "writes": {
+        "wsib_registry": [
+          "business_size",
+          "is_gta",
+          "last_seen_at",
+          "legal_name",
+          "legal_name_normalized",
+          "mailing_address",
+          "naics_code",
+          "naics_description",
+          "predominant_class",
+          "subclass",
+          "subclass_description",
+          "trade_name",
+          "trade_name_normalized"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "1308:2",
+      "write_fingerprints": [
+        "8e0e557d4c86c776"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "wsib_registry": [
+        "business_size",
+        "is_gta",
+        "last_seen_at",
+        "legal_name",
+        "legal_name_normalized",
+        "mailing_address",
+        "naics_code",
+        "naics_description",
+        "predominant_class",
+        "subclass",
+        "subclass_description",
+        "trade_name",
+        "trade_name_normalized"
+      ]
+    },
+    "writes": {
+      "wsib_registry": [
+        "business_size",
+        "is_gta",
+        "last_seen_at",
+        "legal_name",
+        "legal_name_normalized",
+        "mailing_address",
+        "naics_code",
+        "naics_description",
+        "predominant_class",
+        "subclass",
+        "subclass_description",
+        "trade_name",
+        "trade_name_normalized"
+      ]
+    }
+  },
+  "errors": []
+}

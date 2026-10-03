@@ -39,9 +39,9 @@ async function insertRun(pool: Pool, opts: { pipeline: string; status: string; s
 }
 
 /** A minimal descriptor declaring recovery.interrupted:"force_full_on_next_run" and a tri-state mode gate — everything detectInterruptedRetraction/selectMode read, nothing else. */
-function descriptorWithInterruptedRecovery(recoveryInterrupted: string) {
+function descriptorWithInterruptedRecovery(recoveryInterrupted: string, name: string = SLUG) {
   return {
-    identity: { name: SLUG },
+    identity: { name },
     staleness: { mode_select: 'tri_state', trigger: 'none' },
     recovery: recoveryInterrupted === 'none' ? { interrupted: 'none' } : { interrupted: recoveryInterrupted },
     execution: { invocation: 'none' },
@@ -182,5 +182,84 @@ describe.skipIf(!dbAvailable())('staleness.detectInterruptedRetraction / selectM
     const modeResult = await staleness.selectMode({ descriptor: d, pool, prior: null, argv: [], env: {}, ownRunId });
     expect(modeResult.reason).not.toBe('recover_interrupted_retraction');
     expect(modeResult.interrupted_retraction).toBeNull();
+  });
+
+  // C4 (F-6 wrapper, brief 11/11a) — the §6.6.1 / R-BG baseline must admit BOTH
+  // terminal-success statuses. `scripts/lib/step/staleness.js:412` reads
+  // `AND status = 'completed'` (the ONLY such occurrence in that file), so a
+  // `completed_with_warnings` baseline row is invisible to `own_last_completed`.
+  // The `:419` window then falls back to '-infinity' and the abandoned `running`
+  // row "looks newer" → a spurious interrupted:true → a forced FULL.
+  describe('R-BG baseline vocabulary — completed_with_warnings counts, completed_with_errors does not', () => {
+    it('RED R10 — a completed_with_warnings baseline row is a BASELINE: an abandoned older running row is NOT an interrupted retraction', async () => {
+      // T2 fixture discipline: FX-prefixed slug, distinct from the suite's SLUG,
+      // so this describe block carries its OWN beforeAll/afterEach pair and does
+      // not mutate the shared constant the sibling cases already pin.
+      const CWW_SLUG = 'FX_rbg_cww_baseline';
+      const cwwPool = getTestPool() as Pool;
+      const { rows } = await cwwPool.query('SELECT NOW() AS now');
+      const cwwAnchor = new Date(rows[0].now);
+      const d = descriptorWithInterruptedRecovery('force_full_on_next_run', CWW_SLUG);
+      try {
+        await insertRun(cwwPool, { pipeline: CWW_SLUG, status: 'completed', startedAt: minutesAgo(cwwAnchor, 120), completedAt: minutesAgo(cwwAnchor, 119) });
+        await insertRun(cwwPool, { pipeline: CWW_SLUG, status: 'running', startedAt: minutesAgo(cwwAnchor, 60), completedAt: null });
+        await insertRun(cwwPool, { pipeline: CWW_SLUG, status: 'completed_with_warnings', startedAt: minutesAgo(cwwAnchor, 5), completedAt: minutesAgo(cwwAnchor, 4) });
+        const result = await staleness.detectInterruptedRetraction(cwwPool, d);
+        expect(result).toEqual({ interrupted: false, row: null });
+      } finally {
+        await cwwPool.query(`DELETE FROM pipeline_runs WHERE pipeline = $1`, [CWW_SLUG]);
+      }
+    });
+
+    it('RED R11 (control) — a running row AFTER the completed_with_warnings row still fires: the recovery is preserved, not weakened', async () => {
+      const CWW_CTRL_SLUG = 'FX_rbg_cww_control';
+      const ctrlPool = getTestPool() as Pool;
+      const { rows } = await ctrlPool.query('SELECT NOW() AS now');
+      const ctrlAnchor = new Date(rows[0].now);
+      const d = descriptorWithInterruptedRecovery('force_full_on_next_run', CWW_CTRL_SLUG);
+      try {
+        await insertRun(ctrlPool, { pipeline: CWW_CTRL_SLUG, status: 'completed', startedAt: minutesAgo(ctrlAnchor, 120), completedAt: minutesAgo(ctrlAnchor, 119) });
+        await insertRun(ctrlPool, { pipeline: CWW_CTRL_SLUG, status: 'running', startedAt: minutesAgo(ctrlAnchor, 60), completedAt: null });
+        await insertRun(ctrlPool, { pipeline: CWW_CTRL_SLUG, status: 'completed_with_warnings', startedAt: minutesAgo(ctrlAnchor, 5), completedAt: minutesAgo(ctrlAnchor, 4) });
+        await insertRun(ctrlPool, { pipeline: CWW_CTRL_SLUG, status: 'running', startedAt: minutesAgo(ctrlAnchor, 1), completedAt: null });
+        const result = await staleness.detectInterruptedRetraction(ctrlPool, d);
+        expect(result.interrupted).toBe(true);
+        expect(result.row?.status).toBe('running');
+      } finally {
+        await ctrlPool.query(`DELETE FROM pipeline_runs WHERE pipeline = $1`, [CWW_CTRL_SLUG]);
+      }
+    });
+
+    // R12 GREEN control (lock, unedited) — the LW-D20 own-run-exclusion shape is
+    // already pinned EXACTLY by the 'REGRESSION (found live)' case above (a
+    // `running` row older than the newest completed row, plus the ownRunId
+    // exclusion returning { interrupted: false, row: null }). Deliberately NOT
+    // duplicated here; cited by name.
+
+    it('RED R18 (F-6(j)) — completed_with_errors is NEVER a baseline: it cannot hide a newer abandoned running row', async () => {
+      // Discrimination note: `detectInterruptedRetraction` reads `started_at`
+      // ONLY, and its two predicates (`:412` baseline-filtered own_last_completed,
+      // `:419` started_at window) are disjoint by construction — so the
+      // completed_with_errors-vs-completed_with_warnings distinction that
+      // source-version R9 proves at the UNIT tier (C3, `wu-3a`) is exercised here
+      // as the live-DB counterpart. The cwe row is never admitted as a baseline,
+      // so the `:419` window still starts before the abandoned running row and the
+      // recovery fires.
+      const CWE_SLUG = 'FX_rbg_cwe_baseline';
+      const cwePool = getTestPool() as Pool;
+      const { rows } = await cwePool.query('SELECT NOW() AS now');
+      const cweAnchor = new Date(rows[0].now);
+      const d = descriptorWithInterruptedRecovery('force_full_on_next_run', CWE_SLUG);
+      try {
+        await insertRun(cwePool, { pipeline: CWE_SLUG, status: 'completed_with_warnings', startedAt: minutesAgo(cweAnchor, 10), completedAt: minutesAgo(cweAnchor, 9) });
+        await insertRun(cwePool, { pipeline: CWE_SLUG, status: 'running', startedAt: minutesAgo(cweAnchor, 5), completedAt: null });
+        await insertRun(cwePool, { pipeline: CWE_SLUG, status: 'completed_with_errors', startedAt: minutesAgo(cweAnchor, 1), completedAt: cweAnchor });
+        const result = await staleness.detectInterruptedRetraction(cwePool, d);
+        expect(result.interrupted).toBe(true);
+        expect(result.row?.status).toBe('running');
+      } finally {
+        await cwePool.query(`DELETE FROM pipeline_runs WHERE pipeline = $1`, [CWE_SLUG]);
+      }
+    });
   });
 });

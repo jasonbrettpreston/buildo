@@ -1,0 +1,350 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-parcel-sanity.js",
+  "chain": "sources",
+  "source_fingerprint": "3d9b4196459f4f12dfe175ee3fff61ee312e1fa03064213d4469021c8927e570",
+  "git_head": "ac30cf1bebdfdfd5747bcfad7523805997e87f42",
+  "header": {
+    "processes": 1,
+    "calls": 26,
+    "distinct": 18,
+    "utility": 12,
+    "tracer_self_ms": 10.397,
+    "wall_ms": 57727
+  },
+  "statements": [
+    {
+      "fingerprint": "1fb93309b947e92f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "max_build_fsi",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2da3ca1411b5e34b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "cost_fb_total",
+          "id",
+          "opt_aor_gfa_sqm",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "49638488480b787e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "comp_fsi_p50",
+          "id",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4fe9473bb0de7ab7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "opt_aor_gfa_sqm",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "52c307f9b52294a7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "bylaw_max_fsi",
+          "id",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5bf92753ca8d23c7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "lot_size_sqm",
+          "max_buildable_footprint_sqm",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 38,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9d59e178df961d2d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "lot_size_sqm",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a13232dae9b3bae1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_buildings": [
+          "building_id",
+          "is_primary",
+          "match_type",
+          "parcel_id"
+        ],
+        "parcels": [
+          "bylaw_max_coverage_pct",
+          "bylaw_max_fsi",
+          "bylaw_max_height_m",
+          "bylaw_max_stories",
+          "coa_fsi",
+          "comp_fsi_p50",
+          "cost_addition_total",
+          "cost_coa_total",
+          "cost_fb_total",
+          "cost_gut_total",
+          "cost_solar_total",
+          "cur_floor_gfa_sqm",
+          "depth_m",
+          "envelope_constraint_reason",
+          "existing_greenspace_sqm",
+          "frontage_m",
+          "geom",
+          "id",
+          "lot_size_source",
+          "lot_size_sqm",
+          "max_build_fsi",
+          "max_build_height_m",
+          "max_build_length_m",
+          "max_build_stories",
+          "max_build_stories_basis",
+          "max_build_width_m",
+          "max_buildable_footprint_sqm",
+          "max_buildable_gfa_basis",
+          "max_buildable_gfa_sqm",
+          "opt_aor_gfa_sqm",
+          "opt_aor_storeys",
+          "opt_coa_gfa_sqm",
+          "opt_coa_storeys",
+          "realized_fsi_p90",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "abdc52d472088f24",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "max_build_height_m",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 663,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 9,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "parcel_buildings": [
+        "building_id",
+        "is_primary",
+        "match_type",
+        "parcel_id"
+      ],
+      "parcels": [
+        "bylaw_max_coverage_pct",
+        "bylaw_max_fsi",
+        "bylaw_max_height_m",
+        "bylaw_max_stories",
+        "coa_fsi",
+        "comp_fsi_p50",
+        "cost_addition_total",
+        "cost_coa_total",
+        "cost_fb_total",
+        "cost_gut_total",
+        "cost_solar_total",
+        "cur_floor_gfa_sqm",
+        "depth_m",
+        "envelope_constraint_reason",
+        "existing_greenspace_sqm",
+        "frontage_m",
+        "geom",
+        "id",
+        "lot_size_source",
+        "lot_size_sqm",
+        "max_build_fsi",
+        "max_build_height_m",
+        "max_build_length_m",
+        "max_build_stories",
+        "max_build_stories_basis",
+        "max_build_width_m",
+        "max_buildable_footprint_sqm",
+        "max_buildable_gfa_basis",
+        "max_buildable_gfa_sqm",
+        "opt_aor_gfa_sqm",
+        "opt_aor_storeys",
+        "opt_coa_gfa_sqm",
+        "opt_coa_storeys",
+        "realized_fsi_p90",
+        "zoning_class"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

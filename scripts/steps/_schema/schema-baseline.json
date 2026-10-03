@@ -107,6 +107,7 @@
     "staleness.on_prior_run_error",
     "staleness.on_prior_run_error_why",
     "staleness.scope",
+    "staleness.skip_scope",
     "staleness.trigger"
   ]
 }

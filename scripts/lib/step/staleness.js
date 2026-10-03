@@ -291,6 +291,79 @@ function skipCheckDecision({ lastModified, etag = null, contentHash = null, prio
   );
 }
 
+/**
+ * Does a re-emitted value satisfy a declared `emits[].type`? The schema vocabulary is
+ * `string,int,number,bool,object,array,null` (§A19; 0y output-grounder F2), which is NOT
+ * JS `typeof` — `typeof []` is `"object"`, `typeof true` is `"boolean"` (not `"bool"`) and
+ * an integer is `"number"` (not `"int"`). Comparing `typeof v` against the DECLARED token
+ * therefore reads a CORRECT `int`/`bool`/`array` as `prior_contract_incomplete` (needless
+ * LOAD) and lets an array pass a declared `object` (a broken contract read as complete).
+ * An unknown token fails safe: nothing matches, so the contract is incomplete.
+ */
+function matchesEmitType(v, t) {
+  switch (t) {
+    case 'string': return typeof v === 'string';
+    case 'int': return Number.isInteger(v);
+    case 'number': return typeof v === 'number' && Number.isFinite(v);
+    case 'bool': return typeof v === 'boolean';
+    case 'array': return Array.isArray(v);
+    case 'object': return v !== null && typeof v === 'object' && !Array.isArray(v);
+    case 'null': return v === null;
+    default: return false;
+  }
+}
+
+/**
+ * INGESTOR prerequisite 0y (Spec 122 §5.1, 122a §A19) — the ALL-PRIMARIES skip decision.
+ * ONE prior, ONE trigger, N primaries, each decided with the SHARED `source-version`
+ * CKAN-metadata style, so per-primary semantics cannot drift from the single-primary
+ * gate. ONE prior, ONE trigger per primary: `triggerFor(id)` returns the `ckan_metadata`
+ * trigger covering that primary (scoped to its id, or unscoped). `reemitKeys` is DERIVED by
+ * the caller from `emits[]` (minus `audit_table` and RUNNER_META_KEYS); every re-emitted key
+ * must be PRESENT, non-null and match its declared `emits[].type`, else LOAD (fail-safe;
+ * legacy's `?? {}` default NOT reproduced).
+ * `max_age_days` = `config[triggerFor(primaries[0]).max_age_days_from_config]`; a non-finite
+ * value throws by name in `skipCheckDecision` (source-version.js:186-188).
+ * `dataset_version_age_days` = age (days) of the OLDEST stored version, or null when none is stored.
+ * @returns {{skip, reason, decisions, max_age_days, dataset_version_age_days}}
+ */
+function allPrimariesDecision({ primaries, triggerFor, validatorsById, priorMeta, config, nowMs, forced, reemitKeys, emitTypes }) {
+  const perPrimary = {};
+  for (const p of primaries) {
+    const trigger = triggerFor(p.id);
+    perPrimary[p.id] = {
+      maxAgeDays: config[trigger.max_age_days_from_config],
+      stored: priorMeta && typeof priorMeta[trigger.emit_key] === 'object' ? priorMeta[trigger.emit_key] : null,
+    };
+  }
+  const maxAgeDays = perPrimary[primaries[0].id].maxAgeDays;
+  const decisions = {};
+  let oldestMs = null;
+  for (const p of primaries) {
+    const head = validatorsById[p.id] || { lastModified: null, etag: null };
+    const { maxAgeDays: pidMaxAgeDays, stored } = perPrimary[p.id];
+    const d = sourceVersion.skipCheckDecision(
+      { lastModified: head.lastModified, etag: null, storedVersion: stored ? (stored[p.id] ?? null) : null, nowMs },
+      { style: sourceVersion.STYLE_CKAN_METADATA, forceReloadMaxAgeDays: pidMaxAgeDays },
+    );
+    decisions[p.id] = { skip: d.skip, reason: d.reason };
+    const v = stored && stored[p.id];
+    if (typeof v === 'string') { const ms = Date.parse(v); if (!Number.isNaN(ms) && (oldestMs === null || ms < oldestMs)) oldestMs = ms; }
+  }
+  const datasetVersionAgeDays = oldestMs === null ? null : (nowMs - oldestMs) / 86400000;
+  let contractIncomplete = false;
+  for (const k of reemitKeys) {
+    const v = priorMeta ? priorMeta[k] : undefined;
+    if (v === null || v === undefined || (emitTypes[k] !== undefined && !matchesEmitType(v, emitTypes[k]))) contractIncomplete = true;
+  }
+  const everySkip = primaries.every((p) => decisions[p.id] && decisions[p.id].skip);
+  const skip = !forced && everySkip && !contractIncomplete;
+  const reasons = primaries.map((p) => decisions[p.id] && decisions[p.id].reason);
+  const precedence = ['cache_stale_force_reload', 'no_prior_version', 'no_validators', 'prior_contract_incomplete', 'changed'];
+  const reason = skip ? 'unchanged' : forced ? 'force_run' : (precedence.find((r) => r === 'prior_contract_incomplete' ? contractIncomplete : reasons.includes(r)) || 'changed');
+  return { skip, reason, decisions, max_age_days: maxAgeDays, dataset_version_age_days: datasetVersionAgeDays };
+}
+
 /** The env var name `override.force_full` declares, or null. */
 function forceFullEnv(descriptor) {
   const o = descriptor.override;
@@ -409,7 +482,7 @@ async function detectInterruptedRetraction(pool, descriptor, { ownRunId = null }
   const res = await pool.query(
     `WITH own_last_completed AS (
        SELECT started_at FROM pipeline_runs
-        WHERE pipeline = ANY($1::text[]) AND status = 'completed'
+        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')
         ORDER BY started_at DESC LIMIT 1
      )
      SELECT p.id, p.pipeline, p.status, p.started_at
@@ -624,6 +697,7 @@ function gateRecordsMeta(descriptor, gate, gatedSkip) {
   const base = {
     reason: gate ? gate.reason : null,
     gated_skip: Boolean(gate && gate.skipped),
+    ...(gate && gate.step_gate ? { decisions: gate.step_gate.decisions, max_age_days: gate.step_gate.max_age_days, dataset_version_age_days: gate.step_gate.dataset_version_age_days } : {}),
   };
   if (!gatedSkip || !gatedSkip.gate) return base;
   const slugs = deriveLedgerSlugs(descriptor);
@@ -665,6 +739,9 @@ module.exports = {
   deriveLedgerSlugs,
   ledgerGatedSkip,
   gateRecordsMeta,
+  // 0y §3c: the all-primaries skip decision (pure). Exported so the 0y gate suite and the
+  // ingest pre-loop can import it directly; every other pure helper here is exported.
+  allPrimariesDecision,
   dryRunArgPresent,
   detectInterruptedRetraction,
 };

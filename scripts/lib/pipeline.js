@@ -260,7 +260,12 @@ function createPool() {
  */
 function classifyError(err) {
   if (!(err instanceof Error)) return 'unknown';
-  const code = /** @type {string|undefined} */ (/** @type {any} */ (err).code);
+  // Only a STRING code can be a SQLSTATE/errno we classify on. A non-string
+  // (a number such as an HTTP 502 status, or an object) is coerced to
+  // `undefined` so the `.startsWith` guards below cannot throw a TypeError
+  // from inside log.error and mask the step's real fatal error (WF3 2026-10-02).
+  const raw = /** @type {unknown} */ (/** @type {any} */ (err).code);
+  const code = /** @type {string|undefined} */ (typeof raw === 'string' ? raw : undefined);
   if (code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'EPIPE') return 'network';
   if (code === 'ETIMEDOUT' || code === 'ABORT_ERR' || (err.message && err.message.includes('timeout'))) return 'timeout';
   if (code === 'ENOENT') return 'file_not_found';
