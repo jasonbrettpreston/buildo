@@ -1,12 +1,15 @@
-// 🔗 SPEC LINK: docs/specs/00-architecture/00_engineering_standards.md §12.9 Real DB integration tests
+// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.10 Real-DB Integration Tests
 //
 // Dual-mode test DB harness:
 //   - CI: GitHub Actions provides a `postgres:16` + PostGIS service container
-//     and sets DATABASE_URL. We connect to that and run migrations.
+//     and sets DATABASE_URL (+ CI=true). We connect to that and run migrations.
+//     An exported DATABASE_URL is migrated ONLY when decideTestDbTarget() rules
+//     it disposable (loopback + CI=true, or BUILDO_TEST_DB_EXTERNAL=1); the local
+//     dev stack (port 54322) is always refused.
 //   - Local opt-in: developer sets BUILDO_TEST_DB=1, we spin up a
 //     `postgis/postgis:16-3.4` container via testcontainers, run migrations
 //     against it, and tear it down at the end of the suite.
-//   - Default (neither set): the helper returns null and every db.test.ts
+//   - Default (nothing set): the helper returns null and every db.test.ts
 //     file early-skips its suite. CI will fail if a db.test.ts isn't gated.
 //
 // Why this design:
@@ -24,8 +27,14 @@
 // fresh `pg.Pool` per file (they tear down their own pool).
 
 import { execSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { Pool } from 'pg';
 import type { StartedTestContainer } from 'testcontainers';
+
+// Reuse the pipeline's own password masking (scripts/lib/resolve-db.js) — CJS module.
+const { redactConnectionString } = createRequire(import.meta.url)('../../../scripts/lib/resolve-db.js') as {
+  redactConnectionString: (connectionString: string) => string;
+};
 
 /**
  * The name of the ephemeral test database — `postgres`, deliberately, and it
@@ -65,24 +74,94 @@ export const TEST_DATABASE_NAME = 'postgres';
 
 let startedContainer: StartedTestContainer | null = null;
 
+export type TestDbTarget = 'testcontainer' | 'external-ci' | 'noop';
+
+/** The local Supabase dev stack's Postgres port — never a disposable test DB. */
+const DEV_STACK_PORT = '54322';
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+
+/**
+ * PURE: which database may this harness migrate? (WF3 2026-10-03 — a pre-commit
+ * run with the dev DB env exported migrated/seeded 127.0.0.1:54322/postgres and
+ * stopped only on a permission error.) Rules, in order:
+ *   1. No (or blank) DATABASE_URL → 'testcontainer' if BUILDO_TEST_DB=1, else 'noop' (db tests self-skip).
+ *   2. A QUALIFIED DATABASE_URL → 'external-ci' (this wins over BUILDO_TEST_DB=1 — the
+ *      original precedence; CI runs `npm run test:db`, which always sets BUILDO_TEST_DB=1).
+ *      Qualified = parseable AND not the dev-stack port 54322 on loopback (never, no flag
+ *      overrides) AND either: non-loopback host with BUILDO_TEST_DB_EXTERNAL=1, or loopback
+ *      host (e.g. the CI service container, localhost:5432) with CI=true (GitHub Actions
+ *      sets it) or BUILDO_TEST_DB_EXTERNAL=1.
+ *   3. An UNQUALIFIED DATABASE_URL → 'testcontainer' if BUILDO_TEST_DB=1 (the container
+ *      URL REPLACES the exported one — the exported target is never touched), else refuse.
+ * A refusal throws naming the target with the password redacted. Refusing (not
+ * no-op-ing) an unqualified URL matters: a no-op would leave DATABASE_URL exported,
+ * so `dbAvailable()` would be true and the db tests would run, unmigrated, against it.
+ */
+export function decideTestDbTarget(env: Record<string, string | undefined>): TestDbTarget {
+  const raw = env.DATABASE_URL;
+  const hasUrl = typeof raw === 'string' && raw.trim() !== '';
+  const wantsContainer = env.BUILDO_TEST_DB === '1';
+
+  if (!hasUrl) return wantsContainer ? 'testcontainer' : 'noop';
+
+  // null = the exported URL qualifies as a disposable external DB; a string = why it does not.
+  const disqualified = ((): string | null => {
+    let url: URL;
+    try {
+      url = new URL(raw);
+    } catch {
+      return 'DATABASE_URL is not a parseable URL';
+    }
+    const host = url.hostname.toLowerCase();
+    const port = url.port || '5432';
+    const loopback = LOOPBACK_HOSTS.has(host);
+    const externalMarker = env.BUILDO_TEST_DB_EXTERNAL === '1';
+    if (loopback && port === DEV_STACK_PORT) {
+      return `${host}:${port} is the local Supabase dev stack, never a throwaway test DB`;
+    }
+    if (!loopback) {
+      return externalMarker ? null : `${host} is not a loopback host and BUILDO_TEST_DB_EXTERNAL=1 is not set`;
+    }
+    return env.CI === 'true' || externalMarker
+      ? null
+      : 'neither CI=true nor BUILDO_TEST_DB_EXTERNAL=1 marks it as a disposable test DB';
+  })();
+
+  if (disqualified === null) return 'external-ci';
+  // A fresh container's URL REPLACES the exported one in setup() — the exported target is never touched.
+  if (wantsContainer) return 'testcontainer';
+
+  throw new Error(
+    `[db-test setup] REFUSING to migrate ${redactConnectionString(raw)}: ${disqualified}\n` +
+      `  The db-test harness only migrates a disposable database. Either unset DATABASE_URL\n` +
+      `  (db tests skip), set BUILDO_TEST_DB=1 (fresh testcontainer), or — for a disposable\n` +
+      `  external DB — run under CI=true (loopback service container) or set BUILDO_TEST_DB_EXTERNAL=1.`,
+  );
+}
+
 /**
  * vitest globalSetup. Boots the test DB once for the entire suite. Returns
  * a teardown function that vitest calls after all tests finish.
  *
- * If neither DATABASE_URL nor BUILDO_TEST_DB=1 is set, this is a no-op
- * and individual test files will skip via the `dbAvailable()` guard.
+ * The target is chosen by `decideTestDbTarget(process.env)` — it throws (and the
+ * suite aborts before any connection) for a database that is not disposable.
+ * With no DATABASE_URL and no BUILDO_TEST_DB=1 this is a no-op and individual
+ * test files skip via the `dbAvailable()` guard.
  */
 export async function setup(): Promise<() => Promise<void>> {
-  // CI path: DATABASE_URL is provided by the service container.
-  if (process.env.DATABASE_URL) {
-    await runMigrations(process.env.DATABASE_URL);
+  const target = decideTestDbTarget(process.env);
+
+  // CI path: DATABASE_URL is provided by the service container (CI=true) or an
+  // explicitly-marked disposable DB (BUILDO_TEST_DB_EXTERNAL=1).
+  if (target === 'external-ci') {
+    await runMigrations(process.env.DATABASE_URL as string);
     return async () => {
       // Service container is managed by GH Actions; nothing to tear down.
     };
   }
 
-  // Local opt-in path.
-  if (process.env.BUILDO_TEST_DB !== '1') {
+  // Nothing configured — tests skip.
+  if (target === 'noop') {
     return async () => {
       // No-op teardown — tests will skip.
     };
