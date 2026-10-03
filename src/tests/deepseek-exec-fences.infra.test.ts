@@ -552,7 +552,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
   // =========================================================================
   describe('commit 10: git_commit — refused flags, never stripped-and-retried', () => {
     it('args:["--no-verify"] is refused (FLAG_REFUSED) and NOTHING executes — no git operation, no ledgered write required first', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'nope', paths: ['seed.txt'], args: ['--no-verify'], reason: 'r' })],
@@ -564,7 +564,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
 
   describe('commit 10: git_commit — the happy path, and PATH_NOT_LEDGERED', () => {
     it('write_file then git_commit succeeds; `git log -1` in the temp repo shows the Executed-By trailer; HEAD advances', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -582,7 +582,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
 
     it('git_commit with a path never written this run ⇒ PATH_NOT_LEDGERED', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [toolTurn('c1', 'git_commit', { message: 'test(08_agents): x', paths: ['seed.txt'], reason: 'r' })],
@@ -596,7 +596,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     it('a committer lock already held by a LIVE pid ⇒ COMMITTER_BUSY', async () => {
       const lockPath = path.join(ledgerDir, committerLockFileName(repo));
       fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'other-run', repo_root: repo, ts: new Date().toISOString() }));
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -613,7 +613,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const dead = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
       const lockPath = path.join(ledgerDir, committerLockFileName(repo));
       fs.writeFileSync(lockPath, JSON.stringify({ pid: dead.pid, run_id: 'stale-run', repo_root: repo, ts: new Date(0).toISOString() }));
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -637,9 +637,74 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
   });
 
+  // WF3 engine-no-commit (2026-10-03) — measured 2026-10-02: the engine
+  // committed f9063dce and attempted 2 more commits despite briefs saying
+  // "never commit". git_commit is now offered ONLY under `allow_commit: true`.
+  describe('WF3 engine-no-commit: git_commit is offered only when the brief sets allow_commit: true', () => {
+    function capturingClient(turns: ReturnType<typeof toolTurn>[]) {
+      const offered: string[][] = [];
+      let i = 0;
+      return {
+        offered,
+        async next(_messages: unknown, tools: Array<{ function: { name: string } }>) {
+          offered.push((tools || []).map((t) => t.function.name));
+          const t = turns[i];
+          i += 1;
+          return t || { message: { role: 'assistant', content: 'done', tool_calls: [] }, usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 }, finish_reason: 'stop' };
+        },
+      };
+    }
+    function runStartOf(records: Array<Record<string, unknown>>) {
+      return records.find((r) => r.kind === 'run_start') as { allow_commit?: unknown } | undefined;
+    }
+
+    it('(a) a brief WITHOUT allow_commit ⇒ the tool list offered to the model has no git_commit; run_start.allow_commit === false', async () => {
+      const briefPath = writeBrief(repo);
+      const client = capturingClient([]);
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, modelClient: client });
+      expect(summary.status).toBe('completed');
+      expect(client.offered.length).toBeGreaterThan(0);
+      for (const names of client.offered) {
+        expect(names).not.toContain('git_commit');
+        expect(names).toContain('write_file'); // the rest of the tool set is still offered
+      }
+      expect(runStartOf(ledgerRecords(ledgerDir, summary.run_id))?.allow_commit).toBe(false);
+    });
+
+    it('(b) allow_commit: true ⇒ git_commit IS offered; run_start.allow_commit === true', async () => {
+      const briefPath = writeBrief(repo, { allowCommit: true });
+      const client = capturingClient([]);
+      const summary = await runEngine({ repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir, modelClient: client });
+      expect(client.offered.length).toBeGreaterThan(0);
+      for (const names of client.offered) {
+        expect(names).toContain('git_commit');
+      }
+      expect(runStartOf(ledgerRecords(ledgerDir, summary.run_id))?.allow_commit).toBe(true);
+    });
+
+    it('(c) the model calls git_commit WITHOUT permission ⇒ blocked COMMIT_NOT_ALLOWED, HEAD unchanged, no commit recorded', async () => {
+      const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8' }).trim();
+      const headBefore = git('rev-parse', 'HEAD');
+      const briefPath = writeBrief(repo);
+      const summary = await runEngine({
+        repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
+        transcriptTurns: [
+          toolTurn('c1', 'write_file', { path: 'unpermitted.txt', content: 'x\n', reason: 'r' }),
+          toolTurn('c2', 'git_commit', { message: 'test(08_agents): unpermitted', paths: ['unpermitted.txt'], reason: 'r' }),
+        ],
+      });
+      const records = ledgerRecords(ledgerDir, summary.run_id);
+      expect(toolCallOf(records, 'git_commit')).toMatchObject({ status: 'blocked', error: { code: 'COMMIT_NOT_ALLOWED' } });
+      expect(summary.commits).toEqual([]);
+      expect(git('rev-parse', 'HEAD')).toBe(headBefore);
+      expect(git('diff', '--cached', '--name-only')).toBe(''); // nothing staged either
+    });
+  });
+
   describe('commit 10: bash argv — the commit-adjacent block list, and a legitimate typecheck-shaped call', () => {
     const blockedCases: string[][] = [
       ['git', 'add', '-A'],
+      ['git', 'commit', '-m', 'x'],
       ['git', 'push'],
       ['git', 'reset', '--hard'],
       ['rm', '-rf', 'x'],
@@ -715,6 +780,14 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         'src/tests/steps/assert_data_bounds/**',
       ]);
       expect(parseBrief('---\nwrite_scope:\n- a/**\n---\n').writeScope).toEqual(['a/**']);
+    });
+    it('WF3 engine-no-commit: allow_commit defaults to false; only the literal `allow_commit: true` enables it', () => {
+      expect(parseBrief('---\nwrite_scope:\n- a/**\n---\n').allowCommit).toBe(false);
+      expect(parseBrief('no front matter\n').allowCommit).toBe(false);
+      expect(parseBrief('---\nwrite_scope:\n- a/**\nallow_commit: false\n---\n').allowCommit).toBe(false);
+      expect(parseBrief('---\nwrite_scope:\n- a/**\nallow_commit: yes\n---\n').allowCommit).toBe(false);
+      expect(parseBrief('---\r\nallow_commit: true\r\nwrite_scope:\r\n  - a/**\r\n---\r\n')).toMatchObject({ allowCommit: true, writeScope: ['a/**'] });
+      expect(parseBrief('---\nwrite_scope:\n- a/**\nallow_commit: true\n---\n')).toMatchObject({ allowCommit: true, writeScope: ['a/**'] });
     });
     it('no front matter ⇒ empty scope, body === the whole content', () => {
       const content = 'plain brief, no front matter\n';
@@ -904,7 +977,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       fs.writeFileSync(path.join(realRepo, '.github', 'workflows', 'ci.yml'), 'x');
       const fakeLedger = { path: path.join(ledgerDir, 'claude-only-unit.jsonl'), append: () => {}, close: () => {} };
       const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, '.github', 'workflows', 'ci.yml')]) };
-      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['**'] });
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['**'], allowCommit: true });
       const outcome = await tools.dispatch('git_commit', { message: 'test(08_agents): x', paths: ['.github/workflows/ci.yml'], reason: 'r' });
       expect(outcome.toolResult.ok).toBe(false);
       expect(outcome.toolResult.error.code).toBe('PATH_CLAUDE_ONLY');
@@ -991,7 +1064,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       fs.writeFileSync(path.join(realRepo, 'out-of-scope-commit.txt'), 'x');
       const fakeLedger = { path: path.join(ledgerDir, 'scope-unit.jsonl'), append: () => {}, close: () => {} };
       const runState = { readState: {}, writtenPaths: new Set([path.join(realRepo, 'out-of-scope-commit.txt')]) };
-      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['scripts/**'] });
+      const tools = createTools({ repoRoot: repo, policy, ledger: fakeLedger, runState, writeScope: ['scripts/**'], allowCommit: true });
       const outcome = await tools.dispatch('git_commit', { message: 'test(08_agents): x', paths: ['out-of-scope-commit.txt'], reason: 'r' });
       expect(outcome.toolResult.ok).toBe(false);
       expect(outcome.toolResult.error.code).toBe('PATH_OUT_OF_SCOPE');
@@ -1075,8 +1148,8 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const repo2 = makeRepo();
       try {
         expect(committerLockFileName(repo)).not.toBe(committerLockFileName(repo2));
-        const briefPath1 = writeBrief(repo);
-        const briefPath2 = writeBrief(repo2);
+        const briefPath1 = writeBrief(repo, { allowCommit: true });
+        const briefPath2 = writeBrief(repo2, { allowCommit: true });
         const summary1 = await runEngine({
           repoRoot: repo, briefPath: briefPath1, provider: 'deepseek', ledgerDir,
           transcriptTurns: [
@@ -1101,7 +1174,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     it('the SAME repo twice (lock still held) ⇒ COMMITTER_BUSY', async () => {
       const lockPath = path.join(ledgerDir, committerLockFileName(repo));
       fs.writeFileSync(lockPath, JSON.stringify({ pid: process.pid, run_id: 'holder', repo_root: repo, ts: new Date().toISOString() }));
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -1123,7 +1196,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
 
   describe('F-II1 (CRITICAL): git_commit refuses a dirty index and undoes a stage mismatch, both directions', () => {
     it('a pre-staged stray file (never ledgered this run) is refused INDEX_DIRTY; nothing is committed; the stray stays staged', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       fs.writeFileSync(path.join(repo, 'stray.txt'), 'stray content, never ledgered this run\n');
       execFileSync('git', ['add', 'stray.txt'], { cwd: repo, env: scrubbedChildEnv() });
       const summary = await runEngine({
@@ -1142,7 +1215,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
 
     it('a clean index (the normal case) commits exactly the ledgered paths — no INDEX_DIRTY false positive', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -1162,7 +1235,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     const cases = ['--amen', '-n', '--no-verify', '--only'];
     for (const flag of cases) {
       it(`args:["${flag}"] ⇒ FLAG_REFUSED, nothing executes`, async () => {
-        const briefPath = writeBrief(repo);
+        const briefPath = writeBrief(repo, { allowCommit: true });
         const summary = await runEngine({
           repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
           transcriptTurns: [
@@ -1176,7 +1249,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     }
 
     it('args: [] (empty, the honest "no flags" declaration) is unaffected — the commit still succeeds', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -1191,7 +1264,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
 
   describe('F-II4 (HIGH): commit message format — validated BEFORE any git call, both directions', () => {
     it('a message whose first line does not match the required pattern ⇒ MESSAGE_FORMAT, no git call at all (index stays clean)', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -1206,7 +1279,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     });
 
     it('a conforming message (type(NN_spec): description) is accepted and lands', async () => {
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
@@ -1223,7 +1296,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
     it('the system prompt states the required pattern (so the model has seen it before its first git_commit call)', async () => {
       const policy = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/lib/exec-policy.json'), 'utf8'));
       expect(typeof policy.commit_message_pattern).toBe('string');
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [toolTurn('c1', 'read_file', { path: 'seed.txt', reason: 'r' })],
@@ -1248,7 +1321,7 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
         '#!/bin/sh\nif [ -n "$DEEPSEEK_API_KEY" ]; then echo "LEAKED:$DEEPSEEK_API_KEY"; exit 1; fi\nexit 0\n',
       );
       execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: repo, env: scrubbedChildEnv() });
-      const briefPath = writeBrief(repo);
+      const briefPath = writeBrief(repo, { allowCommit: true });
       const summary = await runEngine({
         repoRoot: repo, briefPath, provider: 'deepseek', ledgerDir,
         transcriptTurns: [
