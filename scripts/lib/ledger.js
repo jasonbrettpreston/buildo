@@ -26,6 +26,8 @@
 // injected ledger and is unchanged without one; `derivedReadsSteps` is (e)'s
 // derived set — the same `stepUpstreams` predicate, one derivation, two inputs.
 //
+// L-A (plan Fold 14): `chainOrderViolations` derives chain order from the same predicate and reports every producer-after-reader edge.
+//
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6 (the cross-step ledger)
 
 const fs = require('fs');
@@ -255,6 +257,78 @@ function derivedReadsSteps(slug, descriptor, opts) {
   return result.sort();
 }
 
+/**
+ * Chain order DERIVED from the effective cross-step ledger and checked against
+ * `manifest.chains` (plan Fold 9 D-B + Fold 14) — LDG-10 class 5, replacing the
+ * hand-written `indexOf` assertions in `chain.logic.test.ts`.
+ *
+ * SPEC LINK Spec 122 §6.5 / §6.6 (c) (LDG-10 class 5, plan Fold 9 D-B + Fold 14):
+ * for every chain, a producer `p` of a column the reader reads (`stepUpstreams`,
+ * column-level, chain-scoped) must sit BEFORE the reader at the same
+ * granularity. A producer AFTER its reader is an
+ * `ORDER:<chain>:<p>><reader>:<cols>` row; an in-chain ledger producer absent
+ * from the manifest chain is `ORDER-UNPLACED:<chain>:<p>><reader>:<cols>`
+ * (never silently dropped).
+ *
+ * rows on `permits`/`coa`/`entities`/`deep_scrapes` are REPORT-ONLY until the
+ * FLEET-2 landing commit (RE-FREEZE) flips them HARD; `sources` + `wsib` are
+ * HARD now.
+ *
+ * NO exemption of any kind: a reader that also writes the shared column is NOT
+ * excluded — that rule needs a Spec 124 §5 register row + Operator-Ruling first
+ * (FLEET-2 work); there is no allowlist and no skip list here, and those edges
+ * stay visible as report-only `ORDER:` rows until then.
+ *
+ * Iteration order is `Object.keys(chains)` for chains and array order within a
+ * chain (reader position ascending); everything is REPORTED, never thrown.
+ *
+ * @param {Record<string, string[]>} chains - `manifest.chains` shape
+ * @param {{inchain: Record<string, object>}} ledger - `{ inchain }` REQUIRED
+ * @returns {{rows: string[], blind: string[], unledgered: string[]}} three string arrays
+ */
+function chainOrderViolations(chains, ledger) {
+  if (!ledger) {
+    throw new Error('[ledger] chainOrderViolations requires an injected ledger (effectiveLedger())');
+  }
+  const inchain = ledger.inchain || {};
+  const cfg = chains || {};
+  const rows = [];
+  const blind = [];
+  const unledgered = [];
+
+  for (const chain of Object.keys(cfg)) {
+    const steps = cfg[chain] || [];
+    for (let readerIndex = 0; readerIndex < steps.length; readerIndex += 1) {
+      const reader = steps[readerIndex];
+      const row = inchain[reader];
+      if (!row) {
+        unledgered.push(`ORDER-UNLEDGERED:${chain}:${reader}`);
+        continue;
+      }
+      const reads = row.reads || {};
+      for (const [table, cols] of Object.entries(reads)) {
+        if (!cols || cols.length === 0) blind.push(`ORDER-BLIND:${chain}:${reader}:${table}`);
+      }
+      for (const p of stepUpstreams(reader, { chain, ledger })) {
+        if (p === reader) continue;
+        const pWrites = (inchain[p] && inchain[p].writes) || {};
+        const producerCols = new Set();
+        for (const [table, cols] of Object.entries(reads)) {
+          const written = pWrites[table] || [];
+          for (const col of cols || []) {
+            if (written.includes(col)) producerCols.add(`${table}.${col}`);
+          }
+        }
+        const cols = [...producerCols].sort().join(',');
+        const producerIndex = steps.indexOf(p);
+        if (producerIndex === -1) rows.push(`ORDER-UNPLACED:${chain}:${p}>${reader}:${cols}`);
+        else if (producerIndex > readerIndex) rows.push(`ORDER:${chain}:${p}>${reader}:${cols}`);
+      }
+    }
+  }
+  return { rows, blind, unledgered };
+}
+
 module.exports = {
   DEFAULT_SNAPSHOT_PATH,
   snapshotPath,
@@ -263,4 +337,5 @@ module.exports = {
   stepUpstreams,
   effectiveLedger,
   derivedReadsSteps,
+  chainOrderViolations,
 };

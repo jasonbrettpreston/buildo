@@ -170,8 +170,11 @@ describe('Pipeline Chain Definitions', () => {
     expect(slugs.indexOf('enrich_parcels')).toBe(slugs.indexOf('load_zoning') + 1);
     // load_ravines runs immediately after parcels (independent source load).
     expect(slugs.indexOf('load_ravines')).toBe(slugs.indexOf('parcels') + 1);
-    // enrich_ravines runs immediately after link_parcels (needs parcels loaded + linked).
-    expect(slugs.indexOf('enrich_ravines')).toBe(slugs.indexOf('link_parcels') + 1);
+    // RETIRED (L-A, LDG-10 class 5, plan Fold 14): "enrich_ravines == link_parcels + 1". Fence: the pin
+    // existed to keep enrich_ravines after its inputs; its comment claimed a link_parcels dependency that
+    // Spec 122 §6.5 measured false (enrich-ravines reads only parcels + ravines). The real dependencies
+    // (parcels > enrich_ravines, load_ravines > enrich_ravines) are now DERIVED and HARD for sources in
+    // src/tests/chain-order-derived.logic.test.ts (red-on-live-data test). Adjacency is not a dependency.
     // WF2 2026-07-07 (Spec 43 §6.7-A): both assert_global_coverage AND assert_parcel_sanity
     // must run AFTER compute_parcel_cost_estimates — they read the FINAL enriched cost/envelope
     // values (coverage gates the max-build fields; sanity gates the cost invariants). RELATIVE
@@ -182,7 +185,11 @@ describe('Pipeline Chain Definitions', () => {
     const globalCovIdx = slugs.indexOf('assert_global_coverage');
     const parcelSanityIdx = slugs.indexOf('assert_parcel_sanity');
     expect(costIdx).toBeGreaterThanOrEqual(0);
-    expect(globalCovIdx).toBeGreaterThan(costIdx);
+    // RETIRED (L-A, plan Fold 14): "assert_global_coverage after compute_parcel_cost_estimates". Fence: it
+    // existed so coverage gates the FINAL cost/envelope values (Spec 43 §6.7-A); that edge
+    // (parcels.cost_fb_total, parcels.parcel_cost_menu) is now DERIVED and HARD for sources in
+    // src/tests/chain-order-derived.logic.test.ts. The two lines around it stay (sanity-after-coverage
+    // has no data edge — an ordering-only finding, kept until its declared home exists).
     expect(parcelSanityIdx).toBeGreaterThan(globalCovIdx);
   });
 
