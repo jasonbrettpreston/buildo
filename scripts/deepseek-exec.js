@@ -22,7 +22,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
-const { openLedger, redact, generateRunId } = require('./lib/exec-ledger');
+const { openLedger, redact, redactForModel, redactForModelDeep, registerSecretsFromEnvFiles, generateRunId } = require('./lib/exec-ledger');
 const { createTools, MalformedToolCallError } = require('./lib/exec-tools');
 const { createTranscriptClient, createDeepSeekClient } = require('./lib/exec-model');
 const { scrubbedEnv } = require('./lib/exec-env');
@@ -42,6 +42,9 @@ const BLOCKED_CODES = new Set([
   'PATH_OUTSIDE_REPO', 'PATH_DENIED', 'SECRET_DENIED',
   'COMMAND_NOT_ALLOWED', 'FLAG_NOT_ALLOWED', 'TOO_LARGE',
   'PATH_NOT_LEDGERED', 'FLAG_REFUSED', 'COMMITTER_BUSY',
+  // WF3 engine-redaction (L17, 2026-10-03): a write/edit whose result would
+  // carry more `[REDACTED]` than the file already had.
+  'REDACTION_LEAK',
   // WF3 engine-no-commit (2026-10-03): git_commit called without the brief's
   // `allow_commit: true` (the tool was never offered).
   'COMMIT_NOT_ALLOWED',
@@ -252,7 +255,9 @@ function addUsage(a, b) {
 /**
  * Redacts a tool call's args for the ledger. `content` (write_file) and
  * `new_string` (edit_file) are replaced by `{ bytes, sha256 }` per §C.3 —
- * everything else passes through the shared `redact()`.
+ * everything else passes through `redact()`, the LEDGER redactor (shape
+ * patterns + real-secret values). Model-facing strings use `redactForModel()`
+ * instead (L17) — the two are deliberately different.
  */
 function ledgerToolArgs(name, args) {
   const out = { ...args };
@@ -289,6 +294,50 @@ function buildResultSummary(name, toolResult) {
 
 const MUTATING_TOOLS = new Set(['write_file', 'edit_file', 'run_bash_command', 'git_commit']);
 
+// WF3 engine-redaction (L17) — `git worktree list --porcelain` → every
+// `worktree <path>` entry's path, in order.
+function worktreeDirsFromPorcelain(text) {
+  const dirs = [];
+  for (const line of String(text || '').split(/\r?\n/)) {
+    if (line.startsWith('worktree ')) {
+      const dir = line.slice('worktree '.length).trim();
+      if (dir) dirs.push(dir);
+    }
+  }
+  return dirs;
+}
+
+// The dirs whose `.env*` files hold real secret VALUES the model view must
+// mask: this worktree, the main checkout (git's common dir parent) and EVERY
+// worktree `git worktree list` knows (a sibling worktree's cloud URL may be
+// printed by a child script too — L17 round 2). De-duplicated; a git failure
+// leaves whatever was resolved (the worktree's own dir at minimum).
+function secretEnvDirs(repoRoot) {
+  const candidates = [repoRoot];
+  const gitOpts = { cwd: repoRoot, env: scrubbedEnv(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+  try {
+    const common = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], gitOpts).trim();
+    if (common) candidates.push(path.dirname(common));
+  } catch {
+    // not resolvable (bare/odd layout) — other sources still apply.
+  }
+  try {
+    candidates.push(...worktreeDirsFromPorcelain(execFileSync('git', ['worktree', 'list', '--porcelain'], gitOpts)));
+  } catch {
+    // no worktree list — other sources still apply.
+  }
+  const seen = new Set();
+  const dirs = [];
+  for (const dir of candidates) {
+    const key = process.platform === 'win32' ? path.resolve(dir).toLowerCase() : path.resolve(dir);
+    if (!seen.has(key)) {
+      seen.add(key);
+      dirs.push(dir);
+    }
+  }
+  return dirs;
+}
+
 /**
  * runEngine(opts) — the exported entry point. Throws on an engine-level
  * fault; otherwise returns `{ status, run_id, ledger_path, iterations,
@@ -296,6 +345,11 @@ const MUTATING_TOOLS = new Set(['write_file', 'edit_file', 'run_bash_command', '
  */
 async function runEngine(opts = {}) {
   const repoRoot = resolveRepoRoot(opts.repoRoot);
+  // WF3 engine-redaction (L17) — the model view masks real secret VALUES, not
+  // secret-looking shapes; learn the values held in the worktree's and the
+  // main checkout's `.env*` files (gitignored, so a fresh worktree has none,
+  // but a child script may still load and print the main checkout's).
+  registerSecretsFromEnvFiles(secretEnvDirs(repoRoot));
   const { policy, sha256: policySha256 } = loadPolicy();
   const limits = policy.limits || {};
   const maxIterations = opts.maxIterations || limits.max_iterations || 40;
@@ -560,7 +614,7 @@ async function runEngine(opts = {}) {
       briefContent,
     ].join('\n');
 
-    const messages = [{ role: 'system', content: redact(systemPrompt) }];
+    const messages = [{ role: 'system', content: redactForModel(systemPrompt) }];
 
     let iteration = 0;
     let usageTotal = emptyUsage();
@@ -586,7 +640,7 @@ async function runEngine(opts = {}) {
       messages.push({
         role: 'tool',
         tool_call_id: call.id,
-        content: redact(JSON.stringify({ ok: false, error: { code: 'MALFORMED_TOOL_CALL', message } })),
+        content: redactForModel(JSON.stringify({ ok: false, error: { code: 'MALFORMED_TOOL_CALL', message } })),
       });
       return false;
     }
@@ -678,13 +732,13 @@ async function runEngine(opts = {}) {
         // ALSO re-fed into the next turn's `messages` array, so it must be
         // redacted here too or a secret the model echoes back would survive
         // unredacted for every subsequent turn's prompt.
-        content: redact(turn.message.content ?? null),
+        content: redactForModel(turn.message.content ?? null),
         // Engine hardening G1 (DeepSeek security lens, 2026-09-27): the
         // model's own tool-call ARGUMENTS are re-fed too, so they pass the
         // same redaction. A COPY — the calls below still dispatch on the raw
         // arguments (redacting them would corrupt e.g. write_file content).
         tool_calls: toolCalls.map((c) => (c && c.function && typeof c.function.arguments === 'string'
-          ? { ...c, function: { ...c.function, arguments: redact(c.function.arguments) } }
+          ? { ...c, function: { ...c.function, arguments: redactForModel(c.function.arguments) } }
           : c)),
       });
 
@@ -790,7 +844,7 @@ async function runEngine(opts = {}) {
           // not only the ledger's copy (a tool result, e.g. read_file's
           // `content`, is otherwise unredacted text headed straight for the
           // model turn).
-          content: redact(JSON.stringify(toolResult)),
+          content: redactForModel(JSON.stringify(redactForModelDeep(toolResult))),
         });
       }
     }
@@ -859,4 +913,6 @@ module.exports = {
   runEngine, resolveProvider, ledgerToolArgs, BLOCKED_CODES,
   // Step 9 panel fold — exported for direct unit testing.
   validatePolicyShape, PolicyInvalidError, gitInfo,
+  // WF3 engine-redaction (L17 round 2) — exported for direct unit testing.
+  worktreeDirsFromPorcelain, secretEnvDirs,
 };

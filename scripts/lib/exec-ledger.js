@@ -47,13 +47,209 @@ const PG_URL_PASSWORD_PATTERN = /(postgres(?:ql)?:\/\/[^:/\s@]+:)([^@/\s]+)(@)/g
 
 const KEY_VALUE_PATTERN = /(api[_-]?key|secret|token|password)(\s*[=:]\s*)(["']?)([^\s"']{8,})(["']?)/gi;
 
+// ---------------------------------------------------------------------------
+// Real-secret literal registry (WF3 engine-redaction, L17, 2026-10-03).
+//
+// The shape patterns above are right for the LEDGER (an audit artifact the
+// model never reads) but WRONG for the model view: a fixture literal such as
+// `postgres://u:testpw@...` or `password = 's3cretpw'` is not a secret, yet
+// shape-masking it showed the model `[REDACTED]`, which the model then copied
+// into its edits (MEASURED 2026-10-03, two seats). The model view therefore
+// masks only VALUES THAT ARE ACTUALLY SECRETS — the values of sensitive-named
+// env vars present in this process, the password component of any
+// credential-bearing URL env value, the same for every `.env*` file the
+// engine registered at run start — plus the vendor token shapes
+// (`sk-`/`AIza`/`gh*_`): near-zero false-positive, kept as a defence for a
+// real key whose env var is absent.
+// ---------------------------------------------------------------------------
+
+// A name that marks its value as a secret. `_PATH`/`_FILE` (a path to a key,
+// not the key), `NEXT_PUBLIC_*` (public by construction) and `*_CLIENT_ID`
+// (an OAuth client id is not a credential) are excluded.
+const SENSITIVE_NAME_RE = /(API_?KEY|SECRET|TOKEN|PASSWORD|PASSWD|_PASS$|^PASS|PRIVATE_KEY|CREDENTIAL|ACCESS_KEY)/i;
+const NON_SECRET_NAME_RE = /(_PATH$|_FILE$|^NEXT_PUBLIC_|_CLIENT_ID$)/i;
+const DATABASE_URL_NAME_RE = /(^|_)DATABASE_URL$/i;
+const USERNAME_NAME_RE = /(_USER|_USERNAME)$/i;
+// A credential-bearing URL value: scheme://user:password@...
+const URL_CREDENTIAL_RE = /^[a-z][a-z0-9+.-]*:\/\/([^:/\s@]+):([^@/\s]+)@/i;
+// Model view only: a standalone literal shorter than this is not masked on
+// its own (it would mask ordinary text everywhere); a URL password is still
+// masked in its `:pw@` position.
+const MIN_STANDALONE_SECRET_LEN = 8;
+// Both views (model AND ledger, L17 round 2): a single lowercase word under
+// 16 chars (a dev/default credential such as the local DB's user-named
+// password), or any value equal to a known user name, is not masked
+// standalone — masking it would mask that word in every path, identifier and
+// psql command line. The ledger's SHAPE patterns still mask it in a URL.
+const WEAK_WORD_RE = /^[a-z]{1,15}$/;
+const URLPW_PREFIX = '\u0000urlpw:';
+const USER_PREFIX = '\u0000user:';
+
+const registeredSecretLiterals = new Set();
+
+// → { standalone: string[], urlPasswords: string[], usernames: string[] }
+function secretLiteralsForEntry(name, value) {
+  const out = { standalone: [], urlPasswords: [], usernames: [] };
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return out;
+  }
+  const v = value.trim();
+  const url = URL_CREDENTIAL_RE.exec(v);
+  if (url) {
+    out.usernames.push(url[1]);
+    // user === password (a dev DB such as postgres://x:x@): the "password"
+    // is the published user name — nothing secret to mask, and masking it
+    // would re-create L17 on every test literal that copies the dev URL.
+    if (url[2] === url[1]) {
+      return out;
+    }
+    out.standalone.push(v); // the whole URL
+    out.urlPasswords.push(url[2]);
+    out.standalone.push(url[2]);
+    try {
+      const decoded = decodeURIComponent(url[2]);
+      if (decoded !== url[2]) {
+        out.urlPasswords.push(decoded);
+        out.standalone.push(decoded);
+      }
+    } catch {
+      // not valid percent-encoding; the raw form is already listed.
+    }
+    return out;
+  }
+  // Sensitive wins over the username rule (a name matching both is a secret).
+  if (name === 'DEEPSEEK_API_KEY' || DATABASE_URL_NAME_RE.test(name)
+    || (SENSITIVE_NAME_RE.test(name) && !NON_SECRET_NAME_RE.test(name))) {
+    out.standalone.push(v);
+  } else if (USERNAME_NAME_RE.test(name)) {
+    out.usernames.push(v);
+  }
+  return out;
+}
+
 /**
- * redact(str, extraLiterals?) — §C.1.5. Replaces every recognised secret
- * shape with the literal text `[REDACTED]`. `extraLiterals` is an additional
- * list of exact strings to scrub (e.g. a brief's own copy of a token); the
- * CURRENT values of `DEEPSEEK_API_KEY` and `DATABASE_URL` are always scrubbed
- * in addition, unconditionally, per §C.1.5's explicit naming of those two
- * env vars — a caller does not have to remember to pass them.
+ * registerSecretLiterals(entries) — entries is `{ NAME: value }` (e.g. a
+ * parsed `.env`). The same name/value rule as the live env applies, so a
+ * `.env`'s `PG_HOST=localhost` is NOT registered while its
+ * `*_SECRET_ACCESS_KEY` is. Process-lifetime (one engine run per process).
+ */
+function registerSecretLiterals(entries) {
+  if (!entries || typeof entries !== 'object') {
+    return;
+  }
+  for (const name of Object.keys(entries)) {
+    const r = secretLiteralsForEntry(name, entries[name]);
+    for (const lit of r.standalone) registeredSecretLiterals.add(lit);
+    for (const pw of r.urlPasswords) registeredSecretLiterals.add(URLPW_PREFIX + pw);
+    for (const u of r.usernames) registeredSecretLiterals.add(USER_PREFIX + u);
+  }
+}
+
+/**
+ * parseDotEnv(text) — minimal KEY=VALUE reader (comments, `export `, matched
+ * outer quotes). Used only to learn which VALUES are secrets; its output is
+ * never shown to the model.
+ */
+function parseDotEnv(text) {
+  const out = {};
+  for (const rawLine of String(text || '').split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.*)$/.exec(rawLine);
+    if (!m) continue;
+    let v = m[2].trim();
+    const quoted = v.length >= 2 && ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")));
+    v = quoted ? v.slice(1, -1) : v.replace(/\s+#.*$/, '');
+    out[m[1]] = v;
+  }
+  return out;
+}
+
+/**
+ * registerSecretsFromEnvFiles(dirs) — reads every `.env` / `.env.*` file
+ * directly inside each dir (`.example`/`.sample`/`.template` excluded:
+ * placeholders, not secrets — masking them would re-create L17) and
+ * registers its secret values. Returns the files read. An unreadable file is
+ * skipped (best-effort: the live env is still masked regardless).
+ */
+function registerSecretsFromEnvFiles(dirs) {
+  const read = [];
+  for (const dir of Array.isArray(dirs) ? dirs : []) {
+    let names;
+    try {
+      names = fs.readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (!/^\.env(\..+)?$/.test(name) || /\.(example|sample|template)$/i.test(name)) continue;
+      const file = path.join(dir, name);
+      try {
+        if (!fs.statSync(file).isFile()) continue;
+        registerSecretLiterals(parseDotEnv(fs.readFileSync(file, 'utf8')));
+        read.push(file);
+      } catch {
+        // an unreadable env file is skipped; see the docblock.
+      }
+    }
+  }
+  return read;
+}
+
+// Live env + registry, recomputed per call (tests change env between calls;
+// the cost is one scan of process.env, negligible next to a model turn).
+function collectSecretLiterals(extraLiterals) {
+  const standalone = new Set();
+  const urlPasswords = new Set();
+  const usernames = new Set();
+  for (const lit of registeredSecretLiterals) {
+    if (lit.startsWith(URLPW_PREFIX)) urlPasswords.add(lit.slice(URLPW_PREFIX.length));
+    else if (lit.startsWith(USER_PREFIX)) usernames.add(lit.slice(USER_PREFIX.length));
+    else standalone.add(lit);
+  }
+  for (const name of Object.keys(process.env)) {
+    const r = secretLiteralsForEntry(name, process.env[name]);
+    for (const lit of r.standalone) standalone.add(lit);
+    for (const pw of r.urlPasswords) urlPasswords.add(pw);
+    for (const u of r.usernames) usernames.add(u);
+  }
+  // A caller's explicit extraLiterals are always masked (no weak-word
+  // exception): the caller named them as secrets.
+  const explicit = new Set();
+  for (const lit of Array.isArray(extraLiterals) ? extraLiterals : []) {
+    if (typeof lit === 'string') explicit.add(lit);
+  }
+  return { standalone, urlPasswords, usernames, explicit };
+}
+
+function maskLiterals(str, extraLiterals, minLen) {
+  const { standalone, urlPasswords, usernames, explicit } = collectSecretLiterals(extraLiterals);
+  let out = str;
+  // Longest first, so a whole URL is masked before its password component.
+  const ordered = [
+    ...[...standalone].filter((l) => l.length >= minLen && !usernames.has(l) && !WEAK_WORD_RE.test(l)),
+    ...[...explicit].filter((l) => l.length >= 4),
+  ].sort((a, b) => b.length - a.length);
+  for (const literal of ordered) {
+    if (out.includes(literal)) {
+      out = out.split(literal).join('[REDACTED]');
+    }
+  }
+  for (const pw of urlPasswords) {
+    const needle = `:${pw}@`;
+    if (pw.length > 0 && out.includes(needle)) {
+      out = out.split(needle).join(':[REDACTED]@');
+    }
+  }
+  return out;
+}
+
+/**
+ * redact(str, extraLiterals?) — §C.1.5, the LEDGER redactor. Replaces every
+ * recognised secret SHAPE with the literal text `[REDACTED]`, then every
+ * real-secret literal (live sensitive env values incl. `DEEPSEEK_API_KEY` and
+ * `DATABASE_URL`, registered `.env` values, `extraLiterals`), with the same user-name / weak-word
+ * exceptions as the model view (L17 round 2 — the ledger stays readable).
+ * The ledger is never shown to the model. NEVER use this on a
+ * model-facing string — use redactForModel (L17).
  */
 function redact(str, extraLiterals) {
   if (typeof str !== 'string' || str.length === 0) {
@@ -65,20 +261,26 @@ function redact(str, extraLiterals) {
   }
   out = out.replace(PG_URL_PASSWORD_PATTERN, (_m, pre, _pass, at) => `${pre}[REDACTED]${at}`);
   out = out.replace(KEY_VALUE_PATTERN, (_m, key, sep) => `${key}${sep}[REDACTED]`);
+  return maskLiterals(out, extraLiterals, 4);
+}
 
-  const literals = new Set(Array.isArray(extraLiterals) ? extraLiterals : []);
-  if (process.env.DEEPSEEK_API_KEY) {
-    literals.add(process.env.DEEPSEEK_API_KEY);
+/**
+ * redactForModel(str, extraLiterals?) — §C.1.5 as applied to every string
+ * that enters a MODEL message (system prompt incl. the brief, tool results,
+ * re-fed assistant turns). Masks real secret VALUES only (+ the vendor token
+ * shapes); a password-LOOKING literal that is not a real secret is shown
+ * verbatim, so the model never sees — and never copies — a `[REDACTED]`
+ * mask into code (L17).
+ */
+function redactForModel(str, extraLiterals) {
+  if (typeof str !== 'string' || str.length === 0) {
+    return str;
   }
-  if (process.env.DATABASE_URL) {
-    literals.add(process.env.DATABASE_URL);
+  let out = str;
+  for (const pattern of SIMPLE_SECRET_PATTERNS) {
+    out = out.replace(pattern, '[REDACTED]');
   }
-  for (const literal of literals) {
-    if (typeof literal === 'string' && literal.length >= 4 && out.includes(literal)) {
-      out = out.split(literal).join('[REDACTED]');
-    }
-  }
-  return out;
+  return maskLiterals(out, extraLiterals, MIN_STANDALONE_SECRET_LEN);
 }
 
 /**
@@ -99,6 +301,31 @@ function redactDeep(value, extraLiterals, depth = 0) {
     const out = {};
     for (const key of Object.keys(value)) {
       out[key] = redactDeep(value[key], extraLiterals, depth + 1);
+    }
+    return out;
+  }
+  return value;
+}
+
+/**
+ * redactForModelDeep(value) — redactForModel over every string leaf (applied
+ * BEFORE JSON.stringify, so a secret containing a quote/backslash is matched
+ * in its raw form, not its JSON-escaped one).
+ */
+function redactForModelDeep(value, depth = 0) {
+  if (depth > 20) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return redactForModel(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactForModelDeep(item, depth + 1));
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value)) {
+      out[key] = redactForModelDeep(value[key], depth + 1);
     }
     return out;
   }
@@ -212,7 +439,12 @@ function generateRunId() {
 module.exports = {
   openLedger,
   redact,
+  redactForModel,
+  redactForModelDeep,
   redactDeep,
+  registerSecretLiterals,
+  registerSecretsFromEnvFiles,
+  parseDotEnv,
   resolveLedgerDir,
   generateRunId,
   LedgerWriteError,

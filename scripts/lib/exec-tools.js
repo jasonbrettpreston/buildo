@@ -46,7 +46,7 @@ const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const { resolveConfinedPath, toRepoRelativePosix, isSecretDenied, PathDeniedError } = require('./exec-path');
 const { scrubbedEnv } = require('./exec-env');
-const { redact } = require('./exec-ledger');
+const { redactForModel } = require('./exec-ledger');
 const { captureWorktree } = require('./exec-worktree');
 const { matchArgv } = require('./exec-policy-match');
 const { matchesAnyGlob } = require('./exec-glob');
@@ -103,6 +103,42 @@ const SELF_PROTECT_DENYLIST = Object.freeze([
   // The shared harness every deepseek-exec* lock imports (same panel fold).
   'src/tests/helpers/deepseek-exec-harness.ts',
 ]);
+
+// WF3 engine-redaction (L17, 2026-10-03) — backstop. The model view masks
+// real secrets as `[REDACTED]`; a model that copies that mask into code
+// corrupts the file silently (MEASURED twice on 2026-10-03). A write/edit
+// whose resulting content carries MORE occurrences of the mask than the file
+// already had is refused, so a mask can never land. `originalText` is the
+// pre-edit content when the caller already has it; otherwise it is read
+// (a new file counts as zero).
+const REDACTION_MASK = '[REDACTED]';
+
+function countMask(text) {
+  return typeof text === 'string' && text.length > 0 ? text.split(REDACTION_MASK).length - 1 : 0;
+}
+
+function checkRedactionLeak(absPath, relPosix, newText, originalText) {
+  const after = countMask(newText);
+  if (after === 0) {
+    return null;
+  }
+  let before = 0;
+  if (typeof originalText === 'string') {
+    before = countMask(originalText);
+  } else if (fs.existsSync(absPath)) {
+    before = countMask(fs.readFileSync(absPath, 'utf8'));
+  }
+  if (after <= before) {
+    return null;
+  }
+  return {
+    ok: false,
+    error: {
+      code: 'REDACTION_LEAK',
+      message: `${relPosix}: the new content contains ${after} "${REDACTION_MASK}" (the file had ${before}). "${REDACTION_MASK}" is the engine's secret mask, never real file content — write the actual literal from the brief or the source, or leave that value unchanged.`,
+    },
+  };
+}
 
 // The ledger directory resolves at RUNTIME (outside the repo by design, F11)
 // so it cannot be a static repo-relative glob; it is checked separately by
@@ -598,6 +634,10 @@ async function writeFileHandler(args, ctx) {
       return { toolResult: shrinkBlock, pre, post: captureWorktree(repoRoot) };
     }
   }
+  const leakBlock = checkRedactionLeak(absPath, relPosix, content);
+  if (leakBlock) {
+    return { toolResult: leakBlock, pre, post: captureWorktree(repoRoot) };
+  }
 
   const created = !fs.existsSync(absPath);
   fs.mkdirSync(path.dirname(absPath), { recursive: true });
@@ -696,6 +736,10 @@ async function editFileHandler(args, ctx) {
   const updated = args.replace_all
     ? original.split(oldString).join(newString)
     : original.replace(oldString, () => newString);
+  const leakBlock = checkRedactionLeak(absPath, relPosix, updated, original);
+  if (leakBlock) {
+    return { toolResult: leakBlock, pre, post: captureWorktree(repoRoot) };
+  }
 
   fs.writeFileSync(absPath, eol === 'crlf' ? updated.replace(/\n/g, '\r\n') : updated, 'utf8');
   const post = captureWorktree(repoRoot);
@@ -1021,8 +1065,8 @@ async function runBashCommandHandler(args, ctx) {
     toolResult: {
       ok: true,
       exit_code: result.exitCode,
-      stdout: redact(result.stdout),
-      stderr: redact(result.stderr),
+      stdout: redactForModel(result.stdout),
+      stderr: redactForModel(result.stderr),
       truncated: result.truncated,
       duration_ms: result.durationMs,
     },
@@ -1134,8 +1178,9 @@ function parseGitGrepLine(line) {
 }
 
 // §C.2 grep_files. Implemented over `git grep -n -I -E --untracked`;
-// matches under a §C.1.5 secret glob are dropped, every `text` is redacted
-// (the ledger/prompt redact() is shared, not re-implemented here).
+// matches under a §C.1.5 secret glob are dropped, every `text` passes
+// redactForModel() (real secret values only, L17 — the ledger's shape-based
+// redact() is never applied to model-facing text), imported, not re-implemented.
 async function grepFilesHandler(args, ctx) {
   const { repoRoot, policy } = ctx;
   const limits = (policy && policy.limits) || {};
@@ -1175,7 +1220,7 @@ async function grepFilesHandler(args, ctx) {
   }
   // git grep exits 1 when there are zero matches — not a fault.
   if (result.status !== 0 && result.status !== 1) {
-    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `git grep exited ${result.status}: ${redact(result.stderr || '')}` } } };
+    return { toolResult: { ok: false, error: { code: 'BAD_PATTERN', message: `git grep exited ${result.status}: ${redactForModel(result.stderr || '')}` } } };
   }
 
   const secretGlobs = (policy && policy.secret_read_deny) || [];
@@ -1189,7 +1234,7 @@ async function grepFilesHandler(args, ctx) {
     if (isSecretDenied(parsed.path.split('\\').join('/'), secretGlobs)) {
       continue;
     }
-    allMatches.push({ path: parsed.path, line: parsed.line, text: redact(parsed.text) });
+    allMatches.push({ path: parsed.path, line: parsed.line, text: redactForModel(parsed.text) });
   }
   const cap = Math.min(args.max_results || 200, limits.grep_max_results || 1000);
   const truncated = allMatches.length > cap;
