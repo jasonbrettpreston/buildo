@@ -21,7 +21,19 @@ const ledger = require('../../scripts/lib/ledger.js') as {
   snapshotPath: (opts?: { env?: Record<string, string | undefined> }) => string;
   loadLedger: (opts?: { env?: Record<string, string | undefined> }) => { inchain: Record<string, unknown>; static: Record<string, unknown> };
   slugForms: (name: string, chains: string[]) => string[];
-  stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined> }) => string[];
+  stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined>; ledger?: { inchain: Record<string, unknown> } }) => string[];
+  // P1-C5 (Spec 122 §6; plan Fold 9 D-B): the effective ledger overlays every
+  // converted descriptor's derived reads/writes and tags each row's provenance.
+  effectiveLedger: (opts?: { env?: Record<string, string | undefined>; srcLedger?: unknown }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    inchain: Record<string, any>;
+    static: Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    src: Record<string, any>;
+  };
+  // P1-C5 (Fold 9 D-C): the column-level, chain-scoped derived reads.steps set.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  derivedReadsSteps: (slug: string, descriptor: any, opts: { ledger: { inchain: Record<string, any> }; producers?: string[] }) => string[];
 };
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -35,6 +47,19 @@ const sourceVersion = require('../../scripts/lib/source-version.js') as {
 const REPO_ROOT = join(process.cwd());
 const FULL_FIXTURE = 'src/tests/fixtures/ledger-snapshot.fixture.json';
 const MISSING_PRODUCER_FIXTURE = 'src/tests/fixtures/ledger-snapshot-missing-producer.fixture.json';
+
+// P1-C5 fixtures: the converted descriptors (seam loader) and their deriveMeta
+// projection — the two sources effectiveLedger/derivedReadsSteps overlay.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const seam = require(join(REPO_ROOT, 'scripts/lib/step/seam.js')) as {
+  loadConvertedDescriptors: () => Record<string, { descriptor: { identity: { name: string } }; slug: string; relFile: string }>;
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const stepLib = require(join(REPO_ROOT, 'scripts/lib/step/index.js')) as {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deriveMeta: (descriptor: any) => { reads: Record<string, string[]>; writes: Record<string, string[]>; external: string[] };
+};
+const deriveMeta = stepLib.deriveMeta;
 
 const fixtureEnv = (relPath: string) => ({ BUILDO_LEDGER_SNAPSHOT_PATH: relPath });
 
@@ -215,5 +240,130 @@ describe("drift lock — the cost step's declared UPSTREAM_SLUGS vs the derived 
     const { onlyDeclared, onlyDerived } = symmetricDifference(POST_RETIREMENT);
     expect(onlyDeclared).toEqual([]);
     expect(onlyDerived).toEqual([]);
+  });
+});
+
+// ===========================================================================
+// P1-C5 — the injected ledger, the EFFECTIVE ledger, and the derived
+// reads.steps set (Spec 122 §6; plan Fold 9 D-A/D-B/D-C). RED-first: the
+// ledger gains `stepUpstreams(...,{ledger})`, `effectiveLedger()` and
+// `derivedReadsSteps(...)` in a sibling brief, so the non-parity tests below
+// fail (TypeError / not a function) until then. D1's byte-parity test is the
+// GREEN control: the injected-ledger path must answer EXACTLY like the
+// committed snapshot for all 89 (slug, chain) pairs.
+// ===========================================================================
+describe('P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec 122 §6; plan Fold 9 D-A/D-B/D-C)', () => {
+  it('D1 byte parity: all 89 snapshot slug×chain pairs answer identically with the raw ledger injected', () => {
+    const raw = ledger.loadLedger();
+    const pairs: Array<[string, string]> = [];
+    for (const slug of Object.keys(raw.inchain)) {
+      const chains = ((raw.inchain[slug] as { chains?: string[] }).chains) || [];
+      for (const chain of chains) pairs.push([slug, chain]);
+    }
+    expect(pairs.length).toBe(89);
+    for (const [s, c] of pairs) {
+      expect(ledger.stepUpstreams(s, { chain: c, ledger: raw })).toEqual(ledger.stepUpstreams(s, { chain: c }));
+    }
+  });
+
+  it('RED: an injected ledger is honoured (not the committed snapshot)', () => {
+    // fx_consumer reads fx_producer's write in the same chain — but NEITHER
+    // slug exists in the committed snapshot. A stepUpstreams that ignored the
+    // injected ledger would throw `unknown slug` instead of answering.
+    const L = {
+      inchain: {
+        fx_consumer: { chains: ['x'], reads: { t: ['k'] }, writes: {} },
+        fx_producer: { chains: ['x'], reads: {}, writes: { t: ['k'] } },
+      },
+      static: {},
+    };
+    expect(ledger.stepUpstreams('fx_consumer', { chain: 'x', ledger: L })).toEqual(['fx_producer']);
+  });
+
+  it('RED: effectiveLedger overlays every converted descriptor (source descriptor) and keeps snapshot rows (source snapshot)', () => {
+    const eff = ledger.effectiveLedger();
+    const raw = ledger.loadLedger();
+    const conv = seam.loadConvertedDescriptors();
+    expect(Object.keys(conv).length).toBeGreaterThan(0);
+
+    const converted = new Set(Object.keys(conv));
+    // (1) every raw key is present in eff.inchain — nothing is dropped.
+    for (const key of Object.keys(raw.inchain)) {
+      expect(eff.inchain[key]).toBeDefined();
+    }
+    // (2) converted rows: reads/writes are the descriptor's deriveMeta and the
+    //     row is tagged source:'descriptor'.
+    for (const [name, { descriptor }] of Object.entries(conv)) {
+      const meta = deriveMeta(descriptor);
+      expect(eff.inchain[name].source).toBe('descriptor');
+      expect(eff.inchain[name].reads).toEqual(meta.reads);
+      expect(eff.inchain[name].writes).toEqual(meta.writes);
+    }
+    // (3) every NON-converted raw key: reads unchanged and tagged source:'snapshot'.
+    for (const key of Object.keys(raw.inchain)) {
+      if (converted.has(key)) continue;
+      expect(eff.inchain[key].source).toBe('snapshot');
+      expect(eff.inchain[key].reads).toEqual((raw.inchain[key] as { reads: unknown }).reads);
+    }
+    // (4) static is untouched.
+    expect(eff.static).toEqual(raw.static);
+  });
+
+  it('RED: effectiveLedger carries the src/ static SQL ledger as its src section, every row source-tagged src_static; not_postgres files never enter it', () => {
+    const eff = ledger.effectiveLedger({
+      srcLedger: {
+        files: {
+          'src/a.ts': { class: 'static', reads: { permits: ['id'] }, writes: {}, statements: 1 },
+          'src/b.ts': { class: 'interpolated', reads: {}, writes: { permits: ['status'] } },
+          'src/c.ts': { class: 'not_postgres', reason: 'x' },
+        },
+      },
+    });
+    expect(eff.src).toEqual({
+      'src/a.ts': { class: 'static', reads: { permits: ['id'] }, writes: {}, source: 'src_static' },
+      'src/b.ts': { class: 'interpolated', reads: {}, writes: { permits: ['status'] }, source: 'src_static' },
+    });
+    // The src section is a SEPARATE section — it never alters the step rows.
+    expect(eff.inchain).toEqual(ledger.effectiveLedger().inchain);
+  });
+
+  it('RED: the default src section is read from the committed src-sql-ledger.json', () => {
+    const eff = ledger.effectiveLedger();
+    expect(typeof eff.src).toBe('object');
+    for (const row of Object.values(eff.src)) {
+      expect((row as { source: string }).source).toBe('src_static');
+      expect(['static', 'interpolated']).toContain((row as { class: string }).class);
+    }
+  });
+
+  it("RED: derivedReadsSteps — column-level, chain-scoped, consumer side = the descriptor's declared reads, self excluded", () => {
+    const L = {
+      inchain: {
+        fx_consumer: { chains: ['x'], reads: {}, writes: {} },
+        p: { chains: ['x'], reads: {}, writes: { t: ['k'] } },
+        q: { chains: ['y'], reads: {}, writes: { t: ['k'] } },
+        r: { chains: ['x'], reads: {}, writes: { t: ['z'] } },
+      },
+      static: {},
+    };
+    const desc = {
+      identity: { name: 'fx_consumer' },
+      inputs: { reads: { tables: [{ table: 't', columns: ['k'] }], steps: [], externals: [] } },
+      execution: { invocation: { x: {} } },
+    };
+    // p writes t.k in chain x → derived. q is another chain; r writes another
+    // column; fx_consumer's own (empty) reads row is OVERLAID by the
+    // descriptor's declared t.k, so nothing self-matches.
+    expect(ledger.derivedReadsSteps('fx_consumer', desc, { ledger: L })).toEqual(['p']);
+    // producers filter is applied to the result.
+    expect(ledger.derivedReadsSteps('fx_consumer', desc, { ledger: L, producers: ['q'] })).toEqual([]);
+    // self exclusion: a descriptor literally named p reading t.k derives nothing
+    // (p is the consumer, and p is excluded from the candidates).
+    const selfDesc = {
+      identity: { name: 'p' },
+      inputs: { reads: { tables: [{ table: 't', columns: ['k'] }], steps: [], externals: [] } },
+      execution: { invocation: { x: {} } },
+    };
+    expect(ledger.derivedReadsSteps('p', selfDesc, { ledger: L })).toEqual([]);
   });
 });

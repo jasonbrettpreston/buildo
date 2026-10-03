@@ -94,10 +94,11 @@ export type AdoptionClass = 'guarded' | 'zero_statement' | 'legacy_oracle_exclud
  * guarded fixture tests). `guarded` suites carry `witnessGuard(`, the
  * `zero_statement` ones a "must not touch the pool" marker, the excluded legacy-oracle
  * harnesses a "legacy-harness" marker. The lock test pins the key set and the
- * 18 / 4 / 3 counts.
+ * 19 / 4 / 3 counts.
  */
 export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   compute_centroids: 'guarded',
+  enrich_centreline: 'guarded',
   enrich_parcels: 'guarded',
   load_ravines: 'guarded',
   compute_parcel_cost_estimates: 'guarded',

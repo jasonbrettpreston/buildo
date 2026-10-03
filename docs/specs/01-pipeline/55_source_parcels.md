@@ -106,10 +106,10 @@ emitMeta writes — all `parcels` table columns including LEGACY 5 (still writte
   - `src/tests/steps/parcels/row-conservation.test.ts`
   - `src/tests/steps/parcels/violations.test.ts`
   - `src/tests/steps/parcels/witness-fixture.logic.test.ts`
-  - data: `parcels` writes (migrations/011_parcels.sql)
+  - data (descriptor): `parcels` writes (migrations/011_parcels.sql)
   - upstream: none
-  - downstream: assert_parcel_sanity · compute_centroids · compute_parcel_cost_estimates · enrich_centreline · enrich_heritage · enrich_parcels · enrich_ravines · link_massing · link_neighbourhoods · link_parcel_addresses · link_parcels
-  - consumers: assert_data_bounds (records_meta audit_table) · parcels (records_meta parcels_load)
+  - downstream: assert_data_bounds · assert_global_coverage · assert_parcel_sanity · compute_centroids · compute_parcel_cost_estimates · enrich_centreline · enrich_heritage · enrich_parcels · enrich_ravines · link_massing · link_parcel_addresses · link_parcels
+  - consumers: assert_data_bounds (records_meta audit_table) · parcels (records_meta parcels_load) · src/lib/leads/lead-inspect-query.ts (table parcels: 1 column)
 <!-- /generated:target-files -->
 - `scripts/lib/parcels-csv-drift.js` — the CSV header/null-fraction drift detector, shared with `assert_schema` (`EXPECTED_PARCEL_COLUMNS`) — its `0.10` null-address literal is a `assert-schema.descriptor.json` `fingerprint_inputs` entry, so it is NOT touched by this conversion (Rule 3 externalizes the boundary as a config value on the compute side instead; see the descriptor's `null_address_pct` check).
 - `scripts/lib/address-normalizers.js` — the shared JOIN-key normalizer, also consumed by Spec 54's loader.

@@ -151,10 +151,10 @@ only"), `wsib_registry` row count and content unaffected (121,116, unchanged). S
   - `scripts/link-wsib.notes.json`
   - `scripts/lib/compute/link-wsib.js`
   - `src/tests/steps/link_wsib/violations.test.ts`
-  - data: `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
+  - data (descriptor): `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
   - upstream: builders · load_wsib
-  - downstream: none
-  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn)
+  - downstream: assert_data_bounds · assert_global_coverage
+  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/app/api/admin/stats/route.ts (table entities: 2 columns) · src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn) · src/features/leads/lib/get-lead-feed.ts (table entities: 3 columns) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 1 column) · src/lib/builders/enrichment.ts (table entities: 4 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 1 column) · src/lib/leads/lead-inspect-query.ts (table entities: 1 column) · src/lib/quality/metrics.ts (table entities: 4 columns)
 <!-- /generated:target-files -->
 - `scripts/enrich-wsib.js` (new)
 - `scripts/manifest.json` (wsib chain array, enrich_wsib_registry entry)

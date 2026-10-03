@@ -35,7 +35,7 @@ refresh_snapshot → assert_data_bounds → assert_engine_health
 | 4 | `geocode_permits` | `geocode-permits.js` | Re-join EVERY permit with a numeric `geo_id` to `address_points` (guarded, not narrowed to missing coordinates) + clear coordinates whose `geo_id` vanished upstream | permits |
 | 5 | `parcels` | `load-parcels.js` | Ingest property lot polygons from city GIS (~486K rows) — converted 2026-09-24 (20th step, INGESTOR 3/9; Spec 55 "As-built" carries the descriptor/compute/deviation detail) | parcels |
 | 6 | `load_ravines` | `load-ravines.js` | Ingest Toronto Ravine & Natural Feature Protection Area polygons (Chapter 658) — zipped shapefile (854 polygons), advisory lock 59 (Spec 59 §8c) | ravines |
-| 7 | `load_heritage` | `load-heritage.js` | Ingest Toronto Heritage Register (≈8,803 Part IV/V address points) + Heritage Conservation Districts (29 polygons) — two zipped shapefiles, Ontario Heritage Act Parts IV/V, advisory lock 61 (Spec 61 §8c) | heritage_properties, heritage_districts |
+| 7 | `load_heritage` | `load-heritage.js` | Ingest Toronto Heritage Register (≈8,803 Part IV/V address points) + Heritage Conservation Districts (29 polygons) — two zipped shapefiles, Ontario Heritage Act Parts IV/V, advisory lock 61 (Spec 61 §8c) — Converted 2026-10-02 (25th step, INGESTOR, first multi-target member: two primaries → two targets, one transaction per target; Spec 61 "As-built" carries the descriptor/compute/deviation detail). | heritage_properties, heritage_districts |
 | 8 | `load_centreline` | `load-centreline.js` | Ingest Toronto Centreline (TCL) street-network LineStrings — zipped shapefile (~47K street-class segments after L25 filter), staging-table full-replace, advisory lock 63 (Spec 62 §8c) — converted 2026-09-27 (21st step, INGESTOR 4/9, first write class C member; Spec 62 "As-built" carries the descriptor/compute/deviation detail) | toronto_centreline |
 | 9 | `link_parcel_addresses` | `link-parcel-addresses.js` | Populate the parcels ↔ address_points spatial bridge via `ST_Within` (PK-ordered parcel batches, GIST index lookups, ~511K bridge rows); advisory lock 115 (Specs 54/55). The bridge is the sole data path for `link_parcels` Strategies 1+2 and `link_coa_to_parcels` Tier 1a/1b — a zero-link result FAIL-gates | parcel_address_points |
 | 10 | `compute_centroids` | `compute-centroids.js` | Calculate centroid lat/lng for parcels missing them | parcels |
@@ -279,16 +279,16 @@ empty) passes no flag at all.
   - `src/tests/steps/compute_centroids/runtime.logic.test.ts`
   - `src/tests/steps/compute_centroids/sabotage.logic.test.ts`
   - `src/tests/steps/compute_centroids/violations.test.ts`
-  - data: `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: parcels
-  - downstream: link_massing · link_parcels
-  - consumers: none
+  - downstream: link_massing
+  - consumers: src/lib/leads/lead-inspect-query.ts (table parcels: 2 columns)
 - `assert_parcel_sanity` — ASSERT · converted · owner specs: 43
   - `scripts/quality/assert-parcel-sanity.js`
   - `scripts/quality/assert-parcel-sanity.descriptor.json`
   - `scripts/lib/compute/assert-parcel-sanity.js`
   - `src/tests/steps/assert_parcel_sanity/violations.test.ts`
-  - data: `parcels` reads (migrations/011_parcels.sql)
+  - data (descriptor): `parcels` reads (migrations/011_parcels.sql)
   - upstream: compute_parcel_cost_estimates · enrich_parcels · parcels
   - downstream: none
   - consumers: src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)

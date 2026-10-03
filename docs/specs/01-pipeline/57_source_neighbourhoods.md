@@ -94,10 +94,10 @@ A NON-NUMERIC key still throws at acquisition (`/positive integer/`, legacy halt
   - `scripts/load-neighbourhoods.notes.json`
   - `scripts/lib/compute/load-neighbourhoods.js`
   - `src/tests/steps/neighbourhoods/violations.test.ts`
-  - data: `neighbourhoods` writes (migrations/013_neighbourhoods.sql)
+  - data (descriptor): `neighbourhoods` writes (migrations/013_neighbourhoods.sql)
   - upstream: none
-  - downstream: enrich_parcels · link_neighbourhoods
-  - consumers: src/components/FreshnessTimeline.tsx (records_meta audit_table)
+  - downstream: assert_data_bounds · link_neighbourhoods
+  - consumers: src/app/api/permits/[id]/route.ts (table neighbourhoods: 17 columns) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/features/leads/lib/get-lead-feed.ts (table neighbourhoods: 1 column) · src/lib/leads/lead-detail-query.ts (table neighbourhoods: 4 columns) · src/lib/leads/lead-inspect-query.ts (table neighbourhoods: 3 columns) · src/lib/market-metrics/queries.ts (table neighbourhoods: 2 columns)
 <!-- /generated:target-files -->
 - `src/lib/leads/lead-detail-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)
 - `src/lib/leads/lead-inspect-query.ts` — implementation file this spec already names in its body; declared explicitly 2026-09-14 (was only reaching the system map through the generator's whole-document fallback scan, which an explicit Target Files list suppresses)

@@ -1,0 +1,22 @@
+{
+ "what": "p1-csrc-static-pass",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "scripts/analysis/src-sql-ledger.mjs"
+ ],
+ "tests": [
+  "src/tests/src-sql-ledger.logic.test.ts"
+ ],
+ "numFailedTests": 0,
+ "numPassedTests": 0,
+ "suite_load_errors": [
+  {
+   "file": "src/tests/src-sql-ledger.logic.test.ts",
+   "message": "Failed to load url ../../scripts/analysis/src-sql-ledger.mjs (resolved id: ../../scripts/analysis/src-sql-ledger.mjs) in C:/Users/User/Buildo-wt-p1c6/src/tests/src-sql-ledger.logic.test.ts. Does the file exist?"
+  }
+ ],
+ "failed": [],
+ "passed_count": 0,
+ "captured_at": "2026-10-03T16:44:43.517Z"
+}

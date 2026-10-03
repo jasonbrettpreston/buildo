@@ -228,6 +228,24 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/generate-target-files\.mjs --check && \\\n\s*/, '');
     expect(stripComments(tampered)).not.toContain('generate-target-files.mjs --check');
   });
+
+  // Registry-truth P1-C-src (plan Fold 14): the generated src/ SQL ledger
+  // (scripts/steps/_schema/src-sql-ledger.json) is drift-checked on EVERY commit,
+  // together with its closed interpolated-file growth lock — its own line, for the
+  // same reason as the Target Files check (step-validate --staged returns early on
+  // a commit that stages no step file, so a src/-only commit would never reach it).
+  it('GREEN — runs the src/ SQL ledger drift + closed-set check right after the Target Files check (P1-C-src)', () => {
+    const code = stripComments(PRE_COMMIT);
+    const at = code.indexOf('node scripts/analysis/src-sql-ledger.mjs --check');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeGreaterThan(code.indexOf('generate-target-files.mjs --check'));
+    expect(at).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+  });
+
+  it('RED — a tampered pre-commit with the src/ SQL ledger check stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/src-sql-ledger\.mjs --check && \\\n\s*/, '');
+    expect(stripComments(tampered)).not.toContain('src-sql-ledger.mjs --check');
+  });
 });
 
 // ---------------------------------------------------------------------------

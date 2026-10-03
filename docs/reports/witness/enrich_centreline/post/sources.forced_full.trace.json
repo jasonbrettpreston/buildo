@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "7b5ecb37cf964960c118210fbe23737fc24a289a3be98d9bdfc897a9410db770",
-  "git_head": "e32c1c24175c5d3a41b2084ae2d4177241d0fc33",
+  "source_fingerprint": "accb5384e6dc05b338bb25145184130111ec4c2903a007a91e5645e5d4cee483",
+  "git_head": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
   "header": {
     "processes": 1,
     "calls": 46,
     "distinct": 30,
     "utility": 13,
-    "tracer_self_ms": 12.072,
-    "wall_ms": 530330
+    "tracer_self_ms": 18.735,
+    "wall_ms": 1716707
   },
   "statements": [
     {
@@ -445,7 +445,7 @@
   ],
   "transactions": [
     {
-      "client": "9668:3",
+      "client": "18492:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

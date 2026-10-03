@@ -1,6 +1,7 @@
 import { Pool, PoolClient, QueryResultRow } from 'pg';
 import { logError } from '@/lib/logger';
 import { resolveSslConfig, stripSslParams } from './ssl-config';
+import { installSqlCallerTag, withSqlCaller } from './sql-trace-caller';
 
 // Pool sizing: default is 10, which is too small for admin dashboard
 // routes that fan out 10-20 parallel COUNT queries (e.g. the admin stats +
@@ -105,6 +106,11 @@ if (pool.listenerCount('error') === 0) {
   });
 }
 
+// P1-C-src (c): test-mode only caller tag for the SQL witness tracer,
+// Spec 122 §6.6.1. Inert unless NODE_ENV=test and BUILDO_SQL_TRACE are set;
+// getClient() callers stay untagged — runtime confirmation is partial.
+installSqlCallerTag(pool);
+
 /**
  * Execute a parameterized query and return the resulting rows.
  */
@@ -123,22 +129,24 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
 export async function withTransaction<T>(
   fn: (client: PoolClient) => Promise<T>
 ): Promise<T> {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await fn(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (err) {
+  return withSqlCaller(async () => {
+    const client = await pool.connect();
     try {
-      await client.query('ROLLBACK');
-    } catch (rollbackErr) {
-      logError('[db/transaction]', rollbackErr as Error, { phase: 'rollback_failed' });
+      await client.query('BEGIN');
+      const result = await fn(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (err) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackErr) {
+        logError('[db/transaction]', rollbackErr as Error, { phase: 'rollback_failed' });
+      }
+      throw err;
+    } finally {
+      client.release();
     }
-    throw err;
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**

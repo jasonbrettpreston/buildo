@@ -490,7 +490,7 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
   - `scripts/lib/compute/load-centreline.js`
   - `src/tests/steps/load_centreline/config-literals.logic.test.ts`
   - `src/tests/steps/load_centreline/violations.test.ts`
-  - data: `toronto_centreline` writes (migrations/173_create_toronto_centreline.sql)
+  - data (descriptor): `toronto_centreline` writes (migrations/173_create_toronto_centreline.sql)
   - upstream: none
   - downstream: enrich_centreline
   - consumers: enrich_centreline (records_meta centreline_load) · load_centreline (records_meta centreline_load.features_updated)
@@ -500,9 +500,9 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
   - `scripts/enrich-centreline.notes.json`
   - `scripts/lib/compute/enrich-centreline.js`
   - `src/tests/steps/enrich_centreline/violations.test.ts`
-  - data: `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
+  - data (lineage snapshot, declared not witnessed): `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
   - upstream: load_centreline · parcels
-  - downstream: enrich_parcels
+  - downstream: none
   - consumers: none
 <!-- /generated:target-files -->
 

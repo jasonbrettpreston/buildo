@@ -20,7 +20,9 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { Writable } from 'node:stream';
 
+import { main } from '../../scripts/analysis/step-registry.mjs';
 import * as reg from '../../scripts/analysis/gates/step-registry.mjs';
 import * as blocks from '../../scripts/analysis/gates/generated-blocks.mjs';
 
@@ -141,7 +143,7 @@ describe('step-registry — renderStepEntry', () => {
 
 describe('step-registry — stepEdges', () => {
   it('upstream/downstream are the ledger\'s own answer in both directions', () => {
-    const { inchain } = ledger.loadLedger();
+    const { inchain } = ledger.effectiveLedger();
     const { env } = inputs;
 
     for (const row of reg.registryRows(inputs)) {
@@ -150,7 +152,7 @@ describe('step-registry — stepEdges', () => {
 
       const expected = new Set<string>();
       for (const chain of chains) {
-        for (const up of ledger.stepUpstreams(row.slug, { chain, env })) expected.add(up);
+        for (const up of ledger.stepUpstreams(row.slug, { chain, env, ledger: inputs.ledger })) expected.add(up);
       }
       expect(sorted(upstream)).toEqual(sorted([...expected]));
 
@@ -181,6 +183,152 @@ describe('step-registry — stepData', () => {
     const row = rows.find((r) => r.table === 'parcels');
     expect(row).toBeTruthy();
     expect(row!.migration).toBe('migrations/011_parcels.sql');
+  });
+});
+
+describe('step-registry — the effective cross-step ledger (P1-C5, plan Fold 9 D-A/D-D)', () => {
+  const effInputs = inputs.ledger as { inchain: Record<string, { source?: string; reads?: unknown }> };
+  it('RED: inputs.ledger is the effective ledger — every converted row is source-tagged descriptor', () => {
+    const eff = ledger.effectiveLedger();
+    expect(Object.keys(effInputs.inchain).sort()).toEqual(Object.keys(eff.inchain).sort());
+
+    let converted = 0;
+    for (const k of Object.keys(eff.inchain)) {
+      if (eff.inchain[k].source !== 'descriptor') continue;
+      converted += 1;
+      expect(effInputs.inchain[k]?.source).toBe('descriptor');
+      expect(effInputs.inchain[k]?.reads).toEqual(eff.inchain[k].reads);
+    }
+    expect(converted).toBeGreaterThan(0);
+  });
+
+  it('RED: the rendered data line names its source', () => {
+    const rows = reg.registryRows(inputs);
+    const parcels = rows.find((r: { slug: string }) => r.slug === 'parcels');
+    expect(parcels).toBeTruthy();
+    expect(reg.renderStepEntry(parcels!, inputs)).toContain('  - data (descriptor): ');
+
+    let snapshotRows = 0;
+    for (const row of rows) {
+      const entry = effInputs.inchain[row.slug];
+      if (!entry || entry.source !== 'snapshot') continue;
+      snapshotRows += 1;
+      expect(reg.renderStepEntry(row, inputs)).toContain('  - data (lineage snapshot, declared not witnessed): ');
+    }
+    // skip-if-none: the loop above is a no-op when no rendered row is a snapshot row
+    void snapshotRows;
+  });
+});
+
+describe('step-registry — grouped src/ consumers + declared vs observed (P1-C6, Fold 9b / Fold 14)', () => {
+  it('RED: src/ table consumer rows are grouped per (consumer, table) with a column count', () => {
+    const fake = {
+      consumerRows: [
+        { consumer: 'src/a.ts', producer: 'p', kind: 'table', key: 't.x' },
+        { consumer: 'src/a.ts', producer: 'p', kind: 'table', key: 't.y' },
+        { consumer: 'src/a.ts', producer: 'p', kind: 'table', key: 'u.z' },
+        { consumer: 'src/b.ts', producer: 'p', kind: 'table', key: 't.x' },
+        { consumer: 'enrich_parcels', producer: 'p', kind: 'records_meta', key: 'k' },
+        { consumer: 'src/c.ts', producer: 'q', kind: 'table', key: 't.x' },
+      ],
+    };
+    expect(reg.stepConsumers('p', fake)).toEqual([
+      'enrich_parcels (records_meta k)',
+      'src/a.ts (table t: 2 columns)',
+      'src/a.ts (table u: 1 column)',
+      'src/b.ts (table t: 1 column)',
+    ]);
+  });
+
+  it('RED: declaredVsObserved splits each table into both / declaredOnly / observedOnly', () => {
+    const declared = { reads: { t: ['a', 'b'], u: ['k'] }, writes: { t: ['a'] } };
+    const observed = { reads: { t: ['b', 'c'] }, writes: {} };
+    expect(reg.declaredVsObserved(declared, observed)).toEqual({
+      reads: [
+        { table: 't', both: ['b'], declaredOnly: ['a'], observedOnly: ['c'] },
+        { table: 'u', both: [], declaredOnly: ['k'], observedOnly: [] },
+      ],
+      writes: [{ table: 't', both: [], declaredOnly: ['a'], observedOnly: [] }],
+    });
+  });
+
+  it('RED: loadObserved unions committed POST traces and the fixture record', () => {
+    const linkWsib = reg.loadObserved(REPO_ROOT, 'link_wsib');
+    expect(linkWsib.traces).toBe(2);
+    expect(linkWsib.fixtureSuites).toBeGreaterThanOrEqual(0);
+    expect(linkWsib.reads.wsib_registry).toContain('linked_entity_id');
+    expect(linkWsib.writes.wsib_registry).toContain('linked_entity_id');
+
+    const enrichParcels = reg.loadObserved(REPO_ROOT, 'enrich_parcels');
+    expect(enrichParcels.traces).toBe(0);
+    expect(enrichParcels.fixtureSuites).toBeGreaterThanOrEqual(1);
+    expect(Object.keys(enrichParcels.reads).length).toBeGreaterThan(0);
+
+    expect(reg.loadObserved(REPO_ROOT, 'no_such_slug')).toEqual({
+      traces: 0,
+      fixtureSuites: 0,
+      unreadable: 0,
+      reads: {},
+      writes: {},
+    });
+  });
+
+  it('RED: renderDeclaredVsObserved renders the declared/observed table per slug', () => {
+    const linkWsib = reg.renderDeclaredVsObserved('link_wsib', inputs, reg.loadObserved(REPO_ROOT, 'link_wsib'));
+    expect(linkWsib.startsWith('declared: descriptor (deriveMeta) · observed: 2 POST trace(s) + ')).toBe(true);
+    expect(linkWsib).toContain('\nreads:\n');
+    expect(linkWsib).toContain('\nwrites:\n');
+    expect(linkWsib.split('\n').some((line) => line.startsWith('  wsib_registry: both '))).toBe(true);
+    expect(linkWsib.endsWith('\n')).toBe(true);
+
+    const emptyObserved = { traces: 0, fixtureSuites: 0, unreadable: 0, reads: {}, writes: {} };
+    const pending = reg.renderDeclaredVsObserved('parcels', inputs, emptyObserved);
+    expect(pending).toContain('observed: none — no committed POST trace or fixture record (witness pending)');
+    expect(pending).toContain('\nreads:\n');
+    expect(pending).toContain('\nwrites:\n');
+    expect(pending.split('\n').some((line) => line === '  none')).toBe(true);
+    expect(pending.endsWith('\n')).toBe(true);
+  });
+});
+
+describe('step:registry CLI — ADVISORY readers grep retired, DECLARED vs OBSERVED section (P1-C6)', () => {
+  it('RED: the CLI prints DECLARED, ADVISORY, then DECLARED vs OBSERVED, and no git-grep readers', () => {
+    let out = '';
+    const stdout = new Writable({
+      write(chunk, _enc, cb) {
+        out += String(chunk);
+        cb();
+      },
+    });
+    const stderr = new Writable({
+      write(_chunk, _enc, cb) {
+        cb();
+      },
+    });
+
+    const code = main(['link_wsib'], { stdout, stderr });
+    expect(code).toBe(0);
+
+    const declared = out.indexOf('== DECLARED ==\n');
+    const advisory = out.indexOf('== ADVISORY ==\n');
+    const dvo = out.indexOf('== DECLARED vs OBSERVED ==\n');
+    expect(declared).toBeGreaterThanOrEqual(0);
+    expect(advisory).toBeGreaterThan(declared);
+    expect(dvo).toBeGreaterThan(advisory);
+
+    expect(out).toContain('declared: descriptor (deriveMeta) · observed: 2 POST trace(s)');
+    expect(out).toContain('tests naming the script or its tables');
+    expect(out).not.toContain('undeclared readers');
+    expect(out).not.toContain('git grep of the step');
+  });
+
+  it('RED: the CLI module defines neither undeclaredReaders nor advisoryTerms', () => {
+    const cliSource = fs.readFileSync(
+      path.join(REPO_ROOT, 'scripts', 'analysis', 'step-registry.mjs'),
+      'utf8',
+    );
+    expect(cliSource).not.toContain('function undeclaredReaders');
+    expect(cliSource).not.toContain('function advisoryTerms');
   });
 });
 

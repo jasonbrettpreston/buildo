@@ -1,0 +1,36 @@
+{
+  "fixture_version": 1,
+  "slug": "enrich_centreline",
+  "generated_by": "src/tests/steps/_witness-guard.ts (BUILDO_WITNESS_WRITE=1)",
+  "suites": {
+    "src/tests/steps/enrich_centreline/violations.test.ts": {
+      "reads": {
+        "parcels": [
+          "address_number",
+          "centreline_dataset_version_when_enriched",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "violations": [],
+      "errors": []
+    }
+  }
+}

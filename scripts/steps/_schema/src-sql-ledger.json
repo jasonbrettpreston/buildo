@@ -1,0 +1,2744 @@
+{
+  "contract_version": 1,
+  "generated_by": "scripts/analysis/src-sql-ledger.mjs",
+  "catalog": "docs/reports/witness/_catalog.json",
+  "files": {
+    "src/app/api/admin/builders/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "fdbc9762b6983f7a"
+      ],
+      "reads": {
+        "entities": [
+          "google_place_id",
+          "last_enriched_at"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/leads/watchlist/route.ts": {
+      "class": "interpolated",
+      "statements": 3,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 1,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0187027545f0b3dc",
+        "afb7fa0895bf01ee",
+        "dfb566616d65ef4d"
+      ],
+      "reads": {
+        "admin_watchlist": [
+          "admin_uid",
+          "id",
+          "lead_key",
+          "permit_num",
+          "revision_num"
+        ],
+        "coa_applications": [],
+        "lead_trades": [
+          "is_active",
+          "lead_id",
+          "trade_id"
+        ],
+        "permit_trades": [
+          "is_active",
+          "permit_num",
+          "revision_num",
+          "trade_id"
+        ],
+        "permits": [],
+        "trade_forecasts": [
+          "lead_id",
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "predicted_start",
+          "trade_slug"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {
+        "admin_watchlist": []
+      }
+    },
+    "src/app/api/admin/leads/watchlist/search/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "9efe3bed32e4d78f"
+      ],
+      "reads": {
+        "coa_applications": [],
+        "permits": []
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/notifications/route.ts": {
+      "class": "interpolated",
+      "statements": 5,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "06ee40621618d99b",
+        "0b6ddc6a5ccb0f20",
+        "4c0fea5d39efaa4a",
+        "efb130157e04d608",
+        "f3077321920d0401"
+      ],
+      "reads": {
+        "device_tokens": [
+          "platform",
+          "push_token",
+          "updated_at",
+          "user_id"
+        ],
+        "notification_dispatches": [
+          "user_id"
+        ],
+        "user_profiles": [
+          "lifecycle_stalled_pref",
+          "new_lead_min_cost_tier",
+          "notification_schedule",
+          "phase_changed",
+          "start_date_urgent",
+          "user_id"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/notifications/test-send/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0d814b7a9d831926"
+      ],
+      "reads": {
+        "device_tokens": [
+          "push_token",
+          "user_id"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/pipelines/[slug]/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "50fae16c115c0909",
+        "ee65b45ed366d2b6"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/admin/pipelines/history/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "cbee43168acafd98"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/admin/pipelines/runs/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "2cdd8706f3cd79f9",
+        "f8e083c429487966"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/admin/pipelines/schedules/route.ts": {
+      "class": "static",
+      "statements": 5,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1f1cbb0a2b1329b5",
+        "949ad2aea47e3f83",
+        "a18645392a844c24",
+        "e67553ca1507ad50",
+        "fc4c11f2f3ef0b5a"
+      ],
+      "reads": {
+        "pipeline_schedules": [
+          "cadence",
+          "cron_expression",
+          "enabled",
+          "pipeline",
+          "updated_at"
+        ]
+      },
+      "writes": {
+        "pipeline_schedules": [
+          "cadence",
+          "enabled",
+          "pipeline",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/admin/pipelines/status/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "4f715a564db4d788",
+        "4fe05ac0cbbba619"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/admin/rules/route.ts": {
+      "class": "interpolated",
+      "statements": 3,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1b09fd271d8c2fc8",
+        "3111b1050e4ff08f",
+        "a37b7bf00c696548"
+      ],
+      "reads": {
+        "trade_mapping_rules": [
+          "confidence",
+          "id",
+          "is_active",
+          "match_field",
+          "match_pattern",
+          "phase_end",
+          "phase_start",
+          "tier",
+          "trade_id"
+        ],
+        "trades": [
+          "id",
+          "name"
+        ]
+      },
+      "writes": {
+        "trade_mapping_rules": [
+          "confidence",
+          "is_active",
+          "match_field",
+          "match_pattern",
+          "phase_end",
+          "phase_start",
+          "tier",
+          "trade_id"
+        ]
+      }
+    },
+    "src/app/api/admin/stats/route.ts": {
+      "class": "interpolated",
+      "statements": 38,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "046f83b08d1c5dbb",
+        "18444a70a5b9a9ce",
+        "1ef6c07b8863beb0",
+        "2e14673e9abc14c6",
+        "3a81064df63bd264",
+        "3d7804c6b31ba666",
+        "4469d451f41d35ea",
+        "4515acc8b94d4bef",
+        "4f715a564db4d788",
+        "4fe05ac0cbbba619",
+        "551d9d9b6fda8e09",
+        "556c6c91a1fa7873",
+        "55f3efca6dc0b2e1",
+        "5cd75cd11bcc4e20",
+        "5d46534466d90d75",
+        "65411e8b0b861e11",
+        "6b7690329bd709d9",
+        "744a9d5d0bcf67a0",
+        "76271c037aa18e2b",
+        "7df01efcd2c31600",
+        "7df285db20b75b80",
+        "8cf1e28c4f337491",
+        "9010e89a6533a7f7",
+        "930e97bec40491c8",
+        "9431ce7b26d8e938",
+        "a04dbdd7b1ece2d1",
+        "b0d7a962751e9f40",
+        "b8de34d1e2eeb7f2",
+        "b9ad9a2ff4c35005",
+        "d3acec84b3e31ddd",
+        "d3cd58dd46a01bad",
+        "d58f832f28f9c92f",
+        "d7c0d3875e7aefa5",
+        "d905c6aceb49a775",
+        "e8f51d7f31648a1a",
+        "eeef600b5091b810",
+        "ef970d4b1884071e",
+        "fff5f93399b85a85"
+      ],
+      "reads": {
+        "address_points": [],
+        "building_footprints": [],
+        "coa_applications": [
+          "decision",
+          "hearing_date",
+          "linked_permit_num"
+        ],
+        "entities": [
+          "primary_email",
+          "primary_phone"
+        ],
+        "lead_views": [
+          "saved"
+        ],
+        "neighbourhoods": [],
+        "notifications": [
+          "is_sent"
+        ],
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "parcels": [],
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_trades": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "builder_name",
+          "first_seen_at",
+          "latitude",
+          "neighbourhood_id",
+          "scope_source",
+          "status"
+        ],
+        "pipeline_schedules": [
+          "cadence",
+          "cron_expression",
+          "enabled",
+          "pipeline"
+        ],
+        "sync_runs": [
+          "started_at"
+        ],
+        "trade_mapping_rules": [
+          "is_active"
+        ],
+        "trades": [],
+        "wsib_registry": [
+          "linked_entity_id",
+          "trade_name"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/sync/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1d93fe3d5c0758a1"
+      ],
+      "reads": {
+        "sync_runs": [
+          "completed_at",
+          "duration_ms",
+          "error_message",
+          "id",
+          "records_errors",
+          "records_new",
+          "records_total",
+          "records_unchanged",
+          "records_updated",
+          "snapshot_path",
+          "started_at",
+          "status"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/users/[uid]/route.ts": {
+      "class": "interpolated",
+      "statements": 4,
+      "interpolated": 7,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "210d2534081fa427",
+        "7e99ac07e62f9d46",
+        "c8f0b126182289e9",
+        "ea347e3655036b48"
+      ],
+      "reads": {
+        "lead_view_events": [
+          "user_id"
+        ],
+        "lead_views": [
+          "saved",
+          "user_id"
+        ],
+        "user_profiles": [
+          "stripe_cancel_failed_at",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "account_deleted_at",
+          "account_preset",
+          "backup_email",
+          "company_name",
+          "email",
+          "full_name",
+          "phone_number",
+          "stripe_cancel_failed_at",
+          "trade_slug",
+          "trade_slugs_override",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/admin/users/[uid]/subscription/events/route.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "6479460c63b79ca2",
+        "8acac9c3449c1756",
+        "9dd27e5853a638d2"
+      ],
+      "reads": {
+        "entitlements": [
+          "last_stripe_event_at",
+          "user_id"
+        ],
+        "stripe_webhook_events": [
+          "event_id",
+          "event_type",
+          "processed_at",
+          "stripe_customer_id"
+        ],
+        "user_profiles": [
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/admin/users/[uid]/subscription/reconcile/route.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "311494382f575402",
+        "8acac9c3449c1756",
+        "b08d55ff929ff41c"
+      ],
+      "reads": {
+        "entitlements": [
+          "product",
+          "status",
+          "user_id"
+        ],
+        "user_profiles": [
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "entitlements": [
+          "created_at",
+          "last_stripe_event_at",
+          "product",
+          "status",
+          "updated_at",
+          "user_id"
+        ]
+      }
+    },
+    "src/app/api/admin/users/[uid]/subscription/retry-cancel/route.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1d0823abcff5f709",
+        "487a40164f1ce045"
+      ],
+      "reads": {
+        "user_profiles": [
+          "account_deleted_at",
+          "stripe_cancel_failed_at",
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "stripe_cancel_failed_at",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/admin/users/route.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "d471c58e0444b2e6"
+      ],
+      "reads": {},
+      "writes": {
+        "user_profiles": [
+          "account_preset",
+          "company_name",
+          "email",
+          "onboarding_complete",
+          "radius_cap_km",
+          "trade_slug",
+          "trade_slugs_override",
+          "user_id"
+        ]
+      }
+    },
+    "src/app/api/builders/[id]/route.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "8516b682c15f73b4"
+      ],
+      "reads": {
+        "entity_projects": [
+          "entity_id",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "permits": [
+          "city",
+          "description",
+          "est_const_cost",
+          "issued_date",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status",
+          "street_name",
+          "street_num",
+          "street_type",
+          "ward",
+          "work"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/builders/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/coa/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/entities/[id]/route.ts": {
+      "class": "interpolated",
+      "statements": 2,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "061a9b383de93e7c",
+        "081473f26de07258"
+      ],
+      "reads": {
+        "entity_projects": [
+          "coa_file_num",
+          "entity_id",
+          "observed_at",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "permits": [
+          "city",
+          "description",
+          "est_const_cost",
+          "issued_date",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status",
+          "street_name",
+          "street_num",
+          "street_type",
+          "ward",
+          "work"
+        ],
+        "wsib_registry": [
+          "legal_name",
+          "linked_entity_id",
+          "mailing_address",
+          "naics_description",
+          "predominant_class",
+          "trade_name"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/entities/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/leads/detail/[id]/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/leads/flight-board/detail/[id]/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0ce95181ba750f77"
+      ],
+      "reads": {
+        "lead_views": [
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "saved",
+          "user_id"
+        ],
+        "permits": [
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num",
+          "updated_at"
+        ],
+        "trade_forecasts": [
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "permit_num",
+          "predicted_start",
+          "revision_num",
+          "trade_slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/leads/flight-board/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "c1229b67ff484ef3"
+      ],
+      "reads": {
+        "lead_views": [
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "saved",
+          "user_id"
+        ],
+        "permits": [
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num",
+          "updated_at"
+        ],
+        "trade_forecasts": [
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "permit_num",
+          "predicted_start",
+          "revision_num",
+          "trade_slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/leads/search/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "265eea14ed017a15"
+      ],
+      "reads": {
+        "permits": [
+          "lifecycle_phase",
+          "permit_num",
+          "revision_num",
+          "status",
+          "street_name",
+          "street_num"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/leads/view/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "a67895ce7651c7d7"
+      ],
+      "reads": {
+        "lead_view_events": [],
+        "user_profiles": [
+          "lead_views_count",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "lead_views_count"
+        ]
+      }
+    },
+    "src/app/api/notifications/preferences/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/notifications/register/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "44f44be51826601e"
+      ],
+      "reads": {},
+      "writes": {
+        "device_tokens": [
+          "created_at",
+          "platform",
+          "push_token",
+          "updated_at",
+          "user_id"
+        ]
+      }
+    },
+    "src/app/api/notifications/route.ts": {
+      "class": "interpolated",
+      "statements": 3,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "24e6c729f4cd15c6",
+        "9c0eb6d680c6372e",
+        "9daa8856443a7da2"
+      ],
+      "reads": {
+        "notifications": [
+          "id",
+          "is_read",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "notifications": [
+          "is_read"
+        ]
+      }
+    },
+    "src/app/api/onboarding/suppliers/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "63063ee2218f098d"
+      ],
+      "reads": {
+        "trade_suppliers": [
+          "active",
+          "name",
+          "trade_slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/permits/[id]/route.ts": {
+      "class": "interpolated",
+      "statements": 4,
+      "interpolated": 6,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "04feba4ab5d9968b",
+        "176dcabfc0a6200b",
+        "cd25b7d728402411",
+        "eb431a27a81abd30"
+      ],
+      "reads": {
+        "building_footprints": [
+          "estimated_stories",
+          "footprint_area_sqft",
+          "id",
+          "max_height_m"
+        ],
+        "neighbourhoods": [
+          "avg_household_income",
+          "avg_individual_income",
+          "census_year",
+          "couples_pct",
+          "english_knowledge_pct",
+          "id",
+          "immigrant_pct",
+          "lone_parent_pct",
+          "low_income_pct",
+          "married_pct",
+          "median_household_income",
+          "name",
+          "neighbourhood_id",
+          "period_of_construction",
+          "tenure_owner_pct",
+          "tenure_renter_pct",
+          "top_mother_tongue",
+          "university_degree_pct",
+          "visible_minority_pct"
+        ],
+        "parcel_buildings": [
+          "building_id",
+          "is_primary",
+          "parcel_id",
+          "structure_type"
+        ],
+        "permit_inspections": [
+          "inspection_date",
+          "permit_num",
+          "scraped_at",
+          "stage_name",
+          "status"
+        ],
+        "permits": [
+          "est_const_cost",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status",
+          "work"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/permits/geo/route.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/permits/route.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 2,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "a69520651284dc6c"
+      ],
+      "reads": {
+        "permit_trades": [
+          "confidence",
+          "lead_score",
+          "permit_num",
+          "phase",
+          "revision_num",
+          "tier",
+          "trade_id"
+        ],
+        "trades": [
+          "color",
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/quality/route.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "79f65cd36a13eb68",
+        "a03f0eb18c35a622",
+        "b5a1b0d462a3ba3c",
+        "db3e42d62cb9055f"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/app/api/subscribe/exchange/route.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "229beb993a3e10d4",
+        "5a3a5e7865c273dc",
+        "8c2f1fb500dfc5aa",
+        "f17234ab9e318492"
+      ],
+      "reads": {
+        "subscribe_nonces": [
+          "expires_at",
+          "nonce"
+        ],
+        "user_profiles": [
+          "email",
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "subscribe_nonces": [],
+        "user_profiles": [
+          "stripe_customer_id",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/subscribe/portal-session/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "8acac9c3449c1756"
+      ],
+      "reads": {
+        "user_profiles": [
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/subscribe/session/route.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "21c048980c025534",
+        "3c910093b6fbc313",
+        "e4a898866fb2b3ec"
+      ],
+      "reads": {
+        "subscribe_nonces": [
+          "expires_at",
+          "nonce",
+          "user_id"
+        ],
+        "user_profiles": [
+          "account_deleted_at",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "subscribe_nonces": [
+          "nonce",
+          "user_id"
+        ]
+      }
+    },
+    "src/app/api/sync/route.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "ccabdc6e0aabb198"
+      ],
+      "reads": {
+        "sync_runs": [
+          "completed_at",
+          "duration_ms",
+          "error_message",
+          "id",
+          "records_errors",
+          "records_new",
+          "records_total",
+          "records_unchanged",
+          "records_updated",
+          "snapshot_path",
+          "started_at",
+          "status"
+        ]
+      },
+      "writes": {}
+    },
+    "src/app/api/user-profile/delete/route.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "23f0258255bbd311",
+        "3da120db82bb9dad",
+        "6f4937ba1a4499f8"
+      ],
+      "reads": {
+        "user_profiles": [
+          "account_deleted_at",
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "account_deleted_at",
+          "stripe_cancel_failed_at",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/user-profile/reactivate/route.ts": {
+      "class": "interpolated",
+      "statements": 4,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "569488d56adaf5ab",
+        "7eff786c789a0624",
+        "c63c582df3890d27",
+        "faa03be3f0011e6d"
+      ],
+      "reads": {
+        "entitlements": [
+          "product",
+          "status",
+          "user_id"
+        ],
+        "user_profiles": [
+          "account_deleted_at",
+          "account_preset",
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "entitlements": [
+          "last_stripe_event_at",
+          "status",
+          "updated_at"
+        ],
+        "user_profiles": [
+          "account_deleted_at",
+          "stripe_cancel_failed_at",
+          "updated_at"
+        ]
+      }
+    },
+    "src/app/api/user-profile/route.ts": {
+      "class": "interpolated",
+      "statements": 4,
+      "interpolated": 4,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1289cc67eae7c467",
+        "b3922286641fbc73",
+        "b7806d31578b4ce8"
+      ],
+      "reads": {
+        "user_profiles": [
+          "account_deleted_at",
+          "account_preset",
+          "home_base_lat",
+          "home_base_lng",
+          "location_mode",
+          "radius_cap_km",
+          "tos_accepted_at",
+          "trade_slug",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "user_profiles": [
+          "user_id"
+        ]
+      }
+    },
+    "src/app/api/webhooks/stripe/route.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "01b2b2464537fbd4",
+        "08de792f73d325cb",
+        "1cb936338dc4ef94"
+      ],
+      "reads": {
+        "entitlements": [
+          "product",
+          "stripe_subscription_id"
+        ],
+        "user_profiles": [
+          "stripe_customer_id",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "stripe_webhook_events": [
+          "event_id",
+          "event_type",
+          "stripe_customer_id"
+        ]
+      }
+    },
+    "src/features/leads/lib/get-lead-feed.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "6b22e781b70c79ea"
+      ],
+      "reads": {
+        "cost_estimates": [
+          "cost_tier",
+          "estimated_cost",
+          "permit_num",
+          "revision_num"
+        ],
+        "entities": [
+          "id",
+          "legal_name",
+          "photo_url",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ],
+        "entity_projects": [
+          "entity_id",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "lead_views": [
+          "entity_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "saved",
+          "trade_slug",
+          "user_id"
+        ],
+        "neighbourhoods": [
+          "id",
+          "name"
+        ],
+        "permit_trades": [
+          "attachment_basis",
+          "confidence",
+          "is_active",
+          "permit_num",
+          "phase",
+          "revision_num",
+          "trade_id"
+        ],
+        "permits": [
+          "description",
+          "est_const_cost",
+          "latitude",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "location",
+          "longitude",
+          "neighbourhood_id",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status",
+          "street_name",
+          "street_num"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ],
+        "wsib_registry": [
+          "business_size",
+          "is_gta",
+          "last_enriched_at",
+          "linked_entity_id",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "writes": {}
+    },
+    "src/features/leads/lib/record-lead-view.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "22551362d86e6bd1",
+        "9f293c8fc53165c9",
+        "f6767aa445518dd1"
+      ],
+      "reads": {
+        "lead_views": [
+          "lead_key",
+          "trade_slug",
+          "user_id",
+          "viewed_at"
+        ]
+      },
+      "writes": {
+        "lead_views": [
+          "entity_id",
+          "lead_key",
+          "lead_type",
+          "permit_num",
+          "revision_num",
+          "saved",
+          "saved_at",
+          "trade_slug",
+          "user_id",
+          "viewed_at"
+        ]
+      }
+    },
+    "src/features/leads/lib/timing.ts": {
+      "class": "static",
+      "statements": 4,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "632f8184975cf21d",
+        "bc2023d3bdd4855e",
+        "ea205285327c4318",
+        "f39d730775c01e69"
+      ],
+      "reads": {
+        "inspection_stage_map": [
+          "id",
+          "max_lag_days",
+          "min_lag_days",
+          "precedence",
+          "relationship",
+          "stage_name",
+          "stage_sequence",
+          "trade_slug"
+        ],
+        "permit_inspections": [
+          "inspection_date",
+          "permit_num",
+          "stage_name",
+          "status"
+        ],
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "issued_date",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status"
+        ],
+        "phase_calibration": [
+          "computed_at",
+          "from_phase",
+          "median_days",
+          "p25_days",
+          "p75_days",
+          "permit_type",
+          "sample_size"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/admin/admin-audit.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "7c081dd8481f429b",
+        "b89ff415aec9162c"
+      ],
+      "reads": {},
+      "writes": {
+        "admin_audit_log": [
+          "action",
+          "admin_uid",
+          "new_value",
+          "old_value",
+          "reason",
+          "target_uid"
+        ]
+      }
+    },
+    "src/lib/admin/backup-codes.ts": {
+      "class": "static",
+      "statements": 6,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "125587cb1c6048f9",
+        "55411d6a274eda1f",
+        "833c68271ba97bea",
+        "8e52b61863a15c12",
+        "dbd576336ebe3494"
+      ],
+      "reads": {
+        "admin_backup_codes": [
+          "code_hash",
+          "code_salt",
+          "id",
+          "used_at",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "admin_backup_codes": [
+          "code_hash",
+          "code_salt",
+          "used_at",
+          "user_id"
+        ]
+      }
+    },
+    "src/lib/admin/control-panel.ts": {
+      "class": "interpolated",
+      "statements": 10,
+      "interpolated": 4,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "36e423631143831e",
+        "41e4cfca372110e4",
+        "4e8c8844e5ddc3b6",
+        "71e57ac51f6bc6b6",
+        "7bb45e9561b6533a",
+        "7bbcde9cfab6c79c",
+        "a46081a556fda027",
+        "b16b431979fc3e05",
+        "be7d70a2af46a053",
+        "c004b3196dffed39"
+      ],
+      "reads": {
+        "archetype_cost_rates": [
+          "archetype",
+          "as_of_date",
+          "cost_adjustment_factor",
+          "cost_per_sqm",
+          "escalation_index_base",
+          "source"
+        ],
+        "parcel_cost_lines": [
+          "archetype",
+          "base_confidence",
+          "fit_permitted_values",
+          "id"
+        ],
+        "scope_intensity_matrix": [
+          "gfa_allocation_percentage",
+          "permit_type",
+          "structure_type"
+        ],
+        "trade_sqft_rates": [
+          "base_rate_sqft",
+          "structure_complexity_factor",
+          "trade_slug"
+        ]
+      },
+      "writes": {
+        "scope_intensity_matrix": [
+          "gfa_allocation_percentage",
+          "permit_type",
+          "structure_type",
+          "updated_at"
+        ]
+      }
+    },
+    "src/lib/admin/manifest-utils.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "d5637d65468a71a8"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/admin/parcel-lookup.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 3,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "22a0943b35395c6b"
+      ],
+      "reads": {
+        "coa_applications": [
+          "address",
+          "application_number",
+          "decision",
+          "decision_date",
+          "description",
+          "estimated_cost",
+          "hearing_date",
+          "modeled_gfa_sqm",
+          "neighbourhood_id",
+          "project_type",
+          "status"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/admin/posthog-client.ts": {
+      "class": "not_postgres",
+      "reason": "HogQL sent to the PostHog query API, never to Postgres"
+    },
+    "src/lib/admin/reap-stale-runs.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "d87b6fd93891c7a4"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/admin/step-output-query.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 4,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "a1d23b9fe1f3688e"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/admin/supplier-leads.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0e7ce87c52c931db",
+        "38fc3cfac6d7ed0f",
+        "d014753c5b931830"
+      ],
+      "reads": {
+        "lead_trades": [
+          "attachment_basis",
+          "confidence",
+          "is_active",
+          "lead_id",
+          "tier",
+          "trade_id"
+        ],
+        "supplier_trades": [
+          "supplier_id",
+          "trade_id"
+        ],
+        "suppliers": [
+          "id"
+        ],
+        "trade_forecasts": [
+          "lead_id",
+          "opportunity_score",
+          "predicted_start",
+          "target_window",
+          "trade_slug",
+          "urgency"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/admin/test-feed-utils.ts": {
+      "class": "static",
+      "statements": 1,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "e0138fd4fffcbe2b"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/analytics/queries.ts": {
+      "class": "interpolated",
+      "statements": 5,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "2aaae11706c7490a",
+        "44a929923df4214e",
+        "8bcebb7d15e14874",
+        "a5aa9a42d3808d0f",
+        "f9c29cd09b961080"
+      ],
+      "reads": {
+        "entities": [
+          "id",
+          "legal_name",
+          "permit_count"
+        ],
+        "entity_projects": [
+          "entity_id",
+          "permit_num",
+          "revision_num",
+          "role"
+        ],
+        "permit_trades": [
+          "lead_score",
+          "permit_num",
+          "revision_num",
+          "trade_id"
+        ],
+        "permits": [
+          "est_const_cost",
+          "issued_date",
+          "permit_num",
+          "revision_num",
+          "status",
+          "ward"
+        ],
+        "trades": [
+          "id",
+          "name"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/auth/get-user-context.ts": {
+      "class": "interpolated",
+      "statements": 1,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "bf5ce2559f9a7190"
+      ],
+      "reads": {},
+      "writes": {
+        "user_profiles": [
+          "display_name",
+          "trade_slug",
+          "user_id"
+        ]
+      }
+    },
+    "src/lib/auth/verify-admin.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "ab56ce7686b7daad"
+      ],
+      "reads": {
+        "profiles": [
+          "id",
+          "is_admin"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/builders/enrichment.ts": {
+      "class": "interpolated",
+      "statements": 4,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "1109208343cae118",
+        "43c385f28dc2ba2d",
+        "848920f5da5341ee",
+        "e5691b1f04ad474c"
+      ],
+      "reads": {
+        "entities": [
+          "entity_type",
+          "first_seen_at",
+          "google_place_id",
+          "google_rating",
+          "google_review_count",
+          "id",
+          "is_wsib_registered",
+          "last_enriched_at",
+          "last_seen_at",
+          "legal_name",
+          "linkedin_url",
+          "name_normalized",
+          "permit_count",
+          "photo_url",
+          "photo_validated_at",
+          "primary_email",
+          "primary_phone",
+          "trade_name",
+          "website"
+        ],
+        "wsib_registry": [
+          "legal_name",
+          "linked_entity_id",
+          "mailing_address",
+          "trade_name"
+        ]
+      },
+      "writes": {
+        "entities": [
+          "last_enriched_at"
+        ],
+        "entity_contacts": [
+          "contact_type",
+          "contact_value",
+          "entity_id",
+          "source"
+        ]
+      }
+    },
+    "src/lib/coa/pre-permits.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/coa/repository.ts": {
+      "class": "interpolated",
+      "statements": 0,
+      "interpolated": 1,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/db/client.ts": {
+      "class": "static",
+      "statements": 3,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "7bbcde9cfab6c79c",
+        "a46081a556fda027",
+        "b16b431979fc3e05"
+      ],
+      "reads": {},
+      "writes": {}
+    },
+    "src/lib/db/generated/schema.ts": {
+      "class": "not_postgres",
+      "reason": "drizzle-kit generated schema mirror (policy/view DDL text), never executed by the app"
+    },
+    "src/lib/entitlements/index.ts": {
+      "class": "static",
+      "statements": 8,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "5a3a5e7865c273dc",
+        "7b8a36047dd0c8f9",
+        "85b2c3054ed56b87",
+        "8cc15981e45cf670",
+        "976901a3dcb12915",
+        "9f70cd68fa2a66ed",
+        "b9e4d97481d18bef",
+        "f1be7dfe3e05a9ac"
+      ],
+      "reads": {
+        "entitlements": [
+          "last_stripe_event_at",
+          "product",
+          "status",
+          "stripe_subscription_id",
+          "trial_started_at",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "entitlements": [
+          "created_at",
+          "current_period_end",
+          "last_stripe_event_at",
+          "product",
+          "status",
+          "stripe_subscription_id",
+          "trial_started_at",
+          "updated_at",
+          "user_id"
+        ]
+      }
+    },
+    "src/lib/leads/lead-detail-query.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "da113c66bd3bb95b",
+        "f42db21a8c9b744d"
+      ],
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "description",
+          "estimated_cost",
+          "latitude",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "longitude",
+          "modeled_gfa_sqm",
+          "neighbourhood_id",
+          "street_name",
+          "street_num",
+          "updated_at"
+        ],
+        "cost_estimates": [
+          "cost_range_high",
+          "cost_range_low",
+          "cost_tier",
+          "estimated_cost",
+          "modeled_gfa_sqm",
+          "permit_num",
+          "revision_num"
+        ],
+        "lead_views": [
+          "lead_key",
+          "lead_type",
+          "saved",
+          "user_id"
+        ],
+        "neighbourhoods": [
+          "avg_household_income",
+          "id",
+          "median_household_income",
+          "name",
+          "period_of_construction"
+        ],
+        "permits": [
+          "description",
+          "latitude",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "longitude",
+          "neighbourhood_id",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num",
+          "updated_at"
+        ],
+        "trade_forecasts": [
+          "lead_id",
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "permit_num",
+          "predicted_start",
+          "revision_num",
+          "target_window",
+          "trade_slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/leads/lead-inspect-query.ts": {
+      "class": "static",
+      "statements": 12,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "0115564b11839ea4",
+        "06874aa91915f505",
+        "07e7cccf664d3b1c",
+        "0e76d6b96f7482a4",
+        "46b8cd0696923dbf",
+        "5a3a5e7865c273dc",
+        "97ce8e2bda151fde",
+        "b410e1f7a7d8ef0c",
+        "c39a5859319ddc94",
+        "d0a7d1fa4e0dc13d",
+        "dc1067169045fe7f",
+        "dd29a22a56ec6af8"
+      ],
+      "reads": {
+        "building_footprints": [
+          "footprint_area_sqm",
+          "id",
+          "max_height_m"
+        ],
+        "coa_applications": [
+          "application_number",
+          "bid_value",
+          "coa_type_class",
+          "cost_source",
+          "decision",
+          "decision_date",
+          "description",
+          "estimated_cost",
+          "hearing_date",
+          "lead_id",
+          "lifecycle_block",
+          "lifecycle_group",
+          "lifecycle_seq",
+          "lifecycle_stage",
+          "linked_confidence",
+          "linked_permit_num",
+          "modeled_gfa_sqm",
+          "project_type",
+          "scope_tags",
+          "structure_type"
+        ],
+        "cost_estimates": [
+          "cost_source",
+          "effective_area_sqm",
+          "estimated_cost",
+          "is_geometric_override",
+          "modeled_gfa_sqm",
+          "permit_num",
+          "revision_num",
+          "trade_contract_values"
+        ],
+        "entities": [
+          "is_wsib_registered",
+          "legal_name",
+          "name_normalized"
+        ],
+        "lead_trades": [
+          "confidence",
+          "lead_id",
+          "trade_id"
+        ],
+        "lead_views": [
+          "lead_key",
+          "lead_type",
+          "saved",
+          "user_id"
+        ],
+        "lifecycle_status_history": [
+          "decision",
+          "from_status",
+          "lead_id",
+          "to_status",
+          "transitioned_at"
+        ],
+        "neighbourhoods": [
+          "avg_household_income",
+          "id",
+          "name",
+          "period_of_construction"
+        ],
+        "parcel_buildings": [
+          "building_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "id",
+          "lot_size_sqm"
+        ],
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_phase_transitions": [
+          "from_phase",
+          "permit_num",
+          "revision_num",
+          "to_phase",
+          "transitioned_at"
+        ],
+        "permit_trades": [
+          "confidence",
+          "permit_num",
+          "revision_num",
+          "trade_id"
+        ],
+        "permits": [
+          "application_date",
+          "builder_name",
+          "completed_date",
+          "description",
+          "enriched_status",
+          "est_const_cost",
+          "first_seen_at",
+          "issued_date",
+          "last_seen_at",
+          "latitude",
+          "lifecycle_classified_at",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "linked_coa_application_number",
+          "longitude",
+          "neighbourhood_id",
+          "owner",
+          "permit_num",
+          "permit_type",
+          "phase_started_at",
+          "project_type",
+          "revision_num",
+          "scope_tags",
+          "status",
+          "storeys",
+          "street_name",
+          "street_num",
+          "street_type",
+          "structure_type",
+          "updated_at",
+          "work"
+        ],
+        "phase_stay_calibration": [
+          "median_days",
+          "p25_days",
+          "p75_days",
+          "permit_type",
+          "phase",
+          "sample_size"
+        ],
+        "scope_intensity_matrix": [
+          "gfa_allocation_percentage",
+          "permit_type",
+          "structure_type"
+        ],
+        "trade_forecasts": [
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "permit_num",
+          "predicted_start",
+          "revision_num",
+          "target_window",
+          "trade_slug",
+          "urgency"
+        ],
+        "trades": [
+          "id",
+          "name",
+          "slug"
+        ],
+        "universal_stream_catalog": [
+          "block_color",
+          "block_icon",
+          "block_label",
+          "group_color",
+          "group_icon",
+          "group_label",
+          "seq",
+          "stage_color",
+          "stage_icon",
+          "stage_label"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/market-metrics/queries.ts": {
+      "class": "static",
+      "statements": 10,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "375f4cb6cf1f8985",
+        "3788e4a856a2dff6",
+        "60a7f37741016b30",
+        "69738ea2f1e28cda",
+        "75b5a5e75c1ac7a3",
+        "82d0bf1ee3128c64",
+        "9aa3ee1de57519e8",
+        "c23302954dfd4306",
+        "fe0d349d5c15681e"
+      ],
+      "reads": {
+        "mv_monthly_permit_stats": [
+          "month",
+          "permit_count",
+          "permit_type",
+          "total_value"
+        ],
+        "neighbourhoods": [
+          "avg_household_income",
+          "id",
+          "name"
+        ],
+        "permit_trades": [
+          "permit_num",
+          "revision_num",
+          "trade_id"
+        ],
+        "permits": [
+          "builder_name",
+          "est_const_cost",
+          "issued_date",
+          "neighbourhood_id",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "scope_tags"
+        ],
+        "trades": [
+          "color",
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "writes": {}
+    },
+    "src/lib/quality/metrics.ts": {
+      "class": "interpolated",
+      "statements": 16,
+      "interpolated": 8,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "11517d55795dc95f",
+        "2d538ea81a328233",
+        "3d19c442ce427905",
+        "3f58401e28e54c4f",
+        "5117505b38a46b65",
+        "62b50cafd03328c4",
+        "6d3d74e590fab398",
+        "83672543b9b45944",
+        "959a9d5af7c7db5f",
+        "a72f76d397aa1b8f",
+        "ab572398a904acd9",
+        "d5847d588780c29b",
+        "e230841952758fbf",
+        "eaf3fb3c61fd94b4",
+        "ef95ca2849354689",
+        "fd9ec90c4654e6d4"
+      ],
+      "reads": {
+        "building_footprints": [],
+        "coa_applications": [
+          "linked_confidence",
+          "linked_permit_num"
+        ],
+        "data_quality_snapshots": [
+          "active_permits",
+          "builders_enriched",
+          "builders_total",
+          "builders_with_email",
+          "builders_with_google",
+          "builders_with_phone",
+          "builders_with_website",
+          "builders_with_wsib",
+          "building_footprints_total",
+          "coa_avg_confidence",
+          "coa_high_confidence",
+          "coa_linked",
+          "coa_low_confidence",
+          "coa_total",
+          "cost_estimates_from_model",
+          "cost_estimates_from_permit",
+          "cost_estimates_liar_gate_overrides",
+          "cost_estimates_null_cost",
+          "cost_estimates_total",
+          "cost_estimates_zero_total_bypass",
+          "created_at",
+          "id",
+          "inspections_not_passed_count",
+          "inspections_outstanding_count",
+          "inspections_passed_count",
+          "inspections_permits_scraped",
+          "inspections_total",
+          "last_sync_at",
+          "last_sync_status",
+          "null_builder_name_count",
+          "null_description_count",
+          "null_est_const_cost_count",
+          "null_geo_id_count",
+          "null_street_name_count",
+          "null_street_num_count",
+          "parcel_avg_confidence",
+          "parcel_exact_matches",
+          "parcel_name_matches",
+          "parcel_spatial_matches",
+          "parcels_with_buildings",
+          "permits_geocoded",
+          "permits_updated_24h",
+          "permits_updated_30d",
+          "permits_updated_7d",
+          "permits_with_builder",
+          "permits_with_detailed_tags",
+          "permits_with_neighbourhood",
+          "permits_with_parcel",
+          "permits_with_scope",
+          "permits_with_scope_tags",
+          "permits_with_trades",
+          "schema_column_counts",
+          "scope_project_type_breakdown",
+          "scope_tags_top",
+          "sla_permits_ingestion_hours",
+          "snapshot_date",
+          "timing_calibration_avg_sample",
+          "timing_calibration_freshness_hours",
+          "timing_calibration_total",
+          "total_permits",
+          "trade_avg_confidence",
+          "trade_commercial_classified",
+          "trade_commercial_total",
+          "trade_matches_total",
+          "trade_residential_classified",
+          "trade_residential_total",
+          "trade_tier1_count",
+          "trade_tier2_count",
+          "trade_tier3_count",
+          "violation_cost_out_of_range",
+          "violation_future_issued_date",
+          "violation_missing_status",
+          "violations_total"
+        ],
+        "entities": [
+          "google_place_id",
+          "is_wsib_registered",
+          "last_enriched_at",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ],
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "permit_inspections": [
+          "permit_num",
+          "status"
+        ],
+        "permit_parcels": [
+          "confidence",
+          "match_type",
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_trades": [
+          "confidence",
+          "permit_num",
+          "revision_num",
+          "tier"
+        ],
+        "permits": [
+          "builder_name",
+          "first_seen_at",
+          "last_seen_at",
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "status"
+        ],
+        "sync_runs": [
+          "started_at",
+          "status"
+        ]
+      },
+      "writes": {
+        "data_quality_snapshots": [
+          "active_permits",
+          "builders_enriched",
+          "builders_total",
+          "builders_with_email",
+          "builders_with_google",
+          "builders_with_phone",
+          "builders_with_website",
+          "builders_with_wsib",
+          "building_footprints_total",
+          "coa_avg_confidence",
+          "coa_high_confidence",
+          "coa_linked",
+          "coa_low_confidence",
+          "coa_total",
+          "inspections_not_passed_count",
+          "inspections_outstanding_count",
+          "inspections_passed_count",
+          "inspections_permits_scraped",
+          "inspections_total",
+          "last_sync_at",
+          "last_sync_status",
+          "null_builder_name_count",
+          "null_description_count",
+          "null_est_const_cost_count",
+          "null_geo_id_count",
+          "null_street_name_count",
+          "null_street_num_count",
+          "parcel_avg_confidence",
+          "parcel_exact_matches",
+          "parcel_name_matches",
+          "parcel_spatial_matches",
+          "parcels_with_buildings",
+          "permits_geocoded",
+          "permits_updated_24h",
+          "permits_updated_30d",
+          "permits_updated_7d",
+          "permits_with_builder",
+          "permits_with_detailed_tags",
+          "permits_with_neighbourhood",
+          "permits_with_parcel",
+          "permits_with_scope",
+          "permits_with_scope_tags",
+          "permits_with_trades",
+          "schema_column_counts",
+          "scope_project_type_breakdown",
+          "scope_tags_top",
+          "sla_permits_ingestion_hours",
+          "snapshot_date",
+          "total_permits",
+          "trade_avg_confidence",
+          "trade_commercial_classified",
+          "trade_commercial_total",
+          "trade_matches_total",
+          "trade_residential_classified",
+          "trade_residential_total",
+          "trade_tier1_count",
+          "trade_tier2_count",
+          "trade_tier3_count",
+          "violation_cost_out_of_range",
+          "violation_future_issued_date",
+          "violation_missing_status",
+          "violations_total"
+        ]
+      }
+    },
+    "src/lib/subscription/expiration.ts": {
+      "class": "static",
+      "statements": 2,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "a6528df1668d6ea6",
+        "e96f5b1dca5c9121"
+      ],
+      "reads": {
+        "entitlements": [
+          "product",
+          "status",
+          "trial_started_at",
+          "user_id"
+        ],
+        "user_profiles": [
+          "account_preset",
+          "onboarding_complete",
+          "user_id"
+        ]
+      },
+      "writes": {
+        "entitlements": [
+          "created_at",
+          "product",
+          "status",
+          "trial_started_at",
+          "updated_at",
+          "user_id"
+        ]
+      }
+    },
+    "src/lib/sync/process.ts": {
+      "class": "static",
+      "statements": 17,
+      "interpolated": 0,
+      "unparsed": [],
+      "skipped": 0,
+      "resolve_errors": 0,
+      "fingerprints": [
+        "14b308eec973fc7d",
+        "2531b649950ba14c",
+        "352673f7333b2dba",
+        "4412ce5eec55f6f9",
+        "7bbcde9cfab6c79c",
+        "7e8ca3383541a979",
+        "7f917d24ef2bb6fb",
+        "88c0b3db7267c838",
+        "92370cd152634b9b",
+        "92960013ae4ea120",
+        "a46081a556fda027",
+        "b16b431979fc3e05",
+        "bea9d07bbdd63c38",
+        "ec51c7684704658b",
+        "f872483a89886d93",
+        "fc568e4d5ceda002"
+      ],
+      "reads": {
+        "permit_trades": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_type_classifications": [
+          "class",
+          "permit_type"
+        ],
+        "permits": [
+          "abuts_laneway",
+          "applicable_bylaws",
+          "application_date",
+          "assembly_sqm",
+          "bid_value",
+          "builder_name",
+          "building_type",
+          "business_personal_services_sqm",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_fsi",
+          "bylaw_max_height_m",
+          "category",
+          "city",
+          "coa_fsi",
+          "comp_build_ratio_p50",
+          "comp_count",
+          "comp_dominant_build",
+          "comp_fsi_p50",
+          "completed_date",
+          "cost_addition_total",
+          "cost_basement_per_sqm",
+          "cost_basement_underpin_per_sqm",
+          "cost_bath_per_sqm",
+          "cost_coa_total",
+          "cost_fb_total",
+          "cost_garage_total",
+          "cost_garden_suite_total",
+          "cost_gut_total",
+          "cost_kitchen_per_sqm",
+          "cost_laneway_suite_total",
+          "cost_solar_total",
+          "council_district",
+          "cur_basement_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_floor_gfa_sqm",
+          "cur_gfa_range_basis",
+          "cur_interior_reno_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "cur_storey_gfa_sqm",
+          "current_use",
+          "data_hash",
+          "depth_m",
+          "description",
+          "dwelling_units_created",
+          "dwelling_units_lost",
+          "enriched_status",
+          "envelope_constrained",
+          "envelope_constraint_reason",
+          "est_const_cost",
+          "exception_number",
+          "existing_data_quality_flag",
+          "existing_greenspace_sqm",
+          "existing_height_m",
+          "existing_length_m",
+          "existing_other_structures_count",
+          "existing_other_structures_sqm",
+          "existing_stories",
+          "existing_structure_confidence",
+          "existing_width_m",
+          "first_seen_at",
+          "frontage_m",
+          "garage_capacity_cars",
+          "garage_constraint_reason",
+          "garage_permission",
+          "garden_suite_fits",
+          "geo_id",
+          "geocoded_at",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "housing_units",
+          "imagery_roof_footprint_sqm",
+          "imagery_roof_gfa_sqm",
+          "industrial_sqm",
+          "institutional_sqm",
+          "interior_alterations_sqm",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_in_ravine_protection_area",
+          "is_through_lot",
+          "issued_date",
+          "last_scraped_at",
+          "last_seen_at",
+          "latitude",
+          "lead_id",
+          "lifecycle_block",
+          "lifecycle_classified_at",
+          "lifecycle_group",
+          "lifecycle_phase",
+          "lifecycle_seq",
+          "lifecycle_stage",
+          "lifecycle_stalled",
+          "linked_coa_application_number",
+          "location",
+          "longitude",
+          "lot_size_basis",
+          "lot_size_confidence",
+          "lot_size_sqm",
+          "market_exceeds_bylaw",
+          "matched_rule",
+          "matched_status",
+          "max_build_basis",
+          "max_build_confidence",
+          "max_build_fsi",
+          "max_build_height_m",
+          "max_build_length_m",
+          "max_build_setback_basis",
+          "max_build_stories",
+          "max_build_stories_aggressive",
+          "max_build_stories_basis",
+          "max_build_width_m",
+          "max_buildable_footprint_sqm",
+          "max_buildable_gfa_basis",
+          "max_buildable_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "max_garden_suite_gfa_sqm",
+          "max_laneway_suite_gfa_sqm",
+          "max_newbuild_coa_gfa_sqm",
+          "max_rear_suite_gfa_sqm",
+          "mercantile_sqm",
+          "neighbourhood_cost_premium",
+          "neighbourhood_id",
+          "opt_aor_gfa_sqm",
+          "opt_aor_storeys",
+          "opt_aor_units",
+          "opt_binding_constraint",
+          "opt_coa_gfa_sqm",
+          "opt_coa_storeys",
+          "opt_config_confidence",
+          "opt_suite_fits_full",
+          "opt_suite_type",
+          "overlay_summary",
+          "owner",
+          "parcel_linked_at",
+          "permit_num",
+          "permit_type",
+          "phase_started_at",
+          "photo_url",
+          "postal",
+          "primary_frontage_street_name",
+          "project_type",
+          "proposed_use",
+          "ravine_distance_m",
+          "raw_json",
+          "realized_fsi_p90",
+          "rear_suite_permission",
+          "rear_suite_type",
+          "residential_sqm",
+          "revision_num",
+          "scope_classified_at",
+          "scope_source",
+          "scope_tags",
+          "status",
+          "storeys",
+          "street_direction",
+          "street_name",
+          "street_name_normalized",
+          "street_num",
+          "street_type",
+          "structure_type",
+          "trade_classified_at",
+          "unmapped_status",
+          "updated_at",
+          "ward",
+          "work",
+          "zoning_class",
+          "zoning_dominant_parcel_id",
+          "zoning_dominant_parcel_method",
+          "zoning_enriched_at",
+          "zoning_parcel_count"
+        ],
+        "sync_runs": [
+          "id"
+        ],
+        "trade_mapping_rules": [
+          "confidence",
+          "created_at",
+          "id",
+          "is_active",
+          "match_field",
+          "match_pattern",
+          "phase_end",
+          "phase_start",
+          "tier",
+          "trade_id",
+          "updated_at"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {
+        "permit_history": [
+          "changed_at",
+          "field_name",
+          "new_value",
+          "old_value",
+          "permit_num",
+          "revision_num",
+          "sync_run_id"
+        ],
+        "permit_trades": [
+          "confidence",
+          "is_active",
+          "lead_score",
+          "permit_num",
+          "phase",
+          "revision_num",
+          "tier",
+          "trade_id",
+          "trade_name",
+          "trade_slug"
+        ],
+        "permits": [
+          "application_date",
+          "builder_name",
+          "building_type",
+          "category",
+          "city",
+          "completed_date",
+          "council_district",
+          "current_use",
+          "data_hash",
+          "description",
+          "dwelling_units_created",
+          "dwelling_units_lost",
+          "enriched_status",
+          "est_const_cost",
+          "first_seen_at",
+          "geo_id",
+          "housing_units",
+          "issued_date",
+          "last_seen_at",
+          "owner",
+          "permit_num",
+          "permit_type",
+          "postal",
+          "proposed_use",
+          "revision_num",
+          "status",
+          "storeys",
+          "street_direction",
+          "street_name",
+          "street_num",
+          "street_type",
+          "structure_type",
+          "ward",
+          "work"
+        ],
+        "sync_runs": [
+          "completed_at",
+          "duration_ms",
+          "error_message",
+          "records_errors",
+          "records_new",
+          "records_total",
+          "records_unchanged",
+          "records_updated",
+          "started_at",
+          "status"
+        ]
+      }
+    }
+  }
+}

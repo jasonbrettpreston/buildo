@@ -1,0 +1,22 @@
+{
+ "what": "p1-csrc-caller-module",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "src/lib/db/sql-trace-caller.ts"
+ ],
+ "tests": [
+  "src/tests/sql-trace-caller.logic.test.ts"
+ ],
+ "numFailedTests": 0,
+ "numPassedTests": 0,
+ "suite_load_errors": [
+  {
+   "file": "src/tests/sql-trace-caller.logic.test.ts",
+   "message": "Cannot find module '@/lib/db/sql-trace-caller' imported from 'C:/Users/User/Buildo-wt-p1c6/src/tests/sql-trace-caller.logic.test.ts'.\n\n- If you rely on tsconfig.json's \"paths\" to resolve modules, please install \"vite-tsconfig-paths\" plugin to handle module resolution.\n- Make sure you don't have rela"
+  }
+ ],
+ "failed": [],
+ "passed_count": 0,
+ "captured_at": "2026-10-03T16:45:24.539Z"
+}

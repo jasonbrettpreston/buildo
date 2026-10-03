@@ -1,0 +1,25 @@
+{
+ "what": "p1-c6-registry-render-cli",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "scripts/analysis/gates/step-registry.mjs",
+  "scripts/analysis/step-registry.mjs"
+ ],
+ "tests": [
+  "src/tests/step-registry.logic.test.ts"
+ ],
+ "numFailedTests": 6,
+ "numPassedTests": 15,
+ "suite_load_errors": [],
+ "failed": [
+  "step-registry — grouped src/ consumers + declared vs observed (P1-C6, Fold 9b / Fold 14) RED: src/ table consumer rows are grouped per (consumer, table) with a column count",
+  "step-registry — grouped src/ consumers + declared vs observed (P1-C6, Fold 9b / Fold 14) RED: declaredVsObserved splits each table into both / declaredOnly / observedOnly",
+  "step-registry — grouped src/ consumers + declared vs observed (P1-C6, Fold 9b / Fold 14) RED: loadObserved unions committed POST traces and the fixture record",
+  "step-registry — grouped src/ consumers + declared vs observed (P1-C6, Fold 9b / Fold 14) RED: renderDeclaredVsObserved renders the declared/observed table per slug",
+  "step:registry CLI — ADVISORY readers grep retired, DECLARED vs OBSERVED section (P1-C6) RED: the CLI prints DECLARED, ADVISORY, then DECLARED vs OBSERVED, and no git-grep readers",
+  "step:registry CLI — ADVISORY readers grep retired, DECLARED vs OBSERVED section (P1-C6) RED: the CLI module defines neither undeclaredReaders nor advisoryTerms"
+ ],
+ "passed_count": 15,
+ "captured_at": "2026-10-03T16:45:08.522Z"
+}

@@ -9,7 +9,7 @@
 // Three sources, three readers, no fourth: `capture-step-golden.js` owns the file derivation
 // (`descriptorPathFor` / `notesPathFor` + the compute-basename rule — the SAME inputs `computeSourceFingerprint`
 // hashes, so the registry can never invent a candidate the lockfile does not), `ledger.js` owns
-// every edge (`loadLedger` / `stepUpstreams` — never a hand-kept upstream array), and
+// every edge (`effectiveLedger` / `stepUpstreams` — never a hand-kept upstream array), and
 // `step-archetype-census.json` owns the ownership/archetype/status row. There is deliberately no
 // shell guessing (no `stepFileCandidates`) and no new scan of `scripts/` for tables.
 //
@@ -31,7 +31,7 @@ export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 const require = createRequire(import.meta.url);
 // ONE DERIVATION (Spec 122 §10): the golden harness is imported, never mirrored.
 const { descriptorPathFor, notesPathFor } = require('../capture-step-golden.js');
-const { loadLedger, stepUpstreams } = require('../../lib/ledger.js');
+const { effectiveLedger, stepUpstreams } = require('../../lib/ledger.js');
 
 const MANIFEST_REL_PATH = 'scripts/manifest.json';
 const CENSUS_REL_PATH = 'scripts/steps/_schema/step-archetype-census.json';
@@ -68,9 +68,10 @@ function readMigrations(root) {
 
 /**
  * Every fact this module derives, loaded ONCE per process: the manifest, the archetype census,
- * the generated consumer registry, the committed cross-step ledger snapshot and the migrations.
- * Nothing here scans `scripts/` for tables or guesses a shell — each field is one registered
- * source's own answer.
+ * the generated consumer registry, the effective cross-step ledger (converted descriptors
+ * overlaid on the committed snapshot, every row source-tagged — P1-C5, plan Fold 9
+ * D-A/D-D) and the migrations. Nothing here scans `scripts/` for tables or guesses a shell —
+ * each field is one registered source's own answer.
  *
  * `env.BUILDO_CONSUMER_REGISTRY_PATH` is a TEST-ONLY override (same shape as `ledger.js`'s
  * `BUILDO_LEDGER_SNAPSHOT_PATH`) resolved against `root`, so a suite can point the registry at a
@@ -89,7 +90,7 @@ export function loadRegistryInputs(root = REPO_ROOT, { env = process.env } = {})
     manifest: readJson(path.join(root, MANIFEST_REL_PATH)),
     census: readJson(path.join(root, CENSUS_REL_PATH)),
     consumerRows: readJson(registryAbs).rows || [],
-    ledger: loadLedger({ env }),
+    ledger: effectiveLedger({ env }),
     migrations: readMigrations(root),
   };
 }
@@ -261,6 +262,174 @@ export function stepData(slug, inputs) {
   });
 }
 
+/** The witness tree: committed POST traces live in `<WITNESS_DIR>/<slug>/post/*.trace.json`. */
+const WITNESS_DIR = 'docs/reports/witness';
+
+/** Union column maps: `{ table: sortedUniqueColumns }` over every map in `maps`, tables sorted. */
+function unionReadWrite(maps) {
+  const acc = new Map();
+  for (const map of maps) {
+    if (!map || typeof map !== 'object') continue;
+    for (const [table, cols] of Object.entries(map)) {
+      if (!acc.has(table)) acc.set(table, new Set());
+      for (const col of Array.isArray(cols) ? cols : []) acc.get(table).add(String(col));
+    }
+  }
+  const out = {};
+  for (const table of [...acc.keys()].sort()) out[table] = [...acc.get(table)].sort();
+  return out;
+}
+
+/** `{ reads, writes }` of ONE trace / fixture suite, either side defaulting to `{}`. */
+function readWriteOf(node) {
+  const src = (node && typeof node === 'object' && node) || {};
+  return { reads: src.reads || {}, writes: src.writes || {} };
+}
+
+/**
+ * The OBSERVED lineage of one slug — the union (sorted unique columns, sorted tables) of every
+ * committed POST trace's `touched.reads` / `touched.writes` under
+ * `<WITNESS_DIR>/<slug>/post/*.trace.json` and every fixture suite's `reads` / `writes` in
+ * `<WITNESS_DIR>/<slug>.fixture.json`.
+ *
+ * A missing directory or file contributes nothing and `traces` / `fixtureSuites` stay 0; a file
+ * that cannot be read or parsed increments `unreadable` instead of throwing, so a hook or a
+ * renderer that asks about an unwitnessed or half-written slug gets an empty answer, never an
+ * exception.
+ *
+ * @param {string} root repository root
+ * @param {string} slug
+ * @returns {{traces: number, fixtureSuites: number, unreadable: number, reads: Record<string,string[]>, writes: Record<string,string[]>}}
+ */
+export function loadObserved(root, slug) {
+  const postDir = path.join(root, WITNESS_DIR, String(slug), 'post');
+  const fixturePath = path.join(root, WITNESS_DIR, `${slug}.fixture.json`);
+
+  let names = [];
+  try {
+    names = fs.readdirSync(postDir).filter((name) => name.endsWith('.trace.json'));
+  } catch {
+    names = [];
+  }
+
+  let unreadable = 0;
+  const readMaps = [];
+  const writeMaps = [];
+  let traces = 0;
+  for (const name of names.sort()) {
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(path.join(postDir, name), 'utf8'));
+    } catch {
+      unreadable += 1;
+      continue;
+    }
+    traces += 1;
+    const { reads, writes } = readWriteOf(parsed.touched);
+    readMaps.push(reads);
+    writeMaps.push(writes);
+  }
+
+  let fixtureSuites = 0;
+  try {
+    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+    for (const entry of Object.values(fixture.suites || {})) {
+      fixtureSuites += 1;
+      const { reads, writes } = readWriteOf(entry);
+      readMaps.push(reads);
+      writeMaps.push(writes);
+    }
+  } catch {
+    // no fixture record (or an unreadable one): contributes no suites and is not a hard failure
+  }
+
+  return {
+    traces,
+    fixtureSuites,
+    unreadable,
+    reads: unionReadWrite(readMaps),
+    writes: unionReadWrite(writeMaps),
+  };
+}
+
+/**
+ * The declared-vs-observed split of ONE read/write map pair — pure, no I/O.
+ *
+ * For `reads` and `writes` separately, over the sorted union of the declared and the observed
+ * tables, each table yields `{ table, both, declaredOnly, observedOnly }` with every column list
+ * sorted; a table only one side names still yields a row (the other side's lists are empty).
+ *
+ * @param {{reads?: object, writes?: object}} declared
+ * @param {{reads?: object, writes?: object}} observed
+ * @returns {{reads: Array<{table: string, both: string[], declaredOnly: string[], observedOnly: string[]}>, writes: Array<{table: string, both: string[], declaredOnly: string[], observedOnly: string[]}>}}
+ */
+export function declaredVsObserved(declared, observed) {
+  const d = readWriteOf(declared);
+  const o = readWriteOf(observed);
+  const split = (dMap, oMap) => {
+    const tables = [...new Set([...Object.keys(dMap || {}), ...Object.keys(oMap || {})])].sort();
+    return tables.map((table) => {
+      const dCols = new Set(Array.isArray(dMap && dMap[table]) ? dMap[table] : []);
+      const oCols = new Set(Array.isArray(oMap && oMap[table]) ? oMap[table] : []);
+      return {
+        table,
+        both: [...dCols].filter((c) => oCols.has(c)).sort(),
+        declaredOnly: [...dCols].filter((c) => !oCols.has(c)).sort(),
+        observedOnly: [...oCols].filter((c) => !dCols.has(c)).sort(),
+      };
+    });
+  };
+  return { reads: split(d.reads, o.reads), writes: split(d.writes, o.writes) };
+}
+
+/** One rendered block (`reads:` / `writes:`) of the declared-vs-observed table, LF-only. */
+function renderDeclaredVsObservedBlock(label, rows) {
+  let out = `${label}:\n`;
+  if (rows.length === 0) return `${out}  none\n`;
+  for (const row of rows) {
+    const d = row.declaredOnly;
+    const o = row.observedOnly;
+    out += `  ${row.table}: both ${row.both.length} · declared only ${d.length}${
+      d.length ? ` [${d.join(', ')}]` : ''
+    } · observed only ${o.length}${o.length ? ` [${o.join(', ')}]` : ''}\n`;
+  }
+  return out;
+}
+
+/**
+ * The per-slug declared-vs-observed table of plan item 9(i) / Fold 9b (Spec 122 §6.6.1):
+ * `observed` is the committed traces ∪ fixture records (`loadObserved`), `declared` is the
+ * effective ledger row for `slug` (`inputs.ledger.inchain[slug]`). The first line names both
+ * provenances and counts the unreadable files when there are any; then one `reads:` and one
+ * `writes:` block, one line per table with the both / declared-only / observed-only columns.
+ *
+ * `observed` is passed in rather than loaded here so the function stays pure over its inputs.
+ * Always ends in `\n`.
+ *
+ * @param {string} slug
+ * @param {{ledger: {inchain: object}}} inputs
+ * @param {{traces: number, fixtureSuites: number, unreadable?: number, reads?: object, writes?: object}} observed
+ * @returns {string}
+ */
+export function renderDeclaredVsObserved(slug, inputs, observed) {
+  const inchain = (inputs && inputs.ledger && inputs.ledger.inchain) || {};
+  const row = inchain[slug];
+  const obs = observed || {};
+  const declaredLabel = row ? (row.source === 'descriptor' ? 'descriptor (deriveMeta)' : 'lineage snapshot, declared not witnessed') : 'none';
+  const observedLabel =
+    obs.traces || obs.fixtureSuites
+      ? `${obs.traces} POST trace(s) + ${obs.fixtureSuites} fixture suite(s)`
+      : 'none — no committed POST trace or fixture record (witness pending)';
+  const unreadableLabel = obs.unreadable ? ` · ${obs.unreadable} unreadable file(s)` : '';
+
+  const { reads, writes } = declaredVsObserved(row || {}, obs);
+  return (
+    `declared: ${declaredLabel} · observed: ${observedLabel}${unreadableLabel}\n` +
+    renderDeclaredVsObservedBlock('reads', reads) +
+    renderDeclaredVsObservedBlock('writes', writes)
+  );
+}
+
 /**
  * The per-(X, chain) upstream memo, created lazily on the inputs object under a NON-enumerable
  * property so it never joins a `JSON.stringify` of `inputs` and never collides with a caller key.
@@ -272,11 +441,11 @@ function upstreamMemo(inputs) {
   return memo;
 }
 
-/** `stepUpstreams(X, {chain, env})`, memoised per `X|chain` — the ledger's own answer, asked once. */
+/** `stepUpstreams(X, {chain, env, ledger: inputs.ledger})`, memoised per `X|chain` — the ledger's own answer, asked once. */
 function upstreamsOf(inputs, slug, chain) {
   const memo = upstreamMemo(inputs);
   const key = `${slug}|${chain}`;
-  if (!memo.has(key)) memo.set(key, stepUpstreams(slug, { chain, env: inputs.env }).slice().sort());
+  if (!memo.has(key)) memo.set(key, stepUpstreams(slug, { chain, env: inputs.env, ledger: inputs.ledger }).slice().sort());
   return memo.get(key);
 }
 
@@ -316,8 +485,14 @@ export function stepEdges(slug, inputs) {
 }
 
 /**
- * Every declared consumer contract of this producer, sorted and unique, rendered as
- * `<consumer> (<kind> <key>)` over the generated consumer registry's rows.
+ * Every declared consumer contract of this producer, sorted and unique, over the generated
+ * consumer registry's rows.
+ *
+ * A `kind: 'table'` row is a per-COLUMN citation — `src/` SQL consumers arrive as up to 68 rows
+ * for ONE (file, table) pair — so those rows are grouped by `(consumer, table)` (`table` = the
+ * key before its first `.`) and rendered as `<consumer> (table <table>: <n> column[s])`, one
+ * line per pair however many columns it cites. Every non-`table` row keeps the flat
+ * `<consumer> (<kind> <key>)` shape.
  *
  * @param {string} slug
  * @param {{consumerRows: object[]}} inputs
@@ -326,9 +501,24 @@ export function stepEdges(slug, inputs) {
 export function stepConsumers(slug, inputs) {
   const rows = (inputs && inputs.consumerRows) || [];
   const out = new Set();
+  const tableCols = new Map();
   for (const row of rows) {
     if (!row || row.producer !== slug) continue;
+    if (row.kind === 'table') {
+      const table = String(row.key).split('.')[0];
+      const group = `${row.consumer} ${table}`;
+      if (!tableCols.has(group)) tableCols.set(group, new Set());
+      tableCols.get(group).add(String(row.key));
+      continue;
+    }
     out.add(`${row.consumer} (${row.kind} ${row.key})`);
+  }
+  for (const [group, cols] of tableCols) {
+    const sep = group.indexOf(' ');
+    const consumer = group.slice(0, sep);
+    const table = group.slice(sep + 1);
+    const n = cols.size;
+    out.add(`${consumer} (table ${table}: ${n} column${n === 1 ? '' : 's'})`);
   }
   return [...out].sort();
 }
@@ -372,7 +562,8 @@ export function renderStepEntry(row, inputs) {
   const inchain = (inputs && inputs.ledger && inputs.ledger.inchain) || {};
   if (Object.prototype.hasOwnProperty.call(inchain, row.slug)) {
     const data = stepData(row.slug, inputs).map(dataItem);
-    lines.push(`  - data: ${data.length ? data.join('; ') : 'none in the cross-step ledger'}`);
+    const source = inchain[row.slug].source === 'descriptor' ? 'descriptor' : 'lineage snapshot, declared not witnessed';
+    lines.push(`  - data (${source}): ${data.length ? data.join('; ') : 'none in the cross-step ledger'}`);
     const { upstream, downstream } = stepEdges(row.slug, inputs);
     lines.push(`  - upstream: ${joinOrNone(upstream)}`);
     lines.push(`  - downstream: ${joinOrNone(downstream)}`);

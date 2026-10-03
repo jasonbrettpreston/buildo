@@ -95,10 +95,10 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `scripts/lib/compute/load-massing.js`
   - `src/tests/steps/massing/violations.test.ts`
   - `src/tests/steps/massing/witness-fixture.logic.test.ts`
-  - data: `building_footprints` writes (migrations/023_building_footprints.sql)
+  - data (descriptor): `building_footprints` writes (migrations/023_building_footprints.sql)
   - upstream: none
-  - downstream: enrich_parcels · link_massing
-  - consumers: massing (records_meta massing_load) · src/components/FreshnessTimeline.tsx (records_meta audit_table)
+  - downstream: assert_data_bounds · assert_global_coverage · link_massing
+  - consumers: massing (records_meta massing_load) · src/app/api/permits/[id]/route.ts (table building_footprints: 3 columns) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/leads/lead-inspect-query.ts (table building_footprints: 2 columns)
 - `link_massing` — LINK · converted · owner specs: 56
   - `scripts/link-massing.js`
   - `scripts/link-massing.descriptor.json`
@@ -108,10 +108,10 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `src/tests/steps/link_massing/nearest-determinism.test.ts`
   - `src/tests/steps/link_massing/rung1-inline-wkt.test.ts`
   - `src/tests/steps/link_massing/violations.test.ts`
-  - data: `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_buildings` writes (migrations/024_parcel_buildings.sql); `parcels` reads (migrations/011_parcels.sql)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_buildings` reads+writes (migrations/024_parcel_buildings.sql); `parcels` reads (migrations/011_parcels.sql)
   - upstream: compute_centroids · massing · parcels
-  - downstream: compute_cost_estimates · enrich_parcels
-  - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · src/components/FreshnessTimeline.tsx (audit_metric link_rate)
+  - downstream: assert_global_coverage · compute_cost_estimates · enrich_parcels
+  - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · src/app/api/admin/stats/route.ts (table parcel_buildings: 1 column) · src/app/api/permits/[id]/route.ts (table parcel_buildings: 4 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/lib/leads/lead-inspect-query.ts (table parcel_buildings: 2 columns) · src/lib/quality/metrics.ts (table parcel_buildings: 1 column)
 <!-- /generated:target-files -->
 - `scripts/seeds/logic_variables.json` — the six massing keys: `massing_skip_rate_max_pct`, `massing_batch_error_rate_max_pct`, `massing_story_height_m`, `massing_download_timeout_ms`, `building_footprints_dead_tuple_ratio_warn_max`, `building_footprints_maintenance_timeout_minutes` (`sources_building_footprints_floor` is shared with assert_data_bounds).
 - `scripts/analysis/probe-shapefile-acquire.mjs` — batch-2 row 3.6 P-M memory/key probe: measures the massing shapefile through the runner's own `acquire.js` acquisition seam (read-only; opt-in one SELECT under `--db`) ahead of the `load-massing.js` conversion (Fold SF-7, WF2 row 3.6).

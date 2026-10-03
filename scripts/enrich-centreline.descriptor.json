@@ -24,6 +24,10 @@
         {
           "step": "load_centreline",
           "version_pin": "exact"
+        },
+        {
+          "step": "parcels",
+          "version_pin": "gte"
         }
       ],
       "tables": [

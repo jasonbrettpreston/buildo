@@ -38,6 +38,8 @@ Commits `94cfe054` → `08f3dabd` → `2240a962` → `c3c36315` (17th converted 
 - **Golden differential — a COMMITTED PERTURBATION COHORT, not a forced FULL.** The 4-column `IS DISTINCT FROM` guard (with the lineage stamp INSIDE it) makes an unchanged-source re-run write 0 rows, so a forced-FULL instrument proves nothing. `scripts/analysis/enrich-heritage-cohort-differential.js` + `docs/reports/golden/enrich_heritage/differential/cohort.json` (494 rows: 94 multi-Part-IV-point parcels, 100 single-Part-IV, 200 Part-V-HCD incl. one parcel per null-date district, 100 undesignated; the 16 invalid-geom parcels held out as a NEGATIVE CONTROL) perturb, re-run the REAL step, and assert `records_updated === 494`, a whole-table projected hash back at baseline, and the negative control untouched — with an unconditional restore bracket.
 - **Measured live 2026-09-20 (local dev DB):** 9,958 designated parcels (2.047% of 486,530) · 1,217 Part IV · 8,741 Part V HCD · 1,557 source Part IV points · 10.4% Part IV points with no containing valid-geom parcel · 16 invalid-geom parcels · full recompute 59–75 s.
 
+`[as-built 2026-10-02, row 3.4 ③]` CUTOVER: `scripts/load-heritage.js` is registered in `scripts/steps/_schema/converted.json` (25th converted step; its `pending[]` entry deleted in the same commit) and the census row is RETAINED with `status: converted` (Spec 124 R-K, R-AO). INGESTOR, identity lock 61; the first MULTI-TARGET converted member — the two primaries `heritage_register` (→ `heritage_properties`) and `heritage_districts` (→ `heritage_districts`), each class-B `upsert_scoped_departure_delete` guarded by `IS DISTINCT FROM` (LH-D2 PIN), `execution.txn_scope: "batch"` = one transaction per target (DEC-K). Files on disk: `scripts/load-heritage.js` (frozen shell), `scripts/load-heritage.descriptor.json`, `scripts/load-heritage.notes.json`, `scripts/lib/compute/load-heritage.js`. The `enrich_heritage` seam is now live: `scripts/enrich-heritage.descriptor.json` `inputs.reads.steps` declares `{step:"load_heritage", version_pin:"exact"}`, and the generated consumer-registry rows for the `heritage_load` key (`load_heritage → enrich_heritage`, `records_meta`, `value: any`, `source: emits`; plus the two self-consumed `heritage_load.<sub>.feature_count` rows) are emitted.
+
 ## v1.0 -> v1.1 fold log (R3 SPEC: 4 CRIT + 5 HIGH + 14 MED)
 
 - **C-v1.1.1 (3-way convergent: Gemini + DeepSeek + Independent CRIT-1, confidence 100):** §11.2 propagation SQL was syntactically invalid -- `bool_or(...) OVER ()` window function nested inside CASE inside GROUP BY CTE. PostgreSQL would reject. v1.1 rewrites §11.2 with a 3-CTE chain (per_permit_state -> per_permit_winner -> per_permit_date) so each level has a single aggregation context.
@@ -471,25 +473,25 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 ### Target Files
 <!-- generated:target-files -->
 <!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
-- `load_heritage` — INGESTOR · pending · owner specs: 61
+- `load_heritage` — INGESTOR · converted · owner specs: 61
   - `scripts/load-heritage.js`
   - `scripts/load-heritage.descriptor.json`
   - `scripts/load-heritage.notes.json`
   - `scripts/lib/compute/load-heritage.js`
   - `src/tests/steps/load_heritage/violations.test.ts`
-  - data: `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
+  - data (descriptor): `heritage_districts` writes (migrations/170_create_heritage_tables.sql); `heritage_properties` writes (migrations/170_create_heritage_tables.sql)
   - upstream: none
   - downstream: enrich_heritage
-  - consumers: none
+  - consumers: enrich_heritage (records_meta heritage_load) · load_heritage (records_meta heritage_load.heritage_districts.feature_count) · load_heritage (records_meta heritage_load.heritage_register.feature_count)
 - `enrich_heritage` — ENRICHER · converted · owner specs: 61
   - `scripts/enrich-heritage.js`
   - `scripts/enrich-heritage.descriptor.json`
   - `scripts/lib/compute/enrich-heritage.js`
   - `src/tests/steps/enrich_heritage/violations.test.ts`
   - `src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts`
-  - data: `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: load_heritage · parcels
-  - downstream: enrich_parcels
+  - downstream: none
   - consumers: src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
 <!-- /generated:target-files -->
 

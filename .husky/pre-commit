@@ -18,6 +18,7 @@ bash scripts/hooks/check-partial-staging.sh && \
 node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/steps/_schema/generate-template-freeze.mjs --check && \
   node scripts/analysis/generate-target-files.mjs --check && \
+  node scripts/analysis/src-sql-ledger.mjs --check && \
   node scripts/analysis/spec-split-check.mjs --check && \
   node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md && \
   npx vitest src/tests/system-map.infra.test.ts --run && \

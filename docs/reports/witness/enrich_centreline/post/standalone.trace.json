@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "none",
-  "source_fingerprint": "7b5ecb37cf964960c118210fbe23737fc24a289a3be98d9bdfc897a9410db770",
-  "git_head": "e32c1c24175c5d3a41b2084ae2d4177241d0fc33",
+  "source_fingerprint": "accb5384e6dc05b338bb25145184130111ec4c2903a007a91e5645e5d4cee483",
+  "git_head": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
   "header": {
     "processes": 1,
     "calls": 49,
     "distinct": 32,
     "utility": 14,
-    "tracer_self_ms": 12.244,
-    "wall_ms": 22196
+    "tracer_self_ms": 22.312,
+    "wall_ms": 59946
   },
   "statements": [
     {
@@ -81,13 +81,13 @@
       "params": [
         [
           "completed",
-          19134,
+          57067,
           null,
-          2252,
+          2254,
           18048,
           0,
           2000,
-          "{\"duration_ms\":14953,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":18048,\"parcels_updated\":2000,\"completed_at\":\"2026-10-03T16:36:33.384Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"e32c1c24175c5d3a41b2084ae2d4177241d0fc33\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":64,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct >= 90\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 50\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_recomputed\",\"value\":18048,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":2000,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":14953,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":987,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":3017,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":3151,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":3090,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":3094,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":943.29,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":19133,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":45767,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":18048,\"parcels_updated\":2000,\"completed_at\":\"2026-10-03T17:35:27.625Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":64,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct >= 90\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 50\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_recomputed\",\"value\":18048,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":2000,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":45767,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":4636,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":6448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":4660,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":4384,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":4378,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":316.26,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":57067,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -339,12 +339,12 @@
         [
           "centreline_join",
           0,
-          2252
+          2254
         ],
         [
           "centreline_join",
           2000,
-          2252
+          2254
         ]
       ]
     },
@@ -367,7 +367,7 @@
             "enrich_centreline",
             "enrich-centreline"
           ],
-          2252
+          2254
         ]
       ]
     },
@@ -494,7 +494,7 @@
   ],
   "transactions": [
     {
-      "client": "11596:3",
+      "client": "8920:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

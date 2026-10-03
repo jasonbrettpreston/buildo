@@ -30,8 +30,13 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import Module from 'module';
+import { witnessGuard } from '../_witness-guard';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
+// P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this
+// step's descriptor. Only the handles that feed the step's REAL compute/library are wrapped —
+// the oracle pins (PART A) run the LEGACY copy and are never wrapped.
+const guard = witnessGuard('enrich_centreline', __filename);
 const STEP_REL = 'scripts/enrich-centreline.js';
 const ORACLE_REL = 'src/tests/steps/enrich_centreline/fixtures/legacy-enrich-centreline.js.txt';
 const ORACLE_SHA256 = '24131dcf8a217adc168ea3a912b1d8d427b15af6599fc7ca83815bcedd64c4c4';
@@ -338,13 +343,16 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     const c = loadCompute();
     const producer = { records_meta: { centreline_load: { spec_version: '1.1', features_inserted: 5, source_dataset_version: V } } };
     const self = (ver: string) => ({ records_meta: { centreline_enrich: { source_dataset_version: ver } } });
-    const db = (selfRow: AnyObj, stale: number) => fakeDb((sql, params) => {
-      if (/COUNT\(\*\)::int AS n FROM parcels/.test(sql)) return { rows: [{ n: stale }] };
-      // EC-D10 fixed (R2 = (b)): the producer read binds slugForms('load_centreline', ['sources']).
-      const p0 = params?.[0];
-      const isProducer = Array.isArray(p0) ? p0.includes('sources:load_centreline') : p0 === 'sources:load_centreline';
-      return { rows: isProducer ? [producer] : (selfRow ? [selfRow] : []) };
-    });
+    const db = (selfRow: AnyObj, stale: number) => {
+      const fake = fakeDb((sql, params) => {
+        if (/COUNT\(\*\)::int AS n FROM parcels/.test(sql)) return { rows: [{ n: stale }] };
+        // EC-D10 fixed (R2 = (b)): the producer read binds slugForms('load_centreline', ['sources']).
+        const p0 = params?.[0];
+        const isProducer = Array.isArray(p0) ? p0.includes('sources:load_centreline') : p0 === 'sources:load_centreline';
+        return { rows: isProducer ? [producer] : (selfRow ? [selfRow] : []) };
+      });
+      return { ...fake, db: guard.wrap(fake.db) };
+    };
     const unchanged = db(self(V), 24426);
     await expect(c.readCentrelineContract(unchanged.db)).resolves.toEqual({ sourceDatasetVersion: V, lastVersion: V, staleCount: 24426, mode: 'incremental' });
     expect(unchanged.calls).toHaveLength(3);
@@ -358,7 +366,9 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     const c = loadCompute();
     const cfg = seededConfig();
     const runPass = async (full: boolean, mode: string) => {
-      const { db, calls } = fakeDb(() => ({ rows: [TALLY_ROW], rowCount: 0 }));
+      const fake = fakeDb(() => ({ rows: [TALLY_ROW], rowCount: 0 }));
+      const db = guard.wrap(fake.db);
+      const calls = fake.calls;
       const ju: AnyObj[] = [];
       const passCtx = {
         full, config: cfg, onProgress: () => {},
@@ -395,11 +405,11 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     const legacy = oracleReducedSummary('skip', 0, 0).records_meta.centreline_enrich;
     const reduced = fakeDb(() => { throw new Error('reduced mode must not query'); });
     const passRaw = { centreline_join: { mode: 'skip', lastVersion: V, sourceDatasetVersion: V, staleCount: 0, updated: 0, tally: null } };
-    const r = await c.computePostPhase(reduced.db, { passRaw, full: false, runAt: RUN_AT, config: cfg });
+    const r = await c.computePostPhase(guard.wrap(reduced.db), { passRaw, full: false, runAt: RUN_AT, config: cfg });
     expect(r.matched.centreline_enrich).toEqual({ ...legacy, completed_at: RUN_AT.toISOString() });
     const row = { geom_total: 486530, invalid_geom: 0, name_pop: 486080, addr_pop: 486530, node_null: 0, total: 47318, n: 486530 };
     const fullRaw = { centreline_join: { mode: 'full', lastVersion: V, sourceDatasetVersion: V, staleCount: null, updated: 3, tally: { ...TALLY_ROW, intersecting: 472002 } } };
-    const f = await c.computePostPhase(fakeDb(() => ({ rows: [row] })).db, { passRaw: fullRaw, full: true, runAt: RUN_AT, config: cfg });
+    const f = await c.computePostPhase(guard.wrap(fakeDb(() => ({ rows: [row] })).db), { passRaw: fullRaw, full: true, runAt: RUN_AT, config: cfg });
     expect(Object.keys(f.matched.centreline_enrich).sort()).toEqual([...FULL_SHAPE_KEYS].sort());
     expect(f.matched.centreline_enrich.parcels_with_zero_centreline_intersections_pct).toBe(2.9899999999999998);
   });

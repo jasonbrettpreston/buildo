@@ -84,23 +84,31 @@ describe('generate-target-files — the CLI and the generator (gtf-02)', () => {
       );
       const inputs = reg.loadRegistryInputs(REPO_ROOT);
       const inchain = snapshot.inchain as Record<string, { chains: string[]; reads?: Record<string, unknown> }>;
+      // P1-C5: the registry reads the EFFECTIVE ledger (converted descriptors overlaid on the
+      // snapshot), so the row, table and column the drift targets are chosen from what the registry
+      // actually derives edges from — a snapshot-only read of a converted step is no longer an edge.
+      const effective = inputs.ledger.inchain as Record<string, { chains: string[]; reads?: Record<string, string[]> }>;
+      const firstReadColumn = (slug: string): [string, string] | null => {
+        for (const [t, cols] of Object.entries(effective[slug]?.reads || {})) {
+          if (Array.isArray(cols) && cols.length > 0) return [t, cols[0]!];
+        }
+        return null;
+      };
 
-      // The first registry row that is an inchain key with at least one read table — stable, because
+      // The first registry row that is an inchain key with at least one read column — stable, because
       // registryRows order is manifest.chains.sources order.
       const row = reg
         .registryRows(inputs)
         .find(
           (candidate: { slug: string }) =>
-            Object.prototype.hasOwnProperty.call(inchain, candidate.slug) &&
-            Object.keys(inchain[candidate.slug]?.reads || {}).length > 0,
+            Object.prototype.hasOwnProperty.call(inchain, candidate.slug) && firstReadColumn(candidate.slug) !== null,
         );
-      expect(row, 'no registry row with a ledger read table').toBeTruthy();
+      expect(row, 'no registry row with a ledger read column').toBeTruthy();
 
       const slug = row!.slug;
       const spec = String(row!.owner_specs[0]);
-      const entry = inchain[slug]!;
-      const table = Object.keys(entry.reads || {})[0]!;
-      const column = (entry.reads as Record<string, string[]>)[table]![0];
+      const entry = effective[slug]!;
+      const [table, column] = firstReadColumn(slug)!;
 
       const drifted = {
         ...snapshot,

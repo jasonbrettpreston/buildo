@@ -1,0 +1,20 @@
+{
+ "what": "p1-csrc-ledger-src-section",
+ "phase": "red",
+ "impl_state": "implementation reverted to base 95e6e035 (or new file absent)",
+ "implementation": [
+  "scripts/lib/ledger.js"
+ ],
+ "tests": [
+  "src/tests/step-upstreams.logic.test.ts"
+ ],
+ "numFailedTests": 2,
+ "numPassedTests": 23,
+ "suite_load_errors": [],
+ "failed": [
+  "P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec 122 §6; plan Fold 9 D-A/D-B/D-C) RED: effectiveLedger carries the src/ static SQL ledger as its src section, every row source-tagged src_static; not_postgres files never enter it",
+  "P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec 122 §6; plan Fold 9 D-A/D-B/D-C) RED: the default src section is read from the committed src-sql-ledger.json"
+ ],
+ "passed_count": 23,
+ "captured_at": "2026-10-03T16:44:56.921Z"
+}
