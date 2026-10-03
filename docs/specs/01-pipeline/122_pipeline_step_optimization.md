@@ -41,32 +41,11 @@ These were put to the operator as the three questions the spec could not answer 
 
 ## Six programme rulings — ✅ OPERATOR-RATIFIED 2026-08-23 (round 2)
 
-Reviewed and accepted by the operator 2026-08-23. **These amend the sections named; where older text in this spec or the plan conflicts, these govern.**
-
-| # | Ruling | Amends |
-|---|---|---|
-| **R1** | **This is a re-architecture of the entire non-compute lifecycle, delivered incrementally — budget it as that, never as a per-step cleanup pass.** The §1 coverage audit is the evidence: 3 structurally failed menus · 6 missing P0 categories · an extractor covering 8/17 · §3f write-class labels wrong for 5 of 27 steps (2 of the 13 classes wrong at source) · 54 unadjudicated orphans | framing throughout |
-| **R2** | **The schema is the canonical vocabulary, not the prose.** `scripts/steps/_schema/step.schema.json` is authored directly, encoding the V1–V6 conflict rulings below plus the reshaped menus (per-target `write_discipline`, 3-axis `staleness`, the four `on_*_error` fields). `122-vocabulary.md` and this spec's menu tables are **generated FROM the schema**. `extract-vocab.mjs` is demoted to a one-time migration tool; §12.1 **B3 dissolves** — the nine categories are born in the schema, never extracted from prose. Downstream corollary: once the Violation Suite exists, the **test manifest becomes the claim register** and the prose appendix stops being the certified artifact | §1.2 · §12.1 B1/B3 (→ 122a §A5) · §12.4.5 (→ 122a §A5) · Spec 123 §1.2/§5 |
-| **R3** | **The P-track and S-track run in PARALLEL.** §10.1's green-cloud-run criterion gates **C1 (first conversion)**, not S1 — building the library, schema, ledger and conformance suite converts nothing. The one real coupling stands: **no golden master until Phase B (P2) lands** | §10.1 · the plan's stage table |
-| **R4** | **S2 is a vertical slice, not a monolith.** Build the minimal `pipeline.step()` the `assert_schema` pilot needs, convert it, and grow the library pilot-by-pilot. Consistent with §7.2's *"freeze the template after the eighth, never the first"* — a fully-finished S2 before C1 buys less than it costs | §9 S2 · the plan |
-| **R5** | **Per-step re-verification folds into PH-0** (the boundary freeze reads every write anyway): the 5 mislabeled write classes are re-derived per step there, not in an upfront S1 sweep. The **54 orphans are adjudicated in triage batches** (contract-must-express / runner-owned / defer-with-reason), pilot-archetype-touching first — not as a monolithic freeze gate | §12.1 B2 (→ 122a §A5) · §12.5 (→ 122a §A5) · Spec 123 §2 |
-| **R6** | **The six missing P0 categories go through a categories-vs-fields adjudication before any lands as a category.** `acquisition` is arguably `staleness.trigger`'s missing lifecycle position plus an `inputs.externals` cache policy; `maintenance` arguably `execution.maintenance`; `terminals` and `plan_shape` look genuinely new. 17→23 is real complexity-clock spend (§12.12 B2) and is decided deliberately, not by default | §12.2 |
+**MOVED to `122a_step_optimization_appendix.md` ## Appendix §A20 — Six programme rulings R1–R6 (moved from Spec 122 top-of-file rulings) — HISTORICAL, 2026-10-03 — 2026-10-03 (Spec 124 §4 R-I(4)).** Historical; Registry-truth P1-C8z (D3 budget). Programme-delivery rulings of 2026-08-23 (M01 class).
 
 ### The six vocabulary-conflict rulings — ✅ ADJUDICATED 2026-08-23 (operator-delegated)
 
-Encoded in `step.schema.json` per R2. Spec 120 §3.2 is annotated, not re-litigated.
-
-| # | Field | Ruling | Why |
-|---|---|---|---|
-| **V1** | `identity.archetype` | **full words** — `INGESTOR\|MATERIALIZER\|LINK\|MATCHER\|ENRICHER\|BACKFILL\|ASSERT\|RECORDER` | descriptors optimize for human/LLM legibility; the `ING|…` forms are display shorthand only |
-| **V2** | `identity.lock` | **unique across manifest ∪ `one-time/` ∪ `backfill/`** (the wider universe); the generated registry *derives* from it | registry-only uniqueness readmits collisions from scripts outside the registry |
-| **V3** | `guards.schema_drift` | **`none \| propagate \| pause`** — `warn` dropped | a drift response is an *action*; warn-ness belongs to the orthogonal `severity ⊥ blocking` axes. Same conflation class as the impossible `severity: PASS` (§12.5) |
-| **V4** | `outputs.replay` | **`append_unsafe` stays in the enum, ⛔ banned for new steps** | same grandfathering mechanism as write-discipline classes D/H — an existing step must be able to declare its truth |
-| **V5** | `staleness.pending` | **dissolved by the §1.5 reshape** — `scope: <sql predicate> \| all \| none`; `source_changed` is not a scope, it is `trigger: source_validator \| content_hash` | the conflict existed because one name carried three axes |
-| **V6** | `guards.empty_source` | **typed form `<table> \| [<table>, …] \| none`** — *amended 2026-08-24: the array form was a schema-authoring generalization (multi-source ENRICHERs need it), surfaced by review and ratified rather than left as silent drift* | notation ruling; prose variant retired |
-| **V7** | `outputs.writes[].write_discipline` | **mechanic ⊥ guard ⊥ scope ⊥ retract — decoupled axes** *(ruled 2026-08-24)*: `class` = mechanic only; guardedness = `guard` (`none` requires `why`, grandfathered-only for new steps); `scope` a required field; D/H bans restated as predicate rules (`no_retraction`, `unscoped_set_based`, `unguarded_write`). **Enforcement, 2026-08-29:** `unguarded_write` was wired first (Fold B item 2, pilot 3); `no_retraction` closed the same way (`scripts/lib/step/validate.js assertNoRetraction`, `grandfathered.json`'s `rules[]` array — a predicate spanning `class`+`retract` has no single `path→value` pair, so it is grandfathered by RULE ID, not path) — `link_parcel_addresses`'s `insert_only_no_retraction` target (LPA-D1) is the one live grandfathered case. `unscoped_set_based` remains ⚠ **UNENFORCED** — no consumer yet, filed as a followup | resolves S1's menu-completeness BLOCKING gap — the §3f enum fused mechanic with guard, leaving 7 measured sites inexpressible |
-
-Notation-only duplicates (`identity.contract_version` · `inputs.expect_nonempty` · `outputs.retract` · `staleness.checkpoint`): **the schema's typed form is canonical** wherever prose and notation differ.
+**MOVED to `122a_step_optimization_appendix.md` ## Appendix §A21 — The six vocabulary-conflict rulings V1–V7 (moved from Spec 122 top-of-file rulings) — HISTORICAL, 2026-10-03 — 2026-10-03 (Spec 124 §4 R-I(4)).** Historical; Registry-truth P1-C8z. Adjudication record; step.schema.json encodes V1–V7 and is canonical (R2).
 
 ---
 
@@ -676,23 +655,11 @@ module.exports = pipeline.step(descriptor, compute);
 
 ### 2.1 Why this rather than Spec 120's runner
 
-Spec 120 proposed the same declaration and the same lifecycle, delivered by relocating all 27 steps into `scripts/steps/<slug>/` under a central runner. **122 changes only the delivery.** The design survives; see §8 for the claim-by-claim classification, which is generated.
-
-The case rests on one measured fact:
-
-> **The SDK boundary is already clean at 27/27.** `pipeline.run` · `withAdvisoryLock` · `emitSummary` · `emitMeta` · `ADVISORY_LOCK_ID` · `audit_table` — universal `[MEASURED 2026-08-23]`. **Every divergence lives *above* that boundary — in what scripts put *into* those calls, never in whether they call them.**
-
-A library already owns a lifecycle in this exact corpus, at full adoption. `pipeline.step()` extends that boundary upward to claim the layer where the divergence actually is. This is Template Method, and Jenkins' Declarative Pipeline + shared libraries, and Dagster's `@asset`, and Lambda Powertools' decorators — the conventional shape, not an invented one `[SOURCED]`. Spec 120 §1's build-vs-adopt finding is **unchanged and reaffirmed**: adopt the *pattern*, never the *dependency*.
+**MOVED to `122a_step_optimization_appendix.md` ## Appendix §A22 — Why this rather than Spec 120's runner (moved from Spec 122 §2.1) — HISTORICAL, 2026-10-03 — 2026-10-03 (Spec 124 §4 R-I(4)).** Historical; Registry-truth P1-C8z. Comparative rationale versus Spec 120's runner (M05 class).
 
 ### 2.2 What this buys that the runner did not
 
-| | Evidence |
-|---|---|
-| **Spec 120 §9.1's "blocking constraint" does not occur** | `pipeline-advisory-lock.infra.test.ts:24` (`LOCK_ID_REGISTRY`, documented at `:22`) records registry keys as manifest `file` paths; `:297` filters manifest files against the registry. No file moves ⇒ `:297` passes on step 1 and step 27 `[READ]`. Spec 121 §12.18a's *"② is the hard blocker"* R-stage entry criterion is **void** |
-| **Migrations 245–248 leave the critical path** | they land with the capability that needs them, not as a prerequisite block (§6.5) |
-| **The ~560-test blast radius mostly does not fire** | path-keyed assertions survive because paths do not change; only *content* assertions break (§7.4) |
-| **A runner defect no longer runs 64 times before anyone sees it** | conversion 1 exercises the library against real data on day one |
-| **Spec 120's own tree would have broken the logic-vars map** | `generate-logic-vars-docs.mjs:38` scans `[scripts, scripts/quality]` **non-recursively** `[READ]`, so `scripts/steps/<slug>/compute.js` would have silently emptied the consumer map for all 27 steps — the exact failure 120 §2 warns about, which its warning does not cover. Islands remove the hazard by construction |
+**MOVED to `122a_step_optimization_appendix.md` ## Appendix §A23 — What this buys that the runner did not (moved from Spec 122 §2.2) — HISTORICAL, 2026-10-03 — 2026-10-03 (Spec 124 §4 R-I(4)).** Historical; Registry-truth P1-C8z. Comparative rationale versus Spec 120's runner (M05 class).
 
 ### 2.3 What this costs — stated up front, not buried
 
