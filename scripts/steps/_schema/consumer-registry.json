@@ -56,6 +56,14 @@
       "source": "emits"
     },
     {
+      "consumer": "enrich_heritage",
+      "producer": "load_heritage",
+      "kind": "records_meta",
+      "key": "heritage_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "enrich_ravines",
       "producer": "load_ravines",
       "kind": "records_meta",
@@ -164,6 +172,22 @@
       "producer": "load_centreline",
       "kind": "records_meta",
       "key": "centreline_load.features_updated",
+      "value": "any",
+      "source": "counters"
+    },
+    {
+      "consumer": "load_heritage",
+      "producer": "load_heritage",
+      "kind": "records_meta",
+      "key": "heritage_load.heritage_districts.feature_count",
+      "value": "any",
+      "source": "counters"
+    },
+    {
+      "consumer": "load_heritage",
+      "producer": "load_heritage",
+      "kind": "records_meta",
+      "key": "heritage_load.heritage_register.feature_count",
       "value": "any",
       "source": "counters"
     },
