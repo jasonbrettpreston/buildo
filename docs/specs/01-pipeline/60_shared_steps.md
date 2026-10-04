@@ -73,6 +73,20 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 > first baseline, which also caught up 12,770 new + 77 corrected links accumulated during the outage. See
 > [pilot 7 assessment](../../reports/2026-08-30-pilot7-link-parcels-assessment.md) §16 and `defect-ledger.md`
 > `LP-D16` for the full measurement.
+>
+> **As-built addendum (WF3, LP-D17, 2026-10-03):** the LP-D16 fix made the `code_version` trigger able to fire,
+> but only on a run whose argv carries `--full` — and `scripts/run-chain.js` passes only the manifest's
+> `chain_args[chain]`, which `link_parcels` never had. The descriptor's `execution.invocation.sources.argv
+> ["--full"]` was therefore unreachable from any chain run; LP-D16's T3 passed because it read the descriptor's
+> argv, not the chain's. Fixed by GENERATING every converted step's manifest `chain_args` from
+> `execution.invocation` (`scripts/analysis/generate-chain-args.mjs`, `--check` in pre-commit, Spec 124 R-AZ);
+> the only manifest change is `link_parcels` gaining `chain_args: {"sources": ["--full"]}`, and T3/T3c now read
+> the manifest. No data remediation: run 1997 had already rebuilt the table under v1. Measured 2026-10-03, PRE
+> golden (committed 4cfce13f) vs POST `sources --full` golden: both `incremental:gate_unchanged`, `permit_parcels`
+> 239,939 rows, `permits` 254,082, all four invariants 0, compare identical after normalisation. Each ledger name
+> (`sources:link_parcels`, `permits:link_parcels`, standalone `link_parcels`) keeps its own `code_version`
+> baseline — filed in `review_followups.md`. See [pilot 7 assessment](../../reports/2026-08-30-pilot7-link-parcels-assessment.md)
+> §17 and `defect-ledger.md` `LP-D17`.
 
 ---
 

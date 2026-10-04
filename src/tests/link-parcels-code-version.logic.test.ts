@@ -19,6 +19,8 @@
 //   T2 — declared ⇔ emitted: every declared trigger emit_key is a key of buildLinkMeta.
 //   T3 — consumer side: a differing prior baseline + `--full` resolves mode full with
 //        reason `code_version_changed(v0-old->v1-knn-boundary-distance)`.
+//   T3b — permits chain argv never resolves full.   T3c — no prior run + sources chain argv ⇒ full.
+//   (WF3 2026-10-02: T3/T3c read the MANIFEST chain_args run-chain passes, not the descriptor argv.)
 //   T4 — Chesterton's fence: an ABSENT baseline is still NOT a change (unchanged).
 
 import { readFileSync } from 'node:fs';
@@ -62,6 +64,17 @@ const descriptor = JSON.parse(
 
 /** The `sources` chain argv — the chain whose invocation carries `--full` (descriptor-declared, never hand-typed). */
 const SOURCES_ARGV = descriptor.execution.invocation.sources.argv;
+
+/**
+ * What `scripts/run-chain.js` ACTUALLY passes the step in each chain: `manifest.scripts[slug].chain_args?.[chain]`
+ * (absent ⇒ []). WF3 2026-10-02: T3 used to read the DESCRIPTOR argv above and stayed green while the manifest
+ * carried no `--full` — a lock that reads the descriptor's argv proves the descriptor, not the chain.
+ */
+const manifest = JSON.parse(readFileSync(join(process.cwd(), 'scripts/manifest.json'), 'utf8')) as {
+  scripts: Record<string, { chain_args?: Record<string, string[]> }>;
+};
+const CHAIN_SOURCES_ARGV: string[] = manifest.scripts.link_parcels?.chain_args?.sources ?? [];
+const CHAIN_PERMITS_ARGV: string[] = manifest.scripts.link_parcels?.chain_args?.permits ?? [];
 
 /**
  * `selectMode` issues exactly one SQL query on this path: `detectInterruptedRetraction`
@@ -119,15 +132,15 @@ describe('link_parcels — code_version staleness baseline (WF3)', () => {
     }
   });
 
-  it('T3 — consumer side (GREEN both sides): prior v0-old + sources `--full` ⇒ mode full, reason code_version_changed(v0-old->v1-knn-boundary-distance)', async () => {
-    // GREEN both sides — pins the contract the fix feeds. `changed` ALONE never selects
+  it('T3 — consumer side (RED until manifest chain_args.sources carries --full): prior v0-old + sources `--full` ⇒ mode full, reason code_version_changed(v0-old->v1-knn-boundary-distance)', async () => {
+    // RED until the manifest carries the pin — pins the contract the fix feeds. `changed` ALONE never selects
     // full (Fold GC-11: full ⇔ forced ∨ (permitted ∧ changed)); `--full` is the sources
-    // chain argv the descriptor itself declares.
+    // argv run-chain passes in the sources chain (manifest chain_args — RED today: [] ⇒ incremental:no_full_arg).
     const result = await staleness.selectMode({
       descriptor,
       pool,
       prior: { code_version: 'v0-old' },
-      argv: SOURCES_ARGV,
+      argv: CHAIN_SOURCES_ARGV,
       env: {},
     });
     expect(result.changed, 'a PRESENT baseline that differs IS a change').toBe(true);
@@ -135,6 +148,34 @@ describe('link_parcels — code_version staleness baseline (WF3)', () => {
     expect(result.reason).toContain(
       `code_version_changed(v0-old->${descriptor.staleness.logic_version})`,
     );
+  });
+
+  it('T3b — permits chain (GREEN both sides): prior v0-old + permits chain argv ⇒ NEVER full (the permits chain carries no --full)', async () => {
+    const result = await staleness.selectMode({
+      descriptor,
+      pool,
+      prior: { code_version: 'v0-old' },
+      argv: CHAIN_PERMITS_ARGV,
+      env: {},
+    });
+    expect(result.changed, 'the differing baseline is still measured as a change').toBe(true);
+    expect(result.mode).toBe('incremental');
+    expect(result.reason).toBe('incremental:no_full_arg');
+  });
+
+  it('T3c — fresh DB (RED until manifest chain_args.sources carries --full): NO prior run + sources chain argv ⇒ full (gate:no_prior_run)', async () => {
+    // Plan consequence (b): a new target DB has no prior run row at all ⇒ changed (fail-safe) ⇒ the first
+    // sources run is FULL — harmless on an empty permit_parcels. RED today: chain argv [] ⇒ incremental:no_full_arg.
+    const result = await staleness.selectMode({
+      descriptor,
+      pool,
+      prior: null,
+      argv: CHAIN_SOURCES_ARGV,
+      env: {},
+    });
+    expect(result.changed).toBe(true);
+    expect(result.mode).toBe('full');
+    expect(result.reason).toBe('gate:no_prior_run');
   });
 
   it('T4 — fence pin (GREEN both sides): prior {} ⇒ NOT changed on the code_version signal (an ABSENT baseline is not a change)', async () => {

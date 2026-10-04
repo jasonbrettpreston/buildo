@@ -1,0 +1,47 @@
+{
+  "manifest": "scratch copy of scripts/manifest.json after: node scripts/analysis/generate-chain-args.mjs --write --root=<copy> (only diff: link_parcels chain_args)",
+  "cases": {
+    "live_manifest": {
+      "sources_argv": [],
+      "T3": [
+        "incremental",
+        "incremental:no_full_arg"
+      ],
+      "T3b": [
+        "incremental",
+        "incremental:no_full_arg"
+      ],
+      "T3c": [
+        "incremental",
+        "incremental:no_full_arg"
+      ],
+      "T4": [
+        "incremental",
+        false
+      ],
+      "STA3_link_parcels": "THROWS: [generateReset guard 2/force_full] reset refused: manifest.j"
+    },
+    "regenerated_copy": {
+      "sources_argv": [
+        "--full"
+      ],
+      "T3": [
+        "full",
+        "gate:code_version_changed(v0-old->v1-knn-boundary-distance)"
+      ],
+      "T3b": [
+        "incremental",
+        "incremental:no_full_arg"
+      ],
+      "T3c": [
+        "full",
+        "gate:no_prior_run"
+      ],
+      "T4": [
+        "incremental",
+        false
+      ],
+      "STA3_link_parcels": "no_throw"
+    }
+  }
+}

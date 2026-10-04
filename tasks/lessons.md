@@ -240,3 +240,7 @@
 - `chain-deep-scrapes.yml` extracted `PG_PASSWORD` from `SUPABASE_DATABASE_URL` into `$GITHUB_ENV` and masked it in the NEXT step. The runner prints a step's `env:` block before running it, so the live password appeared in plain text once per run — and a 2026-07-30 commit saved 8 raw run logs into `docs/reports/archive/`, publishing it to the repo.
 - Emit `::add-mask::` inside the deriving step, before the `$GITHUB_ENV` write (locked by `deep-scrapes-workflow.infra.test.ts`).
 - Never commit downloaded CI/run logs without a secret scan against the real `.env` values (counts only, never print the value).
+
+## 2026-10-03 — A lock that reads the descriptor's argv proves the descriptor, not the chain (LP-D17)
+- `link_parcels` declared `execution.invocation.sources.argv ["--full"]` at conversion (`b37087f3`), but `scripts/manifest.json` never carried `chain_args`, and `run-chain.js` passes only `chain_args[chain]` — so the FULL relink was unreachable from any chain run for five weeks. LP-D16's T3 built its argv from the descriptor and stayed green the whole time. A test of a runtime path must read the input the runtime reads (here the manifest), not the declaration that is supposed to match it.
+- Two hand-kept copies of one fact drift; R-L (`link_wsib`) kept them in step by convention only. Fix the class: generate one from the other and gate the drift in pre-commit — `generate-chain-args.mjs --check` (Spec 124 R-AZ), the same shape as R-BE's generated Target Files. WF3 chain_args, 2026-10-03.

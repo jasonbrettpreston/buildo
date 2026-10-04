@@ -1909,6 +1909,47 @@ descriptor's own `staleness.trigger[].emit_key`, never by reading the descriptor
 
 ---
 
+## §17. LP-D17 — the sources chain never passed the declared `--full` (WF3 chain_args, 2026-10-03)
+
+**The defect.** The descriptor declares `execution.invocation.sources.argv = ["--full"]` (since conversion,
+`b37087f3`, 2026-08-30), but `scripts/manifest.json`'s `link_parcels` entry never carried `chain_args`, and
+`scripts/run-chain.js` passes only `chain_args[chain]`. So no chain run ever received `--full`, and the
+`code_version` trigger LP-D16 repaired could not force a FULL from a chain. §0.3 below recorded "no
+`chain_args`" for both chains at planning time. LP-D16's T3 stayed green because it built its argv from the
+descriptor, not from what the chain passes — a lock that reads the descriptor's argv proves the descriptor,
+not the chain.
+
+**THE FIX (class, not instance).** `scripts/analysis/generate-chain-args.mjs` derives every converted step's
+manifest `chain_args` from `execution.invocation`; `--check` runs in pre-commit (Spec 124 R-AZ). `--write`
+changed exactly one manifest entry: `link_parcels` gains `"chain_args": { "sources": ["--full"] }`. T3/T3c in
+`src/tests/link-parcels-code-version.logic.test.ts` now read `manifest.scripts.link_parcels.chain_args.sources`
+(RED before the manifest change, GREEN after); T3b pins that the permits chain never resolves FULL. The
+`step-library.logic.test.ts` STA-3 case proves `assertForceFullAuthorized` now accepts a `force_full` reset for
+`link_parcels` (RED before). RED evidence: `docs/reports/red-evidence/chain-args/`.
+
+**Data.** No remediation owed — run 1997 (2026-09-26, `LINK_PARCELS_FORCE_FULL=1`) already rebuilt the table
+under `v1-knn-boundary-distance`. G8, measured 2026-10-03:
+
+| | PRE (`pre/sources-full.json`, committed 4cfce13f) | POST (`post/sources-full.json`) |
+|---|---|---|
+| args | `["--full"]` | `["--full"]` |
+| mode gate | `incremental:gate_unchanged` | `incremental:gate_unchanged` |
+| `permit_parcels` rows | 239,939 | 239,939 |
+| `permits` rows | 254,082 | 254,082 |
+| invariants (4) | all 0 | all 0 |
+| verdict | PASS | PASS |
+
+`--compare` POST vs PRE: identical after normalisation. Both captures pass `--full` directly to the step, so
+they prove the step's behaviour under that argv, not run-chain's injection; the injection is covered by the
+generator check plus T3 reading the manifest (enforced, not measured on a chain run).
+
+### G-verdict, LP-D17
+
+**CLOSED.** `LP-D17` closed in `defect-ledger.md`. Lesson routed to `tasks/lessons.md`. Per-chain baseline split
+(each ledger name keeps its own `code_version`) filed in `review_followups.md`, cross-ref `EC-D10`.
+
+---
+
 ## §R Reflection (FULL — promoted at commit 9, per Spec 123 §7/Spec 124 R-F)
 
 > Spec 123 §7's own nine-commit procedure scopes `§R Reflection` to "after cutover" (commit 9) — this is that
