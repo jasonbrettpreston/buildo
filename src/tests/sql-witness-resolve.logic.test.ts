@@ -552,3 +552,116 @@ describe('sql-witness resolver — real pipeline SQL shapes (orchestrator probe 
     expect(r.writes.parcels).toEqual(expect.arrayContaining(declared));
   });
 });
+
+describe('WF3 resolver scope + closed statement kinds (outer-scope binding, loud refusal)', () => {
+  const CAT2: Record<string, string[]> = { a: ['id', 'x'], b: ['id', 'y'], c: ['z'] };
+
+  it('R-A1 RED: outer-scope ambiguity errors', () => {
+    const r = R.resolveStatement('SELECT 1 FROM a, b WHERE EXISTS (SELECT 1 FROM c WHERE id = 1)', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:column:id');
+    expect(r.reads.c ?? []).not.toContain('id');
+  });
+
+  it('R-A2 RED: outer column binds to the outer table', () => {
+    const r = R.resolveStatement('SELECT 1 FROM a WHERE EXISTS (SELECT 1 FROM c WHERE id = 1)', CAT2);
+    expect(r.error).toBeNull();
+    expect(r.reads.a).toEqual(['id']);
+    expect(r.reads.c).toEqual([]);
+  });
+
+  it('R-A3 RED: outer column binds to the outer UPDATE target', () => {
+    const r = R.resolveStatement('UPDATE a SET x = 1 WHERE EXISTS (SELECT 1 FROM c WHERE id = 2)', CAT2);
+    expect(r.reads.a).toEqual(['id']);
+    expect(r.reads.c).toEqual([]);
+    expect(r.writes.a).toEqual(['x']);
+  });
+
+  it('R-A4 RED: subquery splits reads across outer and inner tables', () => {
+    const r = R.resolveStatement(
+      'SELECT 1 FROM a JOIN b ON a.id = b.id WHERE x IN (SELECT z FROM c WHERE y = 1)',
+      CAT2,
+    );
+    expect(r.reads.b).toEqual(['id', 'y']);
+    expect(r.reads.c).toEqual(['z']);
+  });
+
+  it('G-A1 GREEN control: innermost ambiguity is unchanged', () => {
+    const r = R.resolveStatement('SELECT 1 FROM a, b WHERE id = 1', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:column:id');
+  });
+
+  it('G-A2 GREEN control: inner table wins when it has the column', () => {
+    const r = R.resolveStatement('SELECT 1 FROM a WHERE EXISTS (SELECT 1 FROM b WHERE id = 1)', CAT2);
+    expect(r.reads.b).toEqual(['id']);
+  });
+
+  it('G-A3 GREEN control: uncatalogued lone relation `d` binds as a fence', () => {
+    const r = R.resolveStatement('SELECT 1 FROM a WHERE EXISTS (SELECT 1 FROM d WHERE id = 1)', CAT2);
+    expect(r.reads.d).toEqual(['id']);
+    expect(r.error).toBeNull();
+  });
+
+  it('G-A4 GREEN control: stale catalog (column `q` not declared) still binds', () => {
+    const r = R.resolveStatement('SELECT q FROM c', CAT2);
+    expect(r.reads.c).toEqual(['q']);
+    expect(r.error).toBeNull();
+  });
+
+  it('R-B1 RED: EXPLAIN refuses by name', () => {
+    const r = R.resolveStatement('EXPLAIN SELECT id FROM a', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:ExplainStmt');
+  });
+
+  it('R-B2 RED: EXPLAIN ANALYZE refuses by name', () => {
+    const r = R.resolveStatement('EXPLAIN ANALYZE UPDATE a SET x = 1', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:ExplainStmt');
+  });
+
+  it('R-B3 RED: DO block refuses by name', () => {
+    const r = R.resolveStatement('DO $$ BEGIN UPDATE a SET x = 1; END $$', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:DoStmt');
+  });
+
+  it('R-B4 RED: CALL refuses by name', () => {
+    const r = R.resolveStatement('CALL refresh_all(1)', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:CallStmt');
+  });
+
+  it('R-B5 RED: CALL refuses by name but still resolves preceding reads', () => {
+    const r = R.resolveStatement('SELECT id FROM a; CALL refresh_all(1)', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:CallStmt');
+    expect(r.reads.a).toEqual(['id']);
+  });
+
+  it('R-B6 RED: TRUNCATE refuses by name', () => {
+    const r = R.resolveStatement('TRUNCATE a', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:TruncateStmt');
+  });
+
+  it('R-B7 RED: unsupported statement first refuses by name but still resolves later reads', () => {
+    const r = R.resolveStatement('CALL refresh_all(1); SELECT id FROM a', CAT2);
+    expect(r.error).toBe('FAIL:INPUT:unsupported:CallStmt');
+    expect(r.reads.a).toEqual(['id']);
+  });
+
+  it('R-C1 RED: MERGE refuses by name without a TypeError/relname leak', () => {
+    const r = R.resolveStatement(
+      'MERGE INTO a USING b ON a.id = b.id WHEN MATCHED THEN UPDATE SET x = b.y',
+      CAT2,
+    );
+    expect(r.error).toBe('FAIL:INPUT:unsupported:MergeStmt');
+    expect(String(r.error)).not.toMatch(/TypeError|relname/);
+  });
+
+  it('G-B1 GREEN control: CREATE INDEX + ANALYZE is a utility statement', () => {
+    const r = R.resolveStatement('CREATE INDEX comp_cand_gix ON comp_cand USING gist (geom); ANALYZE comp_cand;', CAT2);
+    expect(r.kind).toBe('utility');
+    expect(r.error).toBeNull();
+  });
+
+  it('G-B2 RED: REINDEX (schema-permitted maintenance op, plausibility.js MAINTENANCE_SQL) is a utility statement', () => {
+    const r = R.resolveStatement('REINDEX TABLE parcels', CAT2);
+    expect(r.kind).toBe('utility');
+    expect(r.error).toBeNull();
+  });
+});
