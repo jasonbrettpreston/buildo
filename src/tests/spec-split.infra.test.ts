@@ -219,10 +219,10 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     expect(run.stderr).toContain('arm(vi) UNDECLARED MOVE — 124a heading');
   });
 
-  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
+  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M17) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; to_spec: string; content_sha256: string | null }[] };
     const into124a = manifest.moves.filter((m) => m.to_spec === '124a');
-    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09']);
+    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17']);
     for (const m of into124a) expect(m.content_sha256, `${m.id} must carry the hash --refresh recorded`).toMatch(/^[0-9a-f]{64}$/);
 
     const green = makeFixtureTree();
