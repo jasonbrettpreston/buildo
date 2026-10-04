@@ -88,6 +88,7 @@
         "assert_schema",
         "compute_centroids",
         "compute_parcel_cost_estimates",
+        "enrich_centreline",
         "enrich_heritage",
         "enrich_ravines",
         "geocode_permits",
