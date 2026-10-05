@@ -632,7 +632,7 @@ Every category declares its possible responses; the suite asserts each has a tes
 
 ### 8.3 Fixtures
 
-Build on `setup-testcontainer.ts` (`postgis/postgis:16-3.4-alpine`, production `migrate.js` for parity, `BUILDO_TEST_DB=1 npm run test:db`, 88 existing examples) `[READ]`.
+Build on `setup-testcontainer.ts` (the target image `docs/specs/_contracts.json` `db_target.test_image`, `public.ecr.aws/supabase/postgres:17.6.1.167` since the WF3 PostGIS pin 2026-10-03, ~~`postgis/postgis:16-3.4-alpine`~~; production `migrate.js` for parity, `BUILDO_TEST_DB=1 npm run test:db`, 88 existing examples) `[READ]`.
 
 ⚠️ **Correction — do NOT use the transaction-rollback idiom here.** An earlier draft of this spec recommended it, copying the house pattern from `vocab-coverage.db.test.ts`. **It is wrong for this system:** the runner owns `COMMIT`/`ROLLBACK`, and tiers 1–2 exist to test crash-mid-transaction behaviour. A test-owned outer transaction breaks precisely what we are verifying.
 

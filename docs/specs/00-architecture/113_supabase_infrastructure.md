@@ -260,7 +260,7 @@ without re-opening this decision.
 
 **Version pinning:** the PostGIS/GEOS version is **pinned** and MUST be recorded via
 `postgis_full_version()` on **both sides** of any data load (source and target) — see §13
-(GEOS-version geometry drift) for why a version mismatch is a correctness risk, not cosmetic.
+(GEOS-version geometry drift) for why a version mismatch is a correctness risk, not cosmetic. **The DB-test engine is pinned to the same target in `docs/specs/_contracts.json` `db_target`** (`pg_major` 17, `postgis_major_minor` "3.3", `test_image` `public.ecr.aws/supabase/postgres:17.6.1.167`), which is the single source the testcontainer harness, the CI service container and the T-PIN-1/T-PIN-2 locks read (WF3 PostGIS pin, 2026-10-03). Measured 2026-10-03 (evidence class: measured): the cloud project and the local stack both report PostgreSQL 17.6, POSTGIS="3.3.7 a0c7967", GEOS="3.14.1-CAPI-1.20.5", PROJ 9.7.1, identical to the pinned image.
 
 **`search_path` smoke query** (run as part of Phase 0.3's full 220-migration replay, not a
 separate step):
@@ -556,11 +556,19 @@ not a background inconsistency to tolerate.
 - The 0.5 data load into local Supabase is schema-plus-data at that moment, but Docker keeps
   mutating afterward (chains run against it during 0.6–0.7) — so the data load is **re-run
   fresh from Docker immediately before cutover** (Phase 0.8), not assumed still current.
-- CI **stays on ephemeral `postgis/postgis:16-3.4-alpine` containers** throughout and after this
+- ~~CI **stays on ephemeral `postgis/postgis:16-3.4-alpine` containers** throughout and after this
   window. These are **schema-fidelity tests** (do migrations apply, do constraints hold) — they
   are explicitly **not** Supabase-integration tests, and are not expected to catch
-  Supabase-specific behavior. `ssl-config.js`'s local no-TLS mode covers them, plus the one
-  dedicated TLS-required container test (§4.4). *(Still true post-closure.)*
+  Supabase-specific behavior.~~ **REVERSED 2026-10-03 (WF3 PostGIS pin):** the CI test DB and the
+  `BUILDO_TEST_DB=1` testcontainer are now **pinned to the cloud engine image**,
+  `public.ecr.aws/supabase/postgres:17.6.1.167` (`docs/specs/_contracts.json` `db_target`).
+  Measured 2026-10-03 (evidence class: measured): the cloud project and the local stack both
+  report PostgreSQL 17.6, POSTGIS="3.3.7 a0c7967", GEOS="3.14.1-CAPI-1.20.5", PROJ 9.7.1, the same
+  as the image. These are now **engine-fidelity tests**: the same PG major, PostGIS, GEOS, ICU
+  collation and non-superuser `postgres` role as the target, so no test can pass on behaviour the
+  target never exhibits (the 0z1-T7 PostGIS 3.4-vs-3.3 split). They still do not exercise the
+  Supabase services (GoTrue, PostgREST, Storage). `ssl-config.js`'s local no-TLS mode covers them,
+  plus the one dedicated TLS-required container test (§4.4). *(Still true post-closure.)*
 
 **Cutover moment (EXECUTED 2026-07-18 EOD):** Phase 0.8 PASS (full G10 data-integrity gate
 suite green against the freshly re-loaded local Supabase instance) flipped the canonical dev

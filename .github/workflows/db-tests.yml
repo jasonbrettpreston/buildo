@@ -20,7 +20,7 @@ on:
 jobs:
   db-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     # ⚠️ The database is named `postgres`, in lockstep with
     # `src/tests/db/setup-testcontainer.ts`'s TEST_DATABASE_NAME (LW-D16, WF3
@@ -31,25 +31,25 @@ jobs:
     # `src/tests/db-test-harness-target.infra.test.ts`.
     services:
       postgres:
-        image: postgis/postgis:16-3.4-alpine
+        image: public.ecr.aws/supabase/postgres:17.6.1.167
         env:
-          POSTGRES_USER: buildo
-          POSTGRES_PASSWORD: buildo
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U buildo -d postgres"
+          --health-cmd "psql -h 127.0.0.1 -U postgres -d postgres -c 'select 1'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 30
+          --health-start-period 30s
 
     env:
-      DATABASE_URL: postgres://buildo:buildo@localhost:5432/postgres
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
       PG_HOST: localhost
       PG_PORT: 5432
-      PG_USER: buildo
-      PG_PASSWORD: buildo
+      PG_USER: postgres
+      PG_PASSWORD: postgres
       PG_DATABASE: postgres
 
     steps:
@@ -65,9 +65,9 @@ jobs:
 
       - name: Wait for Postgres
         run: |
-          for i in {1..30}; do
-            pg_isready -h localhost -p 5432 -U buildo && break
-            sleep 1
+          for i in {1..60}; do
+            PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'select 1' >/dev/null 2>&1 && break
+            sleep 2
           done
 
       - name: Run DB integration tests

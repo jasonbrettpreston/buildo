@@ -107,5 +107,12 @@
     "$comment_bands": "P16 16F [D7 — GLOBAL-band resolution, panel-ratified 2026-07-10]: mean_warn/mean_fail govern the CORPUS-WIDE mean of active trades per permit-with-trades in classify-permits.js audit rows (a flat per-archetype FAIL>13 would trip on the honest 16-trade build complements BY DESIGN; the whole-corpus 16B mean 10.6 passes). Consumers: scripts/classify-permits.js (INFERENCE_MEAN_WARN / INFERENCE_MEAN_FAIL).",
     "mean_warn": 11,
     "mean_fail": 13
+  },
+  "db_target": {
+    "$comment": "WF3 PostGIS pin (2026-10-03) — the ONE declared database engine the DB-tier tests must match. Consumers: src/tests/db/setup-testcontainer.ts (reads test_image from this file via fs at runtime — no literal), .github/workflows/db-tests.yml services.postgres.image (literal), src/tests/db/db-target-version.db.test.ts (T-PIN-2, live container), scripts/ai-env-check.mjs (dev-DB drift WARN); pinned statically by src/tests/db-test-harness-target.infra.test.ts (T-PIN-1). pg_major must equal supabase/config.toml [db] major_version. test_image is an exact tag, never a floating one.",
+    "pg_major": 17,
+    "postgis_major_minor": "3.3",
+    "test_image": "public.ecr.aws/supabase/postgres:17.6.1.167",
+    "$provenance": "MEASURED 2026-10-03 — local stack supabase_db_Buildo (image public.ecr.aws/supabase/postgres:17.6.1.167): PostgreSQL 17.6, POSTGIS=\"3.3.7 a0c7967\", GEOS=\"3.14.1-CAPI-1.20.5\", PROJ 9.7.1. Cloud project (read-only SELECT, BEGIN READ ONLY ... ROLLBACK, 2026-10-03): PostgreSQL 17.6, POSTGIS=\"3.3.7 a0c7967\", GEOS=\"3.14.1-CAPI-1.20.5\", PROJ 9.7.1 — identical."
   }
 }

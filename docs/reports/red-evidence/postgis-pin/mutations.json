@@ -1,0 +1,14 @@
+{
+  "wf": "WF3 PostGIS pin",
+  "date": "2026-10-03",
+  "runner": "npx vitest run src/tests/db-test-harness-target.infra.test.ts src/tests/test-db-setup-guard.logic.test.ts (VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1, all DB env unset)",
+  "baseline_failures_pending_ci_yml": ["T-PIN-1(a)", "T-PIN-1(a2)", "T-PIN-1(d) offender .github/workflows/db-tests.yml:34"],
+  "mutations": [
+    {"id": "M1", "mutation": "drop DATABASE_URL from migrationChildEnv", "new_failures": ["migrationChildEnv overrides an exported dev DATABASE_URL (the F14 hijack)"]},
+    {"id": "M2", "mutation": "GenericContainer('postgis/postgis:16-3.4-alpine') literal restored", "new_failures": ["T-PIN-1(b)", "T-PIN-1(d) (adds harness offender)"]},
+    {"id": "M3", "mutation": "auth seed never skips", "new_failures": ["a complete baseline is SKIPPED with no other SQL issued"]},
+    {"id": "M4", "mutation": "auth seed skips when EITHER object exists (&& -> ||)", "new_failures": ["a partial or absent baseline is SEEDED"]},
+    {"id": "M5", "mutation": "runMigrations env back to raw process.env", "new_failures": ["T-PIN-1(f)"]}
+  ],
+  "restored": "harness byte-identical to pre-mutation copy (cmp)"
+}

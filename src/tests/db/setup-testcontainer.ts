@@ -1,14 +1,16 @@
 // 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.10 Real-DB Integration Tests
 //
 // Dual-mode test DB harness:
-//   - CI: GitHub Actions provides a `postgres:16` + PostGIS service container
-//     and sets DATABASE_URL (+ CI=true). We connect to that and run migrations.
+//   - CI: GitHub Actions provides a Postgres service container pinned to
+//     `_contracts.json db_target.test_image` — the Supabase Postgres image the
+//     authoritative target runs (PG17 / PostGIS 3.3 / GEOS 3.14) — and sets
+//     DATABASE_URL (+ CI=true). We connect to that and run migrations.
 //     An exported DATABASE_URL is migrated ONLY when decideTestDbTarget() rules
 //     it disposable (loopback + CI=true, or BUILDO_TEST_DB_EXTERNAL=1); the local
 //     dev stack (port 54322) is always refused.
-//   - Local opt-in: developer sets BUILDO_TEST_DB=1, we spin up a
-//     `postgis/postgis:16-3.4` container via testcontainers, run migrations
-//     against it, and tear it down at the end of the suite.
+//   - Local opt-in: developer sets BUILDO_TEST_DB=1, we spin up a container of
+//     the SAME image (`readDbTarget().test_image`) via testcontainers, run
+//     migrations against it, and tear it down at the end of the suite.
 //   - Default (nothing set): the helper returns null and every db.test.ts
 //     file early-skips its suite. CI will fail if a db.test.ts isn't gated.
 //
@@ -27,7 +29,9 @@
 // fresh `pg.Pool` per file (they tear down their own pool).
 
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
 import type { StartedTestContainer } from 'testcontainers';
 
@@ -71,6 +75,66 @@ const { redactConnectionString } = createRequire(import.meta.url)('../../../scri
  * either side drifts.
  */
 export const TEST_DATABASE_NAME = 'postgres';
+
+/**
+ * The role the db-test harness connects as. `postgres` on the target image
+ * (db_target) is a NON-SUPERUSER, exactly like the production target, so a test
+ * runs under production's grant/RLS reality instead of a superuser's blanket
+ * access. Never `supabase_admin` — it bypasses the grant checks that are half
+ * the point of the DB tier. `buildo` (a prior hardcode) is not a role on the
+ * image at all.
+ */
+export const TEST_DB_USER = 'postgres';
+
+/**
+ * The throwaway password the container is started with (`POSTGRES_PASSWORD`, which
+ * the target image applies to the `postgres` role). Local testcontainer only — the
+ * container is ephemeral; CI sets the same value in `.github/workflows/db-tests.yml`.
+ */
+const TEST_DB_PASSWORD = 'postgres';
+
+/** The declared DB engine the DB-tier tests must match (see `_contracts.json#db_target`). */
+export interface DbTarget {
+  pg_major: number;
+  postgis_major_minor: string;
+  test_image: string;
+}
+
+/**
+ * The single source of truth for the DB-test engine: `docs/specs/_contracts.json
+ * #db_target` (WF3 PostGIS pin 2026-10-03). The harness provisions the image the
+ * authoritative target runs, so DB-tier behaviour is graded against the engine
+ * that will execute it. Read with fs — NOT a JSON import — because this module
+ * runs as vitest globalSetup, where an import assertion/attribute would couple
+ * the whole db suite to the bundler (panel finding 6). Throws (never falls back)
+ * when the contract is missing or malformed: silently testing a different engine
+ * is the defect this pins.
+ */
+export function readDbTarget(): DbTarget {
+  const path = fileURLToPath(new URL('../../../docs/specs/_contracts.json', import.meta.url));
+  const parsed = JSON.parse(fs.readFileSync(path, 'utf8')) as {
+    db_target?: Partial<DbTarget>;
+  };
+  const target = parsed.db_target;
+  const ok =
+    target != null &&
+    typeof target.pg_major === 'number' &&
+    typeof target.postgis_major_minor === 'string' &&
+    target.postgis_major_minor !== '' &&
+    typeof target.test_image === 'string' &&
+    target.test_image !== '';
+  if (!ok) {
+    throw new Error(
+      '[db-test setup] docs/specs/_contracts.json db_target is missing or malformed — ' +
+        'expected { pg_major: number, postgis_major_minor: string, test_image: string }',
+    );
+  }
+  return {
+    pg_major: target.pg_major as number,
+    postgis_major_minor: target.postgis_major_minor as string,
+    test_image: target.test_image as string,
+  };
+}
 
 let startedContainer: StartedTestContainer | null = null;
 
@@ -169,19 +233,25 @@ export async function setup(): Promise<() => Promise<void>> {
 
   // Lazy-import testcontainers so the dependency is only loaded when needed
   // (avoids slowing down the normal mocked-test suite by ~1s of imports).
-  const { GenericContainer } = await import('testcontainers');
-  startedContainer = await new GenericContainer('postgis/postgis:16-3.4-alpine')
+  const { GenericContainer, Wait } = await import('testcontainers');
+  startedContainer = await new GenericContainer(readDbTarget().test_image)
+    // Do NOT set POSTGRES_USER: the image's default init role is `supabase_admin`
+    // (a superuser), and the harness deliberately connects as the non-superuser
+    // `postgres` — the role the image accepts POSTGRES_PASSWORD for.
     .withEnvironment({
-      POSTGRES_USER: 'buildo',
-      POSTGRES_PASSWORD: 'buildo',
+      POSTGRES_PASSWORD: TEST_DB_PASSWORD,
       POSTGRES_DB: TEST_DATABASE_NAME,
     })
     .withExposedPorts(5432)
+    // The image's init runs a temporary server, then RESTARTS it, so "ready to accept
+    // connections" is logged twice; only the second one is the server the suite uses.
+    .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/, 2))
+    .withStartupTimeout(180_000)
     .start();
 
   const host = startedContainer.getHost();
   const port = startedContainer.getMappedPort(5432);
-  const url = `postgres://buildo:buildo@${host}:${port}/${TEST_DATABASE_NAME}`;
+  const url = `postgres://${TEST_DB_USER}:${TEST_DB_PASSWORD}@${host}:${port}/${TEST_DATABASE_NAME}`;
   process.env.DATABASE_URL = url;
   await runMigrations(url);
 
@@ -194,7 +264,7 @@ export async function setup(): Promise<() => Promise<void>> {
 }
 
 // Minimal Supabase baseline the migration set legitimately depends on but a
-// bare postgis/postgis image does not provide. On the real target (Supabase
+// GoTrue-less image (e.g. a bare PostGIS image) does not provide. On the real target (Supabase
 // local stack + cloud) GoTrue always creates the `auth` schema, `auth.users`,
 // `auth.uid()`, and the `anon`/`authenticated`/`service_role` roles;
 // migrations 226/228/229/230/231/233/234/235 reference them (FK to auth.users,
@@ -203,11 +273,19 @@ export async function setup(): Promise<() => Promise<void>> {
 // aborts globalSetup (first at mig 226 `schema "auth" does not exist`, then at
 // mig 233 `role "anon" does not exist`) and the ENTIRE db-test suite fails
 // before a single test runs. This is the CI image's counterpart to PostGIS
-// being pre-baked: a foundational baseline the real target always has. The
-// OPTIONAL Supabase extensions (pg_cron/pg_net/vault) are self-guarded inside
-// their own migrations (224/232/233/234) and correctly skip on this image —
-// only the auth schema + roles are foundational and (partly) unguarded.
+// being pre-baked: a foundational baseline the real target always has.
 // Kept to exactly the referenced surface: auth.users(id), auth.uid(), 3 roles.
+//
+// CONDITIONAL since the WF3 PostGIS pin (2026-10-03, panel finding 1): the test
+// image is now the Supabase target image (`_contracts.json db_target`), which
+// already ships every object below, and the harness connects as the target's
+// non-superuser `postgres`, which can neither create in schema `auth` (42501
+// `permission denied for schema auth`) nor replace `auth.uid()` (owner
+// `supabase_auth_admin`). So the seed runs ONLY when `to_regclass('auth.users')`
+// or `to_regprocedure('auth.uid()')` is missing — kept, not deleted, for any
+// GoTrue-less image (review_followups.md:2942, offboarding-sweep.db.test.ts:17-31).
+// On the target image pg_cron/pg_net/vault also exist, so the self-guarded
+// migrations 224/232/233/234 run for real instead of skipping.
 const SUPABASE_AUTH_BASELINE_SQL = `
   DO $roles$
   BEGIN
@@ -232,6 +310,28 @@ const SUPABASE_AUTH_BASELINE_SQL = `
     AS $fn$ SELECT (NULLIF(current_setting('request.jwt.claims', true), '')::json ->> 'sub')::uuid $fn$;
 `;
 
+/** Probe for the two auth objects the seed exists to provide (both columns are NULL when absent). */
+export const AUTH_BASELINE_PROBE_SQL =
+  "SELECT to_regclass('auth.users')::text AS users, to_regprocedure('auth.uid()')::text AS uid";
+
+/** The minimal query surface `applyAuthBaselineIfMissing` needs — a pg Pool/Client fits. */
+export type SqlQuery = (sql: string) => Promise<{ rows: Array<Record<string, unknown>> }>;
+
+/**
+ * Seed the Supabase auth baseline ONLY when it is missing (panel finding 1).
+ * Both objects present → 'skipped', and no other statement is issued (on the
+ * target image the seed would throw 42501 as `postgres`). Either missing →
+ * the seed runs → 'seeded'. Pure over `query`, so both directions are locked
+ * DB-free in `src/tests/test-db-setup-guard.logic.test.ts`.
+ */
+export async function applyAuthBaselineIfMissing(query: SqlQuery): Promise<'skipped' | 'seeded'> {
+  const { rows } = await query(AUTH_BASELINE_PROBE_SQL);
+  const row = rows[0] ?? {};
+  if (row.users != null && row.uid != null) return 'skipped';
+  await query(SUPABASE_AUTH_BASELINE_SQL);
+  return 'seeded';
+}
+
 async function seedSupabaseAuthBaseline(databaseUrl: string): Promise<void> {
   // The container's port opens before Postgres finishes initdb, so a query
   // fired at that instant hits FATAL 57P03 "the database system is starting up"
@@ -244,7 +344,7 @@ async function seedSupabaseAuthBaseline(databaseUrl: string): Promise<void> {
     // eslint-disable-next-line no-restricted-syntax -- test harness owns its own pool (see getTestPool)
     const pool = new Pool({ connectionString: databaseUrl });
     try {
-      await pool.query(SUPABASE_AUTH_BASELINE_SQL);
+      await applyAuthBaselineIfMissing((sql) => pool.query(sql));
       await pool.end();
       return;
     } catch (err) {
@@ -261,23 +361,38 @@ async function seedSupabaseAuthBaseline(databaseUrl: string): Promise<void> {
   }
 }
 
+/**
+ * The env handed to the `scripts/migrate.js` child. DATABASE_URL is set
+ * EXPLICITLY (panel finding 2): migrate.js resolves DATABASE_URL before PG_*,
+ * so a stray exported DATABASE_URL (e.g. the dev stack's, via `.env`) would
+ * otherwise win over the PG_* below — the plan-panel spike migrated 54322 that
+ * way (F14). PG_* are kept for any reader of the discrete vars.
+ */
+export function migrationChildEnv(
+  databaseUrl: string,
+  baseEnv: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const url = new URL(databaseUrl);
+  return {
+    ...baseEnv,
+    DATABASE_URL: databaseUrl,
+    PG_HOST: url.hostname,
+    PG_PORT: url.port,
+    PG_USER: url.username,
+    PG_PASSWORD: url.password,
+    PG_DATABASE: url.pathname.slice(1),
+  };
+}
+
 async function runMigrations(databaseUrl: string): Promise<void> {
   // Provision the Supabase auth baseline BEFORE migrate.js — several migrations
   // FK to auth.users / call auth.uid() and would otherwise hard-fail here.
+  // A no-op on the target image, where it already exists.
   await seedSupabaseAuthBaseline(databaseUrl);
   // Use the existing scripts/migrate.js runner for parity with production.
-  // It reads PG_* env vars; we translate from DATABASE_URL.
-  const url = new URL(databaseUrl);
   execSync('node scripts/migrate.js', {
     stdio: 'inherit',
-    env: {
-      ...process.env,
-      PG_HOST: url.hostname,
-      PG_PORT: url.port,
-      PG_USER: url.username,
-      PG_PASSWORD: url.password,
-      PG_DATABASE: url.pathname.slice(1),
-    },
+    env: migrationChildEnv(databaseUrl, process.env) as NodeJS.ProcessEnv,
   });
 }
 
