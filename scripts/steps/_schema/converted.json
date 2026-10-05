@@ -67,7 +67,9 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [],
+  "pending": [
+    { "file": "scripts/load-zoning.js", "registers_at": "commit ③", "reason": "Batch-2 row 3.3 (load_zoning, INGESTOR, multi-primary: 10 CKAN DataStore layers -> 10 targets, all-primaries skip; COMPRESSED per R-PACE-1; library prerequisites 0y + 0z1 (RE-FREEZE #30) and witness C4 land before ②). ① lands the ZONING_FORCE_RELOAD seam (15d69d04), the assessment + red suite (L1-L29 legacy pins executing the oracle, D1-D11 it.fails) + gate-K red evidence + LZ-D1..LZ-D20; ② the descriptor/compute/shell/notes/seeds + same-session PRE/POST goldens under the witness with a forced-change cohort (heritage E3 precedent); ③ registers, per Spec 124 R-K. ② code half landed 2026-10-03 (descriptor/compute/shell/notes/15 seeds; D1-D11 flipped to it, stage -> shape_clean); PRE/POST goldens captured 2026-10-04 under the witness (forced-change cohort sha256 4ca2a9f9…c939e2, committed with them); judge PASS x4, restored true x4, table_state identical PRE->POST on all 10 tables.", "declared": "2026-10-02", "stage": "shape_clean" }
+  ],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",

@@ -88,13 +88,13 @@ export interface SuiteRecord {
 export type AdoptionClass = 'guarded' | 'zero_statement' | 'legacy_oracle_excluded';
 
 /**
- * The CLOSED adoption map: exactly the 25 slugs registered in
+ * The CLOSED adoption map: exactly the 26 slugs registered in
  * `scripts/steps/_schema/converted.json` (converted + pending), each in one of three
  * classes (Fold 7 rulings 2 and 4; the P1-C4b class retired when its 10 slugs gained
  * guarded fixture tests). `guarded` suites carry `witnessGuard(`, the
  * `zero_statement` ones a "must not touch the pool" marker, the excluded legacy-oracle
  * harnesses a "legacy-harness" marker. The lock test pins the key set and the
- * 19 / 4 / 3 counts.
+ * 19 / 4 / 4 counts.
  */
 export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   compute_centroids: 'guarded',
@@ -112,6 +112,7 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   link_wsib: 'zero_statement',
   load_heritage: 'legacy_oracle_excluded',
   load_wsib: 'legacy_oracle_excluded',
+  load_zoning: 'legacy_oracle_excluded',
   neighbourhoods: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',

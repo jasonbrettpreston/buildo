@@ -1,0 +1,55 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "zoning_bylaw_areas",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: zoning_areas_loaded_count 11719 - zoning_areas_unchanged_skipped 11699 = 20 written, zoning_areas_orphans_removed_count 1. This equals the forced-change cohort's |U| 5 + |D| 5 + |X| 10 = 20 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (5 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (11694 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_height_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: height_overlay_loaded_count 2528 - height_overlay_unchanged_skipped 2481 = 47 written, height_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 5 + |D| 5 + |X| 37 = 47 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (5 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (2476 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_lot_coverage_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: lot_coverage_overlay_loaded_count 1242 - lot_coverage_overlay_unchanged_skipped 1216 = 26 written, lot_coverage_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 5 + |D| 5 + |X| 16 = 26 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (5 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (1211 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_building_setback_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: building_setback_overlay_loaded_count 4 - building_setback_overlay_unchanged_skipped 0 = 4 written, building_setback_overlay_orphans_removed_count 0. 4 X (GEOS vertex-order) updates, no U/D/A/P arm possible (4 rows, all X), so the written count is exactly |X| = 4 and no orphan is expected. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_policy_area_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: policy_area_overlay_loaded_count 352 - policy_area_overlay_unchanged_skipped 336 = 16 written, policy_area_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 3 + |D| 3 + |X| 10 = 16 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (3 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (333 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_policy_road_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: policy_road_overlay_loaded_count 8913 - policy_road_overlay_unchanged_skipped 8903 = 10 written, policy_road_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 5 + |D| 5 + |X| 0 = 10 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (5 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (8898 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_rooming_house_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: rooming_house_overlay_loaded_count 558 - rooming_house_overlay_unchanged_skipped 531 = 27 written, rooming_house_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 3 + |D| 3 + |X| 21 = 27 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (3 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (528 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_parking_zone_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: parking_zone_overlay_loaded_count 913 - parking_zone_overlay_unchanged_skipped 884 = 29 written, parking_zone_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 3 + |D| 3 + |X| 23 = 29 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (3 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (881 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_priority_retail_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: priority_retail_overlay_loaded_count 643 - priority_retail_overlay_unchanged_skipped 637 = 6 written, priority_retail_overlay_orphans_removed_count 1. This equals the forced-change cohort's |U| 3 + |D| 3 + |X| 0 = 6 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 1 phantom orphan(s); the A arm (3 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (634 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    },
+    {
+      "table": "zoning_queenstw_eat_overlay",
+      "capture": "sources.json",
+      "why": "POST docs/reports/golden/load_zoning/post/sources.json: queenstw_eat_overlay_loaded_count 4 - queenstw_eat_overlay_unchanged_skipped 2 = 2 written, queenstw_eat_overlay_orphans_removed_count 0. This equals the forced-change cohort's |U| 1 + |D| 1 + |X| 0 = 2 (U guard heal, D re-insert, X pre-existing GEOS-drift rewrites) and |P| 0 phantom orphan(s); the A arm (1 rows, source_dataset_version only, outside the guard, LZ-D2) correctly wrote 0 and the negative control (1 rows) was untouched. Identical numbers on PRE (legacy) and on the standalone pair; table_state content_hash equal PRE->POST. The step-level counters (records_new 5 / records_updated 15) are base-only (P-C1), so per-table attribution lives here (R-AS; cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2, derived 2026-10-04, committed in the landing commit)."
+    }
+  ]
+}

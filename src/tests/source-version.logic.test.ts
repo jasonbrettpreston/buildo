@@ -38,8 +38,10 @@ const ravines = require('../../scripts/lib/step/staleness.js');
 // per-dataset tier-1 gate is the library's (`prior` = the dataset's own sub-block, 0x subKey).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const heritage = require('../../scripts/lib/step/staleness.js');
+// RE-HOMED at batch-2 row 3.3 ② (2026-10-03): load-zoning.js is the frozen shell; its all-layers gate is the
+// library's 0y allPrimariesDecision over the descriptor's ckan_metadata trigger.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const zoning = require('../../scripts/load-zoning.js');
+const zoningDescriptor = require('../../scripts/load-zoning.descriptor.json');
 
 const LIB_SOURCE = fs.readFileSync(
   path.resolve(__dirname, '../../scripts/lib/source-version.js'),
@@ -69,7 +71,8 @@ const ADOPTION_SUBJECT: Record<string, string[]> = {
   // skipCheckDecision/contentHashDecision/readPriorRunMeta of its own any more —
   // same two library files as load-ravines.js.
   'load-centreline.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
-  'load-zoning.js': ['load-zoning.js'],
+  // RE-HOMED at row 3.3 ② (INGESTOR class B, multi-primary 0x + all-primaries CKAN gate 0y): same two library files.
+  'load-zoning.js': ['lib/step/staleness.js', 'lib/step/acquire.js'],
 };
 const LOADER_SOURCES: Record<string, string> = Object.fromEntries(
   Object.entries(ADOPTION_SUBJECT).map(([f, subjects]) => [
@@ -226,13 +229,22 @@ describe('skipCheckDecision — zoning-style (CKAN metadata equality + max-age f
     expect(() => sv.skipCheckDecision({ lastModified: 'x', storedVersion: 'v', nowMs: now }, { style: sv.STYLE_CKAN_METADATA }))
       .toThrow(/forceReloadMaxAgeDays/);
   });
-  it('load-zoning.js wrapper preserves its exact prior signature + decisions', () => {
+  it('load-zoning (converted, 0y all-primaries gate) preserves the exact decisions', () => {
+    const decide = (lastModified: string | null, storedVersion: string | null, etag: string | null = null) =>
+      ravines.allPrimariesDecision({
+        primaries: [{ id: 'base' }],
+        triggerFor: () => zoningDescriptor.staleness.trigger[0],
+        validatorsById: { base: { lastModified, etag } },
+        priorMeta: storedVersion === null ? null : { zoning_layer_versions: { base: storedVersion } },
+        config: { load_zoning_force_reload_max_age_days: 730 },
+        nowMs: now, forced: false, reemitKeys: [], emitTypes: {},
+      }).decisions.base;
     const v = '2026-02-20T00:00:00Z';
-    expect(zoning.skipCheckDecision({ lastModified: v, storedVersion: v, nowMs: now })).toEqual({ skip: true, reason: 'unchanged' });
-    expect(zoning.skipCheckDecision({ lastModified: 'x', storedVersion: null, nowMs: now }).skip).toBe(false);
-    expect(zoning.skipCheckDecision({ lastModified: null, etag: null, storedVersion: 'v', nowMs: now }).reason).toBe('no_validators');
+    expect(decide(v, v)).toEqual({ skip: true, reason: 'unchanged' });
+    expect(decide('x', null).skip).toBe(false);
+    expect(decide(null, 'v').reason).toBe('no_validators');
     const old = '2024-01-01T00:00:00Z';
-    expect(zoning.skipCheckDecision({ lastModified: old, storedVersion: old, nowMs: now }).reason).toBe('cache_stale_force_reload');
+    expect(decide(old, old).reason).toBe('cache_stale_force_reload');
   });
 });
 

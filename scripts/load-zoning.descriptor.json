@@ -1,0 +1,3803 @@
+{
+  "identity": {
+    "name": "load_zoning",
+    "display_name": "Zoning By-law",
+    "owner": "data",
+    "description": "Loads Toronto's Zoning By-law 569-2013 from ten CKAN DataStore resources (one package) into ten tables: the base zone layer zoning_bylaw_areas and nine overlays. One package_show decides the run (skip only when every layer is unchanged, R2-12); each layer is paged through datastore_search, shaped, deduplicated (reject-all), geometry-validated and written by a guarded upsert on source_id plus an F-C1-guarded departure delete, one transaction per layer. The base layer is required (its failure aborts the step, D3); an overlay failure is a WARN and the run continues.",
+    "lock": 58,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of the ten zoning tables (Spec 47 §A.5 row 58, DEC-A: lock = spec number); the shell keeps `const ADVISORY_LOCK_ID = 58;` as a §5.4 source-text constant, asserted equal by the pipeline advisory-lock suite.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "58",
+    "spec_version": "2.3",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "base",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "76a2620f-a6b4-495d-8e41-c0ede1f8a928",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_bylaw_areas"
+        },
+        {
+          "id": "height_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "f0a88d06-2430-4025-b15d-362cabd00f31",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_height_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "lot_coverage_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "58ad8814-ca4e-43d6-848d-d5fd8d873574",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_lot_coverage_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "building_setback_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "8d75cab6-ab97-4158-8ba5-8874860b26f7",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_building_setback_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "policy_area_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "1a6469f8-1eaf-4ba6-a1f6-07179efbc2f2",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_policy_area_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "policy_road_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "4e2f9292-6082-4627-be8e-61b87a2cb273",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_policy_road_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "rooming_house_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "75b9805b-bc65-4c30-97fa-9c57c17233b2",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_rooming_house_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "parking_zone_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "8f969df7-9008-49fd-a50b-df53f1f680e6",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_parking_zone_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "priority_retail_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "499de5f6-194a-4da3-a18f-27a8e684721d",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_priority_retail_overlay",
+          "on_failure": "warn_row_continue"
+        },
+        {
+          "id": "queenstw_eat_overlay",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "1f18bd73-bbbc-4ad6-ac27-6c9cae7385b4",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=34927e44-fc11-4336-a8aa-a0dfb27658b7",
+            "page_size_from_config": "load_zoning_datastore_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "_id",
+          "cache": "none",
+          "cache_ttl": "none",
+          "target": "zoning_queenstw_eat_overlay",
+          "on_failure": "warn_row_continue"
+        }
+      ]
+    },
+    "expect_nonempty": false,
+    "on_missing": "run"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "zoning_bylaw_areas",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "gen_zone",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_zone",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_holding",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "holding_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "frontage_min_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "area_min_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "units_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "density_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "coverage_max_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "fsi_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "pct_commercial_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "pct_residential_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "pct_employment_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "pct_office_max",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "exception_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "exception_text",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_chapter",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_section",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_exception_ref",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "standard_setback",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zone_status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "area_units",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "gen_zone",
+            "zn_zone",
+            "zn_string",
+            "zn_holding",
+            "holding_id",
+            "frontage_min_m",
+            "area_min_sqm",
+            "units_max",
+            "density_max",
+            "coverage_max_pct",
+            "fsi_max",
+            "pct_commercial_max",
+            "pct_residential_max",
+            "pct_employment_max",
+            "pct_office_max",
+            "exception_number",
+            "exception_text",
+            "bylaw_chapter",
+            "bylaw_section",
+            "bylaw_exception_ref",
+            "standard_setback",
+            "zone_status",
+            "area_units",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_bylaw_areas ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_height_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ht_stories",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ht_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "height_max_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "ht_stories",
+            "ht_string",
+            "height_max_m",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_height_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_lot_coverage_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "coverage_max_pct_override",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "coverage_max_pct_override",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_lot_coverage_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_building_setback_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "objectid",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ch600_area_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_section_link",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "objectid",
+            "zn_string",
+            "ch600_area_type",
+            "bylaw_section_link",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_building_setback_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_policy_area_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "policy_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "chapter_200_ref",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "exception_link",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "policy_id",
+            "chapter_200_ref",
+            "exception_link",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_policy_area_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_policy_road_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "multiline",
+        "line_validity": "length_and_simple",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "road_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "road_name",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_policy_road_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_rooming_house_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "rmh_area",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "rmg_hs_no",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "rmg_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "chapter_150_25_ref",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "rmh_area",
+            "rmg_hs_no",
+            "rmg_string",
+            "chapter_150_25_ref",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_rooming_house_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_parking_zone_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "objectid",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_parkzone",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "objectid",
+            "zn_parkzone",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_parking_zone_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_priority_retail_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "multiline",
+        "line_validity": "length_and_simple",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "objectid",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ch600_line_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "linear_name_full_legal",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_section_link",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "objectid",
+            "zn_string",
+            "ch600_line_type",
+            "linear_name_full_legal",
+            "bylaw_section_link",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_priority_retail_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      },
+      {
+        "table": "zoning_queenstw_eat_overlay",
+        "key": "source_id",
+        "key_sql_type": "INTEGER",
+        "geometry_kind": "polygon",
+        "columns": [
+          {
+            "name": "source_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "objectid",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zn_string",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ch600_area_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bylaw_section_link",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "source_dataset_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "created_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "objectid",
+            "zn_string",
+            "ch600_area_type",
+            "bylaw_section_link",
+            "geometry",
+            "geom"
+          ],
+          "scope": "none",
+          "expected_change_ratio": "<= 0.5",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Legacy `INSERT INTO zoning_queenstw_eat_overlay ... ON CONFLICT (source_id) DO UPDATE SET <columns>, geometry, geom, source_dataset_version WHERE <columns>/geometry/geom IS DISTINCT FROM EXCLUDED.*` (H5) then the F-C1-guarded `DELETE ... WHERE NOT EXISTS` against the run's keys, one transaction for this layer [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:496-542]. The guard is the legacy set byte for byte: source_dataset_version is written but is NOT a guard column (LZ-D2), so an unchanged row keeps its old stamp.",
+            "liveness": {
+              "kind": "file",
+              "ref": "src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt"
+            }
+          }
+        },
+        "retract": "departed",
+        "replay": "idempotent_upsert",
+        "source_key_policy": {
+          "unique": true,
+          "on_collision": "dedupe_upstream",
+          "key_space_migration": "none"
+        }
+      }
+    ],
+    "cascades": "none",
+    "invalidates": [],
+    "publish": "direct",
+    "write_inventory": {
+      "statements": 20,
+      "why": {
+        "text": "Per layer: the batched guarded upsert and the departure DELETE, each layer in its own transaction (10 targets x 2 statements). The geometry validation is a pure SELECT and writes nothing.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "scope": "none",
+    "trigger": [
+      {
+        "signal": "source_validator",
+        "position": "pre_acquisition",
+        "style": "ckan_metadata",
+        "emit_key": "zoning_layer_versions",
+        "max_age_days_from_config": "load_zoning_force_reload_max_age_days"
+      }
+    ],
+    "skip_scope": "all_primaries",
+    "mode_select": "skip",
+    "checkpoint": "none",
+    "interval": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "warn_row",
+    "on_prior_run_error_why": {
+      "text": "LZ-D20 PIN (parity). The legacy `readPriorRunMeta(...).catch(...)` logged `prior-run query failed (treating as no baseline)` and loaded every layer as a first run [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:594-597]. warn_row keeps that behaviour and adds the library WARN row, so it is no longer silent; the fix candidate is fail_step (LH-D3 / LR-D2 precedent).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/staleness.js"
+      }
+    }
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_bylaw_areas",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_bylaw_areas with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_bylaw_areas"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_height_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_height_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_height_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_lot_coverage_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_lot_coverage_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_lot_coverage_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_building_setback_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_building_setback_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_building_setback_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_policy_area_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_policy_area_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_policy_area_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_policy_road_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_policy_road_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_policy_road_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_rooming_house_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_rooming_house_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_rooming_house_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_parking_zone_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_parking_zone_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_parking_zone_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_priority_retail_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_priority_retail_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_priority_retail_overlay"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "zoning_queenstw_eat_overlay",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enables RLS class-B default-deny on zoning_queenstw_eat_overlay with 0 policies [READ migrations/227_rls_class_b_default_deny.sql:101-110]: the upsert and DELETE work only under rolbypassrls, else they affect 0 rows while the verdict reads PASS.",
+          "liveness": {
+            "kind": "table",
+            "ref": "zoning_queenstw_eat_overlay"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_bylaw_areas_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_bylaw_areas through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_height_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_height_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_lot_coverage_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_lot_coverage_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_building_setback_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_building_setback_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_policy_area_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_policy_area_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_policy_road_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_policy_road_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_rooming_house_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_rooming_house_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_parking_zone_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_parking_zone_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_priority_retail_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_priority_retail_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_zoning_queenstw_eat_overlay_geom",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GIST index enrich_parcels joins zoning_queenstw_eat_overlay through [READ migrations/164_zoning_bylaw_tables.sql]; without it the consumer's spatial join degrades to a sequential scan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/164_zoning_bylaw_tables.sql"
+          }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "none",
+    "schema_drift": "pause"
+  },
+  "execution": {
+    "shape": "ingest",
+    "budget": "10m",
+    "txn_scope": "batch",
+    "txn_budget": "5m",
+    "chunked": true,
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": 1000,
+    "needs_disk_mb": 64,
+    "partial_fill": "atomic",
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A record with a null geometry, a non-integer _id, a duplicated _id (reject-all, R2-17) or a geometry the validator cannot use is counted and the layer continues [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:430-478]; each skip is a named counter in the row-conservation identity and an audit row; the base tolerance is bounded by the FAIL-severity zoning_areas_invalid_polygon_pct / zoning_areas_invalid_polygon_count band.",
+      "liveness": {
+        "kind": "check",
+        "ref": "zoning_areas_invalid_polygon_pct"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured, so a check that throws is a library or compute defect, not an upstream condition — it must redden the run rather than drop its row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-zoning.js"
+      }
+    },
+    "on_degrade": "none",
+    "criticality": "required",
+    "network": {
+      "egress": [
+        "ckan0.cf.opendata.inter.prod-toronto.ca"
+      ],
+      "timeout": "60000ms",
+      "timeout_from_config": "load_zoning_http_timeout_ms",
+      "retries": 0,
+      "retries_from_config": "none",
+      "redact": "none"
+    },
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "dataset_source_license",
+      "kind": "invariant",
+      "expect": {
+        "license_url_present": true
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO row `dataset_source_license` = the Toronto Open Data licence URL, on every run including a skip [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:588]. Read from the declared externals (all ten carry the same licence); a missing licence reads 1.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_override_force_reload_present",
+      "kind": "invariant",
+      "expect": {
+        "standing_override": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy WARN row pushed only when ZONING_FORCE_RELOAD=1 (the additive ① force seam, 15d69d04, plan O2) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:589]; now always present, WARN exactly when override.force_run stands, so a forced reload says so on its own record and the forced PRE and POST captures carry the same row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "no_op_refresh",
+      "kind": "freshness",
+      "expect": {
+        "reports": "true when the all-layers gate skipped the run (R2-12), false on a load"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The legacy INFO row `no_op_refresh: true` on an all-layers skip [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:616]; now present on every run (false on a load), read from records_meta.gate (gated_skip).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_attr_drift",
+      "kind": "schema",
+      "expect": {
+        "violation_when": "a required base field (_id, geometry or a mapped CKAN column) is missing from the first raw record"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "A missing required base field must abort the step before the base write and before any overlay is acquired (D3).",
+        "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md",
+        "anchor": "F-H3"
+      },
+      "why": {
+        "text": "F-H3 + D3 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:412-422, :681-682]: a missing REQUIRED base field aborts the step before the base write (and so before any overlay). LZ-D3: the drift is read from the first raw record only (acquired.record_fields, 0y). value = {missing, extra}; extra columns alone never abort (zoning_attr_drift_extra_columns).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "violation_when": "the base layer would load zero rows"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "An empty base layer must FAIL before any overlay is loaded (OB-2, D3).",
+        "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md",
+        "anchor": "OB-2"
+      },
+      "why": {
+        "text": "OB-2 zero-coverage gate + D3 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:406-410, :551, :681-682]: an empty base (or one whose every geometry is discarded) FAILs and stops the step before any overlay. value = the rows the base write carries (feature_count - invalid_geometry_skipped at the gate; written.rows_scanned after the write).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_out_of_range_nulled_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "cells nulled by the -1 sentinel / out-of-range rule (D9), row kept"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "D9 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:437-439, :455]: an out-of-range numeric cell (Toronto's -1 \"not regulated\" sentinel) is nulled, the row is kept and counted. Counted per cell by compute.shapeRecord (tag out_of_range_nulled).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_duplicate_source_id_count",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "base rows share a CKAN _id (every such row is rejected, R2-17)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "R2-17 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:457-459]: every base row whose _id is not unique is rejected (reject-ALL, deterministic) and the row is FAIL; the layer still loads the unique rows, as legacy did.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "base geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "warn_limit": "viol <= 50",
+      "warn_limit_from_config": "load_zoning_base_invalid_polygon_warn_max_count",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 58 §3 invalid-polygon band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:479-484]: 0 PASS; up to the configured count WARN (with the percentage bound in zoning_areas_invalid_polygon_pct); above it FAIL. Scored after the write, as legacy did.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_invalid_polygon_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "base geometries discarded over the base rows after dedupe"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_base_invalid_polygon_warn_max_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The percentage half of the legacy band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:481-483]: WARN only while the discarded share is at most the configured percentage, else FAIL. A separate row because one limit carries one bound; the verdict is the legacy one.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's zoning_areas_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_with_exceptions_count",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's zoning_areas_with_exceptions_count row (F-H13)"
+      },
+      "limit": "pct >= 50",
+      "limit_from_config": "load_zoning_with_exceptions_warn_below_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H13 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:271-275, :560-562]: value = rows with an exception_number x 100 / the prior row's count; WARN below the configured percentage; no prior is INFO. detail = the count (written rows minus acquired.column_nulls.exception_number).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_areas_distribution_top20",
+      "kind": "distribution",
+      "expect": {
+        "violation_when": "the zn_zone distribution is empty although rows loaded (Obs CRIT-2)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 47 §8.4 + P-M4 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:297-308, :563-567]: the top-N zn_zone classes (N = load_zoning_distribution_top_n); the truncation counters ride a companion context row zoning_areas_distribution_top20_truncation. Counted over the shaped base rows (compute tags zn_zone:<value>).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "coverage_max_pct_null_count",
+      "kind": "field_coverage",
+      "expect": {
+        "vs": "the prior run's coverage_max_pct_null_count row (F-M5)"
+      },
+      "limit": "value_max 10",
+      "limit_from_config": "load_zoning_null_count_warn_over_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-M5 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:265-269, :568-571]: value = the percentage by which this run's NULL coverage_max_pct count exceeds the prior row's (acquired.column_nulls); WARN above the configured percentage; no prior is INFO. detail = the NULL count. LZ-D7 baseline caveat as loaded_pct.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "fsi_max_null_count",
+      "kind": "field_coverage",
+      "expect": {
+        "vs": "the prior run's fsi_max_null_count row (F-M5)"
+      },
+      "limit": "value_max 10",
+      "limit_from_config": "load_zoning_null_count_warn_over_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-M5 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:265-269, :568-571]: value = the percentage by which this run's NULL fsi_max count exceeds the prior row's (acquired.column_nulls); WARN above the configured percentage; no prior is INFO. detail = the NULL count. LZ-D7 baseline caveat as loaded_pct.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "frontage_min_m_null_count",
+      "kind": "field_coverage",
+      "expect": {
+        "vs": "the prior run's frontage_min_m_null_count row (F-M5)"
+      },
+      "limit": "value_max 10",
+      "limit_from_config": "load_zoning_null_count_warn_over_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-M5 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:265-269, :568-571]: value = the percentage by which this run's NULL frontage_min_m count exceeds the prior row's (acquired.column_nulls); WARN above the configured percentage; no prior is INFO. detail = the NULL count. LZ-D7 baseline caveat as loaded_pct.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_height_overlay_unparseable_label_count",
+      "kind": "bound",
+      "expect": {
+        "violation_when": "an HT_LABEL is not a plain number of metres (R2-16)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "R2-16 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:190-198, :451-453]: a range or prose HT_LABEL never fabricates a height; height_max_m is NULL and the label is counted (compute tag unparseable_height).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_out_of_range_nulled_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "cells nulled by the -1 sentinel / out-of-range rule (D9), row kept"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "D9 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:437-439, :455]: an out-of-range numeric cell (Toronto's -1 \"not regulated\" sentinel) is nulled, the row is kept and counted. Counted per cell by compute.shapeRecord (tag out_of_range_nulled).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "height_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's height_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_out_of_range_nulled_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "cells nulled by the -1 sentinel / out-of-range rule (D9), row kept"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "D9 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:437-439, :455]: an out-of-range numeric cell (Toronto's -1 \"not regulated\" sentinel) is nulled, the row is kept and counted. Counted per cell by compute.shapeRecord (tag out_of_range_nulled).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "lot_coverage_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's lot_coverage_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "building_setback_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's building_setback_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_area_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's policy_area_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "policy_road_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's policy_road_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "rooming_house_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's rooming_house_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "parking_zone_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's parking_zone_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "priority_retail_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's priority_retail_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_invalid_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "of": "overlay geometries the validator discarded"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy overlay band [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:486]: WARN when any geometry is discarded; the layer still loads the rest.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_repaired_polygon_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "geometries invalid at source that ST_MakeValid repaired and the layer stored"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:484, :487]: invalid at source, repaired, stored. A GeometryCollection repair is counted here too (validatorCounterDelta collection_extracted carries).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_orphans_removed_count",
+      "kind": "orphan",
+      "expect": {
+        "of": "departed rows over the pre-delete row count (F-H1)"
+      },
+      "limit": "pct <= 0.5",
+      "limit_from_config": "load_zoning_orphan_warn_pct",
+      "warn_limit": "pct <= 2",
+      "warn_limit_from_config": "load_zoning_orphan_fail_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H1 + R2-14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:242-248, :544]: value = departed rows x 100 / the pre-delete count (= updated + unchanged + deleted, measured by the write); PASS at or below the warn percentage, WARN at or below the fail percentage, else FAIL. A zero pre-delete count (first load) is INFO. detail = the departed-row count (the legacy row value).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_unchanged_skipped",
+      "kind": "invariant",
+      "expect": {
+        "reports": "rows the guarded upsert left untouched (IS DISTINCT FROM no-op)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-549]. LZ-D1 retired by the library: the value is the write's MEASURED no-op count (written.unchanged), never loaded - inserted - updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_loaded_count",
+      "kind": "bound",
+      "expect": {
+        "reports": "rows the layer write carried (written.rows_scanned)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:553]; an empty overlay counts 0 and still loads (F-C1 suppresses its delete).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "queenstw_eat_overlay_loaded_pct",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's queenstw_eat_overlay_loaded_count audit row (F-H11)"
+      },
+      "limit": "pct >= 95",
+      "limit_from_config": "load_zoning_loaded_pct_warn_below",
+      "warn_limit": "pct >= 90",
+      "warn_limit_from_config": "load_zoning_loaded_pct_fail_below",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H11 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:250-258, :555-557]: value = loaded x 100 / the prior run's loaded_count row; PASS at or above the warn floor, WARN at or above the fail floor, else FAIL; no baseline is INFO (the legacy _no_baseline). detail = the legacy one-decimal percentage. LZ-D7: the baseline is the latest successful run, which after a skip holds no loaded_count (vacuous, pinned).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_overlay_attr_drift",
+      "kind": "schema",
+      "expect": {
+        "violation_when": "an overlay is missing a required field in its first raw record"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "A missing required overlay field must skip that overlay before its write; the other layers still load (F-H3, D3).",
+        "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md",
+        "anchor": "F-H3"
+      },
+      "on_warn": "skip_write",
+      "why": {
+        "text": "F-H3 + D3 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:412-422, :684-687]: a missing REQUIRED overlay field skips THAT overlay's write (WARN, on_warn skip_write) and the run continues; the overlay reads false in zoning_layers_loaded and is listed in zoning_partial_load. LZ-D3: first raw record only. detail = {layer: missing[]}.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_attr_drift_extra_columns",
+      "kind": "schema",
+      "expect": {
+        "violation_when": "a layer carries CKAN fields the loader does not map"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H3 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:414-419]: unknown extra columns WARN and never abort. One row for all ten layers (detail = {layer: extra[]}) in place of the legacy per-layer extras-only <layer>_attr_drift row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_non_integer_source_id_count",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a CKAN _id does not coerce to a positive integer (F-M7)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-M7 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:432-433, :449]: the record is skipped and counted (acquired.bad_key_count). One row for all ten layers (detail = per-layer counts) in place of the legacy per-layer row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_null_geometry_count",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a CKAN record carries no geometry"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "[READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:431, :450]: counted BEFORE the key coercion (GR-5e) and skipped (acquired.null_geometry_count). One row for all ten layers in place of the legacy per-layer row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_overlay_duplicate_source_id_count",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "overlay rows share a CKAN _id (all rejected, R2-17)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "R2-17 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:457-459]: overlay duplicates are rejected and WARN (the base row is zoning_areas_duplicate_source_id_count, FAIL). One row for the nine overlays.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_orphan_delete_skipped",
+      "kind": "orphan",
+      "expect": {
+        "reports": "layers whose departure DELETE the F-C1 empty-set guard suppressed"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-C1 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:406-408, :534-543]: a layer that carried no rows never runs its departure DELETE (written.delete_skipped_empty_guard). detail = the layer keys, null when none.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_duration_ms",
+      "kind": "trend",
+      "expect": {
+        "vs": "the prior run's zoning_duration_ms row (F-H14)"
+      },
+      "limit": "value_max 2",
+      "limit_from_config": "load_zoning_duration_warn_factor",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H14 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:277-281, :574-575]: value = this run's elapsed time over the prior row's; WARN above the configured factor; no prior is INFO. ONE run-level row in place of the ten legacy per-layer <layer>_duration_ms rows (the library measures no per-primary duration). detail = elapsed ms.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "dataset_version_age_days",
+      "kind": "freshness",
+      "expect": {
+        "vs": "the base resource version (load) or the stored version (skip) against the run clock (F-H10)"
+      },
+      "limit": "value_max 450",
+      "limit_from_config": "load_zoning_dataset_age_warn_days",
+      "warn_limit": "value_max 730",
+      "warn_limit_from_config": "load_zoning_dataset_age_fail_days",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-H10 [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:283-295, :615-617, :690-692]: INFO-band up to the warn days, WARN up to the fail days, FAIL beyond. On a load the base resource's package_show version, on a skip the stored records_meta.source_dataset_version. Unparseable is INFO. LZ-D8: measured from the publisher's version, so after 2028-02-20 it FAILs until the City republishes.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "ZONING_FORCE_RELOAD",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "zoning_layers_loaded",
+      "type": "object",
+      "consumers": [
+        "enrich_parcels"
+      ]
+    },
+    {
+      "key": "zoning_partial_load",
+      "type": "bool",
+      "consumers": [
+        "enrich_parcels"
+      ]
+    },
+    {
+      "key": "source_dataset_version",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "zoning_layer_versions",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "base_layer_committed_after_overlays_failed",
+      "type": "bool",
+      "consumers": []
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "LZ-D11 — a STANDALONE legacy run read and wrote the chain-scoped ledger name sources:load_zoning (PIPELINE_NAME hard-coded) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:42, :594]",
+      "why": {
+        "text": "The library names the standalone ledger row load_zoning (ledgerPipelineName), so a standalone run gates and baselines on load_zoning rows while the sources chain keeps sources:load_zoning (LC-D7 precedent). enrich_parcels reads only sources:load_zoning, so a standalone load is invisible to it, as before.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D13 — a layer with no stored version fell back to records_meta.source_dataset_version (`storedLayerVersions[l.key] ?? storedVersion`) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:611-613]",
+      "why": {
+        "text": "Dropped (0y §3c (i)): a missing per-layer version now reads no_prior_version and LOADS. It can only follow a package_show that omitted that resource, which the CKAN arm now refuses by name, so the change leans fail-safe toward a load.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/staleness.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D14 — legacy followed at most 5 redirects (MAX_REDIRECTS) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:58, :353-360]",
+      "why": {
+        "text": "The library fetch follows up to 20 (every converted INGESTOR; operator D2, 0y O-2). The difference shows only on a 6-20-hop error path CKAN does not produce; the legacy redirect-cap variable is struck from §5 rather than registered with no reader.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D15 — legacy armed a 30 s socket-IDLE timeout per request (HTTP_TIMEOUT_MS) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:45, :355, :366]",
+      "why": {
+        "text": "The library arms a whole-request deadline (AbortController) from load_zoning_http_timeout_ms, seeded above 30 s because a full 10,000-record page must arrive inside it (0y §1.6, §3c (iv)).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D16 — legacy truncated the run clock to whole seconds (`Date.parse(String(runAt))`) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:585-586]",
+      "why": {
+        "text": "The all-primaries gate reads the DB clock with millisecond precision (0y §3c (ii)); the 730-day force window can therefore flip up to one second earlier.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/staleness.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D17 — a skip re-emitted a missing prior key as a default (`?? {}` / `?? false`) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:626-630]",
+      "why": {
+        "text": "A re-emitted key that is missing, null or not of its declared emits[].type now LOADS (prior_contract_incomplete, 0y §3c (iii)). This includes a prior zoning_partial_load {missing_layers} object (declared bool), so a run after a partial load reloads instead of re-forwarding the partial state.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/staleness.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D18 — geometry validation ran in 1,000-row batches on the pool (BATCH_SIZE) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:43, :468-478]",
+      "why": {
+        "text": "The library validates each layer in ONE read-only statement (write.validateGeometries; LC-D12 precedent). The per-geometry classification is the legacy one: empty-after-extract or a non-simple / zero-length line is discarded, an invalid-but-repairable geometry is repaired.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D12 (thrown-overlay path) — legacy recorded EVERY layer's new version in zoning_layer_versions, including an overlay whose fetch or load threw [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:698]",
+      "why": {
+        "text": "Carried on the write_skipped path (a drift-skipped overlay still records its acquired version, wrong-form, ④d). On the THROWN path the library surfaces no version for a failed primary, so the compute writes null and the next run reloads that overlay — the ④d fix lands early on that path only.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D6 — a package_show failure pushed an INFO skip_check_error row that claimed \"proceed\", then bound String(runAt) as the version and failed on the base upsert [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:603-607]",
+      "why": {
+        "text": "Outcome parity, honest message (0y D3, ④a retired): a package_show 5xx or success:false throws by name before any datastore_search GET; the step FAILs with 0 rows written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D19 — a base failure pushed FAIL rows (zoning_areas_fetch_error / _load_error, zoning_partial_load) but threw before emitSummary, so the failed run carried no audit_table [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:650-657, :670-672]",
+      "why": {
+        "text": "The base primary declares no on_failure (abort_step): its throw fails the step through the runner's failure terminal (failed_step_error). The FAIL path changes shape only; it is absent from the goldens.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "LZ-D1 — `unchanged = Math.max(0, loaded - inserted - updated)` was derived [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:547-548]",
+      "why": {
+        "text": "The <layer>_unchanged_skipped rows read the write's MEASURED no-op count (written.unchanged) and row conservation holds per layer (WF2 simplification item 8).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/conservation.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "the audit row set — legacy pushed conditional rows only when they fired, scored passing non-INFO rows INFO, and attached _no_baseline / _truncated_class_count / _other_count keys to rows [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:401-575]",
+      "why": {
+        "text": "Every declared check emits on every run (heritage LH / ravines LR precedent): conditional per-layer rows (attr drift extras, non-integer _id, null geometry, overlay duplicates, orphan-delete skips) are one aggregate row each with per-layer detail; the ten <layer>_duration_ms rows are one run-level zoning_duration_ms; a passing bounded row reads PASS; no-baseline rows read INFO with a null detail; the distribution truncation counters ride the context row zoning_areas_distribution_top20_truncation. An overlay that throws lands the library row primary_failed:<id> (WARN) in place of <layer>_fetch_error / _fetch_skipped / _load_error.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "the base empty / all-discarded path — legacy threw on an empty base before any overlay but, when every base geometry was discarded, wrote nothing to the base, FAILed the row and still loaded the overlays [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:406-410, :551, :681-682]",
+      "why": {
+        "text": "zoning_areas_loaded_count is a pre_write gate, so both cases stop at the base and no overlay is acquired (stricter on the all-discarded path; 0 base geometries have been discarded on record).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    },
+    {
+      "from": "the zn_zone distribution — legacy counted the INSERTABLE base rows (after dedupe and geometry validation) [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:563]",
+      "why": {
+        "text": "The compute counts the SHAPED base rows (before the reject-all dedupe and the validator), because the runner hands compute counters, not rows. Identical whenever no base row is a duplicate or discarded (0 and 0 on run 1085).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      },
+      "adjudicated_by": "batch-2 row 3.3 ② (plan .cursor/batch2_load_zoning_active_task.md; re-grounding .cursor/zoning-plan-regrounding-2026-10-02.md §C)",
+      "date": "2026-10-03"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "LZ-D2 — source_dataset_version is written by every upsert but is NOT a guard column (H5), so an unchanged row keeps the version stamp of the load that last changed it.",
+      "measured": "by design since H5; enrich_parcels' incremental scope compares changed rows only [READ scripts/lib/compute/enrich-parcels.js:207-210]",
+      "check_id": "none"
+    },
+    {
+      "what": "LZ-D3 — attribute drift is read from the FIRST raw record of each layer only (acquired.record_fields); a later record missing a mapped field loads with that cell NULL.",
+      "measured": "CKAN DataStore records carry the full field set on every record (0 drift on record)",
+      "check_id": "zoning_overlay_attr_drift"
+    },
+    {
+      "what": "LZ-D4 — datastore_search pages by offset with no sort; the order is CKAN's default (ORDER BY _id in practice).",
+      "measured": "1-2 pages per layer at page size 10000 (largest layer 11,719 records)",
+      "check_id": "none"
+    },
+    {
+      "what": "LZ-D7 — every baseline (loaded_pct, with_exceptions, null counts, duration) reads the latest successful run, which after a skip run carries none of those rows, so the first load after a skip has no baseline (INFO).",
+      "measured": "every recorded sources:load_zoning run since 1291 is a skip",
+      "check_id": "zoning_areas_loaded_pct"
+    },
+    {
+      "what": "LZ-D8 — the 730-day force window and dataset_version_age_days run from the PUBLISHER's version, so after 2028-02-20 every run force-reloads and the age row FAILs until the City republishes.",
+      "measured": "stored version 2026-02-20T21:29:42.613615",
+      "check_id": "dataset_version_age_days"
+    },
+    {
+      "what": "LZ-D20 — a failed prior-run read degrades to a first run (no skip, no baselines); warn_row makes it a WARN row instead of a log line.",
+      "measured": "0 prior-read failures on record",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "load-zoning.notes.json",
+    "entries": 8
+  },
+  "recovery": {
+    "reset": "TRUNCATE is never correct here — re-run with ZONING_FORCE_RELOAD=1, which bypasses the all-layers gate and rewrites every layer through the same guarded upsert plus departure delete.",
+    "resume": "none",
+    "force": "ZONING_FORCE_RELOAD",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "Ten per-layer transactions commit one after another, so a kill between two leaves some layers on the new version and some on the old while no completed row records the run. Declaring force_full_on_next_run makes the all-primaries gate (detectInterruptedRetraction, 0y GR-4) force the next run to LOAD every layer instead of skipping on the older completed row.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/staleness.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "Every target declares scope \"none\" with retract \"departed\": there is no scoped retraction to mirror, and every column is re-derived from CKAN on a forced reload.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 227,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.by_target.zoning_bylaw_areas.rows_scanned",
+      "scoped_by": "source_id"
+    },
+    "records_new": {
+      "source": "written.by_target.zoning_bylaw_areas.inserted",
+      "scoped_by": "source_id"
+    },
+    "records_updated": {
+      "source": "written.by_target.zoning_bylaw_areas.updated",
+      "scoped_by": "source_id"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "load_zoning_datastore_page_size",
+        "min": 1,
+        "max": 32000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_http_timeout_ms",
+        "min": 1000,
+        "max": 600000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_orphan_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_orphan_fail_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_loaded_pct_warn_below",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_loaded_pct_fail_below",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_dataset_age_warn_days",
+        "min": 1,
+        "max": 3650,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_dataset_age_fail_days",
+        "min": 1,
+        "max": 3650,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_force_reload_max_age_days",
+        "min": 1,
+        "max": 3650,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_null_count_warn_over_pct",
+        "min": 0,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_with_exceptions_warn_below_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_duration_warn_factor",
+        "min": 1,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_base_invalid_polygon_warn_max_count",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_base_invalid_polygon_warn_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "load_zoning_distribution_top_n",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 58
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "zoning_layers_loaded": "object",
+        "zoning_partial_load": "bool",
+        "source_dataset_version": "string",
+        "zoning_layer_versions": "object",
+        "base_layer_committed_after_overlays_failed": "bool",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Every layer was acquired and written (or, for an empty overlay, carried no rows) and every check passed.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "zoning_layers_loaded": "object",
+        "zoning_partial_load": "bool",
+        "source_dataset_version": "string",
+        "zoning_layer_versions": "object",
+        "base_layer_committed_after_overlays_failed": "bool",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A WARN check tripped with no FAIL: an unparseable height label, an overlay that failed or drift-skipped (primary_failed / zoning_overlay_attr_drift), a standing force override, a WARN-band age, or a loaded_pct / orphan WARN band.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "skipped_source_validator_unchanged",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": {
+        "zoning_layers_loaded": "object",
+        "zoning_partial_load": "bool",
+        "source_dataset_version": "string",
+        "zoning_layer_versions": "object",
+        "base_layer_committed_after_overlays_failed": "bool",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "R2-12: package_show reports every one of the ten resources unchanged against zoning_layer_versions and the 730-day window has not elapsed, so nothing is fetched; the prior run's five §9 keys are re-emitted so enrich_parcels still finds zoning_layers_loaded on the latest completed row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_check",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "zoning_layers_loaded": "object",
+        "zoning_partial_load": "bool",
+        "source_dataset_version": "string",
+        "zoning_layer_versions": "object",
+        "base_layer_committed_after_overlays_failed": "bool",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A FAIL check tripped: an empty or drifted base (pre_write, nothing written, no overlay acquired), a base duplicate or invalid-polygon band, a loaded_pct or orphan FAIL band, or a dataset older than the fail days.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "failed_step_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A step-level throw: package_show failed (LZ-D6), the base layer's fetch or write threw (D3 abort_step), the once-per-step write-privilege preflight failed, or a row-conservation mismatch. Nothing further is written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 58 is held by another process. Legacy returned with no summary (the SDK SKIP carried no audit_table); the library emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

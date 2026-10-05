@@ -1,0 +1,927 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-zoning.js",
+  "chain": "sources",
+  "source_fingerprint": null,
+  "git_head": "a0554feadc439b5bd2fa3e9dc2f25961a8b3cbde",
+  "header": {
+    "processes": 1,
+    "calls": 117,
+    "distinct": 31,
+    "utility": 35,
+    "tracer_self_ms": 1137.384,
+    "wall_ms": 48706
+  },
+  "statements": [
+    {
+      "fingerprint": "02f497079c70fa64",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_height_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "123029c66926688b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_policy_area_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "123da06d40ec4eea",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_rooming_house_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1cfbe4702b7fa05b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 6,
+      "reads": {
+        "zoning_priority_retail_overlay": [
+          "bylaw_section_link",
+          "ch600_line_type",
+          "geom",
+          "geometry",
+          "linear_name_full_legal",
+          "objectid",
+          "zn_string"
+        ]
+      },
+      "writes": {
+        "zoning_priority_retail_overlay": [
+          "bylaw_section_link",
+          "ch600_line_type",
+          "geom",
+          "geometry",
+          "linear_name_full_legal",
+          "objectid",
+          "source_dataset_version",
+          "source_id",
+          "zn_string"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1e2251f5e08c8b1f",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 2,
+      "reads": {
+        "zoning_queenstw_eat_overlay": [
+          "bylaw_section_link",
+          "ch600_area_type",
+          "geom",
+          "geometry",
+          "objectid",
+          "zn_string"
+        ]
+      },
+      "writes": {
+        "zoning_queenstw_eat_overlay": [
+          "bylaw_section_link",
+          "ch600_area_type",
+          "geom",
+          "geometry",
+          "objectid",
+          "source_dataset_version",
+          "source_id",
+          "zn_string"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3758b2d711f46dfd",
+      "kind": "write",
+      "count": 5,
+      "rowCount": 20,
+      "reads": {
+        "zoning_bylaw_areas": [
+          "area_min_sqm",
+          "area_units",
+          "bylaw_chapter",
+          "bylaw_exception_ref",
+          "bylaw_section",
+          "coverage_max_pct",
+          "density_max",
+          "exception_number",
+          "exception_text",
+          "frontage_min_m",
+          "fsi_max",
+          "gen_zone",
+          "geom",
+          "geometry",
+          "holding_id",
+          "pct_commercial_max",
+          "pct_employment_max",
+          "pct_office_max",
+          "pct_residential_max",
+          "standard_setback",
+          "units_max",
+          "zn_holding",
+          "zn_string",
+          "zn_zone",
+          "zone_status"
+        ]
+      },
+      "writes": {
+        "zoning_bylaw_areas": [
+          "area_min_sqm",
+          "area_units",
+          "bylaw_chapter",
+          "bylaw_exception_ref",
+          "bylaw_section",
+          "coverage_max_pct",
+          "density_max",
+          "exception_number",
+          "exception_text",
+          "frontage_min_m",
+          "fsi_max",
+          "gen_zone",
+          "geom",
+          "geometry",
+          "holding_id",
+          "pct_commercial_max",
+          "pct_employment_max",
+          "pct_office_max",
+          "pct_residential_max",
+          "source_dataset_version",
+          "source_id",
+          "standard_setback",
+          "units_max",
+          "zn_holding",
+          "zn_string",
+          "zn_zone",
+          "zone_status"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3b701d806c281d43",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_policy_road_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6354cec5d8ef8e4a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_bylaw_areas": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6798c8114ad7f886",
+      "kind": "utility",
+      "count": 10,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6807c2c9c948243c",
+      "kind": "read",
+      "count": 10,
+      "rowCount": 9556,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "73f840f50bf71950",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_priority_retail_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_zoning"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7ba393bbf751d242",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 16,
+      "reads": {
+        "zoning_policy_area_overlay": [
+          "chapter_200_ref",
+          "exception_link",
+          "geom",
+          "geometry",
+          "policy_id"
+        ]
+      },
+      "writes": {
+        "zoning_policy_area_overlay": [
+          "chapter_200_ref",
+          "exception_link",
+          "geom",
+          "geometry",
+          "policy_id",
+          "source_dataset_version",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 11,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8e96c3d0df5b293c",
+      "kind": "write",
+      "count": 10,
+      "rowCount": 8,
+      "reads": {
+        "zoning_building_setback_overlay": [
+          "source_id"
+        ],
+        "zoning_bylaw_areas": [
+          "source_id"
+        ],
+        "zoning_height_overlay": [
+          "source_id"
+        ],
+        "zoning_lot_coverage_overlay": [
+          "source_id"
+        ],
+        "zoning_parking_zone_overlay": [
+          "source_id"
+        ],
+        "zoning_policy_area_overlay": [
+          "source_id"
+        ],
+        "zoning_policy_road_overlay": [
+          "source_id"
+        ],
+        "zoning_priority_retail_overlay": [
+          "source_id"
+        ],
+        "zoning_queenstw_eat_overlay": [
+          "source_id"
+        ],
+        "zoning_rooming_house_overlay": [
+          "source_id"
+        ]
+      },
+      "writes": {
+        "zoning_building_setback_overlay": [],
+        "zoning_bylaw_areas": [],
+        "zoning_height_overlay": [],
+        "zoning_lot_coverage_overlay": [],
+        "zoning_parking_zone_overlay": [],
+        "zoning_policy_area_overlay": [],
+        "zoning_policy_road_overlay": [],
+        "zoning_priority_retail_overlay": [],
+        "zoning_queenstw_eat_overlay": [],
+        "zoning_rooming_house_overlay": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "905ebd5c6aafbe04",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 4,
+      "reads": {
+        "zoning_building_setback_overlay": [
+          "bylaw_section_link",
+          "ch600_area_type",
+          "geom",
+          "geometry",
+          "objectid",
+          "zn_string"
+        ]
+      },
+      "writes": {
+        "zoning_building_setback_overlay": [
+          "bylaw_section_link",
+          "ch600_area_type",
+          "geom",
+          "geometry",
+          "objectid",
+          "source_dataset_version",
+          "source_id",
+          "zn_string"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9e5e6c4dd83b04c4",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 47,
+      "reads": {
+        "zoning_height_overlay": [
+          "geom",
+          "geometry",
+          "height_max_m",
+          "ht_stories",
+          "ht_string"
+        ]
+      },
+      "writes": {
+        "zoning_height_overlay": [
+          "geom",
+          "geometry",
+          "height_max_m",
+          "ht_stories",
+          "ht_string",
+          "source_dataset_version",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a36334ccdd3da481",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 10,
+      "reads": {
+        "zoning_policy_road_overlay": [
+          "geom",
+          "geometry",
+          "road_name"
+        ]
+      },
+      "writes": {
+        "zoning_policy_road_overlay": [
+          "geom",
+          "geometry",
+          "road_name",
+          "source_dataset_version",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a78847a59cf8e839",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_queenstw_eat_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a8a6565dee4ce56a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_building_setback_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 11,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c2c737a852cfb343",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_lot_coverage_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cf98d39cce3e5313",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 26,
+      "reads": {
+        "zoning_lot_coverage_overlay": [
+          "coverage_max_pct_override",
+          "geom",
+          "geometry"
+        ]
+      },
+      "writes": {
+        "zoning_lot_coverage_overlay": [
+          "coverage_max_pct_override",
+          "geom",
+          "geometry",
+          "source_dataset_version",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d84bf944b2e292e6",
+      "kind": "read",
+      "count": 22,
+      "rowCount": 17320,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e6855ed5dcf275d6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "zoning_parking_zone_overlay": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e951e05344bfebe2",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 29,
+      "reads": {
+        "zoning_parking_zone_overlay": [
+          "geom",
+          "geometry",
+          "objectid",
+          "zn_parkzone"
+        ]
+      },
+      "writes": {
+        "zoning_parking_zone_overlay": [
+          "geom",
+          "geometry",
+          "objectid",
+          "source_dataset_version",
+          "source_id",
+          "zn_parkzone"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f348a3b205aebed5",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 27,
+      "reads": {
+        "zoning_rooming_house_overlay": [
+          "chapter_150_25_ref",
+          "geom",
+          "geometry",
+          "rmg_hs_no",
+          "rmg_string",
+          "rmh_area"
+        ]
+      },
+      "writes": {
+        "zoning_rooming_house_overlay": [
+          "chapter_150_25_ref",
+          "geom",
+          "geometry",
+          "rmg_hs_no",
+          "rmg_string",
+          "rmh_area",
+          "source_dataset_version",
+          "source_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f47bb578c84e9a39",
+      "kind": "write",
+      "count": 14,
+      "rowCount": 26876,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "3758b2d711f46dfd",
+        "8e96c3d0df5b293c",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "9e5e6c4dd83b04c4",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "cf98d39cce3e5313",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "905ebd5c6aafbe04",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "7ba393bbf751d242",
+        "8e96c3d0df5b293c",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "a36334ccdd3da481",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "f348a3b205aebed5",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "8e96c3d0df5b293c",
+        "e951e05344bfebe2",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "1cfbe4702b7fa05b",
+        "8e96c3d0df5b293c",
+        "f47bb578c84e9a39"
+      ]
+    },
+    {
+      "client": "7552:2",
+      "write_fingerprints": [
+        "1e2251f5e08c8b1f",
+        "8e96c3d0df5b293c",
+        "f47bb578c84e9a39"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "zoning_building_setback_overlay": [
+        "bylaw_section_link",
+        "ch600_area_type",
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_bylaw_areas": [
+        "area_min_sqm",
+        "area_units",
+        "bylaw_chapter",
+        "bylaw_exception_ref",
+        "bylaw_section",
+        "coverage_max_pct",
+        "density_max",
+        "exception_number",
+        "exception_text",
+        "frontage_min_m",
+        "fsi_max",
+        "gen_zone",
+        "geom",
+        "geometry",
+        "holding_id",
+        "pct_commercial_max",
+        "pct_employment_max",
+        "pct_office_max",
+        "pct_residential_max",
+        "source_dataset_version",
+        "source_id",
+        "standard_setback",
+        "units_max",
+        "zn_holding",
+        "zn_string",
+        "zn_zone",
+        "zone_status"
+      ],
+      "zoning_height_overlay": [
+        "geom",
+        "geometry",
+        "height_max_m",
+        "ht_stories",
+        "ht_string",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_lot_coverage_overlay": [
+        "coverage_max_pct_override",
+        "geom",
+        "geometry",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_parking_zone_overlay": [
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_parkzone"
+      ],
+      "zoning_policy_area_overlay": [
+        "chapter_200_ref",
+        "exception_link",
+        "geom",
+        "geometry",
+        "policy_id",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_policy_road_overlay": [
+        "geom",
+        "geometry",
+        "road_name",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_priority_retail_overlay": [
+        "bylaw_section_link",
+        "ch600_line_type",
+        "geom",
+        "geometry",
+        "linear_name_full_legal",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_queenstw_eat_overlay": [
+        "bylaw_section_link",
+        "ch600_area_type",
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_rooming_house_overlay": [
+        "chapter_150_25_ref",
+        "geom",
+        "geometry",
+        "rmg_hs_no",
+        "rmg_string",
+        "rmh_area",
+        "source_dataset_version",
+        "source_id"
+      ]
+    },
+    "writes": {
+      "zoning_building_setback_overlay": [
+        "bylaw_section_link",
+        "ch600_area_type",
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_bylaw_areas": [
+        "area_min_sqm",
+        "area_units",
+        "bylaw_chapter",
+        "bylaw_exception_ref",
+        "bylaw_section",
+        "coverage_max_pct",
+        "density_max",
+        "exception_number",
+        "exception_text",
+        "frontage_min_m",
+        "fsi_max",
+        "gen_zone",
+        "geom",
+        "geometry",
+        "holding_id",
+        "pct_commercial_max",
+        "pct_employment_max",
+        "pct_office_max",
+        "pct_residential_max",
+        "source_dataset_version",
+        "source_id",
+        "standard_setback",
+        "units_max",
+        "zn_holding",
+        "zn_string",
+        "zn_zone",
+        "zone_status"
+      ],
+      "zoning_height_overlay": [
+        "geom",
+        "geometry",
+        "height_max_m",
+        "ht_stories",
+        "ht_string",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_lot_coverage_overlay": [
+        "coverage_max_pct_override",
+        "geom",
+        "geometry",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_parking_zone_overlay": [
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_parkzone"
+      ],
+      "zoning_policy_area_overlay": [
+        "chapter_200_ref",
+        "exception_link",
+        "geom",
+        "geometry",
+        "policy_id",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_policy_road_overlay": [
+        "geom",
+        "geometry",
+        "road_name",
+        "source_dataset_version",
+        "source_id"
+      ],
+      "zoning_priority_retail_overlay": [
+        "bylaw_section_link",
+        "ch600_line_type",
+        "geom",
+        "geometry",
+        "linear_name_full_legal",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_queenstw_eat_overlay": [
+        "bylaw_section_link",
+        "ch600_area_type",
+        "geom",
+        "geometry",
+        "objectid",
+        "source_dataset_version",
+        "source_id",
+        "zn_string"
+      ],
+      "zoning_rooming_house_overlay": [
+        "chapter_150_25_ref",
+        "geom",
+        "geometry",
+        "rmg_hs_no",
+        "rmg_string",
+        "rmh_area",
+        "source_dataset_version",
+        "source_id"
+      ]
+    }
+  },
+  "errors": []
+}

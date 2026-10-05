@@ -486,7 +486,7 @@ describe('P1-C4a — suite adoption (Fold 7 rulings 2 and 4)', () => {
     expect(Object.keys(guard.ADOPTION).sort()).toEqual(expected);
   });
 
-  it('ADOPTION class counts are 19 / 4 / 3 (no c4b_pending left; enrich_centreline joined as guarded while pending, 2026-10-03)', async () => {
+  it('ADOPTION class counts are 19 / 4 / 4 (no c4b_pending left; enrich_centreline joined as guarded while pending, 2026-10-03; load_zoning joined as legacy_oracle_excluded while pending, 2026-10-04)', async () => {
     const guard = await loadGuard();
     const counts: Record<string, number> = {};
     for (const cls of Object.values(guard.ADOPTION) as string[]) {
@@ -494,7 +494,7 @@ describe('P1-C4a — suite adoption (Fold 7 rulings 2 and 4)', () => {
     }
     expect(counts.guarded).toBe(19);
     expect(counts.zero_statement).toBe(4);
-    expect(counts.legacy_oracle_excluded).toBe(3);
+    expect(counts.legacy_oracle_excluded).toBe(4);
     expect(Object.keys(counts).sort()).toEqual(['guarded', 'legacy_oracle_excluded', 'zero_statement']);
   });
 

@@ -1,0 +1,180 @@
+{
+  "contract_version": 1,
+  "step": "load_zoning",
+  "source": "measured --compare of docs/reports/golden/load_zoning/{pre,post}/{sources,standalone}.json (2026-10-04) + scripts/load-zoning.descriptor.json + docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md + docs/reports/defect-ledger.md LZ-D*",
+  "note": "MEASURED FACT (2026-10-04; PRE = legacy loader + ZONING_FORCE_RELOAD seam run from a detached tip worktree carrying wf2/load-zoning-1's scripts/load-zoning.js; POST = converted step; forced-change cohort docs/reports/golden/load_zoning/differential/cohort.json sha256 4ca2a9f9fab3eb5e21e6e2609bcf6b3fcb9f79010438ceea18905fa271c939e2): table_state is IDENTICAL PRE->POST on BOTH chains for all 10 tables (row counts 11719/2528/1242/4/352/8913/558/913/643/4, content_hash equal); records_new 5 / records_updated 15, exit 0 and verdict WARN on all four; per-target written/orphans 20/1, 47/1, 26/1, 4/0, 16/1, 10/1, 27/1, 29/1, 6/1, 2/0 on all four; POST two-run proof PASS (0 of 10 tables rewritten). The raw diffs (423 sources, 424 standalone) collapse to the 43 normalised compare keys below (array indices -> []); 0 table_state diffs; 0 value differences on any shared audit metric.",
+  "diffs": [
+    {
+      "key": "meta[].external[]",
+      "why": "pipeline_meta lineage is derived from the descriptor (deriveMeta), not the legacy hand-written emitMeta: legacy declared one external \"CKAN\"; the converted step names its ten inputs.reads.externals (base + nine overlays). Lineage shape only; no data effect (table_state identical PRE->POST)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-area",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-area as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-building-setback-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-building-setback-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-height-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-height-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-lot-coverage-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-lot-coverage-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-parking-zone-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-parking-zone-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-policy-area-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-policy-area-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-policy-road-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-policy-road-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-priority-retail-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-priority-retail-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-queenstw-eat-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-queenstw-eat-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].reads.ckan:zoning-rooming-house-overlay",
+      "why": "Legacy emitMeta declared the CKAN field list it read for zoning-rooming-house-overlay as a reads key; the converted pipeline_meta is derived from the descriptor's inputs.reads.externals (format ckan_datastore), which carries no per-layer reads key. Lineage representation only; the same layer is acquired (one \"acquired ckan_datastore\" stdout line per primary; LZ-D3 via acquired.record_fields)."
+    },
+    {
+      "key": "meta[].writes.zoning_building_setback_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_building_setback_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_bylaw_areas[]",
+      "why": "Converted pipeline_meta writes for zoning_bylaw_areas are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_height_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_height_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_lot_coverage_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_lot_coverage_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_parking_zone_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_parking_zone_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_policy_area_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_policy_area_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_policy_road_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_policy_road_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_priority_retail_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_priority_retail_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_queenstw_eat_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_queenstw_eat_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "meta[].writes.zoning_rooming_house_overlay[]",
+      "why": "Converted pipeline_meta writes for zoning_rooming_house_overlay are derived from the descriptor's outputs.writes[] columns (including db_default columns such as created_at), whereas legacy emitMeta listed a hand-typed subset. Declared lineage only; row content is identical (table_state content_hash equal PRE vs POST on all 10 tables, both chains)."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone only: the converted step writes its ledger row under pipeline \"load_zoning\" (status completed_with_warnings, re-grounding A5), while the legacy loader hard-codes PIPELINE_NAME \"sources:load_zoning\", which the capture (filtered on the step slug) does not select: declared deviation LZ-D11. Sources-chain runs write no own ledger row on either side."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "Log lines differ by construction: legacy prints one \"[load-zoning] completed in\" line; the converted runner prints the descriptor.database target line, one \"acquired ckan_datastore <layer>: N feature(s) from P page(s)\" line per primary (11719/2528/1242/4/352/8913/558/913/643/4, the same counts legacy loaded) and \"[load_zoning] completed in\". No data effect."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "The audit table name comes from the descriptor (\"Zoning By-law\") instead of the legacy literal \"Toronto Zoning By-law ingest\". Presentation only; consumers read the Spec 58 §9 records_meta keys, which are unchanged."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "Row-set reshape (positional): POST emits 84 rows vs PRE 80. Added declared checks (the converted step emits every declared check on every run): no_op_refresh, zoning_areas_attr_drift, zoning_overlay_attr_drift, zoning_attr_drift_extra_columns, zoning_areas/overlay duplicate source_id counts, zoning_non_integer_source_id_count, zoning_null_geometry_count, zoning_areas_invalid_polygon_pct, zoning_height_overlay_unparseable_label_count, lot_coverage_overlay_out_of_range_nulled_count, zoning_orphan_delete_skipped, zoning_duration_ms, zoning_areas_distribution_top20_truncation. Removed: the ten per-layer *_duration_ms rows (one step-level zoning_duration_ms replaces them). Every metric present on both sides has an identical value (measured: 0 value diffs)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]._no_baseline",
+      "why": "Legacy marks the ten *_loaded_pct rows _no_baseline because its baseline read finds no metric rows after skip run 2189 (LZ-D7). The converted loaded_pct checks use absolute config thresholds (load_zoning_loaded_pct_warn_below 95 / fail_below 90), so no baseline marker is emitted. The values are identical."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]._other_count",
+      "why": "Legacy folds the top-20 distribution truncation into _other_count/_truncated_class_count on the distribution row; the converted step emits it as its own context row zoning_areas_distribution_top20_truncation {other_count 86, truncated_class_count 6}. Same numbers, separate row."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]._truncated_class_count",
+      "why": "Same reshape as _other_count: legacy carries _truncated_class_count 6 on the distribution row; the converted step reports truncated_class_count 6 / other_count 86 in the separate zoning_areas_distribution_top20_truncation context row."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "Positional consequence of the row-set reshape (4 more rows; ten per-layer duration rows replaced by one step-level row plus the added declared checks): array index i pairs different metrics. By metric name, every shared metric has the same value PRE vs POST (measured)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].order_guarantee",
+      "why": "Converted rows carry the descriptor order_guarantee annotation on the ordering checks (F-H3: a missing required base field aborts before the base write; OB-2: an empty base FAILs before any overlay; D3). Legacy rows have no such field. Annotation only."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "Every converted audit row carries source \"check\" or \"context\" (the runner records which declared check produced it); legacy rows have no source field. Annotation only."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "Legacy emits INFO for count rows with no threshold; the converted step evaluates the declared thresholds, so the *_invalid_polygon_count and *_orphans_removed_count rows, zoning_areas_loaded_count, zoning_areas_distribution_top20 and dataset_version_age_days grade PASS. Values are identical; the verdict is WARN on both sides (the single WARN is zoning_override_force_reload_present, seam parity)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "Converted rows state the declared threshold text (viol == 0, pct <= 0.5, pct >= 95, value_max 10, value_max 450, ...) sourced from the 15 load_zoning_* logic variables (LZ-D5: the 18 legacy literals moved to config); legacy rows carry no threshold field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "Positional only: with the reshaped row set, index i holds a different metric on each side. Compared by metric name there are 0 value differences across all shared metrics on both chains (measured from the goldens)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].warn_threshold",
+      "why": "Converted two-band checks state warn_threshold (viol <= 50 invalid polygons, pct <= 2 orphans, pct >= 90 loaded, value_max 730 dataset age) from config; legacy rows carry no warn_threshold field."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner-written run-record key (count of FAIL checks, 0 here); legacy records_meta has no such key. The verdict is WARN on both sides."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner-written run-record key: 1 WARN check (zoning_override_force_reload_present, from the ZONING_FORCE_RELOAD seam every capture uses); legacy has the same WARN row but no counter key."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner-written snapshot of the resolved logic variables (the 15 load_zoning_* keys, seeded and verified 2026-10-04): the converted step reads its thresholds from config instead of 18 literals (LZ-D5). Absent on the legacy side."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "The 0y all-primaries gate block (scope all_primaries, reason, per-primary decisions, max_age_days, dataset_version_age_days 226) reaches records_meta via stepCtx.gate -> gateRecordsMeta; under the forced reload every decision is recorded and the step loads. Legacy publishes no gate block."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner-written key: \"chain_owned\" on sources-chain runs (the chain owns the ledger row), \"owned\" on the standalone run. Legacy records_meta has no such key."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner-written run-record key (pool error count, 0). Absent on the legacy side."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner-written terminal label \"loaded_with_warnings\" from the descriptor terminals; legacy has no terminal key. Consistent with verdict WARN on both sides."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "Runner-written list of the WARN rows (\"zoning_override_force_reload_present: true\"); the same WARN row is in the legacy audit table, only the summary list key is new."
+    }
+  ]
+}

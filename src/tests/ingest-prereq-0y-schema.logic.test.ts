@@ -568,12 +568,34 @@ describe('INGESTOR prerequisite 0y — ckan_datastore + ckan + trigger style + s
     const triggersAt = (descriptor: Record<string, any>) =>
       Array.isArray(descriptor.staleness?.trigger) ? (descriptor.staleness.trigger as Array<Record<string, any>>) : [];
 
+    let consumerSeen = false;
     for (const file of globbed) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const descriptor = require(file);
       const label = path.relative(process.cwd(), file);
 
       expect(validate(descriptor), `${label} must stay valid: ${errText(validate.errors)}`).toBe(true);
+
+      // ② (batch-2 row 3.3, 2026-10-03): load_zoning is the ONE declared consumer of these fields — it must
+      // declare them (never vacuous); every other descriptor keeps the "none declares" pin below.
+      if (path.basename(file) === 'load-zoning.descriptor.json') {
+        consumerSeen = true;
+        for (const e of (descriptor.inputs?.reads?.externals as Array<Record<string, any>>) ?? []) {
+          expect(e.format, `${label}'s external ${e.id} must declare the 0y \`ckan_datastore\` format`).toBe(
+            'ckan_datastore',
+          );
+          expect(e.ckan, `${label}'s external ${e.id} must declare the 0y \`ckan\` block`).toBeDefined();
+        }
+        expect(
+          descriptor.staleness?.skip_scope,
+          `${label} is the declared all-primaries consumer and must declare staleness.skip_scope`,
+        ).toBe('all_primaries');
+        expect(triggersAt(descriptor), `${label} must declare exactly the one ckan_metadata trigger`).toHaveLength(1);
+        expect(triggersAt(descriptor)[0]!.style, `${label}'s trigger must declare the 0y \`ckan_metadata\` style`).toBe(
+          'ckan_metadata',
+        );
+        continue;
+      }
 
       for (const e of (descriptor.inputs?.reads?.externals as Array<Record<string, any>>) ?? []) {
         expect(e.ckan, `${label}'s external ${e.id} must not declare a 0y \`ckan\` block`).toBeUndefined();
@@ -587,6 +609,8 @@ describe('INGESTOR prerequisite 0y — ckan_datastore + ckan + trigger style + s
         expect(trigger.style, `${label} has a trigger declaring a 0y \`style\``).toBeUndefined();
       }
     }
+
+    expect(consumerSeen, 'the glob must reach scripts/load-zoning.descriptor.json (the declared consumer)').toBe(true);
   });
 });
 
