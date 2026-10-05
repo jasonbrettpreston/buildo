@@ -494,16 +494,16 @@ The §11 8-CTE join over 486K parcels is the sources chain's single biggest cost
   - upstream: none
   - downstream: enrich_centreline
   - consumers: enrich_centreline (records_meta centreline_load) · load_centreline (records_meta centreline_load.features_updated)
-- `enrich_centreline` — ENRICHER · pending · owner specs: 62
+- `enrich_centreline` — ENRICHER · converted · owner specs: 62
   - `scripts/enrich-centreline.js`
   - `scripts/enrich-centreline.descriptor.json`
   - `scripts/enrich-centreline.notes.json`
   - `scripts/lib/compute/enrich-centreline.js`
   - `src/tests/steps/enrich_centreline/violations.test.ts`
-  - data (lineage snapshot, declared not witnessed): `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
+  - data (descriptor): `parcels` reads+writes (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
   - upstream: load_centreline · parcels
   - downstream: none
-  - consumers: none
+  - consumers: enrich_centreline (records_meta centreline_enrich) · src/components/FreshnessTimeline.tsx (records_meta duration_ms) · src/lib/admin/funnel.ts (records_meta duration_ms)
 <!-- /generated:target-files -->
 
 - `scripts/lib/source-version.js` (**[as-built ②]** the tier-1/tier-2 skip-check gate + skip re-emit, called via the library's `scripts/lib/step/{staleness,acquire}.js`, not from the step body)
@@ -634,6 +634,28 @@ the ③ cutover (`converted.json` registration) follow. Assessment: `docs/report
   closed externalization note, §8h variable names, §9 keys, §11 5th disjunct, §12.2); **EC-D10** (the producer read sees only
   the chain-prefixed `completed` row) ported verbatim and PINNED as a known defect by operator ruling 2026-09-30 — its fix
   belongs to the descriptor-truth programme.
+
+## As-built — batch-2 row 3.10 ③ enrich_centreline cutover (2026-10-04)
+
+`[as-built 2026-10-04, row 3.10 ③]` CUTOVER (`npm run cutover -- --step=enrich_centreline`): `scripts/enrich-centreline.js` is
+registered in `scripts/steps/_schema/converted.json` (26th converted step; its `pending[]` entry deleted in the same commit,
+leaving `pending[]` empty) and the census row is RETAINED with `status: converted`, `converted_at: commit-3`, `batch: "pending"`
+kept verbatim (Spec 124 R-K, R-AO). Archetype count corrected: it is the **6th** converted ENRICHER (census:
+`enrich_parcels`, `geocode_permits`, `enrich_ravines`, `enrich_heritage`, `compute_parcel_cost_estimates` precede it) — the ②
+section's "4th" counted only the parcel-enrichment siblings.
+
+- **Seams live.** `inputs.reads.steps` declares `{step:"load_centreline", version_pin:"exact"}` and
+  `{step:"parcels", version_pin:"gte"}`; both pairs are now converted-to-converted.
+- **Consumer registry (gate D)** gains the generated producer rows for this step's emits: `enrich_centreline → enrich_centreline`
+  (`records_meta centreline_enrich`, self-read by the §3.11 version-skip gate) and `enrich_centreline → src/lib/admin/funnel.ts`,
+  `→ src/components/FreshnessTimeline.tsx` (`records_meta duration_ms`).
+- **assert_schema probe lists** gain the 19 `enrich_centreline_*` logic variables (probe_presence +
+  `declared_logic_variables_present.expect`), so the assert_schema POST goldens are recaptured with this commit.
+- **`step_timeout` stays declared-not-wired.** The descriptor declares `execution.step_timeout "240m"` (plan D3);
+  `manifest.scripts.enrich_centreline` carries no `step_timeout_minutes`, so the slug stays in
+  `execution-budget-disposition.json` `step_timeout.pending` until a cloud run measures the step (Spec 124 R-AQ).
+- **Programme item LC-4** (generated SQL, no string surgery) → BUILT: the one builder in
+  `scripts/lib/compute/enrich-centreline.js` replaced the `.replace()` scoping (EC-D7).
 
 ## 6. License & Attribution
 

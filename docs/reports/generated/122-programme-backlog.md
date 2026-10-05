@@ -10,9 +10,9 @@ Total items: **130**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 29 |
+| ⬜ NOT_STARTED | 28 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 81 |
+| ✅ BUILT | 82 |
 | ⏭️ SUPERSEDED | 4 |
 
 **blocks batching: 0**
@@ -81,7 +81,7 @@ Total items: **130**
 | `LC-1c` | 122 §4.1 | a skip re-measures its checks live | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-2` | 122 §4.1a | 5-part logic fingerprint | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `LC-3` | 122 §4.2b | --plan mode | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
-| `LC-4` | 122 §4.6 | generated SQL only, no string surgery | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `LC-4` | 122 §4.6 | generated SQL only, no string surgery | ✅ BUILT | wf: batch2 row 3.10 enrich_centreline ①②③ (.cursor/batch2_enrich_centreline_active_task.md) | — | 2026-10-04 |
 | `LC-5` | 122 §4.1 (Spec 120 §4) | declaration_tiers badge + OpenLineage emit (split from LC-1, 2026-09-04) | ⬜ NOT_STARTED | followup: review_followups.md (split at WF2 'template freeze' C2, 2026-09-04) | — | 2026-09-04 |
 | `VAL-1` | 120 §5 | 12 named check types as generators | ⏭️ SUPERSEDED | — | — | 2026-08-29 |
 | `VAL-2` | 79 §2 | 12-item per-step evidence checklist | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |

@@ -452,8 +452,8 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
 // ============================================================================
 // PART C — registration, RED until ③ (`npm run cutover`).
 // ============================================================================
-describe('enrich_centreline — PART C: cutover registration (RED until ③)', () => {
-  it.fails('C1 converted.json registers scripts/enrich-centreline.js in converted[] and drops the pending entry (flips at: commit ③)', () => {
+describe('enrich_centreline — PART C: cutover registration (GREEN from ③, 2026-10-04)', () => {
+  it('C1 converted.json registers scripts/enrich-centreline.js in converted[] and drops the pending entry (flips at: commit ③)', () => {
     const conv = JSON.parse(fs.readFileSync(abs(CONVERTED_REL), 'utf8'));
     expect(conv.converted).toContain(STEP_REL);
     expect(conv.pending.map((p: AnyObj) => p.file)).not.toContain(STEP_REL);

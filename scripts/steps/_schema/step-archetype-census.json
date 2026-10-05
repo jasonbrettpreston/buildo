@@ -208,11 +208,15 @@
     },
     {
       "slug": "enrich_centreline",
-      "owner_specs": ["docs/specs/01-pipeline/62_source_centreline.md"],
+      "owner_specs": [
+        "docs/specs/01-pipeline/62_source_centreline.md"
+      ],
       "file": "scripts/enrich-centreline.js",
       "archetype": "ENRICHER",
       "batch": "pending",
-      "reason": "Spec 122 §1.10 declared; batch-2 row 3.10 conversion IN FLIGHT (commit ①, 2026-09-30) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER (class N set_based_join_update)"
+      "reason": "RETAINED at cutover per Spec 124 R-AO: archetype and batch are the census's own pre-cutover values, kept verbatim and never re-derived from the descriptor (a copy would make fast invariant #25 compare a value to itself); converted.json registers the file in converted[] and deletes its pending[] entry in the same commit (R-K).",
+      "status": "converted",
+      "converted_at": "commit-3"
     },
     {
       "slug": "enrich_heritage",

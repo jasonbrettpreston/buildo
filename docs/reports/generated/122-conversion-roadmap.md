@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **37** (+ **1** pending) · remaining slugs: **39** (+ **1** pending)
+Remaining files: **37** (+ **0** pending) · remaining slugs: **39** (+ **0** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 2 | 2 |
+| C5 | 1 | 1 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -29,12 +29,10 @@ Remaining files: **37** (+ **1** pending) · remaining slugs: **39** (+ **1** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| ENRICHER | `scripts/enrich-centreline.js` | enrich_centreline [pending: shape_clean] | sources (1) | bottom-left | — | — |
 | INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
-- `scripts/enrich-centreline.js` (ENRICHER): Spec 122 §1.10 declared; batch-2 row 3.10 conversion IN FLIGHT (commit ①, 2026-09-30) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER (class N set_based_join_update)
 - `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
 
 </details>
@@ -92,4 +90,4 @@ Remaining files: **37** (+ **1** pending) · remaining slugs: **39** (+ **1** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **25** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **39** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **26** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **39** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
