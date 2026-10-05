@@ -15,6 +15,7 @@ type ResolverModule = {
   resolveStatement: (
     sql: string,
     catalog: Record<string, string[]>,
+    opts?: { sessionTemps?: Set<string> },
   ) => {
     kind: string;
     fingerprint: string;
@@ -33,6 +34,7 @@ type ResolverModule = {
     utility: number;
     errors: string[];
   };
+  collectSessionTemps: (sql: string, catalog: Record<string, string[]>) => Set<string>;
 };
 
 // Loaded lazily inside beforeAll (error re-thrown per test in beforeEach) so a missing module turns every test RED
@@ -662,6 +664,64 @@ describe('WF3 resolver scope + closed statement kinds (outer-scope binding, loud
   it('G-B2 RED: REINDEX (schema-permitted maintenance op, plausibility.js MAINTENANCE_SQL) is a utility statement', () => {
     const r = R.resolveStatement('REINDEX TABLE parcels', CAT2);
     expect(r.kind).toBe('utility');
+    expect(r.error).toBeNull();
+  });
+});
+
+// WF3 resolver temp staging (2026-10-04, .cursor/wf3_resolver_temp_staging_active_task.md): `_staging`
+// maps to a base table ONLY when it stages a catalog table. The legacy zoning loader's
+// `CREATE TEMP TABLE _zoning_staging …` stages nothing in the catalog — it is a session temp
+// (no read, no write), never the nonexistent table `_zoning`.
+describe('sql-witness resolver — a TEMP *_staging that stages no catalog table is a session temp (WF3 temp staging)', () => {
+  const ZCAT: Record<string, string[]> = { ...CAT, zoning_height_overlay: ['source_id', 'geom'] };
+  const CREATE = 'CREATE TEMP TABLE _zoning_staging (source_id INTEGER NOT NULL) ON COMMIT DROP';
+  const INSERT = 'INSERT INTO _zoning_staging VALUES ($1), ($2)';
+  const DELETE = 'DELETE FROM zoning_height_overlay t WHERE NOT EXISTS (SELECT 1 FROM _zoning_staging s WHERE s.source_id = t.source_id)';
+
+  it('T1 RED: collectSessionTemps returns _zoning_staging (its base _zoning is not a catalog table)', () => {
+    expect([...R.collectSessionTemps(CREATE, ZCAT)]).toEqual(['_zoning_staging']);
+  });
+
+  it('T2 RED: with that session temp, the INSERT writes nothing and the DELETE reads only the real table', () => {
+    const temps = R.collectSessionTemps(CREATE, ZCAT);
+    const ins = R.resolveStatement(INSERT, ZCAT, { sessionTemps: temps });
+    expect(ins.writes).toEqual({});
+    expect(ins.error).toBeNull();
+    const del = R.resolveStatement(DELETE, ZCAT, { sessionTemps: temps });
+    expect(del.reads).toEqual({ zoning_height_overlay: ['source_id'] });
+    expect(del.writes).toEqual({ zoning_height_overlay: [] });
+    expect(del.error).toBeNull();
+    expect(JSON.stringify([ins, del])).not.toMatch(/"_zoning/);
+  });
+
+  it('T3 GREEN fence: a staging of a CATALOG table still maps to its base and is not a session temp', () => {
+    expect([...R.collectSessionTemps('CREATE TEMP TABLE parcels_staging (LIKE parcels)', CAT)]).toEqual([]);
+    const r = R.resolveStatement('INSERT INTO parcels (id, lot_size_sqm) SELECT id, lot_size_sqm FROM parcels_staging', CAT);
+    expect(keys(r.writes)).toEqual(['parcels']);
+    expect(keys(r.reads)).toEqual(['parcels']);
+  });
+
+  it('T4 GREEN fence: with an EMPTY catalog the legacy strip holds (src-sql-ledger passes {})', () => {
+    const r = R.resolveStatement(DELETE, {});
+    expect(keys(r.reads)).toContain('_zoning');
+    expect([...R.collectSessionTemps(CREATE, {})]).toEqual([]);
+  });
+
+  it('T5 GREEN fence: a non-staging TEMP that shadows a catalog table still fails loudly', () => {
+    const r = R.resolveStatement('CREATE TEMP TABLE parcels AS SELECT id FROM permits', CAT);
+    expect(r.error).toBe('FAIL:INPUT:temp-shadows:parcels');
+  });
+
+  it('T6 RED: statement-at-a-time (no sessionTemps) with a full catalog never credits the nonexistent _zoning', () => {
+    const r = R.resolveStatement(DELETE, ZCAT);
+    expect(keys(r.reads)).not.toContain('_zoning');
+    expect(keys(r.reads)).toContain('_zoning_staging');
+  });
+
+  it('T7 GREEN fence (plan fold, DeepSeek lens): a *_staging name that is ITSELF a catalog table is a real table, never stripped', () => {
+    const SCAT: Record<string, string[]> = { ...CAT, parcels_staging: ['id', 'note'] };
+    const r = R.resolveStatement('SELECT note FROM parcels_staging', SCAT);
+    expect(r.reads).toEqual({ parcels_staging: ['note'] });
     expect(r.error).toBeNull();
   });
 });

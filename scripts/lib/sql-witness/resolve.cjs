@@ -148,9 +148,25 @@ function makeRel(relname, schemaname, alias) {
   return { rel: relname, schema: schemaname || null, alias: alias || null, raw: bareName(schemaname, relname) };
 }
 
-/** Strip a trailing `_staging` suffix (staging tables resolve to their base table). */
+/**
+ * WF3 temp staging (2026-10-04): is `name` a staging of a CATALOG table? True iff it ends in
+ * `_staging`, is not itself a catalog table, and its stripped base IS a catalog table — or, when no
+ * catalog is known (an empty `{}`, e.g. src-sql-ledger), any `*_staging` (the legacy mapping).
+ * A TEMP `*_staging` whose base is not catalogued (legacy load-zoning `_zoning_staging`) is an
+ * ordinary session temp, never a nonexistent base table. Derived from the catalog, never a list.
+ * Deliberate: with a NON-empty catalog that lacks the base (a stale catalog), the staging name is a session temp under collectSessionTemps — no production consumer passes a partial catalog (assemble.cjs and _witness-guard.ts pass the full catalog; src-sql-ledger passes the full catalog or {}).
+ */
+function isCatalogStaging(name, cat) {
+  if (typeof name !== 'string' || name.length <= '_staging'.length || !name.endsWith('_staging')) return false;
+  const c = cat || {};
+  if (Object.keys(c).length === 0) return true;
+  if (Object.prototype.hasOwnProperty.call(c, name)) return false;
+  return Object.prototype.hasOwnProperty.call(c, name.slice(0, name.length - '_staging'.length));
+}
+
+/** Strip a trailing `_staging` suffix — only for a staging of a catalog table (isCatalogStaging). */
 function baseTable(name) {
-  if (name.length > '_staging'.length && name.endsWith('_staging')) {
+  if (isCatalogStaging(name, currentCatalog)) {
     return name.slice(0, name.length - '_staging'.length);
   }
   return name;
@@ -196,7 +212,7 @@ function boundInChain(scope, name) {
  * CTEs / subquery aliases. `derived` names are column sources we must NOT treat as real
  * tables. `parent` is the enclosing scope chain: a RangeVar naming a CTE bound here or in
  * any enclosing scope (incl. a sibling CTE) is derived — under its alias too (`FROM a z`) —
- * and a CTE binding beats the `_staging` -> base mapping. A schema-qualified name is never
+ * and a CTE binding beats the `_staging` -> base mapping (isCatalogStaging). A schema-qualified name is never
  * a CTE. A CTE bound only inside a nested/sibling subquery is not visible here.
  */
 function collectScope(stmtNode, parent) {
@@ -384,7 +400,7 @@ function isTempRel(rv) {
 
 /**
  * The session temp tables ONE SQL text creates (every statement of it): CREATE TABLE AS or
- * CREATE TABLE whose relation is a temp (isTempRel), not `*_staging`, and not a catalog table
+ * CREATE TABLE whose relation is a temp (isTempRel), not a staging of a catalog table (isCatalogStaging), and not a catalog table
  * name (a shadow is never exempt). The single home of temp detection (Spec 122 §10.1 one
  * resolver): assemble.cjs unions these per pid and passes them back as `opts.sessionTemps`.
  * Requires init(); never throws (unparseable SQL -> empty set).
@@ -403,7 +419,7 @@ function collectSessionTemps(sql, catalog) {
     const rv = node.CreateTableAsStmt
       ? node.CreateTableAsStmt.into && node.CreateTableAsStmt.into.rel
       : node.CreateStmt ? node.CreateStmt.relation : null;
-    if (!rv || !isRangeVar(rv) || !isTempRel(rv) || rv.relname.endsWith('_staging')) continue;
+    if (!rv || !isRangeVar(rv) || !isTempRel(rv) || isCatalogStaging(rv.relname, cat)) continue;
     if (Object.prototype.hasOwnProperty.call(cat, rv.relname)) continue;
     out.add(rv.relname);
   }
@@ -515,9 +531,9 @@ function resolveNode(node, fp, catalog) {
   // --- CREATE TABLE ... AS SELECT -> write statement ---
   if (key === 'CreateTableAsStmt') {
     const target = inner.into && inner.into.rel ? inner.into.rel : null;
-    // WF3 C2: a session temp (`isTempRel`, not `*_staging`) is no write — its query's reads are
+    // WF3 C2: a session temp (`isTempRel`, not a staging of a catalog table) is no write — its query's reads are
     // witnessed here. A temp that shadows a catalog table is never silently exempt.
-    const temp = target && isRangeVar(target) && isTempRel(target) && !target.relname.endsWith('_staging');
+    const temp = target && isRangeVar(target) && isTempRel(target) && !isCatalogStaging(target.relname, catalog);
     if (temp && Object.prototype.hasOwnProperty.call(catalog, target.relname)) {
       currentErrors.push(`FAIL:INPUT:temp-shadows:${target.relname}`);
     } else if (temp) {
@@ -532,14 +548,14 @@ function resolveNode(node, fp, catalog) {
     return result('write', fp, reads, writes, excluded, null);
   }
 
-  // --- CREATE [TEMP] TABLE <x>_staging (...) -> utility; other CREATE -> utility ---
+  // --- CREATE [TEMP] TABLE (staging or not) -> utility; a session temp's name is collected by collectSessionTemps ---
   if (key === 'CreateStmt') {
     const isTemp = inner.relation && inner.relation.relpersistence === 't';
     if (isStagingCreate(inner, isTemp)) return result('utility', fp, {}, {}, [], null);
     return result('utility', fp, {}, {}, [], null);
   }
 
-  // --- DROP TABLE <x>_staging -> utility ---
+  // --- DROP TABLE -> utility ---
   if (key === 'DropStmt') {
     return result('utility', fp, {}, {}, [], null);
   }
@@ -950,6 +966,7 @@ async function init() {
 // Session temp tables of the statement's process (WF3 C2, `opts.sessionTemps`): bound like
 // CTE names while one statement resolves; module-level for the same reason as currentErrors.
 let currentSessionTemps = new Set();
+let currentCatalog = {}; // the catalog of the statement being resolved (baseTable's isCatalogStaging); set in resolveStatement
 
 /**
  * resolveStatement(sql, catalog, opts) -> plain result object; never throws on bad SQL.
@@ -959,6 +976,7 @@ let currentSessionTemps = new Set();
 function resolveStatement(sql, catalog, opts) {
   const cat = catalog || {};
   currentSessionTemps = opts && opts.sessionTemps instanceof Set ? opts.sessionTemps : new Set();
+  currentCatalog = cat;
   let fp = '';
   try {
     fp = typeof fingerprintSync === 'function' ? fingerprintSync(sql) : '';
