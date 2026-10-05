@@ -2387,7 +2387,13 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // abuts_laneway: the corner/through setback arithmetic and the laneway-suite gate). Same disposition
     // as RV-D5/EH-D4/massing/neighbourhoods: declaring it moves enrich_parcels' own seam pairs and
     // staleness gating, out of scope for a conversion that must not change enrich_parcels' behaviour.
-    enrich_parcels: { missing: ['enrich_centreline', 'enrich_heritage', 'enrich_ravines', 'massing', 'neighbourhoods', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6 + 3.8 + 3.10
+    // WIDENED AGAIN at the batch-2 row 3.3 ③ (load_zoning, 2026-10-05): load_zoning became a CONVERTED
+    // producer, so the ledger can now see enrich_parcels' long-standing §9 read of it
+    // (scripts/lib/compute/enrich-parcels.js:169-192 — the latest sources:load_zoning run's
+    // records_meta.zoning_layers_loaded, base must be loaded — plus the zoning tables). Same disposition
+    // as enrich_centreline above: declaring it moves enrich_parcels' own seam pairs and staleness gating,
+    // out of scope for a conversion that must not change enrich_parcels' behaviour.
+    enrich_parcels: { missing: ['enrich_centreline', 'enrich_heritage', 'enrich_ravines', 'load_zoning', 'massing', 'neighbourhoods', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6 + 3.8 + 3.10 + 3.3
     // NEW at the batch-2 row 3.7 cutover (2026-09-24): parcels becoming a CONVERTED producer
     // makes the ledger's column-overlap derivation newly VISIBLE for every OTHER converted
     // step whose compute reads the `parcels` table directly but has never declared a

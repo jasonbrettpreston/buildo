@@ -391,6 +391,26 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
     return bodies;
   }
 
+  /**
+   * TABLE form (load_zoning, converted 2026-10-05): the compute dispatches through an observer table —
+   * an object-literal entry `<check id>: <fn>,` or a family entry `<suffix>: <fn>,` where the check id
+   * ends with `_<suffix>` (the longest matching suffix wins) — and `ctx.report(id, fn(ctx))`. Returns
+   * the observer's body, or null when no table entry names a function this source defines (the caller
+   * then fails closed).
+   */
+  function tableObserverBody(source: string, checkId: string): string | null {
+    const entries = [...source.matchAll(/^\s*([a-z0-9_]+)\s*:\s*([A-Za-z0-9_]+)\s*,?\s*$/gm)];
+    const exact = entries.find((e) => e[1] === checkId);
+    const suffix = exact
+      ? null
+      : entries
+          .filter((e) => e[1] && checkId.endsWith(`_${e[1]}`))
+          .sort((a, b) => (b[1] as string).length - (a[1] as string).length)[0];
+    const hit = exact ?? suffix;
+    if (!hit || !hit[2]) return null;
+    return functionBody(source, hit[2]);
+  }
+
   it('finds at least 150 pct-bounded checks (anti-vacuous)', () => {
     expect(fleetChecks().length).toBeGreaterThanOrEqual(150);
   });
@@ -427,6 +447,16 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
           return found;
         });
         if (reports.length === 0 || reports.some((l) => /\bviolations\s*:/.test(l) || !/\bvalue\s*(:|,|\})/.test(l))) {
+          offenders.push(`${stepName}:${check.id}`);
+        }
+        continue;
+      }
+
+      // TABLE: an observer-table dispatch (load_zoning). The observer body must report `value` (a
+      // `{ value: … }` literal or the INERT constant, which carries value) and never `violations`.
+      const observer = tableObserverBody(source, check.id);
+      if (observer) {
+        if (/\bviolations\s*:/.test(observer) || !(/\bvalue\s*(:|,|\})/.test(observer) || /\bINERT\b/.test(observer))) {
           offenders.push(`${stepName}:${check.id}`);
         }
         continue;
@@ -494,5 +524,23 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
     expect(bodies).not.toBeNull();
     expect(bodies!.some((b) => /\bviolations\s*:/.test(b))).toBe(true);
     expect(helperBodies("function some_pct(ctx) { const v = 1; reportGradedPct(ctx, 'some_pct'); }", 'some_pct')).toBeNull();
+  });
+
+  // TABLE-form controls (2026-10-05): an exact entry and a family-suffix entry both resolve to the
+  // observer body; a check id no table entry names resolves to null (the caller fails closed).
+  it('the table form resolves exact and family-suffix observers and returns null for an unnamed id', () => {
+    const src = [
+      'function obsPct(ctx, id) { return { value: 1, detail: 1 }; }',
+      'function obsFlag(ctx) { return { violations: 1, detail: 0 }; }',
+      'const fixed = {',
+      '  base_invalid_pct: obsFlag,',
+      '};',
+      'const family = {',
+      '  loaded_pct: obsPct,',
+      '};',
+    ].join('\n');
+    expect(tableObserverBody(src, 'base_invalid_pct')).toContain('violations');
+    expect(tableObserverBody(src, 'overlay_loaded_pct')).toContain('value: 1');
+    expect(tableObserverBody(src, 'something_else_pct')).toBeNull();
   });
 });

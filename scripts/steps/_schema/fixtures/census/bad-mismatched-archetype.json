@@ -379,7 +379,9 @@
       "file": "scripts/load-zoning.js",
       "archetype": "INGESTOR",
       "batch": "pending",
-      "reason": "Spec 122 §1.10 declared; batch-2 row 3.3 conversion IN FLIGHT (commit ①, 2026-10-02) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (ten primaries, ten targets, all-primaries skip)"
+      "reason": "RETAINED at cutover per Spec 124 R-AO: archetype and batch are the census's own pre-cutover values, kept verbatim and never re-derived from the descriptor (a copy would make fast invariant #25 compare a value to itself); converted.json registers the file in converted[] and deletes its pending[] entry in the same commit (R-K).",
+      "status": "converted",
+      "converted_at": "commit-3"
     },
     {
       "slug": "observe_chain",

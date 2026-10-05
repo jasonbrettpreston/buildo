@@ -73,6 +73,22 @@
       "source": "emits"
     },
     {
+      "consumer": "enrich_parcels",
+      "producer": "load_zoning",
+      "kind": "records_meta",
+      "key": "zoning_layers_loaded",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "enrich_parcels",
+      "producer": "load_zoning",
+      "kind": "records_meta",
+      "key": "zoning_partial_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "enrich_ravines",
       "producer": "load_ravines",
       "kind": "records_meta",
@@ -199,6 +215,14 @@
       "key": "heritage_load.heritage_register.feature_count",
       "value": "any",
       "source": "counters"
+    },
+    {
+      "consumer": "load_zoning",
+      "producer": "load_zoning",
+      "kind": "records_meta",
+      "key": "zoning_layer_versions",
+      "value": "any",
+      "source": "trigger"
     },
     {
       "consumer": "massing",

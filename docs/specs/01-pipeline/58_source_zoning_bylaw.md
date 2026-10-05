@@ -399,16 +399,16 @@ Every test file MUST include the SPEC LINK header.
 ### Target Files
 <!-- generated:target-files -->
 <!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
-- `load_zoning` — INGESTOR · pending · owner specs: 58
+- `load_zoning` — INGESTOR · converted · owner specs: 58
   - `scripts/load-zoning.js`
   - `scripts/load-zoning.descriptor.json`
   - `scripts/load-zoning.notes.json`
   - `scripts/lib/compute/load-zoning.js`
   - `src/tests/steps/load_zoning/violations.test.ts`
-  - data (lineage snapshot, declared not witnessed): `zoning_building_setback_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` writes (migrations/164_zoning_bylaw_tables.sql)
+  - data (descriptor): `zoning_building_setback_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` writes (migrations/164_zoning_bylaw_tables.sql)
   - upstream: none
   - downstream: none
-  - consumers: none
+  - consumers: enrich_parcels (records_meta zoning_layers_loaded) · enrich_parcels (records_meta zoning_partial_load) · load_zoning (records_meta zoning_layer_versions)
 <!-- /generated:target-files -->
 - `scripts/lib/zoning-attr-drift.js`
 - `scripts/lib/geometry-validator.js`
@@ -648,6 +648,26 @@ What was a 753-line `pipeline.run` loader is now the frozen shell `scripts/load-
 - **Fifteen logic variables (LZ-D5 closed; Spec 124 Rule 3, all `on_invalid: "fail"`, admin group "Source Ingestion"):** `load_zoning_datastore_page_size` 10000, `load_zoning_http_timeout_ms` 60000 (a whole-request deadline replacing the 30 s socket-idle timeout, LZ-D15), `load_zoning_orphan_warn_pct` 0.5, `load_zoning_orphan_fail_pct` 2, `load_zoning_loaded_pct_warn_below` 95, `load_zoning_loaded_pct_fail_below` 90, `load_zoning_dataset_age_warn_days` 450, `load_zoning_dataset_age_fail_days` 730, `load_zoning_force_reload_max_age_days` 730, `load_zoning_null_count_warn_over_pct` 10, `load_zoning_with_exceptions_warn_below_pct` 50, `load_zoning_duration_warn_factor` 2, `load_zoning_base_invalid_polygon_warn_max_count` 50, `load_zoning_base_invalid_polygon_warn_max_pct` 0.5, `load_zoning_distribution_top_n` 20. The legacy redirect cap is struck, not registered (LZ-D14).
 - **Declared deviations / limitations (descriptor).** Deviations: LZ-D11 standalone ledger name, LZ-D13 dropped `?? storedVersion` fallback, LZ-D14 redirect cap, LZ-D15 deadline, LZ-D16 millisecond clock, LZ-D17 re-emit type check, LZ-D18 single validation statement, LZ-D12 on the thrown-overlay path (null version, fail-safe), LZ-D6 package_show fails by name, LZ-D19 base failure through the runner's failure terminal, LZ-D1 measured `unchanged`, the audit-row set, the base empty / all-discarded gate, the shaped-row distribution. Limitations: LZ-D2, LZ-D3, LZ-D4, LZ-D7, LZ-D8, LZ-D20.
 - **Force seam parity.** The ① legacy seam `ZONING_FORCE_RELOAD=1` (15d69d04) is the converted `override.force_run`; the WARN check `zoning_override_force_reload_present` reproduces the legacy row, so the forced PRE and POST captures carry the same row.
+
+### 11.2 batch-2 row 3.3 ③ (2026-10-05) — `load_zoning` CUTOVER
+
+`[as-built 2026-10-05, row 3.3 ③]` CUTOVER (`npm run cutover -- --step=load_zoning`): `scripts/load-zoning.js` is registered in
+`scripts/steps/_schema/converted.json` (27th converted step; its `pending[]` entry deleted in the same commit, leaving `pending[]`
+empty) and the census row is RETAINED with `status: converted`, `converted_at: commit-3`, `batch: "pending"` kept verbatim
+(Spec 124 R-K, R-AO). It is the **9th** converted INGESTOR and the first multi-primary CKAN DataStore one (10 primaries → 10 targets).
+
+- **No seam pairs.** `inputs.reads.steps` is `[]`; the seam-pair registry does not move.
+- **Consumer registry (gate D)** gains the generated producer rows for the §9 contract: `load_zoning → enrich_parcels`
+  (`records_meta zoning_layers_loaded`, `records_meta zoning_partial_load`) and `load_zoning → load_zoning`
+  (`records_meta zoning_layer_versions`, self-read by the all-primaries gate, 0y).
+- **assert_schema probe lists** gain the 15 `load_zoning_*` logic variables (probe_presence +
+  `declared_logic_variables_present.expect`), so the assert_schema POST goldens are recaptured with this commit.
+- **`step_timeout` stays declared-not-wired.** The descriptor declares `execution.step_timeout "15m"`;
+  `manifest.scripts.load_zoning` carries no `step_timeout_minutes`, so the slug stays in
+  `execution-budget-disposition.json` `step_timeout.pending` until a cloud run measures the converted step (Spec 124 R-AQ).
+- **Class lock (pct checks report a value).** `src/tests/steps/pct-checks-evaluate.logic.test.ts` resolves this step's
+  observer-TABLE dispatch (`observerFor` → `named(id, fn)`); every pct observer reports `value` (or the INERT constant), never a
+  `violations` flag.
 
 ## 12. Known Failure Modes
 
