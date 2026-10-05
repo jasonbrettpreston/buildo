@@ -212,3 +212,55 @@ describe('scripts/backfill-realtor-permit-trades.js — manifest.json wiring', (
     expect(idxBackfillRealtor).toBeLessThan(idxComputeCost);
   });
 });
+
+// WF3 2026-10-04 (sync-permit-trades sibling): the backfill INSERT omitted
+// attachment_basis, so every realtor row it adds carries a NULL basis — Spec 80
+// L476 makes `attachment_basis_null_count == 0` a hard FAIL ("a NULL basis = a
+// missed writer"). The realtor append is evidence (Spec 80 §5.C.1 rule 8).
+// Resolved with the ONE witness resolver against the committed catalog.
+describe('scripts/backfill-realtor-permit-trades.js — attachment_basis (Spec 80 §5.C)', () => {
+  type Resolver = {
+    init: () => Promise<void>;
+    resolveStatement: (
+      sql: string,
+      catalog: Record<string, string[]>,
+    ) => { writes: Record<string, string[]>; error: string | null };
+  };
+  let R: Resolver;
+  let catalog: Record<string, string[]>;
+  let insertSql: string;
+  let script: string;
+
+  beforeAll(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    R = require(path.join(process.cwd(), 'scripts/lib/sql-witness/resolve.cjs')) as Resolver;
+    await R.init();
+    catalog = (JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'docs/reports/witness/_catalog.json'), 'utf8'),
+    ) as { tables: Record<string, string[]> }).tables;
+    script = fs.readFileSync(
+      path.resolve(__dirname, '../../scripts/backfill-realtor-permit-trades.js'),
+      'utf-8',
+    );
+    insertSql = script.match(/`(INSERT\s+INTO\s+permit_trades[\s\S]*?)`/)?.[1] ?? '';
+  });
+
+  it('the INSERT writes only catalogued permit_trades columns, including attachment_basis', () => {
+    expect(insertSql, 'INSERT INTO permit_trades template not found').toBeTruthy();
+    const r = R.resolveStatement(insertSql, catalog);
+    expect(r.error).toBeNull();
+    const written = r.writes.permit_trades ?? [];
+    expect(written.filter((c) => !(catalog.permit_trades ?? []).includes(c))).toEqual([]);
+    expect(written).toContain('attachment_basis');
+  });
+
+  it("the SELECT projects the realtor basis as the literal 'evidence'", () => {
+    expect(insertSql).toMatch(/true,\s*\$4::timestamptz,\s*'evidence'/);
+  });
+
+  it('emitMeta declares attachment_basis among the permit_trades writes', () => {
+    const metaBlock = script.match(/pipeline\.emitMeta\(([\s\S]*?)\)\s*;/)?.[1] ?? '';
+    const writesBlock = metaBlock.match(/permit_trades:\s*\[([\s\S]*?)\]/)?.[1] ?? '';
+    expect(writesBlock).toMatch(/['"]attachment_basis['"]/);
+  });
+});

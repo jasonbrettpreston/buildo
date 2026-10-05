@@ -142,17 +142,21 @@ pipeline.run('reclassify-all', async (pool) => {
             [permit.permit_num, permit.revision_num]
           );
           if (matches.length > 0) {
-            const tradeCols = 10;
+            // Spec 80 §5.C: the same 9 columns + basis derivation as
+            // classify-permits.js. permit_trades has never had trade_slug /
+            // trade_name columns (migration 006) — WF3 2026-10-04.
+            const tradeCols = 9;
             const tradePlaceholders = [];
             const tradeValues = [];
             for (let ti = 0; ti < matches.length; ti++) {
               const m = matches[ti];
               const base = ti * tradeCols;
-              tradePlaceholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7},$${base+8},$${base+9},$${base+10})`);
-              tradeValues.push(m.permit_num, m.revision_num, m.trade_id, m.trade_slug, m.trade_name, m.tier, m.confidence, m.is_active, m.phase, m.lead_score);
+              const basis = m.attachment_basis || (m.is_active ? 'evidence' : 'inference');
+              tradePlaceholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7},$${base+8},$${base+9})`);
+              tradeValues.push(m.permit_num, m.revision_num, m.trade_id, m.tier, m.confidence, m.is_active, m.phase, m.lead_score, basis);
             }
             await client.query(
-              `INSERT INTO permit_trades (permit_num, revision_num, trade_id, trade_slug, trade_name, tier, confidence, is_active, phase, lead_score)
+              `INSERT INTO permit_trades (permit_num, revision_num, trade_id, tier, confidence, is_active, phase, lead_score, attachment_basis)
                VALUES ${tradePlaceholders.join(',')}`,
               tradeValues
             );
@@ -244,7 +248,7 @@ pipeline.run('reclassify-all', async (pool) => {
   });
   pipeline.emitMeta(
     { permits: ['permit_num', 'revision_num', 'permit_type', 'structure_type', 'work', 'description', 'status', 'est_const_cost', 'issued_date', 'scope_tags'] },
-    { permits: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'], permit_trades: ['permit_num', 'revision_num', 'trade_id'], permit_products: ['permit_num', 'revision_num', 'product_id'] }
+    { permits: ['project_type', 'scope_tags', 'scope_classified_at', 'scope_source'], permit_trades: ['permit_num', 'revision_num', 'trade_id', 'tier', 'confidence', 'is_active', 'phase', 'lead_score', 'attachment_basis'], permit_products: ['permit_num', 'revision_num', 'product_id'] }
   );
 
   }); // withAdvisoryLock
