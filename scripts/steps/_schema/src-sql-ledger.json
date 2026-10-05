@@ -1877,14 +1877,15 @@
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
-        "da113c66bd3bb95b",
-        "f42db21a8c9b744d"
+        "1a62b0ef89dbc6d5",
+        "da113c66bd3bb95b"
       ],
       "reads": {
         "coa_applications": [
           "application_number",
           "description",
           "estimated_cost",
+          "last_seen_at",
           "latitude",
           "lifecycle_phase",
           "lifecycle_stalled",
@@ -1892,8 +1893,7 @@
           "modeled_gfa_sqm",
           "neighbourhood_id",
           "street_name",
-          "street_num",
-          "updated_at"
+          "street_num"
         ],
         "cost_estimates": [
           "cost_range_high",
