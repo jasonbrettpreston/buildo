@@ -334,7 +334,7 @@ zero writes both times — the guard/limitations-only change touches no SQL path
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=245 |
+| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=246 |
 | 2 | enrich_heritage | PASS | 10 declared, missing from seeds: none |
 | 3 | enrich_heritage | PASS | retired=1 overlap-with-declared=none |
 | 7 | enrich_heritage | PASS | SPEC LINK header present=true |

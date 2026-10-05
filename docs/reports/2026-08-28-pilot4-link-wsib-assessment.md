@@ -736,7 +736,7 @@ The permits and standalone POST arms were re-taken under the 0y/0z1 library. `ta
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_wsib | PASS | min_migration=240 <= migrations count=245 |
+| 1 | link_wsib | PASS | min_migration=240 <= migrations count=246 |
 | 2 | link_wsib | PASS | 8 declared, missing from seeds: none |
 | 3 | link_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_wsib | PASS | SPEC LINK header present=true |

@@ -1376,7 +1376,7 @@ gate reads it as EXPLAINED (cited by name) rather than silently passing or wrong
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=245 |
+| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=246 |
 | 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
 | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_centroids | PASS | SPEC LINK header present=true |

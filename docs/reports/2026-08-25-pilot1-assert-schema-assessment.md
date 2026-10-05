@@ -457,7 +457,7 @@ Batch1 I1's own cutover (`assert_global_coverage`, commit 9, R-K) registered 20 
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=245 |
+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=246 |
 | 2 | assert_schema | PASS | 3 declared, missing from seeds: none |
 | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_schema | PASS | SPEC LINK header present=true |

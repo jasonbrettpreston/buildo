@@ -781,7 +781,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_heritage | PASS | min_migration=227 <= migrations count=245 |
+| 1 | load_heritage | PASS | min_migration=227 <= migrations count=246 |
 | 2 | load_heritage | PASS | 7 declared, missing from seeds: none |
 | 3 | load_heritage | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_heritage | PASS | SPEC LINK header present=true |

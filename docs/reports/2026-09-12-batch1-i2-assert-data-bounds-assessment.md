@@ -750,7 +750,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=245 |
+| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=246 |
 | 2 | assert_data_bounds | PASS | 26 declared, missing from seeds: none |
 | 3 | assert_data_bounds | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_data_bounds | PASS | SPEC LINK header present=true |

@@ -526,7 +526,7 @@ Re-captured after the DB restore (Spec 124 §5 R-BA gate K FIXER commit series).
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_massing | PASS | min_migration=81 <= migrations count=245 |
+| 1 | link_massing | PASS | min_migration=81 <= migrations count=246 |
 | 2 | link_massing | PASS | 8 declared, missing from seeds: none |
 | 3 | link_massing | PASS | retired=1 overlap-with-declared=none |
 | 7 | link_massing | PASS | SPEC LINK header present=true |

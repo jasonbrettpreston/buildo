@@ -726,7 +726,7 @@ Spec 124 §2 Rule 13's R-T addendum lands 5 net-new `invariants[]` (rows, multi_
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=245 |
+| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=246 |
 | 2 | link_parcel_addresses | PASS | 7 declared, missing from seeds: none |
 | 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |

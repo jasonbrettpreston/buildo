@@ -734,7 +734,7 @@ seat re-runs **before ②** and **before ③**.
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | massing | PASS | min_migration=227 <= migrations count=245 |
+| 1 | massing | PASS | min_migration=227 <= migrations count=246 |
 | 2 | massing | PASS | 7 declared, missing from seeds: none |
 | 3 | massing | PASS | retired=0 overlap-with-declared=none |
 | 7 | massing | PASS | SPEC LINK header present=true |
