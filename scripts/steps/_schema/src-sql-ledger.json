@@ -556,6 +556,7 @@
           "radius_cap_km",
           "trade_slug",
           "trade_slugs_override",
+          "updated_at",
           "user_id"
         ]
       }
@@ -2354,6 +2355,7 @@
           "coa_linked",
           "coa_low_confidence",
           "coa_total",
+          "created_at",
           "inspections_not_passed_count",
           "inspections_outstanding_count",
           "inspections_passed_count",
