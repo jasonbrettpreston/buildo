@@ -23,8 +23,8 @@
 //   · `0z1-T7` — REQUIRED db-tier gate. The executed proof of plan §1.1: the same
 //     `ST_GeomFromWKB(geom_wkb, 4326)` INSERT into a `geometry(MultiLineString,4326)` column
 //     SUCCEEDS for fixture (a) from the `multiline` arm; from the current `line` arm (a LineString)
-//     it is REFUSED (`does not match column type`) on PostGIS < 3.4 — the 3.3.7 target — and
-//     silently AUTO-PROMOTED on PostGIS >= 3.4 (the testcontainer), so its own bytes never land.
+//     it is REFUSED (`does not match column type`) on the target (PostGIS 3.3, pinned by
+//     `db_target`; T-PIN-2 guards the version), so its own bytes never land.
 //   · `0z1-T8` — REQUIRED db-tier gate, and the SOLE no-op guard for `line_validity` (plan O-2):
 //     without the field a zero-length line repairs to EMPTY (`skipped_null`) and a self-crossing
 //     line is `accepted`; with it BOTH are `skipped_degenerate_line`.
@@ -319,9 +319,8 @@ describe.skipIf(!dbAvailable())(
 
         // ── the FAILURE direction: the SAME insert from the CURRENT `line` arm, which collapses a
         // single-member extract to a genuine LineString (asserted first — version-independent).
-        // What PostGIS then does is VERSION-dependent (measured 2026-10-02): 3.3.7 (the target)
-        // REFUSES it; 3.4.3 (the testcontainer) AUTO-PROMOTES it. Either way the line arm's own
-        // bytes never land in a MultiLineString column.
+        // The target (PostGIS 3.3, pinned by `_contracts.json` `db_target` and guarded by T-PIN-2)
+        // REFUSES it, so the line arm's own bytes never land in a MultiLineString column.
         const lineArmRow = await runOne(
           writeLib.geometryValidationSql(KEY_TYPE, 'line', null, {}) as string,
           FX.a,
@@ -332,17 +331,8 @@ describe.skipIf(!dbAvailable())(
           [lineArmRow.geom_wkb],
         );
         expect(lineType.rows[0]!.t, 'the line arm emits a LineString, not the column type').toBe('ST_LineString');
-        const ver = await client.query<{ v: string }>('SELECT postgis_lib_version() AS v');
-        const [major = 0, minor = 0] = ver.rows[0]!.v.split('.').map(Number);
         const insertSql = "INSERT INTO _z1 (geom) SELECT ST_GeomFromWKB($1::bytea, 4326) RETURNING encode(ST_AsBinary(geom), 'hex') AS stored";
-        if (major < 3 || (major === 3 && minor < 4)) {
-          await expect(client.query(insertSql, [lineArmRow.geom_wkb])).rejects.toThrow(/does not match column type/);
-        } else {
-          const ins = await client.query<{ stored: string }>(insertSql, [lineArmRow.geom_wkb]);
-          expect(ins.rows[0]!.stored, 'PostGIS >= 3.4 rewrites the line-arm value: its own bytes do NOT land').not.toBe(
-            (lineArmRow.geom_wkb as Buffer).toString('hex'),
-          );
-        }
+        await expect(client.query(insertSql, [lineArmRow.geom_wkb])).rejects.toThrow(/does not match column type/);
       } finally {
         await client.query('ROLLBACK').catch(() => {});
         client.release();

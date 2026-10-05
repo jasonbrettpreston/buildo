@@ -19,7 +19,7 @@
 
 ### 2.1 Prerequisites
 - **Node.js:** 22 LTS (matches the repo `.nvmrc`).
-- **Postgres:** 16 with PostGIS 3.4 (testcontainer convention from `src/tests/db/setup-testcontainer.ts`).
+- **Postgres:** the declared target engine — `docs/specs/_contracts.json` `db_target` (PG 17 / PostGIS 3.3, image `public.ecr.aws/supabase/postgres:17.6.1.167`). `src/tests/db/setup-testcontainer.ts` starts that image; T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) fails on any other engine.
 - **Docker Desktop:** required for testcontainer-backed `*.db.test.ts` integration tests when `BUILDO_TEST_DB=1` is set.
 - **Playwright browsers:** `npx playwright install --with-deps` (CI installs via the workflow).
 
@@ -33,12 +33,14 @@ npx vitest run src/tests/admin-app-health.logic.test.ts   # single file
 
 **DB integration tests (`*.db.test.ts`) — Docker required:**
 ```bash
-# Option A — testcontainer (slower; spins up postgres each run):
-BUILDO_TEST_DB=1 npm run test
+# Option A — testcontainer (slower; spins up the db_target image each run):
+npm run test:db
 
-# Option B — pre-running postgres + DATABASE_URL in env (faster; CI uses this):
-docker run -d --name buildo-test-pg -p 5432:5432 -e POSTGRES_PASSWORD=test postgres:16-3.4
-DATABASE_URL=postgresql://postgres:test@localhost:5432/buildo npm run test
+# Option B — pre-running disposable postgres + DATABASE_URL (faster; CI uses this).
+# The image must be _contracts.json db_target.test_image; a loopback DATABASE_URL is
+# accepted only with CI=true or BUILDO_TEST_DB_EXTERNAL=1 (the dev stack, port 54322, never).
+docker run -d --name buildo-test-pg -p 5432:5432 -e POSTGRES_PASSWORD=postgres public.ecr.aws/supabase/postgres:17.6.1.167
+BUILDO_TEST_DB_EXTERNAL=1 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres npm run test:db
 ```
 
 `*.db.test.ts` files use `describe.skipIf(!dbAvailable())` per the `setup-testcontainer.ts` convention so the default `npm run test` doesn't fail when Docker isn't running.
@@ -178,7 +180,7 @@ unit-tests:
   runs-on: ubuntu-latest
   services:
     postgres:
-      image: postgis/postgis:16-3.4
+      image: public.ecr.aws/supabase/postgres:17.6.1.167   # = _contracts.json db_target.test_image (T-PIN-1; the live job is .github/workflows/db-tests.yml)
       env:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: test
