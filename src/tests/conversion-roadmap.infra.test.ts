@@ -298,7 +298,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 1 -> 0 at the row 3.4 ③ (load_heritage, 2026-10-03): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
     // 0 -> 1 at batch-2 row 3.10 commit ① (enrich_centreline): its census row flipped batch
     // "C5" -> "pending" (the enrich_heritage row 2.2 commit 1 move). Returns to 0 at enrich_centreline ③.
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 0 at the row 3.10 ③ (enrich_centreline, 2026-10-04): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
+    expect(pendingBatch.size).toBe(0);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });

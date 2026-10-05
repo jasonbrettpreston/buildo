@@ -221,6 +221,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // batch-2 row 3.6 cutover (massing, 2026-09-28) — 16 -> 17 PAIRS, ONE NEW: massing declares inputs.reads.steps [] (a leaf INGESTOR) but link_massing already declares it ({step: 'massing', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
     // batch-2 row 3.8 cutover (neighbourhoods, 2026-09-28) — 17 -> 18 PAIRS, ONE NEW: neighbourhoods declares inputs.reads.steps [] (a leaf INGESTOR) but link_neighbourhoods already declares it ({step: 'neighbourhoods', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
     // batch-2 row 3.4 ③ (load_heritage, 2026-10-03) — 19 -> 20 PAIRS, ONE NEW: load_heritage declares inputs.reads.steps [] (a leaf INGESTOR) but enrich_heritage already declares it ({step: 'load_heritage', version_pin: 'exact'}), so its registration resolves that edge to a live producer.
+    // batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04) — 20 -> 22 PAIRS, TWO NEW: enrich_centreline declares inputs.reads.steps [{step: 'load_centreline', version_pin: 'exact'}, {step: 'parcels', version_pin: 'gte'}] (measured, scripts/enrich-centreline.descriptor.json) and both producers are already converted, so its registration adds both edges as the DOWNSTREAM half.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
@@ -232,6 +233,11 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // batch-2 row 3.7 (2026-09-24) — sorts here: 'compute_parcel_cost_estimates:parcels'
       // falls immediately after 'compute_parcel_cost_estimates:enrich_parcels' ('enrich_parcels' < 'parcels').
       { upstream: 'parcels', downstream: 'compute_parcel_cost_estimates' },
+      // batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04) — sorts here: 'enrich_centreline:load_centreline'
+      // and 'enrich_centreline:parcels' fall between 'compute_parcel_cost_estimates:parcels' and
+      // 'enrich_heritage:load_heritage' ('enrich_centreline' < 'enrich_heritage'; 'load_centreline' < 'parcels').
+      { upstream: 'load_centreline', downstream: 'enrich_centreline' },
+      { upstream: 'parcels', downstream: 'enrich_centreline' },
       // batch-2 row 3.4 ③ (load_heritage, 2026-10-03) — sorts here: 'enrich_heritage:load_heritage'
       // falls between 'compute_parcel_cost_estimates:parcels' and 'enrich_parcels:link_massing'
       // ('compute_parcel_cost_estimates' < 'enrich_heritage' < 'enrich_parcels').
@@ -413,12 +419,18 @@ describe('runSeamChecks — one row per derived pair', () => {
   // inputs.reads.steps [{step: 'load_heritage', version_pin: 'exact'}], so its registration resolves
   // that edge to a live producer. load_heritage declares inputs.reads.steps [] (a leaf INGESTOR).
   // Live pairs/metrics 19 -> 20.
+  // enrich_centreline (batch-2 row 3.10 ③, 2026-10-04) ADDS TWO: it declares inputs.reads.steps on
+  // load_centreline (exact) and parcels (gte), both already converted and both, like enrich_centreline
+  // itself, members of the 'sources' chain (Spec 43 rows 8/5/14). Live pairs/metrics 20 -> 22.
   const EXPECTED_SEAM_METRICS = [
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
     'seam_parcels_before_compute_centroids',
     'seam_enrich_parcels_before_compute_parcel_cost_estimates',
     'seam_parcels_before_compute_parcel_cost_estimates',
+    // batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04) — enrich_centreline registering adds its two declared reads.
+    'seam_load_centreline_before_enrich_centreline',
+    'seam_parcels_before_enrich_centreline',
     // batch-2 row 3.4 ③ (load_heritage, 2026-10-03) — load_heritage registering resolves enrich_heritage's declared read.
     'seam_load_heritage_before_enrich_heritage',
     'seam_link_massing_before_enrich_parcels',

@@ -529,17 +529,17 @@
       "spec": "122 §4.6",
       "title": "generated SQL only, no string surgery",
       "promised": "generated SQL only, no string surgery (retires enrich-centreline.js:277-283's .replace() scoping bug)",
-      "status": "NOT_STARTED",
-      "evidence": "enrich_centreline is not a C1 pilot archetype representative; the .replace() bug at scripts/enrich-centreline.js:277-283 is untouched by any of pilots 1-6",
+      "status": "BUILT",
+      "evidence": "scripts/lib/compute/enrich-centreline.js:63 buildTempSql — one SQL builder emits the full and stale-scoped builds (byte-equal to the legacy strings at the seeded defaults); the .replace() surgery is retired (EC-D7). Landed a2cd2d37 (batch2 row 3.10 ②); registered at ③ cutover 2026-10-04",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (2026-08-29 programme backlog filing)"
+        "kind": "wf",
+        "ref": "batch2 row 3.10 enrich_centreline ①②③ (.cursor/batch2_enrich_centreline_active_task.md)"
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-29"
+      "last_reviewed": "2026-10-04"
     },
     {
       "id": "LC-5",
