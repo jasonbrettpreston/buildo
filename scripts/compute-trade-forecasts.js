@@ -1613,7 +1613,7 @@ pipeline.run('compute-trade-forecasts', async (pool) => {
       logic_variables: ['variable_key', 'variable_value_json'],
     },
     {
-      trade_forecasts: ['permit_num', 'revision_num', 'lead_id', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],
+      trade_forecasts: ['permit_num', 'revision_num', 'lead_id', 'trade_slug', 'predicted_start', 'confidence', 'urgency', 'target_window', 'calibration_method', 'sample_size', 'median_days', 'p25_days', 'p75_days', 'computed_at'],
     },
   );
   }); // end withAdvisoryLock

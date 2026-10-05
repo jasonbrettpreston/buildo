@@ -1336,7 +1336,7 @@ pipeline.run('classify-permits', async (pool) => {
       },
     },
   });
-  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "project_type", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"], "product_groups": ["id", "slug", "name"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "attachment_basis", "classified_at"], "permit_products": ["permit_num", "revision_num", "product_id", "product_slug", "product_name", "confidence"] });
+  pipeline.emitMeta({ "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "description", "status", "est_const_cost", "issued_date", "current_use", "proposed_use", "scope_tags", "project_type", "last_seen_at"], "trade_mapping_rules": ["id", "trade_id", "tier", "match_field", "match_pattern", "confidence", "phase_start", "phase_end", "is_active"], "product_groups": ["id", "slug", "name"] }, { "permit_trades": ["permit_num", "revision_num", "trade_id", "tier", "confidence", "is_active", "phase", "lead_score", "attachment_basis", "classified_at"], "permit_products": ["permit_num", "revision_num", "product_id", "product_slug", "product_name", "confidence"], "permits": ["trade_classified_at"] });
   });
   if (!lockResult.acquired) return;
 });
