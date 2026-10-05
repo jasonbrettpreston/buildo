@@ -192,15 +192,18 @@ async function processBatch(
         const permitClass = classifyPermitType(permitClassMap, mapped.permit_type);
         const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable, permitClass });
         for (const m of matches) {
+          // Spec 80 §5.C: the same 9 columns + basis derivation as the pipeline
+          // writer (scripts/classify-permits.js). permit_trades has never had
+          // trade_slug/trade_name columns (migration 006) — WF3 2026-10-04.
+          const basis = m.attachment_basis ?? (m.is_active ? 'evidence' : 'inference');
           await client.query(
             `INSERT INTO permit_trades (
-              permit_num, revision_num, trade_id, trade_slug, trade_name,
-              tier, confidence, is_active, phase, lead_score
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+              permit_num, revision_num, trade_id, tier, confidence,
+              is_active, phase, lead_score, attachment_basis
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
             [
-              m.permit_num, m.revision_num, m.trade_id, m.trade_slug,
-              m.trade_name, m.tier, m.confidence, m.is_active, m.phase,
-              m.lead_score,
+              m.permit_num, m.revision_num, m.trade_id, m.tier,
+              m.confidence, m.is_active, m.phase, m.lead_score, basis,
             ]
           );
         }
@@ -265,15 +268,18 @@ async function processBatch(
         const permitClass = classifyPermitType(permitClassMap, mapped.permit_type);
         const matches = classifyPermit(mapped, rules, undefined, { realtorAvailable, permitClass });
         for (const m of matches) {
+          // Spec 80 §5.C: the same 9 columns + basis derivation as the pipeline
+          // writer (scripts/classify-permits.js). permit_trades has never had
+          // trade_slug/trade_name columns (migration 006) — WF3 2026-10-04.
+          const basis = m.attachment_basis ?? (m.is_active ? 'evidence' : 'inference');
           await client.query(
             `INSERT INTO permit_trades (
-              permit_num, revision_num, trade_id, trade_slug, trade_name,
-              tier, confidence, is_active, phase, lead_score
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+              permit_num, revision_num, trade_id, tier, confidence,
+              is_active, phase, lead_score, attachment_basis
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
             [
-              m.permit_num, m.revision_num, m.trade_id, m.trade_slug,
-              m.trade_name, m.tier, m.confidence, m.is_active, m.phase,
-              m.lead_score,
+              m.permit_num, m.revision_num, m.trade_id, m.tier,
+              m.confidence, m.is_active, m.phase, m.lead_score, basis,
             ]
           );
         }

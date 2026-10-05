@@ -2455,6 +2455,7 @@
         "7bbcde9cfab6c79c",
         "7e8ca3383541a979",
         "7f917d24ef2bb6fb",
+        "85905f3f54cdba03",
         "88c0b3db7267c838",
         "92370cd152634b9b",
         "92960013ae4ea120",
@@ -2462,7 +2463,6 @@
         "b16b431979fc3e05",
         "bea9d07bbdd63c38",
         "ec51c7684704658b",
-        "f872483a89886d93",
         "fc568e4d5ceda002"
       ],
       "reads": {
@@ -2679,6 +2679,7 @@
           "sync_run_id"
         ],
         "permit_trades": [
+          "attachment_basis",
           "confidence",
           "is_active",
           "lead_score",
@@ -2686,9 +2687,7 @@
           "phase",
           "revision_num",
           "tier",
-          "trade_id",
-          "trade_name",
-          "trade_slug"
+          "trade_id"
         ],
         "permits": [
           "application_date",
