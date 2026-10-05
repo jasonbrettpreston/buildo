@@ -39,6 +39,14 @@
 //
 // Deterministic: the ledger is sorted, `--write` regenerates it and `--check`
 // compares byte-for-byte. No DB, no network, no `process.exit`.
+//
+// CATALOG MEMBERSHIP (`catalogMembership`, also enforced by `--check`): every
+// column a file reads or writes on a table the committed information_schema
+// snapshot (`_catalog.json`) lists must be one of that table's columns. A table
+// the catalog does not carry (a matview — information_schema.columns omits them)
+// is skipped and listed, never flagged. Added WF3 2026-10-04 after the ledger
+// recorded sync/process.ts writing permit_trades.trade_slug/trade_name and
+// lead-detail-query.ts reading coa_applications.updated_at — none exist.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -561,8 +569,42 @@ export function closedSetViolations(ledger, closedSet = CLOSED_INTERPOLATED_SET)
 }
 
 /**
+ * Catalog membership over a ledger's `files` map. PURE.
+ *   missing       `missing-column:<file>:<reads|writes>:<table>.<column>` for every
+ *                 column of a catalogued table the catalog does not list, sorted
+ *   uncatalogued  tables the ledger touches that the catalog does not carry
+ *                 (matviews), sorted unique — skipped, never flagged
+ * @param {{files: {[f:string]: {class?: string, reason?: string, reads?: {[t:string]: string[]}, writes?: {[t:string]: string[]}}}}} ledger
+ * @param {{[table:string]: string[]}} catalogTables
+ * @returns {{missing: string[], uncatalogued: string[]}}
+ */
+export function catalogMembership(ledger, catalogTables) {
+  const files = (ledger && ledger.files) || {};
+  const catalog = catalogTables || {};
+  const missing = [];
+  const uncatalogued = new Set();
+  for (const f of Object.keys(files).sort()) {
+    const entry = files[f] || {};
+    for (const kind of ['reads', 'writes']) {
+      const map = entry[kind] || {};
+      for (const table of Object.keys(map).sort()) {
+        if (!Object.prototype.hasOwnProperty.call(catalog, table)) {
+          uncatalogued.add(table);
+          continue;
+        }
+        const known = new Set(catalog[table] || []);
+        for (const col of map[table] || []) {
+          if (!known.has(col)) missing.push(`missing-column:${f}:${kind}:${table}.${col}`);
+        }
+      }
+    }
+  }
+  return { missing: missing.sort(), uncatalogued: Array.from(uncatalogued).sort() };
+}
+
+/**
  * `--check`: regenerate in memory, compare `files` to disk, compute closed-set
- * violations. Returns `{ fresh, firstDiff, violations, built }` — `built` is the
+ * violations. Returns `{ fresh, firstDiff, violations, membership, built }` — `built` is the
  * in-memory ledger, so the CLI needs exactly ONE build per `--check`.
  */
 export async function checkSrcSqlLedger(root = REPO_ROOT) {
@@ -587,7 +629,13 @@ export async function checkSrcSqlLedger(root = REPO_ROOT) {
       }
     }
   }
-  return { fresh, firstDiff, violations: closedSetViolations(built), built };
+  return {
+    fresh,
+    firstDiff,
+    violations: closedSetViolations(built),
+    membership: catalogMembership(built, readCatalog(root)),
+    built,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -723,9 +771,12 @@ export async function main(argv) {
     const built = r.built;
     const { staticN, interpN, npN } = counts(built);
     const n = Object.keys(built.files).length;
-    if (r.fresh && r.violations.length === 0) {
+    const m = r.membership;
+    if (r.fresh && r.violations.length === 0 && m.missing.length === 0) {
       process.stdout.write(
-        `src-sql-ledger: fresh, ${n} file(s) (${staticN} static, ${interpN} interpolated, ${npN} not_postgres), closed set holds\n`,
+        `src-sql-ledger: fresh, ${n} file(s) (${staticN} static, ${interpN} interpolated, ${npN} not_postgres), closed set holds, every column is in the catalog`
+        + (m.uncatalogued.length > 0 ? ` (uncatalogued, skipped: ${m.uncatalogued.join(', ')})` : '')
+        + '\n',
       );
       return 0;
     }
@@ -738,6 +789,9 @@ export async function main(argv) {
     }
     for (const v of r.violations) {
       process.stderr.write(`${v} — run \`node scripts/analysis/src-sql-ledger.mjs --write\` (then update CLOSED_INTERPOLATED_SET)\n`);
+    }
+    for (const v of m.missing) {
+      process.stderr.write(`${v} — not in ${CATALOG_REL_PATH}: fix the SQL, or re-capture the catalog if a migration added the column\n`);
     }
     return 1;
   }

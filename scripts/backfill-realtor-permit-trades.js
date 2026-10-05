@@ -185,6 +185,10 @@ pipeline.run('backfill-realtor-permit-trades', async (pool) => {
       //   DEFAULT 0`). Pre-fix the script wrote `NULL` for both, which
       //   tripped PG 23502 on lead_score AND silently overrode DEFAULT 0.
       //
+      //   WF3 2026-10-04: `attachment_basis` = 'evidence' (Spec 80 §5.C.1
+      //   rule 8 — the realtor append is evidence). Omitting it left a NULL
+      //   basis on every backfilled row, a Spec 80 L476 hard FAIL.
+      //
       //   F4: 3-axis realtor gate (Spec 91 §3.5 WF3 amendment + Spec 80
       //   §5 Realtor sub-gating). Without these clauses the backfill
       //   writes realtor rows for sign permits, plumbing-only, demolition,
@@ -198,8 +202,8 @@ pipeline.run('backfill-realtor-permit-trades', async (pool) => {
       const insertResult = await pipeline.withTransaction(pool, async (client) => {
         return client.query(
           `INSERT INTO permit_trades
-             (permit_num, revision_num, trade_id, tier, confidence, is_active, classified_at)
-           SELECT p.permit_num, p.revision_num, $1, 1, 1.0, true, $4::timestamptz
+             (permit_num, revision_num, trade_id, tier, confidence, is_active, classified_at, attachment_basis)
+           SELECT p.permit_num, p.revision_num, $1, 1, 1.0, true, $4::timestamptz, 'evidence'
            FROM permits p
            JOIN permit_type_classifications ptc
              ON ptc.permit_type = p.permit_type
@@ -325,6 +329,7 @@ pipeline.run('backfill-realtor-permit-trades', async (pool) => {
           'confidence',
           'is_active',
           'classified_at',
+          'attachment_basis',
         ],
       },
     );
