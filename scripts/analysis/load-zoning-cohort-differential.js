@@ -240,7 +240,7 @@ const COHORT_LOCK_ID = 902003;
 // CONSUMER lock, never the step's 58, so the step under test can still take its own.
 const CONSUMER_LOCK_ID = 65;
 // The ONE hostnames a perturb-and-restore bracket may ever connect to. The resolved description
-// has two shapes — a connection string (`postgresql://u:[REDACTED]@127.0.0.1:54322/postgres`, so
+// has two shapes — a connection string (`postgresql://postgres:fakepw@127.0.0.1:54322/postgres`, so
 // `@host:`) and a discrete PG_* form (`127.0.0.1:54322/postgres`, so `host:port/`); hence `(^|@)`,
 // without which the discrete local form would be refused.
 const LOCAL_HOST_RE = /(^|@)(127\.0\.0\.1|localhost)[:\/]/;
@@ -1004,10 +1004,10 @@ function selfTest() {
   assert(verifyBeforeImage({ rows: 'nope' }, cohort).ok === false, 'verifyBeforeImage accepted a non-array rows');
 
   // ── safety predicates / argv contract ──────────────────────────────────────
-  assertLocalTarget('postgresql://u:[REDACTED]@127.0.0.1:54322/postgres');
+  assertLocalTarget('postgresql://postgres:fakepw@127.0.0.1:54322/postgres');
   assertLocalTarget('127.0.0.1:54322/postgres');
-  assertLocalTarget('postgresql://u:[REDACTED]@localhost:54322/postgres');
-  throws(() => assertLocalTarget('postgresql://u:[REDACTED]@db.abcdefgh.supabase.co:5432/postgres'), 'assertLocalTarget accepted a *.supabase.co host');
+  assertLocalTarget('postgresql://postgres:fakepw@localhost:5433/postgres');
+  throws(() => assertLocalTarget('postgresql://postgres:fakepw@db.abcdefgh.supabase.co:5432/postgres'), 'assertLocalTarget accepted a *.supabase.co host');
   throws(() => assertLocalTarget('10.0.0.5:5432/postgres'), 'assertLocalTarget accepted a non-loopback IP');
   throws(() => assertLocalTarget(''), 'assertLocalTarget accepted an empty description');
   throws(() => assertLocalTarget(undefined), 'assertLocalTarget accepted undefined');
