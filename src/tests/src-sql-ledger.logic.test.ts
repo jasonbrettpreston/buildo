@@ -166,6 +166,48 @@ describe('src-sql-ledger — closedSetViolations', () => {
   });
 });
 
+// WF3 2026-10-04 (sync-permit-trades): the ledger recorded `src/lib/sync/process.ts`
+// writing permit_trades.trade_slug/trade_name and `lead-detail-query.ts` reading
+// coa_applications.updated_at — columns that do not exist — and nothing compared
+// them to the catalog the ledger is built against. catalogMembership closes that.
+describe('src-sql-ledger — catalogMembership (every ledger column exists in the catalog)', () => {
+  const catalog = { permits: ['id', 'status'], permit_trades: ['permit_num', 'trade_id'] };
+
+  it('flags a read or written column the catalogued table does not have, sorted', () => {
+    const ledger = {
+      files: {
+        'src/b.ts': { class: 'static', writes: { permit_trades: ['permit_num', 'trade_slug'] } },
+        'src/a.ts': { class: 'static', reads: { permits: ['id', 'nope'] } },
+      },
+    };
+    expect(ssl.catalogMembership(ledger, catalog)).toEqual({
+      missing: [
+        'missing-column:src/a.ts:reads:permits.nope',
+        'missing-column:src/b.ts:writes:permit_trades.trade_slug',
+      ],
+      uncatalogued: [],
+    });
+  });
+
+  it('skips and lists a table the catalog does not carry (a matview), never flagging its columns', () => {
+    const ledger = {
+      files: {
+        'src/a.ts': { class: 'static', reads: { mv_x: ['anything'], permits: ['status'] } },
+        'src/c.ts': { class: 'static', reads: { mv_x: ['other'] } },
+      },
+    };
+    expect(ssl.catalogMembership(ledger, catalog)).toEqual({ missing: [], uncatalogued: ['mv_x'] });
+  });
+
+  it('ignores not_postgres entries (no reads/writes) and tolerates an empty ledger', () => {
+    expect(ssl.catalogMembership({ files: { 'src/n.ts': { class: 'not_postgres', reason: 'x' } } }, catalog)).toEqual({
+      missing: [],
+      uncatalogued: [],
+    });
+    expect(ssl.catalogMembership({ files: {} }, catalog)).toEqual({ missing: [], uncatalogued: [] });
+  });
+});
+
 describe('src-sql-ledger — parse errors vs resolution notes', () => {
   it('a resolution note on SQL that parsed is NOT unparsed: the statement counts and resolve_errors records it', () => {
     // Only a PARSE failure is `FAIL:INPUT:parse:`; everything else is a note on
@@ -278,6 +320,12 @@ describe('src-sql-ledger — committed ledger (live)', () => {
     const r = await ssl.checkSrcSqlLedger(REPO_ROOT);
     expect(r.violations).toEqual([]);
     expect(r.fresh).toBe(true);
+  });
+
+  it('live: every column the ledger reads/writes on a catalogued table exists in the catalog; only the matview is skipped', async () => {
+    const r = await ssl.checkSrcSqlLedger(REPO_ROOT);
+    expect(r.membership.missing).toEqual([]);
+    expect(r.membership.uncatalogued).toEqual(['mv_monthly_permit_stats']);
   });
 
   it('exit criterion: every SQL-bearing src/ file is classified', async () => {
