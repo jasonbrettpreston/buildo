@@ -5,7 +5,9 @@
 // segments (`COA-${application_number}`) returned 404. Post-Phase G, the route
 // resolves them via COA_LEAD_DETAIL_SQL + toCoaLeadDetail.
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { NextRequest } from 'next/server';
 
 vi.mock('@/lib/db/client', () => ({
@@ -19,7 +21,7 @@ vi.mock('@/lib/auth/get-user-context', () => ({
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
 import { pool } from '@/lib/db/client';
 import { GET } from '@/app/api/leads/detail/[id]/route';
-import { COA_LEAD_DETAIL_SQL, toCoaLeadDetail } from '@/lib/leads/lead-detail-query';
+import { COA_LEAD_DETAIL_SQL, LEAD_DETAIL_SQL, toCoaLeadDetail } from '@/lib/leads/lead-detail-query';
 
 const mockedGetUserContext = vi.mocked(getCurrentUserContext);
 const mockedPool = pool as unknown as { query: ReturnType<typeof vi.fn> };
@@ -239,5 +241,59 @@ describe('COA_LEAD_DETAIL_SQL — SQL contract', () => {
     // `::uuid`, not `::text` (a stale `::text` cast 42883s at query time).
     expect(COA_LEAD_DETAIL_SQL).toMatch(/lv2\.user_id != \$3::uuid/);
     expect(COA_LEAD_DETAIL_SQL).toMatch(/lv2\.lead_type = 'coa'/);
+  });
+});
+
+// WF3 2026-10-04 (coa-lead-detail): every test above mocks `pool.query`, so a
+// select of a column the table does not have (`ca.updated_at` — coa_applications
+// never had one; migration 009 gives it first_seen_at/last_seen_at) passed CI and
+// 500'd every CoA detail request. This block resolves both detail statements
+// with the ONE witness resolver and checks every column read from a catalogued
+// table against the committed information_schema snapshot.
+describe('detail SQL reads only columns that exist (witness catalog)', () => {
+  type Resolver = {
+    init: () => Promise<void>;
+    resolveStatement: (
+      sql: string,
+      catalog: Record<string, string[]>,
+    ) => { reads: Record<string, string[]>; error: string | null };
+  };
+  let R: Resolver;
+  let catalog: Record<string, string[]>;
+
+  beforeAll(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    R = require(path.join(process.cwd(), 'scripts/lib/sql-witness/resolve.cjs')) as Resolver;
+    await R.init();
+    const raw = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'docs/reports/witness/_catalog.json'), 'utf8'),
+    ) as { tables: Record<string, string[]> };
+    catalog = raw.tables;
+  });
+
+  function missingColumns(sql: string): string[] {
+    const r = R.resolveStatement(sql, catalog);
+    expect(r.error).toBeNull();
+    const missing: string[] = [];
+    for (const [table, cols] of Object.entries(r.reads)) {
+      const known = catalog[table];
+      if (!known) continue;
+      for (const col of cols) if (!known.includes(col)) missing.push(`${table}.${col}`);
+    }
+    return missing;
+  }
+
+  it('COA_LEAD_DETAIL_SQL reads no column missing from the catalog', () => {
+    expect(missingColumns(COA_LEAD_DETAIL_SQL)).toEqual([]);
+  });
+
+  it('control: LEAD_DETAIL_SQL (permit branch) reads no column missing from the catalog', () => {
+    expect(missingColumns(LEAD_DETAIL_SQL)).toEqual([]);
+  });
+
+  it('control: the check detects a missing column', () => {
+    expect(missingColumns('SELECT ca.no_such_column FROM coa_applications ca')).toEqual([
+      'coa_applications.no_such_column',
+    ]);
   });
 });

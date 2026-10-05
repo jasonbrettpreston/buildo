@@ -3199,6 +3199,14 @@
       "consumer": "src/lib/leads/lead-detail-query.ts",
       "producer": "coa",
       "kind": "table",
+      "key": "coa_applications.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-detail-query.ts",
+      "producer": "coa",
+      "kind": "table",
       "key": "coa_applications.street_name",
       "value": "any",
       "source": "src_sql"
@@ -3456,6 +3464,14 @@
       "producer": "geocode_permits",
       "kind": "table",
       "key": "permits.longitude",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-detail-query.ts",
+      "producer": "link_coa",
+      "kind": "table",
+      "key": "coa_applications.last_seen_at",
       "value": "any",
       "source": "src_sql"
     },

@@ -287,7 +287,11 @@ export const COA_LEAD_DETAIL_SQL = `
     ca.lifecycle_stalled,
     ca.latitude::text AS latitude,
     ca.longitude::text AS longitude,
-    ca.updated_at::text AS updated_at,
+    -- coa_applications has no updated_at (migration 009 gives it first_seen_at /
+    -- last_seen_at). last_seen_at is NOT NULL and is the recency signal migration
+    -- 115 used to backfill permits.updated_at, so the LeadDetail.updated_at field
+    -- (required string, Spec 91 §4.3) means the same thing on both branches.
+    ca.last_seen_at::text AS updated_at,
     ca.estimated_cost::text AS estimated_cost,
     ca.modeled_gfa_sqm::text AS modeled_gfa_sqm,
     n.name AS neighbourhood_name,
