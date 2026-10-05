@@ -268,8 +268,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // with status:"converted", dropping it from the live C5 count the same way as parcels.
     // DERIVED since conversion-simplification item 4 (R-AN): was the hand-bumped literal 6. The
     // batch identity asserted below (c4 + c5 + c6 = remaining, with C4/C6 pinned) now carries C5;
-    // this line only keeps the bucket from being vacuously empty.
-    expect(c5.size).toBeGreaterThan(0);
+    // this line only kept the bucket from being vacuously empty.
+    // 1 -> 0 at batch-2 row 3.3 commit ① (load_zoning, 2026-10-04): load_zoning was the last active C5 row and
+    // flipped to "pending"; every other C5 row is RETAINED with status:"converted" (R-AO). C5 is now empty by
+    // measurement, not vacuously — the identity below (c4 + c5 + c6 = remaining) still carries it.
+    expect(c5.size).toBe(0);
     // 1 -> 0 at the I4 CUTOVER (commit 3): the row is RETAINED with `status: "converted"`
     // (Spec 124 R-AO) rather than deleted, but `byBatch` counts only rows the roadmap still
     // treats as pending work, and a converted row is no longer that.
@@ -299,7 +302,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 0 -> 1 at batch-2 row 3.10 commit ① (enrich_centreline): its census row flipped batch
     // "C5" -> "pending" (the enrich_heritage row 2.2 commit 1 move). Returns to 0 at enrich_centreline ③.
     // 1 -> 0 at the row 3.10 ③ (enrich_centreline, 2026-10-04): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
-    expect(pendingBatch.size).toBe(0);
+    // 0 -> 1 at batch-2 row 3.3 commit ① (load_zoning): its census row flipped batch
+    // "C5" -> "pending" (the same move load_heritage made at row 3.4 ①). Returns to 0 at load_zoning ③.
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -639,7 +644,8 @@ describe('buildRoadmap() — the R-AP RUNNER-owned exemption class, both directi
     // The generator's C5 rows must equal the census's own active C5 files, read independently.
     const censusRows = (JSON.parse(fs.readFileSync(CENSUS_PATH, 'utf8')) as { entries: Array<{ file: string; batch: string; status?: string }> }).entries;
     const activeC5 = new Set(censusRows.filter((e) => e.batch === 'C5' && e.status !== 'converted').map((e) => e.file));
-    expect(activeC5.size).toBeGreaterThan(0);
+    // 0 since load_zoning ① (2026-10-04) flipped the last active C5 row to "pending".
+    expect(activeC5.size).toBe(0);
     expect(c5).toHaveLength(activeC5.size);
   });
 });

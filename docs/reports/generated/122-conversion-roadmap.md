@@ -7,7 +7,7 @@
 
 ## Counts
 
-Remaining files: **37** (+ **0** pending) · remaining slugs: **39** (+ **0** pending)
+Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
@@ -29,11 +29,11 @@ Remaining files: **37** (+ **0** pending) · remaining slugs: **39** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| INGESTOR | `scripts/load-zoning.js` | load_zoning | sources (1) | top-left | — | — |
+| INGESTOR | `scripts/load-zoning.js` | load_zoning [pending: shape_clean] | sources (1) | top-left | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
-- `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared
+- `scripts/load-zoning.js` (INGESTOR): Spec 122 §1.10 declared; batch-2 row 3.3 conversion IN FLIGHT (commit ①, 2026-10-02) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (ten primaries, ten targets, all-primaries skip)
 
 </details>
 
@@ -90,4 +90,4 @@ Remaining files: **37** (+ **0** pending) · remaining slugs: **39** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **26** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **39** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **26** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

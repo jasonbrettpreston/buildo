@@ -248,12 +248,43 @@ describe('INGESTOR prerequisite 0z1 — geometry_kind "multiline" + writes[].lin
     }
     expect(globbed.length, 'the glob must find the committed descriptor set (non-recursive)').toBeGreaterThan(0);
 
+    let consumerSeen = false;
     for (const file of globbed) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const descriptor = require(file);
       const label = path.relative(process.cwd(), file);
 
       expect(validate(descriptor), `${label} must stay valid: ${errText(validate.errors)}`).toBe(true);
+
+      // ② (batch-2 row 3.3, 2026-10-03): load_zoning is the ONE declared consumer of these fields — it must
+      // declare them (never vacuous); every other descriptor keeps the "none declares" pin below.
+      if (path.basename(file) === 'load-zoning.descriptor.json') {
+        consumerSeen = true;
+        const writes = (descriptor.outputs?.writes as Array<Record<string, any>>) ?? [];
+        const multiline = writes
+          .filter((write) => write.geometry_kind === 'multiline')
+          .map((write) => write.table)
+          .sort();
+        expect(multiline, `${label} is the declared multiline consumer and must declare both multiline writes`).toEqual([
+          'zoning_policy_road_overlay',
+          'zoning_priority_retail_overlay',
+        ]);
+        for (const table of multiline) {
+          const write = writes.find((candidate) => candidate.table === table) as Record<string, any>;
+          expect(
+            write.line_validity,
+            `${label}'s multiline write target ${table} must declare line_validity`,
+          ).toBe('length_and_simple');
+        }
+        for (const write of writes) {
+          if (write.geometry_kind === 'multiline') continue;
+          expect(
+            write.line_validity,
+            `${label}'s non-multiline write target ${write.table} must not declare line_validity`,
+          ).toBeUndefined();
+        }
+        continue;
+      }
 
       for (const write of (descriptor.outputs?.writes as Array<Record<string, any>>) ?? []) {
         expect(
@@ -262,10 +293,12 @@ describe('INGESTOR prerequisite 0z1 — geometry_kind "multiline" + writes[].lin
         ).not.toBe('multiline');
         expect(
           write.line_validity,
-          `${label}'s write target ${write.table} must not declare the 0z1 \`line_validity\` (load_centreline is the only \`line\` declarer; zoning ② is the future consumer)`,
+          `${label}'s write target ${write.table} must not declare the 0z1 \`line_validity\` (load_centreline is the only \`line\` declarer; load_zoning is the one multiline consumer)`,
         ).toBeUndefined();
       }
     }
+
+    expect(consumerSeen, 'the glob must reach scripts/load-zoning.descriptor.json (the declared consumer)').toBe(true);
   });
 });
 

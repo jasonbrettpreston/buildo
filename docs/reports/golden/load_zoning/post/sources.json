@@ -1,0 +1,2675 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/load-zoning.js",
+  "chain": "sources",
+  "git_head": "a0554feadc439b5bd2fa3e9dc2f25961a8b3cbde",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 11719,
+    "records_new": 5,
+    "records_updated": 15,
+    "records_meta": {
+      "zoning_layers_loaded": {
+        "base": true,
+        "height_overlay": true,
+        "lot_coverage_overlay": true,
+        "building_setback_overlay": true,
+        "policy_area_overlay": true,
+        "policy_road_overlay": true,
+        "rooming_house_overlay": true,
+        "parking_zone_overlay": true,
+        "priority_retail_overlay": true,
+        "queenstw_eat_overlay": true
+      },
+      "zoning_partial_load": false,
+      "source_dataset_version": "2026-02-20T21:29:42.613615",
+      "zoning_layer_versions": {
+        "base": "2026-02-20T21:29:42.613615",
+        "height_overlay": "2026-02-20T21:29:42.613615",
+        "lot_coverage_overlay": "2026-02-20T21:29:42.613615",
+        "building_setback_overlay": "2026-02-20T21:29:42.613615",
+        "policy_area_overlay": "2026-02-20T21:29:42.613615",
+        "policy_road_overlay": "2026-02-20T21:29:42.613615",
+        "rooming_house_overlay": "2026-02-20T21:29:42.613615",
+        "parking_zone_overlay": "2026-02-20T21:29:42.613615",
+        "priority_retail_overlay": "2026-02-20T21:29:42.613615",
+        "queenstw_eat_overlay": "2026-02-20T21:29:42.613615"
+      },
+      "base_layer_committed_after_overlays_failed": false,
+      "gate": {
+        "reason": "force_run",
+        "gated_skip": false,
+        "decisions": {
+          "base": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "height_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "lot_coverage_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "building_setback_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "policy_area_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "policy_road_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "rooming_house_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "parking_zone_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "priority_retail_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          },
+          "queenstw_eat_overlay": {
+            "skip": true,
+            "reason": "unchanged"
+          }
+        },
+        "max_age_days": 730,
+        "dataset_version_age_days": 226.0032191087963
+      },
+      "config": {
+        "load_zoning_datastore_page_size": 10000,
+        "load_zoning_http_timeout_ms": 60000,
+        "load_zoning_orphan_warn_pct": 0.5,
+        "load_zoning_orphan_fail_pct": 2,
+        "load_zoning_loaded_pct_warn_below": 95,
+        "load_zoning_loaded_pct_fail_below": 90,
+        "load_zoning_dataset_age_warn_days": 450,
+        "load_zoning_dataset_age_fail_days": 730,
+        "load_zoning_force_reload_max_age_days": 730,
+        "load_zoning_null_count_warn_over_pct": 10,
+        "load_zoning_with_exceptions_warn_below_pct": 50,
+        "load_zoning_duration_warn_factor": 2,
+        "load_zoning_base_invalid_polygon_warn_max_count": 50,
+        "load_zoning_base_invalid_polygon_warn_max_pct": 0.5,
+        "load_zoning_distribution_top_n": 20
+      },
+      "terminal": "loaded_with_warnings",
+      "ledger_row": "chain_owned",
+      "chain_run_id": null,
+      "code_sha": "a0554feadc439b5bd2fa3e9dc2f25961a8b3cbde",
+      "pool_errors": 0,
+      "checks_failed": 0,
+      "checks_warned": 1,
+      "warnings": [
+        "zoning_override_force_reload_present: true"
+      ],
+      "audit_table": {
+        "phase": 58,
+        "name": "Zoning By-law",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "dataset_source_license",
+            "value": "https://open.toronto.ca/open-data-license/",
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_override_force_reload_present",
+            "value": true,
+            "threshold": "viol == 0",
+            "status": "WARN",
+            "source": "check"
+          },
+          {
+            "metric": "no_op_refresh",
+            "value": false,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_attr_drift",
+            "value": null,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "F-H3",
+              "guarantee": "A missing required base field must abort the step before the base write and before any overlay is acquired (D3)."
+            }
+          },
+          {
+            "metric": "zoning_areas_loaded_count",
+            "value": 11719,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "OB-2",
+              "guarantee": "An empty base layer must FAIL before any overlay is loaded (OB-2, D3)."
+            }
+          },
+          {
+            "metric": "zoning_areas_out_of_range_nulled_count",
+            "value": 78744,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_duplicate_source_id_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "viol <= 50"
+          },
+          {
+            "metric": "zoning_areas_invalid_polygon_pct",
+            "value": 0,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_repaired_polygon_count",
+            "value": 22,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "zoning_areas_unchanged_skipped",
+            "value": 11699,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "zoning_areas_with_exceptions_count",
+            "value": 8956,
+            "threshold": "pct >= 50",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_areas_distribution_top20",
+            "value": [
+              {
+                "zone": "RD",
+                "count": 2715
+              },
+              {
+                "zone": "CR",
+                "count": 2173
+              },
+              {
+                "zone": "R",
+                "count": 937
+              },
+              {
+                "zone": "RM",
+                "count": 929
+              },
+              {
+                "zone": "OR",
+                "count": 814
+              },
+              {
+                "zone": "RS",
+                "count": 662
+              },
+              {
+                "zone": "RA",
+                "count": 658
+              },
+              {
+                "zone": "RT",
+                "count": 620
+              },
+              {
+                "zone": "O",
+                "count": 405
+              },
+              {
+                "zone": "E",
+                "count": 383
+              },
+              {
+                "zone": "ON",
+                "count": 318
+              },
+              {
+                "zone": "RAC",
+                "count": 257
+              },
+              {
+                "zone": "CL",
+                "count": 133
+              },
+              {
+                "zone": "UT",
+                "count": 120
+              },
+              {
+                "zone": "IPW",
+                "count": 109
+              },
+              {
+                "zone": "EH",
+                "count": 96
+              },
+              {
+                "zone": "CRE",
+                "count": 90
+              },
+              {
+                "zone": "I",
+                "count": 87
+              },
+              {
+                "zone": "EL",
+                "count": 84
+              },
+              {
+                "zone": "EO",
+                "count": 43
+              }
+            ],
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "coverage_max_pct_null_count",
+            "value": 11719,
+            "threshold": "value_max 10",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "fsi_max_null_count",
+            "value": 8884,
+            "threshold": "value_max 10",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "frontage_min_m_null_count",
+            "value": 8401,
+            "threshold": "value_max 10",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_height_overlay_unparseable_label_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_out_of_range_nulled_count",
+            "value": 411,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_repaired_polygon_count",
+            "value": 49,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "height_overlay_unchanged_skipped",
+            "value": 2481,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_loaded_count",
+            "value": 2528,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "height_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "lot_coverage_overlay_out_of_range_nulled_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "lot_coverage_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "lot_coverage_overlay_repaired_polygon_count",
+            "value": 24,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "lot_coverage_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "lot_coverage_overlay_unchanged_skipped",
+            "value": 1216,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "lot_coverage_overlay_loaded_count",
+            "value": 1242,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "lot_coverage_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "building_setback_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "building_setback_overlay_repaired_polygon_count",
+            "value": 4,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "building_setback_overlay_orphans_removed_count",
+            "value": 0,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "building_setback_overlay_unchanged_skipped",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "building_setback_overlay_loaded_count",
+            "value": 4,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "building_setback_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "policy_area_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "policy_area_overlay_repaired_polygon_count",
+            "value": 11,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_area_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "policy_area_overlay_unchanged_skipped",
+            "value": 336,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_area_overlay_loaded_count",
+            "value": 352,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_area_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "policy_road_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "policy_road_overlay_repaired_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_road_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "policy_road_overlay_unchanged_skipped",
+            "value": 8903,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_road_overlay_loaded_count",
+            "value": 8913,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "policy_road_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "rooming_house_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "rooming_house_overlay_repaired_polygon_count",
+            "value": 24,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "rooming_house_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "rooming_house_overlay_unchanged_skipped",
+            "value": 531,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "rooming_house_overlay_loaded_count",
+            "value": 558,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "rooming_house_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "parking_zone_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "parking_zone_overlay_repaired_polygon_count",
+            "value": 28,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "parking_zone_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "parking_zone_overlay_unchanged_skipped",
+            "value": 884,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "parking_zone_overlay_loaded_count",
+            "value": 913,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "parking_zone_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "priority_retail_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "priority_retail_overlay_repaired_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "priority_retail_overlay_orphans_removed_count",
+            "value": 1,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "priority_retail_overlay_unchanged_skipped",
+            "value": 637,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "priority_retail_overlay_loaded_count",
+            "value": 643,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "priority_retail_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "queenstw_eat_overlay_invalid_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "queenstw_eat_overlay_repaired_polygon_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "queenstw_eat_overlay_orphans_removed_count",
+            "value": 0,
+            "threshold": "pct <= 0.5",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "pct <= 2"
+          },
+          {
+            "metric": "queenstw_eat_overlay_unchanged_skipped",
+            "value": 2,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "queenstw_eat_overlay_loaded_count",
+            "value": 4,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "queenstw_eat_overlay_loaded_pct",
+            "value": null,
+            "threshold": "pct >= 95",
+            "status": "INFO",
+            "source": "check",
+            "warn_threshold": "pct >= 90"
+          },
+          {
+            "metric": "zoning_overlay_attr_drift",
+            "value": null,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "order_guarantee": {
+              "anchor": "F-H3",
+              "guarantee": "A missing required overlay field must skip that overlay before its write; the other layers still load (F-H3, D3)."
+            }
+          },
+          {
+            "metric": "zoning_attr_drift_extra_columns",
+            "value": null,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_non_integer_source_id_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_null_geometry_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_overlay_duplicate_source_id_count",
+            "value": 0,
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_orphan_delete_skipped",
+            "value": null,
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "zoning_duration_ms",
+            "value": 58371,
+            "threshold": "value_max 2",
+            "status": "INFO",
+            "source": "check"
+          },
+          {
+            "metric": "dataset_version_age_days",
+            "value": 226,
+            "threshold": "value_max 450",
+            "status": "PASS",
+            "source": "check",
+            "warn_threshold": "value_max 730"
+          },
+          {
+            "source": "context",
+            "metric": "zoning_areas_distribution_top20_truncation",
+            "value": {
+              "truncated_class_count": 6,
+              "other_count": 86
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 200.59,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 58424,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {},
+      "writes": {
+        "zoning_bylaw_areas": [
+          "source_id",
+          "gen_zone",
+          "zn_zone",
+          "zn_string",
+          "zn_holding",
+          "holding_id",
+          "frontage_min_m",
+          "area_min_sqm",
+          "units_max",
+          "density_max",
+          "coverage_max_pct",
+          "fsi_max",
+          "pct_commercial_max",
+          "pct_residential_max",
+          "pct_employment_max",
+          "pct_office_max",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "standard_setback",
+          "zone_status",
+          "area_units",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_height_overlay": [
+          "source_id",
+          "ht_stories",
+          "ht_string",
+          "height_max_m",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_lot_coverage_overlay": [
+          "source_id",
+          "coverage_max_pct_override",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_building_setback_overlay": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_area_type",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_policy_area_overlay": [
+          "source_id",
+          "policy_id",
+          "chapter_200_ref",
+          "exception_link",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_policy_road_overlay": [
+          "source_id",
+          "road_name",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_rooming_house_overlay": [
+          "source_id",
+          "rmh_area",
+          "rmg_hs_no",
+          "rmg_string",
+          "chapter_150_25_ref",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_parking_zone_overlay": [
+          "source_id",
+          "objectid",
+          "zn_parkzone",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_priority_retail_overlay": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_line_type",
+          "linear_name_full_legal",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ],
+        "zoning_queenstw_eat_overlay": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_area_type",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version",
+          "created_at"
+        ]
+      },
+      "external": [
+        "base",
+        "height_overlay",
+        "lot_coverage_overlay",
+        "building_setback_overlay",
+        "policy_area_overlay",
+        "policy_road_overlay",
+        "rooming_house_overlay",
+        "parking_zone_overlay",
+        "priority_retail_overlay",
+        "queenstw_eat_overlay"
+      ]
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"[load_zoning] target: load_zoning (descriptor.database) → database=postgres user=postgres migrations=245 (floor 227)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"base\\\": 11719 feature(s) from 2 page(s) (resource 76a2620f-a6b4-495d-8e41-c0ede1f8a928, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"height_overlay\\\": 2528 feature(s) from 1 page(s) (resource f0a88d06-2430-4025-b15d-362cabd00f31, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"lot_coverage_overlay\\\": 1242 feature(s) from 1 page(s) (resource 58ad8814-ca4e-43d6-848d-d5fd8d873574, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"building_setback_overlay\\\": 4 feature(s) from 1 page(s) (resource 8d75cab6-ab97-4158-8ba5-8874860b26f7, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"policy_area_overlay\\\": 352 feature(s) from 1 page(s) (resource 1a6469f8-1eaf-4ba6-a1f6-07179efbc2f2, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"policy_road_overlay\\\": 8913 feature(s) from 1 page(s) (resource 4e2f9292-6082-4627-be8e-61b87a2cb273, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"rooming_house_overlay\\\": 558 feature(s) from 1 page(s) (resource 75b9805b-bc65-4c30-97fa-9c57c17233b2, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"parking_zone_overlay\\\": 913 feature(s) from 1 page(s) (resource 8f969df7-9008-49fd-a50b-df53f1f680e6, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"priority_retail_overlay\\\": 643 feature(s) from 1 page(s) (resource 499de5f6-194a-4da3-a18f-27a8e684721d, version 2026-02-20T21:29:42.613615)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_zoning]\",\"msg\":\"acquired ckan_datastore \\\"queenstw_eat_overlay\\\": 4 feature(s) from 1 page(s) (resource 1f18bd73-bbbc-4ad6-ac27-6c9cae7385b4, version 2026-02-20T21:29:42.613615)\"}\nPIPELINE_SUMMARY:{\"records_total\":11719,\"records_new\":5,\"records_updated\":15,\"records_meta\":{\"zoning_layers_loaded\":{\"base\":true,\"height_overlay\":true,\"lot_coverage_overlay\":true,\"building_setback_overlay\":true,\"policy_area_overlay\":true,\"policy_road_overlay\":true,\"rooming_house_overlay\":true,\"parking_zone_overlay\":true,\"priority_retail_overlay\":true,\"queenstw_eat_overlay\":true},\"zoning_partial_load\":false,\"source_dataset_version\":\"2026-02-20T21:29:42.613615\",\"zoning_layer_versions\":{\"base\":\"2026-02-20T21:29:42.613615\",\"height_overlay\":\"2026-02-20T21:29:42.613615\",\"lot_coverage_overlay\":\"2026-02-20T21:29:42.613615\",\"building_setback_overlay\":\"2026-02-20T21:29:42.613615\",\"policy_area_overlay\":\"2026-02-20T21:29:42.613615\",\"policy_road_overlay\":\"2026-02-20T21:29:42.613615\",\"rooming_house_overlay\":\"2026-02-20T21:29:42.613615\",\"parking_zone_overlay\":\"2026-02-20T21:29:42.613615\",\"priority_retail_overlay\":\"2026-02-20T21:29:42.613615\",\"queenstw_eat_overlay\":\"2026-02-20T21:29:42.613615\"},\"base_layer_committed_after_overlays_failed\":false,\"gate\":{\"reason\":\"force_run\",\"gated_skip\":false,\"decisions\":{\"base\":{\"skip\":true,\"reason\":\"unchanged\"},\"height_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"lot_coverage_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"building_setback_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"policy_area_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"policy_road_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"rooming_house_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"parking_zone_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"priority_retail_overlay\":{\"skip\":true,\"reason\":\"unchanged\"},\"queenstw_eat_overlay\":{\"skip\":true,\"reason\":\"unchanged\"}},\"max_age_days\":730,\"dataset_version_age_days\":226.0032191087963},\"config\":{\"load_zoning_datastore_page_size\":10000,\"load_zoning_http_timeout_ms\":60000,\"load_zoning_orphan_warn_pct\":0.5,\"load_zoning_orphan_fail_pct\":2,\"load_zoning_loaded_pct_warn_below\":95,\"load_zoning_loaded_pct_fail_below\":90,\"load_zoning_dataset_age_warn_days\":450,\"load_zoning_dataset_age_fail_days\":730,\"load_zoning_force_reload_max_age_days\":730,\"load_zoning_null_count_warn_over_pct\":10,\"load_zoning_with_exceptions_warn_below_pct\":50,\"load_zoning_duration_warn_factor\":2,\"load_zoning_base_invalid_polygon_warn_max_count\":50,\"load_zoning_base_invalid_polygon_warn_max_pct\":0.5,\"load_zoning_distribution_top_n\":20},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a0554feadc439b5bd2fa3e9dc2f25961a8b3cbde\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"zoning_override_force_reload_present: true\"],\"audit_table\":{\"phase\":58,\"name\":\"Zoning By-law\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_override_force_reload_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"no_op_refresh\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_areas_attr_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-H3\",\"guarantee\":\"A missing required base field must abort the step before the base write and before any overlay is acquired (D3).\"}},{\"metric\":\"zoning_areas_loaded_count\",\"value\":11719,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"OB-2\",\"guarantee\":\"An empty base layer must FAIL before any overlay is loaded (OB-2, D3).\"}},{\"metric\":\"zoning_areas_out_of_range_nulled_count\",\"value\":78744,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_areas_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_areas_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"viol <= 50\"},{\"metric\":\"zoning_areas_invalid_polygon_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_areas_repaired_polygon_count\",\"value\":22,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_areas_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"zoning_areas_unchanged_skipped\",\"value\":11699,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_areas_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"zoning_areas_with_exceptions_count\",\"value\":8956,\"threshold\":\"pct >= 50\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_areas_distribution_top20\",\"value\":[{\"zone\":\"RD\",\"count\":2715},{\"zone\":\"CR\",\"count\":2173},{\"zone\":\"R\",\"count\":937},{\"zone\":\"RM\",\"count\":929},{\"zone\":\"OR\",\"count\":814},{\"zone\":\"RS\",\"count\":662},{\"zone\":\"RA\",\"count\":658},{\"zone\":\"RT\",\"count\":620},{\"zone\":\"O\",\"count\":405},{\"zone\":\"E\",\"count\":383},{\"zone\":\"ON\",\"count\":318},{\"zone\":\"RAC\",\"count\":257},{\"zone\":\"CL\",\"count\":133},{\"zone\":\"UT\",\"count\":120},{\"zone\":\"IPW\",\"count\":109},{\"zone\":\"EH\",\"count\":96},{\"zone\":\"CRE\",\"count\":90},{\"zone\":\"I\",\"count\":87},{\"zone\":\"EL\",\"count\":84},{\"zone\":\"EO\",\"count\":43}],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coverage_max_pct_null_count\",\"value\":11719,\"threshold\":\"value_max 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"fsi_max_null_count\",\"value\":8884,\"threshold\":\"value_max 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"frontage_min_m_null_count\",\"value\":8401,\"threshold\":\"value_max 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_height_overlay_unparseable_label_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"height_overlay_out_of_range_nulled_count\",\"value\":411,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"height_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"height_overlay_repaired_polygon_count\",\"value\":49,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"height_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"height_overlay_unchanged_skipped\",\"value\":2481,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"height_overlay_loaded_count\",\"value\":2528,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"height_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"lot_coverage_overlay_out_of_range_nulled_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_coverage_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"lot_coverage_overlay_repaired_polygon_count\",\"value\":24,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_coverage_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"lot_coverage_overlay_unchanged_skipped\",\"value\":1216,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_coverage_overlay_loaded_count\",\"value\":1242,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lot_coverage_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"building_setback_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"building_setback_overlay_repaired_polygon_count\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"building_setback_overlay_orphans_removed_count\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"building_setback_overlay_unchanged_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"building_setback_overlay_loaded_count\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"building_setback_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"policy_area_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"policy_area_overlay_repaired_polygon_count\",\"value\":11,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_area_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"policy_area_overlay_unchanged_skipped\",\"value\":336,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_area_overlay_loaded_count\",\"value\":352,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_area_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"policy_road_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"policy_road_overlay_repaired_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_road_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"policy_road_overlay_unchanged_skipped\",\"value\":8903,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_road_overlay_loaded_count\",\"value\":8913,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"policy_road_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"rooming_house_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rooming_house_overlay_repaired_polygon_count\",\"value\":24,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"rooming_house_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"rooming_house_overlay_unchanged_skipped\",\"value\":531,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"rooming_house_overlay_loaded_count\",\"value\":558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"rooming_house_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"parking_zone_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parking_zone_overlay_repaired_polygon_count\",\"value\":28,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parking_zone_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"parking_zone_overlay_unchanged_skipped\",\"value\":884,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parking_zone_overlay_loaded_count\",\"value\":913,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parking_zone_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"priority_retail_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"priority_retail_overlay_repaired_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"priority_retail_overlay_orphans_removed_count\",\"value\":1,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"priority_retail_overlay_unchanged_skipped\",\"value\":637,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"priority_retail_overlay_loaded_count\",\"value\":643,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"priority_retail_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"queenstw_eat_overlay_invalid_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"queenstw_eat_overlay_repaired_polygon_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"queenstw_eat_overlay_orphans_removed_count\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 2\"},{\"metric\":\"queenstw_eat_overlay_unchanged_skipped\",\"value\":2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"queenstw_eat_overlay_loaded_count\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"queenstw_eat_overlay_loaded_pct\",\"value\":null,\"threshold\":\"pct >= 95\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\"},{\"metric\":\"zoning_overlay_attr_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-H3\",\"guarantee\":\"A missing required overlay field must skip that overlay before its write; the other layers still load (F-H3, D3).\"}},{\"metric\":\"zoning_attr_drift_extra_columns\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_non_integer_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_overlay_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_orphan_delete_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zoning_duration_ms\",\"value\":58371,\"threshold\":\"value_max 2\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"dataset_version_age_days\",\"value\":226,\"threshold\":\"value_max 450\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_max 730\"},{\"source\":\"context\",\"metric\":\"zoning_areas_distribution_top20_truncation\",\"value\":{\"truncated_class_count\":6,\"other_count\":86},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":200.59,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":58424,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"zoning_bylaw_areas\":[\"source_id\",\"gen_zone\",\"zn_zone\",\"zn_string\",\"zn_holding\",\"holding_id\",\"frontage_min_m\",\"area_min_sqm\",\"units_max\",\"density_max\",\"coverage_max_pct\",\"fsi_max\",\"pct_commercial_max\",\"pct_residential_max\",\"pct_employment_max\",\"pct_office_max\",\"exception_number\",\"exception_text\",\"bylaw_chapter\",\"bylaw_section\",\"bylaw_exception_ref\",\"standard_setback\",\"zone_status\",\"area_units\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_height_overlay\":[\"source_id\",\"ht_stories\",\"ht_string\",\"height_max_m\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_lot_coverage_overlay\":[\"source_id\",\"coverage_max_pct_override\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_building_setback_overlay\":[\"source_id\",\"objectid\",\"zn_string\",\"ch600_area_type\",\"bylaw_section_link\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_policy_area_overlay\":[\"source_id\",\"policy_id\",\"chapter_200_ref\",\"exception_link\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_policy_road_overlay\":[\"source_id\",\"road_name\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_rooming_house_overlay\":[\"source_id\",\"rmh_area\",\"rmg_hs_no\",\"rmg_string\",\"chapter_150_25_ref\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_parking_zone_overlay\":[\"source_id\",\"objectid\",\"zn_parkzone\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_priority_retail_overlay\":[\"source_id\",\"objectid\",\"zn_string\",\"ch600_line_type\",\"linear_name_full_legal\",\"bylaw_section_link\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"],\"zoning_queenstw_eat_overlay\":[\"source_id\",\"objectid\",\"zn_string\",\"ch600_area_type\",\"bylaw_section_link\",\"geometry\",\"geom\",\"source_dataset_version\",\"created_at\"]},\"external\":[\"base\",\"height_overlay\",\"lot_coverage_overlay\",\"building_setback_overlay\",\"policy_area_overlay\",\"policy_road_overlay\",\"rooming_house_overlay\",\"parking_zone_overlay\",\"priority_retail_overlay\",\"queenstw_eat_overlay\"]}\n\n[load_zoning] completed in 58.4s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 2258,
+  "table_state": [
+    {
+      "table": "zoning_building_setback_overlay",
+      "row_count": 4,
+      "content_hash": "8c522e89c22974bff36a102ed06f7b53",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_area_type",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_bylaw_areas",
+      "row_count": 11719,
+      "content_hash": "5c0598ba2d52d580b4611360e583fbe8",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "gen_zone",
+        "zn_zone",
+        "zn_string",
+        "zn_holding",
+        "holding_id",
+        "frontage_min_m",
+        "area_min_sqm",
+        "units_max",
+        "density_max",
+        "coverage_max_pct",
+        "fsi_max",
+        "pct_commercial_max",
+        "pct_residential_max",
+        "pct_employment_max",
+        "pct_office_max",
+        "exception_number",
+        "exception_text",
+        "bylaw_chapter",
+        "bylaw_section",
+        "bylaw_exception_ref",
+        "standard_setback",
+        "zone_status",
+        "area_units",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_height_overlay",
+      "row_count": 2528,
+      "content_hash": "d9c838e9f4a4abee2c2a0b164e9c0b18",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "ht_stories",
+        "ht_string",
+        "height_max_m",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_lot_coverage_overlay",
+      "row_count": 1242,
+      "content_hash": "eb3f2e053a921bee295b0f39d7cbfffe",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "coverage_max_pct_override",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_parking_zone_overlay",
+      "row_count": 913,
+      "content_hash": "c51758e51cd5b16263f8ef40c5f01db7",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_parkzone",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_policy_area_overlay",
+      "row_count": 352,
+      "content_hash": "cedb4e197ca38ef1c047575097b900d1",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "policy_id",
+        "chapter_200_ref",
+        "exception_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_policy_road_overlay",
+      "row_count": 8913,
+      "content_hash": "33ddd10dce7a8320b97a0aa73462f24a",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "road_name",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_priority_retail_overlay",
+      "row_count": 643,
+      "content_hash": "c47a9074c247f08842998fd01b80133d",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_line_type",
+        "linear_name_full_legal",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_queenstw_eat_overlay",
+      "row_count": 4,
+      "content_hash": "da8c206518fde5063083e0b8ca885f88",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_area_type",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    },
+    {
+      "table": "zoning_rooming_house_overlay",
+      "row_count": 558,
+      "content_hash": "632c2a175672f20256e197513ecbfcf5",
+      "order_by": "explicit",
+      "order_columns": [
+        "source_id"
+      ],
+      "columns": [
+        "source_id",
+        "rmh_area",
+        "rmg_hs_no",
+        "rmg_string",
+        "chapter_150_25_ref",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ]
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "zoning_building_setback_overlay": 101,
+    "zoning_bylaw_areas": 2697,
+    "zoning_height_overlay": 308,
+    "zoning_lot_coverage_overlay": 188,
+    "zoning_parking_zone_overlay": 83,
+    "zoning_policy_area_overlay": 35,
+    "zoning_policy_road_overlay": 58,
+    "zoning_priority_retail_overlay": 6,
+    "zoning_queenstw_eat_overlay": 2,
+    "zoning_rooming_house_overlay": 80
+  },
+  "table_specs": {
+    "zoning_building_setback_overlay": {
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_area_type",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_bylaw_areas": {
+      "columns": [
+        "source_id",
+        "gen_zone",
+        "zn_zone",
+        "zn_string",
+        "zn_holding",
+        "holding_id",
+        "frontage_min_m",
+        "area_min_sqm",
+        "units_max",
+        "density_max",
+        "coverage_max_pct",
+        "fsi_max",
+        "pct_commercial_max",
+        "pct_residential_max",
+        "pct_employment_max",
+        "pct_office_max",
+        "exception_number",
+        "exception_text",
+        "bylaw_chapter",
+        "bylaw_section",
+        "bylaw_exception_ref",
+        "standard_setback",
+        "zone_status",
+        "area_units",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_height_overlay": {
+      "columns": [
+        "source_id",
+        "ht_stories",
+        "ht_string",
+        "height_max_m",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_lot_coverage_overlay": {
+      "columns": [
+        "source_id",
+        "coverage_max_pct_override",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_parking_zone_overlay": {
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_parkzone",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_policy_area_overlay": {
+      "columns": [
+        "source_id",
+        "policy_id",
+        "chapter_200_ref",
+        "exception_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_policy_road_overlay": {
+      "columns": [
+        "source_id",
+        "road_name",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_priority_retail_overlay": {
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_line_type",
+        "linear_name_full_legal",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_queenstw_eat_overlay": {
+      "columns": [
+        "source_id",
+        "objectid",
+        "zn_string",
+        "ch600_area_type",
+        "bylaw_section_link",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    },
+    "zoning_rooming_house_overlay": {
+      "columns": [
+        "source_id",
+        "rmh_area",
+        "rmg_hs_no",
+        "rmg_string",
+        "chapter_150_25_ref",
+        "geometry",
+        "geom",
+        "source_dataset_version"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "source_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "pattern:duration_literal",
+    "pattern:iso_timestamp",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/load-zoning.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "Zoning By-law",
+          "phase": 58,
+          "rows": [
+            {
+              "metric": "dataset_source_license",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": "https://open.toronto.ca/open-data-license/"
+            },
+            {
+              "metric": "zoning_override_force_reload_present",
+              "source": "check",
+              "status": "WARN",
+              "threshold": "viol == 0",
+              "value": true
+            },
+            {
+              "metric": "no_op_refresh",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": false
+            },
+            {
+              "metric": "zoning_areas_attr_drift",
+              "order_guarantee": {
+                "anchor": "F-H3",
+                "guarantee": "A missing required base field must abort the step before the base write and before any overlay is acquired (D3)."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": null
+            },
+            {
+              "metric": "zoning_areas_loaded_count",
+              "order_guarantee": {
+                "anchor": "OB-2",
+                "guarantee": "An empty base layer must FAIL before any overlay is loaded (OB-2, D3)."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 11719
+            },
+            {
+              "metric": "zoning_areas_out_of_range_nulled_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 78744
+            },
+            {
+              "metric": "zoning_areas_duplicate_source_id_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "zoning_areas_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0,
+              "warn_threshold": "viol <= 50"
+            },
+            {
+              "metric": "zoning_areas_invalid_polygon_pct",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 0
+            },
+            {
+              "metric": "zoning_areas_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 22
+            },
+            {
+              "metric": "zoning_areas_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "zoning_areas_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 11699
+            },
+            {
+              "metric": "zoning_areas_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "zoning_areas_with_exceptions_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 50",
+              "value": 8956
+            },
+            {
+              "metric": "zoning_areas_distribution_top20",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": [
+                {
+                  "count": 2715,
+                  "zone": "RD"
+                },
+                {
+                  "count": 2173,
+                  "zone": "CR"
+                },
+                {
+                  "count": 937,
+                  "zone": "R"
+                },
+                {
+                  "count": 929,
+                  "zone": "RM"
+                },
+                {
+                  "count": 814,
+                  "zone": "OR"
+                },
+                {
+                  "count": 662,
+                  "zone": "RS"
+                },
+                {
+                  "count": 658,
+                  "zone": "RA"
+                },
+                {
+                  "count": 620,
+                  "zone": "RT"
+                },
+                {
+                  "count": 405,
+                  "zone": "O"
+                },
+                {
+                  "count": 383,
+                  "zone": "E"
+                },
+                {
+                  "count": 318,
+                  "zone": "ON"
+                },
+                {
+                  "count": 257,
+                  "zone": "RAC"
+                },
+                {
+                  "count": 133,
+                  "zone": "CL"
+                },
+                {
+                  "count": 120,
+                  "zone": "UT"
+                },
+                {
+                  "count": 109,
+                  "zone": "IPW"
+                },
+                {
+                  "count": 96,
+                  "zone": "EH"
+                },
+                {
+                  "count": 90,
+                  "zone": "CRE"
+                },
+                {
+                  "count": 87,
+                  "zone": "I"
+                },
+                {
+                  "count": 84,
+                  "zone": "EL"
+                },
+                {
+                  "count": 43,
+                  "zone": "EO"
+                }
+              ]
+            },
+            {
+              "metric": "coverage_max_pct_null_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "value_max 10",
+              "value": 11719
+            },
+            {
+              "metric": "fsi_max_null_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "value_max 10",
+              "value": 8884
+            },
+            {
+              "metric": "frontage_min_m_null_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "value_max 10",
+              "value": 8401
+            },
+            {
+              "metric": "zoning_height_overlay_unparseable_label_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "height_overlay_out_of_range_nulled_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 411
+            },
+            {
+              "metric": "height_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "height_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 49
+            },
+            {
+              "metric": "height_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "height_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 2481
+            },
+            {
+              "metric": "height_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 2528
+            },
+            {
+              "metric": "height_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "lot_coverage_overlay_out_of_range_nulled_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "lot_coverage_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "lot_coverage_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 24
+            },
+            {
+              "metric": "lot_coverage_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "lot_coverage_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 1216
+            },
+            {
+              "metric": "lot_coverage_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 1242
+            },
+            {
+              "metric": "lot_coverage_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "building_setback_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "building_setback_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 4
+            },
+            {
+              "metric": "building_setback_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 0,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "building_setback_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "building_setback_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 4
+            },
+            {
+              "metric": "building_setback_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "policy_area_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "policy_area_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 11
+            },
+            {
+              "metric": "policy_area_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "policy_area_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 336
+            },
+            {
+              "metric": "policy_area_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 352
+            },
+            {
+              "metric": "policy_area_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "policy_road_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "policy_road_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "policy_road_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "policy_road_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 8903
+            },
+            {
+              "metric": "policy_road_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 8913
+            },
+            {
+              "metric": "policy_road_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "rooming_house_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "rooming_house_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 24
+            },
+            {
+              "metric": "rooming_house_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "rooming_house_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 531
+            },
+            {
+              "metric": "rooming_house_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 558
+            },
+            {
+              "metric": "rooming_house_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "parking_zone_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "parking_zone_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 28
+            },
+            {
+              "metric": "parking_zone_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "parking_zone_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 884
+            },
+            {
+              "metric": "parking_zone_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 913
+            },
+            {
+              "metric": "parking_zone_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "priority_retail_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "priority_retail_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "priority_retail_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 1,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "priority_retail_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 637
+            },
+            {
+              "metric": "priority_retail_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 643
+            },
+            {
+              "metric": "priority_retail_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "queenstw_eat_overlay_invalid_polygon_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "queenstw_eat_overlay_repaired_polygon_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "queenstw_eat_overlay_orphans_removed_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct <= 0.5",
+              "value": 0,
+              "warn_threshold": "pct <= 2"
+            },
+            {
+              "metric": "queenstw_eat_overlay_unchanged_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 2
+            },
+            {
+              "metric": "queenstw_eat_overlay_loaded_count",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": 4
+            },
+            {
+              "metric": "queenstw_eat_overlay_loaded_pct",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "pct >= 95",
+              "value": null,
+              "warn_threshold": "pct >= 90"
+            },
+            {
+              "metric": "zoning_overlay_attr_drift",
+              "order_guarantee": {
+                "anchor": "F-H3",
+                "guarantee": "A missing required overlay field must skip that overlay before its write; the other layers still load (F-H3, D3)."
+              },
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": null
+            },
+            {
+              "metric": "zoning_attr_drift_extra_columns",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": null
+            },
+            {
+              "metric": "zoning_non_integer_source_id_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "zoning_null_geometry_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "zoning_overlay_duplicate_source_id_count",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": 0
+            },
+            {
+              "metric": "zoning_orphan_delete_skipped",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": null
+            },
+            {
+              "metric": "zoning_duration_ms",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "value_max 2",
+              "value": 58371
+            },
+            {
+              "metric": "dataset_version_age_days",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "value_max 450",
+              "value": 226,
+              "warn_threshold": "value_max 730"
+            },
+            {
+              "metric": "zoning_areas_distribution_top20_truncation",
+              "source": "context",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "other_count": 86,
+                "truncated_class_count": 6
+              }
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "base_layer_committed_after_overlays_failed": false,
+        "checks_failed": 0,
+        "checks_warned": 1,
+        "config": {
+          "load_zoning_base_invalid_polygon_warn_max_count": 50,
+          "load_zoning_base_invalid_polygon_warn_max_pct": 0.5,
+          "load_zoning_dataset_age_fail_days": 730,
+          "load_zoning_dataset_age_warn_days": 450,
+          "load_zoning_datastore_page_size": 10000,
+          "load_zoning_distribution_top_n": 20,
+          "load_zoning_duration_warn_factor": 2,
+          "load_zoning_force_reload_max_age_days": 730,
+          "load_zoning_http_timeout_ms": 60000,
+          "load_zoning_loaded_pct_fail_below": 90,
+          "load_zoning_loaded_pct_warn_below": 95,
+          "load_zoning_null_count_warn_over_pct": 10,
+          "load_zoning_orphan_fail_pct": 2,
+          "load_zoning_orphan_warn_pct": 0.5,
+          "load_zoning_with_exceptions_warn_below_pct": 50
+        },
+        "gate": {
+          "dataset_version_age_days": 226.0032191087963,
+          "decisions": {
+            "base": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "building_setback_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "height_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "lot_coverage_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "parking_zone_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "policy_area_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "policy_road_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "priority_retail_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "queenstw_eat_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            },
+            "rooming_house_overlay": {
+              "reason": "unchanged",
+              "skip": true
+            }
+          },
+          "gated_skip": false,
+          "max_age_days": 730,
+          "reason": "force_run"
+        },
+        "ledger_row": "chain_owned",
+        "pool_errors": 0,
+        "source_dataset_version": "<TS>",
+        "terminal": "loaded_with_warnings",
+        "warnings": [
+          "zoning_override_force_reload_present: true"
+        ],
+        "zoning_layer_versions": {
+          "base": "<TS>",
+          "building_setback_overlay": "<TS>",
+          "height_overlay": "<TS>",
+          "lot_coverage_overlay": "<TS>",
+          "parking_zone_overlay": "<TS>",
+          "policy_area_overlay": "<TS>",
+          "policy_road_overlay": "<TS>",
+          "priority_retail_overlay": "<TS>",
+          "queenstw_eat_overlay": "<TS>",
+          "rooming_house_overlay": "<TS>"
+        },
+        "zoning_layers_loaded": {
+          "base": true,
+          "building_setback_overlay": true,
+          "height_overlay": true,
+          "lot_coverage_overlay": true,
+          "parking_zone_overlay": true,
+          "policy_area_overlay": true,
+          "policy_road_overlay": true,
+          "priority_retail_overlay": true,
+          "queenstw_eat_overlay": true,
+          "rooming_house_overlay": true
+        },
+        "zoning_partial_load": false
+      },
+      "records_new": 5,
+      "records_total": 11719,
+      "records_updated": 15
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "external": [
+          "base",
+          "height_overlay",
+          "lot_coverage_overlay",
+          "building_setback_overlay",
+          "policy_area_overlay",
+          "policy_road_overlay",
+          "rooming_house_overlay",
+          "parking_zone_overlay",
+          "priority_retail_overlay",
+          "queenstw_eat_overlay"
+        ],
+        "reads": {},
+        "writes": {
+          "zoning_building_setback_overlay": [
+            "source_id",
+            "objectid",
+            "zn_string",
+            "ch600_area_type",
+            "bylaw_section_link",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_bylaw_areas": [
+            "source_id",
+            "gen_zone",
+            "zn_zone",
+            "zn_string",
+            "zn_holding",
+            "holding_id",
+            "frontage_min_m",
+            "area_min_sqm",
+            "units_max",
+            "density_max",
+            "coverage_max_pct",
+            "fsi_max",
+            "pct_commercial_max",
+            "pct_residential_max",
+            "pct_employment_max",
+            "pct_office_max",
+            "exception_number",
+            "exception_text",
+            "bylaw_chapter",
+            "bylaw_section",
+            "bylaw_exception_ref",
+            "standard_setback",
+            "zone_status",
+            "area_units",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_height_overlay": [
+            "source_id",
+            "ht_stories",
+            "ht_string",
+            "height_max_m",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_lot_coverage_overlay": [
+            "source_id",
+            "coverage_max_pct_override",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_parking_zone_overlay": [
+            "source_id",
+            "objectid",
+            "zn_parkzone",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_policy_area_overlay": [
+            "source_id",
+            "policy_id",
+            "chapter_200_ref",
+            "exception_link",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_policy_road_overlay": [
+            "source_id",
+            "road_name",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_priority_retail_overlay": [
+            "source_id",
+            "objectid",
+            "zn_string",
+            "ch600_line_type",
+            "linear_name_full_legal",
+            "bylaw_section_link",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_queenstw_eat_overlay": [
+            "source_id",
+            "objectid",
+            "zn_string",
+            "ch600_area_type",
+            "bylaw_section_link",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ],
+          "zoning_rooming_house_overlay": [
+            "source_id",
+            "rmh_area",
+            "rmg_hs_no",
+            "rmg_string",
+            "chapter_150_25_ref",
+            "geometry",
+            "geom",
+            "source_dataset_version",
+            "created_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[load_zoning] target: load_zoning (descriptor.database) → database=postgres user=postgres migrations=245 (floor 227)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"base\\\": 11719 feature(s) from 2 page(s) (resource 76a2620f-a6b4-495d-8e41-c0ede1f8a928, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"height_overlay\\\": 2528 feature(s) from 1 page(s) (resource f0a88d06-2430-4025-b15d-362cabd00f31, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"lot_coverage_overlay\\\": 1242 feature(s) from 1 page(s) (resource 58ad8814-ca4e-43d6-848d-d5fd8d873574, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"building_setback_overlay\\\": 4 feature(s) from 1 page(s) (resource 8d75cab6-ab97-4158-8ba5-8874860b26f7, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"policy_area_overlay\\\": 352 feature(s) from 1 page(s) (resource 1a6469f8-1eaf-4ba6-a1f6-07179efbc2f2, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"policy_road_overlay\\\": 8913 feature(s) from 1 page(s) (resource 4e2f9292-6082-4627-be8e-61b87a2cb273, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"rooming_house_overlay\\\": 558 feature(s) from 1 page(s) (resource 75b9805b-bc65-4c30-97fa-9c57c17233b2, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"parking_zone_overlay\\\": 913 feature(s) from 1 page(s) (resource 8f969df7-9008-49fd-a50b-df53f1f680e6, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"priority_retail_overlay\\\": 643 feature(s) from 1 page(s) (resource 499de5f6-194a-4da3-a18f-27a8e684721d, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired ckan_datastore \\\"queenstw_eat_overlay\\\": 4 feature(s) from 1 page(s) (resource 1f18bd73-bbbc-4ad6-ac27-6c9cae7385b4, version <TS>)\",\"tag\":\"[load_zoning]\"}",
+      "[load_zoning] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_area_type",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "8c522e89c22974bff36a102ed06f7b53",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 4,
+        "table": "zoning_building_setback_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "gen_zone",
+          "zn_zone",
+          "zn_string",
+          "zn_holding",
+          "holding_id",
+          "frontage_min_m",
+          "area_min_sqm",
+          "units_max",
+          "density_max",
+          "coverage_max_pct",
+          "fsi_max",
+          "pct_commercial_max",
+          "pct_residential_max",
+          "pct_employment_max",
+          "pct_office_max",
+          "exception_number",
+          "exception_text",
+          "bylaw_chapter",
+          "bylaw_section",
+          "bylaw_exception_ref",
+          "standard_setback",
+          "zone_status",
+          "area_units",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "5c0598ba2d52d580b4611360e583fbe8",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 11719,
+        "table": "zoning_bylaw_areas"
+      },
+      {
+        "columns": [
+          "source_id",
+          "ht_stories",
+          "ht_string",
+          "height_max_m",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "d9c838e9f4a4abee2c2a0b164e9c0b18",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 2528,
+        "table": "zoning_height_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "coverage_max_pct_override",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "eb3f2e053a921bee295b0f39d7cbfffe",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 1242,
+        "table": "zoning_lot_coverage_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "objectid",
+          "zn_parkzone",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "c51758e51cd5b16263f8ef40c5f01db7",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 913,
+        "table": "zoning_parking_zone_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "policy_id",
+          "chapter_200_ref",
+          "exception_link",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "cedb4e197ca38ef1c047575097b900d1",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 352,
+        "table": "zoning_policy_area_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "road_name",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "33ddd10dce7a8320b97a0aa73462f24a",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 8913,
+        "table": "zoning_policy_road_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_line_type",
+          "linear_name_full_legal",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "c47a9074c247f08842998fd01b80133d",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 643,
+        "table": "zoning_priority_retail_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "objectid",
+          "zn_string",
+          "ch600_area_type",
+          "bylaw_section_link",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "da8c206518fde5063083e0b8ca885f88",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 4,
+        "table": "zoning_queenstw_eat_overlay"
+      },
+      {
+        "columns": [
+          "source_id",
+          "rmh_area",
+          "rmg_hs_no",
+          "rmg_string",
+          "chapter_150_25_ref",
+          "geometry",
+          "geom",
+          "source_dataset_version"
+        ],
+        "content_hash": "632c2a175672f20256e197513ecbfcf5",
+        "order_by": "explicit",
+        "order_columns": [
+          "source_id"
+        ],
+        "row_count": 558,
+        "table": "zoning_rooming_house_overlay"
+      }
+    ],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "zoning_building_setback_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_bylaw_areas",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_height_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_lot_coverage_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_parking_zone_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_policy_area_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_policy_road_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_priority_retail_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_queenstw_eat_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "zoning_rooming_house_overlay",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 10 table(s) [zoning_building_setback_overlay,zoning_bylaw_areas,zoning_height_overlay,zoning_lot_coverage_overlay,zoning_parking_zone_overlay,zoning_policy_area_overlay,zoning_policy_road_overlay,zoning_priority_retail_overlay,zoning_queenstw_eat_overlay,zoning_rooming_house_overlay]",
+    "txid_before_run2": 3158865,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "loaded_with_warnings"
+    }
+  },
+  "source_fingerprint": "3b778466014c7bcccc84059c8883411574a2760612680e556a79bfe98d40487d",
+  "fingerprint_files": [
+    "scripts/lib/compute/load-zoning.js",
+    "scripts/load-zoning.descriptor.json",
+    "scripts/load-zoning.js",
+    "scripts/load-zoning.notes.json"
+  ],
+  "lib_fingerprint": "1962e41bd0c68174440cfbbbd01bd3d33b1866b391e26bcafa9bef1bbbfa6910"
+}

@@ -1,0 +1,213 @@
+{
+  "_why": "batch-2 row 3.3 ① legacy-oracle fixture: CKAN datastore_search records per layer key (legacy LAYERS order); geometry is a GeoJSON STRING as CKAN returns it. Values exercise: -1 sentinel (base 2 FSI_TOTAL/PRCNT_COMM, height 2 HT_STORIES), COVERAGE 150 out of range (base 3), maxLen-20 truncation (base 4 ZN_ZONE), blank COVERAGE, null FRONTAGE (base 4), HT_LABEL strict parse (12 m / 10-12 / blank).",
+  "base": [
+    {
+      "_id": 1,
+      "GEN_ZONE": 0,
+      "ZN_ZONE": "RD",
+      "ZN_HOLDING": "N",
+      "HOLDING_ID": 0,
+      "FRONTAGE": 12,
+      "ZN_AREA": 370,
+      "UNITS": 2,
+      "DENSITY": 1.5,
+      "COVERAGE": "",
+      "FSI_TOTAL": 0.6,
+      "PRCNT_COMM": 10,
+      "PRCNT_RES": 90,
+      "PRCNT_EMMP": 0,
+      "PRCNT_OFFC": 0,
+      "ZN_EXCPTN": "N",
+      "EXCPTN_NO": null,
+      "STAND_SET": 3,
+      "ZN_STATUS": 1,
+      "ZN_STRING": "RD (f12.0; a370)",
+      "AREA_UNITS": 1,
+      "ZBL_CHAPT": "10.20",
+      "ZBL_SECTN": "10.20.40",
+      "ZBL_EXCPTN": "",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.6],[-79.385,43.6],[-79.385,43.605],[-79.39,43.605],[-79.39,43.6]]]}"
+    },
+    {
+      "_id": 2,
+      "GEN_ZONE": 0,
+      "ZN_ZONE": "CR",
+      "ZN_HOLDING": "N",
+      "HOLDING_ID": 0,
+      "FRONTAGE": 12,
+      "ZN_AREA": 370,
+      "UNITS": 2,
+      "DENSITY": 1.5,
+      "COVERAGE": "",
+      "FSI_TOTAL": -1,
+      "PRCNT_COMM": -1,
+      "PRCNT_RES": 90,
+      "PRCNT_EMMP": 0,
+      "PRCNT_OFFC": 0,
+      "ZN_EXCPTN": "Y",
+      "EXCPTN_NO": 123,
+      "STAND_SET": 3,
+      "ZN_STATUS": 1,
+      "ZN_STRING": "RD (f12.0; a370)",
+      "AREA_UNITS": 1,
+      "ZBL_CHAPT": "10.20",
+      "ZBL_SECTN": "10.20.40",
+      "ZBL_EXCPTN": "",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.38,43.6],[-79.375,43.6],[-79.375,43.605],[-79.38,43.605],[-79.38,43.6]]]}"
+    },
+    {
+      "_id": 3,
+      "GEN_ZONE": 0,
+      "ZN_ZONE": "RM",
+      "ZN_HOLDING": "N",
+      "HOLDING_ID": 0,
+      "FRONTAGE": 12,
+      "ZN_AREA": 370,
+      "UNITS": 2,
+      "DENSITY": 1.5,
+      "COVERAGE": 150,
+      "FSI_TOTAL": 0.6,
+      "PRCNT_COMM": 10,
+      "PRCNT_RES": 90,
+      "PRCNT_EMMP": 0,
+      "PRCNT_OFFC": 0,
+      "ZN_EXCPTN": "Y",
+      "EXCPTN_NO": 5,
+      "STAND_SET": 3,
+      "ZN_STATUS": 1,
+      "ZN_STRING": "RD (f12.0; a370)",
+      "AREA_UNITS": 1,
+      "ZBL_CHAPT": "10.20",
+      "ZBL_SECTN": "10.20.40",
+      "ZBL_EXCPTN": "",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.37,43.6],[-79.365,43.6],[-79.365,43.605],[-79.37,43.605],[-79.37,43.6]]]}"
+    },
+    {
+      "_id": 4,
+      "GEN_ZONE": 0,
+      "ZN_ZONE": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "ZN_HOLDING": "N",
+      "HOLDING_ID": 0,
+      "FRONTAGE": null,
+      "ZN_AREA": 370,
+      "UNITS": 2,
+      "DENSITY": 1.5,
+      "COVERAGE": "",
+      "FSI_TOTAL": 0.6,
+      "PRCNT_COMM": 10,
+      "PRCNT_RES": 90,
+      "PRCNT_EMMP": 0,
+      "PRCNT_OFFC": 0,
+      "ZN_EXCPTN": "N",
+      "EXCPTN_NO": null,
+      "STAND_SET": 3,
+      "ZN_STATUS": 1,
+      "ZN_STRING": "RD (f12.0; a370)",
+      "AREA_UNITS": 1,
+      "ZBL_CHAPT": "10.20",
+      "ZBL_SECTN": "10.20.40",
+      "ZBL_EXCPTN": "",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.36,43.6],[-79.355,43.6],[-79.355,43.605],[-79.36,43.605],[-79.36,43.6]]]}"
+    }
+  ],
+  "height_overlay": [
+    {
+      "_id": 1,
+      "HT_STORIES": 4,
+      "HT_STRING": "HT 12",
+      "HT_LABEL": "12 m",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.61],[-79.385,43.61],[-79.385,43.615],[-79.39,43.615],[-79.39,43.61]]]}"
+    },
+    {
+      "_id": 2,
+      "HT_STORIES": -1,
+      "HT_STRING": "HT 10-12",
+      "HT_LABEL": "10-12",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.38,43.61],[-79.375,43.61],[-79.375,43.615],[-79.38,43.615],[-79.38,43.61]]]}"
+    },
+    {
+      "_id": 3,
+      "HT_STORIES": 3,
+      "HT_STRING": "",
+      "HT_LABEL": "",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.37,43.61],[-79.365,43.61],[-79.365,43.615],[-79.37,43.615],[-79.37,43.61]]]}"
+    }
+  ],
+  "lot_coverage_overlay": [
+    {
+      "_id": 1,
+      "PRCNT_CVER": 35,
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.62],[-79.385,43.62],[-79.385,43.625],[-79.39,43.625],[-79.39,43.62]]]}"
+    }
+  ],
+  "building_setback_overlay": [
+    {
+      "_id": 1,
+      "OBJECTID": 11,
+      "ZN_STRING": "SB",
+      "CH600_AREA_TYPE": 1,
+      "BYLAW_SECTIONLINK": "https://example.test/600-sb",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.63],[-79.385,43.63],[-79.385,43.635],[-79.39,43.635],[-79.39,43.63]]]}"
+    }
+  ],
+  "policy_area_overlay": [
+    {
+      "_id": 1,
+      "POLICY_ID": "PA1",
+      "CHAPT_200": "200.5",
+      "EXCPTN_LK": "https://example.test/pa1",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.64],[-79.385,43.64],[-79.385,43.645],[-79.39,43.645],[-79.39,43.64]]]}"
+    }
+  ],
+  "policy_road_overlay": [
+    {
+      "_id": 1,
+      "ROAD_NAME": "Yonge St",
+      "geometry": "{\"type\":\"LineString\",\"coordinates\":[[-79.39,43.65],[-79.385,43.655]]}"
+    },
+    {
+      "_id": 2,
+      "ROAD_NAME": "Bloor St W",
+      "geometry": "{\"type\":\"LineString\",\"coordinates\":[[-79.38,43.65],[-79.375,43.655]]}"
+    }
+  ],
+  "rooming_house_overlay": [
+    {
+      "_id": 1,
+      "RMH_AREA": "A",
+      "RMG_HS_NO": 2,
+      "RMG_STRING": "RMH A2",
+      "CHAP150_25": "150.25",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.66],[-79.385,43.66],[-79.385,43.665],[-79.39,43.665],[-79.39,43.66]]]}"
+    }
+  ],
+  "parking_zone_overlay": [
+    {
+      "_id": 1,
+      "OBJECTID": 21,
+      "ZN_PARKZONE": "PZ-A",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.67],[-79.385,43.67],[-79.385,43.675],[-79.39,43.675],[-79.39,43.67]]]}"
+    }
+  ],
+  "priority_retail_overlay": [
+    {
+      "_id": 1,
+      "OBJECTID": 31,
+      "ZN_STRING": "PR",
+      "CH600_LINE_TYPE": 2,
+      "LINEAR_NAME_FULL_LEGAL": "Queen St W",
+      "BYLAW_SECTIONLINK": "https://example.test/600-pr",
+      "geometry": "{\"type\":\"LineString\",\"coordinates\":[[-79.39,43.68],[-79.385,43.685]]}"
+    }
+  ],
+  "queenstw_eat_overlay": [
+    {
+      "_id": 1,
+      "OBJECTID": 41,
+      "ZN_STRING": "QW",
+      "CH600_AREA_TYPE": 3,
+      "BYLAW_SECTIONLINK": "https://example.test/600-qw",
+      "geometry": "{\"type\":\"Polygon\",\"coordinates\":[[[-79.39,43.69],[-79.385,43.69],[-79.385,43.695],[-79.39,43.695],[-79.39,43.69]]]}"
+    }
+  ]
+}

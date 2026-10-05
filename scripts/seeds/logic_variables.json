@@ -6386,5 +6386,155 @@
     "admin": {
       "group": "Spatial & Massing"
     }
+  },
+  "load_zoning_datastore_page_size": {
+    "default": 10000,
+    "type": "number",
+    "min": 1,
+    "max": 32000,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — records per CKAN datastore_search page for each of the ten zoning layers. 10000 = the pre-externalization DATASTORE_PAGE literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:44). CKAN clamps limit at 32000 (0y GR-3), hence the max. on_invalid fail. CONSUMED by load_zoning (scripts/lib/step/acquire.js ckan arm, via inputs.reads.externals[].ckan.page_size_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_http_timeout_ms": {
+    "default": 60000,
+    "type": "number",
+    "min": 1000,
+    "max": 600000,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — whole-request deadline (AbortController) for each package_show / datastore_search call. 60000, NOT the legacy 30000: the legacy HTTP_TIMEOUT_MS (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:45) was a socket-IDLE timeout, and a full 10,000-record page must now arrive inside one deadline (declared deviation LZ-D15; heritage 60000 precedent). on_invalid fail. CONSUMED by load_zoning (scripts/lib/step/acquire.js, via execution.network.timeout_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_orphan_warn_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H1: departed rows as a percentage of a layer's pre-delete row count above which <layer>_orphans_removed_count WARNs. 0.5 = the pre-externalization ORPHAN_INFO_PCT literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:48). on_invalid fail. CONSUMED by load_zoning (the ten *_orphans_removed_count checks, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_orphan_fail_pct": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H1: the departed-row percentage above which <layer>_orphans_removed_count FAILs. 2 = the pre-externalization ORPHAN_WARN_PCT literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:49). on_invalid fail. CONSUMED by load_zoning (the ten *_orphans_removed_count checks, via checks[].warn_limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_loaded_pct_warn_below": {
+    "default": 95,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H11: loaded rows as a percentage of the prior run's loaded_count below which <layer>_loaded_pct WARNs. 95 = the pre-externalization LOADED_PCT_PASS literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:50). on_invalid fail. CONSUMED by load_zoning (the ten *_loaded_pct checks, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_loaded_pct_fail_below": {
+    "default": 90,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H11: the loaded percentage below which <layer>_loaded_pct FAILs. 90 = the pre-externalization LOADED_PCT_WARN literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:51). on_invalid fail. CONSUMED by load_zoning (the ten *_loaded_pct checks, via checks[].warn_limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_dataset_age_warn_days": {
+    "default": 450,
+    "type": "number",
+    "min": 1,
+    "max": 3650,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H10: age in days of the CKAN version above which dataset_version_age_days WARNs. 450 = the pre-externalization AGE_INFO_DAYS literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:52). on_invalid fail. CONSUMED by load_zoning (dataset_version_age_days, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_dataset_age_fail_days": {
+    "default": 730,
+    "type": "number",
+    "min": 1,
+    "max": 3650,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H10: the age in days above which dataset_version_age_days FAILs. 730 = the pre-externalization AGE_FAIL_DAYS literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:53). on_invalid fail. CONSUMED by load_zoning (dataset_version_age_days, via checks[].warn_limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_force_reload_max_age_days": {
+    "default": 730,
+    "type": "number",
+    "min": 1,
+    "max": 3650,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-M4: a stored layer version older than this many days forces a reload even when package_show reports it unchanged. 730 = the pre-externalization FORCE_RELOAD_STALE_DAYS literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:54). on_invalid fail. CONSUMED by load_zoning (the all-primaries ckan_metadata gate, scripts/lib/step/staleness.js, via staleness.trigger[].max_age_days_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_null_count_warn_over_pct": {
+    "default": 10,
+    "type": "number",
+    "min": 0,
+    "max": 1000,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-M5: percentage by which a base NULL count (coverage_max_pct / fsi_max / frontage_min_m) may exceed the prior run's before the row WARNs. 10 = the pre-externalization NULL_COUNT_WARN_OVER_PCT literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:55). on_invalid fail. CONSUMED by load_zoning (the three *_null_count checks, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_with_exceptions_warn_below_pct": {
+    "default": 50,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H13: rows carrying an exception_number as a percentage of the prior run's count below which zoning_areas_with_exceptions_count WARNs. 50 = the pre-externalization WITH_EXCEPTIONS_WARN_BELOW_PCT literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:56). on_invalid fail. CONSUMED by load_zoning (zoning_areas_with_exceptions_count, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_duration_warn_factor": {
+    "default": 2,
+    "type": "number",
+    "min": 1,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — F-H14: the run's elapsed time over the prior run's above which zoning_duration_ms WARNs. 2 = the pre-externalization DURATION_WARN_FACTOR literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:57); now one run-level row instead of ten per-layer rows. on_invalid fail. CONSUMED by load_zoning (zoning_duration_ms, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_base_invalid_polygon_warn_max_count": {
+    "default": 50,
+    "type": "number",
+    "min": 0,
+    "max": 100000,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — Spec 58 §3: discarded base geometries up to this count WARN, above it FAIL. 50 = the pre-externalization inline literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:483). on_invalid fail. CONSUMED by load_zoning (zoning_areas_invalid_polygon_count, via checks[].warn_limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_base_invalid_polygon_warn_max_pct": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — Spec 58 §3: discarded base geometries as a percentage of the deduplicated base rows above which the row FAILs. 0.5 = the pre-externalization inline literal (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:483). on_invalid fail. CONSUMED by load_zoning (zoning_areas_invalid_polygon_pct, via checks[].limit_from_config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_zoning_distribution_top_n": {
+    "default": 20,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — Spec 47 §8.4: number of zn_zone classes zoning_areas_distribution_top20 reports before truncating. 20 = the pre-externalization topNDistribution default (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:298). Never compared against a bound. on_invalid fail. CONSUMED by load_zoning (scripts/lib/compute/load-zoning.js zoning_areas_distribution_top20, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
   }
 }

@@ -115,7 +115,8 @@ describe('geometry-validator.classifyGeometry', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// Loader pure helpers (scripts/load-zoning.js) — locks mid-process review fixes
+// Loader pure helpers — RE-POINTED at batch-2 row 3.3 ② from scripts/load-zoning.js (now the frozen
+// pipeline.step() shell) to scripts/lib/compute/load-zoning.js + the descriptor checks + verdict.js.
 // ─────────────────────────────────────────────────────────────────────────
 import {
   LAYERS,
@@ -123,19 +124,39 @@ import {
   coerceColumn,
   parseHeightLabel,
   dedupeRejectAll,
-  orphanStatus,
-  loadedCountStatus,
-  loadedPctStatus,
   priorMetricValue,
-  withExceptionsStatus,
-  durationStatus,
-  datasetVersionAgeStatus,
   topNDistribution,
-  verdictCascade,
-  skipCheckDecision,
-} from '../../scripts/load-zoning';
+  checks as COMPUTE_CHECKS,
+} from '../../scripts/lib/compute/load-zoning';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { checkRow, deriveVerdict } = require('../../scripts/lib/step/verdict.js') as {
+  checkRow: (check: unknown, observation: unknown, onCheckError: string, config: unknown) => { status: string };
+  deriveVerdict: (rows: Array<{ status: string }>) => string;
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const sv = require('../../scripts/lib/source-version.js') as {
+  skipCheckDecision: (args: Record<string, unknown>, opts: unknown) => { skip?: boolean; reason?: string };
+  STYLE_CKAN_METADATA: string;
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ZD = require('../../scripts/load-zoning.descriptor.json') as {
+  checks: Array<{ id: string }>;
+};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SEEDS = require('../../scripts/seeds/logic_variables.json') as Record<string, { default: unknown }>;
 
-describe('load-zoning.coerceSourceId (F-M7, M4)', () => {
+/** The seed defaults for this step's own tunables — checkRow's config. */
+const CFG = Object.fromEntries(
+  Object.entries(SEEDS)
+    .filter(([k]) => k.startsWith('load_zoning_'))
+    .map(([k, v]) => [k, v.default]),
+);
+/** The declared check, read from the descriptor by id (one source of truth for the bands). */
+const declared = (id: string) => ZD.checks.find((c: { id: string }) => c.id === id);
+/** The row a declared check renders for an observation — the shared two-tier cascade. */
+const statusOf = (id: string, obs: Record<string, unknown>) => checkRow(declared(id), obs, 'fail_step', CFG).status;
+
+describe('load-zoning compute.coerceSourceId (F-M7, M4)', () => {
   it('accepts positive integers', () => expect(coerceSourceId(11719)).toBe(11719));
   it('rejects 0 (degenerate upsert key — M4)', () => expect(coerceSourceId(0)).toBeNull());
   it('rejects null / non-integer / negative', () => {
@@ -146,7 +167,7 @@ describe('load-zoning.coerceSourceId (F-M7, M4)', () => {
   });
 });
 
-describe('load-zoning.coerceColumn (H1 non-throwing, P-H5 range-reject)', () => {
+describe('load-zoning compute.coerceColumn (H1 non-throwing, P-H5 range-reject)', () => {
   it('does NOT throw on dirty non-numeric text — returns null value (H1)', () => {
     expect(() => coerceColumn('SEE NOTE', { src: 'DENSITY', kind: 'num', min: 0 })).not.toThrow();
     expect(coerceColumn('SEE NOTE', { src: 'DENSITY', kind: 'num', min: 0 })).toEqual({ value: null, ok: true });
@@ -166,7 +187,7 @@ describe('load-zoning.coerceColumn (H1 non-throwing, P-H5 range-reject)', () => 
   });
 });
 
-describe('load-zoning.dedupeRejectAll (R2-17)', () => {
+describe('load-zoning compute.dedupeRejectAll (R2-17)', () => {
   it('rejects ALL rows sharing a non-unique source_id (deterministic)', () => {
     const { kept, duplicateCount } = dedupeRejectAll([
       { source_id: 1 }, { source_id: 2 }, { source_id: 2 }, { source_id: 3 },
@@ -176,7 +197,7 @@ describe('load-zoning.dedupeRejectAll (R2-17)', () => {
   });
 });
 
-describe('load-zoning.priorMetricValue (C3 — reads audit_table.rows, not flat keys)', () => {
+describe('load-zoning compute.priorMetricValue (C3 — reads audit_table.rows, not flat keys)', () => {
   const prior = {
     records_meta: {
       zoning_baseline_count: 999, // flat key must be IGNORED
@@ -193,42 +214,60 @@ describe('load-zoning.priorMetricValue (C3 — reads audit_table.rows, not flat 
   });
 });
 
-describe('load-zoning threshold cascades', () => {
-  it('orphanStatus: first-deploy (0 denom) → INFO, then relative-% F-H1', () => {
-    expect(orphanStatus(50, 0)).toBe('INFO');
-    expect(orphanStatus(1, 1000)).toBe('INFO');   // 0.1% ≤ 0.5
-    expect(orphanStatus(15, 1000)).toBe('WARN');  // 1.5% ≤ 2
-    expect(orphanStatus(30, 1000)).toBe('FAIL');  // 3% > 2
+describe('load-zoning threshold cascades — the declared checks via verdict.checkRow', () => {
+  it('orphans (zoning_areas_orphans_removed_count): first-deploy (0 denom) → INFO, then relative-% F-H1 → PASS/WARN/FAIL', () => {
+    expect(statusOf('zoning_areas_orphans_removed_count', { value: 0, detail: 50, inert: true })).toBe('INFO');
+    expect(statusOf('zoning_areas_orphans_removed_count', { value: 0.1, detail: 1 })).toBe('PASS');
+    expect(statusOf('zoning_areas_orphans_removed_count', { value: 1.5, detail: 15 })).toBe('WARN');
+    expect(statusOf('zoning_areas_orphans_removed_count', { value: 3, detail: 30 })).toBe('FAIL');
+    // The compute observer derives the same 1.5% for 15 departed of a 1,000-row pre-delete count.
+    let got: Record<string, unknown> = {};
+    const ctx = {
+      checks: [],
+      acquired: { primaries: { base: { outcome: 'loaded' } } },
+      written: {
+        by_target: {
+          zoning_bylaw_areas: { inserted: 0, updated: 985, unchanged: 0, deleted: 15, rows_scanned: 985 },
+        },
+      },
+      report: (_id: string, o: Record<string, unknown>) => {
+        got = o;
+      },
+    };
+    (COMPUTE_CHECKS as unknown as Record<string, (c: unknown) => void>).zoning_areas_orphans_removed_count!(ctx);
+    expect(got.value).toBe(1.5);
+    expect(got.detail).toBe(15);
+    expect(statusOf('zoning_areas_orphans_removed_count', got)).toBe('WARN');
   });
-  it('loadedCountStatus: OB-2 zero gate — ==0 FAIL, else INFO (spec §3, no WARN band)', () => {
-    expect(loadedCountStatus(0)).toBe('FAIL');
-    expect(loadedCountStatus(500)).toBe('INFO');
-    expect(loadedCountStatus(11719)).toBe('INFO');
+  it('loaded count (zoning_areas_loaded_count): OB-2 zero gate — viol != 0 FAIL, else PASS (no WARN band)', () => {
+    expect(statusOf('zoning_areas_loaded_count', { violations: 1, detail: 0 })).toBe('FAIL');
+    expect(statusOf('zoning_areas_loaded_count', { violations: 0, detail: 500 })).toBe('PASS');
+    expect(statusOf('zoning_areas_loaded_count', { violations: 0, detail: 11719 })).toBe('PASS');
   });
-  it('loadedPctStatus: no baseline → INFO + _no_baseline (F-H11)', () => {
-    expect(loadedPctStatus(100, null)).toEqual({ pct: null, status: 'INFO', noBaseline: true });
-    expect(loadedPctStatus(96, 100).status).toBe('PASS');
-    expect(loadedPctStatus(92, 100).status).toBe('WARN');
-    expect(loadedPctStatus(80, 100).status).toBe('FAIL');
+  it('loaded pct (zoning_areas_loaded_pct): no baseline → INFO, then PASS/WARN/FAIL (F-H11)', () => {
+    expect(statusOf('zoning_areas_loaded_pct', { value: 0, detail: null, inert: true })).toBe('INFO');
+    expect(statusOf('zoning_areas_loaded_pct', { value: 96 })).toBe('PASS');
+    expect(statusOf('zoning_areas_loaded_pct', { value: 92 })).toBe('WARN');
+    expect(statusOf('zoning_areas_loaded_pct', { value: 80 })).toBe('FAIL');
   });
-  it('withExceptionsStatus: WARN if 50% below prior (F-H13)', () => {
-    expect(withExceptionsStatus(2000, 5000)).toBe('WARN');
-    expect(withExceptionsStatus(4000, 5000)).toBe('INFO');
-    expect(withExceptionsStatus(4000, null)).toBe('INFO');
+  it('with exceptions (zoning_areas_with_exceptions_count): WARN if 50% below prior (F-H13)', () => {
+    expect(statusOf('zoning_areas_with_exceptions_count', { value: 40, detail: 2000 })).toBe('WARN');
+    expect(statusOf('zoning_areas_with_exceptions_count', { value: 80, detail: 4000 })).toBe('PASS');
+    expect(statusOf('zoning_areas_with_exceptions_count', { value: 0, detail: 4000, inert: true })).toBe('INFO');
   });
-  it('durationStatus: WARN if > 2× prior (F-H14)', () => {
-    expect(durationStatus(2500, 1000)).toBe('WARN');
-    expect(durationStatus(1500, 1000)).toBe('INFO');
-    expect(durationStatus(1500, null)).toBe('INFO');
+  it('duration (zoning_duration_ms): WARN if > 2× prior (F-H14)', () => {
+    expect(statusOf('zoning_duration_ms', { value: 2.5, detail: 2500 })).toBe('WARN');
+    expect(statusOf('zoning_duration_ms', { value: 1.5, detail: 1500 })).toBe('PASS');
+    expect(statusOf('zoning_duration_ms', { value: 0, detail: 1500, inert: true })).toBe('INFO');
   });
-  it('datasetVersionAgeStatus: 450/730 bands (F-H10)', () => {
-    expect(datasetVersionAgeStatus(100)).toBe('INFO');
-    expect(datasetVersionAgeStatus(600)).toBe('WARN');
-    expect(datasetVersionAgeStatus(900)).toBe('FAIL');
+  it('age (dataset_version_age_days): 450/730 bands (F-H10) → PASS/WARN/FAIL', () => {
+    expect(statusOf('dataset_version_age_days', { value: 100 })).toBe('PASS');
+    expect(statusOf('dataset_version_age_days', { value: 600 })).toBe('WARN');
+    expect(statusOf('dataset_version_age_days', { value: 900 })).toBe('FAIL');
   });
 });
 
-describe('load-zoning.topNDistribution (Spec 47 §8.4 / P-M4)', () => {
+describe('load-zoning compute.topNDistribution (Spec 47 §8.4 / P-M4)', () => {
   it('caps at top-N and reports truncated-class + other counts', () => {
     const vals: string[] = [];
     for (let z = 0; z < 25; z++) for (let k = 0; k <= z; k++) vals.push(`R${z}`); // R24 most frequent
@@ -240,15 +279,15 @@ describe('load-zoning.topNDistribution (Spec 47 §8.4 / P-M4)', () => {
   });
 });
 
-describe('load-zoning.verdictCascade (P-C3 — 3-way row-derived)', () => {
+describe('load-zoning compute.verdictCascade (P-C3 — 3-way row-derived)', () => {
   it('FAIL > WARN > PASS', () => {
-    expect(verdictCascade([{ status: 'INFO' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
-    expect(verdictCascade([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
-    expect(verdictCascade([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
+    expect(deriveVerdict([{ status: 'INFO' }, { status: 'WARN' }, { status: 'FAIL' }])).toBe('FAIL');
+    expect(deriveVerdict([{ status: 'INFO' }, { status: 'WARN' }])).toBe('WARN');
+    expect(deriveVerdict([{ status: 'INFO' }, { status: 'PASS' }])).toBe('PASS');
   });
 });
 
-describe('load-zoning LAYERS — per-layer column mapping (§4)', () => {
+describe('load-zoning compute LAYERS — per-layer column mapping (§4)', () => {
   it('registers exactly 10 layers, each with a UUID resourceId, geomKind, non-empty cols', () => {
     expect(LAYERS).toHaveLength(10);
     for (const l of LAYERS) {
@@ -259,7 +298,7 @@ describe('load-zoning LAYERS — per-layer column mapping (§4)', () => {
   });
   it('base maps the spec §2 CKAN source fields to the right target columns', () => {
     const base = LAYERS.find((l) => l.key === 'base')!;
-    const map = Object.fromEntries(base.cols.map((c) => [c.src, c.col]));
+    const map = Object.fromEntries(base.cols.map((c: { src: string; col: string }) => [c.src, c.col]));
     expect(map.COVERAGE).toBe('coverage_max_pct');
     expect(map.FSI_TOTAL).toBe('fsi_max');
     expect(map.ZN_ZONE).toBe('zn_zone');
@@ -274,19 +313,24 @@ describe('load-zoning LAYERS — per-layer column mapping (§4)', () => {
 
 describe('load-zoning.skipCheckDecision (R2-11 / F-M4)', () => {
   const now = Date.parse('2026-05-30T00:00:00Z');
-  it('no prior version → load', () => expect(skipCheckDecision({ lastModified: 'x', storedVersion: null, nowMs: now }).skip).toBe(false));
+  const skip = (a: Record<string, unknown>) =>
+    sv.skipCheckDecision(a, {
+      style: sv.STYLE_CKAN_METADATA,
+      forceReloadMaxAgeDays: CFG.load_zoning_force_reload_max_age_days,
+    });
+  it('no prior version → load', () => expect(skip({ lastModified: 'x', storedVersion: null, nowMs: now }).skip).toBe(false));
   it('unchanged → skip', () => {
     const v = '2026-02-20T21:25:57Z';
-    expect(skipCheckDecision({ lastModified: v, storedVersion: v, nowMs: now }).skip).toBe(true);
+    expect(skip({ lastModified: v, storedVersion: v, nowMs: now }).skip).toBe(true);
   });
   it('changed → load', () => {
-    expect(skipCheckDecision({ lastModified: '2026-05-01T00:00:00Z', storedVersion: '2026-02-20T00:00:00Z', nowMs: now }).skip).toBe(false);
+    expect(skip({ lastModified: '2026-05-01T00:00:00Z', storedVersion: '2026-02-20T00:00:00Z', nowMs: now }).skip).toBe(false);
   });
   it('missing validators → force load', () => {
-    expect(skipCheckDecision({ lastModified: null, etag: null, storedVersion: 'v', nowMs: now }).reason).toBe('no_validators');
+    expect(skip({ lastModified: null, etag: null, storedVersion: 'v', nowMs: now }).reason).toBe('no_validators');
   });
   it('stale cache (> 730d) → force reload', () => {
     const old = '2023-01-01T00:00:00Z';
-    expect(skipCheckDecision({ lastModified: old, storedVersion: old, nowMs: now }).reason).toBe('cache_stale_force_reload');
+    expect(skip({ lastModified: old, storedVersion: old, nowMs: now }).reason).toBe('cache_stale_force_reload');
   });
 });
