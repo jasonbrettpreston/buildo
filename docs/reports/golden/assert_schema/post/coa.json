@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-schema.js",
   "chain": "coa",
-  "git_head": "0f68c4e5824c5ac0cb4b33087d52c00e7e483734",
+  "git_head": "6d1cc9cc8571a9ab05f272d895aa35a8406db91e",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -19,7 +19,7 @@
       "terminal": "all_checks_passed",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "0f68c4e5824c5ac0cb4b33087d52c00e7e483734",
+      "code_sha": "6d1cc9cc8571a9ab05f272d895aa35a8406db91e",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -60,7 +60,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 1627,
+            "value": 5294,
             "threshold": null,
             "status": "INFO"
           }
@@ -93,10 +93,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=245 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for CoA Active...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: CoA Active — all 11 expected columns present (30 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"0f68c4e5824c5ac0cb4b33087d52c00e7e483734\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1627,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"logic_variables\":[\"variable_key\"]},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 1.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=246 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for CoA Active...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: CoA Active — all 11 expected columns present (30 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"6d1cc9cc8571a9ab05f272d895aa35a8406db91e\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"coa_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5294,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"logic_variables\":[\"variable_key\"]},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 5.3s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2257,
+  "pipeline_runs_max_id_before": 2262,
   "table_state": [],
   "tables_source": "trace",
   "table_row_ceiling": 100000,
@@ -191,7 +191,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=245 (floor 41)\",\"tag\":\"[assert_schema]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=246 (floor 41)\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Fetching metadata for CoA Active...\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"OK: CoA Active — all 11 expected columns present (30 total)\",\"tag\":\"[assert_schema]\"}",
@@ -207,7 +207,7 @@
     "rows": [],
     "reason": "no zero_writes target"
   },
-  "source_fingerprint": "39798a115c3c2133edf27f87afb0206710c2146a186c3ac3aa34e2df04f028c4",
+  "source_fingerprint": "cdb2bc73041fe1ef7e37de452cb0d6a550d6c6aa08e7d0cf49f4c3bc22c97ca4",
   "fingerprint_files": [
     "scripts/lib/compute/assert-schema.js",
     "scripts/quality/assert-schema.descriptor.json",
