@@ -778,7 +778,7 @@ these captures.
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=245 |
+| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=246 |
 | 2 | refresh_snapshot | PASS | 4 declared, missing from seeds: none |
 | 3 | refresh_snapshot | PASS | retired=0 overlap-with-declared=none |
 | 7 | refresh_snapshot | PASS | SPEC LINK header present=true |

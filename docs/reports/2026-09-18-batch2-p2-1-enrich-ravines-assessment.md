@@ -554,7 +554,7 @@ the direct counterpart of the new `audit_table.rows[13]` row already cited above
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_ravines | PASS | min_migration=244 <= migrations count=245 |
+| 1 | enrich_ravines | PASS | min_migration=244 <= migrations count=246 |
 | 2 | enrich_ravines | PASS | 8 declared, missing from seeds: none |
 | 3 | enrich_ravines | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_ravines | PASS | SPEC LINK header present=true |

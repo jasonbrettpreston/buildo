@@ -957,7 +957,7 @@ fast invariant #26 (COUNTER-ROOT), which REDs any declared counter source whose 
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_parcels | PASS | min_migration=237 <= migrations count=245 |
+| 1 | enrich_parcels | PASS | min_migration=237 <= migrations count=246 |
 | 2 | enrich_parcels | PASS | 47 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |

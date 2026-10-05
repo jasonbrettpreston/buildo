@@ -359,6 +359,38 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
     return close === -1 ? null : source.slice(open, close + 1);
   }
 
+  /** The body of a NON-async `function <name>(` in a compute source, brace-matched, or null. */
+  function functionBody(source: string, name: string): string | null {
+    const at = source.indexOf(`function ${name}(`);
+    if (at === -1) return null;
+    const open = source.indexOf('{', at);
+    const close = matchBrace(source, open);
+    return close === -1 ? null : source.slice(open, close + 1);
+  }
+
+  /**
+   * HELPER form (enrich_centreline, converted 2026-10-04 834991c0): the check function is
+   * `function <id>(ctx) { [return] <helper>(ctx, '<id>'); }`. Returns the helper body PLUS the bodies
+   * of every helper it delegates to with `return <fn>(ctx, id)` (one level), or null when the check
+   * is not in this form or any body cannot be found (the caller then fails closed).
+   */
+  function helperBodies(source: string, checkId: string): string[] | null {
+    const escaped = checkId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const own = functionBody(source, checkId);
+    if (!own) return null;
+    const call = own.match(new RegExp(`^\\{\\s*(?:return\\s+)?([A-Za-z0-9_]+)\\(\\s*ctx\\s*,\\s*['"]${escaped}['"]\\s*\\);?\\s*\\}$`));
+    if (!call || !call[1]) return null;
+    const helper = functionBody(source, call[1]);
+    if (!helper) return null;
+    const bodies = [helper];
+    for (const d of helper.matchAll(/return\s+([A-Za-z0-9_]+)\(\s*ctx\s*,\s*id\s*\)/g)) {
+      const delegate = d[1] ? functionBody(source, d[1]) : null;
+      if (!delegate) return null;
+      bodies.push(delegate);
+    }
+    return bodies;
+  }
+
   it('finds at least 150 pct-bounded checks (anti-vacuous)', () => {
     expect(fleetChecks().length).toBeGreaterThanOrEqual(150);
   });
@@ -374,6 +406,27 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
         // `value:` and none may report `violations:` (evaluateLimit prefers the flag).
         // ES shorthand { value, … } is the same property as value: (load_wsib, converted 2026-10-01 bd01e07a).
         if (literals.some((l) => /\bviolations\s*:/.test(l) || !/\bvalue\s*(:|,|\})/.test(l))) {
+          offenders.push(`${stepName}:${check.id}`);
+        }
+        continue;
+      }
+
+      // HELPER: `function <id>(ctx) { <helper>(ctx, '<id>') }` — every report literal inside the helper
+      // (and its one-level `return <fn>(ctx, id)` delegates) must report `value` and never `violations`.
+      const helpers = helperBodies(source, check.id);
+      if (helpers) {
+        const reports = helpers.flatMap((b) => {
+          const re = /ctx\.report\(\s*[A-Za-z0-9_'"]+\s*,\s*\{/g;
+          const found: string[] = [];
+          let hm: RegExpExecArray | null;
+          while ((hm = re.exec(b)) !== null) {
+            const open = hm.index + hm[0].length - 1;
+            const close = matchBrace(b, open);
+            found.push(close === -1 ? '' : b.slice(open, close + 1));
+          }
+          return found;
+        });
+        if (reports.length === 0 || reports.some((l) => /\bviolations\s*:/.test(l) || !/\bvalue\s*(:|,|\})/.test(l))) {
           offenders.push(`${stepName}:${check.id}`);
         }
         continue;
@@ -421,5 +474,25 @@ describe('class lock — every pct-bounded check reports a value, never a flag',
     expect(offender('ctx.report("id", { value: v })')).toBe(false);
     expect(offender('ctx.report("id", { violations: 1, value: 0 })')).toBe(true);
     expect(offender('ctx.report("id", { detail: 1 })')).toBe(true);
+  });
+
+  // HELPER-form controls (2026-10-04): a helper that reports value resolves GREEN; a helper that
+  // reports a violations flag is an offender; a check function that is not a bare helper call is
+  // not this form (null -> the caller fails closed).
+  it('the helper form resolves value-reporting helpers and rejects a violations helper', () => {
+    const good = [
+      "function reportGradedPct(ctx, id) { const value = (ctx.matched || {})[id]; if (value === undefined) return reportNotMeasured(ctx, id); return ctx.report(id, { value }); }",
+      "function reportNotMeasured(ctx, id) { ctx.report(id, { value: 0, inert: true, detail: 'x' }); }",
+      "function some_pct(ctx) { reportGradedPct(ctx, 'some_pct'); }",
+    ].join('\n');
+    expect(helperBodies(good, 'some_pct')).toHaveLength(2);
+    const bad = [
+      "function reportFlag(ctx, id) { return ctx.report(id, { violations: 1, value: 0 }); }",
+      "function some_pct(ctx) { reportFlag(ctx, 'some_pct'); }",
+    ].join('\n');
+    const bodies = helperBodies(bad, 'some_pct');
+    expect(bodies).not.toBeNull();
+    expect(bodies!.some((b) => /\bviolations\s*:/.test(b))).toBe(true);
+    expect(helperBodies("function some_pct(ctx) { const v = 1; reportGradedPct(ctx, 'some_pct'); }", 'some_pct')).toBeNull();
   });
 });

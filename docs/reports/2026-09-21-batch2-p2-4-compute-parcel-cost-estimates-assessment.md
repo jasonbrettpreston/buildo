@@ -563,7 +563,7 @@ with the post-E3 recapture (C4, source_fingerprint recomputed over the changed
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=245 |
+| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=246 |
 | 2 | compute_parcel_cost_estimates | PASS | 20 declared, missing from seeds: none |
 | 3 | compute_parcel_cost_estimates | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_parcel_cost_estimates | PASS | SPEC LINK header present=true |

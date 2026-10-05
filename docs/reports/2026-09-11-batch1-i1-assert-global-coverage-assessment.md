@@ -819,7 +819,7 @@ Related suites green: `violations.test.ts` (25, was 21), `assert-global-coverage
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=245 |
+| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=246 |
 | 2 | assert_global_coverage | PASS | 20 declared, missing from seeds: none |
 | 3 | assert_global_coverage | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_global_coverage | PASS | SPEC LINK header present=true |

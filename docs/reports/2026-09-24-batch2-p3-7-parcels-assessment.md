@@ -687,7 +687,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | parcels | PASS | min_migration=11 <= migrations count=245 |
+| 1 | parcels | PASS | min_migration=11 <= migrations count=246 |
 | 2 | parcels | PASS | 5 declared, missing from seeds: none |
 | 3 | parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | parcels | PASS | SPEC LINK header present=true |

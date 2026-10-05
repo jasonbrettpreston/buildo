@@ -2319,7 +2319,7 @@ above).*
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcels | PASS | min_migration=12 <= migrations count=245 |
+| 1 | link_parcels | PASS | min_migration=12 <= migrations count=246 |
 | 2 | link_parcels | PASS | 8 declared, missing from seeds: none |
 | 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcels | PASS | SPEC LINK header present=true |

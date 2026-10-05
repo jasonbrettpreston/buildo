@@ -533,7 +533,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=245 |
+| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=246 |
 | 2 | enrich_centreline | PASS | 19 declared, missing from seeds: none |
 | 3 | enrich_centreline | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_centreline | PASS | SPEC LINK header present=true |

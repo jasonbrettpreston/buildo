@@ -680,7 +680,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_wsib | PASS | min_migration=66 <= migrations count=245 |
+| 1 | load_wsib | PASS | min_migration=66 <= migrations count=246 |
 | 2 | load_wsib | PASS | 2 declared, missing from seeds: none |
 | 3 | load_wsib | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_wsib | PASS | SPEC LINK header present=true |

@@ -173,7 +173,7 @@ RED evidence: the whole `src/tests/steps/assert_parcel_sanity/violations.test.ts
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=245 |
+| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=246 |
 | 2 | assert_parcel_sanity | PASS | 38 declared, missing from seeds: none |
 | 3 | assert_parcel_sanity | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_parcel_sanity | PASS | SPEC LINK header present=true |

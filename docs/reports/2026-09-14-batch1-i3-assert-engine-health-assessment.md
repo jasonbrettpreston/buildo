@@ -325,7 +325,7 @@ Output panel on commit 7: Guardian PASS ×5; Code Reviewer 2 FAIL (R1, R2); Obse
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=245 |
+| 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=246 |
 | 2 | assert_engine_health | PASS | 7 declared, missing from seeds: none |
 | 3 | assert_engine_health | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_engine_health | PASS | SPEC LINK header present=true |

@@ -790,7 +790,7 @@ No `order_guarantee.anchor` needed re-pointing: this step declares no `pre_write
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=245 |
+| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=246 |
 | 2 | geocode_permits | PASS | 3 declared, missing from seeds: none |
 | 3 | geocode_permits | PASS | retired=0 overlap-with-declared=none |
 | 7 | geocode_permits | PASS | SPEC LINK header present=true |

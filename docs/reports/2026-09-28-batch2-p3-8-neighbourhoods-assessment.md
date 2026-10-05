@@ -990,7 +990,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=245 |
+| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=246 |
 | 2 | neighbourhoods | PASS | 4 declared, missing from seeds: none |
 | 3 | neighbourhoods | PASS | retired=0 overlap-with-declared=none |
 | 7 | neighbourhoods | PASS | SPEC LINK header present=true |

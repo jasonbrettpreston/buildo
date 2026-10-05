@@ -482,7 +482,7 @@ Every finding acted on was re-executed by a grounder before it was folded. Three
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=245 |
+| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=246 |
 | 2 | link_neighbourhoods | PASS | 4 declared, missing from seeds: none |
 | 3 | link_neighbourhoods | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_neighbourhoods | PASS | SPEC LINK header present=true |
