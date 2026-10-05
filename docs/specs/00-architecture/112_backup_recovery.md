@@ -306,13 +306,15 @@ the operator sign-off pattern D6 already established for the 0-row HALT check.
 
 Three PostgreSQL versions coexist across environments during Phases 0–3 (Spec 113 §12
 coexistence window): dev Docker `buildo_pgdata` = **PG15**, CI ephemeral containers =
-**PG16** (`postgis/postgis:16-3.4-alpine`), Supabase (local stack and cloud project) = **PG17**
+~~**PG16** (`postgis/postgis:16-3.4-alpine`)~~ **PG17** since the WF3 PostGIS pin, 2026-10-03
+(`public.ecr.aws/supabase/postgres:17.6.1.167`, `docs/specs/_contracts.json` `db_target`; PG 17.6
+measured 2026-10-03), Supabase (local stack and cloud project) = **PG17**
 (17.6 confirmed 2026-07-18).
 
 **Client-version rule:** the `pg_dump`/`pg_restore` **client binary** used by `backup-db.js` and
 `restore-db.js` MUST be at least as new as the highest PostgreSQL server version touched in
 either direction of the operation — in practice, pin the PG17-line client toolchain, not
-whatever `pg_dump` happens to ship alongside the local PG15 Docker image or CI's PG16 container.
+whatever `pg_dump` happens to ship alongside the local PG15 Docker image ~~or CI's PG16 container~~ (CI runs PG17 since 2026-10-03).
 An older client dumping or restoring a newer server can fail on catalog/object features it does
 not recognize; this is silent or opaquely-worded far more often than it is an obvious version
 error. This is a live, not theoretical, risk here specifically because three server versions are

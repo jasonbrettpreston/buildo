@@ -18,8 +18,10 @@
 // `src/tests/db/setup-testcontainer.ts`'s globalSetup runs
 // `node scripts/migrate.js` unconditionally against whatever DB is available
 // (CI's `postgres` service container, or the `BUILDO_TEST_DB=1` testcontainer
-// — BOTH provision a plain `postgis/postgis:16-3.4-alpine` image with no
-// GoTrue, hence no `auth` schema at all). Empirically reproduced this session
+// — BOTH then provisioned a plain PostGIS 16 / 3.4 alpine image with no
+// GoTrue, hence no `auth` schema at all; since the WF3 PostGIS pin, 2026-10-03,
+// both run `_contracts.json db_target.test_image`, the Supabase target image,
+// which ships `auth`). Empirically reproduced this session
 // by running `scripts/migrate.js` against a scratch container of that exact
 // image: migration application halts at `226_profiles_admin_bootstrap.sql`
 // with `schema "auth" does not exist` (that migration's `CREATE TABLE

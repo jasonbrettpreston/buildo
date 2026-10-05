@@ -1,5 +1,6 @@
 // 🔗 SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §P0 (resolve-db, the database-target fence)
 // 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.9 (real-DB integration tests)
+// 🔗 SPEC LINK: docs/specs/00-architecture/113_supabase_infrastructure.md §Version pinning (WF3 PostGIS pin, T-PIN-1)
 //
 // LW-D16 anti-regression lock (WF3, 2026-09-21) — DB-FREE, so it runs in the
 // ordinary `npm run test` suite, where the db-test harness itself never does.
@@ -88,7 +89,7 @@ describe('LW-D16 — the db-test harness provisions the database the step guard 
     expect(WORKFLOW).toMatch(new RegExp(`POSTGRES_DB:\\s*${HARNESS_DB}\\b`));
     expect(WORKFLOW).toMatch(new RegExp(`PG_DATABASE:\\s*${HARNESS_DB}\\b`));
     expect(WORKFLOW).toMatch(new RegExp(`DATABASE_URL:\\s*postgres://[^\\s]*/${HARNESS_DB}\\b`));
-    expect(WORKFLOW).toMatch(new RegExp(`pg_isready[^"]*-d ${HARNESS_DB}\\b`));
+    expect(WORKFLOW).toMatch(new RegExp(`(?:pg_isready|psql)[^"]*-d ${HARNESS_DB}\\b`));
     expect(WORKFLOW).not.toMatch(/buildo_test/);
   });
 
@@ -130,5 +131,115 @@ describe('LW-D16 — the fence was satisfied, NOT weakened', () => {
     expect(body).toMatch(/expectDatabase:\s*db\.assert_current_database === 'none' \? undefined : db\.assert_current_database/);
     expect(body).not.toMatch(/BUILDO_TEST_DB|VITEST|NODE_ENV/);
     expect(body).not.toMatch(/catch\s*\(/); // never swallowed
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WF3 PostGIS pin (T-PIN-1, 2026-10-03). The DB-tier tests ran PostGIS 3.4 / PG16
+// while the target (local stack AND cloud, measured) runs PostGIS 3.3.7 / PG 17.6 /
+// GEOS 3.14.1, so a test could pass on behaviour the target never exhibits (the
+// 0z1-T7 version branch existed only because of that). The engine is now declared
+// ONCE in `docs/specs/_contracts.json#db_target`; the harness and the CI service
+// container are pinned to it, and both connect as the target's non-superuser
+// `postgres`. The live half is T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`).
+// These locks are DB-FREE: they read text and JSON, so they run in the ordinary suite.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CONTRACTS = JSON.parse(
+  fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/_contracts.json'), 'utf8'),
+) as {
+  db_target: { pg_major: number; postgis_major_minor: string; test_image: string };
+};
+const DB_TARGET = CONTRACTS.db_target;
+const CONFIG_TOML = fs.readFileSync(path.join(REPO_ROOT, 'supabase/config.toml'), 'utf8');
+
+/** Escape every regex metacharacter so a literal (e.g. an image reference) is matched verbatim. */
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Every file under `dir`, recursively, any extension (node_modules pruned). */
+function allFiles(dir: string, acc: string[] = []): string[] {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      allFiles(full, acc);
+    } else if (entry.isFile()) {
+      acc.push(full);
+    }
+  }
+  return acc;
+}
+
+describe('T-PIN-1 — the DB-test engine is pinned to _contracts.json db_target (WF3 PostGIS pin)', () => {
+  it('T-PIN-1(a) — the CI service container pulls the contract image', () => {
+    // anchored to a whole, UNCOMMENTED `image:` line — a `# image: …` comment never satisfies it
+    expect(WORKFLOW).toMatch(new RegExp(`^\\s*image:\\s*${escapeRe(DB_TARGET.test_image)}\\s*$`, 'm'));
+  });
+
+  it('T-PIN-1(a2) — the CI stack connects as the non-superuser `postgres`', () => {
+    expect(WORKFLOW).toMatch(/DATABASE_URL:\s*postgres:\/\/postgres:/);
+    expect(WORKFLOW).toMatch(/PG_USER:\s*postgres\b/);
+    expect(WORKFLOW).not.toMatch(/POSTGRES_USER:\s*buildo\b/);
+  });
+
+  it('T-PIN-1(b) — the harness takes its image from the contract, not a string literal', () => {
+    expect(stripTsComments(HARNESS)).not.toMatch(/GenericContainer\(\s*['"`]/);
+    expect(stripTsComments(HARNESS)).toMatch(/GenericContainer\(/);
+    expect(stripTsComments(HARNESS)).toMatch(/readFileSync/);
+    expect(stripTsComments(HARNESS)).toMatch(/_contracts\.json/);
+    expect(stripTsComments(HARNESS)).toMatch(/readDbTarget\(\)/);
+  });
+
+  it('T-PIN-1(b2) — the harness connects as the non-superuser `postgres`', () => {
+    expect(HARNESS).toMatch(/export const TEST_DB_USER\s*=\s*'postgres'/);
+    expect(stripTsComments(HARNESS)).not.toMatch(/buildo:buildo@/);
+    expect(stripTsComments(HARNESS)).not.toMatch(/POSTGRES_USER:\s*'buildo'/);
+  });
+
+  it('T-PIN-1(c) — db_target.pg_major is the major_version supabase/config.toml declares', () => {
+    const m = CONFIG_TOML.match(/^major_version\s*=\s*(\d+)/m);
+    expect(m, 'major_version not found in supabase/config.toml').toBeTruthy();
+    expect(DB_TARGET.pg_major).toBe(Number(m![1]));
+    expect(String(DB_TARGET.postgis_major_minor)).toMatch(/^\d+\.\d+$/);
+  });
+
+  it('T-PIN-1(d) — no `postgis/postgis:` literal survives (raw text, comments included)', () => {
+    const roots = [
+      path.join(REPO_ROOT, 'src/tests/db'),
+      path.join(REPO_ROOT, '.github/workflows'),
+    ];
+    const offenders: string[] = [];
+    for (const root of roots) {
+      for (const file of allFiles(root)) {
+        const text = fs.readFileSync(file, 'utf8');
+        text.split('\n').forEach((line, i) => {
+          if (line.includes('postgis/postgis:')) {
+            offenders.push(`${path.relative(REPO_ROOT, file)}:${i + 1}`);
+          }
+        });
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('T-PIN-1(e) — the pin is an exact tag whose PG major is the contract pg_major', () => {
+    const tag = DB_TARGET.test_image.slice(DB_TARGET.test_image.lastIndexOf(':') + 1);
+    expect(tag).not.toBe('latest');
+    expect(tag).toMatch(/^\d+\.\d+\.\d+/);
+    expect(tag.startsWith(`${DB_TARGET.pg_major}.`)).toBe(true);
+  });
+
+  it('T-PIN-1(f) — runMigrations hands the child an explicit DATABASE_URL (panel finding 2)', () => {
+    expect(stripTsComments(HARNESS)).toMatch(
+      /execSync\(\s*'node scripts\/migrate\.js'[\s\S]{0,200}?env:\s*migrationChildEnv\(\s*databaseUrl/,
+    );
+  });
+
+  it('T-PIN-1(g) — the auth seed is conditional, not deleted (panel finding 1)', () => {
+    const calls = stripTsComments(HARNESS).match(/applyAuthBaselineIfMissing\(/g)?.length ?? 0;
+    expect(calls).toBeGreaterThanOrEqual(2); // definition + call site
+    expect(stripTsComments(HARNESS)).toContain('CREATE TABLE IF NOT EXISTS auth.users');
   });
 });

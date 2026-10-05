@@ -9,7 +9,7 @@
 // Usage: node scripts/ai-env-check.mjs
 // ---------------------------------------------------------------------------
 
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -293,6 +293,32 @@ if (dbUrl) {
   );
 } else {
   console.log('⚠  pg_stat_statements: skipped (DATABASE_URL not set — run migration 110 to enable)');
+}
+
+// 7. PostGIS target drift (WF3 PostGIS pin 2026-10-03)
+// Compares the DEV DB's PostGIS (DATABASE_URL — the dev stack, by design)
+// against db_target.postgis_major_minor in docs/specs/_contracts.json. This is
+// what notices a Supabase CLI/image upgrade instead of hand-copied
+// "PostGIS 3.3.7" lines in reports. Report-only: never throws, never aborts.
+if (dbUrl) {
+  try {
+    const contracts = JSON.parse(readFileSync(resolve(__dirname, '..', 'docs/specs/_contracts.json'), 'utf-8'));
+    const want = contracts?.db_target?.postgis_major_minor;
+    const got = execFileSync('psql', [dbUrl, '-tAc', 'SELECT postgis_lib_version()'], { encoding: 'utf-8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    const gotMajorMinor = got.split('.').slice(0, 2).join('.');
+    if (!want) {
+      console.log('⚠  PostGIS target: _contracts.json db_target.postgis_major_minor is missing — cannot check drift');
+    } else if (gotMajorMinor === want) {
+      console.log(`✔ PostGIS target: dev DB ${got} matches db_target ${want}`);
+    } else {
+      console.log(`⚠  PostGIS target DRIFT: dev DB PostGIS ${got} (major.minor ${gotMajorMinor}) ≠ _contracts.json db_target.postgis_major_minor ${want} — the DB-test image and the target no longer agree; re-measure and update db_target (WF3 PostGIS pin)`);
+    }
+  } catch (e) {
+    const msg = e.stderr ? e.stderr.toString().split('\n')[0] : String(e.message).split('\n')[0];
+    console.log(`⚠  PostGIS target: probe FAILED — ${msg}`);
+  }
+} else {
+  console.log('⚠  PostGIS target: skipped (DATABASE_URL not set)');
 }
 
 console.log('\n--- Done ---');
