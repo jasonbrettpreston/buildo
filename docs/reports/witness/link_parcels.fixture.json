@@ -56,9 +56,7 @@
         ]
       },
       "violations": [],
-      "errors": [
-        "FAIL:INPUT:column:permit_num"
-      ]
+      "errors": []
     }
   }
 }

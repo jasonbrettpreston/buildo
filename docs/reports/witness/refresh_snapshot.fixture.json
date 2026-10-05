@@ -171,6 +171,7 @@
           "cost_estimates_from_permit",
           "cost_estimates_null_cost",
           "cost_estimates_total",
+          "created_at",
           "inspections_not_passed_count",
           "inspections_outstanding_count",
           "inspections_passed_count",

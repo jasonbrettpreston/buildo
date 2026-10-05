@@ -18,6 +18,7 @@
       },
       "writes": {
         "engine_health_snapshots": [
+          "captured_at",
           "dead_ratio",
           "idx_scan",
           "n_dead_tup",
@@ -29,6 +30,7 @@
         ]
       },
       "violations": [
+        "a:engine_health_snapshots.captured_at",
         "a:engine_health_snapshots.snapshot_date",
         "a:engine_health_snapshots.table_name"
       ],
