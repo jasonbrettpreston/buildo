@@ -8,9 +8,9 @@
  * Link parcels to building footprints and write the parcel_buildings junction.
  *
  * Usage: node scripts/link-massing.js   ·   PIPELINE_CHAIN=sources node scripts/link-massing.js --full
- * LINK_MASSING_FORCE_FULL=1 forces a full relink unconditionally (budget ~22 min: it
- * retracts and rebuilds all 520,492 links and bumps every linked_at, which re-scopes the
- * next enrich_parcels run from 1,395 parcels to 485,135).
+ * LINK_MASSING_FORCE_FULL is RETIRED (MQ-B2, fold 19): since O4 row 5 every run is a full
+ * rescan that rewrites only changed links, so the override changed nothing; the env var is a
+ * deviations[] entry in the descriptor and arms nothing (link_wsib keeps its own override).
  *
  * ⚠️ THE ENTIRE FILE SHAPE IS FROZEN (Spec 122 §5.1) and enforced by
  * scripts/ast-grep-rules/step-shape.yml over scripts/steps/_schema/converted.json.

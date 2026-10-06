@@ -4,8 +4,8 @@
     "",
     "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
     "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
-    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 11,",
-    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
     "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
     "There is no overflow file and no overflow block.",
     "",
@@ -66,11 +66,11 @@
   ],
   "suspicious_if": [
     {
-      "what": "The load completes with errors > 0, or with rows_read meaningfully below the source's own row count. A failed 1,000-row flush DROPS that batch's rows for the run (PR-D1 / review_followups #68), increments `errors` and inflates records_unchanged by the dropped count — so the load can 'succeed' while silently carrying fewer parcels than the CSV holds. The declared records_errors FAIL row is where a dropped batch surfaces, and rows_read_floor (WARN) catches a short read; skip_rate_pct counts rows the step REFUSES to carry (CSV drift), not dropped batches, and since WF3 2026-09-28 it can actually reach FAIL (it previously compared a 0/1 flag to the bound).",
+      "what": "The load completes with rows_read meaningfully below the source's own row count. A failed batch no longer drops rows: since the conversion the runner's write.js executeWrite runs every batch inside ONE transaction with no catch, so a failed flush rolls back the whole step and the run fails (PR-D1 FIXED-BY-RUNNER, MQ-B5 (a), 2026-10-05). rows_read_floor (WARN) catches a short read; skip_rate_pct counts rows the step REFUSES to carry (CSV drift), not dropped batches, and since WF3 2026-09-28 it can actually reach FAIL (it previously compared a 0/1 flag to the bound).",
       "measured": {
-        "value": { "drop_path": "flushBatch catch -> errors++ -> batch = []", "evidence_row": "records_errors", "pinned": "PR-D1" },
-        "date": "2026-09-24",
-        "query": "grep -n \"errors++\" scripts/load-parcels.js"
+        "value": { "batch_error": "write.js executeWrite: no catch inside the one withTransaction -> the step rolls back and fails", "superseded": "PR-D1 batch drop (legacy flushBatch catch, measured 2026-09-24)" },
+        "date": "2026-10-05",
+        "query": "sed -n 1477,1496p scripts/lib/step/write.js"
       }
     }
   ],

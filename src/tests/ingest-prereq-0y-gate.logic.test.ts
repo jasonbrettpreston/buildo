@@ -169,7 +169,6 @@ function Z3(): Record<string, any> {
       page_size_from_config: PAGE_SIZE_VAR,
     },
     key_property: '_id',
-    cache: 'none',
     target: `t${id}`,
     ...(onFailure ? { on_failure: onFailure } : {}),
   });
@@ -212,12 +211,8 @@ function Z3(): Record<string, any> {
         why: { text: 'One guarded upsert per declared target.', liveness: { kind: 'table', ref: table } },
       },
       retract: 'departed',
-      replay: 'idempotent_upsert',
-      source_key_policy: { unique: true, on_collision: 'dedupe_upstream', key_space_migration: 'none' },
     })),
-    cascades: 'none',
     invalidates: [],
-    publish: 'direct',
     write_inventory: {
       statements: 3,
       why: { text: 'One guarded upsert per declared target.', liveness: { kind: 'file', ref: 'scripts/lib/step/write.js' } },
@@ -225,7 +220,6 @@ function Z3(): Record<string, any> {
   };
   d.staleness = {
     ...d.staleness,
-    scope: 'none',
     trigger: [{
       signal: 'source_validator',
       position: 'pre_acquisition',
@@ -235,8 +229,6 @@ function Z3(): Record<string, any> {
     }],
     skip_scope: 'all_primaries',
     mode_select: 'skip',
-    checkpoint: 'none',
-    interval: 'none',
     logic_version: 'none',
     on_prior_run_error: 'fail_step',
   };
@@ -794,7 +786,7 @@ describe('INGESTOR prerequisite 0y — refusals (0y Y1–Y5) and the relaxed B6'
     // narrowing would have dropped: reaching runIngestPhase means it was NOT dropped.
     d.inputs.reads.externals = [{
       id: 'base', kind: 'http_file', format: 'shapefile_zip', url: 'https://ex/layer.zip',
-      key_property: 'OBJECTID', cache: 'none',
+      key_property: 'OBJECTID',
     }];
     const f = fakeFetch();
     const pool = fakePool();
@@ -933,7 +925,9 @@ describe('INGESTOR prerequisite 0y — T15 PIN: the per_primary path is unchange
     d.guards.requires = [];
     d.invariants = 'none';
     d.plausibility = 'none';
-    d.override = 'none';
+    // FLEET-2 MQ-A7 (step.schema.json allOf[11]): the ravines base keeps schema_drift "pause", so force_run must be an
+    // env var (same as the real load-ravines descriptor).
+    d.override = { force_full: 'none', force_run: 'RAVINE_FORCE_RELOAD', dry_run: 'none' };
     return d;
   }
 

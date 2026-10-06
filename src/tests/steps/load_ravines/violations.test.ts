@@ -220,7 +220,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[] }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   database: { min_migration: number | 'none' };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };
   config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }> };
@@ -874,16 +874,7 @@ function revertHashGateFence(i: HashGateInput): HashGateInput {
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4–§3.4b) — the notes.json seven ────────────────
 
-  it('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
-    const d = loadDescriptor();
-    const notes = loadNotes();
-    expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none" (vacuity risk on 7 of 44 — a REAL notes file)').not.toBe('none');
-    const interp = d.interpretation as { file: string; entries: number };
-    const entries = notesEntries(notes);
-    expect(entries.length, 'prose entries across the capped blocks').toBeLessThanOrEqual(NOTES_CAP);
-    expect(entries.length, 'interpretation.entries must equal the real prose count').toBe(interp.entries);
-    expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
-  });
+  // #30 retired (Phase 3 RE-FREEZE): interpretation.entries is deleted; the <=12 prose cap is ONE notes-file check — step-validate fast invariant #45 NOTES-CAP (scripts/analysis/gates/notes-cap.mjs).
 
   it('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
     const d = loadDescriptor();
@@ -1574,7 +1565,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(w[0]?.write_discipline.class).toBe(WRITE_CLASS);
     expect(w[0]?.columns.map((c) => c.name).sort(), 'all 5 columns incl. created_at (D-2: declared, never written)').toEqual([...WRITE_COLUMNS].sort());
     expect(w[0]?.retract, 'class B retracts departed rows').toBe('departed');
-    expect(w[0]?.replay).toBe('idempotent_upsert');
+    // outputs.writes[].replay deleted in the Phase 3 RE-FREEZE (#18, zero runtime readers)
     expect(d.execution.txn_scope, 'LG-2: the upsert loop and the departure DELETE commit together').toBe('step');
     // LG-3 — two triggers at two lifecycle positions
     const triggers = d.staleness.trigger;

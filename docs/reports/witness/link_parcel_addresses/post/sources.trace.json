@@ -1,0 +1,392 @@
+{
+  "trace_version": 1,
+  "step": "scripts/link-parcel-addresses.js",
+  "chain": "sources",
+  "source_fingerprint": "17b9897a17e09631a0e1c43cf6543c48638eacbcbf27b739864aad570964058e",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 1522,
+    "distinct": 24,
+    "utility": 1004,
+    "tracer_self_ms": 194.056,
+    "wall_ms": 76606
+  },
+  "statements": [
+    {
+      "fingerprint": "1ba5ce390f442ea9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_class_desc",
+          "address_point_id"
+        ],
+        "parcel_address_points": [
+          "address_point_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "234fa9884e04f4ac",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "feature_type",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "36b93635ce8767b3",
+      "kind": "read",
+      "count": 498,
+      "rowCount": 498,
+      "reads": {
+        "address_points": [],
+        "parcel_address_points": [],
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4b184f7c2cf370d6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5459ad2be5bf706c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5ebf9defbcf196db",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_class_desc",
+          "address_point_id",
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 499,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9e2372a707475eeb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": [
+          "address_point_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "abbf367668f10b42",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [],
+        "parcels": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 499,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b85f2f153f5f85cf",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last AS (\n       SELECT started_at, completed_at, records_meta\n         FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[])\n          AND status IN ('completed', 'completed_with_warnings')\n          AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n        ORDER BY completed_at DESC\n        LIMIT 1\n     ),\n     -- 'skipped' rows ⇒ RUN, deliberately: ANY status other than 'completed'\n     -- in the upstream window counts toward non_completed, including a\n     -- literal status='skipped' row (a lock-contention self-skip, or a\n     -- legacy pre-DS4 skip that never re-stamped 'completed'). We cannot\n     -- positively confirm such a row changed nothing, so the fail-safe is\n     -- RUN — \"the first post-scoped-run never skips\" (header item 6).\n     upstream_since AS (\n       SELECT\n         COUNT(*) FILTER (WHERE p.status <> 'completed')                                            AS non_completed,\n         COUNT(*) FILTER (WHERE p.status = 'completed'\n                             AND (COALESCE(p.records_new, 0) + COALESCE(p.records_updated, 0)) > 0)  AS completed_with_changes,\n         -- Commit E (B3 output-panel remediation) — defence-in-depth VISIBILITY\n         -- only (chain-concurrency.js:36's 12h TTL convention, same class of\n         -- staleness): an upstream 'running' row whose started_at is already\n         -- past the TTL is almost certainly an orphan (a crashed/killed\n         -- producer that never reached its finalize step — the load-wsib.js\n         -- E#1 defect this commit also fixes). It STILL counts toward\n         -- non_completed above (E-R2: a stranded running row must keep\n         -- forcing RUN — fail-safe, pinned so a future \"optimization\" cannot\n         -- quietly start treating a stale running row as safe-to-skip-past).\n         -- This count exists ONLY so a caller/operator can tell \"genuinely\n         -- busy upstream\" apart from \"an orphaned row nobody ever finalized\"\n         -- without changing the skip/run decision itself.\n         COUNT(*) FILTER (WHERE p.status = 'running'\n                             AND p.started_at <= NOW() - INTERVAL '12 hours')                        AS stale_running\n         FROM pipeline_runs p\n         CROSS JOIN own_last o\n        WHERE p.pipeline = ANY($2::text[])\n          AND COALESCE(p.completed_at, 'infinity'::timestamptz) > o.started_at\n     )\n     SELECT\n       (SELECT started_at    FROM own_last)              AS own_started,\n       (SELECT completed_at  FROM own_last)               AS own_completed,\n       (SELECT records_meta  FROM own_last)               AS own_last_records_meta,\n       (SELECT non_completed FROM upstream_since)          AS non_completed,\n       (SELECT completed_with_changes FROM upstream_since) AS completed_with_changes,\n       (SELECT stale_running FROM upstream_since)          AS stale_running",
+      "params": [
+        [
+          [
+            "sources:link_parcel_addresses",
+            "link_parcel_addresses",
+            "link-parcel-addresses"
+          ],
+          [
+            "sources:address_points",
+            "address_points",
+            "address-points",
+            "sources:parcels",
+            "parcels"
+          ]
+        ]
+      ]
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ef70996c61cb0fb3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fa81ad30f23daf1b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "geom",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "feature_type",
+          "geom",
+          "id",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "address_class_desc",
+        "address_point_id",
+        "geom",
+        "retired_at"
+      ],
+      "parcel_address_points": [
+        "address_point_id",
+        "parcel_id"
+      ],
+      "parcels": [
+        "feature_type",
+        "geom",
+        "id",
+        "zoning_class"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

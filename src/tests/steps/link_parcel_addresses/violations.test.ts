@@ -175,13 +175,16 @@ const NOTES_PROSE_BLOCKS = [
   'expected', 'known_normal', 'known_bad', 'do_not_reflag', 'how_to_investigate', 'limitations',
 ];
 const NOTES_MEASURED_EXEMPT = new Set(['decisions']);
-const NOTES_CAP = 12;
 
 const FIXTURE_REVIEWED = '2026-08-29';
 const FIXTURE_MAX_AGE_DAYS = 180;
 
 /** Measured live 2026-08-29 (172.20.0.10:5432/postgres, 242 migrations) — commits 1-5. */
 const LIVE_PAP_ROWS = 511_224;
+// FLEET-2 §5 (2026-10-06): the POST row count is DB state that moves with every recapture (526,534 at A30, then 526,570
+// after the A32 sources re-run inserted 36 links). #150 therefore MEASURES it per capture: table_state = `rows` invariant =
+// the step's own final_link_count, one value across all POSTs, never below the frozen PRE (insert-only MATERIALIZER).
+// PRE stays the frozen 511,224 above.
 const LIVE_PARCELS_TOTAL = 486_530;
 const LIVE_AP_TOTAL = 525_346;
 const LIVE_STALE_ST_WITHIN = 0;
@@ -253,7 +256,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[] }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   database: { min_migration: number | 'none' };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };
   config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }>; hoisted_above_gate: boolean };
@@ -632,16 +635,7 @@ function detectPreCheckOnGatedSkipFence(subject: { hasSkipGatedTerminal: boolean
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4-§3.4b) — the notes.json seven ──
 
-  it('#30 Cap of 12 prose entries — add a 13th → build fails (flips at: commit 7)', () => {
-    const d = loadDescriptor();
-    const notes = loadNotes();
-    expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none"').not.toBe('none');
-    const interp = d.interpretation as { file: string; entries: number };
-    const entries = notesEntries(notes);
-    expect(entries.length, 'prose entries across the capped blocks').toBeLessThanOrEqual(NOTES_CAP);
-    expect(entries.length, 'interpretation.entries must equal the real prose count').toBe(interp.entries);
-    expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
-  });
+  // #30 retired (Phase 3 RE-FREEZE): interpretation.entries is deleted; the <=12 prose cap is ONE notes-file check — step-validate fast invariant #45 NOTES-CAP (scripts/analysis/gates/notes-cap.mjs).
 
   it('#31 Exactly two legal resolutions — promote or delete; no overflow file (flips at: commit 7)', () => {
     const d = loadDescriptor();
@@ -756,16 +750,28 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
     for (const inv of INVOCATIONS) artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`, 'commit 9 cutover capture');
     const postHashes = new Set<string | null>();
+    const postRowCounts = new Set<number>();
     for (const inv of INVOCATIONS) {
       const post = docsFor(docs, inv).filter(isNew).filter((d) => !isForced(d));
       expect(post.length, `${inv.name}: no POST capture at all`).toBeGreaterThanOrEqual(1);
       for (const p of post) {
         const ts = papTableState(p);
-        expect(ts.row_count, `${p.file}: ${TABLE} row count must stay ${LIVE_PAP_ROWS} — no repair lands in this pilot`).toBe(LIVE_PAP_ROWS);
+        // Three independent measurements of the same table must agree: the harness's table_state, the harness's `rows`
+        // invariant, and the step's own audit row final_link_count.
+        expect(invariant(p, 'rows'), `${p.file}: ${TABLE} table_state row_count vs the rows invariant`).toBe(ts.row_count);
+        const audit = ((p as unknown as { summary?: { records_meta?: { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } } })
+          .summary?.records_meta?.audit_table?.rows ?? []).find((r) => r.metric === 'final_link_count');
+        expect(audit, `${p.file}: no final_link_count audit row`).toBeDefined();
+        expect(audit!.value, `${p.file}: ${TABLE} table_state row_count vs the step's own final_link_count`).toBe(ts.row_count);
+        // Insert-only MATERIALIZER (ON CONFLICT DO NOTHING, no retraction): links can only grow from the frozen PRE.
+        expect(ts.row_count, `${p.file}: ${TABLE} POST row count fell below the frozen PRE ${LIVE_PAP_ROWS}`).toBeGreaterThanOrEqual(LIVE_PAP_ROWS);
+        postRowCounts.add(ts.row_count);
         postHashes.add(ts.content_hash);
       }
     }
     expect(postHashes.size, 'both POST invocations must ALSO hash-identical to each other').toBe(1);
+    expect(postRowCounts.size, 'every POST capture must measure ONE parcel_address_points row count').toBe(1);
+    const [POST_PAP_ROWS] = [...postRowCounts];
     const [preHash] = [...preHashes];
     const [postHash] = [...postHashes];
     // R-T addendum (commit 4, 2026-08-30) — this assertion's ORIGINAL claim ("POST must
@@ -785,7 +791,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     // unchanged row count on both sides (already asserted above) — proving the difference is
     // link-content drift, not row loss.
     if (postHash !== preHash) {
-      console.warn(`[#150] content_hash moved (PRE ${preHash} -> POST ${postHash}) with row_count UNCHANGED at both ends (${LIVE_PAP_ROWS}) — accepted as live-corpus drift since the pilot 5 cutover (2026-07-08), not a conversion regression. See docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md §8.`);
+      console.warn(`[#150] content_hash moved (PRE ${preHash} -> POST ${postHash}) with row_count pinned exactly at both ends (PRE ${LIVE_PAP_ROWS}, POST ${POST_PAP_ROWS}) — accepted as live-corpus drift since the pilot 5 cutover (2026-07-08), not a conversion regression. See docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md §8.`);
     }
   });
 

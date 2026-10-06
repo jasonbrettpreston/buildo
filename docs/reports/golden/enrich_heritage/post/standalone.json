@@ -3,56 +3,56 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-heritage.js",
   "chain": "none",
-  "git_head": "08f3dabd1e8fd2d1ba98efc8e2c65bcf878759d3",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 486514,
+    "records_total": 496509,
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 4046,
-      "code_version": "v1-containment-lateral",
+      "duration_ms": 14520,
+      "code_version": "none",
       "heritage_designated_by_zone": {
         "RD": {
-          "parcels": 233876,
-          "designated": 2391
+          "parcels": 236067,
+          "designated": 2490
         },
         "R": {
-          "parcels": 102551,
-          "designated": 4521
+          "parcels": 104544,
+          "designated": 4593
         },
         "RM": {
-          "parcels": 54332,
-          "designated": 24
+          "parcels": 54869,
+          "designated": 25
         },
         "RS": {
-          "parcels": 29256,
+          "parcels": 29683,
           "designated": 3
         },
         "CR": {
-          "parcels": 18127,
-          "designated": 1811
+          "parcels": 19305,
+          "designated": 2056
         },
         "RT": {
-          "parcels": 14220,
-          "designated": 2
+          "parcels": 14926,
+          "designated": 3
         },
         "RA": {
-          "parcels": 2354,
-          "designated": 10
+          "parcels": 2609,
+          "designated": 12
         },
         "CRE": {
-          "parcels": 552,
-          "designated": 507
+          "parcels": 707,
+          "designated": 659
         },
         "(null)": {
-          "parcels": 16365,
-          "designated": 455
+          "parcels": 17820,
+          "designated": 515
         },
         "other": {
-          "parcels": 14897,
-          "designated": 234
+          "parcels": 15980,
+          "designated": 259
         }
       },
       "config": {
@@ -70,10 +70,13 @@
       "terminal": "enriched",
       "ledger_row": "owned",
       "chain_run_id": null,
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
       "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
         "phase": 13,
         "name": "Parcel Heritage Designation",
@@ -81,123 +84,157 @@
         "rows": [
           {
             "metric": "parcels_heritage_designated_count",
-            "value": 9958,
+            "value": 10615,
             "threshold": "value_min 1",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_part_iv_count",
-            "value": 1217,
+            "value": 1361,
             "threshold": "value_min 1",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_part_v_hcd_count",
-            "value": 8741,
+            "value": 9254,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_part_iv_source_count",
-            "value": 1557,
+            "value": 1568,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_points_no_parcel_match",
-            "value": 10.4,
+            "value": 0.8,
             "threshold": "pct <= 15",
             "status": "PASS",
             "source": "check",
-            "warn_threshold": "pct <= 30"
+            "warn_threshold": "pct <= 30",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_invalid_geom_count",
-            "value": 16,
+            "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_enriched_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_heritage_enrich_skipped",
             "value": true,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_source_dataset_version",
-            "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1",
+            "value": "37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1",
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "enrich_heritage_duration_ms",
-            "value": 4046,
+            "value": 14520,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_flag_type_agree_flagged_side",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_flag_type_agree_unflagged_side",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_date_without_type_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_part_iv_null_date_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_designated_share_max_pct",
-            "value": 2.04673915277578,
+            "value": 2.13792270044913,
             "threshold": "value_max 10",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_designated_count_collapse_floor",
-            "value": 9958,
+            "value": 10615,
             "threshold": "value_min 1000",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
           },
           {
             "metric": "heritage_part_iv_matched_le_source",
             "value": 0,
             "threshold": "value_max 0",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "heritage_properties": 8848,
+              "heritage_districts": 29
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "empty_source_guard",
+            "value": {
+              "heritage_properties": 8848
+            },
+            "threshold": "guards.empty_source table(s) non-empty",
+            "status": "INFO"
           },
           {
             "metric": "retired_var_row_present:heritage_point_match_radius_m",
@@ -207,55 +244,55 @@
           },
           {
             "metric": "sys_heritage_flag_type_agree_flagged_side_duration_ms",
-            "value": 2117,
+            "value": 3669,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_flag_type_agree_unflagged_side_duration_ms",
-            "value": 1617,
+            "value": 3450,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_date_without_type_count_duration_ms",
-            "value": 1827,
+            "value": 3448,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_part_iv_null_date_count_duration_ms",
-            "value": 2134,
+            "value": 3678,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_designated_share_max_pct_duration_ms",
-            "value": 1731,
+            "value": 1630,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_designated_count_collapse_floor_duration_ms",
-            "value": 1684,
+            "value": 1631,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_part_iv_matched_le_source_duration_ms",
-            "value": 1758,
+            "value": 1334,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 61258.37,
+            "value": 24987.87,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 7942,
+            "value": 19870,
             "threshold": null,
             "status": "INFO"
           }
@@ -306,17 +343,17 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 1144ms\"}\nPIPELINE_SUMMARY:{\"records_total\":486514,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":4046,\"code_version\":\"v1-containment-lateral\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":233876,\"designated\":2391},\"R\":{\"parcels\":102551,\"designated\":4521},\"RM\":{\"parcels\":54332,\"designated\":24},\"RS\":{\"parcels\":29256,\"designated\":3},\"CR\":{\"parcels\":18127,\"designated\":1811},\"RT\":{\"parcels\":14220,\"designated\":2},\"RA\":{\"parcels\":2354,\"designated\":10},\"CRE\":{\"parcels\":552,\"designated\":507},\"(null)\":{\"parcels\":16365,\"designated\":455},\"other\":{\"parcels\":14897,\"designated\":234}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":9958,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1217,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":8741,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1557,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":10.4,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":16,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":4046,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.04673915277578,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":9958,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":2117,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":1617,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":1827,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":2134,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":1731,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":1684,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":1758,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":61258.37,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":7942,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 7.9s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=247 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 10820ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496509,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":14520,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236067,\"designated\":2490},\"R\":{\"parcels\":104544,\"designated\":4593},\"RM\":{\"parcels\":54869,\"designated\":25},\"RS\":{\"parcels\":29683,\"designated\":3},\"CR\":{\"parcels\":19305,\"designated\":2056},\"RT\":{\"parcels\":14926,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17820,\"designated\":515},\"other\":{\"parcels\":15980,\"designated\":259}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10615,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1361,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":14520,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13792270044913,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10615,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":3669,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":3450,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":3448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":3678,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":1630,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":1631,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":1334,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":24987.87,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":19870,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 19.9s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1932,
+      "id": 2288,
       "pipeline": "enrich_heritage",
       "status": "completed",
-      "started_at": "2026-09-21T03:23:53.297Z",
-      "completed_at": "2026-09-21T03:24:01.211Z",
-      "duration_ms": 7943,
-      "records_total": 486514,
+      "started_at": "2026-10-05T18:45:59.712Z",
+      "completed_at": "2026-10-05T18:46:19.421Z",
+      "duration_ms": 19866,
+      "records_total": 496509,
       "records_new": 0,
       "records_updated": 0,
       "records_meta": {
@@ -332,52 +369,61 @@
           "enrich_heritage_designated_count_collapse_floor": 1000,
           "enrich_heritage_designated_share_plausible_max_pct": 10
         },
+        "errors": [],
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
         "terminal": "enriched",
+        "warnings": [],
         "ledger_row": "owned",
         "audit_table": {
           "name": "Parcel Heritage Designation",
           "rows": [
             {
-              "value": 9958,
+              "value": 10615,
               "metric": "parcels_heritage_designated_count",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 1"
             },
             {
-              "value": 1217,
+              "value": 1361,
               "metric": "parcels_part_iv_count",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 1"
             },
             {
-              "value": 8741,
+              "value": 9254,
               "metric": "parcels_part_v_hcd_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 1557,
+              "value": 1568,
               "metric": "heritage_part_iv_source_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 10.4,
+              "value": 0.8,
               "metric": "heritage_points_no_parcel_match",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "pct <= 15",
               "warn_threshold": "pct <= 30"
             },
             {
-              "value": 16,
+              "value": 0,
               "metric": "parcels_invalid_geom_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -385,6 +431,7 @@
               "metric": "parcels_enriched_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -392,20 +439,23 @@
               "metric": "parcels_heritage_enrich_skipped",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1",
+              "value": "37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1",
               "metric": "heritage_source_dataset_version",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 4046,
+              "value": 14520,
               "metric": "enrich_heritage_duration_ms",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -413,6 +463,7 @@
               "metric": "heritage_flag_type_agree_flagged_side",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -420,6 +471,7 @@
               "metric": "heritage_flag_type_agree_unflagged_side",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -427,6 +479,7 @@
               "metric": "heritage_date_without_type_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -434,20 +487,23 @@
               "metric": "heritage_part_iv_null_date_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 2.04673915277578,
+              "value": 2.13792270044913,
               "metric": "heritage_designated_share_max_pct",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 10"
             },
             {
-              "value": 9958,
+              "value": 10615,
               "metric": "heritage_designated_count_collapse_floor",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 1000"
             },
             {
@@ -455,7 +511,25 @@
               "metric": "heritage_part_iv_matched_le_source",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 0"
+            },
+            {
+              "value": {
+                "heritage_districts": 29,
+                "heritage_properties": 8848
+              },
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": {
+                "heritage_properties": 8848
+              },
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty"
             },
             {
               "value": "\"heritage_point_match_radius_m\" (retired 2026-06-04, EH-D3) has no logic_variables row",
@@ -464,55 +538,55 @@
               "threshold": "no logic_variables row for a retired name"
             },
             {
-              "value": 2117,
+              "value": 3669,
               "metric": "sys_heritage_flag_type_agree_flagged_side_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1617,
+              "value": 3450,
               "metric": "sys_heritage_flag_type_agree_unflagged_side_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1827,
+              "value": 3448,
               "metric": "sys_heritage_date_without_type_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 2134,
+              "value": 3678,
               "metric": "sys_heritage_part_iv_null_date_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1731,
+              "value": 1630,
               "metric": "sys_heritage_designated_share_max_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1684,
+              "value": 1631,
               "metric": "sys_heritage_designated_count_collapse_floor_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1758,
+              "value": 1334,
               "metric": "sys_heritage_part_iv_matched_le_source_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 61258.37,
+              "value": 24987.87,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 7942,
+              "value": 19870,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -521,66 +595,66 @@
           "phase": 13,
           "verdict": "PASS"
         },
-        "duration_ms": 4046,
+        "duration_ms": 14520,
         "pool_errors": 0,
         "chain_run_id": null,
-        "code_version": "v1-containment-lateral",
+        "code_version": "none",
         "checks_failed": 0,
         "checks_passed": "all",
         "checks_warned": 0,
         "heritage_designated_by_zone": {
           "R": {
-            "parcels": 102551,
-            "designated": 4521
+            "parcels": 104544,
+            "designated": 4593
           },
           "CR": {
-            "parcels": 18127,
-            "designated": 1811
+            "parcels": 19305,
+            "designated": 2056
           },
           "RA": {
-            "parcels": 2354,
-            "designated": 10
+            "parcels": 2609,
+            "designated": 12
           },
           "RD": {
-            "parcels": 233876,
-            "designated": 2391
+            "parcels": 236067,
+            "designated": 2490
           },
           "RM": {
-            "parcels": 54332,
-            "designated": 24
+            "parcels": 54869,
+            "designated": 25
           },
           "RS": {
-            "parcels": 29256,
+            "parcels": 29683,
             "designated": 3
           },
           "RT": {
-            "parcels": 14220,
-            "designated": 2
+            "parcels": 14926,
+            "designated": 3
           },
           "CRE": {
-            "parcels": 552,
-            "designated": 507
+            "parcels": 707,
+            "designated": 659
           },
           "other": {
-            "parcels": 14897,
-            "designated": 234
+            "parcels": 15980,
+            "designated": 259
           },
           "(null)": {
-            "parcels": 16365,
-            "designated": 455
+            "parcels": 17820,
+            "designated": 515
           }
         }
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1931,
+  "pipeline_runs_max_id_before": 2287,
   "table_state": [
     {
       "table": "parcels",
-      "row_count": 486530,
+      "row_count": 496510,
       "ceiling_bypassed": "projected",
-      "content_hash": "6b34814df23e5219c8a1741f93b9880f",
+      "content_hash": "7339a5234225cd1cc52b2fafdd4348df",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -597,7 +671,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 1987
+    "parcels": 1821
   },
   "table_specs": {
     "parcels": {
@@ -634,11 +708,11 @@
     },
     {
       "name": "heritage_designated_share_max_pct",
-      "value": "2.04673915277578"
+      "value": "2.13792270044913"
     },
     {
       "name": "heritage_designated_count_collapse_floor",
-      "value": "9958"
+      "value": "10615"
     },
     {
       "name": "heritage_part_iv_matched_le_source",
@@ -646,7 +720,7 @@
     }
   ],
   "invariants_file": null,
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -654,9 +728,11 @@
     "key:pipeline_runs[0].duration_ms",
     "key:pipeline_runs[0].id",
     "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
     "key:pipeline_runs[0].records_meta.duration_ms",
     "key:pipeline_runs[0].started_at",
     "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
     "key:summary.records_meta.duration_ms",
     "pattern:duration_literal",
     "row:sys_duration_ms",
@@ -681,49 +757,56 @@
           "rows": [
             {
               "metric": "parcels_heritage_designated_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 1",
-              "value": 9958
+              "value": 10615
             },
             {
               "metric": "parcels_part_iv_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 1",
-              "value": 1217
+              "value": 1361
             },
             {
               "metric": "parcels_part_v_hcd_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 8741
+              "value": 9254
             },
             {
               "metric": "heritage_part_iv_source_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1557
+              "value": 1568
             },
             {
               "metric": "heritage_points_no_parcel_match",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "pct <= 15",
-              "value": 10.4,
+              "value": 0.8,
               "warn_threshold": "pct <= 30"
             },
             {
               "metric": "parcels_invalid_geom_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 16
+              "value": 0
             },
             {
               "metric": "parcels_enriched_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -731,6 +814,7 @@
             },
             {
               "metric": "parcels_heritage_enrich_skipped",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -738,20 +822,23 @@
             },
             {
               "metric": "heritage_source_dataset_version",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1"
+              "value": "37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1"
             },
             {
               "metric": "enrich_heritage_duration_ms",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 4046
+              "value": 14520
             },
             {
               "metric": "heritage_flag_type_agree_flagged_side",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -759,6 +846,7 @@
             },
             {
               "metric": "heritage_flag_type_agree_unflagged_side",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -766,6 +854,7 @@
             },
             {
               "metric": "heritage_date_without_type_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -773,6 +862,7 @@
             },
             {
               "metric": "heritage_part_iv_null_date_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -780,24 +870,44 @@
             },
             {
               "metric": "heritage_designated_share_max_pct",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_max 10",
-              "value": 2.04673915277578
+              "value": 2.13792270044913
             },
             {
               "metric": "heritage_designated_count_collapse_floor",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_min 1000",
-              "value": 9958
+              "value": 10615
             },
             {
               "metric": "heritage_part_iv_matched_le_source",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_max 0",
               "value": 0
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "heritage_districts": 29,
+                "heritage_properties": 8848
+              }
+            },
+            {
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty",
+              "value": {
+                "heritage_properties": 8848
+              }
             },
             {
               "metric": "retired_var_row_present:heritage_point_match_radius_m",
@@ -811,7 +921,7 @@
         "checks_failed": 0,
         "checks_passed": "all",
         "checks_warned": 0,
-        "code_version": "v1-containment-lateral",
+        "code_version": "none",
         "config": {
           "enrich_heritage_address_levenshtein_threshold": 2,
           "enrich_heritage_designated_count_collapse_floor": 1000,
@@ -824,54 +934,56 @@
           "enrich_heritage_unlinked_point_fail_pct": 30,
           "enrich_heritage_unlinked_point_warn_pct": 15
         },
+        "errors": [],
         "heritage_designated_by_zone": {
           "(null)": {
-            "designated": 455,
-            "parcels": 16365
+            "designated": 515,
+            "parcels": 17820
           },
           "CR": {
-            "designated": 1811,
-            "parcels": 18127
+            "designated": 2056,
+            "parcels": 19305
           },
           "CRE": {
-            "designated": 507,
-            "parcels": 552
+            "designated": 659,
+            "parcels": 707
           },
           "R": {
-            "designated": 4521,
-            "parcels": 102551
+            "designated": 4593,
+            "parcels": 104544
           },
           "RA": {
-            "designated": 10,
-            "parcels": 2354
+            "designated": 12,
+            "parcels": 2609
           },
           "RD": {
-            "designated": 2391,
-            "parcels": 233876
+            "designated": 2490,
+            "parcels": 236067
           },
           "RM": {
-            "designated": 24,
-            "parcels": 54332
+            "designated": 25,
+            "parcels": 54869
           },
           "RS": {
             "designated": 3,
-            "parcels": 29256
+            "parcels": 29683
           },
           "RT": {
-            "designated": 2,
-            "parcels": 14220
+            "designated": 3,
+            "parcels": 14926
           },
           "other": {
-            "designated": 234,
-            "parcels": 14897
+            "designated": 259,
+            "parcels": 15980
           }
         },
         "ledger_row": "owned",
         "pool_errors": 0,
-        "terminal": "enriched"
+        "terminal": "enriched",
+        "warnings": []
       },
       "records_new": 0,
-      "records_total": 486514,
+      "records_total": 496509,
       "records_updated": 0
     },
     "summary_count": 1,
@@ -924,49 +1036,56 @@
             "rows": [
               {
                 "metric": "parcels_heritage_designated_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "value_min 1",
-                "value": 9958
+                "value": 10615
               },
               {
                 "metric": "parcels_part_iv_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "value_min 1",
-                "value": 1217
+                "value": 1361
               },
               {
                 "metric": "parcels_part_v_hcd_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 8741
+                "value": 9254
               },
               {
                 "metric": "heritage_part_iv_source_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1557
+                "value": 1568
               },
               {
                 "metric": "heritage_points_no_parcel_match",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "pct <= 15",
-                "value": 10.4,
+                "value": 0.8,
                 "warn_threshold": "pct <= 30"
               },
               {
                 "metric": "parcels_invalid_geom_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 16
+                "value": 0
               },
               {
                 "metric": "parcels_enriched_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -974,6 +1093,7 @@
               },
               {
                 "metric": "parcels_heritage_enrich_skipped",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -981,20 +1101,23 @@
               },
               {
                 "metric": "heritage_source_dataset_version",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "bdca9c50f1243057ec70720b2e55dd4b|eb37b1a023ddccff155145a9fdd2e3d1"
+                "value": "37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1"
               },
               {
                 "metric": "enrich_heritage_duration_ms",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 4046
+                "value": 14520
               },
               {
                 "metric": "heritage_flag_type_agree_flagged_side",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -1002,6 +1125,7 @@
               },
               {
                 "metric": "heritage_flag_type_agree_unflagged_side",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -1009,6 +1133,7 @@
               },
               {
                 "metric": "heritage_date_without_type_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -1016,6 +1141,7 @@
               },
               {
                 "metric": "heritage_part_iv_null_date_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -1023,24 +1149,44 @@
               },
               {
                 "metric": "heritage_designated_share_max_pct",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_max 10",
-                "value": 2.04673915277578
+                "value": 2.13792270044913
               },
               {
                 "metric": "heritage_designated_count_collapse_floor",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_min 1000",
-                "value": 9958
+                "value": 10615
               },
               {
                 "metric": "heritage_part_iv_matched_le_source",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_max 0",
                 "value": 0
+              },
+              {
+                "metric": "inputs_nonempty",
+                "status": "INFO",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+                "value": {
+                  "heritage_districts": 29,
+                  "heritage_properties": 8848
+                }
+              },
+              {
+                "metric": "empty_source_guard",
+                "status": "INFO",
+                "threshold": "guards.empty_source table(s) non-empty",
+                "value": {
+                  "heritage_properties": 8848
+                }
               },
               {
                 "metric": "retired_var_row_present:heritage_point_match_radius_m",
@@ -1054,7 +1200,7 @@
           "checks_failed": 0,
           "checks_passed": "all",
           "checks_warned": 0,
-          "code_version": "v1-containment-lateral",
+          "code_version": "none",
           "config": {
             "enrich_heritage_address_levenshtein_threshold": 2,
             "enrich_heritage_designated_count_collapse_floor": 1000,
@@ -1067,60 +1213,62 @@
             "enrich_heritage_unlinked_point_fail_pct": 30,
             "enrich_heritage_unlinked_point_warn_pct": 15
           },
+          "errors": [],
           "heritage_designated_by_zone": {
             "(null)": {
-              "designated": 455,
-              "parcels": 16365
+              "designated": 515,
+              "parcels": 17820
             },
             "CR": {
-              "designated": 1811,
-              "parcels": 18127
+              "designated": 2056,
+              "parcels": 19305
             },
             "CRE": {
-              "designated": 507,
-              "parcels": 552
+              "designated": 659,
+              "parcels": 707
             },
             "R": {
-              "designated": 4521,
-              "parcels": 102551
+              "designated": 4593,
+              "parcels": 104544
             },
             "RA": {
-              "designated": 10,
-              "parcels": 2354
+              "designated": 12,
+              "parcels": 2609
             },
             "RD": {
-              "designated": 2391,
-              "parcels": 233876
+              "designated": 2490,
+              "parcels": 236067
             },
             "RM": {
-              "designated": 24,
-              "parcels": 54332
+              "designated": 25,
+              "parcels": 54869
             },
             "RS": {
               "designated": 3,
-              "parcels": 29256
+              "parcels": 29683
             },
             "RT": {
-              "designated": 2,
-              "parcels": 14220
+              "designated": 3,
+              "parcels": 14926
             },
             "other": {
-              "designated": 234,
-              "parcels": 14897
+              "designated": 259,
+              "parcels": 15980
             }
           },
           "ledger_row": "owned",
           "pool_errors": 0,
-          "terminal": "enriched"
+          "terminal": "enriched",
+          "warnings": []
         },
         "records_new": 0,
-        "records_total": 486514,
+        "records_total": 496509,
         "records_updated": 0,
         "status": "completed"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=244 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=247 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join completed in <DUR>\",\"tag\":\"[enrich_heritage]\"}",
       "[enrich_heritage] completed in <DUR>"
@@ -1135,12 +1283,12 @@
           "heritage_designation_date",
           "heritage_dataset_version_when_enriched"
         ],
-        "content_hash": "6b34814df23e5219c8a1741f93b9880f",
+        "content_hash": "7339a5234225cd1cc52b2fafdd4348df",
         "order_by": "explicit",
         "order_columns": [
           "id"
         ],
-        "row_count": 486530,
+        "row_count": 496510,
         "table": "parcels"
       }
     ],
@@ -1163,11 +1311,11 @@
       },
       {
         "name": "heritage_designated_share_max_pct",
-        "value": "2.04673915277578"
+        "value": "2.13792270044913"
       },
       {
         "name": "heritage_designated_count_collapse_floor",
-        "value": "9958"
+        "value": "10615"
       },
       {
         "name": "heritage_part_iv_matched_le_source",
@@ -1175,10 +1323,30 @@
       }
     ]
   },
-  "source_fingerprint": "59b0b09347a7655435db2f9eaf3c234e02ea14de00b50f30748b0cf171df857c",
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "parcels",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 1 table(s) [parcels]",
+    "txid_before_run2": 3191277,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "enriched"
+    }
+  },
+  "source_fingerprint": "91187f63df513d6ae265c46b46efd754d50e89be8f48c0fa5d77dbfef4743cc6",
   "fingerprint_files": [
     "scripts/enrich-heritage.descriptor.json",
     "scripts/enrich-heritage.js",
     "scripts/lib/compute/enrich-heritage.js"
-  ]
+  ],
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

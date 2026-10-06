@@ -26,7 +26,7 @@
 // injected ledger and is unchanged without one; `derivedReadsSteps` is (e)'s
 // derived set — the same `stepUpstreams` predicate, one derivation, two inputs.
 //
-// L-A (plan Fold 14): `chainOrderViolations` derives chain order from the same predicate and reports every producer-after-reader edge.
+// L-A (plan Fold 14): `chainOrderViolations` derives chain order from the same predicate and reports every producer-after-reader edge. A same-statement write guard witnessed by the #44 trace is the one exclusion (fold 17 #5).
 //
 // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6 (the cross-step ledger)
 
@@ -42,6 +42,9 @@ const DEFAULT_SNAPSHOT_PATH = path.resolve(__dirname, '../seeds/lineage-meta-sna
  * declares, not a statement observed running.
  */
 const SRC_SQL_LEDGER_PATH = path.resolve(__dirname, '../steps/_schema/src-sql-ledger.json');
+
+/** The committed #44 witness traces `docs/reports/witness/<slug>/post/*.trace.json`. */
+const DEFAULT_WITNESS_ROOT = path.resolve(__dirname, '../../docs/reports/witness');
 
 /**
  * The `src` section of the effective ledger — the static-parsed src/ SQL
@@ -199,8 +202,10 @@ function invocationChains(descriptor) {
  * the code TEXT declares, NOT witnessed. Runtime confirmation is partial; a
  * `src` row must never be described as witnessed lineage.
  *
- * @param {{env?: Record<string,string|undefined>, descriptors?: Record<string, object>, srcLedger?: unknown}} [opts]
- * @returns {{inchain: Record<string, object>, static: Record<string, object>, src: Record<string, object>}}
+ * A snapshot row whose slug has no manifest.scripts entry is retired: dropped from inchain and listed in `retired` as ORDER-RETIRED:<slug> (MQ-C1, fold 19).
+ *
+ * @param {{env?: Record<string,string|undefined>, descriptors?: Record<string, object>, srcLedger?: unknown, scripts?: Record<string, unknown>}} [opts]
+ * @returns {{inchain: Record<string, object>, static: Record<string, object>, src: Record<string, object>, retired: string[]}}
  */
 function effectiveLedger(opts) {
   const o = opts || {};
@@ -218,8 +223,21 @@ function effectiveLedger(opts) {
     );
   const { deriveMeta } = require('./step/index.js');
 
+  // MQ-C1 (a) (plan fold 19 + compliance amendment C1): a snapshot row whose slug has no
+  // manifest.scripts entry is a RETIRED producer (e.g. a slug kept alive only by old pipeline_runs
+  // rows). It is dropped HERE so ORDER, #44 (e) and unproducedReads all see one truth, and each is
+  // reported as ORDER-RETIRED:<slug>. Derived from the manifest, never a list. Descriptor rows are
+  // never dropped. opts.scripts injects a manifest.scripts-shaped object (tests).
+  const scripts = o.scripts || JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json'), 'utf8')).scripts || {};
+  const isLive = (slug) => Object.prototype.hasOwnProperty.call(scripts, slug);
+
   const inchain = {};
+  const retired = [];
   for (const [name, row] of Object.entries(base.inchain)) {
+    if (!isLive(name) && !Object.prototype.hasOwnProperty.call(descriptors, name)) {
+      retired.push(`ORDER-RETIRED:${name}`);
+      continue;
+    }
     inchain[name] = { ...row, source: 'snapshot' };
   }
   for (const [name, descriptor] of Object.entries(descriptors)) {
@@ -227,13 +245,19 @@ function effectiveLedger(opts) {
     const prior = base.inchain[name] || {};
     inchain[name] = {
       ...prior,
-      chains: (base.inchain[name] && base.inchain[name].chains) || invocationChains(descriptor),
+      // FLEET-2 assembly 2026-10-05: the DECLARED invocation is the truth (R-AZ generates manifest chain_args
+      // from it; generate-chain-args --check keeps it equal to manifest membership). A stale lineage-snapshot
+      // membership (e.g. link_massing after it left the permits chain, §2 item 2.1) must not keep a producer in
+      // a chain it no longer runs in. Snapshot chains only when the descriptor declares no invocation.
+      chains: invocationChains(descriptor).length > 0
+        ? invocationChains(descriptor)
+        : (base.inchain[name] && base.inchain[name].chains) || [],
       reads: meta.reads,
       writes: meta.writes,
       source: 'descriptor',
     };
   }
-  return { inchain, static: base.static, src: srcSection(srcLedger) };
+  return { inchain, static: base.static, src: srcSection(srcLedger), retired: retired.sort() };
 }
 
 /**
@@ -257,6 +281,7 @@ function effectiveLedger(opts) {
  * snapshot default because the derived set is only meaningful against the
  * ledger it was derived over.
  *
+ * LDG-10: every `staleness.pins[].step` (self excluded) joins the result — a pin is a declared producer edge.
  * @param {string} slug - `identity.name`
  * @param {object} descriptor - the converted descriptor (its declared reads)
  * @param {{ledger: {inchain: Record<string, object>}, producers?: string[]}} opts - `ledger` REQUIRED
@@ -288,9 +313,92 @@ function derivedReadsSteps(slug, descriptor, opts) {
       producers.add(step);
     }
   }
+  // LDG-10 (WF1 Step 2 rider, Panel fold 1 item 10): every staleness.pins[].step is a declared
+  // producer edge (the reader halts on / compares that producer's stamp), so it JOINS the derived
+  // set — L-A ordering and #44 (e) see every pin edge. Self-pins are excluded like self-writes.
+  const pins = (descriptor && descriptor.staleness && Array.isArray(descriptor.staleness.pins)) ? descriptor.staleness.pins : [];
+  for (const pin of pins) {
+    if (pin && typeof pin.step === 'string' && pin.step && pin.step !== slug) producers.add(pin.step);
+  }
   const allowed = Array.isArray(o.producers) ? new Set(o.producers) : null;
   const result = [...producers].filter((step) => !allowed || allowed.has(step));
   return result.sort();
+}
+
+/**
+ * Every step's #44 trace statements (`docs/reports/witness/<slug>/post/*.trace.json`),
+ * keyed by the witness directory name (= the step slug; `trace.step` is a file path and is not used), all invocations concatenated.
+ * Read-only, file-only (no DB). An unreadable or unparsable trace file is skipped — the
+ * reader is then simply unwitnessed for the L-A guard, which keeps its ORDER row.
+ * @param {string} [witnessRoot]
+ * @returns {Record<string, Array<{reads?: Record<string,string[]>, writes?: Record<string,string[]>}>>}
+ */
+function loadTraceStatements(witnessRoot) {
+  const root = witnessRoot || DEFAULT_WITNESS_ROOT;
+  const out = {};
+  let dirs = [];
+  try { dirs = fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name); } catch { return out; }
+  for (const dir of dirs) {
+    const post = path.join(root, dir, 'post');
+    let files = [];
+    try { files = fs.readdirSync(post).filter((f) => f.endsWith('.trace.json')); } catch { continue; }
+    for (const f of files) {
+      let trace;
+      try { trace = JSON.parse(fs.readFileSync(path.join(post, f), 'utf8')); } catch { continue; }
+      if (!trace || !Array.isArray(trace.statements)) continue;
+      const slug = dir;
+      (out[slug] = out[slug] || []).push(...trace.statements);
+    }
+  }
+  return out;
+}
+
+/**
+ * L-A same-statement write guard (plan fold 14 L-A, fold 17 #5; register row R-id assigned at
+ * landing). TRUE only when the reader declares `table.col` as BOTH a read and a write, its trace
+ * has at least one statement reading it, and EVERY traced statement reading it also writes it.
+ * No trace ⇒ false (unwitnessed). Computed from the trace only — no list, no allowlist.
+ */
+function isSameStatementGuard(row, statements, table, col) {
+  const has = (m) => Boolean(m && Array.isArray(m[table]) && m[table].includes(col));
+  if (!has(row && row.reads) || !has(row && row.writes)) return false;
+  if (!Array.isArray(statements) || statements.length === 0) return false;
+  const readers = statements.filter((s) => s && has(s.reads));
+  return readers.length > 0 && readers.every((s) => has(s.writes));
+}
+
+/**
+ * The converted step slugs: every manifest.scripts slug whose `file` is listed in
+ * scripts/steps/_schema/converted.json `converted` (MQ-C3, plan fold 19 row 3). Read from disk, never
+ * a list. `opts.converted` (file paths) / `opts.scripts` (manifest.scripts shape) inject the inputs.
+ * @param {{converted?: string[], scripts?: Record<string, {file?: string}>}} [opts]
+ * @returns {string[]} sorted slugs
+ */
+function convertedSlugs(opts) {
+  const o = opts || {};
+  const files = new Set(
+    o.converted || JSON.parse(fs.readFileSync(path.resolve(__dirname, '../steps/_schema/converted.json'), 'utf8')).converted || [],
+  );
+  const scripts = o.scripts || JSON.parse(fs.readFileSync(path.resolve(__dirname, '../manifest.json'), 'utf8')).scripts || {};
+  return Object.keys(scripts).filter((slug) => scripts[slug] && files.has(scripts[slug].file)).sort();
+}
+
+/**
+ * MQ-C1 guard (compliance amendment C1 (iii)): every chain slug with no manifest.scripts entry,
+ * as sorted `CHAIN-UNSCRIPTED:<chain>:<slug>`. Must be empty — otherwise effectiveLedger's retired
+ * predicate could hide a live producer.
+ * @param {Record<string, string[]>} chains - `manifest.chains` shape
+ * @param {Record<string, unknown>} scripts - `manifest.scripts` shape
+ * @returns {string[]}
+ */
+function unscriptedChainSlugs(chains, scripts) {
+  const out = [];
+  for (const [chain, steps] of Object.entries(chains || {})) {
+    for (const slug of steps || []) {
+      if (!Object.prototype.hasOwnProperty.call(scripts || {}, slug)) out.push(`CHAIN-UNSCRIPTED:${chain}:${slug}`);
+    }
+  }
+  return out.sort();
 }
 
 /**
@@ -306,31 +414,36 @@ function derivedReadsSteps(slug, descriptor, opts) {
  * from the manifest chain is `ORDER-UNPLACED:<chain>:<p>><reader>:<cols>`
  * (never silently dropped).
  *
- * rows on `permits`/`coa`/`entities`/`deep_scrapes` are REPORT-ONLY until the
- * FLEET-2 landing commit (RE-FREEZE) flips them HARD; `sources` + `wsib` are
- * HARD now.
+ * Every chain is HARD since the FLEET-2 landing commit (RE-FREEZE, plan fold 14 L-A): the caller fails on any ORDER / ORDER-UNPLACED row.
  *
- * NO exemption of any kind: a reader that also writes the shared column is NOT
- * excluded — that rule needs a Spec 124 §5 register row + Operator-Ruling first
- * (FLEET-2 work); there is no allowlist and no skip list here, and those edges
- * stay visible as report-only `ORDER:` rows until then.
+ * ONE exclusion, computed from the trace (opts.traces, see loadTraceStatements): a same-statement write guard (isSameStatementGuard) is not an edge; each one is returned in `guarded` as ORDER-GUARD:<chain>:<p>><reader>:<table.col> so it is printed, never silent. Without a trace the reader is unwitnessed and the row stays. No list, no last-writer-wins (e.g. permits.status stays ordered).
+ * MQ-C3 derived arm (fold 19 row 3): with opts.converted (see convertedSlugs), an ORDER row whose producer AND reader are both unconverted goes to `unwitnessed` as ORDER-UNWITNESSED:<chain>:<p>><reader>:<cols> — report-only, printed and counted by the caller, ceiling-locked; it is hard again the moment either side is in converted.json. ORDER-UNPLACED rows never move.
  *
  * Iteration order is `Object.keys(chains)` for chains and array order within a
  * chain (reader position ascending); everything is REPORTED, never thrown.
  *
  * @param {Record<string, string[]>} chains - `manifest.chains` shape
  * @param {{inchain: Record<string, object>}} ledger - `{ inchain }` REQUIRED
- * @returns {{rows: string[], blind: string[], unledgered: string[]}} three string arrays
+ * @param {{traces?: Record<string, Array<object>>, converted?: Iterable<string>}} [opts]
+ * @returns {{rows: string[], blind: string[], unledgered: string[], guarded: string[], unwitnessed: string[]}} five string arrays
  */
-function chainOrderViolations(chains, ledger) {
+function chainOrderViolations(chains, ledger, opts) {
   if (!ledger) {
     throw new Error('[ledger] chainOrderViolations requires an injected ledger (effectiveLedger())');
   }
   const inchain = ledger.inchain || {};
   const cfg = chains || {};
+  const traces = (opts && opts.traces) || {};
+  // MQ-C3 compliant variant (plan fold 19 row 3; Spec 124 §5 row + Operator-Ruling at landing): with
+  // opts.converted, an ORDER row whose producer AND reader are BOTH unconverted has no trace to verify
+  // or fix it — it is reported as ORDER-UNWITNESSED (printed, counted, report-only) and goes hard
+  // automatically when either side converts. Without opts.converted every row stays hard (fail-safe).
+  const converted = opts && opts.converted ? new Set(opts.converted) : null;
+  const unwitnessed = [];
   const rows = [];
   const blind = [];
   const unledgered = [];
+  const guarded = [];
 
   for (const chain of Object.keys(cfg)) {
     const steps = cfg[chain] || [];
@@ -349,20 +462,32 @@ function chainOrderViolations(chains, ledger) {
         if (p === reader) continue;
         const pWrites = (inchain[p] && inchain[p].writes) || {};
         const producerCols = new Set();
+        const producerIndex = steps.indexOf(p);
         for (const [table, cols] of Object.entries(reads)) {
           const written = pWrites[table] || [];
           for (const col of cols || []) {
-            if (written.includes(col)) producerCols.add(`${table}.${col}`);
+            if (!written.includes(col)) continue;
+            if (
+              (producerIndex === -1 || producerIndex > readerIndex) &&
+              isSameStatementGuard(row, traces[reader], table, col)
+            ) {
+              guarded.push(`ORDER-GUARD:${chain}:${p}>${reader}:${table}.${col}`);
+              continue;
+            }
+            producerCols.add(`${table}.${col}`);
           }
         }
+        if (producerCols.size === 0) continue;
         const cols = [...producerCols].sort().join(',');
-        const producerIndex = steps.indexOf(p);
         if (producerIndex === -1) rows.push(`ORDER-UNPLACED:${chain}:${p}>${reader}:${cols}`);
-        else if (producerIndex > readerIndex) rows.push(`ORDER:${chain}:${p}>${reader}:${cols}`);
+        else if (producerIndex > readerIndex) {
+          if (converted && !converted.has(p) && !converted.has(reader)) unwitnessed.push(`ORDER-UNWITNESSED:${chain}:${p}>${reader}:${cols}`);
+          else rows.push(`ORDER:${chain}:${p}>${reader}:${cols}`);
+        }
       }
     }
   }
-  return { rows, blind, unledgered };
+  return { rows, blind, unledgered, guarded, unwitnessed };
 }
 
 module.exports = {
@@ -375,4 +500,7 @@ module.exports = {
   effectiveLedger,
   derivedReadsSteps,
   chainOrderViolations,
+  unscriptedChainSlugs,
+  convertedSlugs,
+  loadTraceStatements,
 };

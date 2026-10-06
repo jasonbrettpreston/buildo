@@ -35,8 +35,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_bylaw_areas"
         },
         {
@@ -51,8 +49,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_height_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -68,8 +64,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_lot_coverage_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -85,8 +79,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_building_setback_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -102,8 +94,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_policy_area_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -119,8 +109,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_policy_road_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -136,8 +124,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_rooming_house_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -153,8 +139,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_parking_zone_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -170,8 +154,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_priority_retail_overlay",
           "on_failure": "warn_row_continue"
         },
@@ -187,8 +169,6 @@
           },
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "_id",
-          "cache": "none",
-          "cache_ttl": "none",
           "target": "zoning_queenstw_eat_overlay",
           "on_failure": "warn_row_continue"
         }
@@ -416,13 +396,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_height_overlay",
@@ -501,13 +475,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_lot_coverage_overlay",
@@ -572,13 +540,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_building_setback_overlay",
@@ -664,13 +626,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_policy_area_overlay",
@@ -749,13 +705,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_policy_road_overlay",
@@ -821,13 +771,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_rooming_house_overlay",
@@ -913,13 +857,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_parking_zone_overlay",
@@ -991,13 +929,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_priority_retail_overlay",
@@ -1091,13 +1023,7 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       },
       {
         "table": "zoning_queenstw_eat_overlay",
@@ -1183,18 +1109,10 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
       "statements": 20,
       "why": {
@@ -1207,7 +1125,6 @@
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "source_validator",
@@ -1219,8 +1136,6 @@
     ],
     "skip_scope": "all_primaries",
     "mode_select": "skip",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -1483,15 +1398,17 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "10m",
     "txn_scope": "batch",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": 1000,
-    "needs_disk_mb": 64,
-    "partial_fill": "atomic",
+    "batch": "none",
+    "batch_why": {
+      "text": "MQ-B1 (a), registry-truth fold 19: ten write targets, and the ingest writer strides EACH by pipeline.maxRowsPerInsert(columnsPerRow) (scripts/lib/step/write.js executeWrite): zoning_bylaw_areas 27 columns -> 2427 rows, zoning_height_overlay 7 -> 9362, zoning_lot_coverage_overlay 5 -> 13107, zoning_building_setback_overlay 8 -> 8191, zoning_policy_area_overlay 7 -> 9362, zoning_policy_road_overlay 5 -> 13107, zoning_rooming_house_overlay 8 -> 8191, zoning_parking_zone_overlay 6 -> 10922, zoning_priority_retail_overlay 9 -> 7281, zoning_queenstw_eat_overlay 8 -> 8191. One number cannot state ten strides, so batch is \"none\" (generated by scripts/generate-ingest-batch.js); no ingest runner reads execution.batch.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    },
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A record with a null geometry, a non-integer _id, a duplicated _id (reject-all, R2-17) or a geometry the validator cannot use is counted and the layer continues [READ src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:430-478]; each skip is a named counter in the row-conservation identity and an audit row; the base tolerance is bounded by the FAIL-severity zoning_areas_invalid_polygon_pct / zoning_areas_invalid_polygon_count band.",
@@ -1510,16 +1427,11 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "60000ms",
       "timeout_from_config": "load_zoning_http_timeout_ms",
       "retries": 0,
-      "retries_from_config": "none",
-      "redact": "none"
+      "retries_from_config": "none"
     },
     "invocation": {
       "sources": {
@@ -3315,7 +3227,9 @@
     {
       "key": "base_layer_committed_after_overlays_failed",
       "type": "bool",
-      "consumers": []
+      "consumers": [
+        "enrich_parcels"
+      ]
     },
     {
       "key": "audit_table",
@@ -3526,8 +3440,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-zoning.notes.json",
-    "entries": 8
+    "file": "load-zoning.notes.json"
   },
   "recovery": {
     "reset": "TRUNCATE is never correct here — re-run with ZONING_FORCE_RELOAD=1, which bypasses the all-layers gate and rewrites every layer through the same guarded upsert plus departure delete.",
@@ -3560,16 +3473,13 @@
   },
   "counters": {
     "records_total": {
-      "source": "written.by_target.zoning_bylaw_areas.rows_scanned",
-      "scoped_by": "source_id"
+      "source": "written.by_target.zoning_bylaw_areas.rows_scanned"
     },
     "records_new": {
-      "source": "written.by_target.zoning_bylaw_areas.inserted",
-      "scoped_by": "source_id"
+      "source": "written.by_target.zoning_bylaw_areas.inserted"
     },
     "records_updated": {
-      "source": "written.by_target.zoning_bylaw_areas.updated",
-      "scoped_by": "source_id"
+      "source": "written.by_target.zoning_bylaw_areas.updated"
     }
   },
   "config": {
@@ -3675,7 +3585,7 @@
     "varies_by_chain": {
       "checks": "none",
       "phase": {
-        "sources": 58
+        "sources": 21
       },
       "audit_table": "one",
       "scope": "none"

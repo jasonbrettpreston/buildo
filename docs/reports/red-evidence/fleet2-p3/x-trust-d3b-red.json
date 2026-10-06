@@ -1,0 +1,68 @@
+{
+  "detail": "X-TRUST (P3-C5): 344 leaf field(s); 223 violation(s) [unclassed 223, bad-class 0, missing-mechanism 0, prose-non-string 0]",
+  "mapped_fields": 85,
+  "mapped_violations": [
+    {
+      "path": "inputs.expect_nonempty",
+      "kind": "unclassed",
+      "detail": "inputs.expect_nonempty: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "inputs.on_missing",
+      "kind": "unclassed",
+      "detail": "inputs.on_missing: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.values",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.values: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.on_unknown",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.on_unknown: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.source",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.source: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].write_discipline.guard",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].write_discipline.guard: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].write_discipline.guard_columns",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].write_discipline.guard_columns: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "guards.empty_source",
+      "kind": "unclassed",
+      "detail": "guards.empty_source: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "execution.on_row_error",
+      "kind": "unclassed",
+      "detail": "execution.on_row_error: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "execution.invocation",
+      "kind": "unclassed",
+      "detail": "execution.invocation: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "checks[].why.text",
+      "kind": "unclassed",
+      "detail": "checks[].why.text: no x-trust on the field or any ancestor"
+    }
+  ],
+  "sample_paths": [
+    "identity.name",
+    "identity.display_name",
+    "identity.owner",
+    "identity.description",
+    "identity.lock"
+  ]
+}

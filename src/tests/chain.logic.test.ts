@@ -7,6 +7,7 @@ import {
   PIPELINE_CHAINS,
   PIPELINE_REGISTRY,
 } from '@/components/FreshnessTimeline';
+import manifest from '../../scripts/manifest.json';
 
 describe('Pipeline Chain Definitions', () => {
   it('defines exactly 6 chains', () => {
@@ -30,7 +31,9 @@ describe('Pipeline Chain Definitions', () => {
     // an actual recurring chain step, not a one-shot operator script.
     const chain = PIPELINE_CHAINS.find((c) => c.id === 'permits');
     expect(chain).toBeDefined();
-    expect(chain!.steps).toHaveLength(33); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (Spec 101 P25 25A, after update_tracked_projects)
+    // FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
+    expect(chain!.steps).toHaveLength(manifest.chains.permits.length); // the UI chain mirrors the manifest exactly (Spec 47); history: +enrich_permits, +compute_storey_norms, +compute_build_norms, +dispatch_notifications, −link_massing (FLEET-2 2.1)
+    expect(chain!.steps.map((s) => s.slug)).not.toContain('link_massing');
     const slugs = chain!.steps.map((s) => s.slug);
     expect(slugs.indexOf('enrich_permits')).toBe(slugs.indexOf('link_parcels') + 1);
     expect(slugs).not.toContain('enrich_wsib_builders');
@@ -85,17 +88,25 @@ describe('Pipeline Chain Definitions', () => {
     const slugs = chain.steps.map((s) => s.slug);
     const tail = slugs.slice(-10);
     expect(tail).toEqual([
-      'classify_lifecycle_phase',
-      'assert_lifecycle_phase_distribution',
+      'assert_engine_health',
       'compute_phase_calibration',
       'compute_trade_forecasts',
       'compute_opportunity_scores',
       'update_tracked_projects',
+      'refresh_snapshot',
       'dispatch_notifications', // Spec 101 P25 25A — the ONE sender, after the enqueuers
       'assert_entity_tracing',
       'assert_global_coverage',
       'backup_db',
     ]);
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const at = (s: string) => slugs.indexOf(s);
+    expect(at('assert_lifecycle_phase_distribution')).toBe(at('classify_lifecycle_phase') + 1); // the gate stays ADJACENT to the classifier
+    expect(at('assert_lifecycle_phase_distribution')).toBeLessThan(at('assert_data_bounds'));
+    expect(at('assert_engine_health')).toBeLessThan(at('compute_phase_calibration'));
+    expect(at('compute_opportunity_scores')).toBeLessThan(at('update_tracked_projects')); // MQ-C2 fence: cross-run lead_analytics (Spec 41:105-110), never swapped
+    expect(at('update_tracked_projects')).toBeLessThan(at('refresh_snapshot'));
+    expect(at('refresh_snapshot')).toBeLessThan(at('dispatch_notifications'));
   });
 
   it('marketplace tail scripts appear only in permits chain', () => {
@@ -205,15 +216,18 @@ describe('Pipeline Chain Definitions', () => {
     const coa = PIPELINE_CHAINS.find((c) => c.id === 'coa');
     expect(coa!.steps[coa!.steps.length - 1]!.slug).toBe('assert_global_coverage');
     expect(coa!.steps[coa!.steps.length - 2]!.slug).toBe('compute_phase_calibration');
-    expect(coa!.steps[coa!.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
-    expect(coa!.steps[coa!.steps.length - 4]!.slug).toBe('classify_lifecycle_phase');
     // Permits chain: backup_db is last; assert_global_coverage is second-to-last
     expect(permits!.steps[permits!.steps.length - 1]!.slug).toBe('backup_db');
     expect(permits!.steps[permits!.steps.length - 2]!.slug).toBe('assert_global_coverage');
     expect(permits!.steps[permits!.steps.length - 3]!.slug).toBe('assert_entity_tracing');
-    // WF1 #B 2026-05-09: tail grew by 1 (compute_phase_calibration step 23).
-    // P25 25A: tail grew by 1 more (dispatch_notifications after update_tracked_projects) → -10.
-    expect(permits!.steps[permits!.steps.length - 10]!.slug).toBe('classify_lifecycle_phase');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const coaAt = (s: string) => coa!.steps.findIndex((x) => x.slug === s);
+    const coaOrder = ['link_coa', 'classify_lifecycle_phase', 'assert_lifecycle_phase_distribution', 'refresh_snapshot', 'assert_data_bounds', 'assert_engine_health', 'compute_phase_calibration', 'assert_global_coverage'];
+    for (let i = 1; i < coaOrder.length; i++) expect(coaAt(coaOrder[i - 1]!), coaOrder[i]).toBeLessThan(coaAt(coaOrder[i]!));
+    expect(coaAt('assert_lifecycle_phase_distribution')).toBe(coaAt('classify_lifecycle_phase') + 1);
+    const pAt = (s: string) => permits!.steps.findIndex((x) => x.slug === s);
+    expect(pAt('classify_lifecycle_phase')).toBeLessThan(pAt('assert_data_bounds'));
+    expect(pAt('update_tracked_projects')).toBeLessThan(pAt('refresh_snapshot'));
   });
 
   it('sources chain ends with assert_engine_health', () => {
@@ -1710,17 +1724,17 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
   // its exact name: `parcel_buildings_written` is asserted BY NAME here, so renaming the
   // audit row during the conversion would have silently dropped the only place the
   // junction's mutation count is visible.
-  it('link_massing: the junction mutation count is a NAMED audit row, and the counters declare their scope', () => {
+  it('link_massing: the junction mutation count is a NAMED audit row, and the counters declare their source', () => {
     const descriptor = JSON.parse(
       fs.readFileSync(path.resolve(__dirname, '../../scripts/link-massing.descriptor.json'), 'utf-8'),
-    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string; scoped_by: string[] }> };
+    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string }> };
     const ids = descriptor.checks.map((c) => c.id);
     expect(ids, 'the parcel_buildings mutation count must stay visible under this exact name').toContain('parcel_buildings_written');
     // The old lock banned `records_updated: buildingsUpserted` — a junction row count posing
-    // as an undeclared entity count. The scope is now DECLARED instead of banned, which is
-    // what §11 asks for: the counter says what it counts.
+    // as an undeclared entity count. The counter's measured source is now DECLARED instead of
+    // banned, which is what §11 asks for: the counter says what it counts.
     expect(descriptor.counters.records_updated!.source).toBe('written.e2.updated');
-    expect(descriptor.counters.records_updated!.scoped_by).toEqual(['parcel_id', 'building_id']);
+    // counters.<slot>.scoped_by deleted in the Phase 3 RE-FREEZE (#69, zero runtime readers)
     const step = src('link-massing.js');
     expect(step).not.toMatch(/records_updated\s*:\s*buildingsUpserted/);
   });
@@ -1736,14 +1750,14 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
   // not a raw dbUpserted variable) is now a DECLARED field
   // (descriptor.counters.records_updated.source = "written.e1.updated") rather than a
   // source-text pattern, same treatment link_massing/link_wsib got at pilots 3/4.
-  it('link_parcels: the permit_parcels mutation count is a NAMED audit row, and the counters declare their scope', () => {
+  it('link_parcels: the permit_parcels mutation count is a NAMED audit row, and the counters declare their source', () => {
     const descriptor = JSON.parse(
       fs.readFileSync(path.resolve(__dirname, '../../scripts/link-parcels.descriptor.json'), 'utf-8'),
-    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string; scoped_by: string[] }> };
+    ) as { checks: Array<{ id: string; severity: string }>; counters: Record<string, { source: string }> };
     const ids = descriptor.checks.map((c) => c.id);
     expect(ids, 'the permit_parcels mutation count must stay visible under this exact name').toContain('permit_parcels_written');
     expect(descriptor.counters.records_updated!.source).toBe('written.e1.updated');
-    expect(descriptor.counters.records_updated!.scoped_by).toEqual(['permit_num', 'revision_num', 'parcel_id']);
+    // counters.<slot>.scoped_by deleted in the Phase 3 RE-FREEZE (#69, zero runtime readers)
   });
 
   // load-neighbourhoods.js RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.8, commit ②,
@@ -1752,11 +1766,11 @@ describe('§11 Counter Semantic Contract — emitSummary uses primary-entity cou
   it('load-neighbourhoods: records_updated is boundary count, not census characteristic rows (fence kept, re-homed onto the descriptor at ②)', () => {
     const descriptor = JSON.parse(
       fs.readFileSync(path.resolve(__dirname, '../../scripts/load-neighbourhoods.descriptor.json'), 'utf-8'),
-    ) as { checks: Array<{ id: string }>; counters: Record<string, { source: string; scoped_by: string }> };
+    ) as { checks: Array<{ id: string }>; counters: Record<string, { source: string }> };
     // The counter says what it counts: the boundary row (written.updated), scoped by the
     // boundary key — NOT the census characteristic rows legacy mismatched it against.
     expect(descriptor.counters.records_updated!.source).toBe('written.updated');
-    expect(descriptor.counters.records_updated!.scoped_by).toBe('neighbourhood_id');
+    // counters.<slot>.scoped_by deleted in the Phase 3 RE-FREEZE (#69, zero runtime readers)
     // census data must remain visible as a named audit row
     expect(descriptor.checks.map((c) => c.id)).toContain('census_rows_matched');
   });
@@ -1790,7 +1804,9 @@ describe('Entity Tracing + Phase Distribution Wiring', () => {
     const chain: string[] = manifest.chains.coa;
     expect(chain[chain.length - 1]).toBe('assert_global_coverage');
     expect(chain[chain.length - 2]).toBe('compute_phase_calibration');
-    expect(chain[chain.length - 3]).toBe('assert_lifecycle_phase_distribution');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const order = ['classify_lifecycle_phase', 'assert_lifecycle_phase_distribution', 'refresh_snapshot', 'assert_data_bounds', 'assert_engine_health', 'compute_phase_calibration'];
+    for (let i = 1; i < order.length; i++) expect(chain.indexOf(order[i - 1]!), order[i]).toBeLessThan(chain.indexOf(order[i]!));
   });
 
   it('manifest: backup_db is the final step of the permits chain (assert_global_coverage is penultimate)', () => {

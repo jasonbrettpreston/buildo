@@ -1,0 +1,31 @@
+{
+  "entries": {
+    "no_priced_null_lot_parcel": {
+      "value": 0,
+      "cost_ms": 3101,
+      "at": "2026-10-05T20:56:24.061Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2309",
+      "chain": null,
+      "sample_n": 2
+    },
+    "new_build_cost_not_gt_coa_cost": {
+      "value": 0,
+      "cost_ms": 3160,
+      "at": "2026-10-05T20:56:24.061Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2309",
+      "chain": null,
+      "sample_n": 2
+    },
+    "no_cost_outside_population": {
+      "value": 0,
+      "cost_ms": 3393,
+      "at": "2026-10-05T20:56:24.061Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2309",
+      "chain": null,
+      "sample_n": 2
+    }
+  }
+}

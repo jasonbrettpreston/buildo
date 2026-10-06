@@ -3,24 +3,32 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-centreline.js",
   "chain": "none",
-  "git_head": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 18048,
+    "records_total": 496509,
     "records_new": 0,
-    "records_updated": 2000,
+    "records_updated": 0,
     "records_meta": {
-      "duration_ms": 45767,
+      "duration_ms": 423759,
       "code_version": "none",
       "centreline_enrich": {
         "spec_version": "1.1",
-        "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
-        "mode": "incremental",
-        "skip_reason": "version_unchanged_incremental",
-        "parcels_recomputed": 18048,
-        "parcels_updated": 2000,
-        "completed_at": "2026-10-03T17:35:27.625Z"
+        "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
+        "mode": "full",
+        "parcels_updated": 0,
+        "parcels_with_zero_centreline_intersections_count": 16048,
+        "parcels_with_zero_centreline_intersections_pct": 3.2299999999999995,
+        "parcels_is_corner_lot_true_count": 55892,
+        "parcels_is_through_lot_true_count": 4989,
+        "parcels_abuts_laneway_true_count": 75824,
+        "parcels_primary_frontage_resolved_count": 480461,
+        "parcels_frontage_priority1_name_match_count": 429895,
+        "parcels_frontage_priority2_addrrange_match_count": 20722,
+        "parcels_frontage_priority3_nearest_segment_count": 29844,
+        "parcels_truncated_pair_count": 30,
+        "completed_at": "2026-10-05T19:03:57.060Z"
       },
       "config": {
         "enrich_centreline_unlinked_warn_pct": 10,
@@ -46,224 +54,266 @@
       "terminal": "enriched",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
       "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
-        "phase": 64,
+        "phase": 14,
         "name": "Parcel Centreline Enrichment",
         "verdict": "PASS",
         "rows": [
           {
             "metric": "parcels_with_zero_centreline_intersections_pct",
-            "value": "not measured (mode=incremental)",
+            "value": 3.2299999999999995,
             "threshold": "pct <= 10",
-            "status": "INFO",
+            "status": "PASS",
             "source": "check",
-            "warn_threshold": "pct <= 40"
+            "warn_threshold": "pct <= 40",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_invalid_geom_count",
-            "value": "not measured (mode=incremental)",
+            "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_street_name_normalized_pct",
-            "value": "not measured (mode=incremental)",
+            "value": 97.9,
             "threshold": "pct >= 90",
-            "status": "INFO",
-            "source": "check"
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_intersection_id_null_pct",
-            "value": "not measured (mode=incremental)",
+            "value": 0,
             "threshold": "pct <= 50",
-            "status": "INFO",
-            "source": "check"
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_address_number_null_pct",
-            "value": "not measured (mode=incremental)",
+            "value": 2.0100000000000002,
             "threshold": "pct <= 10",
-            "status": "INFO",
-            "source": "check"
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_is_corner_lot_count",
-            "value": "not measured (mode=incremental)",
+            "value": 55892,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_is_through_lot_count",
-            "value": "not measured (mode=incremental)",
+            "value": 4989,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_abuts_laneway_count",
-            "value": "not measured (mode=incremental)",
+            "value": 75824,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_primary_frontage_resolved_count",
-            "value": "not measured (mode=incremental)",
+            "value": 480461,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_frontage_priority1_match_count",
-            "value": "not measured (mode=incremental)",
+            "value": 429895,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_frontage_priority2_match_count",
-            "value": "not measured (mode=incremental)",
+            "value": 20722,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_frontage_priority3_match_count",
-            "value": "not measured (mode=incremental)",
+            "value": 29844,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_truncated_pair_count",
-            "value": "not measured (mode=incremental)",
+            "value": 30,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "enrich_centreline_mode",
-            "value": "incremental",
+            "value": "full",
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "enrich_centreline_skip_reason",
-            "value": "version_unchanged_incremental",
+            "value": null,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_recomputed",
-            "value": 18048,
+            "value": null,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "parcels_enriched_count",
-            "value": 2000,
+            "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_source_dataset_version",
-            "value": "1da4549b223eb577a79c57ba1f0f97dc",
+            "value": "2ac6f3990d9925171db071303acb1a7d",
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "enrich_centreline_duration_ms",
-            "value": 45767,
+            "value": 423759,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_corner_or_through_has_frontage",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_corner_share_min_pct",
             "value": 11.2569963485053,
             "threshold": "value_min 8",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_corner_share_max_pct",
             "value": 11.2569963485053,
             "threshold": "value_max 14",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_through_share_min_pct",
             "value": 1.00481562267753,
             "threshold": "value_min 0.2",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_through_share_max_pct",
             "value": 1.00481562267753,
             "threshold": "value_max 3",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "toronto_centreline": 47330
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "empty_source_guard",
+            "value": {
+              "toronto_centreline": 47330
+            },
+            "threshold": "guards.empty_source table(s) non-empty",
+            "status": "INFO"
           },
           {
             "metric": "sys_centreline_corner_or_through_has_frontage_duration_ms",
-            "value": 4636,
+            "value": 2106,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centreline_corner_share_min_pct_duration_ms",
-            "value": 6448,
+            "value": 5374,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centreline_corner_share_max_pct_duration_ms",
-            "value": 4660,
+            "value": 5486,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centreline_through_share_min_pct_duration_ms",
-            "value": 4384,
+            "value": 5499,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centreline_through_share_max_pct_duration_ms",
-            "value": 4378,
+            "value": 5396,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 316.26,
+            "value": 1150.79,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 57067,
+            "value": 431450,
             "threshold": null,
             "status": "INFO"
           }
@@ -318,19 +368,19 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"[enrich_centreline] target: enrich_centreline (descriptor.database) → database=postgres user=postgres migrations=245 (floor 225)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"phase centreline_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"phase centreline_join completed in 40192ms\"}\nPIPELINE_SUMMARY:{\"records_total\":18048,\"records_new\":0,\"records_updated\":2000,\"records_meta\":{\"duration_ms\":45767,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":18048,\"parcels_updated\":2000,\"completed_at\":\"2026-10-03T17:35:27.625Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":64,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct >= 90\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 50\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_recomputed\",\"value\":18048,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":2000,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":45767,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":4636,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":6448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":4660,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":4384,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":4378,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":316.26,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":57067,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"address_number\",\"street_name_normalized\",\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"centreline_dataset_version_when_enriched\"],\"toronto_centreline\":[\"id\",\"geom\",\"linear_name\",\"linear_name_full\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"parity_l\",\"lo_num_r\",\"hi_num_r\",\"parity_r\",\"feature_code_desc\"]},\"writes\":{\"parcels\":[\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"centreline_dataset_version_when_enriched\"]}}\n\n[enrich_centreline] completed in 57.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"[enrich_centreline] target: enrich_centreline (descriptor.database) → database=postgres user=postgres migrations=247 (floor 225)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"phase centreline_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_centreline]\",\"msg\":\"phase centreline_join completed in 421291ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496509,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":423759,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"2ac6f3990d9925171db071303acb1a7d\",\"mode\":\"full\",\"parcels_updated\":0,\"parcels_with_zero_centreline_intersections_count\":16048,\"parcels_with_zero_centreline_intersections_pct\":3.2299999999999995,\"parcels_is_corner_lot_true_count\":55892,\"parcels_is_through_lot_true_count\":4989,\"parcels_abuts_laneway_true_count\":75824,\"parcels_primary_frontage_resolved_count\":480461,\"parcels_frontage_priority1_name_match_count\":429895,\"parcels_frontage_priority2_addrrange_match_count\":20722,\"parcels_frontage_priority3_nearest_segment_count\":29844,\"parcels_truncated_pair_count\":30,\"completed_at\":\"2026-10-05T19:03:57.060Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":14,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":3.2299999999999995,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":97.9,\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":0,\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":2.0100000000000002,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":55892,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":4989,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":75824,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":480461,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":429895,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":20722,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":29844,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":30,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"full\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_recomputed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"2ac6f3990d9925171db071303acb1a7d\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":423759,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":2106,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":5374,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":5486,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":5499,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":5396,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1150.79,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":431450,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"address_number\",\"street_name_normalized\",\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"centreline_dataset_version_when_enriched\"],\"toronto_centreline\":[\"id\",\"geom\",\"linear_name\",\"linear_name_full\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"parity_l\",\"lo_num_r\",\"hi_num_r\",\"parity_r\",\"feature_code_desc\"]},\"writes\":{\"parcels\":[\"is_corner_lot\",\"is_through_lot\",\"primary_frontage_street_name\",\"abuts_laneway\",\"centreline_dataset_version_when_enriched\"]}}\n\n[enrich_centreline] completed in 431.5s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2254,
+      "id": 2290,
       "pipeline": "enrich_centreline",
       "status": "completed",
-      "started_at": "2026-10-03T17:35:27.467Z",
-      "completed_at": "2026-10-03T17:36:24.389Z",
-      "duration_ms": 57067,
-      "records_total": 18048,
+      "started_at": "2026-10-05T19:03:56.992Z",
+      "completed_at": "2026-10-05T19:11:08.396Z",
+      "duration_ms": 431450,
+      "records_total": 496509,
       "records_new": 0,
-      "records_updated": 2000,
+      "records_updated": 0,
       "records_meta": {
         "config": {
           "enrich_centreline_abut_m": 13,
@@ -353,144 +403,165 @@
           "enrich_centreline_through_share_plausible_max_pct": 3,
           "enrich_centreline_through_share_plausible_min_pct": 0.2
         },
-        "code_sha": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
+        "errors": [],
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
         "terminal": "enriched",
+        "warnings": [],
         "ledger_row": "owned",
         "audit_table": {
           "name": "Parcel Centreline Enrichment",
           "rows": [
             {
-              "value": "not measured (mode=incremental)",
+              "value": 3.2299999999999995,
               "metric": "parcels_with_zero_centreline_intersections_pct",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
+              "observed": "after_write",
               "threshold": "pct <= 10",
               "warn_threshold": "pct <= 40"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 0,
               "metric": "parcels_invalid_geom_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 97.9,
               "metric": "parcels_street_name_normalized_pct",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
+              "observed": "after_write",
               "threshold": "pct >= 90"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 0,
               "metric": "centreline_intersection_id_null_pct",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
+              "observed": "after_write",
               "threshold": "pct <= 50"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 2.0100000000000002,
               "metric": "parcels_address_number_null_pct",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
+              "observed": "after_write",
               "threshold": "pct <= 10"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 55892,
               "metric": "parcels_is_corner_lot_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 4989,
               "metric": "parcels_is_through_lot_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 75824,
               "metric": "parcels_abuts_laneway_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 480461,
               "metric": "parcels_primary_frontage_resolved_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 429895,
               "metric": "parcels_frontage_priority1_match_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 20722,
               "metric": "parcels_frontage_priority2_match_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 29844,
               "metric": "parcels_frontage_priority3_match_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "not measured (mode=incremental)",
+              "value": 30,
               "metric": "parcels_truncated_pair_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "incremental",
+              "value": "full",
               "metric": "enrich_centreline_mode",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "version_unchanged_incremental",
+              "value": null,
               "metric": "enrich_centreline_skip_reason",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 18048,
+              "value": null,
               "metric": "parcels_recomputed",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 2000,
+              "value": 0,
               "metric": "parcels_enriched_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": "1da4549b223eb577a79c57ba1f0f97dc",
+              "value": "2ac6f3990d9925171db071303acb1a7d",
               "metric": "centreline_source_dataset_version",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 45767,
+              "value": 423759,
               "metric": "enrich_centreline_duration_ms",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -498,6 +569,7 @@
               "metric": "centreline_corner_or_through_has_frontage",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -505,6 +577,7 @@
               "metric": "centreline_corner_share_min_pct",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 8"
             },
             {
@@ -512,6 +585,7 @@
               "metric": "centreline_corner_share_max_pct",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 14"
             },
             {
@@ -519,6 +593,7 @@
               "metric": "centreline_through_share_min_pct",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 0.2"
             },
             {
@@ -526,55 +601,72 @@
               "metric": "centreline_through_share_max_pct",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 3"
             },
             {
-              "value": 4636,
+              "value": {
+                "toronto_centreline": 47330
+              },
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": {
+                "toronto_centreline": 47330
+              },
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty"
+            },
+            {
+              "value": 2106,
               "metric": "sys_centreline_corner_or_through_has_frontage_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 6448,
+              "value": 5374,
               "metric": "sys_centreline_corner_share_min_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 4660,
+              "value": 5486,
               "metric": "sys_centreline_corner_share_max_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 4384,
+              "value": 5499,
               "metric": "sys_centreline_through_share_min_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 4378,
+              "value": 5396,
               "metric": "sys_centreline_through_share_max_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 316.26,
+              "value": 1150.79,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 57067,
+              "value": 431450,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
-          "phase": 64,
+          "phase": 14,
           "verdict": "PASS"
         },
-        "duration_ms": 45767,
+        "duration_ms": 423759,
         "pool_errors": 0,
         "chain_run_id": null,
         "code_version": "none",
@@ -582,25 +674,33 @@
         "checks_passed": "all",
         "checks_warned": 0,
         "centreline_enrich": {
-          "mode": "incremental",
-          "skip_reason": "version_unchanged_incremental",
-          "completed_at": "2026-10-03T17:35:27.625Z",
+          "mode": "full",
+          "completed_at": "2026-10-05T19:03:57.060Z",
           "spec_version": "1.1",
-          "parcels_updated": 2000,
-          "parcels_recomputed": 18048,
-          "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc"
+          "parcels_updated": 0,
+          "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
+          "parcels_truncated_pair_count": 30,
+          "parcels_abuts_laneway_true_count": 75824,
+          "parcels_is_corner_lot_true_count": 55892,
+          "parcels_is_through_lot_true_count": 4989,
+          "parcels_primary_frontage_resolved_count": 480461,
+          "parcels_frontage_priority1_name_match_count": 429895,
+          "parcels_with_zero_centreline_intersections_pct": 3.2299999999999995,
+          "parcels_frontage_priority2_addrrange_match_count": 20722,
+          "parcels_frontage_priority3_nearest_segment_count": 29844,
+          "parcels_with_zero_centreline_intersections_count": 16048
         }
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2253,
+  "pipeline_runs_max_id_before": 2289,
   "table_state": [
     {
       "table": "parcels",
       "row_count": 496510,
       "ceiling_bypassed": "projected",
-      "content_hash": "baaa7776b49068ff00fc4a656700088e",
+      "content_hash": "894c343f41693a5f2c4cdae89b0d7bcd",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -618,7 +718,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 7613
+    "parcels": 1798
   },
   "table_specs": {
     "parcels": {
@@ -660,7 +760,7 @@
     }
   ],
   "invariants_file": null,
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -693,144 +793,164 @@
       "records_meta": {
         "audit_table": {
           "name": "Parcel Centreline Enrichment",
-          "phase": 64,
+          "phase": 14,
           "rows": [
             {
               "metric": "parcels_with_zero_centreline_intersections_pct",
+              "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
               "threshold": "pct <= 10",
-              "value": "not measured (mode=incremental)",
+              "value": 3.2299999999999995,
               "warn_threshold": "pct <= 40"
             },
             {
               "metric": "parcels_invalid_geom_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 0
             },
             {
               "metric": "parcels_street_name_normalized_pct",
+              "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
               "threshold": "pct >= 90",
-              "value": "not measured (mode=incremental)"
+              "value": 97.9
             },
             {
               "metric": "centreline_intersection_id_null_pct",
+              "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
               "threshold": "pct <= 50",
-              "value": "not measured (mode=incremental)"
+              "value": 0
             },
             {
               "metric": "parcels_address_number_null_pct",
+              "observed": "after_write",
               "source": "check",
-              "status": "INFO",
+              "status": "PASS",
               "threshold": "pct <= 10",
-              "value": "not measured (mode=incremental)"
+              "value": 2.0100000000000002
             },
             {
               "metric": "parcels_is_corner_lot_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 55892
             },
             {
               "metric": "parcels_is_through_lot_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 4989
             },
             {
               "metric": "parcels_abuts_laneway_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 75824
             },
             {
               "metric": "parcels_primary_frontage_resolved_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 480461
             },
             {
               "metric": "parcels_frontage_priority1_match_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 429895
             },
             {
               "metric": "parcels_frontage_priority2_match_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 20722
             },
             {
               "metric": "parcels_frontage_priority3_match_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 29844
             },
             {
               "metric": "parcels_truncated_pair_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "not measured (mode=incremental)"
+              "value": 30
             },
             {
               "metric": "enrich_centreline_mode",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "incremental"
+              "value": "full"
             },
             {
               "metric": "enrich_centreline_skip_reason",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "version_unchanged_incremental"
+              "value": null
             },
             {
               "metric": "parcels_recomputed",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 18048
+              "value": null
             },
             {
               "metric": "parcels_enriched_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 2000
+              "value": 0
             },
             {
               "metric": "centreline_source_dataset_version",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": "1da4549b223eb577a79c57ba1f0f97dc"
+              "value": "2ac6f3990d9925171db071303acb1a7d"
             },
             {
               "metric": "enrich_centreline_duration_ms",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 45767
+              "value": 423759
             },
             {
               "metric": "centreline_corner_or_through_has_frontage",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -838,6 +958,7 @@
             },
             {
               "metric": "centreline_corner_share_min_pct",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_min 8",
@@ -845,6 +966,7 @@
             },
             {
               "metric": "centreline_corner_share_max_pct",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_max 14",
@@ -852,6 +974,7 @@
             },
             {
               "metric": "centreline_through_share_min_pct",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_min 0.2",
@@ -859,20 +982,45 @@
             },
             {
               "metric": "centreline_through_share_max_pct",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_max 3",
               "value": 1.00481562267753
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "toronto_centreline": 47330
+              }
+            },
+            {
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty",
+              "value": {
+                "toronto_centreline": 47330
+              }
             }
           ],
           "verdict": "PASS"
         },
         "centreline_enrich": {
-          "mode": "incremental",
-          "parcels_recomputed": 18048,
-          "parcels_updated": 2000,
-          "skip_reason": "version_unchanged_incremental",
-          "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+          "mode": "full",
+          "parcels_abuts_laneway_true_count": 75824,
+          "parcels_frontage_priority1_name_match_count": 429895,
+          "parcels_frontage_priority2_addrrange_match_count": 20722,
+          "parcels_frontage_priority3_nearest_segment_count": 29844,
+          "parcels_is_corner_lot_true_count": 55892,
+          "parcels_is_through_lot_true_count": 4989,
+          "parcels_primary_frontage_resolved_count": 480461,
+          "parcels_truncated_pair_count": 30,
+          "parcels_updated": 0,
+          "parcels_with_zero_centreline_intersections_count": 16048,
+          "parcels_with_zero_centreline_intersections_pct": 3.2299999999999995,
+          "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
           "spec_version": "1.1"
         },
         "checks_failed": 0,
@@ -900,13 +1048,15 @@
           "enrich_centreline_unlinked_fail_pct": 40,
           "enrich_centreline_unlinked_warn_pct": 10
         },
+        "errors": [],
         "ledger_row": "owned",
         "pool_errors": 0,
-        "terminal": "enriched"
+        "terminal": "enriched",
+        "warnings": []
       },
       "records_new": 0,
-      "records_total": 18048,
-      "records_updated": 2000
+      "records_total": 496509,
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -958,144 +1108,164 @@
         "records_meta": {
           "audit_table": {
             "name": "Parcel Centreline Enrichment",
-            "phase": 64,
+            "phase": 14,
             "rows": [
               {
                 "metric": "parcels_with_zero_centreline_intersections_pct",
+                "observed": "after_write",
                 "source": "check",
-                "status": "INFO",
+                "status": "PASS",
                 "threshold": "pct <= 10",
-                "value": "not measured (mode=incremental)",
+                "value": 3.2299999999999995,
                 "warn_threshold": "pct <= 40"
               },
               {
                 "metric": "parcels_invalid_geom_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 0
               },
               {
                 "metric": "parcels_street_name_normalized_pct",
+                "observed": "after_write",
                 "source": "check",
-                "status": "INFO",
+                "status": "PASS",
                 "threshold": "pct >= 90",
-                "value": "not measured (mode=incremental)"
+                "value": 97.9
               },
               {
                 "metric": "centreline_intersection_id_null_pct",
+                "observed": "after_write",
                 "source": "check",
-                "status": "INFO",
+                "status": "PASS",
                 "threshold": "pct <= 50",
-                "value": "not measured (mode=incremental)"
+                "value": 0
               },
               {
                 "metric": "parcels_address_number_null_pct",
+                "observed": "after_write",
                 "source": "check",
-                "status": "INFO",
+                "status": "PASS",
                 "threshold": "pct <= 10",
-                "value": "not measured (mode=incremental)"
+                "value": 2.0100000000000002
               },
               {
                 "metric": "parcels_is_corner_lot_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 55892
               },
               {
                 "metric": "parcels_is_through_lot_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 4989
               },
               {
                 "metric": "parcels_abuts_laneway_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 75824
               },
               {
                 "metric": "parcels_primary_frontage_resolved_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 480461
               },
               {
                 "metric": "parcels_frontage_priority1_match_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 429895
               },
               {
                 "metric": "parcels_frontage_priority2_match_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 20722
               },
               {
                 "metric": "parcels_frontage_priority3_match_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 29844
               },
               {
                 "metric": "parcels_truncated_pair_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "not measured (mode=incremental)"
+                "value": 30
               },
               {
                 "metric": "enrich_centreline_mode",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "incremental"
+                "value": "full"
               },
               {
                 "metric": "enrich_centreline_skip_reason",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "version_unchanged_incremental"
+                "value": null
               },
               {
                 "metric": "parcels_recomputed",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 18048
+                "value": null
               },
               {
                 "metric": "parcels_enriched_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 2000
+                "value": 0
               },
               {
                 "metric": "centreline_source_dataset_version",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": "1da4549b223eb577a79c57ba1f0f97dc"
+                "value": "2ac6f3990d9925171db071303acb1a7d"
               },
               {
                 "metric": "enrich_centreline_duration_ms",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 45767
+                "value": 423759
               },
               {
                 "metric": "centreline_corner_or_through_has_frontage",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -1103,6 +1273,7 @@
               },
               {
                 "metric": "centreline_corner_share_min_pct",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_min 8",
@@ -1110,6 +1281,7 @@
               },
               {
                 "metric": "centreline_corner_share_max_pct",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_max 14",
@@ -1117,6 +1289,7 @@
               },
               {
                 "metric": "centreline_through_share_min_pct",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_min 0.2",
@@ -1124,20 +1297,45 @@
               },
               {
                 "metric": "centreline_through_share_max_pct",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "value_max 3",
                 "value": 1.00481562267753
+              },
+              {
+                "metric": "inputs_nonempty",
+                "status": "INFO",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+                "value": {
+                  "toronto_centreline": 47330
+                }
+              },
+              {
+                "metric": "empty_source_guard",
+                "status": "INFO",
+                "threshold": "guards.empty_source table(s) non-empty",
+                "value": {
+                  "toronto_centreline": 47330
+                }
               }
             ],
             "verdict": "PASS"
           },
           "centreline_enrich": {
-            "mode": "incremental",
-            "parcels_recomputed": 18048,
-            "parcels_updated": 2000,
-            "skip_reason": "version_unchanged_incremental",
-            "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+            "mode": "full",
+            "parcels_abuts_laneway_true_count": 75824,
+            "parcels_frontage_priority1_name_match_count": 429895,
+            "parcels_frontage_priority2_addrrange_match_count": 20722,
+            "parcels_frontage_priority3_nearest_segment_count": 29844,
+            "parcels_is_corner_lot_true_count": 55892,
+            "parcels_is_through_lot_true_count": 4989,
+            "parcels_primary_frontage_resolved_count": 480461,
+            "parcels_truncated_pair_count": 30,
+            "parcels_updated": 0,
+            "parcels_with_zero_centreline_intersections_count": 16048,
+            "parcels_with_zero_centreline_intersections_pct": 3.2299999999999995,
+            "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
             "spec_version": "1.1"
           },
           "checks_failed": 0,
@@ -1165,18 +1363,20 @@
             "enrich_centreline_unlinked_fail_pct": 40,
             "enrich_centreline_unlinked_warn_pct": 10
           },
+          "errors": [],
           "ledger_row": "owned",
           "pool_errors": 0,
-          "terminal": "enriched"
+          "terminal": "enriched",
+          "warnings": []
         },
         "records_new": 0,
-        "records_total": 18048,
-        "records_updated": 2000,
+        "records_total": 496509,
+        "records_updated": 0,
         "status": "completed"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_centreline] target: enrich_centreline (descriptor.database) → database=postgres user=postgres migrations=245 (floor 225)\",\"tag\":\"[enrich_centreline]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_centreline] target: enrich_centreline (descriptor.database) → database=postgres user=postgres migrations=247 (floor 225)\",\"tag\":\"[enrich_centreline]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase centreline_join starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_centreline]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase centreline_join completed in <DUR>\",\"tag\":\"[enrich_centreline]\"}",
       "[enrich_centreline] completed in <DUR>"
@@ -1192,7 +1392,7 @@
           "abuts_laneway",
           "centreline_dataset_version_when_enriched"
         ],
-        "content_hash": "baaa7776b49068ff00fc4a656700088e",
+        "content_hash": "894c343f41693a5f2c4cdae89b0d7bcd",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -1236,19 +1436,19 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 3094569,
+    "txid_before_run2": 3192096,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "enriched"
     }
   },
-  "source_fingerprint": "accb5384e6dc05b338bb25145184130111ec4c2903a007a91e5645e5d4cee483",
+  "source_fingerprint": "53ef7ad75616c8aaff7688181fbf69fe9546f33919856cf68f6adb397c7020f8",
   "fingerprint_files": [
     "scripts/enrich-centreline.descriptor.json",
     "scripts/enrich-centreline.js",
     "scripts/enrich-centreline.notes.json",
     "scripts/lib/compute/enrich-centreline.js"
   ],
-  "lib_fingerprint": "1962e41bd0c68174440cfbbbd01bd3d33b1866b391e26bcafa9bef1bbbfa6910"
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

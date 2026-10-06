@@ -22,9 +22,7 @@
           "kind": "http_file",
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip",
           "license": "https://open.toronto.ca/open-data-license/",
-          "key_property": "OBJECTID",
-          "cache": "revalidate",
-          "cache_ttl": "none"
+          "key_property": "OBJECTID"
         }
       ]
     },
@@ -88,24 +86,18 @@
             }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       }
     ],
-    "cascades": "none",
     "invalidates": [
       {
         "table": "parcels",
         "column": "ravine_dataset_version_when_enriched",
-        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie"
+        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie",
+        "by": "step",
+        "step": "parcels"
       }
     ],
-    "publish": "direct",
     "write_inventory": {
       "statements": 2,
       "why": {
@@ -118,7 +110,6 @@
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "source_validator",
@@ -132,8 +123,6 @@
       }
     ],
     "mode_select": "skip",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/source-version.js",
@@ -194,15 +183,10 @@
     "schema_drift": "pause"
   },
   "execution": {
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": 16383,
-    "needs_disk_mb": 64,
-    "partial_fill": "atomic",
     "on_row_error": "skip",
     "on_row_error_max_pct": 0.05,
     "on_batch_error": "fail_step",
@@ -215,15 +199,10 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "60000ms",
       "timeout_from_config": "load_ravines_download_timeout_ms",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "sources": {
@@ -953,8 +932,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-ravines.notes.json",
-    "entries": 9
+    "file": "load-ravines.notes.json"
   },
   "recovery": {
     "reset": "TRUNCATE is never correct here — re-run with RAVINE_FORCE_RELOAD=1, which bypasses both staleness triggers and rewrites the table through the same guarded upsert plus departure delete.",
@@ -984,16 +962,13 @@
   },
   "counters": {
     "records_total": {
-      "source": "acquired.feature_count",
-      "scoped_by": "source_id"
+      "source": "acquired.feature_count"
     },
     "records_new": {
-      "source": "written.inserted",
-      "scoped_by": "source_id"
+      "source": "written.inserted"
     },
     "records_updated": {
-      "source": "written.updated",
-      "scoped_by": "source_id"
+      "source": "written.updated"
     }
   },
   "config": {

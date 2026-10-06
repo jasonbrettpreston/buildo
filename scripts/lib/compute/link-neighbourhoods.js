@@ -31,11 +31,12 @@
  *     plausibility row (1,493 at conversion), never silently dropped.
  *   · `polygon_tests_skipped` (LN-D8) — it counted work only the retired branch did.
  *   · a batch loop and a keyset cursor. The surviving write is ONE server-side statement
- *     (`execution.txn_scope: "statement"`, `batch: "none"`, `partial_fill: "atomic"`).
+ *     (`execution.txn_scope: "statement"`, `batch: "none"`; one statement is atomic by itself).
  *     The draft descriptor declared the RETIRED branch's batching here; lifting it onto the
  *     surviving path would have added a partial-commit exposure the pre-conversion PostGIS
  *     path never had, inside a commit whose whole claim is that nothing changed.
- *   · any FULL mode (LN-D9). The pre-conversion file reads `process.argv` nowhere.
+ *   · any FULL mode (LN-D9). The pre-conversion file reads `process.argv` nowhere. full_rescan
+ *     is not a mode — the single statement below is the same every run.
  */
 'use strict';
 
@@ -44,18 +45,37 @@
 // ===========================================================================
 
 /**
- * THE ELIGIBILITY SCOPE — `staleness.scope`, the write's own WHERE, and the
+ * THE ELIGIBILITY SCOPE — `staleness.scope`, the eligible-count's own WHERE, and the
  * `permits_processed` denominator, all the same string so they cannot drift.
  *
- * ⚠️ IT IS NARROWER THAN THE PRE-CONVERSION `totalPermits` COUNT, DELIBERATELY (LN-D6).
- * That count LEFT JOINed `permit_parcels`/`parcels` and counted permits with coordinates
- * OR a linked parcel geometry — but the live PostGIS write has only ever touched permits
- * with coordinates, so on every run the step reported work it structurally could not do
- * and those permits stayed NULL and were re-counted forever. Measured at conversion: the
- * wider count reads 1,493 while the write's own eligible set reads 0. The narrower set is
- * the truthful one; the 1,493 is declared and counted by its own plausibility row.
+ * ⚠️ O4 ROW 1 — FULL RESCAN (operator ruling 2026-10-03, registry-truth fold 14). This use
+ * to carry the fill-once `p.neighbourhood_id IS NULL` conjunct. That conjunct never
+ * re-derived a stamped permit, so a permit whose coordinates moved (re-geocoding) or lost
+ * them kept a stale stamp forever. Measured live (`.cursor/o4-no-invalidator-list-2026-10-03.md`
+ * row 1): 5,138 stamped permits carried the WRONG neighbourhood id after re-geocoding, and
+ * 9,017 were stamped with no coordinates at all. full_rescan drops the conjunct: every
+ * GEOCoded permit is re-derived every run. The write is guarded `IS DISTINCT FROM`, so the
+ * steady state (nothing moved) writes 0 rows.
+ *
+ * ⚠️ THE COORDINATE PREDICATE IS LOAD-BEARING AND STAYS. It is narrower than the
+ * pre-conversion `totalPermits` count, deliberately (LN-D6). That count LEFT JOINed
+ * `permit_parcels`/`parcels` and counted permits with coordinates OR a linked parcel
+ * geometry — but the live PostGIS write has only ever touched permits with coordinates, so
+ * on every run the step reported work it structurally could not do and those permits stayed
+ * NULL and were re-counted forever. Measured at conversion: the wider count reads 1,493
+ * while the write's own eligible set reads 0. The narrower set is the truthful one; the
+ * 1,493 is declared and counted by its own plausibility row.
  */
-const ELIGIBLE_SCOPE = 'p.neighbourhood_id IS NULL AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL';
+const ELIGIBLE_SCOPE = 'p.latitude IS NOT NULL AND p.longitude IS NOT NULL';
+
+/**
+ * THE POST-WRITE REMAINDER — the population of geocoded permits NO polygon contains, i.e.
+ * the permits the full-rescan write left with `neighbourhood_id IS NULL`. This is the
+ * UNCHANGED meaning of the old eligibility predicate; it is now a REPORTED remainder, not the
+ * write's scope. `cumulative_sql`'s `no_match_remaining` reads it, so the counter keeps
+ * describing the same population it always did.
+ */
+const UNMATCHED_SCOPE = 'p.neighbourhood_id IS NULL AND p.latitude IS NOT NULL AND p.longitude IS NOT NULL';
 
 /**
  * The polygon corpus filter — `geom` (PostGIS), NEVER `geometry` (GeoJSON).
@@ -77,12 +97,22 @@ const CORPUS_FILTER = 'geom IS NOT NULL';
 /**
  * Every statement `runLinkColumnPhase` issues, as text, derived from the descriptor.
  *
- * ⚠️ `update_sql` IS THE PRE-CONVERSION STATEMENT, PORTED VERBATIM except for the SRID,
- * which comes from `guards.srid` instead of a literal 4326 (Rule 3). Do not "tidy" it:
- *   · `n.geom IS NOT NULL` is the corpus filter, not redundant with the join — a NULL geom
+ * ⚠️ O4 ROW 1 — `update_sql` IS THE FULL-RESCAN STATEMENT (operator ruling 2026-10-03,
+ * registry-truth fold 14). It is ONE statement, `execution.txn_scope: "statement"`, executed
+ * by `write.executeSetBasedJoinUpdate` (which refuses INSERT/ON CONFLICT). What it does, and
+ * why each part is there:
+ *   · it re-derives EVERY geocoded permit AND reaches every STAMPED permit — the
+ *     `OR q.neighbourhood_id IS NOT NULL` arm below is the NULL-out arm: a permit with no
+ *     coordinates (9,017 measured) or no containing polygon gets `nid` NULL, so a stale
+ *     stamp is NULLed rather than surviving forever.
+ *   · the change predicate is `p.neighbourhood_id IS DISTINCT FROM m.nid`, so an unchanged
+ *     estate writes 0 rows and `rowCount` counts stamps AND un-stamps.
+ *   · `ORDER BY n.id LIMIT 1` makes the pick deterministic when more than one polygon
+ *     contains the point.
+ *   · `n.${CORPUS_FILTER}` is the corpus filter, not redundant with containment — a NULL geom
  *     makes ST_Contains return NULL and the row would be silently dropped either way, but
  *     the explicit filter is what makes the corpus this run matched against COUNTABLE.
- *   · the `::float` casts on `p.longitude`/`p.latitude` are ported as-is. Both columns are
+ *   · the `::float` casts on `q.longitude`/`q.latitude` are ported as-is. Both columns are
  *     `numeric`, so the cast cannot throw on data (a plan-panel lens claimed it could —
  *     refuted by `information_schema.columns`).
  *   · `RETURNING p.permit_num` is ported. `executeSetBasedJoinUpdate` reads `rowCount`, so
@@ -93,10 +123,11 @@ const CORPUS_FILTER = 'geom IS NOT NULL';
  * @param {Readonly<Record<string, number>>|null} [config] - `ctx.config`; unused today
  *   (every declared tunable bounds a CHECK, none bounds a predicate), taken for signature
  *   parity with the other LINK computes and so a future bound has an obvious home
- * @param {'full'|'incremental'} [mode] - the resolved mode. ALWAYS `"incremental"`:
- *   `staleness.mode_select` is `"none"` and `override.force_full` is `"none"` (LN-D9).
- *   The parameter exists so the shape matches its siblings; branching on it here without
- *   a declared FULL mode would be a capability the descriptor does not promise.
+ * @param {'full'|'incremental'} [mode] - the resolved mode. full_rescan is NOT a mode: the
+ *   statement below is IDENTICAL for `"full"` and `"incremental"` (N3 locks that), and
+ *   `staleness.mode_select`/`override.force_full` are `"none"` (LN-D9). The parameter exists
+ *   so the shape matches its siblings; branching on it here would be a capability the
+ *   descriptor does not promise, and would be exactly the regression N3 guards against.
  */
 function buildMatchSql(descriptor, config, mode) {
   // Coerced, though the REAL guard is the schema: `guards.srid` is `{"anyOf": [{"const":
@@ -120,13 +151,19 @@ function buildMatchSql(descriptor, config, mode) {
     eligible_count_sql:
       `SELECT count(*)::int AS total FROM permits p WHERE ${ELIGIBLE_SCOPE};`,
 
-    // W1, ported verbatim. ONE statement, its own implicit transaction.
+    // W1, full_rescan (O4 row 1). ONE statement, its own implicit transaction.
     update_sql:
-      'UPDATE permits p SET neighbourhood_id = n.id\n'
-      + '  FROM neighbourhoods n\n'
-      + ` WHERE n.${CORPUS_FILTER}\n`
-      + `   AND ${ELIGIBLE_SCOPE}\n`
-      + `   AND ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(p.longitude::float, p.latitude::float), ${srid}))\n`
+      'UPDATE permits p SET neighbourhood_id = m.nid\n'
+      + '  FROM (\n'
+      + '    SELECT q.permit_num, q.revision_num,\n'
+      + `           (SELECT n.id FROM neighbourhoods n WHERE n.${CORPUS_FILTER}\n`
+      + `               AND ST_Contains(n.geom, ST_SetSRID(ST_MakePoint(q.longitude::float, q.latitude::float), ${srid}))\n`
+      + '             ORDER BY n.id LIMIT 1) AS nid\n'
+      + '      FROM permits q\n'
+      + '     WHERE (q.latitude IS NOT NULL AND q.longitude IS NOT NULL) OR q.neighbourhood_id IS NOT NULL\n'
+      + '  ) m\n'
+      + ' WHERE p.permit_num = m.permit_num AND p.revision_num = m.revision_num\n'
+      + '   AND p.neighbourhood_id IS DISTINCT FROM m.nid\n'
       + ' RETURNING p.permit_num;',
 
     // ONE post-write round trip for the cumulative rate AND every table-wide observation
@@ -143,7 +180,7 @@ function buildMatchSql(descriptor, config, mode) {
       + '  (SELECT count(*)::int FROM permits WHERE neighbourhood_id IS NOT NULL AND neighbourhood_id != -1) AS linked,\n'
       + '  (SELECT count(*)::int FROM permits) AS total,\n'
       + '  (SELECT count(*)::int FROM permits WHERE neighbourhood_id < 0) AS negative_ids,\n'
-      + `  (SELECT count(*)::int FROM permits p WHERE ${ELIGIBLE_SCOPE}) AS no_match_remaining,\n`
+      + `  (SELECT count(*)::int FROM permits p WHERE ${UNMATCHED_SCOPE}) AS no_match_remaining,\n`
       + `  (SELECT count(*)::int FROM neighbourhoods WHERE ${CORPUS_FILTER}) AS neighbourhoods_loaded;`,
   };
 }
@@ -386,6 +423,7 @@ module.exports.buildMatchSql = buildMatchSql;
 module.exports.buildLinkMeta = buildLinkMeta;
 // Structural constants, exported so their locks read the real value rather than a copy.
 module.exports.ELIGIBLE_SCOPE = ELIGIBLE_SCOPE;
+module.exports.UNMATCHED_SCOPE = UNMATCHED_SCOPE;
 module.exports.CORPUS_FILTER = CORPUS_FILTER;
 module.exports.linkRatePct = linkRatePct;
 // The runner reads its own post-write scalars through this, so "a missing column" and

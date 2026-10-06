@@ -419,7 +419,7 @@ function deriveVerdict(rows) {
  * @param {{checks?:object[], observations?:Record<string,object>}|null} [synthetic]
  * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[], warnings:string[]}}
  */
-function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null, synthetic = null) {
+function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null, synthetic = null, observedFor = null) {
   const onCheckError = (descriptor.execution && descriptor.execution.on_check_error) || 'fail_step';
   // `only` narrows the scored set to a LIFECYCLE-REACHABLE subset — a gated skip
   // scores the `when: "pre"` checks and nothing else, because a post-write check
@@ -433,6 +433,8 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
   for (const check of selected) {
     const row = checkRow(check, observations ? observations[check.id] : undefined, onCheckError, config);
     if (!row) continue;
+    // #52 (fold 19 MQ-A1 (a)) — the observation phase of each checks[]/synthetic row: "before_write" | "after_write" (absent when the caller passes no observedFor).
+    if (typeof observedFor === 'function') row.observed = observedFor(check.id);
     rows.push(row);
     // LPA-D6 — severity-separated, never one conflated array (see the header note).
     if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
@@ -449,6 +451,8 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
   for (const check of syntheticChecks) {
     const row = checkRow(check, syntheticObservations[check.id], syntheticOnCheckError, config);
     if (!row) continue;
+    // #52 (fold 19 MQ-A1 (a)) — the observation phase of each checks[]/synthetic row: "before_write" | "after_write" (absent when the caller passes no observedFor).
+    if (typeof observedFor === 'function') row.observed = observedFor(check.id);
     rows.push(row);
     if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
     else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);

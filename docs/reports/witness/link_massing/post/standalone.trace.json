@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-massing.js",
   "chain": "none",
-  "source_fingerprint": "c142a4b70aa92abaeb870ba81176fa81bddb57d522848470dc9ac8ca53785ab2",
-  "git_head": "ac30cf1bebdfdfd5747bcfad7523805997e87f42",
+  "source_fingerprint": "b875e8412897cbb5d5d5636011b8bd66ee26e278c64899cef07771e54cd2a065",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 46,
-    "distinct": 32,
-    "utility": 8,
-    "tracer_self_ms": 17.161,
-    "wall_ms": 25054
+    "calls": 5015,
+    "distinct": 39,
+    "utility": 1002,
+    "tracer_self_ms": 4592.686,
+    "wall_ms": 875377
   },
   "statements": [
     {
@@ -43,6 +43,22 @@
       "error": null
     },
     {
+      "fingerprint": "19bc90a4b6eb124a",
+      "kind": "read",
+      "count": 498,
+      "rowCount": 496321,
+      "reads": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "245dd9200fa5b156",
       "kind": "read",
       "count": 1,
@@ -68,6 +84,26 @@
         ]
       },
       "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2c8f41d51552e865",
+      "kind": "write",
+      "count": 497,
+      "rowCount": 0,
+      "reads": {
+        "parcel_buildings": [
+          "building_id",
+          "is_primary",
+          "parcel_id"
+        ]
+      },
+      "writes": {
+        "parcel_buildings": [
+          "is_primary"
+        ]
+      },
       "excluded": [],
       "error": null
     },
@@ -117,6 +153,23 @@
       "error": null
     },
     {
+      "fingerprint": "42d7b4ae9742a171",
+      "kind": "write",
+      "count": 497,
+      "rowCount": 0,
+      "reads": {
+        "parcel_buildings": [
+          "building_id",
+          "parcel_id"
+        ]
+      },
+      "writes": {
+        "parcel_buildings": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "528151b0515ba432",
       "kind": "write",
       "count": 1,
@@ -131,13 +184,13 @@
       "params": [
         [
           "completed_with_warnings",
-          23771,
+          874043,
           null,
-          2223,
+          2331,
+          534699,
           0,
           0,
-          0,
-          "{\"duration_ms\":21349,\"code_version\":\"v2-building-centroid-in-parcel\",\"building_footprints_count\":\"427077\",\"full_mode\":false,\"full_mode_reason\":\"incremental:no_full_arg\",\"parcels_processed\":1577,\"parcels_linked\":0,\"buildings_matched\":0,\"buildings_upserted\":0,\"matches_centroid_in_parcel\":0,\"matches_nearest\":0,\"no_match_count\":1577,\"config\":{\"massing_shed_threshold_sqm\":20,\"massing_garage_max_sqm\":60,\"massing_nearest_max_distance_m\":50,\"link_massing_link_rate_fail_pct\":50,\"link_massing_centroid_confidence\":0.95,\"link_massing_nearest_confidence\":0.6,\"link_massing_mass_retraction_ratio_fail_pct\":0.05,\"link_massing_rows_changed_ratio_warn_pct\":0.5},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"ac30cf1bebdfdfd5747bcfad7523805997e87f42\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":3,\"warnings\":[\"nearest_footprint_gt_lot_count: {\\\"centroid_in_parcel\\\":13832,\\\"centroid_in_parcel_pct\\\":3.5724,\\\"nearest\\\":53425,\\\"nearest_pct\\\":49.5879,\\\"of_primary_links\\\":{\\\"centroid_in_parcel\\\":387194,\\\"nearest\\\":107738}}\",\"shared_primary_buildings: {\\\"buildings\\\":67411,\\\"parcels_affected\\\":173437}\",\"borrowed_primary_links: 106276\"],\"audit_table\":{\"phase\":0,\"name\":\"Building Footprint Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"incremental\",\"reason\":\"incremental:no_full_arg\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"structure_thresholds\",\"value\":{\"shed_below_sqm\":20,\"garage_max_sqm\":60},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"empty_source_guard\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE the retraction runs whenever the upstream corpus is empty\",\"guarantee\":\"The full-mode retraction must abort BEFORE the retraction runs whenever the upstream corpus is empty, or it would delete all 520,492 links and rebuild nothing.\"}},{\"metric\":\"parcels_processed\",\"value\":1577,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"run_matched\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_centroid_in_parcel\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"match_nearest_fallback\",\"value\":{\"links\":0,\"max_distance_m\":50},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":1577,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcel_buildings_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":99.6824,\"unlinked_pct\":0.3176,\"linked_parcels\":494932,\"parcels_with_centroid\":496509},\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"multi_primary_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"confidence_vocabulary\",\"value\":{\"off_domain\":0,\"domain\":[0.95,0.6]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"nearest_footprint_gt_lot_count\",\"value\":{\"nearest\":53425,\"centroid_in_parcel\":13832,\"of_primary_links\":{\"nearest\":107738,\"centroid_in_parcel\":387194},\"nearest_pct\":49.5879,\"centroid_in_parcel_pct\":3.5724},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"shared_primary_buildings\",\"value\":{\"buildings\":67411,\"parcels_affected\":173437},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"mass_retraction_ratio\",\"value\":{\"retracted\":0,\"rebuilt\":0,\"unrestored_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"rows_changed_ratio\",\"value\":{\"scanned\":0,\"changed\":0,\"ratio\":0},\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"pb_unique_pairs_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"pb_rows\",\"value\":534989,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"pb_distinct_parcels\",\"value\":494932,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"parcels_with_centroid\",\"value\":496509,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"nearest_share_pct\",\"value\":20.14,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"linked_parcel_null_centroid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"borrowed_primary_links\",\"value\":106276,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"retired_var_row_present:link_massing_grid_degrees\",\"value\":\"\\\"link_massing_grid_degrees\\\" (retired 2026-08-28, LM-D7) still has a live logic_variables row — an operator-editable knob with zero effect\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"WARN\"},{\"metric\":\"sys_pb_unique_pairs_violations_duration_ms\",\"value\":340,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_rows_duration_ms\",\"value\":92,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_distinct_parcels_duration_ms\",\"value\":216,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_with_centroid_duration_ms\",\"value\":494,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_nearest_share_pct_duration_ms\",\"value\":67,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_parcel_null_centroid_count_duration_ms\",\"value\":1792,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_borrowed_primary_links_duration_ms\",\"value\":391,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":23769,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":872430,\"code_version\":\"v2-building-centroid-in-parcel\",\"building_footprints_count\":\"427077\",\"full_mode\":true,\"full_mode_reason\":\"full_rescan\",\"parcels_processed\":496321,\"parcels_linked\":494746,\"buildings_matched\":534699,\"buildings_upserted\":0,\"matches_centroid_in_parcel\":427018,\"matches_nearest\":107681,\"no_match_count\":1575,\"config\":{\"massing_shed_threshold_sqm\":20,\"massing_garage_max_sqm\":60,\"massing_nearest_max_distance_m\":50,\"link_massing_link_rate_fail_pct\":50,\"link_massing_centroid_confidence\":0.95,\"link_massing_nearest_confidence\":0.6,\"link_massing_mass_retraction_ratio_fail_pct\":0.05,\"link_massing_rows_changed_ratio_warn_pct\":0.5},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":4,\"errors\":[],\"warnings\":[\"nearest_footprint_gt_lot_count: {\\\"centroid_in_parcel\\\":13833,\\\"centroid_in_parcel_pct\\\":3.5726,\\\"nearest\\\":53423,\\\"nearest_pct\\\":49.5865,\\\"of_primary_links\\\":{\\\"centroid_in_parcel\\\":387195,\\\"nearest\\\":107737}}\",\"shared_primary_buildings: {\\\"buildings\\\":67413,\\\"parcels_affected\\\":173439}\",\"linked_parcel_null_centroid_count: 186\",\"borrowed_primary_links: 106275\"],\"audit_table\":{\"phase\":16,\"name\":\"Building Footprint Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"structure_thresholds\",\"value\":{\"shed_below_sqm\":20,\"garage_max_sqm\":60},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":496321,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"run_matched\",\"value\":494746,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"match_centroid_in_parcel\",\"value\":427018,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"match_nearest_fallback\",\"value\":{\"links\":107681,\"max_distance_m\":50},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":1575,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcel_buildings_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":99.7201,\"unlinked_pct\":0.2799,\"linked_parcels\":494932,\"parcels_with_centroid\":496321},\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"multi_primary_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"confidence_vocabulary\",\"value\":{\"off_domain\":0,\"domain\":[0.95,0.6]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"nearest_footprint_gt_lot_count\",\"value\":{\"nearest\":53423,\"centroid_in_parcel\":13833,\"of_primary_links\":{\"nearest\":107737,\"centroid_in_parcel\":387195},\"nearest_pct\":49.5865,\"centroid_in_parcel_pct\":3.5726},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shared_primary_buildings\",\"value\":{\"buildings\":67413,\"parcels_affected\":173439},\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"mass_retraction_ratio\",\"value\":{\"deleted\":0,\"derived\":534699,\"deleted_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_changed_ratio\",\"value\":{\"scanned\":534699,\"changed\":0,\"ratio\":0},\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"pb_unique_pairs_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pb_rows\",\"value\":534989,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pb_distinct_parcels\",\"value\":494932,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"parcels_with_centroid\",\"value\":496321,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"nearest_share_pct\",\"value\":20.14,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"linked_parcel_null_centroid_count\",\"value\":186,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"borrowed_primary_links\",\"value\":106275,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"building_footprints\":427077},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"building_footprints\":427077},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_buildings.structure_type\",\"value\":\"within declared values (4 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_buildings.match_type\",\"value\":\"within declared values (2 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:link_massing_grid_degrees\",\"value\":\"\\\"link_massing_grid_degrees\\\" (retired 2026-08-28, LM-D7) still has a live logic_variables row — an operator-editable knob with zero effect\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"WARN\"},{\"metric\":\"sys_pb_unique_pairs_violations_duration_ms\",\"value\":297,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_rows_duration_ms\",\"value\":81,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pb_distinct_parcels_duration_ms\",\"value\":192,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_with_centroid_duration_ms\",\"value\":489,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_nearest_share_pct_duration_ms\",\"value\":41,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_parcel_null_centroid_count_duration_ms\",\"value\":879,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_borrowed_primary_links_duration_ms\",\"value\":219,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":611.76,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":874041,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -154,48 +207,42 @@
       "error": null
     },
     {
-      "fingerprint": "593e0d31f0b5798a",
-      "kind": "read",
-      "count": 3,
-      "rowCount": 1577,
-      "reads": {
-        "parcel_buildings": [
-          "parcel_id"
-        ],
-        "parcels": [
-          "centroid_lat",
-          "centroid_lng",
-          "id"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "5ce5e647c81a539f",
+      "fingerprint": "58b5b1e7c754cb2b",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5a837f74d0a97fd3",
+      "kind": "write",
+      "count": 497,
+      "rowCount": 0,
       "reads": {
-        "parcel_buildings": [
-          "parcel_id"
-        ],
         "parcels": [
-          "centroid_lat",
-          "centroid_lng",
-          "id"
+          "id",
+          "massing_enriched_at"
         ]
       },
-      "writes": {},
+      "writes": {
+        "parcels": [
+          "massing_enriched_at"
+        ]
+      },
       "excluded": [],
       "error": null
     },
     {
       "fingerprint": "5eebf4a9ff6d7782",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -237,6 +284,33 @@
       "error": null
     },
     {
+      "fingerprint": "6873d9f043db4309",
+      "kind": "write",
+      "count": 497,
+      "rowCount": 0,
+      "reads": {
+        "parcel_buildings": [
+          "confidence",
+          "is_primary",
+          "match_type",
+          "structure_type"
+        ]
+      },
+      "writes": {
+        "parcel_buildings": [
+          "building_id",
+          "confidence",
+          "is_primary",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "structure_type"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "6b18467966eba81f",
       "kind": "read",
       "count": 5,
@@ -249,10 +323,30 @@
       "error": null
     },
     {
+      "fingerprint": "72882f43b25fd783",
+      "kind": "read",
+      "count": 497,
+      "rowCount": 0,
+      "reads": {
+        "parcel_buildings": [
+          "building_id",
+          "confidence",
+          "is_primary",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "structure_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "729847550ee37bff",
       "kind": "read",
-      "count": 2,
-      "rowCount": 0,
+      "count": 497,
+      "rowCount": 427018,
       "reads": {
         "building_footprints": [
           "centroid_lat",
@@ -301,7 +395,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 1,
+      "count": 498,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -321,8 +415,8 @@
     {
       "fingerprint": "85a159738d0b886f",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 3,
+      "rowCount": 3,
       "reads": {
         "building_footprints": []
       },
@@ -365,8 +459,8 @@
     {
       "fingerprint": "905870c399aa9319",
       "kind": "read",
-      "count": 2,
-      "rowCount": 0,
+      "count": 497,
+      "rowCount": 107681,
       "reads": {
         "building_footprints": [
           "footprint_area_sqm",
@@ -383,28 +477,32 @@
       "error": null
     },
     {
-      "fingerprint": "a47b9456480b80ba",
+      "fingerprint": "92881cc842badef0",
       "kind": "read",
       "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:link_massing",
-            "permits:link_massing",
-            "link_massing",
-            "link-massing"
-          ],
-          2223
+      "rowCount": 4,
+      "reads": {
+        "parcel_buildings": [
+          "structure_type"
         ]
-      ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "96dec3628c65df53",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2,
+      "reads": {
+        "parcel_buildings": [
+          "match_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
     },
     {
       "fingerprint": "abb34df2efca0158",
@@ -433,7 +531,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 1,
+      "count": 498,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -444,7 +542,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -495,9 +593,4498 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "f1ade28e9a21ad8b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    },
+    {
+      "client": "20348:2",
+      "write_fingerprints": [
+        "2c8f41d51552e865",
+        "42d7b4ae9742a171",
+        "5a837f74d0a97fd3",
+        "6873d9f043db4309"
+      ]
+    }
+  ],
   "autocommit_writes": [
     "528151b0515ba432",
     "6447cd32076ed957"
@@ -515,18 +5102,34 @@
         "building_id",
         "confidence",
         "is_primary",
+        "linked_at",
         "match_type",
-        "parcel_id"
+        "parcel_id",
+        "structure_type"
       ],
       "parcels": [
         "centroid_lat",
         "centroid_lng",
         "geom",
         "id",
-        "lot_size_sqm"
+        "lot_size_sqm",
+        "massing_enriched_at"
       ]
     },
-    "writes": {}
+    "writes": {
+      "parcel_buildings": [
+        "building_id",
+        "confidence",
+        "is_primary",
+        "linked_at",
+        "match_type",
+        "parcel_id",
+        "structure_type"
+      ],
+      "parcels": [
+        "massing_enriched_at"
+      ]
+    }
   },
   "errors": []
 }

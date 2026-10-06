@@ -1,0 +1,67 @@
+{
+  "entries": {
+    "heritage_flag_type_agree_flagged_side": {
+      "value": 0,
+      "cost_ms": 3669,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_flag_type_agree_unflagged_side": {
+      "value": 0,
+      "cost_ms": 3450,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_date_without_type_count": {
+      "value": 0,
+      "cost_ms": 3448,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_part_iv_null_date_count": {
+      "value": 0,
+      "cost_ms": 3678,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_designated_share_max_pct": {
+      "value": 2.13792270044913,
+      "cost_ms": 1630,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_designated_count_collapse_floor": {
+      "value": 10615,
+      "cost_ms": 1631,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    },
+    "heritage_part_iv_matched_le_source": {
+      "value": 0,
+      "cost_ms": 1334,
+      "at": "2026-10-05T18:46:39.345Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2288",
+      "chain": null,
+      "sample_n": 2
+    }
+  }
+}

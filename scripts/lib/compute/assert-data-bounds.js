@@ -222,11 +222,12 @@ async function loadCoaBranch(ctx) {
 async function loadSourcesBranch(ctx) {
   return memo(ctx, 'sources', async () => {
     const pool = ctx.pool;
-    const apCountRes = await pool.query(`SELECT COUNT(*) FROM address_points`);
+    // Live points only (retired_at IS NULL) — registry-truth fold 10 item 4: the floor measures usable points, not soft-retired history.
+    const apCountRes = await pool.query(`SELECT COUNT(*) FROM address_points WHERE retired_at IS NULL`);
     const apCount = parseInt(apCountRes.rows[0].count, 10);
 
     const apDupesRes = await pool.query(
-      `SELECT COUNT(*) FROM (SELECT address_point_id FROM address_points GROUP BY address_point_id HAVING COUNT(*) > 1) d`,
+      `SELECT COUNT(*) FROM (SELECT address_point_id FROM address_points WHERE retired_at IS NULL GROUP BY address_point_id HAVING COUNT(*) > 1) d`,
     );
     const apDupes = parseInt(apDupesRes.rows[0].count, 10);
 

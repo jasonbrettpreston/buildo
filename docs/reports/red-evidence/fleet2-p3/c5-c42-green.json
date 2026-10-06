@@ -1,0 +1,129 @@
+{
+  "source": "vitest --reporter=json, summarized; full report kept outside the repo at C:/Users/User/fleet2-p3-tools/d1-run1.json",
+  "numTotalTests": 5422,
+  "numPassedTests": 5332,
+  "numFailedTests": 76,
+  "files": 154,
+  "failing": [
+    {
+      "file": "src/tests/gate-score-floor.infra.test.ts",
+      "failed": [
+        "T6: live — every converted step scores >= 14/17 or has a gate-F score row; 0 orphans"
+      ]
+    },
+    {
+      "file": "src/tests/golden-fingerprint.infra.test.ts",
+      "failed": [
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)",
+        "every post/ capture carries source_fingerprint === the CURRENT fingerprint over (step, descriptor, notes, compute)"
+      ]
+    },
+    {
+      "file": "src/tests/programme-backlog.infra.test.ts",
+      "failed": [
+        "prints \"blocks batching: N\" unconditionally (the hook fast path line)",
+        "the real (committed) data is clean — no converted slug is blocked by an unmet cutover_prereq item",
+        "GREEN (EP-D13-adjacent, pilot 9 commit 8 P9, 2026-09-08) — the SAME bad fixture (blocks compute_centroids ONLY) does NOT hard-stop an UNRELATED step's own --fast run: gate.blocks is honoured literally, one blocked slug is not everyone's problem",
+        "GREEN — the same slug, same shape, but the item is BUILT — passes clean (proves the finding names the STATUS, not the fixture)",
+        "prints per-step blocking items when the fixture names this slug directly",
+        "GREEN — applies_when: a condition that does NOT match the blocked slug's descriptor does not block, even NOT_STARTED",
+        "a BUILT item and a SUPERSEDED item naming \"batching\" are NOT counted as open blockers — only the genuinely open one is",
+        "the real committed programme-items.json: an unfiltered count and the honest count now disagree by exactly the BUILT+SUPERSEDED batching_prereq rows (proves the live data actually exercises the fix, not just the fixture)"
+      ]
+    },
+    {
+      "file": "src/tests/step-conformance.infra.test.ts",
+      "failed": [
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "the committed block's vitest-independent sections equal a fresh `step:validate --fast` run",
+        "a real `--step` run reports Rule 10 as enforced-green — VRD-SKIP closed, zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS",
+        "the SAME sanctioned sites still pass with no override at all — the fixture above is additive, never a narrowing of the real corpus",
+        "a step with NO when:\"pre_write\" checks reports Rule 11 vacuous (not enforced-green — Spec 121 §12b.6)",
+        "load_ravines: 2 real when:\"pre_write\" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green",
+        "link_massing: 1 real when:\"pre_write\" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green",
+        "link_wsib: 1 real when:\"pre_write\" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green",
+        "a step with recovery.interrupted \"none\" reports Rule 12 enforced-green, with no reachability claim to verify",
+        "link_massing: shape=link declares force_full_on_next_run and its runner (runLinkPhase) is measured REACHABLE against the live scripts/lib/step/index.js",
+        "link_wsib: shape=cascade declares force_full_on_next_run and its runner (runCascadePhase) is measured REACHABLE against the live scripts/lib/step/index.js",
+        "link_parcels: shape=link_keyed declares force_full_on_next_run and its runner (runLinkKeyedPhase) is measured REACHABLE against the live scripts/lib/step/index.js",
+        "enrich_parcels: shape=enrich declares force_full_on_next_run and its runner (runEnrichPhase) is measured REACHABLE against the live scripts/lib/step/index.js"
+      ]
+    },
+    {
+      "file": "src/tests/step-schema.logic.test.ts",
+      "failed": [
+        "enricher-pending-without-invalidator.json — claim #54 — an ENRICHER with a lineage-predicate staleness.scope cannot omit its invalidator (the centroid defect made unexpressible)",
+        "the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe_presence fleet fix — assert-schema.descriptor.json; WF3 I3a gate_exempt correction — compute-centroids.descriptor.json/refresh-snapshot.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds/assert_engine_health are the SECOND/THIRD ASSERT-and-RECORDER cutovers (batch1 I2 commit 9 2026-09-13 + batch1 I3 commit 9 2026-09-14 — converted.json at 12 entries; assert_engine_health's own descriptor is unchanged this commit — pure cutover, no probe_presence regen, since assert-schema's probe list only regenerates when a NEW logic_variables name enters the fleet, and this step's 7 vars all landed at commit 7/8)"
+      ]
+    },
+    {
+      "file": "src/tests/template-freeze.infra.test.ts",
+      "failed": [
+        "a fresh --check reports clean — no drift between the live tree and the committed artifact"
+      ]
+    },
+    {
+      "file": "src/tests/steps/enrich_heritage/violations.test.ts",
+      "failed": [
+        "outputs.invalidates[] declares the lineage-column invalidator, and phases[0].invalidator_ref points at it [flips at commit 2]",
+        "override.force_full names ENRICH_HERITAGE_FORCE_FULL and staleness.mode_select is none — the enrich runner never selects a mode (registry-truth fold 8 item 8 supersedes the tri_state pin) [flips at commit 2]"
+      ]
+    },
+    {
+      "file": "src/tests/steps/enrich_ravines/violations.test.ts",
+      "failed": [
+        "claim #54 — staleness.scope is a lineage predicate, so outputs.invalidates[] and phases[0].invalidator_ref are BOTH present"
+      ]
+    },
+    {
+      "file": "src/tests/steps/link_parcels/witness-fixture.logic.test.ts",
+      "failed": []
+    }
+  ]
+}

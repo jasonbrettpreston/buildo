@@ -1,0 +1,9 @@
+{
+ "orphans": [
+  "scan.src/components/FreshnessTimeline.tsx.engine_health"
+ ],
+ "unallowed": [
+  "scan.scripts/lib/massing-full-gate.js.code_version",
+  "scan.scripts/lib/massing-full-gate.js.building_footprints_count"
+ ]
+}

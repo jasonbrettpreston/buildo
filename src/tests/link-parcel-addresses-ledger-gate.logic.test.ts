@@ -49,10 +49,11 @@ describe('link_parcel_addresses ledger-gate slugs — DERIVED (LG-15), sources-c
     expect(derived.own.some((s) => s.startsWith('permits:') || s.startsWith('entities:'))).toBe(false);
   });
 
-  it('upstream-slugs covers both parcels and address_points producer forms (was: UPSTREAM_SLUGS array on the step)', () => {
+  it('upstream-slugs covers both parcels and address_points producer forms, and no retired load_* alias (was: UPSTREAM_SLUGS array on the step; aliases deleted by P1-C8a, fold 9 D-B)', () => {
     expect(derived.upstream).toEqual(
-      expect.arrayContaining(['sources:parcels', 'parcels', 'load_parcels', 'sources:address_points', 'address_points', 'load_address_points']),
+      expect.arrayContaining(['sources:parcels', 'parcels', 'sources:address_points', 'address_points']),
     );
+    expect(derived.upstream.filter((s) => /load[_-](parcels|address[_-]points)/.test(s))).toEqual([]);
   });
 
   it('g/b — manifest.json lists link_parcel_addresses in the sources chain only', () => {

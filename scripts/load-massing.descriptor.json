@@ -17,7 +17,7 @@
       "steps": [],
       "tables": [],
       "externals": [
-        { "id": "ckan:3d-massing-shapefile-wgs84", "kind": "http_file", "format": "shapefile_zip", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip", "license": "https://open.toronto.ca/open-data-license/", "cache": "none" }
+        { "id": "ckan:3d-massing-shapefile-wgs84", "kind": "http_file", "format": "shapefile_zip", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip", "license": "https://open.toronto.ca/open-data-license/" }
       ]
     },
     "expect_nonempty": true,
@@ -44,23 +44,20 @@
           {"name":"centroid_lat","vocabulary":"none","written":"step","bind":"value"},
           {"name":"centroid_lng","vocabulary":"none","written":"step","bind":"value"},
           {"name":"geom","vocabulary":"none","written":"insert_only","bind":"wkb_geometry"},
-          {"name":"created_at","vocabulary":"none","written":"db_default","bind":"value"}
+          {"name":"created_at","vocabulary":"none","written":"db_default","bind":"value"},
+          {"name":"id","vocabulary":"none","written":"db_default","bind":"value"}
         ],
         "write_discipline": {
           "class": "guarded_upsert", "guard": "is_distinct_from", "guard_columns": ["geometry", "max_height_m", "min_height_m", "centroid_lat", "centroid_lng"], "scope": "none", "expected_change_ratio": ">= 0", "idempotent_rerun": "zero_writes", "txn_scope": "step",
           "why": { "text": "Legacy per-batch INSERT verbatim [READ scripts/load-massing.js, anchor `ON CONFLICT (source_id) DO UPDATE SET`]: the legacy five predicates (M-D4 wrong-form, §4.3; widening is F2); area/geom insert_only seeded by the validator (0t/0u) instead of legacy S7/S8; per-1000 batch txn becomes one step txn (M-D11).", "liveness": { "kind": "file", "ref": "src/tests/step-library.logic.test.ts" } }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": false, "on_collision": "last_write_wins", "on_collision_why": { "text": "M-D3: source_id is md5(geometry) (DBF has no OBJECTID/ID), so identical geometries collide; the file-order last occurrence wins, as legacy's cross-batch overwrite did.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-massing.js" } }, "key_space_migration": "none" }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": { "statements": 1, "why": { "text": "Only the guarded upsert writes: legacy S1 becomes a declared invariant FAIL, S2/S3 are measured-dead and retired (M-D1), S7/S8 rehome to insert-time derived columns (M-D7).", "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" } } }
   },
-  "staleness": { "scope": "none", "trigger": "none", "mode_select": "none", "checkpoint": "none", "interval": "none", "fingerprint": "derived", "fingerprint_inputs": "none", "logic_version": "none", "on_fingerprint_change": "run" },
+  "staleness": { "trigger": "none", "mode_select": "none", "fingerprint": "derived", "fingerprint_inputs": "none", "logic_version": "none", "on_fingerprint_change": "run" },
   "guards": {
     "requires": [
       { "kind": "rls_bypass_or_policy", "name": "building_footprints", "on_missing": "fail", "why": { "text": "RLS default-deny on building_footprints (migration 227; 0 policies): the upsert works only under rolbypassrls=true, else it affects 0 rows silently and the verdict still reads PASS.", "liveness": { "kind": "table", "ref": "building_footprints" } } },
@@ -72,15 +69,10 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": 1000,
-    "needs_disk_mb": 512,
-    "partial_fill": "atomic",
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A feature the step refuses to carry is counted and the load continues: a feature with no geometry, or an outer ring with fewer than 4 points, is skipped [READ scripts/load-massing.js, anchor `if (!ring || ring.length < 4)`]. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
@@ -106,15 +98,10 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "60000ms",
       "timeout_from_config": "massing_download_timeout_ms",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "sources": {
@@ -332,14 +319,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-09-27T17:35:40.000Z",
-        "commit": "1828b4e1",
-        "cost_ms": 386,
-        "sample_n": 3,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-06T12:35:32.239Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 204, "sample_n": 5, "source_run": { "run_id": "2325", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "M-D1. Legacy S1 detection [READ scripts/load-massing.js, anchor `WHERE source_id NOT LIKE 'hash_%' LIMIT 1`] kept as a FAIL invariant; its S2-S5 auto-DELETE cleanup is knowingly retired (0 such rows measured; unreachable after 0s).",
         "liveness": { "kind": "table", "ref": "building_footprints" }
@@ -354,14 +334,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-09-27T17:35:40.000Z",
-        "commit": "1828b4e1",
-        "cost_ms": 275,
-        "sample_n": 3,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-06T12:35:32.239Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 245, "sample_n": 5, "source_run": { "run_id": "2325", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "M-D7. Replaces the 'heal any NULL row' half of legacy S7 [READ scripts/load-massing.js, anchor `WHERE footprint_area_sqm IS NULL`]; measured 0.",
         "liveness": { "kind": "table", "ref": "building_footprints" }
@@ -376,14 +349,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-09-27T17:35:40.000Z",
-        "commit": "1828b4e1",
-        "cost_ms": 26,
-        "sample_n": 3,
-        "source_run": { "run_id": null, "chain": null, "event": "manual_timing" }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-06T12:35:32.239Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 649, "sample_n": 5, "source_run": { "run_id": "2325", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "M-D7. Replaces the heal half of legacy S8 [READ scripts/load-massing.js, anchor `WHERE geom IS NULL AND geometry IS NOT NULL`]; measured 0.",
         "liveness": { "kind": "table", "ref": "building_footprints" }
@@ -531,8 +497,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-massing.notes.json",
-    "entries": 8
+    "file": "load-massing.notes.json"
   },
   "recovery": {
     "reset": "none",
@@ -562,16 +527,13 @@
   },
   "counters": {
     "records_total": {
-      "source": "written.inserted + written.updated",
-      "scoped_by": "source_id"
+      "source": "written.inserted + written.updated"
     },
     "records_new": {
-      "source": "written.inserted",
-      "scoped_by": "source_id"
+      "source": "written.inserted"
     },
     "records_updated": {
-      "source": "written.updated",
-      "scoped_by": "source_id"
+      "source": "written.updated"
     }
   },
   "config": {
@@ -594,7 +556,7 @@
     "varies_by_chain": {
       "checks": "none",
       "phase": {
-        "sources": 7
+        "sources": 15
       },
       "audit_table": "one",
       "scope": "none"

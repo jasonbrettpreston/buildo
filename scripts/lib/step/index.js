@@ -41,7 +41,7 @@
  *   ✅ `when: "pre_write"` — abort BEFORE any write (LR-D9) → INGESTOR (Fold C)
  *   · the run-ledger gate (upstream/own slugs)               → ENRICHER
  *   · invalidation + counters scoped by `writes.key`         → LINK/MATCHER
- *   · quarantine / checkpoint / partial_fill                 → BACKFILL
+ *   · quarantine / checkpoint                                → BACKFILL
  *   · publish pointer / WAP                                  → RECORDER
  *   · scope-defer                                            → ENRICHER
  *   · ledger-row consolidation out of run-chain (claim #39)  → run-chain wave
@@ -67,7 +67,7 @@ const pipeline = require('../pipeline');
 const { getPoolStatementTimeoutMs } = pipeline;
 const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
-const { buildAuditTable, deriveVerdict, selectChecks } = require('./verdict');
+const { buildAuditTable, deriveVerdict, selectChecks, SEVERITY_RANK } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
 const { resolveConfig, retiredVarRow } = require('./config');
 const staleness = require('./staleness');
@@ -151,6 +151,7 @@ const RUNNER_META_KEYS = Object.freeze([
   'errors',
   'warnings',
   'audit_table',
+  'acquired', // #33 (fold 19 MQ-A2 (a)) — records_meta.acquired.record_fields: the recorded header, the next run's schema_drift baseline.
 ]);
 
 /**
@@ -178,6 +179,18 @@ function resolveCodeSha(env = process.env) {
   }
 }
 
+/**
+ * The write MECHANICS that INSERT rows into their declared target (Spec 122 §1 class table) — the
+ * ONE partition, shared by `deriveMeta` (an inserting target writes its key) and gate D's MQ-A5
+ * predicate (`scripts/analysis/gates/consumer-registry.mjs` ROW_INSERTING_CLASSES, parity-locked by
+ * src/tests/fleet2-derive-meta-key.logic.test.ts K7). Every other frozen class matches rows ON its
+ * key and never writes it.
+ */
+const ROW_INSERTING_CLASSES = Object.freeze([
+  'guarded_upsert', 'upsert_scoped_departure_delete', 'staging_full_replace',
+  'insert_only_no_retraction', 'link_full_retraction', 'snapshot_append',
+]);
+
 /** `PIPELINE_META` reads/writes/externals, derived from the descriptor — never hand-maintained. */
 function deriveMeta(descriptor) {
   const reads = {};
@@ -193,7 +206,25 @@ function deriveMeta(descriptor) {
     for (const w of descriptor.outputs.writes) {
       const seen = writes[w.table] || [];
       for (const c of w.columns) if (!seen.includes(c.name)) seen.push(c.name);
+      // An INSERTING target always writes its key (INSERT … ON CONFLICT (key) writes the key
+      // column), so the key is a declared write even when `columns[]` does not list it — the
+      // gap that left data_quality_snapshots.snapshot_date "unproduced". A NON-inserting target
+      // (UPDATE/DELETE matched ON its key) does not write it; declaring it would forge lineage.
+      if (w.write_discipline && ROW_INSERTING_CLASSES.includes(w.write_discipline.class)) {
+        const keys = Array.isArray(w.key) ? w.key : (typeof w.key === 'string' && w.key !== 'none' ? [w.key] : []);
+        for (const k of keys) if (!seen.includes(k)) seen.push(k);
+      }
       writes[w.table] = seen;
+    }
+    // LDG-10 (WF1 Step 2 rider, Panel fold 1 item 9): an outputs.invalidates[] row carrying
+    // set_null_on_change_of is EXECUTED by codegen (write.js appends `<column> = CASE … THEN NULL`
+    // to that write's DO UPDATE SET), so its column IS written by this step — declared == observed.
+    // A trigger/step/pin/full_rescan row is NOT this step's write (someone else NULLs or re-derives it).
+    for (const inv of descriptor.outputs.invalidates || []) {
+      if (!inv || typeof inv.set_null_on_change_of !== 'string') continue;
+      const seen = writes[inv.table] || [];
+      if (!seen.includes(inv.column)) seen.push(inv.column);
+      writes[inv.table] = seen;
     }
   }
   const externals = (descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.externals) || [];
@@ -520,7 +551,59 @@ const REQUIREMENT_PROBES = {
     sql: 'SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2',
     args: (r) => r.name.split('.'),
   },
+  // LDG-10 (WF1 Step 2, 2026-10-03): a declared trigger invalidator (outputs.invalidates[] by
+  // "trigger") is a runner precondition. Name format <table>.<trigger>. Enabled = origin ('O') or
+  // always ('A'); 'D' (disabled) and 'R' (replica-only) do not fire for the pipeline role, and an
+  // internal (constraint) trigger is never a declared invalidator.
+  trigger: {
+    sql: "SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid WHERE c.relname = $1 AND t.tgname = $2 AND NOT t.tgisinternal AND t.tgenabled IN ('O','A')",
+    args: (r) => r.name.split('.'),
+  },
 };
+
+/**
+ * Requirement kinds measured by ANOTHER runner mechanism, never by a catalog probe — the ONLY
+ * kinds `probeRequirement` may answer without probing (LDG-10 T16, no vacuous pass). Every other
+ * kind missing from REQUIREMENT_PROBES is REFUSED: a declared precondition nobody checks would
+ * read as satisfied.
+ *   rls_bypass_or_policy — owned by write.assertWritePrivileges (it MEASURES the privilege).
+ */
+const REQUIREMENT_OWNED_ELSEWHERE = new Set(['rls_bypass_or_policy']);
+
+/**
+ * MQ-D3 (a) (compliance vetting batch 2; R-BF "declared == observed", Rule 1) — the columns a
+ * `kind:"trigger"` requirement must visibly stamp: this step's own `outputs.invalidates[]` rows
+ * with `by: "trigger"` naming THAT trigger. Derived from the descriptor, never a list.
+ * @param {object|null} descriptor
+ * @param {string} triggerName - `<table>.<trigger>`
+ * @returns {string[]}
+ */
+function triggerInvalidatedColumns(descriptor, triggerName) {
+  const outputs = descriptor && descriptor.outputs;
+  const rows = outputs && outputs !== 'none' && Array.isArray(outputs.invalidates) ? outputs.invalidates : [];
+  return rows.filter((r) => r && r.by === 'trigger' && r.trigger === triggerName).map((r) => r.column);
+}
+
+/**
+ * The columns whose `NEW.<col> := NULL` arm is NOT in the live trigger function body. SQL
+ * comments are stripped first and the body lowercased, so a commented-out arm never passes.
+ * Proves the assignment EXISTS, not its condition (the condition is locked by test:db).
+ * @param {string|null|undefined} prosrc
+ * @param {string[]} columns
+ * @returns {string[]}
+ */
+function triggerBodyMissingColumns(prosrc, columns) {
+  const body = typeof prosrc === 'string'
+    ? prosrc.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ').toLowerCase()
+    : null;
+  return columns.filter((col) => {
+    if (body === null) return true;
+    const esc = String(col).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return !new RegExp(`new\\.${esc}\\s*:=\\s*null`).test(body);
+  });
+}
+
+const TRIGGER_BODY_SQL = 'SELECT p.prosrc FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid JOIN pg_class c ON c.oid = t.tgrelid WHERE c.relname = $1 AND t.tgname = $2';
 
 /**
  * Probe ONE `guards.requires[]` entry against the live catalog.
@@ -533,22 +616,41 @@ const REQUIREMENT_PROBES = {
  * = rows.length > 0`. The `detail` field carries the probe's own SQL text so an
  * audit row can name what was asked, not merely what came back.
  *
- * A requirement whose `kind` has no probe (`rls_bypass_or_policy`) is NOT this
- * function's concern — `assertRequirements` skips it (owned by
- * `write.assertWritePrivileges`), and it returns `present: true` here so a
- * caller iterating a descriptor's requires[] never reads an unprobed kind as a
- * missing precondition. Callers that want the skip explicitly should test
- * `REQUIREMENT_PROBES[r.kind]` first, as the runner does.
+ * A requirement whose `kind` is in REQUIREMENT_OWNED_ELSEWHERE (`rls_bypass_or_policy`) is NOT
+ * this function's concern — `assertRequirements` skips it (owned by `write.assertWritePrivileges`)
+ * and it returns `present: true` here so a caller iterating requires[] never reads it as a missing
+ * precondition. Any OTHER kind with no probe THROWS (LDG-10 T16): a kind nobody probes must never
+ * pass vacuously.
+ *
+ * MQ-D3 (a): a present trigger is also checked against the live function body for every column the
+ * descriptor's outputs.invalidates[] says it stamps; with no such column the detail says the check is
+ * presence only.
  *
  * @param {import('pg').Pool|import('pg').PoolClient} pool
  * @param {{kind: string, name: string}} requirement
+ * @param {object|null} [descriptor] - the declaring step; for kind "trigger" its by:"trigger" invalidates[] columns are checked in the live function body (MQ-D3)
  * @returns {Promise<{present: boolean, detail: string}>}
  */
-async function probeRequirement(pool, requirement) {
+async function probeRequirement(pool, requirement, descriptor = null) {
   const probe = REQUIREMENT_PROBES[requirement.kind];
-  if (!probe) return { present: true, detail: `no catalog probe for kind "${requirement.kind}"` };
+  if (!probe) {
+    if (REQUIREMENT_OWNED_ELSEWHERE.has(requirement.kind)) {
+      return { present: true, detail: `kind "${requirement.kind}" is owned elsewhere (write.assertWritePrivileges), not catalog-probed` };
+    }
+    throw new Error(`[probeRequirement] guards.requires kind "${requirement.kind}" (name "${requirement.name}") has no catalog probe and is not owned elsewhere — refusing rather than reading an unchecked precondition as present (LDG-10 T16).`);
+  }
   const { rows } = await pool.query(probe.sql, probe.args(requirement));
-  return { present: rows.length > 0, detail: probe.sql };
+  const present = rows.length > 0;
+  if (requirement.kind !== 'trigger' || !present) return { present, detail: probe.sql };
+  const columns = triggerInvalidatedColumns(descriptor, requirement.name);
+  if (columns.length === 0) {
+    return { present, detail: `${probe.sql} — presence only: no outputs.invalidates[] by:"trigger" row names ${requirement.name}, so its function body is not checked` };
+  }
+  const body = await pool.query(TRIGGER_BODY_SQL, probe.args(requirement));
+  const missing = triggerBodyMissingColumns(body.rows[0] ? body.rows[0].prosrc : null, columns);
+  return missing.length > 0
+    ? { present: false, detail: `${requirement.name}: the live function body has no NEW.<col> := NULL arm for ${missing.join(', ')} (declared by outputs.invalidates[] by:"trigger"; R-BF)` }
+    : { present: true, detail: `${probe.sql}; body: NEW.<col> := NULL present for ${columns.join(', ')}` };
 }
 
 /**
@@ -574,8 +676,8 @@ async function assertRequirements(pool, descriptor, { log, tag }) {
   const requires = (descriptor.guards && descriptor.guards.requires) || [];
   const measured = {};
   for (const r of requires) {
-    if (!REQUIREMENT_PROBES[r.kind]) continue; // rls_bypass_or_policy — measured by the write preflight
-    const { present } = await probeRequirement(pool, r);
+    if (REQUIREMENT_OWNED_ELSEWHERE.has(r.kind)) continue; // rls_bypass_or_policy — measured by the write preflight; an unknown kind reaches probeRequirement and is refused
+    const { present } = await probeRequirement(pool, r, descriptor);
     measured[r.name] = present;
     if (present) continue;
     if (r.on_missing === 'fail') {
@@ -821,6 +923,7 @@ function aggregatePrimaries(results, base) {
   const headErrors = [];
   const failedPreWrite = [];
   const failedPreWriteWarn = [];
+  const schemaDrifts = [];
   let writeSkippedPreWriteWarn = false;
   let priorError = null;
   let overrides;
@@ -833,6 +936,7 @@ function aggregatePrimaries(results, base) {
       continue;
     }
     if (overrides === undefined) overrides = o.overrides;
+    if (o.schemaDrift) schemaDrifts.push(o.schemaDrift);
     prior[r.id] = o.prior;
     if (!priorError && o.priorError) priorError = o.priorError;
     const acq = o.acquired || {};
@@ -863,6 +967,7 @@ function aggregatePrimaries(results, base) {
     skipped: false,
     reason: base.stepGate ? base.stepGate.reason : 'multi_primary',
     ...(failedPreWrite.length ? { failedPreWrite } : {}),
+    ...(schemaDrifts.length ? { schemaDrift: schemaDrifts } : {}),
     ...(writeSkippedPreWriteWarn ? { writeSkippedPreWriteWarn: true, failedPreWriteWarn } : {}),
     acquired: { primaries, head_error: headErrors.length ? headErrors.join('; ') : null, ...(base.stepGate ? { step_gate: base.stepGate } : {}) },
     written: {
@@ -983,7 +1088,7 @@ function multiPrimarySkipEmit(ingest, computeResult) {
  *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey, validatorCache }) {
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey, validatorCache, schemaDriftBaseline }) {
   // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
   // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
   // departure DELETE. A second declared target would be acquired for, gated over and then
@@ -1558,6 +1663,68 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     skipped_keys: validated.skippedKeys,
   };
 
+  // P3-C1 #32 (FLEET-2 A-1 ruling 3) — an INGESTOR that declares guards.empty_source refuses
+  // the WRITE when the acquired source has 0 rows to write: no transaction, the target is
+  // untouched, and the refusal is said out loud as an errored FAIL row (§emptySourceRows).
+  // Placed BEFORE the pre_write gate (checks move earlier; a pre_write check never scores
+  // over an empty acquisition). Refuse only — the declaration has no skip arm.
+  const emptySource = emptySourceRefusal(descriptor, acquired);
+  if (emptySource && emptySource.refused) {
+    log.error(tag, `guards.empty_source: 0 rows to write — the write is REFUSED, ${plan.table} is untouched`);
+    return {
+      skipped: false,
+      writeSkipped: true,
+      reason: 'empty_source_refused',
+      emptySource,
+      acquired,
+      written: {
+        inserted: 0,
+        updated: 0,
+        deleted: 0,
+        rows_scanned: 0,
+        rows_changed: 0,
+        delete_skipped_empty_guard: false,
+        write_skipped_empty_source: true,
+        privilege: privilege[writeSpec.table] || null,
+      },
+      prior,
+      priorError,
+      overrides,
+      emitKey,
+      emitBlock: null,
+    };
+  }
+  // P3-C1 #33 (fold 19 MQ-A2 (a)) — the acquired header against the prior completed run's
+  // recorded one. A "pause" drift refuses the write exactly like the empty-source refusal
+  // above: no transaction, the target is untouched, an errored FAIL row (§schemaDriftRows).
+  // A standing override.force_run (overrides, NOT forced) releases a "pause" drift as a WARN (MQ-A7).
+  const schemaDrift = schemaDriftDecision(descriptor, external.id, acquired.record_fields, schemaDriftBaseline, overrides);
+  if (schemaDrift && schemaDrift.refused) {
+    log.error(tag, `guards.schema_drift: the header of "${external.id}" drifted under "pause" — the write is REFUSED, ${plan.table} is untouched (${schemaDrift.row.value})`);
+    return {
+      skipped: false,
+      writeSkipped: true,
+      reason: 'schema_drift_refused',
+      emptySource,
+      schemaDrift,
+      acquired,
+      written: {
+        inserted: 0,
+        updated: 0,
+        deleted: 0,
+        rows_scanned: 0,
+        rows_changed: 0,
+        delete_skipped_empty_guard: false,
+        write_skipped_schema_drift: true,
+        privilege: privilege[writeSpec.table] || null,
+      },
+      prior,
+      priorError,
+      overrides,
+      emitKey,
+      emitBlock: null,
+    };
+  }
   // ── THE PRE-WRITE GATE (LR-D9) ───────────────────────────────────────────────
   // Everything above this line is a read. Everything below it writes. A `pre_write`
   // check that FAILs with no standing acceptance stops the run HERE: no transaction is
@@ -1575,6 +1742,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       reason: 'pre_write_check_failed',
       failedPreWrite: gateDecision.failed,
       acquired,
+      emptySource,
+      schemaDrift,
       // "An empty `written`" — every counter zero, so the remaining `post` checks score
       // over what actually happened (nothing) rather than over a null they would read as
       // "not reported". The MEASURED privilege is carried because it WAS measured, above
@@ -1614,6 +1783,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       writeSkippedPreWriteWarn: true,
       failedPreWriteWarn: skipWriteChecks,
       acquired,
+      emptySource,
+      schemaDrift,
       written: {
         inserted: 0,
         updated: 0,
@@ -1647,9 +1818,15 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     log,
     tag,
   };
+  // fold 10 — the bound comes from the DECLARED logic variable; write.js fails closed when a
+  // departed_mark plan gets a non-finite value.
   const written = writeSpec.write_discipline.class === write.STAGING_FULL_REPLACE_CLASS
     ? await write.executeStagingReplace(pool, { ...writeArgs, prior })
-    : await write.executeWrite(pool, { ...writeArgs, shouldSkipDelete: compute.shouldSkipDelete });
+    : await write.executeWrite(pool, {
+      ...writeArgs,
+      shouldSkipDelete: compute.shouldSkipDelete,
+      retireMaxPct: writeSpec.retire_max_pct_from_config ? config[writeSpec.retire_max_pct_from_config] : null,
+    });
   // ROW CONSERVATION (WF2 "conversion simplification" item 8, Spec 122 §11 KFM 9): every
   // row the source yielded is a named skip, an insert, an update or a MEASURED no-op —
   // exactly once. A mismatch throws RowConservationError with every count (the write.js
@@ -1661,6 +1838,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     writeSkipped: false,
     reason: 'loaded',
     acquired,
+    emptySource,
+    schemaDrift,
     written: { ...written, privilege: privilege[writeSpec.table] || null },
     prior,
     priorError,
@@ -1726,7 +1905,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   // suppression below is the generic mechanism every LINK/MATCHER descriptor gets the
   // moment it declares a dry-run flag — never a per-step branch).
   const dryRun = overrides.dry_run;
-  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
+  const gate = await resolveLinkGate({ descriptor, pool, prior, ownRunId, tag });
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
     + `changed=${gate.changed} → ${gate.mode.toUpperCase()} (${gate.reason})`);
@@ -1745,6 +1924,8 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   const beforeImage = [];
 
   const match = compute.buildMatchSql(descriptor, config, gate.mode);
+  // O4 row 5 — null for every step whose compute supplies no keyed stale-link delete.
+  const keyedTargets = resolveKeyedLinkTargets(specs, match, tag);
   const eligible = await pool.query(match.eligible_count_sql);
   // ⚠️ THE RUNNER NAMES NOTHING THE STEP DID NOT DECLARE (Gate 0 / claim #149). The four
   // counters below are the LINK vocabulary itself — rows walked, rows linked, rows that
@@ -1837,7 +2018,15 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     // `link-wsib.js` dry-run reported (read-only COUNT queries over the same match
     // predicate, 5de41cc1) — `written` stays genuinely zero, which is correct: nothing
     // was written.
-    if (rows.length > 0 && !dryRun) await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
+    if (!dryRun && keyedTargets) {
+      // O4 row 5 — issued even when the batch derived nothing: its parcels' stale links must still go.
+      await executeKeyedLinkWrites({
+        pool, plans, specs, targets: keyedTargets, match, batchIds: ids, rows, runAt: clockNow,
+        written, slug: descriptor.identity.name, beforeImage,
+      });
+    } else if (rows.length > 0 && !dryRun) {
+      await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
+    }
 
     matched.parcels_processed += batch.rows.length;
     matched.parcels_linked += classified.parcels + fallback.parcels;
@@ -1905,7 +2094,7 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
   const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
   const overrides = staleness.resolveOverrides(descriptor);
   const dryRun = overrides.dry_run;
-  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
+  const gate = await resolveLinkGate({ descriptor, pool, prior, ownRunId, tag });
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `mode gate: explicit_full=${gate.explicit_full} forced=${gate.forced} `
     + `changed=${gate.changed} → ${gate.mode.toUpperCase()} (${gate.reason})`);
@@ -1980,17 +2169,8 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
 
   const upsertPlan = plans[0];
   const deletePlan = plans[1];
-  // LG-24's own before-image is DESCRIPTIVE (its SQL is compute-authored, not a
-  // `buildWritePlan`-generated `delete_sql`) — a minimal scope covering every row the
-  // batch's own DELETE could touch (a superset of what actually deletes is a safe,
-  // honest audit trail; the DELETE's own `IS NULL`-vs-`!=` branching is not re-derived
-  // here).
-  const deleteBeforeImagePlan = {
-    table: deletePlan.table,
-    scope: 'permit_num = ANY($1::text[]) AND revision_num = ANY($2::text[])',
-    keys: ['permit_num', 'revision_num'],
-    step_columns: ['permit_num', 'revision_num', 'parcel_id', 'match_type', 'confidence', 'linked_at'],
-  };
+  // LG-24's before-image (R-M / LG-17) is read per batch by the compute's EXACT twin of the keyed
+  // DELETE (delete_by_key_select_sql — same USING, same WHERE), not a superset scope (O4 row 7).
 
   // ── The composite-key keyset-paginated batch loop (LG-25) ────────────────────
   const batchSize = descriptor.execution.batch === 'none' ? pipeline.BATCH_SIZE : descriptor.execution.batch;
@@ -2110,24 +2290,26 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
         // R-M / LG-17, extended to LG-24 (Fold A I-3) — before-image the rows THIS
         // batch's DELETE is about to touch, BEFORE the delete, appended into the SAME
         // per-run file every batch (Fold B item 5).
-        const bi = await write.writeBeforeImage(client, deleteBeforeImagePlan,
-          [delPermitNums, delRevisionNums], descriptor.identity.name, clockNow);
-        if (bi.written) beforeImage.push({ ...bi, table: deletePlan.table });
-        const deleted = await write.executeGuardedDeleteByKey(client, match.delete_by_key_sql,
-          [delPermitNums, delRevisionNums, delKeepParcelIds]);
+        // O4 row 7 — EXACT: the rows the DELETE is about to remove, read once with the DELETE's own
+        // params. Persisted only when non-empty (an unchanged batch writes no audit file), and their
+        // keys are the permits whose link the DELETE removes (the watermark's $4/$5).
+        const delParams = [delPermitNums, delRevisionNums, delKeepParcelIds];
+        const stale = await client.query(match.delete_by_key_select_sql, delParams);
+        if (stale.rows.length > 0) {
+          const bi = write.persistBeforeImageRows(stale.rows, deletePlan.table, descriptor.identity.name, clockNow);
+          if (bi && bi.written) beforeImage.push({ ...bi, table: deletePlan.table });
+        }
+        const deleted = await write.executeGuardedDeleteByKey(client, match.delete_by_key_sql, delParams);
         written.e2.scanned += delPermitNums.length;
         written.e2.deleted += deleted;
         written.e2.rows_changed += deleted;
-        // LP-D10 (WF6 output-panel finding, restored commit 10) — the "evaluated"
-        // watermark, ORDERED LAST (after upsert + delete, same transaction): every
-        // permit THIS BATCH processed, matched or not, gets parcel_linked_at
-        // stamped to clockNow — fence a21b7b01's own reason to exist (the
-        // incremental filter above can only ever EXCLUDE a no-match permit
-        // because this statement ran). delPermitNums/delRevisionNums already
-        // cover the WHOLE batch (built from permitKeys before any match
-        // filtering), so no new key arrays are needed here.
+        // LP-D10 → O4 row 7 — the watermark, ORDERED LAST (after upsert + delete, same transaction),
+        // now CHANGE-ONLY: of the whole batch ($1/$2), a permit is stamped only when the upsert wrote
+        // one of its rows this run (linked_at = clockNow) or the DELETE removed one ($4/$5 = `stale`).
+        // An unchanged permit is never rewritten (fold 15: no ≈240K permits rewrite per run).
         const watermarked = await write.executeGuardedUpdate(client, match.watermark_update_sql,
-          [delPermitNums, delRevisionNums, clockNow]);
+          [delPermitNums, delRevisionNums, clockNow,
+            stale.rows.map((r) => r.permit_num), stale.rows.map((r) => r.revision_num)]);
         written.e3.scanned += delPermitNums.length;
         written.e3.updated += watermarked.length;
         written.e3.rows_changed += watermarked.length;
@@ -2165,88 +2347,43 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
 }
 
 /**
- * LW-D10 (commit 8b, 2026-08-28) — a cascade tier's ONE-PASS-vs-LOOP-TO-CONVERGENCE
- * mechanism, extracted to its own function so the LOOP LOGIC is independently
- * unit-testable without mocking `runCascadePhase`'s pool/transaction/staleness-gate
- * machinery. `runOnePass` performs ONE pass (whatever that means for the caller — a
- * cascade tier's wsib join-update + entities flag + entities contacts, in
- * `runCascadePhase`'s case) and resolves the counts it produced; `linked` is what the
- * loop condition watches.
+ * THE BULK N-TIER CASCADE PHASE (ruling A-1, SHOULD-FIX d — MATCHER pilot 2026-08-28; O4 row 6
+ * full rescan, operator ruling 2026-10-03, registry-truth folds 14 + 15).
  *
- * `loops === false` (a tier with no declared `max_iterations_from_config`, or any tier
- * outside mode "full") runs the pass EXACTLY ONCE, unconditionally — the pre-LW-D10
- * behaviour, byte-identical (S3's `LIMIT 1000` single-pass cap in incremental mode is
- * untouched). `loops === true` repeats while the LAST pass's `linked` count was > 0 AND
- * `iterations < maxIterations` — Fold B's ruling (`TIER3_SELECT`'s `LIMIT 1000` cap means
- * one pass cannot relink more than 1,000 rows per invocation, so a mode-"full" repair
- * must keep passing until nothing is left or the declared bound is hit).
+ * Forked from `runLinkPhase` rather than folded into it (see `isCascadeStep`'s header): a bulk
+ * cascade over a declared `execution.tiers[]` array, no batching/pagination anywhere, writes
+ * across TWO tables inside ONE step-scoped write transaction (G-11).
  *
- * `exhausted` is true ONLY when the bound stopped the loop WHILE the final pass still
- * found matches (`iterations >= maxIterations && lastLinked > 0`) — reaching the bound on
- * a pass that itself matched 0 is a normal, converged stop, never exhaustion, and
- * `loops === false` can never report `exhausted: true` (there is no bound to exhaust).
- *
- * @param {() => Promise<{linked: number, flagged: number, contacts: number}>} runOnePass
- * @param {boolean} loops
- * @param {number} maxIterations
- * @returns {Promise<{iterations: number, linked_total: number, flagged_total: number, contacts_total: number, exhausted: boolean}>}
- */
-async function runTierToConvergence(runOnePass, loops, maxIterations) {
-  let iterations = 0;
-  let linkedTotal = 0;
-  let flaggedTotal = 0;
-  let contactsTotal = 0;
-  let lastLinked = 0;
-  do {
-    const pass = await runOnePass();
-    iterations += 1;
-    linkedTotal += pass.linked;
-    flaggedTotal += pass.flagged;
-    contactsTotal += pass.contacts;
-    lastLinked = pass.linked;
-  } while (loops && lastLinked > 0 && iterations < maxIterations);
-  const exhausted = loops && iterations >= maxIterations && lastLinked > 0;
-  return { iterations, linked_total: linkedTotal, flagged_total: flaggedTotal, contacts_total: contactsTotal, exhausted };
-}
-
-/**
- * THE BULK N-TIER CASCADE PHASE (ruling A-1, SHOULD-FIX d — MATCHER pilot 2026-08-28).
- *
- * Forked from `runLinkPhase` rather than folded into it (see `isCascadeStep`'s header):
- * `link_wsib` is a bulk cascade over a declared `execution.tiers[]` array, no
- * batching/pagination anywhere, THREE write statements per tier across TWO tables, all
- * inside ONE step-scoped transaction (G-11) — not `runLinkPhase`'s keyset-paginated
- * single-target-per-batch shape.
- *
- * PHASE ORDER, and the guarantee each step carries (the assessment's G-1..G-19 table):
- *   guards.requires         preconditions before the first read
- *   LEDGER GATED SKIP        LG-15 — generalizes this step's own pre-existing B3 SKIP
- *                            (staleness.ledgerGatedSkip), folding the config_version
- *                            signal (G-6/A-3) so an operator threshold edit is never
- *                            invisible behind a green SKIP forever
- *   tri-state mode            A-8 — mode "full" ONLY by the load_wsib corpus signal or
- *                            LINK_WSIB_FORCE_FULL, never by schedule
- *   RUN_AT                    the DB clock, captured once, before any write (G-7)
+ * PHASE ORDER, and the guarantee each step carries:
+ *   guards.requires            preconditions before the first read
+ *   interrupted retraction     R-B — probed BEFORE the gate and folded into `bypassed`
+ *   LEDGER GATED SKIP          LG-15 (staleness.ledgerGatedSkip) — an operator threshold edit
+ *                              (config_version, G-6/A-3) or an upstream run with changes un-skips
+ *   mode gate                  resolveLinkGate — mode_select "none" (full_rescan) resolves mode
+ *                              "full"; a retract "all" target is refused, and so is a null-retract
+ *                              target that is not keyed (retract "none")
+ *   RUN_AT                     the DB clock, captured once, before any write (G-7)
  *   RLS preflight              refuse a write that would affect 0 rows
- *   PRE_WRITE GATE             scored before writes[0] — before the mode-full-only LG-16
- *                            retraction, which is the destructive write in this step
- *   [mode full only] LG-16    the tier-3 UPDATE-to-NULL retraction + the
- *                            entities.is_wsib_registered cascade + the copyContacts
- *                            reverse pass (A-7) — declared and wired here, exercised only
- *                            when mode resolves full (A-8 keeps mode incremental absent a
- *                            genuine corpus/FORCE_FULL signal)
- *   tiers[], IN ORDER          for each tier: wsib_registry join-update (LG-11) → the
- *                            entities.is_wsib_registered flag → entities contacts,
- *                            EXACTLY the order G-9 names, each tier excluding rows a
- *                            higher tier already claimed (the tiers[] declaration order
- *                            IS the confidence hierarchy, G-8). A tier declaring
- *                            `max_iterations_from_config` LOOPS this sequence in mode full
- *                            (LW-D10, commit 8b) — while the pass's matched count > 0 and
- *                            iterations < the declared bound — instead of running once;
- *                            every other tier, and every tier in incremental mode, is
- *                            unchanged (a single pass)
- *   post checks                over the cumulative/invariant query, run once after the
- *                            transaction commits
+ *   DERIVATION + DIFF          O4 row 6 — the compute's ONE derivation of every row's best link
+ *                              (buildDerivationSql), in its OWN READ ONLY transaction on one client
+ *                              (its setup statement first, G-10). Only rows whose stored link
+ *                              differs come back: set / move / vanish
+ *   PRE_WRITE GATE             scored on the diff (the mass-relink guard) before the write
+ *                              transaction opens — an unaccepted FAIL means nothing is written
+ *   WRITE TRANSACTION          skipped under --dry-run (LW-D15: read-only count mirrors only)
+ *     before-image             R-M / LG-17 — the moved + vanished rows' OLD link
+ *     W-set                    set + move rows, compare-and-set on the old link (LG-11 executor)
+ *     W-vanish                 the declared keyed UPDATE-to-NULL, compare-and-set (LG-16)
+ *     contacts reverse clear   A-7, keyed per (old entity, value) pair
+ *     flag fill-true           LW-D19, exact tiers only, once
+ *     self-heal unflag         LW-D19, once, unconditional
+ *     copyContacts             once per tier, in cascade order (G-8 / G-9)
+ *   post checks                over the cumulative/invariant query, once, after COMMIT
+ *
+ * Same input twice ⇒ the second diff is EMPTY ⇒ every keyed write binds empty arrays (0 rows), no
+ * before-image is written, matched_at does not move, and the guarded entities writes change 0 rows.
+ * The S3 tier-3 cap and the LW-D10 convergence loop (runTierToConvergence) are retired with the
+ * fill-once `linked_entity_id IS NULL` scope they existed for (operator D1(a)).
  *
  * @returns {Promise<object>} `{mode, gate, matched, cumulative, written, prior, overrides, skipped, gatedSkip}`
  */
@@ -2288,9 +2425,21 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   const prior = gatedSkip.gate
     ? gatedSkip.gate.ownLastRecordsMeta
     : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
-  const gate = await staleness.selectMode({ descriptor, pool, prior, ownRunId });
-  const configTrigger = staleness.triggersAt(descriptor, 'pre_compute').find((t) => t.signal === 'config_version');
-  const configVersionUpdatedAt = configTrigger ? (await staleness.measureTrigger(pool, descriptor, configTrigger)).current : null;
+  // O4 row 6 (operator ruling 2026-10-03) — the cascade routes through resolveLinkGate like the two
+  // LINK runners: staleness.mode_select "none" (full_rescan) resolves mode "full" / reason
+  // "full_rescan" and refuses a retract "all" target (selectMode would throw on "none"); a tri_state
+  // descriptor falls through to staleness.selectMode unchanged.
+  const gate = await resolveLinkGate({ descriptor, pool, prior, ownRunId, tag });
+  // O4 row 6 (fold 16 row 1 (d)) — EVERY declared config_version trigger is measured (the tier
+  // confidences joined the threshold), keyed by emit_key, so each self-consumed stamp is re-emitted.
+  // `configVersionUpdatedAt` stays the FIRST one's value (the pre-row-6 field, unchanged for it).
+  const configTriggers = staleness.triggersAt(descriptor, 'pre_compute').filter((t) => t.signal === 'config_version');
+  const configVersions = {};
+  for (const t of configTriggers) {
+    const measured = await staleness.measureTrigger(pool, descriptor, t);
+    configVersions[measured.key] = measured.current;
+  }
+  const configVersionUpdatedAt = configTriggers.length > 0 ? configVersions[configTriggers[0].emit_key || configTriggers[0].signal] : null;
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `cascade mode gate: ${gate.mode.toUpperCase()} (${gate.reason})`);
 
@@ -2304,6 +2453,15 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   const entitiesUnflagSpec = specs.find((w) => w.write_discipline.class === 'set_based_scoped' && w.columns.some((c) => c.set_value === false));
   const entitiesContactsSpec = specs.find((w) => w.write_discipline.class === 'set_based_join_update' && w.table !== 'wsib_registry');
   const nullRetractSpec = specs.find((w) => w.write_discipline.class === 'set_based_null_retract');
+  // O4 row 6 — the null-retract target is KEYED (the diff's vanish ids + each row's old link,
+  // compare-and-set), never a scope-wide retraction: the cascade re-derives every row on every run,
+  // so a `retract: "all"` scope would NULL and re-link its whole scope each time. Refused before any
+  // plan is built — under mode_select "none" resolveLinkGate already refused it above.
+  if (nullRetractSpec && nullRetractSpec.retract !== 'none') {
+    throw new Error(`${tag} the cascade re-derives every row and NULLs only the links that vanished, keyed by id `
+      + `(compare-and-set on the old link). The set_based_null_retract target on ${nullRetractSpec.table} declares `
+      + `retract "${nullRetractSpec.retract}" — declare retract "none" with the keyed scope.`);
+  }
   const entitiesFlagPlan = entitiesFlagSpec ? write.buildWritePlan(entitiesFlagSpec, descriptor) : null;
   const entitiesUnflagPlan = entitiesUnflagSpec ? write.buildWritePlan(entitiesUnflagSpec, descriptor) : null;
   const nullRetractPlan = nullRetractSpec ? write.buildWritePlan(nullRetractSpec, descriptor) : null;
@@ -2321,9 +2479,8 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   // step ever lacks a null-retract target (this function is not link_wsib-specific).
   written.privilege = privilege[(nullRetractSpec || specs[specs.length - 1]).table] || null;
   written.requirements = requirements;
-  // R-M / LG-17 — one entry per destructive-retraction target this run actually wrote
-  // a before-image for (the LG-16 mode="full" repair, below); surfaces as
-  // `before_image_written` audit rows.
+  // R-M / LG-17 — one entry per target this run wrote a before-image for (the diff's moved +
+  // vanished rows' OLD link, below); surfaces as `before_image_written` audit rows.
   const beforeImage = [];
 
   const tiers = descriptor.execution.tiers;
@@ -2333,14 +2490,47 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 
   const beforeCounts = await pool.query('SELECT '
     + '(SELECT COUNT(*) FROM wsib_registry WHERE linked_entity_id IS NULL) AS unlinked_start, '
+    + '(SELECT COUNT(*) FROM wsib_registry WHERE linked_entity_id IS NOT NULL) AS linked_start, '
     + '(SELECT COUNT(*) FROM entities) AS entities_count');
   const matched = {
     unlinked_start: Number(beforeCounts.rows[0].unlinked_start),
+    linked_start: Number(beforeCounts.rows[0].linked_start),
     entities_count: Number(beforeCounts.rows[0].entities_count),
     tiers: {},
   };
 
-  // ── THE PRE-WRITE GATE, before the (mode-full-only) LG-16 retraction ────────
+  // ── O4 row 6 — THE DERIVATION + DIFF, in its OWN READ ONLY transaction, BEFORE the write
+  // transaction (§11 L13, operator D3(a)). The compute derives EVERY row's best link once (no
+  // `IS NULL` scope, no LIMIT, no convergence loop — S3 and LW-D10 are retired, operator D1(a)) and
+  // returns only the rows whose stored link differs. Its setup statement (set_config, transaction-
+  // scoped, G-10) runs on the SAME client, first. The ~300–500 s scan therefore holds no write
+  // transaction open; a row whose link changes between the two transactions is caught by the
+  // compare-and-set writes below (0 rows) and re-derived next run. Runs under --dry-run too: it is
+  // read-only, and its rows ARE the would-be write set.
+  const derivation = compute.buildDerivationSql(descriptor, config);
+  const diffRows = await pipeline.withTransaction(pool, async (client) => {
+    await client.query('SET TRANSACTION READ ONLY');
+    await client.query(derivation.setup_sql, derivation.setup_params);
+    const r = await client.query(derivation.diff_sql, derivation.diff_params);
+    return r.rows;
+  });
+  const present = (v) => v !== null && v !== undefined;
+  const setRows = diffRows.filter((r) => present(r.new_entity_id));
+  const vanishRows = diffRows.filter((r) => !present(r.new_entity_id));
+  const movedOrVanished = diffRows.filter((r) => present(r.old_entity_id));
+  const moves = setRows.filter((r) => present(r.old_entity_id)).length;
+  matched.diff = { set: setRows.length - moves, move: moves, vanish: vanishRows.length };
+  for (const tier of tiers) matched.tiers[tier.id] = { linked: 0, contacts: 0 };
+  for (const r of setRows) {
+    const tier = tiers.find((t) => Number(config[t.confidence_from_config]) === Number(r.new_confidence));
+    if (tier) matched.tiers[tier.id].linked += 1;
+  }
+  if (vanishRows.length > 0 && !nullRetractPlan) {
+    throw new Error(`${tag} the derivation found ${vanishRows.length} link(s) that vanished, but the step declares no `
+      + 'set_based_null_retract target to NULL them — an undeclared write is refused.');
+  }
+
+  // ── THE PRE-WRITE GATE, scored on the diff, before the write transaction opens ──────────
   const decision = preWriteGate
     ? await preWriteGate({ matched, gate, prior, overrides, written: null })
     : { abort: false, failed: [] };
@@ -2348,7 +2538,7 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
     log.error(tag, `pre_write check(s) FAILED with no standing override — cascade write SKIPPED: ${decision.failed.join(', ')}`);
     return {
       mode: gate.mode,
-      gate: { ...gate, configVersionUpdatedAt },
+      gate: { ...gate, configVersionUpdatedAt, configVersions },
       matched,
       cumulative: null,
       written: { ...written, write_skipped_pre_write_fail: true },
@@ -2361,145 +2551,118 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
   }
 
   const runAt = clockNow;
-  await pipeline.withTransaction(pool, async (client) => {
-    // ── LG-16 — A-7's tier-3 repair, mode "full" ONLY. The retracted rows' contact
-    // values are read BEFORE the retraction (provenance-by-equality needs the values the
-    // retraction is about to erase), then the retraction, then the entities cascade, then
-    // the reverse clear. LW-D10 (commit 8b, 2026-08-28): `iterations`/`exhausted` below are
-    // no longer hardcoded — the tier loop, further down, fills them in for real once the
-    // (possibly looping) tier whose `max_iterations_from_config` is declared has run.
-    const isFullRepair = gate.mode === 'full' && nullRetractPlan;
-    let tier3Full = null;
-    if (isFullRepair) {
-      const scopeParams = compute.buildRetractionScopeParams(config, tiers);
-      // The read stays live in dry-run — it is a SELECT, and its row count IS the
-      // "would retract" count LW-D15 needs (the exact predicate the retraction targets).
-      const priorContacts = await client.query(
-        'SELECT linked_entity_id, primary_phone, primary_email, website FROM wsib_registry WHERE match_confidence = $1 AND linked_entity_id IS NOT NULL',
-        scopeParams,
-      );
-      if (dryRun) {
-        // LW-D15 — zero UPDATE/DELETE issued. `contacts_cleared` is a DECLARED
-        // limitation in dry-run mode (limitations[], descriptor): the reverse-clear
-        // count depends on each entity's CURRENT column values, which a read-only
-        // simulation would need a second full mirror query to reproduce faithfully;
-        // the primary retraction count (the one operators check before a live repair)
-        // is exact.
-        tier3Full = { retracted: priorContacts.rows.length, contacts_cleared: 0 };
-      } else {
-        // R-M / LG-17 — the before-image read+write happens on the SAME client, inside
-        // the SAME transaction, strictly BEFORE the retraction call below: a throw here
-        // aborts the transaction and the retraction never runs. Separate from
-        // `priorContacts` above (that read serves copyContacts' reverse-clear; this one
-        // is the declared key-columns + nulled-columns audit trail, LG-16's own scope).
-        const bi = await write.writeBeforeImage(client, nullRetractPlan, scopeParams, descriptor.identity.name, runAt);
-        if (bi.written) beforeImage.push({ ...bi, table: nullRetractPlan.table });
-        const retracted = await write.executeSetBasedClear(client, nullRetractPlan, scopeParams);
-        const nullRetractIdx = specs.indexOf(nullRetractSpec);
-        written[write.targetKey(nullRetractIdx)].retracted = retracted;
-        written[write.targetKey(nullRetractIdx)].deleted = 0;
-        await client.query(compute.buildEntitiesUnflagSql());
-        const affectedIds = [...new Set(priorContacts.rows.map((r) => r.linked_entity_id))];
-        let contactsCleared = 0;
-        if (affectedIds.length > 0) {
-          const phones = [...new Set(priorContacts.rows.map((r) => r.primary_phone).filter(Boolean))];
-          const emails = [...new Set(priorContacts.rows.map((r) => r.primary_email).filter(Boolean))];
-          const sites = [...new Set(priorContacts.rows.map((r) => r.website).filter(Boolean))];
-          const clearResult = await client.query(compute.buildContactsReverseClearSql(), [phones, emails, sites, affectedIds]);
-          contactsCleared = clearResult.rowCount || 0;
-        }
-        tier3Full = { retracted, contacts_cleared: contactsCleared };
-      }
+  const exactConfidences = compute.exactTierConfidences(descriptor, config);
+  const orNull = (v) => (present(v) ? v : null);
+  if (dryRun) {
+    // LW-D15 — ZERO write statements. The diff above IS the would-be link write set; the entities
+    // flag / self-heal / copyContacts counts are their read-only mirrors over the CURRENT links
+    // (declared limitation: they do not see this run's diff), and contacts_cleared is 0.
+    if (entitiesFlagPlan) {
+      const r = await pool.query(compute.buildEntitiesFlagCountSql(), exactConfidences);
+      matched.flagged = Number(r.rows[0].n);
     }
-    matched.tier3_full = tier3Full;
-
-    for (const tier of tiers) {
-      // LW-D10 (commit 8b, 2026-08-28) — a tier LOOPS in mode "full" iff it declares
-      // `max_iterations_from_config` (a generic, per-tier, DECLARED signal — no
-      // "tier3_fuzzy" string anywhere in this library file, per Gate 0's "zero new
-      // bespoke runner paths"). Every other tier, and every tier in incremental mode
-      // (S3's LIMIT-1000 single pass is a deliberate incremental-mode property, unchanged),
-      // runs the pass exactly once — the pre-LW-D10 behaviour, byte-identical.
-      // LW-D15 — a dry-run NEVER loops: convergence depends on rows actually leaving
-      // the `linked_entity_id IS NULL` scope between passes, which cannot happen when
-      // nothing is written, so a simulated "pass 2" would just re-count pass 1's rows.
-      // Declared limitation: a full-mode dry-run reports ONE simulated pass, never
-      // `exhausted`/multi-iteration convergence.
-      const loopsInFullMode = !dryRun && isFullRepair && typeof tier.max_iterations_from_config === 'string';
-      const maxIterations = loopsInFullMode ? config[tier.max_iterations_from_config] : 1;
-
-      const runOnePass = async () => {
-        const sql = compute.buildTierSql(descriptor, config, tier, runAt);
-        const wsibIdx = specs.indexOf(wsibJoinPlan);
-        let linked;
-        if (dryRun) {
-          const r = await client.query(sql.wsib_count_sql, sql.wsib_count_params);
-          linked = Number(r.rows[0].n);
-        } else {
-          linked = await write.executeSetBasedJoinUpdate(client, sql.wsib_update_sql, sql.wsib_update_params);
-          written[write.targetKey(wsibIdx)].scanned += linked;
-          written[write.targetKey(wsibIdx)].updated += linked;
-          written[write.targetKey(wsibIdx)].rows_changed += linked;
-        }
-
-        let flagged = 0;
-        if (entitiesFlagPlan) {
-          if (dryRun) {
-            const r = await client.query(sql.entities_flag_count_sql, sql.entities_flag_count_params);
-            flagged = Number(r.rows[0].n);
-          } else {
-            flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, sql.entities_flag_scope_params);
-            const flagIdx = specs.indexOf(entitiesFlagSpec);
-            written[write.targetKey(flagIdx)].updated += flagged;
-            written[write.targetKey(flagIdx)].rows_changed += flagged;
-          }
-        }
-
-        let contacts = 0;
-        if (entitiesContactsSpec) {
-          if (dryRun) {
-            const r = await client.query(sql.entities_contacts_count_sql, sql.entities_contacts_count_params);
-            contacts = Number(r.rows[0].n);
-          } else {
-            contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
-            const contactsIdx = specs.indexOf(entitiesContactsSpec);
-            written[write.targetKey(contactsIdx)].updated += contacts;
-            written[write.targetKey(contactsIdx)].rows_changed += contacts;
-          }
-        }
-        return { linked, flagged, contacts };
-      };
-
-      const result = await runTierToConvergence(runOnePass, loopsInFullMode, maxIterations);
-      matched.tiers[tier.id] = { linked: result.linked_total, flagged: result.flagged_total, contacts: result.contacts_total };
-      if (loopsInFullMode) {
-        tier3Full = { ...tier3Full, iterations: result.iterations, relinked_total: result.linked_total, exhausted: result.exhausted };
-      }
-    }
-    matched.tier3_full = tier3Full;
-
-    // ── LW-D19 (2026-08-29 operator ruling) — the is_wsib_registered self-heal
-    // correction. Runs EXACTLY ONCE per invocation, UNCONDITIONAL of mode (unlike LG-16's
-    // retraction above, never gated to mode "full"): an entity currently flagged
-    // registered whose wsib_registry link(s) are all fuzzy (0.60) is corrected back to
-    // false every run — the fill-true target only ever transitions false→true, so this is
-    // the sole mechanism that closes the loop the other direction. Same declared
-    // set_based_scoped / is_distinct_from shape as the fill-true target, just the opposite
-    // constant, so a re-run over an already-corrected corpus changes 0 rows.
     if (entitiesUnflagPlan) {
-      const correctionParams = compute.exactTierConfidences(descriptor, config);
-      if (dryRun) {
-        const r = await client.query(compute.buildEntitiesUnflagCorrectionCountSql(), correctionParams);
-        matched.is_wsib_registered_corrected = Number(r.rows[0].n);
-      } else {
-        const corrected = await write.executeSetBasedClear(client, entitiesUnflagPlan, correctionParams);
+      const r = await pool.query(compute.buildEntitiesUnflagCorrectionCountSql(), exactConfidences);
+      matched.is_wsib_registered_corrected = Number(r.rows[0].n);
+    }
+    if (entitiesContactsSpec) {
+      for (const tier of tiers) {
+        const sql = compute.buildTierSql(descriptor, config, tier);
+        const r = await pool.query(sql.entities_contacts_count_sql, sql.entities_contacts_count_params);
+        matched.tiers[tier.id].contacts = Number(r.rows[0].n);
+      }
+    }
+    matched.contacts_cleared = 0;
+  } else {
+    await pipeline.withTransaction(pool, async (client) => {
+      // R-M / LG-17 — the moved + vanished rows' OLD link, persisted BEFORE the statements that
+      // overwrite or NULL it (a throw here aborts the transaction; nothing is written). Only when
+      // non-empty: an unchanged run writes no audit file.
+      if (movedOrVanished.length > 0) {
+        const bi = write.persistBeforeImageRows(movedOrVanished.map((r) => ({
+          id: r.id, linked_entity_id: r.old_entity_id, match_confidence: r.old_confidence, matched_at: r.old_matched_at,
+        })), wsibJoinPlan.table, descriptor.identity.name, runAt);
+        if (bi && bi.written) beforeImage.push({ ...bi, table: wsibJoinPlan.table });
+      }
+
+      // W-set — set + move rows, ONE keyed compare-and-set UPDATE (LG-11 executor: INSERT refused).
+      // Always issued (empty arrays write 0) so the statement inventory is the same on every run.
+      const wsibIdx = specs.indexOf(wsibJoinPlan);
+      const applied = await write.executeSetBasedJoinUpdate(client, compute.buildApplyLinksSql(), [
+        runAt,
+        setRows.map((r) => r.id),
+        setRows.map((r) => r.new_entity_id),
+        setRows.map((r) => r.new_confidence),
+        setRows.map((r) => orNull(r.old_entity_id)),
+        setRows.map((r) => orNull(r.old_confidence)),
+      ]);
+      written[write.targetKey(wsibIdx)].scanned += setRows.length;
+      written[write.targetKey(wsibIdx)].updated += applied;
+      written[write.targetKey(wsibIdx)].rows_changed += applied;
+
+      // W-vanish — the declared keyed UPDATE-to-NULL (never DELETE, LG-16): $1 ids, $2 old entity
+      // ids, $3 old confidences (compare-and-set on the old link). Always issued.
+      if (nullRetractPlan) {
+        const retracted = await write.executeSetBasedClear(client, nullRetractPlan, [
+          vanishRows.map((r) => r.id),
+          vanishRows.map((r) => r.old_entity_id),
+          vanishRows.map((r) => r.old_confidence),
+        ]);
+        const nullRetractIdx = specs.indexOf(nullRetractSpec);
+        written[write.targetKey(nullRetractIdx)].scanned += vanishRows.length;
+        written[write.targetKey(nullRetractIdx)].retracted += retracted;
+        written[write.targetKey(nullRetractIdx)].rows_changed += retracted;
+        written[write.targetKey(nullRetractIdx)].deleted = 0;
+      }
+
+      // A-7 — the contacts reverse clear, keyed per (OLD entity, value) pair, for the moved +
+      // vanished rows that carry a contact value; copyContacts (below) refills from the remaining
+      // links. Always issued.
+      const pairs = movedOrVanished.filter((r) => r.primary_phone || r.primary_email || r.website);
+      matched.contacts_cleared = await write.executeSetBasedJoinUpdate(client, compute.buildContactsReverseClearSql(), [
+        pairs.map((r) => r.old_entity_id),
+        pairs.map((r) => r.primary_phone || null),
+        pairs.map((r) => r.primary_email || null),
+        pairs.map((r) => r.website || null),
+      ]);
+
+      // LW-D19 — the is_wsib_registered fill-true target, ONCE, scoped to the two EXACT tiers'
+      // confidences (the old per-tier passes issued the identical statement three times).
+      if (entitiesFlagPlan) {
+        const flagged = await write.executeSetBasedClear(client, entitiesFlagPlan, exactConfidences);
+        const flagIdx = specs.indexOf(entitiesFlagSpec);
+        written[write.targetKey(flagIdx)].updated += flagged;
+        written[write.targetKey(flagIdx)].rows_changed += flagged;
+        matched.flagged = flagged;
+      }
+
+      // ── LW-D19 (2026-08-29 operator ruling) — the is_wsib_registered self-heal correction, ONCE,
+      // unconditional: an entity flagged registered with no exact-tier link (its only exact link
+      // vanished or moved to the fuzzy tier, or a pre-LW-D19 row) goes back to false. It also covers
+      // the retired LG-16 cascade's "an entity whose ONLY links were retracted loses the flag" (no
+      // link at all ⊂ no exact-tier link). Guarded, so an unchanged corpus changes 0 rows.
+      if (entitiesUnflagPlan) {
+        const corrected = await write.executeSetBasedClear(client, entitiesUnflagPlan, exactConfidences);
         const unflagIdx = specs.indexOf(entitiesUnflagSpec);
         written[write.targetKey(unflagIdx)].updated += corrected;
         written[write.targetKey(unflagIdx)].rows_changed += corrected;
         matched.is_wsib_registered_corrected = corrected;
       }
-    }
-  });
+
+      // copyContacts — once per tier, in cascade order (the tiers[] declaration order IS the
+      // confidence hierarchy, G-8): fill-only, never overwrite.
+      if (entitiesContactsSpec) {
+        const contactsIdx = specs.indexOf(entitiesContactsSpec);
+        for (const tier of tiers) {
+          const sql = compute.buildTierSql(descriptor, config, tier);
+          const contacts = await write.executeSetBasedJoinUpdate(client, sql.entities_contacts_sql, sql.entities_contacts_params);
+          written[write.targetKey(contactsIdx)].updated += contacts;
+          written[write.targetKey(contactsIdx)].rows_changed += contacts;
+          matched.tiers[tier.id].contacts = contacts;
+        }
+      }
+    });
+  }
 
   // LW-D14 — every cascade compute's CUMULATIVE_SQL is a function of `descriptor` (was
   // a bare string), so a step whose invariant needs declared descriptor data (e.g.
@@ -2516,7 +2679,7 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 
   return {
     mode: gate.mode,
-    gate: { ...gate, configVersionUpdatedAt },
+    gate: { ...gate, configVersionUpdatedAt, configVersions },
     matched,
     cumulative: { linked: Number(c.linked), total: Number(c.total) },
     written,
@@ -5084,6 +5247,129 @@ async function executeOrderedWrites(pool, plans, rows, runAt, written, specs) {
 }
 
 /**
+ * O4 ROW 5 / ROW 7 — the gate for a LINK step whose `staleness.mode_select` is `"none"` (full_rescan,
+ * operator ruling 2026-10-03, registry-truth folds 14 + 15). full_rescan is NOT a mode decision: every
+ * eligible row is re-derived on every run and every write is change-guarded, so the gate resolves
+ * `"full"` with reason `"full_rescan"`. The declared pre_compute triggers are still MEASURED (for
+ * observation: a compute's pre_write corpus guard reads them off `ctx.matched`), never used to decide.
+ *
+ * A `retract: "all"` target is REFUSED under full_rescan: it would fire on every run (the mode is always
+ * "full"), mass-deleting and re-inserting every row in its scope, which moves every run-clock column and
+ * is exactly the rewrite full_rescan exists to avoid. The keyed per-batch delete replaces it.
+ * Any other mode_select is answered by `staleness.selectMode`, unchanged.
+ */
+async function resolveLinkGate({ descriptor, pool, prior, ownRunId, tag }) {
+  if (!(descriptor.staleness && descriptor.staleness.mode_select === 'none')) {
+    return staleness.selectMode({ descriptor, pool, prior, ownRunId });
+  }
+  const massRetract = (descriptor.outputs.writes || []).filter((w) => w.retract === 'all');
+  if (massRetract.length > 0) {
+    throw new Error(`${tag} staleness.mode_select "none" (full_rescan) re-derives every row on every run, so a `
+      + `retract "all" target (${massRetract.map((w) => w.table).join(', ')}) would mass-delete and re-insert its whole `
+      + 'scope on every run. Declare retract "none": links no longer derived are removed by the keyed per-batch delete.');
+  }
+  const signals = [];
+  for (const t of staleness.triggersAt(descriptor, 'pre_compute')) {
+    const measured = await staleness.measureTrigger(pool, descriptor, t);
+    measured.prior = prior && prior[measured.key] !== undefined ? String(prior[measured.key]) : null;
+    measured.changed = false;
+    signals.push(measured);
+  }
+  return { mode: 'full', reason: 'full_rescan', changed: false, explicit_full: false, forced: false, signals, interrupted_retraction: null };
+}
+
+/**
+ * O4 ROW 5 — which declared `outputs.writes[]` targets the keyed LINK writes land on, or null when the
+ * compute supplies no keyed stale-link delete (every pre-row-5 LINK step: the ordered-writes path is
+ * unchanged). Resolved from the DECLARED classes, never from a domain name: the guarded upsert, the
+ * set-based clear on the same table, the `link_full_retraction` keyed delete on the same table, and the
+ * one target on another table (the lost-link flag). A compute that supplies the statements while the
+ * descriptor does not declare the targets is REFUSED — an undeclared write is never issued.
+ */
+function resolveKeyedLinkTargets(specs, match, tag) {
+  if (!match.stale_link_delete_sql) return null;
+  const cls = (w) => w.write_discipline && w.write_discipline.class;
+  const upsert = specs.findIndex((w) => cls(w) === 'guarded_upsert');
+  const table = upsert >= 0 ? specs[upsert].table : null;
+  const clear = specs.findIndex((w) => cls(w) === 'set_based_scoped' && w.table === table);
+  const del = specs.findIndex((w) => cls(w) === 'link_full_retraction' && w.table === table);
+  const flag = specs.findIndex((w) => table !== null && w.table !== table);
+  const missing = [];
+  if (upsert < 0) missing.push('a guarded_upsert target');
+  if (clear < 0) missing.push('a set_based_scoped clear on the upsert table');
+  if (del < 0) missing.push('a link_full_retraction keyed-delete target on the upsert table');
+  if (flag < 0) missing.push('the lost-link flag target (a target on another table)');
+  // E1 stays GENERATED: its declared scope must carry the derived-key guard ($2/$3), or an unchanged
+  // primary would be cleared and re-set every run (linked_at would move).
+  if (clear >= 0 && !/\$3\b/.test(String(specs[clear].write_discipline.scope || ''))) {
+    missing.push('a clear target whose declared scope carries the derived-key guard ($2/$3)');
+  }
+  for (const k of ['stale_link_select_sql', 'lost_link_flag_sql']) {
+    if (!match[k]) missing.push(`the compute statement ${k}`);
+  }
+  if (missing.length > 0) {
+    throw new Error(`${tag} the compute supplies a keyed stale-link delete, but the step does not declare `
+      + `${missing.join('; ')} — an undeclared write is refused.`);
+  }
+  return { upsert, clear, del, flag };
+}
+
+/**
+ * O4 ROW 5 — one batch's keyed LINK writes, in ONE transaction, in this order:
+ *   1. E1's GENERATED guarded clear — resets the clear target's column only on rows that are not re-asserted by a
+ *      derived row (the derived rows whose value for that column differs from the cleared value);
+ *   2. the guarded upsert (run-clock columns stamped by the runner, as executeOrderedWrites does);
+ *   3. the rows no longer derived, read once: before-imaged (R-M / LG-17) when non-empty, and their
+ *      distinct leading keys are the parcels that lost a link;
+ *   4. the lost-link flag over those parcels (issued every batch, an empty set writes nothing);
+ *   5. the keyed DELETE of the rows no longer derived.
+ * `batchIds` is EVERY eligible row of the batch, so a parcel with zero derived links is still reached.
+ */
+async function executeKeyedLinkWrites({ pool, plans, specs, targets, match, batchIds, rows, runAt, written, slug, beforeImage }) {
+  const keys = plans[targets.upsert].keys;
+  const keyArrays = (rs) => keys.map((k) => rs.map((r) => r[k]));
+  const clearCol = specs[targets.clear].columns[0];
+  const kept = rows.filter((r) => r[clearCol.name] !== clearCol.set_value);
+  const clockColumns = (specs[targets.upsert].columns || []).filter((c) => c.source === 'run_at').map((c) => c.name);
+  const stamped = clockColumns.length === 0
+    ? rows
+    : rows.map((r) => Object.assign({}, r, Object.fromEntries(clockColumns.map((c) => [c, runAt]))));
+  const derived = [batchIds, ...keyArrays(rows)];
+  const ek = (i) => write.targetKey(i);
+  await pipeline.withTransaction(pool, async (client) => {
+    // E1's GENERATED clear (write.js, from the declared scope); $2/$3 = the derived rows that re-assert it.
+    const cleared = await write.executeSetBasedClear(client, plans[targets.clear], [batchIds, ...keyArrays(kept)]);
+    written[ek(targets.clear)].scanned += batchIds.length;
+    written[ek(targets.clear)].updated += cleared;
+    written[ek(targets.clear)].rows_changed += cleared;
+
+    if (stamped.length > 0) {
+      const result = await write.executeUpsertBatch(client, plans[targets.upsert], stamped);
+      written[ek(targets.upsert)].scanned += stamped.length;
+      written[ek(targets.upsert)].inserted += result.inserted;
+      written[ek(targets.upsert)].updated += result.updated;
+      written[ek(targets.upsert)].rows_changed += result.inserted + result.updated;
+    }
+
+    const stale = await client.query(match.stale_link_select_sql, derived);
+    if (stale.rows.length > 0) {
+      const bi = write.persistBeforeImageRows(stale.rows, plans[targets.del].table, slug, runAt);
+      if (bi && bi.written) beforeImage.push({ ...bi, table: plans[targets.del].table });
+    }
+    const lost = [...new Set(stale.rows.map((r) => r[keys[0]]))];
+    const flagged = await write.executeGuardedUpdate(client, match.lost_link_flag_sql, [lost]);
+    written[ek(targets.flag)].scanned += lost.length;
+    written[ek(targets.flag)].updated += flagged.length;
+    written[ek(targets.flag)].rows_changed += flagged.length;
+
+    const deleted = await write.executeGuardedDeleteByKey(client, match.stale_link_delete_sql, derived);
+    written[ek(targets.del)].scanned += batchIds.length;
+    written[ek(targets.del)].deleted += deleted;
+    written[ek(targets.del)].rows_changed += deleted;
+  });
+}
+
+/**
  * THE `when: "pre_write"` GATE (LR-D9 — operator ruling §7.1, 2026-08-26).
  *
  * Returns the callback `runIngestPhase` invokes between the last read and the first
@@ -5094,9 +5380,10 @@ async function executeOrderedWrites(pool, plans, rows, runAt, written, specs) {
  * It scores those checks through THE SAME two mechanisms the final table uses — the
  * compute's own dispatch (`ctx.checks` narrowed to the pre_write ids) and
  * `buildAuditTable` — so the gate can never disagree with the audit row it is gating
- * on. The rows it builds are DISCARDED: the compute is re-run over the full selection
- * afterwards and those checks report identically, because a `pre_write` check reads
- * only `ctx.acquired` / `ctx.prior`, which the write does not touch.
+ * on. Its OBSERVATIONS are what the audit table scores (#52, fold 19 MQ-A1 (a)): an
+ * optional `sink` receives them, and runWithPool copies the sink over the final pass's
+ * report of the same id, so a pre_write row is measured before the write and stamped
+ * `observed: "before_write"`.
  *
  * Acceptance (ruling A-5) is applied to the DECISION only, never to the row: an
  * accepted FAIL proceeds to the write and still lands its FAIL row downstream.
@@ -5118,7 +5405,7 @@ async function executeOrderedWrites(pool, plans, rows, runAt, written, specs) {
  * and lock (LR-D9) that predates it. The caller decides what `skipWrite` means for its own
  * shape; only `runIngestPhase` acts on it today.
  */
-function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
+function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config, sink = null }) {
   const preWriteIds = selectChecks(descriptor, chainId)
     .filter((c) => c.when === 'pre_write')
     .map((c) => c.id);
@@ -5131,6 +5418,7 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
   // `{acquired, prior, overrides}` from the ingest phase, `{matched, gate, prior,
   // overrides}` from the link phase. Spread rather than destructured so one gate serves
   // both shapes without the runner inventing keys a compute would read as undefined.
+  const sinkRank = Object.create(null);
   return async function preWriteGate(phaseState) {
     const observations = Object.create(null);
     // `written: null` is the whole point — a pre_write check that reached for it would
@@ -5151,6 +5439,26 @@ function makePreWriteGate({ descriptor, chainId, stepCtx, compute, config }) {
     };
     await compute(probeCtx);
     const built = buildAuditTable(descriptor, chainId, observations, [], config, only);
+    // #52 (fold 19 MQ-A1 (a) + compliance amendment) — the gate's OWN observations are what
+    // the audit table scores for a when:"pre_write" check (runWithPool copies `sink` over the
+    // final pass's report, which is dropped, never double-scored). A multi-primary ingest
+    // calls this gate once per primary: keep the WORST lane — higher severity rank, then the
+    // larger magnitude (violations, else value) — so the row reads what the final pass's own
+    // worst-of-lanes reduction would have read.
+    if (sink) {
+      for (const id of Object.keys(observations)) {
+        const obs = observations[id];
+        const r = built.rows.find((row) => String(row.metric).split(':')[0] === id);
+        const rank = r && SEVERITY_RANK[r.status] !== undefined ? SEVERITY_RANK[r.status] : 0;
+        const mag = obs && Number.isFinite(obs.violations) ? obs.violations
+          : (obs && Number.isFinite(obs.value) ? obs.value : -Infinity);
+        const prev = sinkRank[id];
+        if (!prev || rank > prev.rank || (rank === prev.rank && mag > prev.mag)) {
+          sink[id] = obs;
+          sinkRank[id] = { rank, mag };
+        }
+      }
+    }
     // ONE derivation of "which FAILs acceptance does not cover", shared with the
     // status cascade below (§partitionFailedRows) — an errored check query is never
     // accepted here either, or the gate would let a write proceed on the strength of
@@ -5446,6 +5754,307 @@ function scopeRetireFailureRows(phaseResults) {
   }];
 }
 
+/**
+ * registry-truth fold 10 (operator ruling 2026-10-03) — the soft-retire MEASUREMENT, said
+ * out loud on the audit table.
+ *
+ * `write.js executeWrite` measures a `retract: "departed_mark"` plan's retirement and hands
+ * it back on the `written` block (`retired`, `unretired`, `retire_candidates`, `retire_pct`,
+ * `retire_suppressed_mass_guard`, `retire_skipped_empty_guard`, `retire_max_pct`). None of it
+ * was readable from the audit table, so the run was indistinguishable from one whose source
+ * simply had no departures. This renders it:
+ *
+ *   · `records_retired` / `records_unretired` — INFO on EVERY run whose write ran a
+ *     departed_mark plan, even when both read 0: zero is the affirmative "nothing left the
+ *     source" signal, so the rows must appear rather than be omitted for having nothing to
+ *     report.
+ *   · `mass_retire_guard` — FAIL with `source: 'gate'` and NO `errored`, because a suppressed
+ *     MARK is a MEASURED THRESHOLD BREACH, not a refusal: the operator's acknowledgement is
+ *     raising the declared logic variable (`retire_max_pct_from_config`), not an
+ *     `override.accept_anomaly`. That is exactly the distinction `preWriteAbortRows` draws
+ *     in the other direction — there `errored: true` marks a REFUSAL the row-derived cascade
+ *     must fail the step on and an operator must not be able to wave through.
+ *   · `retire_empty_set_guard` — WARN with `source: 'gate'`, for the suppressed-MARK arm of
+ *     the library's own empty-set guard. WARN, not FAIL: the guard did its job (zero carried
+ *     keys means `<> ALL('{}')` would have retired the whole table) and the run completes.
+ *
+ * Rule 10: LIBRARY-owned, never step-declared — only the library that issued the statement
+ * knows what it measured. Absent ENTIRELY for every other step and every other retract axis,
+ * so their audit tables are byte-identical.
+ *
+ * A multi-primary step reports its retirement per declared `written.by_target` entry, with
+ * `:<target>` suffixed onto the metric name (mirrors §primaryFailureRows' own naming); a
+ * target with no retirement of its own (`w.retired === undefined`) contributes NOTHING, just
+ * as a single-target step with no departed_mark plan does.
+ *
+ * @param {Array<{written?:object}|null>} phaseResults - the per-shape runner results
+ * @returns {Array<object>} zero or more rows
+ */
+function retireAuditRows(phaseResults) {
+  const rows = [];
+  for (const p of phaseResults || []) {
+    if (!p || !p.written) continue;
+    const w = p.written;
+    const entries = (w.by_target && typeof w.by_target === 'object')
+      ? Object.entries(w.by_target)
+      : [[null, w]];
+    for (const [target, t] of entries) {
+      const sfx = target === null ? '' : `:${target}`;
+      // A target that ran no departed_mark plan carries no `retired` key at all — its audit
+      // table stays byte-identical to the pre-fold one.
+      if (!t || t.retired === undefined) continue;
+      rows.push({ metric: 'records_retired' + sfx, value: t.retired, threshold: null, status: 'INFO' });
+      rows.push({ metric: 'records_unretired' + sfx, value: t.unretired, threshold: null, status: 'INFO' });
+      if (t.retire_suppressed_mass_guard === true) {
+        rows.push({
+          metric: 'mass_retire_guard' + sfx,
+          value: `suppressed: ${t.retire_candidates} stale keys = ${t.retire_pct} of active rows`,
+          threshold: `pct <= ${t.retire_max_pct}`,
+          status: 'FAIL',
+          source: 'gate',
+        });
+      }
+      if (t.retire_skipped_empty_guard === true) {
+        rows.push({
+          metric: 'retire_empty_set_guard' + sfx,
+          value: 'zero carried keys — MARK/UNMARK suppressed',
+          threshold: 'carried keys > 0',
+          status: 'WARN',
+          source: 'gate',
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+const INPUTS_NONEMPTY_THRESHOLD = 'every declared read table non-empty (inputs.expect_nonempty)';
+const EMPTY_SOURCE_THRESHOLD = 'guards.empty_source table(s) non-empty';
+const EMPTY_SOURCE_INGEST_THRESHOLD = 'guards.empty_source: an INGESTOR never writes from an empty source';
+
+/**
+ * The tables a descriptor WRITES — the exclusion set for the #12 read-nonempty guard
+ * (a step never counts the table it writes against itself).
+ * registry-truth Phase 3 WIRE #12 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+function writtenTables(descriptor) {
+  const out = descriptor && descriptor.outputs;
+  if (!out || out === 'none' || !Array.isArray(out.writes)) return new Set();
+  return new Set(out.writes.map((w) => w && w.table).filter(Boolean));
+}
+
+/**
+ * The `guards.empty_source` table name(s), normalized to an array (`'none'`/absent → `[]`).
+ * registry-truth Phase 3 WIRE #32 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+function emptySourceTables(descriptor) {
+  const es = descriptor && descriptor.guards ? descriptor.guards.empty_source : 'none';
+  if (es === undefined || es === null || es === 'none') return [];
+  return Array.isArray(es) ? [...new Set(es)] : [es];
+}
+
+/**
+ * A real `COUNT(*)` per named table — the measured population every guard below scores over.
+ * registry-truth Phase 3 WIRE #12/#32 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+async function countTables(pool, tables) {
+  const counts = {};
+  for (const t of tables) {
+    const { rows } = await pool.query(`SELECT COUNT(*)::bigint AS n FROM ${t}`);
+    counts[t] = Number(rows && rows[0] ? rows[0].n : 0);
+  }
+  return counts;
+}
+
+/**
+ * The declared input guards, measured BEFORE any phase or compute: `inputs.expect_nonempty`
+ * read-table non-emptiness (#12) and a consumer's `guards.empty_source` table(s) (#32). A
+ * halt (an empty read table under `on_missing: "halt"`, or an empty consumer source) returns
+ * `{ rows, halt: true }` — the caller dispatches NO phase and runs NO compute, and the
+ * errored FAIL row makes the row-derived verdict FAIL with no new boolean.
+ * registry-truth Phase 3 WIRE #12/#32 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+async function measureInputGuards(pool, descriptor) {
+  const rows = [];
+  let halt = false;
+  const inputs = (descriptor && descriptor.inputs) || {};
+  if (inputs.expect_nonempty === true) {
+    const self = writtenTables(descriptor);
+    const declared = ((inputs.reads && inputs.reads.tables) || []).map((t) => t && t.table).filter(Boolean);
+    const tables = [...new Set(declared)].filter((t) => !self.has(t));
+    if (tables.length > 0) {
+      const counts = await countTables(pool, tables);
+      const empty = tables.filter((t) => !(counts[t] > 0));
+      if (empty.length === 0) {
+        rows.push({ metric: 'inputs_nonempty', value: counts, threshold: INPUTS_NONEMPTY_THRESHOLD, status: 'INFO' });
+      } else {
+        const value = `empty: ${empty.join(', ')}`;
+        if (inputs.on_missing === 'halt') {
+          rows.push({ metric: 'inputs_nonempty', value, threshold: INPUTS_NONEMPTY_THRESHOLD, status: 'FAIL', source: 'gate', errored: true });
+          halt = true;
+        } else if (inputs.on_missing === 'warn') {
+          rows.push({ metric: 'inputs_nonempty', value, threshold: INPUTS_NONEMPTY_THRESHOLD, status: 'WARN', source: 'gate' });
+        } else {
+          rows.push({ metric: 'inputs_nonempty', value, threshold: INPUTS_NONEMPTY_THRESHOLD, status: 'INFO' });
+        }
+      }
+    }
+  }
+  const archetype = descriptor && descriptor.identity ? descriptor.identity.archetype : null;
+  if (archetype !== 'INGESTOR') {
+    const tables = emptySourceTables(descriptor);
+    if (tables.length > 0) {
+      const counts = await countTables(pool, tables);
+      const empty = tables.filter((t) => !(counts[t] > 0));
+      if (empty.length === 0) {
+        rows.push({ metric: 'empty_source_guard', value: counts, threshold: EMPTY_SOURCE_THRESHOLD, status: 'INFO' });
+      } else {
+        rows.push({ metric: 'empty_source_guard', value: `empty: ${empty.join(', ')}`, threshold: EMPTY_SOURCE_THRESHOLD, status: 'FAIL', source: 'gate', errored: true });
+        halt = true;
+      }
+    }
+  }
+  return { rows, halt };
+}
+
+/**
+ * The INGESTOR empty-source refusal: an INGESTOR declaring `guards.empty_source` refuses the
+ * WRITE when the acquired source has 0 rows to write (`feature_count === 0`). Refuse only,
+ * never skip — the declaration has no skip arm.
+ * registry-truth Phase 3 WIRE #32 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+function emptySourceRefusal(descriptor, acquired) {
+  const archetype = descriptor && descriptor.identity ? descriptor.identity.archetype : null;
+  if (archetype !== 'INGESTOR') return null;
+  const tables = emptySourceTables(descriptor);
+  if (tables.length === 0) return null;
+  const a = acquired || {};
+  return {
+    table: descriptor.guards.empty_source,
+    rows_read: a.rows_read ?? null,
+    rows_acquired: a.feature_count,
+    refused: a.feature_count === 0,
+  };
+}
+
+/**
+ * The supervisor row a completed ingest phase surfaces for its empty-source refusal (an
+ * errored FAIL row) or its clean non-refusal (an INFO row) — §emptySourceRefusal.
+ * registry-truth Phase 3 WIRE #32 (PLAN :238); FLEET-2 A-1 rulings 2026-10-03.
+ */
+function emptySourceRows(phaseResults) {
+  const hit = (phaseResults || []).find((p) => p && p.emptySource && typeof p.emptySource === 'object');
+  if (!hit) return [];
+  const es = hit.emptySource;
+  if (es.refused) {
+    return [{ metric: 'empty_source_guard', value: `refused: 0 rows to write for ${es.table}`, threshold: EMPTY_SOURCE_INGEST_THRESHOLD, status: 'FAIL', source: 'gate', errored: true }];
+  }
+  return [{ metric: 'empty_source_guard', value: { table: es.table, rows_acquired: es.rows_acquired }, threshold: EMPTY_SOURCE_INGEST_THRESHOLD, status: 'INFO' }];
+}
+
+/**
+ * P3-C1 #33 `guards.schema_drift` (registry-truth PLAN :238; fold 19 MQ-A2 (a) + compliance
+ * amendment). The baseline is the PRIOR completed run's recorded header,
+ * `records_meta.acquired.record_fields[<external id>]`, read through the ONE R-BG (iv) baseline
+ * selector (`source-version.js readPriorRunMeta`: completed / completed_with_warnings, never a
+ * `write_skipped_pre_write_warn` run). `pause` refuses the write (errored FAIL row, the A-1
+ * empty-source refusal shape); `propagate` is a WARN row and the write continues; `none` is no
+ * check. No eligible baseline, or no recorded header on either side, is a COUNTED INFO
+ * `no_baseline` row on every run — never a silent fall-back to an older run.
+ */
+const SCHEMA_DRIFT_THRESHOLD = "guards.schema_drift: the acquired header equals the prior completed run's recorded header";
+
+/** The declared arm for one external: a scalar response, or the per-layer arm whose `match` is the external id, else the `"default"` arm. */
+function schemaDriftArm(descriptor, externalId) {
+  const decl = descriptor && descriptor.guards ? descriptor.guards.schema_drift : 'none';
+  if (Array.isArray(decl)) {
+    const arm = decl.find((a) => a && a.match === externalId) || decl.find((a) => a && a.match === 'default') || null;
+    return arm ? { response: arm.response, severity: arm.severity } : { response: 'none', severity: null };
+  }
+  return { response: typeof decl === 'string' ? decl : 'none', severity: null };
+}
+
+/** One external's drift decision, or null when the resolved response is "none". A standing overrides.force_run releases a paused drift as a WARN (MQ-A7). */
+function schemaDriftDecision(descriptor, externalId, recordFields, baseline, overrides = null) {
+  const arm = schemaDriftArm(descriptor, externalId);
+  if (arm.response === 'none') return null;
+  const metric = `schema_drift:${externalId}`;
+  const info = (value) => ({ external: externalId, response: arm.response, refused: false, row: { metric, value, threshold: SCHEMA_DRIFT_THRESHOLD, status: 'INFO' } });
+  if (!baseline || !baseline.found) return info('no_baseline: no eligible prior run');
+  const prior = baseline.fields && Array.isArray(baseline.fields[externalId]) ? baseline.fields[externalId] : null;
+  if (!prior) return info('no_baseline: the prior run recorded no record_fields');
+  if (!Array.isArray(recordFields)) return info('no_baseline: this run recorded no record_fields');
+  const now = new Set(recordFields);
+  const was = new Set(prior);
+  const added = [...now].filter((f) => !was.has(f)).sort();
+  const removed = [...was].filter((f) => !now.has(f)).sort();
+  if (added.length === 0 && removed.length === 0) return info(`header unchanged (${now.size} fields)`);
+  const value = `added: ${added.length ? added.join(', ') : 'none'}; removed: ${removed.length ? removed.join(', ') : 'none'}`;
+  const refused = arm.response === 'pause';
+  // MQ-A7 (a) + compliance vetting batch 2: a STANDING `override.force_run` releases a paused
+  // drift. Only that one: the combined `forced` value also ORs an interrupted retraction, and
+  // that must not release a drift. The write proceeds and the row is a WARN that records the
+  // release, so the run is completed_with_warnings and becomes the next run's baseline
+  // (R-BG (iv)). Without the env the refusal stands: a paused drift is never released silently.
+  if (refused && overrides && overrides.force_run === true) {
+    return {
+      external: externalId,
+      response: arm.response,
+      refused: false,
+      released: true,
+      row: { metric, value: `${value}; released by force_run`, threshold: SCHEMA_DRIFT_THRESHOLD, status: 'WARN', source: 'gate' },
+    };
+  }
+  const status = arm.severity || (refused ? 'FAIL' : 'WARN');
+  return {
+    external: externalId,
+    response: arm.response,
+    refused,
+    row: { metric, value, threshold: SCHEMA_DRIFT_THRESHOLD, status, source: 'gate', ...(refused && status === 'FAIL' ? { errored: true } : {}) },
+  };
+}
+
+/** The header this run records, keyed by every non-lookup external id. A skipped primary re-stamps the baseline so the NEXT run still has one. */
+function recordFieldsMeta(ingest, descriptor, baseline) {
+  const externals = (descriptor && descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.externals))
+    ? descriptor.inputs.reads.externals.filter((e) => e && e.role !== 'lookup')
+    : [];
+  const fields = baseline && baseline.fields && typeof baseline.fields === 'object' ? baseline.fields : {};
+  const carried = (id) => (Array.isArray(fields[id]) ? fields[id] : null);
+  const acquired = (ingest && ingest.acquired) || {};
+  const out = {};
+  for (const e of externals) {
+    if (acquired.primaries && typeof acquired.primaries === 'object') {
+      const p = acquired.primaries[e.id];
+      if (!p) out[e.id] = null;
+      else if (ingest.skipped || p.outcome === 'skipped') out[e.id] = carried(e.id);
+      else out[e.id] = Array.isArray(p.record_fields) ? p.record_fields : null;
+    } else {
+      out[e.id] = ingest && ingest.skipped ? carried(e.id) : (Array.isArray(acquired.record_fields) ? acquired.record_fields : null);
+    }
+  }
+  return out;
+}
+
+/** The audit row of every schema-drift decision the ingest phase recorded (one object, or an array from a multi-primary run). */
+function schemaDriftRows(phaseResults) {
+  const rows = [];
+  for (const p of phaseResults || []) {
+    if (!p || !p.schemaDrift) continue;
+    for (const d of (Array.isArray(p.schemaDrift) ? p.schemaDrift : [p.schemaDrift])) if (d && d.row) rows.push(d.row);
+  }
+  return rows;
+}
+
+/** The ONE prior-run lookup per ingest run: the R-BG (iv) baseline's recorded header, under the declared prior-run-error posture. */
+async function readSchemaDriftBaseline(pool, descriptor, chainId) {
+  const { prior, error } = await staleness.readPriorEmitWithPosture(
+    pool, ledgerPipelineName(descriptor, chainId), null, staleness.priorRunErrorPosture(descriptor),
+  );
+  const rf = prior && prior.acquired && prior.acquired.record_fields;
+  return { found: Boolean(prior) && !error, fields: rf && typeof rf === 'object' ? rf : null };
+}
+
 /** LW-D15 — the INFO audit row every `--dry-run` run carries, naming the posture explicitly (Rule 1: nothing hidden). */
 function dryRunRow() {
   return {
@@ -5550,6 +6159,8 @@ async function runWithPool(runnable, pool, ctx) {
         ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
       }
       const observations = Object.create(null);
+      // #52 — the pre_write gate's own observations (makePreWriteGate sink).
+      const preWriteObserved = Object.create(null);
       const declared = new Set(descriptor.checks.map((c) => c.id));
       // batch2 P1.1 — see stepCtx.contextRow() below.
       const contextRows = [];
@@ -5618,6 +6229,7 @@ async function runWithPool(runnable, pool, ctx) {
       // Only for a descriptor that DECLARES the shape; every other step reaches
       // `runnable.compute` on exactly the path pilot 1 established.
       let ingest = null;
+      let schemaDriftBaseline = null;
       let link = null;
       let linkKeyed = null;
       let cascade = null;
@@ -5644,11 +6256,20 @@ async function runWithPool(runnable, pool, ctx) {
       // cannot straddle a second (or a midnight) and a downstream consumer scoping on
       // `> last_stamp` cannot see half a run.
       const clockNow = drivesWrites ? await pipeline.getDbTimestamp(pool) : null;
-      if (isLinkStep(descriptor)) {
+      // P3-C1 #12 + #32 (FLEET-2 A-1 rulings 2026-10-03) — the declared input guards, measured
+      // BEFORE any phase or compute. A halt (an empty read table under on_missing "halt", or an
+      // empty guards.empty_source table on a consumer) dispatches NO phase and runs NO compute;
+      // its errored FAIL row makes the row-derived verdict FAIL with no new boolean.
+      const inputGuard = await measureInputGuards(pool, descriptor);
+      if (inputGuard.halt) {
+        onlyChecks = new Set();
+        onlyWhen = [];
+        stepCtx.checks = [];
+      } else if (isLinkStep(descriptor)) {
         link = await runLinkPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = link.matched;
         stepCtx.cumulative = link.cumulative;
@@ -5669,7 +6290,7 @@ async function runWithPool(runnable, pool, ctx) {
         linkKeyed = await runLinkKeyedPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = linkKeyed.matched;
         stepCtx.cumulative = linkKeyed.cumulative;
@@ -5688,7 +6309,7 @@ async function runWithPool(runnable, pool, ctx) {
         linkColumn = await runLinkColumnPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = linkColumn.matched;
         stepCtx.cumulative = linkColumn.cumulative;
@@ -5708,11 +6329,13 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isIngestStep(descriptor)) {
         // 0x (RE-FREEZE #29): a descriptor with a targeted external is multi-primary.
+        schemaDriftBaseline = await readSchemaDriftBaseline(pool, descriptor, chainId);
         ingest = await (isMultiPrimary(descriptor) ? ingestPrimaries : runIngestPhase)({
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
           ownRunId: runId,
+          schemaDriftBaseline,
         });
         stepCtx.acquired = ingest.acquired;
         stepCtx.written = ingest.written;
@@ -5738,7 +6361,7 @@ async function runWithPool(runnable, pool, ctx) {
         cascade = await runCascadePhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = cascade.matched;
         stepCtx.cumulative = cascade.cumulative;
@@ -5760,7 +6383,7 @@ async function runWithPool(runnable, pool, ctx) {
         materialize = await runMaterializePhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = materialize.matched;
         stepCtx.written = materialize.written;
@@ -5780,7 +6403,7 @@ async function runWithPool(runnable, pool, ctx) {
         backfill = await runBackfillPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = backfill.matched;
         stepCtx.written = backfill.written;
@@ -5802,7 +6425,7 @@ async function runWithPool(runnable, pool, ctx) {
         recorder = await runRecorderPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         stepCtx.matched = recorder.matched;
         stepCtx.written = recorder.written;
@@ -5823,7 +6446,7 @@ async function runWithPool(runnable, pool, ctx) {
         enrich = await runEnrichPhase({
           descriptor, pool, compute: runnable.compute, config: configValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
-          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues }),
+          preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
         // WF3 enrich_parcels double-run incident (2026-09-07) — `runEnrichPhase`'s OWN
         // inner advisory lock (coupled to its shared-txn/post-commit connections, unlike
@@ -5866,7 +6489,20 @@ async function runWithPool(runnable, pool, ctx) {
       // `observations` object is NOT merged (fold D, pilot 1 output panel): two
       // paths meant a compute could bypass the declared-check guard above. The
       // return value carries `records_meta` / counters only.
-      const computeResult = await runnable.compute(stepCtx);
+      const computeResult = inputGuard.halt ? null : await runnable.compute(stepCtx);
+      // #52 (fold 19 MQ-A1 (a)) — a when:"pre_write" check is scored from the gate pass that
+      // ran BEFORE the write; the final pass's report of the same id is dropped, not double-scored.
+      for (const id of Object.keys(preWriteObserved)) observations[id] = preWriteObserved[id];
+
+      // P3-C1 #17 (FLEET-2 A-2) — the declared vocabularies, read back AFTER a write phase
+      // actually wrote (never on a halt, a gated skip, a skipped write or a dry run).
+      const writePhase = ingest || link || linkKeyed || linkColumn || cascade || materialize || backfill || recorder || enrich;
+      const wrotePhase = !inputGuard.halt && !!writePhase && !writePhase.skipped && !writePhase.writeSkipped
+        && !(stepCtx.overrides && stepCtx.overrides.dry_run);
+      const vocabRows = wrotePhase ? await write.vocabularyRows(pool, descriptor) : [];
+      // #52 — the observation phase stamped on every checks[]/synthetic row: a gate-pass
+      // observation, or any row of a run that issued no write, was observed before the write.
+      const observedFor = (id) => (id in preWriteObserved || !wrotePhase ? 'before_write' : 'after_write');
 
       // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the invariants[]/plausibility[]
       // EVERY_RUN executor. Runs AFTER compute (every checks[] observation is already
@@ -5992,6 +6628,14 @@ async function runWithPool(runnable, pool, ctx) {
       // affirmative INFO signal that the retirement is complete, so the row must appear
       // whether it reads WARN or INFO.
       const extraRows = [
+        // P3-C1 #12 + #32 — the input-guard rows (fire path AND clean path), §measureInputGuards.
+        ...inputGuard.rows,
+        // P3-C1 #32 (INGESTOR) — the empty-source refusal / clean row, §emptySourceRows.
+        ...emptySourceRows([ingest]),
+        // P3-C1 #33 — the schema-drift rows (§schemaDriftRows).
+        ...schemaDriftRows([ingest]),
+        // P3-C1 #17 — the post-write vocabulary rows (§write.vocabularyRows).
+        ...vocabRows,
         ...(ingest && ingest.priorError ? [staleness.priorRunErrorRow(ingest.priorError)] : []),
         ...(linkColumn && linkColumn.priorError ? [staleness.priorRunErrorRow(linkColumn.priorError)] : []),
         ...configRetiredStatus.map(retiredVarRow),
@@ -6026,12 +6670,14 @@ async function runWithPool(runnable, pool, ctx) {
         // than only in a log line. Both absent on every healthy run.
         ...phaseDeadlineRows([enrich]),
         ...scopeRetireFailureRows([enrich]),
+        // fold 10 — the soft-retire MEASUREMENT, rendered on the audit table (§retireAuditRows).
+        ...retireAuditRows([ingest]),
         // batch2 P1.1 — compute-supplied literal context rows (stepCtx.contextRow()),
         // e.g. assert_parcel_sanity's "residential_parcels_scanned" population row.
         // Empty for every step that never calls it.
         ...contextRows,
       ];
-      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic);
+      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic, observedFor);
       // Observability fold — the deadline abort no longer THROWS (that is what cost the run
       // its audit table), so the ledger's `error_message` must be set here instead. Same
       // text the throw carried, so a reader of `pipeline_runs` sees no change in what the
@@ -6058,7 +6704,7 @@ async function runWithPool(runnable, pool, ctx) {
                   : (enrich
                     ? { matched: enrich.matched, written: enrich.written }
                     : (ingest ? { acquired: ingest.acquired, written: ingest.written } : null))))))));
-      counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped)
+      counters = (ingest && ingest.skipped) || (cascade && cascade.skipped) || (materialize && materialize.skipped) || inputGuard.halt
         ? { records_total: null, records_new: null, records_updated: null }
         : deriveCounters(descriptor, computeResult, counterScope);
 
@@ -6174,6 +6820,9 @@ async function runWithPool(runnable, pool, ctx) {
         // Absent entirely for a `config: "none"` step, so the byte cost is paid only
         // by steps that actually consume a tunable (§1.2a P3).
         ...(configStamp ? { config: configStamp } : {}),
+        // P3-C1 #33 — the header this run recorded (a skip re-stamps the baseline), the next
+        // run's schema_drift baseline (§recordFieldsMeta). Runner-owned (RUNNER_META_KEYS).
+        ...(ingest ? { acquired: { record_fields: recordFieldsMeta(ingest, descriptor, schemaDriftBaseline) } } : {}),
         ...(terminal ? { terminal: terminal.id } : {}),
         // LW-D13 — closed enum LEDGER_ROW_VALUES, above.
         ledger_row: owns ? LEDGER_ROW_VALUES[0] : LEDGER_ROW_VALUES[1],
@@ -6206,8 +6855,12 @@ async function runWithPool(runnable, pool, ctx) {
         checks_passed: (built.errors.length === 0 && built.warnings.length === 0) ? 'all' : undefined,
         checks_failed: built.errors.length,
         checks_warned: built.warnings.length,
-        errors: built.errors.length > 0 ? built.errors : undefined,
-        warnings: built.warnings.length > 0 ? built.warnings : undefined,
+        // #75 reconcile (fold 11 item 6, FLEET-2) — ALWAYS emitted, `[]` when none: every ASSERT
+        // terminal declares them as arrays, and an omitted key made that declared shape false on
+        // every clean run (seat C's terminals-records-meta gate, 16 findings). `checks_passed`
+        // above stays 'all'-or-absent (legacy assert-data-bounds.js parity; semantic, not a gap).
+        errors: built.errors,
+        warnings: built.warnings,
         audit_table: built.audit_table,
       };
 
@@ -6332,6 +6985,7 @@ module.exports = {
   RUNNER_META_KEYS,
   resolveCodeSha,
   deriveMeta,
+  ROW_INSERTING_CLASSES,
   deriveCounters,
   resolveCounterSource,
   skipRecordsMeta,
@@ -6348,13 +7002,23 @@ module.exports = {
   isEnrichStep,
   assertRequirements,
   probeRequirement,
+  triggerInvalidatedColumns,
+  triggerBodyMissingColumns,
   REQUIREMENT_PROBES,
+  REQUIREMENT_OWNED_ELSEWHERE,
   ledgerPipelineName,
   runIngestPhase,
   runLinkPhase,
   runLinkKeyedPhase,
   runLinkColumnPhase,
   runCascadePhase,
+  resolveLinkGate, // exported for the O4 rows 5/6/7 locks (FLEET-2 dry-merge D9): the real mode path under mode_select "none"
+  // P3-C1 #12 + #32 (FLEET-2 A-1) — the input guards, exported for their locks.
+  measureInputGuards,
+  emptySourceRefusal,
+  emptySourceRows,
+  // P3-C1 #33 (FLEET-2 A-3) — schema drift, exported for its locks.
+  SCHEMA_DRIFT_THRESHOLD, schemaDriftDecision, recordFieldsMeta, schemaDriftRows, readSchemaDriftBaseline,
   runMaterializePhase,
   runBackfillPhase,
   runRecorderPhase,
@@ -6373,7 +7037,6 @@ module.exports = {
   startHeartbeatTicker,
   startPhaseDeadline,
   streamOverClient,
-  runTierToConvergence,
   executeOrderedWrites,
   acceptedCheckIds,
   partitionFailedRows,
@@ -6388,6 +7051,7 @@ module.exports = {
   primaryFailureRows,
   phaseDeadlineRows,
   scopeRetireFailureRows,
+  retireAuditRows,
   makePreWriteGate,
   generateReset,
   assertBeforeImageDeclared,

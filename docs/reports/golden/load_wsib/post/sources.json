@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-wsib.js",
   "chain": "sources",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -12,7 +12,7 @@
     "records_updated": 200,
     "records_meta": {
       "wsib_load": {
-        "duration_ms": 15802,
+        "duration_ms": 11799,
         "total_csv_rows": 345416,
         "unique_class_g": 121116,
         "records_inserted": 0,
@@ -28,16 +28,32 @@
         "load_wsib_unique_class_g_warn_min": 110000,
         "load_wsib_no_name_skip_warn_pct": 1
       },
+      "acquired": {
+        "record_fields": {
+          "local:wsib-business-classification-details": [
+            "Legal name",
+            "Trade name",
+            "Mailing Address",
+            "Predominant class",
+            "NAICS code",
+            "Description",
+            "Class/subclass",
+            "Business size"
+          ]
+        }
+      },
       "terminal": "loaded",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "f9063dcecd837216c7e009e4d86451d0593114c4",
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
       "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
-        "phase": 11,
+        "phase": 19,
         "name": "WSIB Registry Ingestion",
         "verdict": "PASS",
         "rows": [
@@ -46,59 +62,72 @@
             "value": null,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_source_file",
             "value": "data/BusinessClassificationDetails(2025).csv",
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_unique_class_g",
             "value": 121116,
             "threshold": "value_min 110000",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_no_name_skip_rate",
             "value": "0.0%",
             "threshold": "pct <= 1",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_null_address_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "records_unchanged",
             "value": 120916,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "duplicate_key_count",
             "value": 12244,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "schema_drift:local:wsib-business-classification-details",
+            "value": "no_baseline: the prior run recorded no record_fields",
+            "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+            "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 12.63,
+            "value": 16.9,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 15836,
+            "value": 11836,
             "threshold": null,
             "status": "INFO"
           }
@@ -124,7 +153,10 @@
           "subclass_description",
           "business_size",
           "is_gta",
-          "last_seen_at"
+          "last_seen_at",
+          "last_enriched_at",
+          "primary_phone",
+          "website"
         ]
       },
       "external": [
@@ -135,10 +167,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_wsib]\",\"msg\":\"[load_wsib] target: load_wsib (descriptor.database) → database=postgres user=postgres migrations=245 (floor 66)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_wsib]\",\"msg\":\"acquired 345416 feature(s) (64164918 bytes, md5 9fc9adbf…)\"}\nPIPELINE_SUMMARY:{\"records_total\":200,\"records_new\":0,\"records_updated\":200,\"records_meta\":{\"wsib_load\":{\"duration_ms\":15802,\"total_csv_rows\":345416,\"unique_class_g\":121116,\"records_inserted\":0,\"records_updated\":200,\"skipped_non_g\":212056,\"skipped_no_name\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_wsib_unique_class_g_warn_min\":110000,\"load_wsib_no_name_skip_warn_pct\":1},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":11,\"name\":\"WSIB Registry Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"wsib_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"wsib_source_file\",\"value\":\"data/BusinessClassificationDetails(2025).csv\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"wsib_unique_class_g\",\"value\":121116,\"threshold\":\"value_min 110000\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_no_name_skip_rate\",\"value\":\"0.0%\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_null_address_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"records_unchanged\",\"value\":120916,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"duplicate_key_count\",\"value\":12244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":12.63,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":15836,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"wsib_registry\":[\"legal_name\",\"trade_name\",\"legal_name_normalized\",\"trade_name_normalized\",\"mailing_address\",\"predominant_class\",\"naics_code\",\"naics_description\",\"subclass\",\"subclass_description\",\"business_size\",\"is_gta\",\"last_seen_at\"]},\"external\":[\"local:wsib-business-classification-details\"]}\n\n[load_wsib] completed in 15.8s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_wsib]\",\"msg\":\"[load_wsib] target: load_wsib (descriptor.database) → database=postgres user=postgres migrations=247 (floor 66)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_wsib]\",\"msg\":\"acquired 345416 feature(s) (64164918 bytes, md5 9fc9adbf…)\"}\nPIPELINE_SUMMARY:{\"records_total\":200,\"records_new\":0,\"records_updated\":200,\"records_meta\":{\"wsib_load\":{\"duration_ms\":11799,\"total_csv_rows\":345416,\"unique_class_g\":121116,\"records_inserted\":0,\"records_updated\":200,\"skipped_non_g\":212056,\"skipped_no_name\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_wsib_unique_class_g_warn_min\":110000,\"load_wsib_no_name_skip_warn_pct\":1},\"acquired\":{\"record_fields\":{\"local:wsib-business-classification-details\":[\"Legal name\",\"Trade name\",\"Mailing Address\",\"Predominant class\",\"NAICS code\",\"Description\",\"Class/subclass\",\"Business size\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"wsib_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_source_file\",\"value\":\"data/BusinessClassificationDetails(2025).csv\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_unique_class_g\",\"value\":121116,\"threshold\":\"value_min 110000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_no_name_skip_rate\",\"value\":\"0.0%\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_null_address_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_unchanged\",\"value\":120916,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_key_count\",\"value\":12244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:local:wsib-business-classification-details\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":16.9,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":11836,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"wsib_registry\":[\"legal_name\",\"trade_name\",\"legal_name_normalized\",\"trade_name_normalized\",\"mailing_address\",\"predominant_class\",\"naics_code\",\"naics_description\",\"subclass\",\"subclass_description\",\"business_size\",\"is_gta\",\"last_seen_at\",\"last_enriched_at\",\"primary_phone\",\"website\"]},\"external\":[\"local:wsib-business-classification-details\"]}\n\n[load_wsib] completed in 11.8s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2241,
+  "pipeline_runs_max_id_before": 2277,
   "table_state": [
     {
       "table": "wsib_registry",
@@ -170,7 +202,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "wsib_registry": 573
+    "wsib_registry": 464
   },
   "table_specs": {
     "wsib_registry": {
@@ -199,7 +231,7 @@
   },
   "invariants": [],
   "invariants_file": null,
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -216,12 +248,27 @@
     "exit_code": 0,
     "summary": {
       "records_meta": {
+        "acquired": {
+          "record_fields": {
+            "local:wsib-business-classification-details": [
+              "Legal name",
+              "Trade name",
+              "Mailing Address",
+              "Predominant class",
+              "NAICS code",
+              "Description",
+              "Class/subclass",
+              "Business size"
+            ]
+          }
+        },
         "audit_table": {
           "name": "WSIB Registry Ingestion",
-          "phase": 11,
+          "phase": 19,
           "rows": [
             {
               "metric": "wsib_load_skipped",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -229,6 +276,7 @@
             },
             {
               "metric": "wsib_source_file",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -236,6 +284,7 @@
             },
             {
               "metric": "wsib_unique_class_g",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 110000",
@@ -243,6 +292,7 @@
             },
             {
               "metric": "wsib_no_name_skip_rate",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "pct <= 1",
@@ -250,6 +300,7 @@
             },
             {
               "metric": "wsib_null_address_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -257,6 +308,7 @@
             },
             {
               "metric": "records_unchanged",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -264,10 +316,17 @@
             },
             {
               "metric": "duplicate_key_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 12244
+            },
+            {
+              "metric": "schema_drift:local:wsib-business-classification-details",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+              "value": "no_baseline: the prior run recorded no record_fields"
             }
           ],
           "verdict": "PASS"
@@ -279,6 +338,7 @@
           "load_wsib_no_name_skip_warn_pct": 1,
           "load_wsib_unique_class_g_warn_min": 110000
         },
+        "errors": [],
         "gate": {
           "gated_skip": false,
           "reason": "loaded"
@@ -286,6 +346,7 @@
         "ledger_row": "chain_owned",
         "pool_errors": 0,
         "terminal": "loaded",
+        "warnings": [],
         "wsib_load": {
           "records_inserted": 0,
           "records_updated": 200,
@@ -320,7 +381,10 @@
             "subclass_description",
             "business_size",
             "is_gta",
-            "last_seen_at"
+            "last_seen_at",
+            "last_enriched_at",
+            "primary_phone",
+            "website"
           ]
         }
       }
@@ -328,7 +392,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_wsib] target: load_wsib (descriptor.database) → database=postgres user=postgres migrations=245 (floor 66)\",\"tag\":\"[load_wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_wsib] target: load_wsib (descriptor.database) → database=postgres user=postgres migrations=247 (floor 66)\",\"tag\":\"[load_wsib]\"}",
       "{\"level\":\"INFO\",\"msg\":\"acquired 345416 feature(s) (64164918 bytes, md5 9fc9adbf…)\",\"tag\":\"[load_wsib]\"}",
       "[load_wsib] completed in <DUR>"
     ],
@@ -374,19 +438,19 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [wsib_registry]",
-    "txid_before_run2": 3058822,
+    "txid_before_run2": 3190272,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "loaded"
     }
   },
-  "source_fingerprint": "afbdfe84c68dc5d12be734cd280d30c67107f75a4c747e25a00c9b6bde5ee8db",
+  "source_fingerprint": "f1517695b7741dd3a14ba2a637c17dfb3ad8f76ffbb693842826b6a4825a3ef4",
   "fingerprint_files": [
     "scripts/lib/compute/load-wsib.js",
     "scripts/load-wsib.descriptor.json",
     "scripts/load-wsib.js",
     "scripts/load-wsib.notes.json"
   ],
-  "lib_fingerprint": "1962e41bd0c68174440cfbbbd01bd3d33b1866b391e26bcafa9bef1bbbfa6910"
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

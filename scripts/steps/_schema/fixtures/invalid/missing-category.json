@@ -26,48 +26,39 @@
         {
           "id": "ckan_datastore_api",
           "kind": "http_api",
-          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
-          "cache": "none"
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search"
         },
         {
           "id": "address_points_csv",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "parcels_csv",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "massing_zip",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "ravine_zip",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "heritage_register_zip",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "heritage_hcd_zip",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "centreline_zip",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         },
         {
           "id": "neighbourhoods_geojson",
-          "kind": "http_file",
-          "cache": "none"
+          "kind": "http_file"
         }
       ]
     },
@@ -76,7 +67,6 @@
   },
   "outputs": "none",
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "always",
@@ -84,8 +74,6 @@
       }
     ],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/address-points-csv-drift.js"
@@ -100,15 +88,10 @@
     "schema_drift": "pause"
   },
   "execution": {
-    "budget": "10m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "omit_row",
@@ -120,14 +103,9 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "30s",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "permits": {

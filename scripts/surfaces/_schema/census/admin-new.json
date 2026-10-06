@@ -1742,7 +1742,7 @@
     },
     "inputs": {
       "answer": "contract",
-      "why": "One designed QUERY contract assembles four things server-side: the run ledger, the app_outputs row a surface renders, the descriptor field inputs.reads.steps[].version_pin (a declaration, not a table) and the usage count. The join is computed on the server and drawn as inline SVG; per the §3.2 dependency ruling no graph library is adopted for a ≤120-node pan/zoom DAG.",
+      "why": "One designed QUERY contract assembles four things server-side: the run ledger, the app_outputs row a surface renders, the descriptor field staleness.pins[] (a declaration, not a table; the producer-pin home since registry-truth Phase 3 #7) and the usage count. The join is computed on the server and drawn as inline SVG; per the §3.2 dependency ruling no graph library is adopted for a ≤120-node pan/zoom DAG.",
       "evidence": [
         "docs/reports/2026-09-15-spec126-admin-best-in-class.md §3.2 — the pipeline <-> app_outputs seam, verdict BUILD; inline SVG with a server-computed layered layout rather than react-flow",
         "docs/specs/02-web-admin/126_maxbld_surface_standard.md §6.3.1 — app_outputs.built_at plus the surface's staleness block make freshness a declared property"
@@ -1764,7 +1764,7 @@
         "source_fingerprint",
         "pipeline_run_id",
         "step_slug",
-        "version_pin",
+        "staleness_pins",
         "run_status",
         "run_completed_at",
         "usage_7d"
@@ -2123,7 +2123,7 @@
       }
     ],
     "interpretation": "none",
-    "notes": "Report §1.1 row 22 and §3.2 (the pipeline <-> app_outputs seam, verdict BUILD — 'the one genuinely new join'). Its fourth input is the descriptor field inputs.reads.steps[].version_pin, which is not a table. VERIFIED: neither app_outputs nor usage_events has a CREATE TABLE in migrations/. Per AQ10 the report defers the shape of app_outputs to Specs 127/128 and assumes only that this surface reads whatever the seam turns out to be, so its inclusion here is provisional. Rendered as server-computed inline SVG per AQ6, not react-flow. DESIGNED, NOT MEASURED. guards.rls_class takes ONE value for a surface reading three tables of two different classes (pipeline_runs/app_outputs Class B, usage_events Class A); the mixed posture is stated in the why and rendered per-table in lineage. chain_position for app_outputs is the RULING (end of chain sources, Spec 126 §6.3.1), not a claimed slot — scripts/manifest.json chains.sources has 28 entries and none of them is this step.",
+    "notes": "Report §1.1 row 22 and §3.2 (the pipeline <-> app_outputs seam, verdict BUILD — 'the one genuinely new join'). Its fourth input is the descriptor field staleness.pins[], which is not a table. VERIFIED: neither app_outputs nor usage_events has a CREATE TABLE in migrations/. Per AQ10 the report defers the shape of app_outputs to Specs 127/128 and assumes only that this surface reads whatever the seam turns out to be, so its inclusion here is provisional. Rendered as server-computed inline SVG per AQ6, not react-flow. DESIGNED, NOT MEASURED. guards.rls_class takes ONE value for a surface reading three tables of two different classes (pipeline_runs/app_outputs Class B, usage_events Class A); the mixed posture is stated in the why and rendered per-table in lineage. chain_position for app_outputs is the RULING (end of chain sources, Spec 126 §6.3.1), not a claimed slot — scripts/manifest.json chains.sources has 28 entries and none of them is this step.",
     "x-draft": {
       "shard": "admin-new",
       "files": [],

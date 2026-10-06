@@ -26,7 +26,16 @@
 // ===========================================================================
 
 const PRODUCER_NAME = 'sources:load_heritage';
-const SPEC_VERSION = '1.1'; // L10
+// L10 contract pin — DECLARED in this step's descriptor (staleness.pins, LDG-10 class 3), never a
+// hard-coded const here: declared == executed. Read once at require() time (load-heritage.js precedent);
+// a missing pin throws at load (fail-closed).
+const DESCRIPTOR = require('../../enrich-heritage.descriptor.json');
+const { pinnedEquals } = require('../staleness-pins');
+const PRODUCER_STEP = 'load_heritage';
+const PIN_STAMP = 'records_meta.heritage_load.spec_version';
+/** The producer spec_version this reader halts on anything but (pinnedSpecVersion = the descriptor pin). */
+const pinnedSpecVersion = () => pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP);
+const SPEC_VERSION = pinnedSpecVersion();
 const TAG = '[enrich_heritage]';
 
 /**

@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-massing.js",
   "chain": "none",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -12,7 +12,7 @@
     "records_updated": 0,
     "records_meta": {
       "massing_load": {
-        "duration_ms": 386249,
+        "duration_ms": 260116,
         "features_read": 428184,
         "records_inserted": 0,
         "records_updated": 0,
@@ -33,16 +33,33 @@
         "building_footprints_dead_tuple_ratio_warn_max": 0.1,
         "building_footprints_maintenance_timeout_minutes": 15
       },
+      "acquired": {
+        "record_fields": {
+          "ckan:3d-massing-shapefile-wgs84": [
+            "MIN_HEIGHT",
+            "MAX_HEIGHT",
+            "AVG_HEIGHT",
+            "HEIGHT_MSL",
+            "SURF_ELEV",
+            "HEIGHT_SRC",
+            "BLDG_SRC",
+            "LONGITUDE",
+            "LATITUDE"
+          ]
+        }
+      },
       "terminal": "loaded",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "f9063dcecd837216c7e009e4d86451d0593114c4",
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
       "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
-        "phase": 7,
+        "phase": 15,
         "name": "Building Footprints Ingestion",
         "verdict": "PASS",
         "rows": [
@@ -51,116 +68,144 @@
             "value": 428184,
             "threshold": "value_min 400000",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "records_inserted",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "records_updated",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "records_unchanged",
             "value": 427077,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "features_skipped",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "skip_rate_pct",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "batch_errors",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "batch_error_rate_pct",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "duplicate_key_count",
             "value": 1107,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "invalid_geometry_stored",
             "value": 17,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "building_footprints_foreign_key_space_rows",
             "value": 0,
             "threshold": "value_max 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "footprint_area_null_count",
             "value": 0,
             "threshold": "value_max 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "geom_null_count",
             "value": 0,
             "threshold": "value_max 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
+          },
+          {
+            "metric": "empty_source_guard",
+            "value": {
+              "table": "building_footprints",
+              "rows_acquired": 427077
+            },
+            "threshold": "guards.empty_source: an INGESTOR never writes from an empty source",
+            "status": "INFO"
+          },
+          {
+            "metric": "schema_drift:ckan:3d-massing-shapefile-wgs84",
+            "value": "no_baseline: the prior run recorded no record_fields",
+            "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+            "status": "INFO"
           },
           {
             "metric": "sys_building_footprints_foreign_key_space_rows_duration_ms",
-            "value": 184,
+            "value": 204,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_footprint_area_null_count_duration_ms",
-            "value": 152,
+            "value": 245,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_geom_null_count_duration_ms",
-            "value": 154,
+            "value": 649,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_maintenance_building_footprints_vacuum_analyze",
-            "value": 0.011,
+            "value": 0.0169,
             "threshold": 0.1,
             "status": "INFO",
-            "note": "skipped — dead_ratio 0.011 <= 0.1"
+            "note": "skipped — dead_ratio 0.0169 <= 0.1"
           },
           {
             "metric": "sys_velocity_rows_sec",
@@ -170,7 +215,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 386488,
+            "value": 260848,
             "threshold": null,
             "status": "INFO"
           }
@@ -195,7 +240,8 @@
           "centroid_lat",
           "centroid_lng",
           "geom",
-          "created_at"
+          "created_at",
+          "id"
         ]
       },
       "external": [
@@ -208,16 +254,16 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[massing]\",\"msg\":\"[massing] target: massing (descriptor.database) → database=postgres user=postgres migrations=245 (floor 227)\"}\n{\"level\":\"INFO\",\"tag\":\"[massing]\",\"msg\":\"acquired 428184 feature(s) (81415175 bytes, md5 3c05e84d…)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"massing_load\":{\"duration_ms\":386249,\"features_read\":428184,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":427077,\"features_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_building_footprints_floor\":400000,\"massing_skip_rate_max_pct\":5,\"massing_batch_error_rate_max_pct\":1,\"massing_story_height_m\":3,\"massing_download_timeout_ms\":60000,\"building_footprints_dead_tuple_ratio_warn_max\":0.1,\"building_footprints_maintenance_timeout_minutes\":15},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":7,\"name\":\"Building Footprints Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"features_read_floor\",\"value\":428184,\"threshold\":\"value_min 400000\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"records_inserted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"records_updated\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"records_unchanged\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"features_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"batch_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"batch_error_rate_pct\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"duplicate_key_count\",\"value\":1107,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"invalid_geometry_stored\",\"value\":17,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"building_footprints_foreign_key_space_rows\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"footprint_area_null_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"geom_null_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"sys_building_footprints_foreign_key_space_rows_duration_ms\",\"value\":184,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_footprint_area_null_count_duration_ms\",\"value\":152,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_null_count_duration_ms\",\"value\":154,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_maintenance_building_footprints_vacuum_analyze\",\"value\":0.011,\"threshold\":0.1,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0.011 <= 0.1\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":386488,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"building_footprints\":[\"source_id\",\"geometry\",\"footprint_area_sqm\",\"footprint_area_sqft\",\"max_height_m\",\"min_height_m\",\"elev_z\",\"estimated_stories\",\"centroid_lat\",\"centroid_lng\",\"geom\",\"created_at\"]},\"external\":[\"ckan:3d-massing-shapefile-wgs84\"]}\n\n[massing] completed in 386.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[massing]\",\"msg\":\"[massing] target: massing (descriptor.database) → database=postgres user=postgres migrations=247 (floor 227)\"}\n{\"level\":\"INFO\",\"tag\":\"[massing]\",\"msg\":\"acquired 428184 feature(s) (81415175 bytes, md5 3c05e84d…)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"massing_load\":{\"duration_ms\":260116,\"features_read\":428184,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":427077,\"features_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_building_footprints_floor\":400000,\"massing_skip_rate_max_pct\":5,\"massing_batch_error_rate_max_pct\":1,\"massing_story_height_m\":3,\"massing_download_timeout_ms\":60000,\"building_footprints_dead_tuple_ratio_warn_max\":0.1,\"building_footprints_maintenance_timeout_minutes\":15},\"acquired\":{\"record_fields\":{\"ckan:3d-massing-shapefile-wgs84\":[\"MIN_HEIGHT\",\"MAX_HEIGHT\",\"AVG_HEIGHT\",\"HEIGHT_MSL\",\"SURF_ELEV\",\"HEIGHT_SRC\",\"BLDG_SRC\",\"LONGITUDE\",\"LATITUDE\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":15,\"name\":\"Building Footprints Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"features_read_floor\",\"value\":428184,\"threshold\":\"value_min 400000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_inserted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_updated\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_unchanged\",\"value\":427077,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"features_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"batch_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"batch_error_rate_pct\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_key_count\",\"value\":1107,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"invalid_geometry_stored\",\"value\":17,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"building_footprints_foreign_key_space_rows\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"footprint_area_null_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geom_null_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"building_footprints\",\"rows_acquired\":427077},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:3d-massing-shapefile-wgs84\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_building_footprints_foreign_key_space_rows_duration_ms\",\"value\":204,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_footprint_area_null_count_duration_ms\",\"value\":245,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_null_count_duration_ms\",\"value\":649,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_maintenance_building_footprints_vacuum_analyze\",\"value\":0.0169,\"threshold\":0.1,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0.0169 <= 0.1\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":260848,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"building_footprints\":[\"source_id\",\"geometry\",\"footprint_area_sqm\",\"footprint_area_sqft\",\"max_height_m\",\"min_height_m\",\"elev_z\",\"estimated_stories\",\"centroid_lat\",\"centroid_lng\",\"geom\",\"created_at\",\"id\"]},\"external\":[\"ckan:3d-massing-shapefile-wgs84\"]}\n\n[massing] completed in 260.9s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2231,
+      "id": 2325,
       "pipeline": "massing",
       "status": "completed",
-      "started_at": "2026-10-02T21:38:03.354Z",
-      "completed_at": "2026-10-02T21:44:29.777Z",
-      "duration_ms": 386488,
+      "started_at": "2026-10-06T12:26:41.920Z",
+      "completed_at": "2026-10-06T12:31:02.728Z",
+      "duration_ms": 260856,
       "records_total": 0,
       "records_new": 0,
       "records_updated": 0,
@@ -235,8 +281,25 @@
           "building_footprints_dead_tuple_ratio_warn_max": 0.1,
           "building_footprints_maintenance_timeout_minutes": 15
         },
-        "code_sha": "f9063dcecd837216c7e009e4d86451d0593114c4",
+        "errors": [],
+        "acquired": {
+          "record_fields": {
+            "ckan:3d-massing-shapefile-wgs84": [
+              "MIN_HEIGHT",
+              "MAX_HEIGHT",
+              "AVG_HEIGHT",
+              "HEIGHT_MSL",
+              "SURF_ELEV",
+              "HEIGHT_SRC",
+              "BLDG_SRC",
+              "LONGITUDE",
+              "LATITUDE"
+            ]
+          }
+        },
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
         "terminal": "loaded",
+        "warnings": [],
         "ledger_row": "owned",
         "audit_table": {
           "name": "Building Footprints Ingestion",
@@ -246,6 +309,7 @@
               "metric": "features_read_floor",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_min 400000"
             },
             {
@@ -253,6 +317,7 @@
               "metric": "records_inserted",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -260,6 +325,7 @@
               "metric": "records_updated",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -267,6 +333,7 @@
               "metric": "records_unchanged",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -274,6 +341,7 @@
               "metric": "features_skipped",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -281,6 +349,7 @@
               "metric": "skip_rate_pct",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -288,6 +357,7 @@
               "metric": "batch_errors",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -295,6 +365,7 @@
               "metric": "batch_error_rate_pct",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -302,6 +373,7 @@
               "metric": "duplicate_key_count",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -309,6 +381,7 @@
               "metric": "invalid_geometry_stored",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -316,6 +389,7 @@
               "metric": "building_footprints_foreign_key_space_rows",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 0"
             },
             {
@@ -323,6 +397,7 @@
               "metric": "footprint_area_null_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 0"
             },
             {
@@ -330,29 +405,45 @@
               "metric": "geom_null_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "value_max 0"
             },
             {
-              "value": 184,
+              "value": {
+                "table": "building_footprints",
+                "rows_acquired": 427077
+              },
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source: an INGESTOR never writes from an empty source"
+            },
+            {
+              "value": "no_baseline: the prior run recorded no record_fields",
+              "metric": "schema_drift:ckan:3d-massing-shapefile-wgs84",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header"
+            },
+            {
+              "value": 204,
               "metric": "sys_building_footprints_foreign_key_space_rows_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 152,
+              "value": 245,
               "metric": "sys_footprint_area_null_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 154,
+              "value": 649,
               "metric": "sys_geom_null_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "note": "skipped — dead_ratio 0.011 <= 0.1",
-              "value": 0.011,
+              "note": "skipped — dead_ratio 0.0169 <= 0.1",
+              "value": 0.0169,
               "metric": "sys_maintenance_building_footprints_vacuum_analyze",
               "status": "INFO",
               "threshold": 0.1
@@ -364,20 +455,20 @@
               "threshold": null
             },
             {
-              "value": 386488,
+              "value": 260848,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
-          "phase": 7,
+          "phase": 15,
           "verdict": "PASS"
         },
         "pool_errors": 0,
         "chain_run_id": null,
         "massing_load": {
           "errors": 0,
-          "duration_ms": 386249,
+          "duration_ms": 260116,
           "features_read": 428184,
           "records_updated": 0,
           "features_skipped": 0,
@@ -391,7 +482,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2230,
+  "pipeline_runs_max_id_before": 2324,
   "table_state": [
     {
       "table": "building_footprints",
@@ -420,7 +511,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "building_footprints": 12219
+    "building_footprints": 8751
   },
   "table_specs": {
     "building_footprints": {
@@ -475,7 +566,7 @@
     }
   ],
   "invariants_file": "docs/reports/golden/massing/invariants.json",
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -503,12 +594,28 @@
     "exit_code": 0,
     "summary": {
       "records_meta": {
+        "acquired": {
+          "record_fields": {
+            "ckan:3d-massing-shapefile-wgs84": [
+              "MIN_HEIGHT",
+              "MAX_HEIGHT",
+              "AVG_HEIGHT",
+              "HEIGHT_MSL",
+              "SURF_ELEV",
+              "HEIGHT_SRC",
+              "BLDG_SRC",
+              "LONGITUDE",
+              "LATITUDE"
+            ]
+          }
+        },
         "audit_table": {
           "name": "Building Footprints Ingestion",
-          "phase": 7,
+          "phase": 15,
           "rows": [
             {
               "metric": "features_read_floor",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 400000",
@@ -516,6 +623,7 @@
             },
             {
               "metric": "records_inserted",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -523,6 +631,7 @@
             },
             {
               "metric": "records_updated",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -530,6 +639,7 @@
             },
             {
               "metric": "records_unchanged",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -537,6 +647,7 @@
             },
             {
               "metric": "features_skipped",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -544,6 +655,7 @@
             },
             {
               "metric": "skip_rate_pct",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -551,6 +663,7 @@
             },
             {
               "metric": "batch_errors",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -558,6 +671,7 @@
             },
             {
               "metric": "batch_error_rate_pct",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -565,6 +679,7 @@
             },
             {
               "metric": "duplicate_key_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -572,6 +687,7 @@
             },
             {
               "metric": "invalid_geometry_stored",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -579,6 +695,7 @@
             },
             {
               "metric": "building_footprints_foreign_key_space_rows",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "value_max 0",
@@ -586,6 +703,7 @@
             },
             {
               "metric": "footprint_area_null_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "value_max 0",
@@ -593,10 +711,26 @@
             },
             {
               "metric": "geom_null_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "value_max 0",
               "value": 0
+            },
+            {
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source: an INGESTOR never writes from an empty source",
+              "value": {
+                "rows_acquired": 427077,
+                "table": "building_footprints"
+              }
+            },
+            {
+              "metric": "schema_drift:ckan:3d-massing-shapefile-wgs84",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+              "value": "no_baseline: the prior run recorded no record_fields"
             }
           ],
           "verdict": "PASS"
@@ -613,6 +747,7 @@
           "massing_story_height_m": 3,
           "sources_building_footprints_floor": 400000
         },
+        "errors": [],
         "gate": {
           "gated_skip": false,
           "reason": "loaded"
@@ -627,7 +762,8 @@
           "records_updated": 0
         },
         "pool_errors": 0,
-        "terminal": "loaded"
+        "terminal": "loaded",
+        "warnings": []
       },
       "records_new": 0,
       "records_total": 0,
@@ -653,7 +789,8 @@
             "centroid_lat",
             "centroid_lng",
             "geom",
-            "created_at"
+            "created_at",
+            "id"
           ]
         }
       }
@@ -664,12 +801,28 @@
         "error_message": null,
         "pipeline": "massing",
         "records_meta": {
+          "acquired": {
+            "record_fields": {
+              "ckan:3d-massing-shapefile-wgs84": [
+                "MIN_HEIGHT",
+                "MAX_HEIGHT",
+                "AVG_HEIGHT",
+                "HEIGHT_MSL",
+                "SURF_ELEV",
+                "HEIGHT_SRC",
+                "BLDG_SRC",
+                "LONGITUDE",
+                "LATITUDE"
+              ]
+            }
+          },
           "audit_table": {
             "name": "Building Footprints Ingestion",
-            "phase": 7,
+            "phase": 15,
             "rows": [
               {
                 "metric": "features_read_floor",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "value_min 400000",
@@ -677,6 +830,7 @@
               },
               {
                 "metric": "records_inserted",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -684,6 +838,7 @@
               },
               {
                 "metric": "records_updated",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -691,6 +846,7 @@
               },
               {
                 "metric": "records_unchanged",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -698,6 +854,7 @@
               },
               {
                 "metric": "features_skipped",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -705,6 +862,7 @@
               },
               {
                 "metric": "skip_rate_pct",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -712,6 +870,7 @@
               },
               {
                 "metric": "batch_errors",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -719,6 +878,7 @@
               },
               {
                 "metric": "batch_error_rate_pct",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -726,6 +886,7 @@
               },
               {
                 "metric": "duplicate_key_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -733,6 +894,7 @@
               },
               {
                 "metric": "invalid_geometry_stored",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -740,6 +902,7 @@
               },
               {
                 "metric": "building_footprints_foreign_key_space_rows",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "value_max 0",
@@ -747,6 +910,7 @@
               },
               {
                 "metric": "footprint_area_null_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "value_max 0",
@@ -754,10 +918,26 @@
               },
               {
                 "metric": "geom_null_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "value_max 0",
                 "value": 0
+              },
+              {
+                "metric": "empty_source_guard",
+                "status": "INFO",
+                "threshold": "guards.empty_source: an INGESTOR never writes from an empty source",
+                "value": {
+                  "rows_acquired": 427077,
+                  "table": "building_footprints"
+                }
+              },
+              {
+                "metric": "schema_drift:ckan:3d-massing-shapefile-wgs84",
+                "status": "INFO",
+                "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+                "value": "no_baseline: the prior run recorded no record_fields"
               }
             ],
             "verdict": "PASS"
@@ -774,6 +954,7 @@
             "massing_story_height_m": 3,
             "sources_building_footprints_floor": 400000
           },
+          "errors": [],
           "gate": {
             "gated_skip": false,
             "reason": "loaded"
@@ -788,7 +969,8 @@
             "records_updated": 0
           },
           "pool_errors": 0,
-          "terminal": "loaded"
+          "terminal": "loaded",
+          "warnings": []
         },
         "records_new": 0,
         "records_total": 0,
@@ -797,7 +979,7 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[massing] target: massing (descriptor.database) → database=postgres user=postgres migrations=245 (floor 227)\",\"tag\":\"[massing]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[massing] target: massing (descriptor.database) → database=postgres user=postgres migrations=247 (floor 227)\",\"tag\":\"[massing]\"}",
       "{\"level\":\"INFO\",\"msg\":\"acquired 428184 feature(s) (81415175 bytes, md5 3c05e84d…)\",\"tag\":\"[massing]\"}",
       "[massing] completed in <DUR>"
     ],
@@ -869,19 +1051,19 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [building_footprints]",
-    "txid_before_run2": 3055867,
+    "txid_before_run2": 3231330,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "loaded"
     }
   },
-  "source_fingerprint": "786d4d8a39477598b52ae3f6acdaa2b91eb3877a7665787289ecaa869971c460",
+  "source_fingerprint": "07af923006804f9430591a078c6454ae06e5800b996e8557af156dbb0bd79b08",
   "fingerprint_files": [
     "scripts/lib/compute/load-massing.js",
     "scripts/load-massing.descriptor.json",
     "scripts/load-massing.js",
     "scripts/load-massing.notes.json"
   ],
-  "lib_fingerprint": "1962e41bd0c68174440cfbbbd01bd3d33b1866b391e26bcafa9bef1bbbfa6910"
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

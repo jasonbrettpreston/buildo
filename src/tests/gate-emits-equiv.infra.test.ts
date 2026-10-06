@@ -197,12 +197,12 @@ describe('gate C — declared emits equals emitted records_meta', () => {
     }
     // The spread-provided keys (config/terminal/dry_run/errors/warnings/gate) are
     // also runner-owned and must be present in the closed set.
-    for (const key of ['gate', 'config', 'terminal', 'dry_run', 'errors', 'warnings']) {
+    for (const key of ['gate', 'config', 'terminal', 'dry_run', 'errors', 'warnings', 'acquired']) {
       expect(set.has(key)).toBe(true);
     }
     // A fixed, closed length so a silent drop is caught (13 -> 14: code_sha,
-    // conversion-simplification item 9).
-    expect(emits.RUNNER_META_KEYS.length).toBe(14);
+    // conversion-simplification item 9; 14 -> 15: acquired, P3-C1 #33 schema_drift baseline).
+    expect(emits.RUNNER_META_KEYS.length).toBe(15);
   });
 
   // -------------------------------------------------------------------------

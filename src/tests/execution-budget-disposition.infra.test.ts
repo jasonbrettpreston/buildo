@@ -14,7 +14,7 @@
 //
 // The measurement that forced it (cloud run 34971921328, main@824ef357, 2026-09-15):
 // `enrich_parcels` declares budget:150m, txn_budget:130m, statement_timeout:75m and
-// step_timeout:180m. Three of the four had NO executor at all — `execution.step_timeout`'s
+// step_timeout:180m (budget/txn_budget since deleted, Phase 3 RE-FREEZE #41). Three of the four had NO executor at all — `execution.step_timeout`'s
 // only reader (`run-chain.js`) reads `scripts/manifest.json`, not the descriptor, and the
 // manifest entry had no `step_timeout_minutes` key (so `|| 0` => INERT, per run-chain's own
 // docblock). The declarations read as enforcement to every reader and enforced nothing; the
@@ -53,8 +53,9 @@ const SPEC124_PATH = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_stand
 const WORKFLOW_PATH = path.join(REPO_ROOT, '.github/workflows/chain-sources.yml');
 const LOGIC_VARS_PATH = path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json');
 
-/** The four `execution.*` fields whose value is a `duration` in step.schema.json. */
-const DURATION_KEYS = ['budget', 'txn_budget', 'statement_timeout', 'step_timeout'] as const;
+/** The two remaining `execution.*` fields whose value is a `duration` in step.schema.json
+ *  (budget/txn_budget deleted in the Phase 3 RE-FREEZE, DELETE row #41). */
+const DURATION_KEYS = ['statement_timeout', 'step_timeout'] as const;
 
 /**
  * The registry's first NON-duration row (INGESTOR prerequisite 0q, 2026-09-24):
@@ -200,7 +201,7 @@ describe('execution-budget-disposition (Spec 124 R-X) — every execution.* dura
   it('(4) every `descriptive` row is named in Spec 124\'s own R-X disposition table — a spec reader learns the declaration is inert, not only a reader of this file', () => {
     const spec = fs.readFileSync(SPEC124_PATH, 'utf8');
     const descriptive = Object.entries(registry.declarations).filter(([, r]) => r.disposition === 'descriptive');
-    expect(descriptive.length, 'budget and txn_budget are the two measured-inert declarations this WF3 dispositioned').toBe(2);
+    expect(descriptive.length, 'budget and txn_budget — the only descriptive rows — were deleted in the Phase 3 RE-FREEZE (DELETE row #41); a future descriptive row must still be named in Spec 124').toBe(0);
     for (const [key] of descriptive) {
       expect(spec, `Spec 124 never names execution.${key} as descriptive — the disposition lives only in a JSON file no reader of the policy will open`).toMatch(
         new RegExp(`execution\\.${key}[^\\n]*descriptive|descriptive[^\\n]*execution\\.${key}`),
@@ -218,7 +219,7 @@ describe('execution-budget-disposition (Spec 124 R-X) — every execution.* dura
     const descriptive = Object.entries(registry.declarations)
       .filter(([, r]) => r.disposition === 'descriptive')
       .map(([k]) => k);
-    expect(descriptive.length, 'at least one descriptive row, or this arm proves nothing').toBeGreaterThan(0);
+    // Vacuous since the Phase 3 RE-FREEZE deleted budget/txn_budget (#41): the refutation below re-arms the moment a descriptive row is added.
 
     // Every .js under scripts/lib, recursively — the runner library is where an executor
     // for an `execution.*` field would have to live (that is where every other one lives).

@@ -1,0 +1,39 @@
+{
+  "wf": "registry-truth fold 19 MQ-B1 (a) — execution.batch_why",
+  "date": "2026-10-05",
+  "phase": "RED",
+  "method": "node replication of src/tests/mq-b1-batch-why.logic.test.ts case 3 (two-target INGESTOR, batch none, no batch_why) against the PRE-EDIT asm schema backup, and case 6 against the HEAD (pre-seat-B) descriptors — no in-tree file swap (seat B was syncing the asm tree)",
+  "result": {
+    "pre-edit": {
+      "case3_refused_for_batch_why": false,
+      "head_descriptors": {
+        "load-heritage": {
+          "batch": 1000,
+          "has_why": false,
+          "missing_batch_why_error": false
+        },
+        "load-zoning": {
+          "batch": 1000,
+          "has_why": false,
+          "missing_batch_why_error": false
+        }
+      }
+    },
+    "current": {
+      "case3_refused_for_batch_why": true,
+      "head_descriptors": {
+        "load-heritage": {
+          "batch": 1000,
+          "has_why": false,
+          "missing_batch_why_error": false
+        },
+        "load-zoning": {
+          "batch": 1000,
+          "has_why": false,
+          "missing_batch_why_error": false
+        }
+      }
+    }
+  },
+  "reading": "pre-edit schema does NOT refuse case 3 (red); current schema refuses it (green). HEAD load_heritage/load_zoning carry batch 1000 and no batch_why, so case 6 is red on HEAD."
+}

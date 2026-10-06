@@ -79,7 +79,6 @@ const NOTES_PROSE_BLOCKS = [
   'expected', 'known_normal', 'known_bad', 'do_not_reflag', 'how_to_investigate', 'limitations',
 ];
 const NOTES_MEASURED_EXEMPT = new Set(['decisions']);
-const NOTES_CAP = 12;
 
 // ⚠️ #183 partial — the inline fixtures below were reviewed on this date. The max-age assertion
 // goes red 180 days later BY DESIGN (Spec 120 §15.5: ">180 days without review fails").
@@ -122,7 +121,7 @@ interface Descriptor {
   checks: Check[];
   emits: Array<{ key: string; consumers: string[] }>;
   deviations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   database: { min_migration: number | 'none' };
   counters: unknown;
   config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }>; probe_presence?: string[] };
@@ -710,17 +709,7 @@ const FENCES: Fence[] = [
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4–§3.4b) — the notes.json seven ────────────────
 
-  it('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
-    const d = loadDescriptor();
-    const notes = loadNotes();
-    expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none" (commit-6 decision)').not.toBe('none');
-    const interp = d.interpretation as { file: string; entries: number };
-    const entries = notesEntries(notes);
-    expect(entries.length, 'prose entries across the capped blocks').toBeLessThanOrEqual(NOTES_CAP);
-    expect(entries.length, 'interpretation.entries must equal the real prose count').toBe(interp.entries);
-    // the 13th: the schema itself is the build failure
-    expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
-  });
+  // #30 retired (Phase 3 RE-FREEZE): interpretation.entries is deleted; the <=12 prose cap is ONE notes-file check — step-validate fast invariant #45 NOTES-CAP (scripts/analysis/gates/notes-cap.mjs).
 
   it('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
     const d = loadDescriptor();

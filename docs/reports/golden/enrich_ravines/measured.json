@@ -1,0 +1,67 @@
+{
+  "entries": {
+    "ravine_sign_flag_agree_flagged_side": {
+      "value": 0,
+      "cost_ms": 2437,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_sign_flag_agree_unflagged_side": {
+      "value": 0,
+      "cost_ms": 3131,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_flag_true_distance_null_count": {
+      "value": 0,
+      "cost_ms": 3187,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_distance_m_min_magnitude_observed": {
+      "value": 1470.30059243,
+      "cost_ms": 2356,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_distance_m_max_observed": {
+      "value": 2739.69388118,
+      "cost_ms": 2175,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_dataset_version_distinct_count": {
+      "value": 1,
+      "cost_ms": 2437,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    },
+    "ravine_distance_m_collapse_floor": {
+      "value": 2739.69388118,
+      "cost_ms": 2375,
+      "at": "2026-10-05T18:17:32.857Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2276",
+      "chain": null,
+      "sample_n": 2
+    }
+  }
+}

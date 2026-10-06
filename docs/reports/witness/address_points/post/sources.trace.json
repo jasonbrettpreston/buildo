@@ -2,21 +2,47 @@
   "trace_version": 1,
   "step": "scripts/load-address-points.js",
   "chain": "sources",
-  "source_fingerprint": "f175c542aca08d1dade96bfa785ac9a964f2e46b73bc534fd4754bbf95717341",
-  "git_head": "7e852a7ae07d403d281445edc6d81291ad39dd67",
+  "source_fingerprint": "c4e3dd51837c4fc9ae1689677bd5b14ad837a2abe3f9512e4ddf64c7ec0333bc",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 146,
-    "distinct": 14,
+    "calls": 158,
+    "distinct": 17,
     "utility": 8,
-    "tracer_self_ms": 10985.902,
-    "wall_ms": 255464
+    "tracer_self_ms": 4552.474,
+    "wall_ms": 106735
   },
   "statements": [
     {
-      "fingerprint": "4884acb6d09f0c44",
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "68563e108d423a94",
       "kind": "write",
-      "count": 129,
+      "count": 137,
       "rowCount": 200,
       "reads": {
         "address_points": [
@@ -54,43 +80,18 @@
           "lo_num",
           "longitude",
           "maint_stage",
-          "place_name"
+          "place_name",
+          "retired_at"
         ]
       },
       "excluded": [],
       "error": null
     },
     {
-      "fingerprint": "5eebf4a9ff6d7782",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pg_class",
-        "pg_policy",
-        "pg_roles"
-      ],
-      "error": null
-    },
-    {
-      "fingerprint": "6652815a6eb5fa63",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "schema_migrations"
-      ],
-      "error": null
-    },
-    {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -110,6 +111,21 @@
       "count": 1,
       "rowCount": 1,
       "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "78729d6f7e0196ce",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "retired_at"
+        ]
+      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -138,12 +154,31 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 5,
       "reads": {},
       "writes": {},
       "excluded": [
         "logic_variables"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "8b9dda5a2430e883",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "retired_at"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
       "error": null
     },
     {
@@ -182,7 +217,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -209,13 +244,34 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "e91c517f196ee56c",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "retired_at"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
     }
   ],
   "transactions": [
     {
-      "client": "7824:3",
+      "client": "24420:3",
       "write_fingerprints": [
-        "4884acb6d09f0c44"
+        "68563e108d423a94",
+        "8b9dda5a2430e883",
+        "e91c517f196ee56c"
       ]
     }
   ],
@@ -238,7 +294,8 @@
         "lo_num",
         "longitude",
         "maint_stage",
-        "place_name"
+        "place_name",
+        "retired_at"
       ]
     },
     "writes": {
@@ -258,7 +315,8 @@
         "lo_num",
         "longitude",
         "maint_stage",
-        "place_name"
+        "place_name",
+        "retired_at"
       ]
     }
   },

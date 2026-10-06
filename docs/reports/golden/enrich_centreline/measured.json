@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "centreline_corner_or_through_has_frontage": {
+      "value": 0,
+      "cost_ms": 904,
+      "at": "2026-10-05T19:25:20.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 3
+    },
+    "centreline_corner_share_min_pct": {
+      "value": 11.2569963485053,
+      "cost_ms": 1472,
+      "at": "2026-10-05T19:25:20.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 3
+    },
+    "centreline_corner_share_max_pct": {
+      "value": 11.2569963485053,
+      "cost_ms": 1527,
+      "at": "2026-10-05T19:25:20.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 3
+    },
+    "centreline_through_share_min_pct": {
+      "value": 1.00481562267753,
+      "cost_ms": 1531,
+      "at": "2026-10-05T19:25:20.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 3
+    },
+    "centreline_through_share_max_pct": {
+      "value": 1.00481562267753,
+      "cost_ms": 1531,
+      "at": "2026-10-05T19:25:20.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 3
+    }
+  }
+}

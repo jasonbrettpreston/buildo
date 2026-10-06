@@ -1,0 +1,225 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-global-coverage.js",
+  "chain": "sources",
+  "source_fingerprint": "ad6782e33af8c77a7421a22e56c1f8d36a2f855096470ad7578b5cb3bd667566",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 14,
+    "distinct": 13,
+    "utility": 5,
+    "tracer_self_ms": 25.574,
+    "wall_ms": 59716
+  },
+  "statements": [
+    {
+      "fingerprint": "53b78482f868c474",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "bylaw_max_fsi",
+          "comp_count",
+          "cost_fb_total",
+          "envelope_constrained",
+          "max_build_stories",
+          "max_buildable_footprint_sqm",
+          "max_buildable_gfa_sqm",
+          "neighbourhood_id",
+          "opt_aor_gfa_sqm",
+          "opt_coa_gfa_sqm",
+          "opt_config_confidence",
+          "zoning_class",
+          "zoning_enriched_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "58f973d675766114",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 11,
+      "reads": {
+        "parcels": [
+          "envelope_constraint_reason"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 20,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9b82c3a0b4c1d4c3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "id",
+          "parcel_cost_menu",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b30b7cb45525982e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "id",
+          "max_build_stories",
+          "max_buildable_footprint_sqm",
+          "max_buildable_gfa_sqm",
+          "opt_aor_gfa_sqm",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "parcel_buildings": [
+        "parcel_id"
+      ],
+      "parcels": [
+        "bylaw_max_fsi",
+        "comp_count",
+        "cost_fb_total",
+        "envelope_constrained",
+        "envelope_constraint_reason",
+        "id",
+        "max_build_stories",
+        "max_buildable_footprint_sqm",
+        "max_buildable_gfa_sqm",
+        "neighbourhood_id",
+        "opt_aor_gfa_sqm",
+        "opt_coa_gfa_sqm",
+        "opt_config_confidence",
+        "parcel_cost_menu",
+        "zoning_class",
+        "zoning_enriched_at"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

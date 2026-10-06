@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "none",
-  "source_fingerprint": "accb5384e6dc05b338bb25145184130111ec4c2903a007a91e5645e5d4cee483",
-  "git_head": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
+  "source_fingerprint": "53ef7ad75616c8aaff7688181fbf69fe9546f33919856cf68f6adb397c7020f8",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 49,
-    "distinct": 32,
-    "utility": 14,
-    "tracer_self_ms": 22.312,
-    "wall_ms": 59946
+    "calls": 54,
+    "distinct": 35,
+    "utility": 13,
+    "tracer_self_ms": 16.437,
+    "wall_ms": 432485
   },
   "statements": [
     {
@@ -19,6 +19,35 @@
       "count": 1,
       "rowCount": 1,
       "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "19592461e878698f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_proc",
+        "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "1d68338a42630d9f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": [
+          "from_intersection_id",
+          "to_intersection_id"
+        ]
+      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -43,7 +72,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 2000,
+      "rowCount": 0,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -81,13 +110,13 @@
       "params": [
         [
           "completed",
-          57067,
+          431450,
           null,
-          2254,
-          18048,
+          2290,
+          496509,
           0,
-          2000,
-          "{\"duration_ms\":45767,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":18048,\"parcels_updated\":2000,\"completed_at\":\"2026-10-03T17:35:27.625Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":64,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct >= 90\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 50\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_recomputed\",\"value\":18048,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_enriched_count\",\"value\":2000,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":45767,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":4636,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":6448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":4660,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":4384,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":4378,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":316.26,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":57067,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          0,
+          "{\"duration_ms\":423759,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"2ac6f3990d9925171db071303acb1a7d\",\"mode\":\"full\",\"parcels_updated\":0,\"parcels_with_zero_centreline_intersections_count\":16048,\"parcels_with_zero_centreline_intersections_pct\":3.2299999999999995,\"parcels_is_corner_lot_true_count\":55892,\"parcels_is_through_lot_true_count\":4989,\"parcels_abuts_laneway_true_count\":75824,\"parcels_primary_frontage_resolved_count\":480461,\"parcels_frontage_priority1_name_match_count\":429895,\"parcels_frontage_priority2_addrrange_match_count\":20722,\"parcels_frontage_priority3_nearest_segment_count\":29844,\"parcels_truncated_pair_count\":30,\"completed_at\":\"2026-10-05T19:03:57.060Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":14,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":3.2299999999999995,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":97.9,\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":0,\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":2.0100000000000002,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":55892,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":4989,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":75824,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":480461,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":429895,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":20722,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":29844,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":30,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"full\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_recomputed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"2ac6f3990d9925171db071303acb1a7d\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":423759,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2569963485053,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2569963485053,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00481562267753,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00481562267753,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":2106,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":5374,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":5486,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":5499,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":5396,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1150.79,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":431450,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -100,6 +129,19 @@
       "writes": {},
       "excluded": [
         "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "58b5b1e7c754cb2b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_trigger"
       ],
       "error": null
     },
@@ -144,21 +186,6 @@
       "excluded": [
         "pg_indexes"
       ],
-      "error": null
-    },
-    {
-      "fingerprint": "6fe0fdbe591bd156",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "parcels": [
-          "centreline_dataset_version_when_enriched",
-          "geom"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
       "error": null
     },
     {
@@ -244,39 +271,6 @@
       "error": null
     },
     {
-      "fingerprint": "7e20c68440df3857",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 2000,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "centreline_dataset_version_when_enriched",
-          "geom",
-          "id",
-          "street_name_normalized"
-        ],
-        "toronto_centreline": [
-          "feature_code_desc",
-          "from_intersection_id",
-          "geom",
-          "hi_num_l",
-          "hi_num_r",
-          "id",
-          "linear_name",
-          "linear_name_full",
-          "lo_num_l",
-          "lo_num_r",
-          "parity_l",
-          "parity_r",
-          "to_intersection_id"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "811af1890e340542",
       "kind": "read",
       "count": 2,
@@ -326,8 +320,8 @@
     {
       "fingerprint": "9bfd7f400254e558",
       "kind": "write",
-      "count": 2,
-      "rowCount": 2,
+      "count": 3,
+      "rowCount": 3,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -339,12 +333,7 @@
         [
           "centreline_join",
           0,
-          2254
-        ],
-        [
-          "centreline_join",
-          2000,
-          2254
+          2290
         ]
       ]
     },
@@ -367,7 +356,7 @@
             "enrich_centreline",
             "enrich-centreline"
           ],
-          2254
+          2290
         ]
       ]
     },
@@ -379,16 +368,6 @@
       "reads": {
         "toronto_centreline": []
       },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ae7bf354abe0d81b",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
       "writes": {},
       "excluded": [],
       "error": null
@@ -416,10 +395,26 @@
       "error": null
     },
     {
+      "fingerprint": "b2d013e8bdf1613d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "street_name_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -490,11 +485,55 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "f25ef8a48360ab09",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f5168ad53ef26d36",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
     }
   ],
   "transactions": [
     {
-      "client": "8920:3",
+      "client": "21484:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

@@ -296,6 +296,7 @@
         "6b7690329bd709d9",
         "744a9d5d0bcf67a0",
         "76271c037aa18e2b",
+        "7723324c5dba0278",
         "7df01efcd2c31600",
         "7df285db20b75b80",
         "8cf1e28c4f337491",
@@ -303,7 +304,6 @@
         "930e97bec40491c8",
         "9431ce7b26d8e938",
         "a04dbdd7b1ece2d1",
-        "b0d7a962751e9f40",
         "b8de34d1e2eeb7f2",
         "b9ad9a2ff4c35005",
         "d3acec84b3e31ddd",
@@ -317,7 +317,9 @@
         "fff5f93399b85a85"
       ],
       "reads": {
-        "address_points": [],
+        "address_points": [
+          "retired_at"
+        ],
         "building_footprints": [],
         "coa_applications": [
           "decision",
@@ -556,6 +558,7 @@
           "radius_cap_km",
           "trade_slug",
           "trade_slugs_override",
+          "updated_at",
           "user_id"
         ]
       }
@@ -2354,6 +2357,7 @@
           "coa_linked",
           "coa_low_confidence",
           "coa_total",
+          "created_at",
           "inspections_not_passed_count",
           "inspections_outstanding_count",
           "inspections_passed_count",

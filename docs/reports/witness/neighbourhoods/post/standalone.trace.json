@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-neighbourhoods.js",
   "chain": "none",
-  "source_fingerprint": "3191bad8a7d19797b9407ca927d5e8abfe7d505bd197b546a3e9ba30846a1937",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "069505a60c5847f2e1215af0ee0eb66638bb65eb26941969af651c16d2964610",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 20,
+    "calls": 21,
     "distinct": 17,
     "utility": 7,
-    "tracer_self_ms": 25.317,
-    "wall_ms": 6230
+    "tracer_self_ms": 18.376,
+    "wall_ms": 6868
   },
   "statements": [
     {
@@ -40,13 +40,13 @@
       "params": [
         [
           "completed",
-          5022,
+          5204,
           null,
-          2233,
+          2319,
           0,
           0,
           0,
-          "{\"boundaries_loaded\":158,\"census_rows_matched\":31,\"duration_ms\":4975,\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_neighbourhoods_floor\":158,\"neighbourhoods_download_timeout_ms\":60000,\"neighbourhoods_dead_tuple_ratio_warn_max\":0.3,\"neighbourhoods_maintenance_timeout_minutes\":15},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":9,\"name\":\"Neighbourhood Boundaries\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"boundaries_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"census_rows_matched\",\"value\":31,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"bad_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"duplicate_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"}},{\"metric\":\"boundary_rows_inserted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_maintenance_neighbourhoods_vacuum_analyze\",\"value\":0,\"threshold\":0.3,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0 <= 0.3\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5021,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"boundaries_loaded\":158,\"census_rows_matched\":31,\"duration_ms\":5163,\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_neighbourhoods_floor\":158,\"neighbourhoods_download_timeout_ms\":60000,\"neighbourhoods_dead_tuple_ratio_warn_max\":0.3,\"neighbourhoods_maintenance_timeout_minutes\":15},\"acquired\":{\"record_fields\":{\"ckan:neighbourhoods-4326\":[\"_id\",\"AREA_ID\",\"AREA_ATTR_ID\",\"PARENT_AREA_ID\",\"AREA_SHORT_CODE\",\"AREA_LONG_CODE\",\"AREA_NAME\",\"AREA_DESC\",\"CLASSIFICATION\",\"CLASSIFICATION_CODE\",\"OBJECTID\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":17,\"name\":\"Neighbourhood Boundaries\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"boundaries_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"census_rows_matched\",\"value\":31,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"bad_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"},\"observed\":\"before_write\"},{\"metric\":\"duplicate_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"},\"observed\":\"before_write\"},{\"metric\":\"null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"Pre-write refusals\",\"guarantee\":\"the refusal must land before the write, so neighbourhoods — the FK target of permits and the neighbourhood norms tables — is left untouched, exactly as legacy's abort did.\"},\"observed\":\"before_write\"},{\"metric\":\"boundary_rows_inserted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"neighbourhoods\",\"rows_acquired\":158},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:neighbourhoods-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_maintenance_neighbourhoods_vacuum_analyze\",\"value\":0,\"threshold\":0.3,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0 <= 0.3\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5203,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -149,8 +149,8 @@
     {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -232,7 +232,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -273,7 +273,7 @@
   ],
   "transactions": [
     {
-      "client": "708:2",
+      "client": "10940:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]

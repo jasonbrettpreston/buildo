@@ -363,9 +363,66 @@ describe('per-pass write class / guard / idempotent_rerun (Fold A1/A2 — the co
     expect(t.write_discipline.guard_why).toBeDefined();
     expect(t.write_discipline.idempotent_rerun, 'zero_writes now that the guard is real (Ask 4 ruling, Fold G1 peel 8x)').toBe('zero_writes');
     expect(t.write_discipline.idempotent_rerun_why).toBeDefined();
-    const outputs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string }> };
+    const outputs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string; by?: string }> };
     expect(Array.isArray(outputs.invalidates) && outputs.invalidates.length >= 1, 'claim #54 — an ENRICHER lineage predicate needs ≥1 declared invalidator; Ask 3 ruled option (a), not the schema-exempt option (b)').toBe(true);
-    expect(outputs.invalidates.some((i) => i.table === 'permits'), 'the invalidator must name permits — pass 4 reads permits pr at :1112, the real staleness source for the comps window').toBe(true);
+    expect(outputs.invalidates.some((i) => i.table === 'parcels' && i.column === 'comp_count' && i.by === 'full_rescan'), 'O4 rows 2+8 (fold 14): pass 4 is always full, so its invalidator is the full_rescan row on parcels.comp_count (replaced the permits.issued_date row)').toBe(true);
+  });
+
+  it('claim #54 (phases discriminator, fold 13) — the live descriptor declares an incremental/deferred phase AND ≥1 invalidator; emptying the invalidators REDs the schema', () => {
+    // FOLD 13 / WF1 fold 1d supersedes fold 12 F4's wording: the lock is keyed on
+    // `execution.phases[].scope` (ANY incremental/deferred phase ⇒ `outputs.invalidates`
+    // minItems 1). staleness.scope was DELETED by FLEET-2 Phase 3 (#28)
+    // (staleness.additionalProperties:false now rejects it), so the old step-level #54
+    // arm can no longer fire: the RED clone below empties invalidates and deletes every
+    // invalidator_ref, and the minItems-at-/outputs/invalidates assertion pins the
+    // phases arm. This test deliberately does NOT assert pass 4's own scope value — an
+    // O4 ruling will flip pass 4 to "full"; the rule only needs ANY incremental/deferred
+    // phase to exist, and the assertion below prints which ones do.
+    const d = loadDescriptor();
+    const SCOPES = ['incremental', 'deferred'];
+    const phases = (d.execution as unknown as { phases: Array<{ name: string; scope: string; invalidator_ref?: number }> }).phases;
+    const scoped = phases.filter((p) => SCOPES.includes(p.scope));
+    console.log(`claim #54 phases discriminator (enrich_parcels): ${scoped.map((p) => `${p.name}:${p.scope}`).join(', ')}`);
+    expect(
+      scoped.length,
+      'the live descriptor must declare at least one incremental/deferred phase, or this lock is vacuous',
+    ).toBeGreaterThanOrEqual(1);
+    const invalidates = (d.outputs as unknown as { invalidates: unknown[] }).invalidates;
+    expect(Array.isArray(invalidates) && invalidates.length >= 1, 'the live descriptor must declare ≥1 invalidator (it does, for pass 4 — Ask 3(a))').toBe(true);
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+    const { compileStepSchema } = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js')) as {
+      compileStepSchema: (s: unknown) => ((x: unknown) => boolean) & { errors?: Array<{ instancePath?: string; dataPath?: string; keyword: string }> };
+    };
+    const schema = JSON.parse(readTextToday(SCHEMA_REL)) as unknown;
+    const validate = compileStepSchema(schema);
+    const errPath = (e: { instancePath?: string; dataPath?: string }): string =>
+      e.instancePath && e.instancePath !== ''
+        ? e.instancePath
+        : String(e.dataPath ?? '').replace(/\[(\d+)\]/g, '/$1').replace(/\./g, '/');
+
+    // Control — the LIVE descriptor validates today.
+    expect(validate(d), JSON.stringify(validate.errors, null, 1)).toBe(true);
+
+    // RED direction — invalidates emptied, every phase's invalidator_ref deleted:
+    // claim #54's only surviving arm is the phases discriminator, so a failure here
+    // can only be that arm.
+    const clone = JSON.parse(JSON.stringify(d)) as {
+      outputs: { invalidates: unknown[] };
+      execution: { phases: Array<{ invalidator_ref?: number }> };
+    };
+    clone.outputs.invalidates = [];
+    for (const p of clone.execution.phases) delete p.invalidator_ref;
+    expect(
+      validate(clone),
+      'the phases discriminator must fire — if this validates, claim #54 has no phases arm at all',
+    ).toBe(false);
+    const errors = (validate.errors ?? []) as Array<{ instancePath?: string; dataPath?: string; keyword: string }>;
+    const hit = errors.find((e) => errPath(e) === '/outputs/invalidates' && e.keyword === 'minItems');
+    expect(
+      hit,
+      `expected minItems at "/outputs/invalidates"; got ${errors.map((e) => `${errPath(e)}:${e.keyword}`).join(', ')}`,
+    ).toBeDefined();
   });
 
   it('pass 5 optimal-config — derived_recompute (K), IS DISTINCT FROM ×10 OR nearby_changed; idempotent_rerun:"zero_writes" on ALL 11 OPTCFG cols INCLUDING nearby_builds_summary — Fold A1 CORRECTION: the original split ("nearby_builds_summary" → declared_drift) is WITHDRAWN, golden-master G1\' measured 0/442,244 drift under controlled conditions (flipped at: commit 7b)', () => {
@@ -593,7 +650,12 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
   // the whole parcels table irrespective of scope. The 2026-09-08 PASS was a genuinely
   // DEFERRED run whose post bounds never executed. Same input file name, two different code
   // paths chosen by DB state at capture time — the pin follows the measured capture (R-C).
-  const EXPECTED_POST_VERDICT: Record<string, string> = { sources_run1: 'WARN', none_incremental: 'WARN' };
+  // RE-MEASURED at the FLEET-2 recapture (2026-10-05, run 2313): none_incremental took the DEFER path again
+  // (stderr `enrich defer: combined scope 446723 >= threshold 50000`, ledger_status deferred_to_full) because
+  // 446,683 parcels carry zoning_enriched_at NULL (pass 1 stamps only inside its IS DISTINCT FROM guard, so a
+  // --full never heals an unchanged parcel's stamp — pre-existing, filed in review_followups 2026-10-06).
+  // Deferred ⇒ only 'pre' checks score (enrich_parcels declares none) ⇒ PASS. The pin follows the capture (R-C).
+  const EXPECTED_POST_VERDICT: Record<string, string> = { sources_run1: 'WARN', none_incremental: 'PASS' };
   it('both POST invocations exist under docs/reports/golden/enrich_parcels/post/ — sources_run1 (real --full, the sole behaviour-preservation diff against pre/sources_run1.json) + none_incremental (real, empty-args, satisfies G8\'s own manifest-invocation key coverage without colliding with any pre/*.json filename) — exit 0; sources_run1\'s differential against PRE is accounted for ENTIRELY by the declared non-determinism inventory (a)-(g) + the Fold A1 correction + the EP-D9/EP-D10 pins — zero unexplained diffs (flipped at: commit 2)', () => {
     for (const inv of POST_INVOCATIONS) {
       const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string };
@@ -674,13 +736,13 @@ describe('facts testable today — the live tree, not a future artifact', () => 
     expect(fs.existsSync(abs(COMPUTE_REL)), 'compute (7c) exists on disk').toBe(true);
   });
 
-  it('defect-ledger.md — EP-D1 (PARTIAL, never-refresh half only) carries the PIN (Spec 123 §3.1) status, pinned_until pilot9 commit 9 (already landed, commits 4/4c/5)', () => {
+  it('defect-ledger.md — EP-D1 never-refresh half is RETIRED at FLEET-2 (O4 rows 2+8, fold 14) — the Fold G4 PIN no longer stands', () => {
     const ledger = readTextToday(DEFECT_LEDGER_REL);
     for (const id of ['EP-D1']) {
       const row = ledger.split('\n').find((l) => l.includes(`| ${id} |`));
       expect(row, `${DEFECT_LEDGER_REL} has no row for ${id}`).toBeDefined();
-      expect(row, `${id} row must carry PIN status`).toMatch(/\*\*PIN \(Spec 123 §3\.1\)/);
-      expect(row, `${id} row must state pinned_until: pilot9 commit 9`).toMatch(/pinned_until:\s*pilot9 commit 9/);
+      expect(row, `${id} row must record the never-refresh half RETIRED at FLEET-2`).toMatch(/\*\*RETIRED · FLEET-2 commit\*\*/);
+      expect(row, `${id} row must no longer carry the never-refresh PIN`).not.toMatch(/never-refresh half \*\*PIN/);
     }
   });
 

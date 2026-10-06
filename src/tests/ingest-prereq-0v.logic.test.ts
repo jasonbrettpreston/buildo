@@ -175,7 +175,7 @@ describe('INGESTOR prerequisite 0v — geojson format', () => {
     + 'bad_key_count 2, null_geometry_count 1, rows_parsed 4', async () => {
     const descriptor = clone(LOAD_RAVINES);
     const external = {
-      id: 'x', kind: 'http_file', url: 'http://ex/n.geojson', format: 'geojson', cache: 'none',
+      id: 'x', kind: 'http_file', url: 'http://ex/n.geojson', format: 'geojson',
     };
     const fetchImpl = fetchOf([
       { status: 200 }, // HEAD

@@ -96,7 +96,7 @@
 //   W2 wsib partial index — migration 243 landed on the live schema.
 //
 // T2 fixture discipline: these callers hardcode their OWN/UPSTREAM slug sets as
-// module constants (the massing-full-gate.js IN-list precedent — NOT a
+// module constants (the retired link_massing full-gate IN-list precedent — NOT a
 // violation of "slug sets are always parameters to runLedgerGateDecision",
 // which is about the shared library function, not its callers), so the
 // fixtures below seed pipeline_runs rows under the REAL slug strings and clean

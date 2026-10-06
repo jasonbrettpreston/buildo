@@ -189,6 +189,7 @@ export async function resolveAddress(q: string): Promise<Resolution> {
   // 2) Typeahead on address_points NORMALIZED columns (both btree-indexed; address_full is NOT
   //    indexed and MUST NOT be filtered — Spec 89 Known Failure Modes). Production-correct status
   //    filter: live data is 100% 'None'/NULL — '=CURRENT' alone matches ZERO rows (WF3 hotfix parity).
+  //    Fold 10 item 4 (registry-truth, 2026-10-03): soft-retired points (retired_at set) are excluded.
   // No SQL-fragment assembly (Gemini fold): a single static statement — the optional number is an
   // ($2 IS NULL OR …) bound parameter, so the query text never varies.
   const typeahead = await query<{ parcel_id: string; address: string }>(
@@ -200,6 +201,7 @@ export async function resolveAddress(q: string): Promise<Resolution> {
        AND ($2::text IS NULL OR ap.addr_num_normalized = $2)
        AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
        AND UPPER(ap.maint_stage) = 'REGULAR'
+       AND ap.retired_at IS NULL
      ORDER BY address LIMIT 10`,
     [streetName + '%', num || null],
   );

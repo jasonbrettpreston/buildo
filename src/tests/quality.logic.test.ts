@@ -583,7 +583,9 @@ describe('Pipeline Chains', () => {
     // WF3 #realtor-backfill 2026-05-09: +1 step (backfill_realtor_permit_trades
     // between classify_permits and compute_cost_estimates).
     const permits = PIPELINE_CHAINS.find((c) => c.id === 'permits')!;
-    expect(permits.steps).toHaveLength(33); // +enrich_permits (Spec 66 WF3); +compute_storey_norms (Spec 65 §8 WF3-C1); +compute_build_norms (Spec 78 P1); +dispatch_notifications (P25 25A, after update_tracked_projects)
+    // FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
+    expect(permits.steps).toHaveLength((JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/manifest.json'), 'utf8')) as { chains: Record<string, string[]> }).chains.permits!.length); // UI mirrors the manifest; −link_massing (FLEET-2 2.1)
+    expect(permits.steps.map((s) => s.slug)).not.toContain('link_massing');
     expect(permits!.steps[0]!.slug).toBe('assert_schema');
     expect(permits!.steps[1]!.slug).toBe('permits');
     expect(permits!.steps[permits.steps.length - 1]!.slug).toBe('backup_db');
@@ -596,7 +598,12 @@ describe('Pipeline Chains', () => {
     // classify_lifecycle_phase is unchanged: tail-9 still points to it.
     // tail-10 (was tail-9): dispatch_notifications (P25 25A) inserted between
     // update_tracked_projects and assert_entity_tracing pushed the tail out by 1.
-    expect(permits!.steps[permits.steps.length - 10]!.slug).toBe('classify_lifecycle_phase');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const pAt = (s: string) => permits.steps.findIndex((x) => x.slug === s);
+    expect(pAt('assert_lifecycle_phase_distribution')).toBe(pAt('classify_lifecycle_phase') + 1);
+    expect(pAt('assert_lifecycle_phase_distribution')).toBeLessThan(pAt('assert_data_bounds'));
+    expect(pAt('update_tracked_projects')).toBeLessThan(pAt('refresh_snapshot'));
+    expect(pAt('refresh_snapshot')).toBeLessThan(pAt('dispatch_notifications'));
   });
 
   it('permits chain has link_wsib as indent-1 step (not sub-step)', () => {
@@ -625,7 +632,10 @@ describe('Pipeline Chains', () => {
     expect(coa!.steps[1]!.slug).toBe('coa');
     expect(coa!.steps[coa.steps.length - 1]!.slug).toBe('assert_global_coverage');
     expect(coa!.steps[coa.steps.length - 2]!.slug).toBe('compute_phase_calibration');
-    expect(coa!.steps[coa.steps.length - 3]!.slug).toBe('assert_lifecycle_phase_distribution');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const cAt = (s: string) => coa.steps.findIndex((x) => x.slug === s);
+    const coaOrder = ['classify_lifecycle_phase', 'assert_lifecycle_phase_distribution', 'refresh_snapshot', 'assert_data_bounds', 'assert_engine_health', 'compute_phase_calibration', 'assert_global_coverage'];
+    for (let i = 1; i < coaOrder.length; i++) expect(cAt(coaOrder[i - 1]!), coaOrder[i]).toBeLessThan(cAt(coaOrder[i]!));
   });
 
   it('sources chain includes link_parcel_addresses, WSIB, load_zoning, enrich_parcels, compute_centroids, centreline and assert_engine_health (length derived from manifest)', () => {

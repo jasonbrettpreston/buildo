@@ -77,23 +77,24 @@
     "permits": [
       "assert_schema", "permits", "close_stale_permits", "classify_permit_phase", "classify_scope",
       "builders", "link_wsib", "geocode_permits", "link_parcels", "enrich_permits",
-      "link_neighbourhoods", "link_massing", "link_similar", "classify_permits",
+      "link_neighbourhoods", "link_similar", "classify_permits",
       "compute_storey_norms",
       "compute_build_norms",
       "backfill_realtor_permit_trades",
       "compute_cost_estimates", "compute_timing_calibration_v2",
-      "link_coa", "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
+      "link_coa", "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
+      "assert_data_bounds", "assert_engine_health",
       "compute_phase_calibration",
       "compute_trade_forecasts", "compute_opportunity_scores", "update_tracked_projects",
+      "refresh_snapshot",
       "dispatch_notifications",
       "assert_entity_tracing", "assert_global_coverage",
       "backup_db"
     ],
     "coa": [
       "assert_schema", "coa", "assert_coa_freshness", "link_coa_to_parcels", "enrich_coa_zoning", "classify_coa_scope", "classify_coa_trades", "compute_coa_cost_estimates", "link_coa",
-      "refresh_snapshot", "assert_data_bounds", "assert_engine_health",
-      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution", "compute_phase_calibration", "assert_global_coverage"
+      "classify_lifecycle_phase", "assert_lifecycle_phase_distribution",
+      "refresh_snapshot", "assert_data_bounds", "assert_engine_health", "compute_phase_calibration", "assert_global_coverage"
     ],
     "sources": [
       "reconcile",
@@ -104,8 +105,8 @@
       "link_parcel_addresses",
       "compute_centroids", "link_parcels", "enrich_ravines", "enrich_heritage", "enrich_centreline", "massing", "link_massing",
       "neighbourhoods", "link_neighbourhoods", "load_wsib", "link_wsib",
-      "load_zoning", "enrich_parcels", "compute_parcel_cost_estimates", "assert_global_coverage", "assert_parcel_sanity",
-      "refresh_snapshot", "assert_data_bounds", "assert_engine_health"
+      "load_zoning", "enrich_parcels", "compute_parcel_cost_estimates", "refresh_snapshot", "assert_global_coverage", "assert_parcel_sanity",
+      "assert_data_bounds", "assert_engine_health"
     ],
     "entities": [
       "enrich_wsib_builders", "enrich_named_builders"

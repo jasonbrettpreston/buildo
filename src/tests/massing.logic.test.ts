@@ -470,7 +470,10 @@ describe('link_massing query shape — the B13 guarantee, re-homed to the comput
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
     const { deriveMeta } = require('../../scripts/lib/step/index.js');
     const meta = deriveMeta(LM_DESCRIPTOR()) as { reads: Record<string, string[]>; writes: Record<string, string[]> };
-    expect(Object.keys(meta.writes)).toEqual(['parcel_buildings']);
+    // FLEET-2 O4 row 5 (fold 15): link_massing also writes parcels.massing_enriched_at (the lost-link flag that
+    // re-queues a parcel which only LOST a link for enrich_parcels), so the derived writes block names two tables.
+    expect(Object.keys(meta.writes)).toEqual(['parcel_buildings', 'parcels']);
+    expect(meta.writes.parcels).toEqual(['massing_enriched_at']);
     expect(meta.writes.parcel_buildings!.sort()).toEqual(
       ['building_id', 'confidence', 'is_primary', 'linked_at', 'match_type', 'parcel_id', 'structure_type'],
     );
@@ -584,14 +587,26 @@ describe('link_massing building-centroid-in-parcel (WF3 fix, re-homed)', () => {
     expect(REQUIREMENT_PROBES.index.sql).toMatch(/FROM pg_indexes WHERE indexname = \$1/);
   });
 
-  it('the FULL-mode stale-link cleanup is ONE generated DELETE, scoped to the parcels being re-evaluated', () => {
+  it('the stale-link cleanup is ONE keyed DELETE, scoped to the parcels being re-evaluated (FLEET-2 O4 row 5 re-home)', () => {
+    // RE-HOMED at FLEET-2 O4 row 5 (operator ruling 2026-10-03, folds 14 + 15). The fence (b16c036d) is unchanged: stale
+    // links are removed ONLY for the parcels being re-evaluated. The generated full-mode `retract:"all"` DELETE on writes[1]
+    // is retired. The cleanup is now writes[2], class link_full_retraction, whose keyed DELETE the compute authors
+    // (stale_link_delete_sql), scoped to this batch's parcel ids and to the keys this batch did NOT re-derive.
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS library
     const write = require('../../scripts/lib/step/write.js');
-    const d = LM_DESCRIPTOR() as { outputs: { writes: unknown[] } };
-    const plan = write.buildWritePlan(d.outputs.writes[1], d) as { delete_sql: string };
-    expect(plan.delete_sql).toMatch(/DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
-    expect(write.retractionFires(plan, 'full')).toBe(true);
-    expect(write.retractionFires(plan, 'incremental'), 'an incremental run must never retract').toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const compute = require('../../scripts/lib/compute/link-massing.js');
+    const d = LM_DESCRIPTOR() as { outputs: { writes: Array<{ table: string; retract: string; write_discipline: { class: string } }> } };
+    const upsertPlan = write.buildWritePlan(d.outputs.writes[1], d) as { delete_sql: string | null };
+    expect(d.outputs.writes[1]!.retract, 'the mass retraction on the upsert target is retired').toBe('none');
+    expect(upsertPlan.delete_sql).toBeNull();
+    expect(write.retractionFires(upsertPlan, 'full')).toBe(false);
+    expect(write.retractionFires(upsertPlan, 'incremental'), 'an incremental run must never retract').toBe(false);
+    const cleanup = d.outputs.writes.filter((w) => w.write_discipline.class === 'link_full_retraction');
+    expect(cleanup.map((w) => w.table), 'exactly ONE keyed-delete target, on the junction').toEqual(['parcel_buildings']);
+    const sql = compute.buildMatchSql(LM_DESCRIPTOR(), null, 'full') as { stale_link_delete_sql: string };
+    expect(sql.stale_link_delete_sql).toMatch(/^DELETE FROM parcel_buildings pb\n WHERE pb\.parcel_id = ANY\(\$1::int\[\]\)/);
+    expect(sql.stale_link_delete_sql).toContain(compute.NOT_DERIVED);
   });
 
   it('the nearest fallback bbox-prefilters BEFORE the geography ST_DWithin (lessons.md runaway guard)', () => {

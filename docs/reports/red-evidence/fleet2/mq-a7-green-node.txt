@@ -1,0 +1,1 @@
+GREEN-node {"external":"x","response":"pause","refused":false,"released":true,"row":{"metric":"schema_drift:x","value":"added: c; removed: b; released by force_run","threshold":"guards.schema_drift: the acquired header equals the prior completed run's recorded header","status":"WARN","source":"gate"}} "FAIL"

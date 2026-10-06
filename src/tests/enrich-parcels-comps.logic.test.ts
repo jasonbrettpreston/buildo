@@ -75,15 +75,45 @@ describe('comps kNN UPDATE SQL', () => {
     expect(sql).toContain("'work_type', m.work_type");
     expect(sql).toContain('mode() WITHIN GROUP (ORDER BY m.work_type)');
   });
-  it('scopes the SUBJECTS at source (not just the final UPDATE) + incremental guard', () => {
+  it('scopes the SUBJECTS at source (not just the final UPDATE) + always full (O4 rows 2+8)', () => {
     const full = ep.buildComparableBuildsUpdateSql({ full: true, scopeWhere: "sp.parcel_id = 'X'", comp: LEGACY_COMP });
     expect(full).toContain('FROM parcels sp');
     expect(full).toContain("sp.parcel_id = 'X'");
     expect(full).not.toContain('sp.comp_count IS NULL'); // full = no incremental guard
     const incr = ep.buildComparableBuildsUpdateSql({ full: false, comp: LEGACY_COMP });
-    expect(incr).toContain('sp.comp_count IS NULL');
+    expect(incr).not.toContain('sp.comp_count IS NULL'); // O4 rows 2+8: pass 4 is always full — no incremental subject filter
+    expect(incr).toBe(ep.buildComparableBuildsUpdateSql({ full: true, comp: LEGACY_COMP }));
   });
   it('exposes the comp write-column set', () => {
     expect(ep.COMP_WRITE_COLS).toEqual(['comparable_builds', 'comp_count', 'comp_dominant_build', 'comp_build_ratio_p50', 'comp_fsi_p50']);
+  });
+
+  // O4 rows 2+8 — pass 4 is ALWAYS full: the incremental `AND sp.comp_count IS NULL` subject filter is
+  // deleted and runPass4 behaves as `full` REGARDLESS of the run's mode. The full-mode pre-clear must be
+  // issued even when ctx.full is false. (Live behaviour is unchanged: the only chain invocation is
+  // sources --full — this closes the latent mode-dependence without moving a live number.)
+  it('runPass4 pre-clears comp columns as `full` even when ctx.full is false (O4 rows 2+8)', async () => {
+    const CONFIG = {
+      enrich_parcels_comp_lot_tol: 0.2,
+      enrich_parcels_comp_knn_overfetch: 50,
+      enrich_parcels_comp_top_n: 10,
+      enrich_parcels_comp_over_capture_clamp: 1.1,
+      enrich_parcels_comp_fsi_min_plausible: 0.05,
+      enrich_parcels_comp_fsi_max_plausible: 8,
+      enrich_parcels_comp_comps_window_years: LEGACY_WINDOW_YEARS,
+    };
+    const sql: string[] = [];
+    const client = {
+      query: async (text: string) => {
+        sql.push(text);
+        return { rows: [{ n: 0, with_comps: 0, zero_comps: 0, with_br: 0 }], rowCount: 0 };
+      },
+    };
+    await ep.runPass4(client, { scopeWhere: 'TRUE', full: false, clock: { asOfDate: () => '2026-10-03' } }, CONFIG);
+    const preClears = sql.filter((s) => s.includes('UPDATE parcels SET comparable_builds = NULL'));
+    expect(
+      preClears.some((s) => !s.includes('p.max_buildable_footprint_sqm IS NULL')),
+      'the full-mode pre-clear (no "lost eligibility" conjunct) must be issued even though ctx.full is false',
+    ).toBe(true);
   });
 });

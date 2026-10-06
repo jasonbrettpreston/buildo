@@ -282,7 +282,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       pipeline.emitMeta(
         { coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
           parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
-          address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status'],
+          address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
           parcel_address_points: ['parcel_id', 'address_point_id'],
           neighbourhoods: ['id', 'geom'] },
         { lead_parcels: ['lead_id', 'parcel_id', 'match_type', 'confidence', 'matched_at'],
@@ -416,6 +416,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
                     -- column contains 'None' for 100% of rows; accept
                     -- 'NONE' alongside 'CURRENT' as the in-use state.
                     AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
+                    -- fold 10 item 4 (registry-truth, 2026-10-03): a soft-retired address point never matches.
+                    AND ap.retired_at IS NULL
                   ORDER BY
                     CASE UPPER(COALESCE(ap.address_class_desc, ''))
                       WHEN 'STRUCTURE'           THEN 1
@@ -713,7 +715,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       {
         coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
         parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
-        address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status'],
+        address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
         parcel_address_points: ['parcel_id', 'address_point_id'],
         neighbourhoods: ['id', 'geom'],
       },

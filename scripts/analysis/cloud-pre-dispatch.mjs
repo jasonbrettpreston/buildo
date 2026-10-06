@@ -185,8 +185,9 @@ export async function checkMigrationsMissing(pool, deps = {}) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Requirement kinds this check probes — `rls_bypass_or_policy` is excluded by design
- * (it is measured by `write.assertWritePrivileges` in the runner, not by a catalog probe). */
-const PROBED_KINDS = new Set(['index', 'extension', 'function', 'column']);
+ * (it is measured by `write.assertWritePrivileges` in the runner, not by a catalog probe).
+ * `trigger` (LDG-10): a declared trigger invalidator. `fk` is a pre-existing gap (probed by the runner, not here) — filed as a follow-up. */
+const PROBED_KINDS = new Set(['index', 'extension', 'function', 'column', 'trigger']);
 
 /**
  * Every declared `guards.requires[]` entry — across every converted descriptor — that
@@ -206,7 +207,8 @@ export async function queryMissingGuards(pool, descriptorsByName) {
     const requires = (descriptor.guards && descriptor.guards.requires) || [];
     for (const r of requires) {
       if (!PROBED_KINDS.has(r.kind)) continue;
-      const { present } = await probeRequirement(pool, r);
+      // MQ-D3: the SAME shared probe and the SAME descriptor-derived trigger columns as the runner.
+      const { present } = await probeRequirement(pool, r, descriptor);
       if (!present) missing.push({ slug, name: r.name, kind: r.kind, on_missing: r.on_missing });
     }
   }
@@ -230,7 +232,7 @@ export async function checkDeclaredGuardsPresent(pool, descriptorsByName) {
     'declared_guards_present',
     severity,
     missing.map((m) => `${m.slug}:${m.name}`),
-    'every converted descriptor\'s guards.requires[] index/extension/function/column present',
+    'every converted descriptor\'s guards.requires[] index/extension/function/column/trigger present',
     'guards.requires[] is THE preconditions, checked before the first read. A missing index is not a slower run, it is an unbounded one; a missing extension can silently switch the step to a second algorithm. on_missing:"fail" means the runner refuses outright — a dispatch would abort mid-chain.',
   );
 }

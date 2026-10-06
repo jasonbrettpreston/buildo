@@ -10,6 +10,7 @@
           "address_class_desc",
           "address_full",
           "address_number",
+          "address_point_id",
           "address_status",
           "class_family_desc",
           "geom",
@@ -20,7 +21,8 @@
           "lo_num",
           "longitude",
           "maint_stage",
-          "place_name"
+          "place_name",
+          "retired_at"
         ]
       },
       "writes": {
@@ -40,7 +42,8 @@
           "lo_num",
           "longitude",
           "maint_stage",
-          "place_name"
+          "place_name",
+          "retired_at"
         ]
       },
       "violations": [],

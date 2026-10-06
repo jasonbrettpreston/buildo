@@ -5,51 +5,165 @@
     "descriptive",
     "retire"
   ],
-  "$comment": "Spec 124 §5 R-BA gate I #34 (R-X) — every staleness.fingerprint_inputs entry declared by a converted step needs an adjudicated disposition row here: \"executed\" (a named executor.{file,symbol} genuinely reads it), \"descriptive\" (declared, documents intent, 0 readers today), or \"retire\" (dead, should be removed from the descriptor). Measured 2026-09-26: all 29 distinct entries across the 20 converted steps are 0-reader — every row below is \"descriptive\". A future step that wires a real executor over one of these entries must flip its row to \"executed\" with executor.{file,symbol} in the SAME commit (R-X: an unexecuted \"executed\" claim is a rotted citation, checked live by dispositionRowFindings).",
+  "$comment": "Spec 124 §5 R-BA gate I #34 (R-X) — every staleness.fingerprint_inputs entry declared by a converted step needs an adjudicated disposition row here: \"executed\" (a named executor.{file,symbol} genuinely reads it), \"descriptive\" (declared, documents intent, 0 readers today), or \"retire\" (dead, should be removed from the descriptor). Measured 2026-09-26: all 29 distinct entries were 0-reader. Reconciled 2026-10-03 with registry-truth ruling 1 (FLEET-2 P2-C6): the retired link_massing full-gate module's row went with it; the remaining 28 are real imports (24) or declared data signals (4), still 0-reader, so every row below stays \"descriptive\". A future step that wires a real executor over one of these entries must flip its row to \"executed\" with executor.{file,symbol} in the SAME commit (R-X: an unexecuted \"executed\" claim is a rotted citation, checked live by dispositionRowFindings).",
+  "spec_version": {
+    "$comment": "identity.spec_version per-step disposition (registry-truth fold 8c item 8, home ruled by fold 8d item 8; ravines per fold 12 F3). x-trust class of the field: executed:scripts/lib/step/acquire.js#acquireExternal — but ONLY on the INGESTOR skip path. Every converted step that does not execute it is named here with why, so the gap stays visible (Phase 3 exit: not D). Locked by src/tests/spec-version-disposition.infra.test.ts (every converted step exactly once; executed == the INGESTOR set; executor resolves).",
+    "executor": {
+      "file": "scripts/lib/step/acquire.js",
+      "symbol": "acquireExternal"
+    },
+    "executed": [
+      "address_points",
+      "load_centreline",
+      "load_heritage",
+      "load_ravines",
+      "load_wsib",
+      "massing",
+      "neighbourhoods",
+      "parcels"
+    ],
+    "not_executed": {
+      "assert_data_bounds": {
+        "why": {
+          "text": "ASSERT: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "assert_engine_health": {
+        "why": {
+          "text": "RECORDER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "assert_global_coverage": {
+        "why": {
+          "text": "ASSERT: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "assert_parcel_sanity": {
+        "why": {
+          "text": "ASSERT: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "assert_schema": {
+        "why": {
+          "text": "ASSERT: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "compute_centroids": {
+        "why": {
+          "text": "BACKFILL: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "compute_parcel_cost_estimates": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "enrich_centreline": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8; converted at the batch-2 row 3.10 ③ cutover 834991c0): no runner path and no compute reads this step's own identity.spec_version — the compute's SPEC_VERSION is read from staleness.pins[] (pinnedSpecVersion, the producer contract records_meta.centreline_load.spec_version), so the value is declared, not executed. Its 1.1 matches load_centreline's stamped centreline_load.spec_version (Spec 62 §9, L10); the consumer-side pin is declared in staleness.pins[] (LDG-10 class 3)."
+        }
+      },
+      "enrich_heritage": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed. Its 1.1 matches load_heritage's stamped heritage_load.spec_version; the consumer-side pin is declared in staleness.pins[] (LDG-10 class 3)."
+        }
+      },
+      "enrich_parcels": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "enrich_ravines": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed. Its 1.2 is the CONTRACT pin shared with load_ravines (standing ruling C-9; fold 12 F3: contract-pinned, NOT drift, never bumped to the Spec 59 header 1.3); the consumer-side pin is declared in staleness.pins[] (LDG-10 class 3)."
+        }
+      },
+      "geocode_permits": {
+        "why": {
+          "text": "ENRICHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_massing": {
+        "why": {
+          "text": "LINK: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_neighbourhoods": {
+        "why": {
+          "text": "LINK: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_parcel_addresses": {
+        "why": {
+          "text": "MATERIALIZER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_parcels": {
+        "why": {
+          "text": "LINK: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_wsib": {
+        "why": {
+          "text": "MATCHER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "load_zoning": {
+        "why": {
+          "text": "INGESTOR under staleness.skip_scope \"all_primaries\": measured 2026-10-06 (FLEET-2 §5 suite triage), the all-primaries skip path (scripts/lib/step/index.js stepGate skip return) re-emits priorMeta verbatim and never reaches acquire.js acquireExternal's skip-path pins, and compute/load-zoning.js stamps no spec_version, so identity.spec_version is DECLARED, NOT EXECUTED. Closing: the runner stamps spec_version on the all_primaries skip re-emit in the next runner-library batch (review_followups, 2026-10-06); this row is then deleted and load_zoning moves to executed[] (operator ruling 2026-10-06)."
+        }
+      },
+      "refresh_snapshot": {
+        "why": {
+          "text": "RECORDER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      }
+    }
+  },
   "declarations": {
     "address_points:count": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): this entry is a declared data signal in the <table>:<signal> grammar, not a file, so the import half of ruling 1's fingerprint_inputs E rule does not apply. It has 0 runtime readers. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "parcels:centroid_lat_null_count": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): this entry is a declared data signal in the <table>:<signal> grammar, not a file, so the import half of ruling 1's fingerprint_inputs E rule does not apply. It has 0 runtime readers. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "parcels:count": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): this entry is a declared data signal in the <table>:<signal> grammar, not a file, so the import half of ruling 1's fingerprint_inputs E rule does not apply. It has 0 runtime readers. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/address-points-csv-drift.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/assert-data-bounds-fields.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/assert-global-coverage-fields.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/assert-parcel-sanity-fields.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/build-norms.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/assert-engine-health.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/compute-centroids.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/compute-parcel-cost-estimates.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/enrich-centreline.js": {
       "disposition": "descriptive",
@@ -57,75 +171,71 @@
     },
     "scripts/lib/compute/enrich-heritage.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/enrich-parcels.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/enrich-ravines.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/geocode-permits.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/link-massing.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/link-neighbourhoods.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/link-parcel-addresses.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/link-parcels.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/link-wsib.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/compute/refresh-snapshot.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
-    },
-    "scripts/lib/massing-full-gate.js": {
-      "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/max-build.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/optimal-config.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/parcel-cost.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/source-version.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/step/acquire.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "scripts/lib/zoning-precedence.js": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
     "wsib_registry:count": {
       "disposition": "descriptive",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #34): 0 readers of staleness.fingerprint_inputs in scripts/lib/** or scripts/analysis/** — no mechanism treats this declared array as an actual fingerprint input list. The field documents intent (what SHOULD invalidate a capture) without yet being wired to a hashing/comparison mechanism; wiring it (or retiring it) is a followup, not invented here."
+      "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): this entry is a declared data signal in the <table>:<signal> grammar, not a file, so the import half of ruling 1's fingerprint_inputs E rule does not apply. It has 0 runtime readers. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     }
   }
 }

@@ -32,14 +32,14 @@
     "V1": "identity.archetype uses FULL WORDS; the ING|MAT|... forms are display shorthand only and are not legal values.",
     "V2": "identity.lock is unique across manifest UNION one-time/ UNION backfill/ — the wider universe, not the generated registry alone. Cross-file uniqueness is a validator-side check (S2); JSON Schema cannot express it.",
     "V3": "guards.schema_drift is none|propagate|pause. 'warn' is DROPPED — a drift response is an action; warn-ness belongs to the orthogonal severity/blocking axes.",
-    "V4": "outputs.writes[].replay keeps append_unsafe in the enum but BANNED FOR NEW STEPS via x-banned-for-new, so an existing step can still declare its truth.",
-    "V5": "staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs.",
+    "V4": "outputs.writes[].replay keeps append_unsafe in the enum but BANNED FOR NEW STEPS via x-banned-for-new, so an existing step can still declare its truth. SUPERSEDED (Phase 3 RE-FREEZE, registry-truth plan DELETE row #18): outputs.writes[].replay is deleted — zero runtime readers.",
+    "V5": "staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs. AMENDED (Phase 3 RE-FREEZE, DELETE row #28): the `scope` axis (with checkpoint/interval) is deleted — prose with zero readers; claim #54's schema replacement rides the same RE-FREEZE (fold 12 F4).",
     "V6": "guards.empty_source is the typed form <table> | [<table>,...] | none — AS AMENDED 2026-08-24. The original ruling typed the scalar form only; the array form is a ratified amendment recorded in Spec 122's V-table, needed because a step may guard on more than one source table (enrich_heritage guards on heritage_properties AND heritage_districts, Spec 120 §3.3). Recorded as an amendment rather than restated silently.",
-    "R6-acquisition": "NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache.",
+    "R6-acquisition": "NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache (the cache fields are deleted in the Phase 3 RE-FREEZE, DELETE row #11 — zero readers).",
     "R6-maintenance": "NOT a category. Absorbed as execution.maintenance — declares targets and CONSTRAINS txn_scope (RE-FREEZE #6, EP-D17 2026-09-10: narrows txn_scope to statement|batch|step|none when maintenance is declared, since the VACUUM statement itself must never run inside a transaction regardless of the declaring step's own txn_scope value — the executor always runs it autocommit on a dedicated connection).",
     "R6-terminals": "A NEW CATEGORY (the 18th). Declared exit paths, each with its records_meta shape. Retires the hand-written per-terminal 'PASS'.",
     "R6-plan_shape": "NOT a category. A checks[].kind value.",
-    "R6-source_key_policy": "NOT a category. A per-target field: outputs.writes[].source_key_policy.",
+    "R6-source_key_policy": "NOT a category. A per-target field: outputs.writes[].source_key_policy. DELETED in the Phase 3 RE-FREEZE (DELETE row #18 — zero runtime readers).",
     "R6-on_missing": "guards.requires[].on_missing is fail|degrade; degrade requires why AND algorithm, because a degraded branch makes outputs.columns a fiction.",
     "V7": "DECOUPLE MECHANIC FROM GUARD (operator ruling, 2026-08-24, closing the S1 menu-completeness gap). write_discipline.class names the write MECHANIC only; guardedness is `guard` (is_distinct_from|none, none requires a why and is grandfathered-only), scope is `scope`, retraction is `retract`. The D and H bans are restated as VALIDATOR RULES over those axes — banned-for-new = (insert-only mechanic AND retract:none) and (set-based mechanic AND scope:none) — not as fused class identities.",
     "R6-schema_drift-conditional": "guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it.",
@@ -49,17 +49,11 @@
     "allowlist": "scripts/steps/_schema/grandfathered.json",
     "enforcer": "scripts/lib/step/validate.js assertGrandfathered — ADDED AT THE LINK PILOT (2026-08-27). Until then x-banned-for-new was METADATA WITH NO CONSUMER: nothing read it, so 'banned for new steps' was a sentence in a JSON file and any new descriptor could carry any banned value with a why. The rule is now two-part and both parts are required — a banned value needs (1) the sibling *_why the schema already demands, AND (2) an entry in the allowlist above naming the step, the exact path, the value, a why and the commit that grandfathered it. A step that is not on the list is REFUSED at pipeline.step() construction, before compute exists.",
     "values": {
-      "outputs.writes[].replay": [
-        "append_unsafe"
-      ],
       "outputs.writes[].write_discipline.guard": [
         "none"
       ],
       "outputs.writes[].write_discipline.class": [
         "staging_full_replace"
-      ],
-      "execution.criticality": [
-        "best_effort"
       ]
     },
     "scalar_fields": {
@@ -187,6 +181,7 @@
       ],
       "properties": {
         "text": {
+          "x-trust": "prose",
           "type": "string",
           "minLength": 8
         },
@@ -342,6 +337,7 @@
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "sql": {
+          "x-trust": "executed:scripts/lib/step/plausibility.js#executeEntry",
           "type": "string",
           "minLength": 1
         },
@@ -465,6 +461,7 @@
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "sql": {
+          "x-trust": "executed:scripts/lib/step/plausibility.js#executeEntry",
           "type": "string",
           "minLength": 1
         },
@@ -664,6 +661,7 @@
       ],
       "properties": {
         "class": {
+          "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
           "description": "V7 (2026-08-24): the write MECHANIC ONLY. The 13 MEASURED classes stand as mechanics; guardedness moved out to `guard`, scope to `scope`, retraction to `retract`. Three names still READ as fused (guarded_upsert, insert_only_no_retraction, set_based_scoped/unscoped) because the ported labels are frozen — see x-mechanic-notes; never infer a guard or a scope from a class name. Re-derived per step at PH-0: the ported labels are wrong for 5 steps.",
           "enum": [
             "guarded_upsert",
@@ -704,6 +702,7 @@
           "x-class-letters-note": "N and O are LG-11/LG-16 (pilot 4, C1 MATCHER, 2026-08-28). N is a scoped UPDATE ... FROM (<compute-authored matched CTE>) with INSERT structurally forbidden — write.js's executeSetBasedJoinUpdate refuses any SQL text containing INSERT INTO or ON CONFLICT at execution time, not merely by convention. O is the UPDATE-to-NULL retraction shape for a target this step does not OWN (wsib_registry rows are load-wsib.js's exclusive territory) — codegen-identical to set_based_scoped/unscoped (a constant SET over a declared scope, via columns[].set_value: null) but declared under its own class so a retract_when: full_only null-retraction reads as a DISTINCT mechanic from a plain flag clear, per LG-16's fence lock (never DELETE)."
         },
         "guard": {
+          "x-trust": "witnessed:#52",
           "description": "V7 — THE GUARD AXIS, decoupled from the mechanic. This field alone says whether the write is change-guarded; a class name never does. `none` is DECLARABLE (it is what makes GAP-1's six unguarded UPDATEs and GAP-2's unguarded keyed upsert expressible at all) but requires a why and is grandfathered — banned for new steps.",
           "enum": [
             "is_distinct_from",
@@ -730,6 +729,7 @@
           ]
         },
         "guard_columns": {
+          "x-trust": "witnessed:#52",
           "anyOf": [
             {
               "const": "all_declared"
@@ -878,83 +878,6 @@
         }
       ]
     },
-    "sourceKeyPolicy": {
-      "description": "R6 ruling — a per-target field, not a category. load-massing.js:239-247: 'Identical geometries produce duplicate hashes ... Last write wins.'",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "unique",
-        "on_collision",
-        "key_space_migration"
-      ],
-      "properties": {
-        "unique": {
-          "type": "boolean"
-        },
-        "on_collision": {
-          "enum": [
-            "not_applicable",
-            "fail",
-            "last_write_wins",
-            "first_write_wins",
-            "dedupe_upstream"
-          ],
-          "x-frozen": true
-        },
-        "on_collision_why": {
-          "$ref": "#/definitions/why"
-        },
-        "key_space_migration": {
-          "anyOf": [
-            {
-              "const": "none"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "from",
-                "to",
-                "why"
-              ],
-              "properties": {
-                "from": {
-                  "type": "string"
-                },
-                "to": {
-                  "type": "string"
-                },
-                "why": {
-                  "$ref": "#/definitions/why"
-                }
-              }
-            }
-          ]
-        }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "on_collision": {
-                "enum": [
-                  "last_write_wins",
-                  "first_write_wins"
-                ]
-              }
-            },
-            "required": [
-              "on_collision"
-            ]
-          },
-          "then": {
-            "required": [
-              "on_collision_why"
-            ]
-          }
-        }
-      ]
-    },
     "write": {
       "type": "object",
       "additionalProperties": false,
@@ -963,15 +886,15 @@
         "key",
         "columns",
         "write_discipline",
-        "retract",
-        "replay",
-        "source_key_policy"
+        "retract"
       ],
       "properties": {
         "table": {
+          "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
           "$ref": "#/definitions/tableName"
         },
         "key": {
+          "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
           "anyOf": [
             {
               "$ref": "#/definitions/columnName"
@@ -998,12 +921,15 @@
             ],
             "properties": {
               "name": {
+                "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                 "$ref": "#/definitions/columnName"
               },
               "vocabulary": {
+                "x-trust": "executed:scripts/lib/step/write.js#vocabularyRows",
                 "$ref": "#/definitions/vocabulary"
               },
               "written": {
+                "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                 "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. THREE values since prerequisite 0j (2026-09-24): `step` (the default — inserted AND updated), `insert_only` (inserted and bound, NEVER rewritten by the conflict UPDATE SET or its guard — the column a DB-side pass recomputes after load), and `db_default` (neither — a DDL default the step never writes).",
                 "enum": [
                   "step",
@@ -1021,6 +947,7 @@
                 }
               },
               "bind": {
+                "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                 "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). How the generated statement binds this column's parameter. \"value\" is a plain `$n`; \"wkb_geometry\" wraps it as `ST_GeomFromWKB($n, <guards.srid>)`, which is the only reason a class-B generator would need to know a column is spatial. Default: \"value\".",
                 "enum": [
                   "value",
@@ -1120,6 +1047,7 @@
           }
         },
         "geometry_repair": {
+          "x-trust": "executed:scripts/lib/step/write.js#assertGeometryRepair",
           "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0t (2026-09-24). Whether the validator MENDS the source geometry before storing it. `make_valid` (the default, and byte-identical to the pre-0t text) runs `ST_MakeValid(geom) AS repaired` and builds every downstream expression from the repaired value; `none` renders `geom AS repaired` — the validator measures and stores the SOURCE geometry unchanged. OPTIONAL, per write target; absent = `make_valid` = today. Orthogonal to `geometry_kind`: the family selects the extract/accept shape, this selects whether the value feeding it is repaired. Requires `geometry_kind` to mean anything (only an INGESTOR runs `validateGeometries`); a write that declares no geometry column may carry it and it is simply never read. Founding case: the legacy massing loader stored the UNREPAIRED source geometry (measured 2026-09-24: 16 invalid geoms survive in `parcels` from the legacy path), and no declaration could express that — the repair was hard-wired by the family. `acquired.invalid_geometry_stored` counts the carried rows whose source geometry was invalid under `none`.",
           "enum": [
             "make_valid",
@@ -1146,12 +1074,22 @@
           "$ref": "#/definitions/writeDiscipline"
         },
         "retract": {
+          "description": "WHAT happens to a key the acquired source no longer carries. none = nothing; departed = scoped departure DELETE; all = scoped mass retraction (with retract_when); departed_mark (registry-truth fold 10, operator ruling 2026-10-03) = SOFT-RETIRE: the key is MARKED retired_at = now() (first stamp kept) and UNMARKED when it reappears, never deleted, inside the same transaction as the guarded upsert (write.js executeWrite ARM 0), behind the library empty-set guard and a mass-retire guard bounded by retire_max_pct_from_config.",
           "enum": [
             "none",
             "departed",
-            "all"
+            "all",
+            "departed_mark"
           ],
-          "x-frozen": true
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) the retract_when sibling: it qualifies WHEN a retraction fires, not WHETHER it deletes or marks — a mark is a different statement, not a different moment",
+              "rung (b) a compute-authored set_based_scoped target: the departed key set is the ingest acquisition's own carried keys, which only the ingest runner holds (a compute has no pool and no second write phase on an INGESTOR)",
+              "rung (c) a check or plausibility row: it can report departed rows but cannot change which statement the runner issues"
+            ],
+            "why": "Departed source rows accumulated forever under retract none (325 CKAN-retired address points, 2026-10-03), and departed hard-deletes cascade into consumers' junction rows. The operator ruled soft-retire (O1, fold 10): a reversible mark the readers filter on (address_points_active)."
+          }
         },
         "retract_when": {
           "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). WHEN the declared retract actually fires. The retract enum is x-frozen, so the qualifier is a SIBLING rather than a fourth enum value. \"always\" is the default and the pre-existing behaviour (a class-B departure DELETE runs every load). \"full_only\" means the retraction is issued ONLY when staleness.mode_select resolved to full mode — which is fence b16c036's whole shape: link_massing's mass DELETE of every link for centroid-bearing parcels is correct in a FULL relink and catastrophic in an incremental one, where it would retract 520,492 rows and rebuild only the 1,395-parcel unmatchable tail. Before this field that gate was an if (FULL_MODE) in a hand-written step and nothing declared it.",
@@ -1161,22 +1099,10 @@
           ],
           "x-frozen": true
         },
-        "replay": {
-          "enum": [
-            "idempotent_upsert",
-            "full_replace",
-            "append_unsafe"
-          ],
-          "x-frozen": true,
-          "x-banned": [
-            "append_unsafe"
-          ]
-        },
-        "replay_why": {
-          "$ref": "#/definitions/why"
-        },
-        "source_key_policy": {
-          "$ref": "#/definitions/sourceKeyPolicy"
+        "retire_max_pct_from_config": {
+          "description": "REQUIRED with retract departed_mark, forbidden otherwise (fold 10). The config.logic_variables[].name bounding the mass-retire guard: the MARK is suppressed (and the run FAILs on the mass_retire_guard row) when stale-not-yet-retired keys over currently-active rows exceeds this fraction (0..1, pct <= passes at the bound) — the mass-delete threshold pattern (load_ravines_mass_delete_fail_pct). Raising the variable is the acknowledgement for a genuine mass retirement.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
         },
         "line_validity": {
           "description": "ADDED AT INGESTOR PREREQUISITE 0z1 (2026-10-02). The legacy LineString reject rule of Spec 58 F-M9 (:49, :220): when declared, the validator's inner subquery adds `(ST_Length(geom::geography) > 0 AND ST_IsSimple(geom)) AS line_ok` over the PRE-repair `geom` (legacy's operand, scripts/lib/geometry-validator.js:64-71), `validated` re-exports it, and the CASE gains a FIRST arm `WHEN NOT line_ok THEN 'skipped_degenerate_line'` (first because legacy discards a degenerate line even when it is valid; a NULL line_ok falls through to skipped_null). OPTIONAL; absent = no test. REQUIRES geometry_kind \"multiline\" (the item rule below) and forbids geometry_repair \"none\" — neither has a consumer today (Spec 124 R-AJ): legacy always repairs.",
@@ -1194,6 +1120,7 @@
           }
         },
         "geometry_kind": {
+          "x-trust": "executed:scripts/lib/step/write.js#assertGeometryKind",
           "description": "REQUIRED when any columns[].bind is \"wkb_geometry\" (the item's own allOf below): the geometry family the target column stores, which selects the validator's repair/accept path (polygon: ST_CollectionExtract(…,3)+ST_Multi, accept Polygon/MultiPolygon; point: ST_CollectionExtract(…,1), no ST_Multi, accept Point; line: ST_CollectionExtract(…,2), no ST_Multi, accept LineString; multiline: ST_Multi(COALESCE(ST_CollectionExtract(repaired, 2), repaired)), accept LineString/MultiLineString, the legacy zoning LineString family (Spec 58 F-M9, Spec 122 §5.1); a true LineString target keeps \"line\"). Declared, never sniffed from the payload — a polygon step receiving a point must still count it skipped_unsupported_type.",
           "enum": [
             "polygon",
@@ -1213,26 +1140,6 @@
         }
       },
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "replay": {
-                "enum": [
-                  "full_replace",
-                  "append_unsafe"
-                ]
-              }
-            },
-            "required": [
-              "replay"
-            ]
-          },
-          "then": {
-            "required": [
-              "replay_why"
-            ]
-          }
-        },
         {
           "x-rule": "V7 ban no_retraction, evaluated over the mechanic AND the retraction axis (which are siblings here, not inside write_discipline). An insert-only mechanic that DOES retract is no longer mislabelled as a W3 breach; one that does not must say why.",
           "if": {
@@ -1309,6 +1216,68 @@
               }
             }
           }
+        },
+        {
+          "x-rule": "fold 10 (soft-retire): retract departed_mark requires a single-column key, write_discipline.class guarded_upsert, a declared retired_at column with written insert_only (seeded NULL on INSERT, never rewritten by the conflict UPDATE — only MARK/UNMARK change it; db_default would red #44 check (b), which treats any traced write of a db_default column as a violation), and retire_max_pct_from_config.",
+          "if": {
+            "properties": {
+              "retract": {
+                "const": "departed_mark"
+              }
+            },
+            "required": [
+              "retract"
+            ]
+          },
+          "then": {
+            "required": [
+              "retire_max_pct_from_config"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "write_discipline": {
+                "properties": {
+                  "class": {
+                    "const": "guarded_upsert"
+                  }
+                }
+              },
+              "columns": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "const": "retired_at"
+                    },
+                    "written": {
+                      "const": "insert_only"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "written"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "x-rule": "fold 10 converse: retire_max_pct_from_config is legal only beside retract departed_mark.",
+          "if": {
+            "required": [
+              "retire_max_pct_from_config"
+            ]
+          },
+          "then": {
+            "properties": {
+              "retract": {
+                "const": "departed_mark"
+              }
+            }
+          }
         }
       ]
     },
@@ -1329,10 +1298,12 @@
       ],
       "properties": {
         "id": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#checkRow",
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "limit_from_config": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#resolveLimit",
           "description": "OPERATOR RULING A-4 (2026-08-25, INGESTOR pilot) — the P1↔P4 resolution. A verdict bound that is ALSO an operator knob names its `config.logic_variables[].name` here; scripts/lib/step/verdict.js substitutes the RESOLVED value into `limit` before evaluating, so the audit row's `threshold` column renders THE VALUE IN FORCE, not a stale literal, at zero extra bytes (the value is already stamped in records_meta.config). DECISION, documented rather than left ambiguous: `limit` STAYS REQUIRED and keeps its numeric form — it carries the SEED DEFAULT, so a descriptor read on its own still states a bound, and `limit_from_config` is the runtime override. The named variable MUST be declared in this descriptor's `config.logic_variables[]`; a name bound to no declaration, or bound to more than one check, is a validator-side finding.",
           "type": "string",
           "minLength": 1
@@ -1357,9 +1328,11 @@
           "description": "OPEN — domain knowledge. No vocabulary could supply that WARD is text in the CoA Active resource and WARD_NUMBER is int4 in Closed."
         },
         "limit": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#resolveLimit",
           "$ref": "#/definitions/bound"
         },
         "warn_limit": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#resolveWarnLimit",
           "description": "OPERATOR RULING (2026-09-11, batch1 I1, RE-FREEZE #7 — Spec 124 §5 R-AD; see Spec 122 §8 / 122a Appendix §A9) — a SECOND, looser, optional bound giving a check 3-tier PASS/WARN/FAIL coverage in one row: `limit` ok -> PASS; else `warn_limit` present and ok -> WARN; else the check's own declared `severity`. Deliberately typed to the SAME STRING GRAMMAR as `limit`'s string arm (`definitions.bound`'s string pattern, byte-for-byte duplicated here rather than `$ref`'d — `bound` itself is `x-frozen` and this ruling does not touch it) — never the `{warn, fail}` object form, because `limit` already expresses a two-tier bound that way; declaring `warn_limit` alongside an object-form `limit` is redundant and rejected by the allOf below. Absent (the overwhelming majority of checks) is the OLD behaviour, byte-for-byte — no row shape change, no evaluation change.",
           "type": "string",
           "pattern": "^(viol (==|<=) [0-9]+|pct (<=|>=) [0-9]*\\.?[0-9]+|pop >= [0-9]+|ratio <= [0-9]*\\.?[0-9]+ x median|value_min -?[0-9]*\\.?[0-9]+|value_max -?[0-9]*\\.?[0-9]+)$",
@@ -1372,11 +1345,13 @@
           }
         },
         "warn_limit_from_config": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#resolveWarnLimit",
           "description": "OPERATOR RULING (2026-09-11, RE-FREEZE #7) — same substitution semantics as `limit_from_config` (OPERATOR RULING A-4), applied to `warn_limit` instead of `limit`: names a `config.logic_variables[].name` whose RESOLVED value replaces `warn_limit`'s trailing number before evaluation. `scripts/lib/step/verdict.js`'s `resolveWarnLimit` performs the substitution; the audit row's `warn_threshold` (present only when `warn_limit` is declared) renders the value IN FORCE, mirroring `threshold`'s own existing contract.",
           "type": "string",
           "minLength": 1
         },
         "severity": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#checkRow",
           "enum": [
             "INFO",
             "WARN",
@@ -1386,6 +1361,7 @@
           "description": "Orthogonal to blocking. PASS is NOT declarable (§12.5) — it is a runtime outcome."
         },
         "blocking": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#checkRow",
           "type": "boolean",
           "description": "Orthogonal to severity: FAIL severity + blocking:false is 'report loudly, do not halt'."
         },
@@ -1447,6 +1423,37 @@
           "type": "string",
           "minLength": 1
         },
+        "reads": {
+          "description": "FOLD 9 C7-1 (registry-truth plan; FLEET-2 RE-FREEZE) — the SQL reads THIS check's own measurement executes, declared here and OUTSIDE `inputs.reads`: a check's measurement read is not an acquisition edge, so it is never used for upstream/edge derivation (`reads.steps`, the cross-step ledger). Gate #44(a) holds check-traced reads ⊆ `inputs.reads` ∪ this home; REPORT-ONLY until the FLEET-2 landing commit populates it (scripts/analysis/gates/schema-homes.mjs). Absent = not yet declared.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "table"
+            ],
+            "properties": {
+              "table": {
+                "$ref": "#/definitions/tableName"
+              },
+              "columns": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/definitions/columnName"
+                }
+              }
+            }
+          },
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) reuse inputs.reads.tables — a check read there becomes an upstream edge and creates false cycles (load_ravines / link_neighbourhoods, fold 9 C7-1)",
+              "a check-runner exemption inside gate #44 — a BYPASS (Spec 124 Rule 10), refused at fold 9"
+            ],
+            "why": "A check's measurement SQL reads tables the step never acquires from; without a home those reads are either undeclared (gate #44(a) cannot hold) or mis-declared as edges. A per-check home keeps them witnessed and declared while staying out of edge derivation."
+          }
+        },
         "order_guarantee": {
           "description": "Spec 124 §2 Rule 11 (WF2 'Rules 10/11/12 mechanical checkers', C2) — the DECLARED half of \"a phase-reorder must re-derive every 'before X' guarantee stated in the step's own governing spec.\" REQUIRED on any check with `when:\"pre_write\"` — that lifecycle position IS a declared ordering constraint (a FAIL row here with no active override skips the write entirely, per `when`'s own description above), so a check placed there is asserting a real spec-stated guarantee, and this field says WHICH one. `guarantee` is the human-authored one-line statement of what must hold before the write (e.g. \"abort before any DB write\"); `spec_ref` names the governing spec file the guarantee is quoted from; `anchor` is the literal substring `checkOrderGuaranteesCited` (scripts/analysis/step-validate.mjs) verifies is STILL PRESENT, verbatim, in that spec file — an anchor that rots (the cited spec prose changed or moved) is a RED, not a silent pass.",
           "type": "object",
@@ -1479,6 +1486,7 @@
           }
         },
         "on_warn": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#checkRow",
           "description": "INGESTOR prerequisite 0h (2026-09-24, Fold A F1) — what a WARN-severity row from a `when:\"pre_write\"` check MEANS to the runner, declared rather than encoded. `\"skip_write\"` = a WARN row from this check makes the pre_write gate SKIP the write (no transaction is opened, the target is untouched, every write counter stays zero) while the run COMPLETES with its row-derived verdict (WARN) — the legacy load-centreline F-C1 'warn and preserve' arm, declared and observable. The gate lands ONE `write_skipped_pre_write_warn` audit row (`source: \"gate\"`). Absent (every check today) = the old behaviour byte-for-byte: a WARN is reported and the write proceeds. FAIL severity is unaffected and FAIL-FIRST: an abort always wins over this arm.",
           "enum": [
             "skip_write"
@@ -1585,14 +1593,15 @@
       ],
       "properties": {
         "kind": {
-          "description": "fk (added at the LINK pilot, 2026-08-27): a named FOREIGN KEY constraint, probed via pg_constraint contype = f. A junction table is only meaningful while BOTH sides stay referential, and a dropped FK is invisible to an index probe — a full-mode retraction would simply leave orphans for a later chain step to report. rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
+          "description": "trigger (added at LDG-10, WF1 Step 2, 2026-10-03): a named non-internal trigger, ENABLED (pg_trigger.tgenabled IN ('O','A') — origin or always; 'D' disabled and 'R' replica-only do not fire for the pipeline role), name format <table>.<trigger> (e.g. parcels.trg_parcels_geom_invalidation), probed by REQUIREMENT_PROBES.trigger (scripts/lib/step/index.js anchor probeRequirement). A declared outputs.invalidates[] by \"trigger\" invalidator is thereby a runner precondition and a cloud:pre declared_guards_present row. fk (added at the LINK pilot, 2026-08-27): a named FOREIGN KEY constraint, probed via pg_constraint contype = f. A junction table is only meaningful while BOTH sides stay referential, and a dropped FK is invisible to an index probe — a full-mode retraction would simply leave orphans for a later chain step to report. rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
           "enum": [
             "extension",
             "index",
             "function",
             "column",
             "fk",
-            "rls_bypass_or_policy"
+            "rls_bypass_or_policy",
+            "trigger"
           ],
           "x-frozen": true
         },
@@ -1635,6 +1644,26 @@
               "why"
             ]
           }
+        },
+        {
+          "x-rule": "LDG-10: a kind \"trigger\" requirement names <table>.<trigger> — the probe splits on the dot (relname, tgname).",
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "trigger"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "name": {
+                "pattern": "^[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+              }
+            }
+          }
         }
       ]
     },
@@ -1674,7 +1703,7 @@
       }
     },
     "enrichPhase": {
-      "description": "ONE pass of a multi-pass ENRICHER (`execution.phases[]`, pilot 9). CLOSED: additionalProperties:false, every axis required except `invalidator_ref` (a pass whose scope is \"full\" has nothing to be invalidated BY — claim #54's own arm only bites a lineage-predicate scope).",
+      "description": "ONE pass of a multi-pass ENRICHER (`execution.phases[]`, pilot 9). CLOSED: additionalProperties:false, every axis required except `invalidator_ref` (a pass whose scope is \"full\" has nothing to be invalidated BY — claim #54's phases arm only bites a pass whose scope is \"incremental\" or \"deferred\").",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1722,7 +1751,7 @@
         "invalidator_ref": {
           "type": "integer",
           "minimum": 0,
-          "description": "OPTIONAL. INDEX into this descriptor's own `outputs.invalidates[]` — which declared invalidator makes this pass's rows eligible again. Present only on a pass whose `scope` is \"incremental\": an incremental pass with no invalidator is a row set that goes stale and never comes back (the centroid defect, claim #54), so its ABSENCE alongside `scope:\"incremental\"` is the thing a reviewer must see and rule on, per-pass, instead of the step-level `staleness.scope` arm answering for all five at once."
+          "description": "OPTIONAL. INDEX into this descriptor's own `outputs.invalidates[]` — which declared invalidator makes this pass's rows eligible again. Present only on a pass whose `scope` is \"incremental\": an incremental pass with no invalidator is a row set that goes stale and never comes back (the centroid defect, claim #54), so its ABSENCE alongside `scope:\"incremental\"` is the thing a reviewer must see and rule on, per-pass, instead of a step-level declaration answering for all five at once (the staleness.scope arm was deleted with #28 in the FLEET-2 RE-FREEZE; the phases arm is the survivor)."
         },
         "timeout_minutes_from_config": {
           "type": "string",
@@ -1740,36 +1769,19 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "source",
-            "scoped_by"
+            "source"
           ],
           "properties": {
             "source": {
+              "x-trust": "executed:scripts/lib/step/index.js#resolveCounterSource",
               "type": "string",
               "minLength": 1,
               "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*(\\s*\\+\\s*[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)*$",
               "description": "Which compute variable feeds this counter. Retires the 9 distinct semantics measured for records_total. 0x fold (library counter defect): a dotted path into {acquired, written, matched, cumulative, gate, records_meta}, or a SUM of dotted paths ('written.inserted + written.updated') — the closed grammar scripts/lib/step/index.js resolveCounterSource executes; any other expression is refused at load instead of silently resolving to null."
             },
-            "scoped_by": {
-              "description": "The outputs.writes[].key this counter counts, or \"step\" for a whole-step count. §11 counter scoping.",
-              "anyOf": [
-                {
-                  "const": "step"
-                },
-                {
-                  "$ref": "#/definitions/columnName"
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/columnName"
-                  }
-                }
-              ]
-            },
             "why": {
               "$ref": "#/definitions/why",
-              "description": "OPTIONAL (pilot 9 commit 8 P5b, R-K.2-adjacent frozen-template bump). Names a non-obvious counter-scoping decision — e.g. a write target this counter's own scoped_by/source deliberately EXCLUDES from the count, and why (a §11 counter-scoping rule, not an omission). Absent for the common case (scoped_by covers every write target that contributes)."
+              "description": "OPTIONAL (pilot 9 commit 8 P5b, R-K.2-adjacent frozen-template bump). Names a non-obvious counter-scoping decision — e.g. a write target this counter's own source deliberately EXCLUDES from the count, and why (a §11 counter-scoping rule, not an omission). Absent for the common case (source covers every write target that contributes)."
             }
           }
         }
@@ -1790,6 +1802,7 @@
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "kind": {
+          "x-trust": "executed:scripts/lib/step/index.js#selectTerminal",
           "enum": [
             "success",
             "no_op",
@@ -1804,6 +1817,7 @@
           "x-frozen": true
         },
         "status": {
+          "x-trust": "executed:scripts/lib/step/index.js#selectTerminal",
           "description": "Spec 120 §3.2b run-status vocabulary, minus 'running' which is not terminal.",
           "enum": [
             "completed",
@@ -1819,6 +1833,7 @@
           "x-frozen": true
         },
         "records_meta": {
+          "x-trust": "enforced:#49",
           "description": "The records_meta SHAPE this exit path emits. NOTE: no verdict key is permitted anywhere in a terminal — the verdict is runner-owned and row-derived, which is exactly what retires the 7 hardcoded skip-path 'PASS'es.",
           "anyOf": [
             {
@@ -1866,6 +1881,7 @@
       ],
       "properties": {
         "name": {
+          "x-trust": "executed:scripts/lib/step/index.js#ledgerPipelineName",
           "$ref": "#/definitions/slug",
           "description": "Slug matching a manifest.chains key.",
           "x-required": true
@@ -1884,6 +1900,7 @@
           "minLength": 8
         },
         "lock": {
+          "x-trust": "executed:scripts/lib/step/index.js#runWithPool",
           "type": "integer",
           "minimum": 1,
           "description": "V2: unique across manifest UNION one-time/ UNION backfill/ (the wider universe). Cross-file uniqueness is enforced by the validator, not by this schema."
@@ -1904,10 +1921,12 @@
           "minLength": 1
         },
         "spec_version": {
+          "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
           "type": "string",
           "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
         },
         "archetype": {
+          "x-trust": "enforced:#25",
           "description": "V1: FULL WORDS. Drives the required-field profile (§1.10) — this field is load-bearing, not a label.",
           "enum": [
             "INGESTOR",
@@ -1956,26 +1975,12 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "step",
-                  "version_pin"
+                  "step"
                 ],
                 "properties": {
                   "step": {
+                    "x-trust": "executed:scripts/lib/step/staleness.js#deriveLedgerSlugs",
                     "$ref": "#/definitions/slug"
-                  },
-                  "version_pin": {
-                    "enum": [
-                      "exact",
-                      "gte",
-                      "none"
-                    ],
-                    "x-frozen": true
-                  },
-                  "assert_health": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   }
                 }
               }
@@ -1990,9 +1995,11 @@
                 ],
                 "properties": {
                   "table": {
+                    "x-trust": "witnessed:#44",
                     "$ref": "#/definitions/tableName"
                   },
                   "columns": {
+                    "x-trust": "witnessed:#44",
                     "type": "array",
                     "items": {
                       "$ref": "#/definitions/columnName"
@@ -2009,15 +2016,16 @@
                 "additionalProperties": false,
                 "required": [
                   "id",
-                  "kind",
-                  "cache"
+                  "kind"
                 ],
                 "properties": {
                   "id": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "type": "string",
                     "minLength": 1
                   },
                   "kind": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "enum": [
                       "http_api",
                       "http_file",
@@ -2028,6 +2036,7 @@
                     "x-frozen": true
                   },
                   "format": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD. `\"ckan_datastore\"` (0y, RE-FREEZE #30) = a primary acquired through paginated CKAN `datastore_search`; declared with a `ckan` block and `kind: \"http_api\"`, its bare `url` is the `datastore_search` endpoint, and its `acquired.source_dataset_version` comes from the resource's `package_show` metadata (never a content hash).",
                     "enum": [
                       "shapefile_zip",
@@ -2049,6 +2058,7 @@
                     }
                   },
                   "role": {
+                    "x-trust": "executed:scripts/lib/step/index.js#ingestPrimaries",
                     "description": "0w (RE-FREEZE #27): how this external joins the step's ONE write target. ABSENT = \"primary\" (byte-identical for every descriptor that predates it): the external whose features become the target's rows. \"lookup\": an xlsx acquired with the same download/timeout/HEAD policy, never staleness-gated, parsed to rows and folded by compute.buildLookup(externalId, rows, {config}) -> {map, stats} into ctx.lookups[id] for shapeRecord. Exactly one url-bearing primary is a RUNTIME refusal in runIngestPhase, never a schema cap (Fold CF-3: 3.4 load_heritage lifts it with a per-primary target binding, not a new role value).",
                     "enum": [
                       "primary",
@@ -2070,6 +2080,7 @@
                     }
                   },
                   "csv_options": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "description": "REQUIRED when `format` is \"csv\" (the item's own allOf below). The two csv-parse options the three CSV loaders DISAGREE on; the other three they agree on (columns / skip_empty_lines / relax_column_count) are hard-wired in the seam because a per-external knob nobody sets differently is a hidden variable with no reader.",
                     "type": "object",
                     "additionalProperties": false,
@@ -2094,9 +2105,11 @@
                     }
                   },
                   "url": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "type": "string"
                   },
                   "path": {
+                    "x-trust": "executed:scripts/lib/step/index.js#ingestPrimaries",
                     "description": "ADDED AT INGESTOR PREREQUISITE 0fs (2026-09-28, Spec 122 §8 RE-FREEZE #28, detail 122a §A17). For kind \"filesystem\" ONLY: a repo-relative glob naming an operator-dropped local file (literal directory + `*` wildcards in the basename; absolute paths, `..`, `**`, `?` and `[` are refused by name). acquire.js resolveLocalSource picks the newest match BY NAME (sort, last wins — the legacy load-wsib data/ scan), matching the basename case-insensitively except its final extension. No HEAD is sent; the file is stream-copied and hashed into the temp root, then parsed by the declared `format` arm. No match (or no directory) is the declared tier-1 skip `no_source_file`, which lands the step's `skip_gated` terminal whose id contains `no_source_file`.",
                     "type": "string",
                     "minLength": 1,
@@ -2115,6 +2128,7 @@
                     "type": "string"
                   },
                   "on_head_error": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "description": "ADDED AT THE INGESTOR PILOT (2026-09-24, INGESTOR prerequisite 0r). The DECLARED posture when a HEAD 4xx/5xx leaves the acquisition seam without the cache validators a tier-1 gate needs. Absent (or \"fail_step\") rethrows the HEAD error and kills the step — today's behaviour, byte-identical. \"warn_row\" swallows it, hands the gate null validators (the tier-1 `no_validators` arm then decides to download), records `acquired.head_error`, and emits ONE library-owned WARN audit row (`head_error`).",
                     "enum": [
                       "fail_step",
@@ -2194,47 +2208,12 @@
                     }
                   },
                   "key_property": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
                     "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). For a record-bearing external (shapefile .dbf, CSV, GeoJSON properties): the SOURCE-SIDE attribute that becomes `outputs.writes[].key`. Declaring it is what lets a generic parser run without knowing the domain — and it makes an upstream rename (the #426 class) a descriptor diff instead of an undeclared constant inside a loader.",
                     "type": "string"
-                  },
-                  "cache": {
-                    "description": "The acquisition policy. reuse_if_present IS the existsSync class — declaring it makes the fiction visible and forces a why.",
-                    "enum": [
-                      "none",
-                      "revalidate",
-                      "reuse_if_fresh",
-                      "reuse_if_present"
-                    ],
-                    "x-frozen": true
-                  },
-                  "cache_why": {
-                    "$ref": "#/definitions/why"
-                  },
-                  "cache_ttl": {
-                    "$ref": "#/definitions/duration"
                   }
                 },
                 "allOf": [
-                  {
-                    "if": {
-                      "properties": {
-                        "cache": {
-                          "enum": [
-                            "reuse_if_present",
-                            "reuse_if_fresh"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "cache"
-                      ]
-                    },
-                    "then": {
-                      "required": [
-                        "cache_why"
-                      ]
-                    }
-                  },
                   {
                     "x-rule": "a declared payload format carries its own parse options — `csv` cannot be parsed without saying how (`bom`/`relax_quotes` are exactly what the three CSV loaders disagree on), and a `shapefile_zip` declaring them would be options no parser reads.",
                     "if": {
@@ -2400,9 +2379,11 @@
           }
         },
         "expect_nonempty": {
+          "x-trust": "executed:scripts/lib/step/index.js#measureInputGuards",
           "type": "boolean"
         },
         "on_missing": {
+          "x-trust": "executed:scripts/lib/step/index.js#measureInputGuards",
           "enum": [
             "halt",
             "warn",
@@ -2422,9 +2403,7 @@
           "additionalProperties": false,
           "required": [
             "writes",
-            "cascades",
             "invalidates",
-            "publish",
             "write_inventory"
           ],
           "properties": {
@@ -2436,49 +2415,8 @@
                 "$ref": "#/definitions/write"
               }
             },
-            "cascades": {
-              "description": "A target this step does not OWN is a cascade, never a write. load-massing.js:208,222 DELETEs from parcel_buildings (step 15's table) while emitMeta declares only building_footprints — the undeclared-telemetry class (orphan #234).",
-              "anyOf": [
-                {
-                  "const": "none"
-                },
-                {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "table",
-                      "owned_by",
-                      "operation",
-                      "why"
-                    ],
-                    "properties": {
-                      "table": {
-                        "$ref": "#/definitions/tableName"
-                      },
-                      "owned_by": {
-                        "$ref": "#/definitions/slug"
-                      },
-                      "operation": {
-                        "enum": [
-                          "delete",
-                          "update",
-                          "insert"
-                        ],
-                        "x-frozen": true
-                      },
-                      "why": {
-                        "$ref": "#/definitions/why"
-                      }
-                    }
-                  }
-                }
-              ]
-            },
             "invalidates": {
-              "description": "list of {table, column, when} — the declared invalidator. An ENRICHER whose staleness.scope is a lineage predicate CANNOT omit it (claim #54); a write_once_backfill class-E target cannot either (§5.4a).",
+              "description": "list of {table, column, when} — the declared invalidator. An ENRICHER with any execution.phases[].scope in {incremental, deferred} CANNOT omit it (claim #54, phases discriminator); a write_once_backfill class-E target cannot either (§5.4a).",
               "type": "array",
               "items": {
                 "type": "object",
@@ -2486,20 +2424,52 @@
                 "required": [
                   "table",
                   "column",
-                  "when"
+                  "when",
+                  "by"
                 ],
                 "properties": {
                   "table": {
+                    "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                     "$ref": "#/definitions/tableName"
                   },
                   "column": {
+                    "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                     "$ref": "#/definitions/columnName"
                   },
                   "when": {
                     "type": "string",
                     "minLength": 1
                   },
+                  "by": {
+                    "description": "LDG-10 class 4 (Spec 122 §6.4/§6.6; WF1 LDG-10 Step 2, 2026-10-03; = registry-truth P3 #20). The MACHINE-RESOLVABLE invalidator of this column — `when` stays, classed prose. CLOSED, NO escape value: trigger = a DB trigger NULLs the column (name it in `trigger`; the step declares guards.requires {kind:\"trigger\"}); set_null_on_change_of = this descriptor's own codegen arm NULLs it (name the watched column in `set_null_on_change_of`); step = another step's set_null_on_change_of row NULLs it (name that step in `step`); pin = a staleness.pins[] row of the producer that stamps this column compares it; full_rescan = the writer re-derives the column on every run (per column). Each arm's direction is checked by gate #44 check (i) after P1-C9.",
+                    "enum": [
+                      "trigger",
+                      "set_null_on_change_of",
+                      "step",
+                      "pin",
+                      "full_rescan"
+                    ],
+                    "x-frozen": true,
+                    "x-trust": "witnessed:#44",
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "keep the prose `when` as the only invalidator — prose cannot be resolved against a migration, a trigger or another descriptor (audit class P)",
+                        "an open string `trigger:<table>.<name>` value — an escape value by another name; a closed enum plus direction fields is checkable by AJV"
+                      ],
+                      "why": "operator authorization 2026-10-03 (WF1 LDG-10, Panel fold 1 + folds 1b-1d): every derived/lineage column has a declared, machine-resolvable invalidator; the enum gets no escape value (Guardian F8)"
+                    }
+                  },
+                  "trigger": {
+                    "description": "by \"trigger\" only: the invalidating trigger as <table>.<trigger> — the same string as the step's guards.requires {kind:\"trigger\"} name.",
+                    "type": "string",
+                    "pattern": "^[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+                  },
+                  "step": {
+                    "description": "by \"step\" only: the step (identity.name) whose own outputs.invalidates[] set_null_on_change_of row NULLs this column.",
+                    "$ref": "#/definitions/slug"
+                  },
                   "set_null_on_change_of": {
+                    "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
                     "description": "BATCH-2 PHASE 3 PREREQUISITE 0l (2026-09-24, operator ruling 2026-09-24 — standardized/observable/scalable/simple). EXECUTED, unlike the base {table,column,when} entry above (which stays declarative-only): the codegen appends `<column> = CASE WHEN <table>.<watched>::jsonb IS DISTINCT FROM EXCLUDED.<watched>::jsonb THEN NULL ELSE <table>.<column> END` to the write target's DO UPDATE SET, and folds the watched column into that write's change-detection guard (deduplicated against write_discipline.guard_columns) so the CASE arm's own comparison is live on every run that reaches the UPDATE. A non-jsonb watched column (one whose columns[].bind is \"wkb_geometry\" — a real PostGIS geometry value cannot cast to jsonb) compares with a plain IS DISTINCT FROM instead. VALIDATED (scripts/lib/step/validate.js, AJV cannot cross-reference two array entries): this entry's own `table` must equal one of `outputs.writes[].table` on the SAME descriptor — the codegen executes this entry against the write target whose table it names, so a mismatched table would silently never fire. Founding case: scripts/load-parcels.js's three DEC-FENCE2 (#418) lineage-stamp arms (ravine/heritage/centreline `_dataset_version_when_enriched`), all gated on `geometry` alone.",
                     "type": "string",
                     "pattern": "^[a-z_][a-z0-9_]*$",
@@ -2510,16 +2480,40 @@
                       "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the lineage-stamp-invalidation-on-geometry-change pattern (parcels' three ravine/heritage/centreline stamps, DEC-FENCE2 #418, a Day-1 critical-safety fix) is common enough to be a DECLARED, codegen-executed axis rather than a per-step escape hatch."
                     }
                   }
-                }
+                },
+                "allOf": [
+                  {
+                    "x-rule": "LDG-10 direction: by trigger => trigger named",
+                    "if": { "required": ["by"], "properties": { "by": { "const": "trigger" } } },
+                    "then": { "required": ["trigger"] }
+                  },
+                  {
+                    "x-rule": "LDG-10 direction: by step => step named",
+                    "if": { "required": ["by"], "properties": { "by": { "const": "step" } } },
+                    "then": { "required": ["step"] }
+                  },
+                  {
+                    "x-rule": "LDG-10 direction: by set_null_on_change_of => watched column named",
+                    "if": { "required": ["by"], "properties": { "by": { "const": "set_null_on_change_of" } } },
+                    "then": { "required": ["set_null_on_change_of"] }
+                  },
+                  {
+                    "x-rule": "LDG-10 direction: a trigger field only with by trigger",
+                    "if": { "required": ["trigger"] },
+                    "then": { "properties": { "by": { "const": "trigger" } } }
+                  },
+                  {
+                    "x-rule": "LDG-10 direction: a step field only with by step",
+                    "if": { "required": ["step"] },
+                    "then": { "properties": { "by": { "const": "step" } } }
+                  },
+                  {
+                    "x-rule": "LDG-10 direction: a set_null_on_change_of field only with by set_null_on_change_of",
+                    "if": { "required": ["set_null_on_change_of"] },
+                    "then": { "properties": { "by": { "const": "set_null_on_change_of" } } }
+                  }
+                ]
               }
-            },
-            "publish": {
-              "enum": [
-                "direct",
-                "pointer",
-                "none"
-              ],
-              "x-frozen": true
             },
             "write_inventory": {
               "description": "Spec 122 §12.3 claim #236 — the RUNTIME write-statement count must equal the declared one.",
@@ -2530,11 +2524,59 @@
               ],
               "properties": {
                 "statements": {
+                  "x-trust": "witnessed:#44",
                   "type": "integer",
                   "minimum": 0
                 },
                 "why": {
                   "$ref": "#/definitions/why"
+                },
+                "by_mode": {
+                  "description": "FOLD 9 C7-2 (registry-truth plan; FLEET-2 RE-FREEZE) — the write-statement count PER RESOLVED MODE, beside the mode-agnostic `statements`. A step whose distinct write statements differ between a full and an incremental run declares each here; `statements` stays the mode-agnostic default. REPORT-ONLY until the FLEET-2 landing commit populates it (scripts/analysis/gates/schema-homes.mjs `writeInventoryForMode`). Keys are closed: `full`, `incremental`.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "properties": {
+                    "full": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "statements"
+                      ],
+                      "properties": {
+                        "statements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "why": {
+                          "$ref": "#/definitions/why"
+                        }
+                      }
+                    },
+                    "incremental": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "statements"
+                      ],
+                      "properties": {
+                        "statements": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "why": {
+                          "$ref": "#/definitions/why"
+                        }
+                      }
+                    }
+                  },
+                  "x-ruling": {
+                    "rungs_tried": [
+                      "rung (a) one mode-agnostic `statements` integer — link_wsib's full-mode statement shapes differ from its incremental ones, so a single integer is false for one mode (its gate #44 `c:` row stays a NAMED OPEN GAP until this home is populated)",
+                      "a per-step allowlist of statement-count exceptions — an exception file, refused (fold 9 bound: no exception file)"
+                    ],
+                    "why": "Gate #44(c) compares distinct write fingerprints to the declared count; a step with mode-dependent statements needs the count keyed by the mode the run resolved, or the gate must either lie for one mode or carry an exception."
+                  }
                 }
               }
             }
@@ -2586,33 +2628,70 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "scope",
         "trigger",
         "mode_select",
-        "checkpoint",
-        "interval",
         "fingerprint",
         "fingerprint_inputs",
         "logic_version",
         "on_fingerprint_change"
       ],
       "properties": {
-        "scope": {
-          "description": "WHICH ROWS are eligible: an SQL predicate, all, or none.",
-          "anyOf": [
-            {
-              "const": "all"
+        "pins": {
+          "description": "LDG-10 class 3 (Spec 122 §6.6: declared in the READING step's staleness; WF1 LDG-10 Step 2, 2026-10-03). Every cross-step stamp/pin THIS step reads from a producer: `step` = the producer's identity.name; `stamp` = `records_meta.<dotted path>` (a key path of the producer's completed pipeline_runs.records_meta) or `<table>.<column>` (a watermark column the producer writes, §6.3); `equals` = the literal the reader requires (records_meta stamps only). A compute reads `equals` from this descriptor via a module-level require — never a hard-coded const — so declared == executed by construction. `step` joins the derived reads.steps set (scripts/lib/ledger.js derivedReadsSteps). Replaces inputs.reads.steps[].version_pin/assert_health (inert, deleted in the FLEET-2 RE-FREEZE). Gate #44 check (h) witnesses it after P1-C9.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step",
+              "stamp"
+            ],
+            "properties": {
+              "step": {
+                "$ref": "#/definitions/slug"
+              },
+              "stamp": {
+                "type": "string",
+                "pattern": "^(records_meta(\\.[a-z_][a-z0-9_]*)+|[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*)$"
+              },
+              "equals": {
+                "type": "string",
+                "minLength": 1
+              },
+              "why": {
+                "$ref": "#/definitions/why"
+              }
             },
-            {
-              "const": "none"
-            },
-            {
-              "type": "string",
-              "minLength": 5
-            }
-          ]
+            "allOf": [
+              {
+                "x-rule": "LDG-10: equals only on a records_meta stamp (a watermark column is compared, not pinned to a literal)",
+                "if": {
+                  "required": [
+                    "equals"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "stamp": {
+                      "pattern": "^records_meta\\."
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "x-trust": "executed:scripts/lib/compute/enrich-ravines.js#pinnedSpecVersion",
+          "x-ruling": {
+            "rungs_tried": [
+              "inputs.reads.steps[].version_pin — inert (zero readers in scripts/lib), classed D by the trust audit, and deleted in the FLEET-2 RE-FREEZE",
+              "keep the hard-coded SPEC_VERSION consts in the computes — the pin then lives only in code (Spec 124 §2 Rule 1) and nothing ties it to what the producer stamps"
+            ],
+            "why": "operator authorization 2026-10-03 (WF1 LDG-10 class 3): the pin needs a declared home on the reading step that replaces version_pin; the computes read it from the descriptor"
+          }
         },
         "trigger": {
+          "x-trust": "executed:scripts/lib/step/staleness.js#measureTrigger",
           "description": "What makes the step ELIGIBLE TO ACT. A SET, ordered by lifecycle position — two-tier metadata->hash is two gates at two positions.",
           "anyOf": [
             {
@@ -2689,7 +2768,7 @@
                     "description": "The inputs.reads.externals[].id this trigger reads, where applicable."
                   },
                   "table": {
-                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The table an upstream_ledger signal COUNTS. Without it the runner cannot evaluate a data-side gate generically and the comparison has to live in a step-specific helper — which is what scripts/lib/massing-full-gate.js is, and why Gate 0 (claim #149) would fire if the library named it.",
+                    "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull). The table an upstream_ledger signal COUNTS. Without it the runner cannot evaluate a data-side gate generically and the comparison has to live in a step-specific helper — which is what link_massing's pre-conversion full-gate module was (retired at FLEET-2 P2-C6), and why Gate 0 (claim #149) would fire if the library named it.",
                     "$ref": "#/definitions/tableName"
                   },
                   "emit_key": {
@@ -2728,6 +2807,7 @@
           ]
         },
         "mode_select": {
+          "x-trust": "executed:scripts/lib/step/staleness.js#selectMode",
           "description": "What the trigger CHOOSES. The massing code+data veto outputs a MODE, not a skip; scope-defer is the inverse of a staleness gate (too much changed, so refuse).",
           "enum": [
             "skip",
@@ -2739,69 +2819,14 @@
           ],
           "x-frozen": true
         },
-        "checkpoint": {
-          "anyOf": [
-            {
-              "const": "none"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "cursor",
-                "ordered"
-              ],
-              "properties": {
-                "cursor": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "ordered": {
-                  "type": "boolean",
-                  "description": "ordered:false CANNOT resume (the Meltano trap)."
-                }
-              }
-            }
-          ]
-        },
-        "interval": {
-          "anyOf": [
-            {
-              "const": "none"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "column",
-                "grain"
-              ],
-              "properties": {
-                "column": {
-                  "$ref": "#/definitions/columnName"
-                },
-                "grain": {
-                  "enum": [
-                    "hour",
-                    "day",
-                    "week",
-                    "month",
-                    "quarter",
-                    "year"
-                  ],
-                  "x-frozen": true
-                }
-              }
-            }
-          ]
-        },
         "fingerprint": {
           "const": "derived",
           "x-derived": true,
           "description": "ALWAYS ON, never declared. Normalized hash over compute + outputs/staleness/guards/execution + the ENUMERATED external inputs below. Never over identity/why/notes/deviations."
         },
         "fingerprint_inputs": {
-          "description": "NEW (§1.5). Closes the contradiction that §4.1a rules an unenumerated external input a declaration defect while fingerprint is marked derived-do-not-declare. LINK_MASSING_CODE_VERSION lives in scripts/lib/, not in the step, and triggers a full destructive rebuild (claim #52b).",
+          "x-trust": "enforced:#34",
+          "description": "NEW (§1.5). Closes the contradiction that §4.1a rules an unenumerated external input a declaration defect while fingerprint is marked derived-do-not-declare. The founding case was a code-version constant living in scripts/lib/ rather than in the step that triggered a full destructive rebuild (claim #52b); since FLEET-2 P2-C6 that value is the descriptor's own staleness.logic_version.",
           "anyOf": [
             {
               "const": "none"
@@ -2817,6 +2842,7 @@
           ]
         },
         "logic_version": {
+          "x-trust": "enforced:#48",
           "anyOf": [
             {
               "const": "none"
@@ -2852,6 +2878,7 @@
           }
         },
         "on_prior_run_error": {
+          "x-trust": "executed:scripts/lib/step/staleness.js#priorRunErrorPosture",
           "description": "§1.6 — the DECLARED posture when the PRIOR-RUN read that feeds every trigger fails (LR-D2, peel 8a). The prior run's emit block is the baseline both gate tiers and every drift ratio compare against, so a failed read is not a neutral event: it silently downgrades the step to \"first run\", which loads unguarded with every ratio 0 BY DEFINITION rather than by measurement. fail_step = the read is load-bearing, refuse. warn_row = proceed with no baseline and say so in a `prior_run_read_failed` audit row — never silently, which is what the pre-conversion `.catch(warn => null)` did. ABSENT means fail_step: the posture may be unstated, but it may not be silent.",
           "enum": [
             "fail_step",
@@ -2894,12 +2921,14 @@
       ],
       "properties": {
         "requires": {
+          "x-trust": "executed:scripts/lib/step/index.js#assertRequirements",
           "type": "array",
           "items": {
             "$ref": "#/definitions/requirement"
           }
         },
         "srid": {
+          "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
           "anyOf": [
             {
               "const": "none"
@@ -2910,6 +2939,7 @@
           ]
         },
         "empty_source": {
+          "x-trust": "executed:scripts/lib/step/index.js#measureInputGuards",
           "description": "V6 — the typed form.",
           "anyOf": [
             {
@@ -2928,7 +2958,7 @@
           ]
         },
         "schema_drift": {
-          "description": "V3: none|propagate|pause ('warn' dropped — a drift response is an ACTION). R6: a scalar OR a CONDITIONAL PER-LAYER ARRAY, because load-zoning.js:405-407 responds differently per layer in ONE step (base FAIL/pause, non-base WARN/propagate). The array must carry a \"default\" arm; the exactly-one-default rule is validator-side.",
+          "description": "V3: none|propagate|pause ('warn' dropped — a drift response is an ACTION). R6: a scalar OR a CONDITIONAL PER-LAYER ARRAY, because load-zoning.js:405-407 responds differently per layer in ONE step (base FAIL/pause, non-base WARN/propagate). The array must carry a \"default\" arm; the exactly-one-default rule is validator-side. RELEASE (MQ-A7, fold 20, 2026-10-05): a `pause` refusal is released for one run by the step's declared `override.force_run` env (read alone — the interrupted-retraction force never releases a drift): the drift is then a WARN row naming the added/removed fields and 'released by force_run', the run is completed_with_warnings, and the next run's baseline is the new header. An INGESTOR declaring `pause` (scalar or any per-layer arm) must declare `override.force_run` as an env var (top-level allOf), else the drift could never be released.",
           "anyOf": [
             {
               "enum": [
@@ -2964,26 +2994,21 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "budget",
         "txn_scope",
-        "txn_budget",
-        "chunked",
         "statement_timeout",
         "step_timeout",
         "batch",
-        "needs_disk_mb",
-        "partial_fill",
         "on_row_error",
         "on_batch_error",
         "on_check_error",
         "on_degrade",
-        "criticality",
         "network",
         "invocation",
         "maintenance"
       ],
       "properties": {
         "shape": {
+          "x-trust": "executed:scripts/lib/step/index.js#isIngestStep",
           "description": "ADDED AT THE LINK PILOT (2026-08-27, C3 pre-pull) — OPERATOR RULING A-1(a). WHICH lifecycle the runner drives, DECLARED rather than sniffed. Until this field the branch was inferred: scripts/lib/step/index.js isIngestStep required an inputs.reads.externals[].url, so a pure DB-to-DB join (a LINK) silently fell to the ASSERT path and its join and write had NO HOME AT ALL. Inference is the wrong mechanism for a phase order that carries before/after guarantees (B-1..B-13): a step whose declaration says nothing gets whichever branch a predicate happens to pick. \"assert\" = compute only, the runner writes nothing. \"ingest\" = acquire, validate, pre_write gate, write (runIngestPhase). \"link\" = read, staleness/mode, RUN_AT, pre_write gate, ordered writes[], post checks (runLinkPhase). \"cascade\" = ADDED AT THE MATCHER PILOT (2026-08-28, A-1 SHOULD-FIX d) — a bulk N-tier cascade over a declared `tiers[]` array with NO batching/pagination and MORE THAN ONE write target per tier (runCascadePhase): read, gated-skip, staleness/mode, RUN_AT, pre_write gate, ordered per-tier writes[] inside ONE step-scoped transaction, post checks. Measured at commit 7 to fork `runLinkPhase`'s keyset batch loop and its flat parcels_* counters rather than fit a `tiers[]` branch inside it — link_wsib is the first and, as of this pilot, only cascade-shaped step. \"materialize\" = ADDED AT THE MATERIALIZER PILOT (2026-08-29, A-1 RULING) — ONE unconditional bulk INSERT...SELECT...JOIN <spatial predicate>...ON CONFLICT DO NOTHING statement, no retraction, no primary/fallback split, no tiers (runMaterializePhase): guards.requires, LG-15 ledger gated-skip, RUN_AT, the keyset-paginated per-batch transaction loop calling LG-18's executeInsertSelectNoRetract, post checks. Forked from runCascadePhase's phase-order shape (guards -> gated-skip -> RUN_AT -> pre_write gate -> write -> post checks), NOT an extension of runLinkPhase: runLinkPhase's write path is SELECT-then-batched-executeUpsertBatch, which would split this archetype's single server-side statement and break the G2 \"verbatim SQL\" guarantee. link_parcel_addresses is the first and, as of this pilot, only materialize-shaped step. \"backfill\" = ADDED AT THE BACKFILL PILOT (2026-08-29, A-4 RULING, ACCEPT at Fold D) — ONE conditional set-based UPDATE...WHERE <scope> statement, UPDATE-only (LG-20's executeBackfillUpdate), no retraction, no batching in the surviving (PostGIS-only) path, no ledger-gated skip (runBackfillPhase): guards.requires, a pre-run backlog count, a DATA-driven (not staleness-gated) zero-work completion when the backlog is 0, RLS preflight, pre_write gate, the one statement, post checks. Forked from runMaterializePhase's phase-order shape, NOT an extension of it: a MATERIALIZER's write is a keyset-paginated batch loop over MANY statements; a BACKFILL's ONE write target is a SINGLE unpaginated statement with `txn_scope: \"statement\"` and no batch loop at all. compute_centroids is the first and, as of this pilot, only backfill-shaped step. \"link_keyed\" = ADDED AT PILOT 7 (2026-08-30, LINK pilot 7, `link_parcels`, Fold B item 4) — FORKED FROM `runLinkPhase` UNCONDITIONALLY (the pilot-4 fork precedent, `index.js:263-268`, was never itself gated on a line-count threshold), NOT a branch inside it: `runLinkPhase`'s single-integer `id` keyset (`eligible_batch_sql` + a `lastId` cursor) cannot page a table whose PK is a composite `(permit_num, revision_num)` with no surrogate `id` (LG-25's own composite-key keyset, `(permit_num, revision_num) > ($2, $3)`); its ONE primary + ONE fallback match pass cannot express a 4-tier cascade (address UNION ALL primary, spatial containment, spatial KNN fallback); and its class-B-shaped single write target cannot express class F's compound upsert-then-keyed-DELETE (LG-24's `executeGuardedDeleteByKey`, run inside the SAME batch transaction as the upsert, Fold B item 5's declared `writes[]` order). `runLinkPhase` (245 lines) is left byte-for-byte untouched — `link_massing` keeps using it exactly as before. `link_parcels` is the first and, as of this pilot, only link_keyed-shaped step. \"recorder\" = ADDED AT PILOT 8 (2026-08-31, RECORDER pilot 8, `refresh_snapshot`, Fold B — zero-growth hypothesis REFUTED by direct trace against all six existing runners) — the SIMPLEST runner in the library (`runRecorderPhase`): no batching, no carried-rows loop, no ledger gate — compute produces exactly ONE row, one single-statement `guarded_upsert` write (`executeRecorderUpsert`, a new write.js executor) in ONE transaction. Mode/staleness derivation, `chain_run_id` (R-U), `records_meta`, and the verdict cascade all reuse the existing generic paths unchanged — this shape adds NO new mechanism beyond the runner + executor pair. Forked from `runBackfillPhase`'s phase-order shape (guards -> pre-write gate -> the one statement -> post checks, no gated-skip) — NOT an extension of it: `executeBackfillUpdate` structurally refuses any INSERT token (UPDATE-only, LG-20), and a RECORDER's write IS an `INSERT ... ON CONFLICT ... DO UPDATE`, which `write_once_backfill`'s own class contract cannot express. Measured against all six prior shapes before adding this one (`ingest`/`link`/`link_keyed`/`cascade`/`materialize` all require either an acquisition seam, a join/carried-rows batch loop, or a ledger gate none of which this step has; `backfill`'s executor is UPDATE-only by construction) — none fit. `refresh_snapshot` is the first and, as of this pilot, only recorder-shaped step. \"enrich\" = ADDED AT PILOT 9 (2026-09-04, ENRICHER pilot 9, `enrich_parcels`, Asks 1/1a/2 RULING) — the FIRST shape whose step does not finish inside one transaction: a MULTI-PASS enricher whose declared `execution.phases[]` run in `order`, passes 1-4 sharing ONE `pipeline.withTransaction` (`enrich-parcels.js:2032`) and pass 5 streaming on a SEPARATE connection AFTER that transaction COMMITs (`txn: \"post_commit\"`), because Spec 78 §P3A.1 makes a same-txn read of what passes 1-4 just wrote invisible (runEnrichPhase). Measured against all seven prior shapes before adding this one: `assert` writes nothing; `ingest` needs an acquisition seam this step has none of; `link`/`link_keyed`'s keyset batch loop pages ONE write target, it does not sequence heterogeneous passes; `cascade`'s `tiers[]` is an N-tier match cascade over ONE write target inside ONE transaction, carrying `confidence_from_config` and no transaction-membership, row-scope or per-pass bound axis at all; `materialize` is one unconditional INSERT...SELECT; `backfill`'s executor is UPDATE-only by construction; `recorder`'s compute produces exactly one row. Decisively: NONE of the seven `phase_runners` orders frozen in `template-freeze.json` contains a phase that runs after the step's own COMMIT — the alternative (declare `shape: \"backfill\"` and hide the five passes inside compute) is cheaper and is exactly what Rule 1 and Rule 2 forbid, a declaration that says something other than what the step does. `enrich_parcels` is the first and, as of this pilot, only enrich-shaped step. \"link_column\" = ADDED AT I4 (2026-09-16, `link_neighbourhoods`, LINK 3/3, Ask 1 ruling (B) FORK, re-ruled after the plan panel) — ONE scoped, change-guarded set-based JOIN UPDATE that stamps ONE column on an EXISTING row: no junction, no retraction, no batch loop, no cursor, no transaction wrapper (`txn_scope: \"statement\"` — a single server-side statement IS its own transaction), executed by write.executeSetBasedJoinUpdate (LG-11, class N) (runLinkColumnPhase). Phase order FORKED FROM runBackfillPhase's — guards.requires, overrides, RLS preflight, prior read under its declared posture, the corpus count and the eligible count, the pre_write gate, the ONE statement, the post-write round trip — but NOT its mechanism: runBackfillPhase's executor is UPDATE-only class E by construction, its matched vocabulary is compute_centroids', its force_full branch needs a second write target, and its zero-backlog EARLY RETURN is the one thing this shape must not do (link_neighbourhoods' eligible set is 0 in the measured steady state, so an early return would suppress every post check — including a standing WARN and the whole failed_link_rate arm — on every ordinary run). Measured against all nine prior shapes before adding this one; see this node's own x-ruling for the three share-rungs and why each was refuted by execution. link_neighbourhoods is the first and, as of this conversion, only link_column-shaped step. ABSENT keeps the pre-existing inference exactly, so no converted step changes behaviour.",
           "enum": [
             "assert",
@@ -3011,6 +3036,7 @@
           }
         },
         "phases": {
+          "x-trust": "executed:scripts/lib/step/index.js#runEnrichPhase",
           "description": "ADDED AT PILOT 9 (2026-09-04, ENRICHER pilot 9, `enrich_parcels`, Fold E3 Ask 1a). REQUIRED when `identity.archetype` is \"ENRICHER\" (§1.10's profile table); no other archetype profile mentions it, so no converted step is touched. The ORDERED, CLOSED per-pass structure of a multi-pass enricher: WHICH pass, in WHAT order, inside or after the shared transaction (`txn`), filling WHICH declared `outputs.writes[]` target (`writes_ref`), over WHICH row scope (`scope`), made eligible again by WHICH declared `outputs.invalidates[]` entry (`invalidator_ref`), bounded by WHICH logic variable (`timeout_minutes_from_config`). Before this field a 5-pass step could declare only `shape` and keep its passes inside compute — Rule 2's ban, and a lifecycle nothing could re-derive; step-level, `staleness.scope` and `outputs.invalidates` answered for all five passes AT ONCE, which is precisely how `enrich_parcels` pass 4's missing comps invalidator (EP-D4/Ask 3) stayed unexpressed while claim #54's ENRICHER arm read satisfied. TWO ARRAY-LEVEL RULES, both AJV-expressed (`allOf` below), both bounded at 8 phases because under the freeze (Spec 122 §8) a 9th pass should cost a deliberate schema edit, not a silent widening: (1) ORDERS ARE UNIQUE AND CONTIGUOUS — an array of N items must `contains` an item declaring `order` k for every k in 1..N, which by pigeonhole forces the order set to be exactly {1..N} (a duplicate or a gap REDs at `/execution/phases` with keyword `contains`); (2) `txn: \"post_commit\"` IS ADMITTED AT MOST ONCE AND ONLY LAST — an item declaring order k AND post_commit caps the array at k items, so a post_commit phase followed by anything, or a second one, REDs at `/execution/phases` with keyword `maxItems`. Both are stated as `contains` rather than a positional `items` tuple ON PURPOSE: a variable-length tuple trips AJV's own strict-mode tuple warning on EVERY compile, i.e. on every `pipeline.step()` construction in production, and a permanent warning printed by the validator is exactly the kind of unread noise this contract exists to retire. `writes_ref`/`invalidator_ref` resolvability is validator-side (JSON Schema cannot reach a sibling array's length) and lands with `runEnrichPhase`.",
           "type": "array",
           "minItems": 1,
@@ -3343,6 +3369,7 @@
           }
         },
         "tiers": {
+          "x-trust": "executed:scripts/lib/step/index.js#runCascadePhase",
           "description": "ADDED AT THE MATCHER PILOT (2026-08-28, A-1). Required when shape is \"cascade\": the ORDERED N-tier match cascade, highest confidence first — a higher tier's write scope (`WHERE linked_entity_id IS NULL`-shaped) must exclude any row a prior tier already claimed, which is what makes each tier's counters and writes independent of loop order. Each tier names the confidence variable its writes stamp; the compute's buildTierSql(descriptor, config, tier, mode) is the ONLY place the tier's match predicate and write SQL are authored (Rule 2 — compute is domain logic only).",
           "anyOf": [
             {
@@ -3378,9 +3405,6 @@
             }
           ]
         },
-        "budget": {
-          "$ref": "#/definitions/duration"
-        },
         "txn_scope": {
           "enum": [
             "statement",
@@ -3390,13 +3414,8 @@
           ],
           "x-frozen": true
         },
-        "txn_budget": {
-          "$ref": "#/definitions/duration"
-        },
-        "chunked": {
-          "type": "boolean"
-        },
         "statement_timeout": {
+          "x-trust": "executed:scripts/lib/step/index.js#runWithPool",
           "$ref": "#/definitions/duration"
         },
         "statement_timeout_minutes_from_config": {
@@ -3427,6 +3446,7 @@
           "$ref": "#/definitions/duration"
         },
         "batch": {
+          "x-trust": "executed:scripts/lib/step/index.js#runLinkPhase",
           "anyOf": [
             {
               "const": "none"
@@ -3436,6 +3456,19 @@
               "minimum": 1
             }
           ]
+        },
+        "batch_why": {
+          "x-trust": "prose",
+          "description": "MQ-B1 (a) (registry-truth fold 19, 2026-10-04; 2.8 RE-FREEZE row). Why `batch` is \"none\" on an INGESTOR with more than one write target: the ingest writer strides EACH target by pipeline.maxRowsPerInsert(columnsPerRow) (scripts/lib/step/write.js), so the batch differs per target and no single integer is true; no ingest runner reads `execution.batch`. Required exactly when identity.archetype is INGESTOR, batch is \"none\" and outputs.writes has two or more targets (top-level allOf). The same {text, liveness} shape as on_batch_error_why.",
+          "$ref": "#/definitions/why",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) the smaller per-target stride as the one integer (MQ-B1 option b) — REFUTED: true only for the binding target and understates the others; a declared value that is false for some targets is Rule 1's own violation",
+              "rung (b) delete execution.batch for every INGESTOR (MQ-B1 option c, D13's deleted arm) — NOT CHOSEN: equally compliant per the 2026-10-04 vetting, but it retires a field the single-target ingestors carry as a generated, true value (generate-ingest-batch.js) and needs a RE-FREEZE deletion plus every ingestor descriptor edit",
+              "rung (c) a deviations[] row or prose in notes — REFUTED: neither is reachable from the field it explains, so a reader of execution.batch sees an unexplained \"none\"; every sibling posture field already carries its reason in a `_why` of the {text, liveness} shape"
+            ],
+            "why": "Registry-truth plan fold 19 MQ-B1 (a) (operator ruling 2026-10-04, compliance vetting PASS): an INGESTOR with two or more write targets declares execution.batch \"none\" because the ingest writer strides EACH target by pipeline.maxRowsPerInsert(columnsPerRow) and no ingest runner reads execution.batch; the \"none\" must state that reason. The cheapest honest rung is the existing why shape on the field itself, required only for that population (today load_heritage and load_zoning)."
+          }
         },
         "heartbeat_minutes_from_config": {
           "type": "string",
@@ -3518,33 +3551,13 @@
           }
         },
         "batch_size_from_config": {
+          "x-trust": "executed:scripts/lib/compute/compute-centroids.js#buildFullRecomputeSql",
           "type": "string",
           "minLength": 1,
           "description": "OPTIONAL, MATERIALIZER pilot (2026-08-29, LW-D10 class). `execution.batch` (above) is frozen to a literal integer or \"none\" — it cannot express a config-driven batch size. Present ONLY on a step whose keyset-paginated batch loop reads its per-batch row count from `config.logic_variables[].name` rather than a hardcoded literal: names that logic variable, with the *_from_config suffix (§1.2a P4) so the generic conformance battery's fromConfigRefs scan counts this as a genuine consumption path — mirroring `tiers[].confidence_from_config`/`max_iterations_from_config`'s own precedent for the identical blind spot (a runner-resolved value the compute never spells `ctx.config.<name>` for)."
         },
-        "needs_disk_mb": {
-          "anyOf": [
-            {
-              "const": "none"
-            },
-            {
-              "type": "integer",
-              "minimum": 1
-            }
-          ]
-        },
-        "partial_fill": {
-          "description": "The 5 measured classes (§3g). Only ONE step has a real recovery ledger; for the other twelve batched steps nothing in the database can answer 'is this table half-loaded?'.",
-          "enum": [
-            "atomic",
-            "batched",
-            "staged",
-            "mixed",
-            "none"
-          ],
-          "x-frozen": true
-        },
         "on_row_error": {
+          "x-trust": "enforced:#50",
           "enum": [
             "fail_fast",
             "quarantine",
@@ -3591,6 +3604,7 @@
           "$ref": "#/definitions/why"
         },
         "on_check_error": {
+          "x-trust": "executed:scripts/lib/step/verdict.js#checkRow",
           "description": "NEW (§1.6). The CHECK QUERY ITSELF errors — today the row is silently omitted, so a dropped table is indistinguishable from a healthy one (assert-data-bounds.js:607-610, assert-schema.js:445-449).",
           "enum": [
             "fail_step",
@@ -3614,17 +3628,8 @@
         "on_degrade_why": {
           "$ref": "#/definitions/why"
         },
-        "criticality": {
-          "enum": [
-            "required",
-            "best_effort"
-          ],
-          "x-frozen": true,
-          "x-banned": [
-            "best_effort"
-          ]
-        },
         "network": {
+          "x-trust": "executed:scripts/lib/step/acquire.js#resolveRetryPolicy",
           "anyOf": [
             {
               "const": "none"
@@ -3633,20 +3638,10 @@
               "type": "object",
               "additionalProperties": false,
               "required": [
-                "egress",
                 "timeout",
-                "retries",
-                "redact"
+                "retries"
               ],
               "properties": {
-                "egress": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
                 "timeout": {
                   "$ref": "#/definitions/duration"
                 },
@@ -3682,28 +3677,13 @@
                 "retries": {
                   "type": "integer",
                   "minimum": 0
-                },
-                "redact": {
-                  "description": "Spec 122 §12.3 claim #276 — values that MUST be scrubbed before persistence. Nowhere else in the contract can say this.",
-                  "anyOf": [
-                    {
-                      "const": "none"
-                    },
-                    {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
-                        "type": "string",
-                        "minLength": 1
-                      }
-                    }
-                  ]
                 }
               }
             }
           ]
         },
         "invocation": {
+          "x-trust": "generated:scripts/analysis/generate-chain-args.mjs",
           "description": "PER CHAIN argv/env, so manifest<->descriptor drift is a CHECKABLE difference rather than a convention. The manifest chain_args --full pin that killed enrich_parcels' incremental path is exactly this class (concern 15).",
           "anyOf": [
             {
@@ -3738,6 +3718,7 @@
           ]
         },
         "maintenance": {
+          "x-trust": "executed:scripts/lib/step/index.js#runWithPool",
           "description": "R6: NOT a category — a field. VACUUM ANALYZE on 4 tables across 3 steps; it CONSTRAINS txn_scope (VACUUM cannot run inside a transaction) and targets tables the issuing step does not own, while an ASSERT does it with outputs forced to \"none\".",
           "anyOf": [
             {
@@ -3944,6 +3925,7 @@
           ],
           "properties": {
             "force_full": {
+              "x-trust": "executed:scripts/lib/step/staleness.js#resolveOverrides",
               "anyOf": [
                 {
                   "const": "none"
@@ -3954,6 +3936,8 @@
               ]
             },
             "force_run": {
+              "x-trust": "executed:scripts/lib/step/staleness.js#resolveOverrides",
+              "description": "A deliberate operator reload: bypasses the tier-1/2 staleness skip (it never changes what is acquired). MQ-A7 (fold 20, 2026-10-05): it ALSO releases a `guards.schema_drift: \"pause\"` refusal on the ingest path for that run (WARN row 'released by force_run', status completed_with_warnings, the new header becomes the next baseline). Only this declared env releases a drift — never the interrupted-retraction force.",
               "anyOf": [
                 {
                   "const": "none"
@@ -3964,6 +3948,7 @@
               ]
             },
             "dry_run": {
+              "x-trust": "executed:scripts/lib/step/staleness.js#resolveOverrides",
               "description": "MOST steps' dry-run is env-var-driven; link_wsib's is ARGV-driven (`process.argv.includes('--dry-run')`, G-5) — declaring the literal flag is what lets `staleness.dryRunArgPresent` be the one place it is read (ADDED AT THE MATCHER PILOT, 2026-08-28).",
               "anyOf": [
                 {
@@ -3979,6 +3964,7 @@
               ]
             },
             "accept_anomaly": {
+              "x-trust": "executed:scripts/lib/step/index.js#partitionFailedRows",
               "description": "OPERATOR RULING A-5 (2026-08-25, INGESTOR pilot) — THE FOURTH KIND OF OVERRIDE. force_full / force_run / dry_run all answer \"does the step act?\"; an accept-anomaly answers \"the step acted, a declared check FAILED, proceed anyway\". Present in >=2 loaders today as ad-hoc env reads (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT, RAVINE_ACCEPT_MASS_DELETE). Declaring it makes the L7c rule STRUCTURAL rather than textual: the override lets the run COMPLETE, it NEVER suppresses the FAIL row. `check_id` must name a declared check; the runner also emits a WARN row whenever the env is standing, so an accidental prod override is visible even on a run it never had to rescue.",
               "type": "array",
               "minItems": 1,
@@ -4027,10 +4013,12 @@
             ],
             "properties": {
               "key": {
+                "x-trust": "enforced:#30",
                 "type": "string",
                 "minLength": 1
               },
               "type": {
+                "x-trust": "enforced:#47",
                 "enum": [
                   "string",
                   "int",
@@ -4043,12 +4031,14 @@
                 "x-frozen": true
               },
               "consumers": {
+                "x-trust": "enforced:#31",
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
               },
               "skeleton": {
+                "x-trust": "executed:scripts/lib/step/index.js#multiPrimaryBinding",
                 "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). The FIELD SET and default values of an `object`-typed emit — the frozen producer block a consumer reads (Spec 59 §9's 18-field records_meta.ravine_load). Two runner behaviours need it and neither can be derived from `type: \"object\"`: (1) a GATED SKIP re-emits the prior run's block through sourceVersion.buildSkipReEmitMeta(skeleton <- prior <- pins), and a skeleton typed only as \"object\" gives the merge no keys; (2) a FAILURE terminal emits the skeleton with whatever is known so far. Declaring it here is P1.1 (descriptor data before code): the 7 fields the consumer HALTs on become greppable in the descriptor instead of living in a hand-written literal inside the step.",
                 "anyOf": [
                   {
@@ -4103,6 +4093,7 @@
       ]
     },
     "limitations": {
+      "x-trust": "enforced:#51",
       "anyOf": [
         {
           "const": "none"
@@ -4144,7 +4135,7 @@
       ]
     },
     "interpretation": {
-      "description": "Prose lives in <slug>.notes.json, capped at 12 entries. Checks are uncapped; prose is capped — the cheapest way to keep knowledge is to make it measurable. May reference a check id but may NEVER quote a number.",
+      "description": "Prose lives in <slug>.notes.json, capped at 12 entries. The cap is ONE notes-file check (step-validate fast invariant #45 NOTES-CAP, scripts/analysis/gates/notes-cap.mjs); the descriptor no longer carries an `entries` count (deleted, Phase 3 RE-FREEZE DELETE row #64). Checks are uncapped; prose is capped — the cheapest way to keep knowledge is to make it measurable. May reference a check id but may NEVER quote a number.",
       "anyOf": [
         {
           "const": "none"
@@ -4153,18 +4144,13 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "file",
-            "entries"
+            "file"
           ],
           "properties": {
             "file": {
+              "x-trust": "enforced:#45",
               "type": "string",
               "pattern": "^[a-z0-9_\\-]+\\.notes\\.json$"
-            },
-            "entries": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 12
             }
           }
         }
@@ -4190,6 +4176,7 @@
           ],
           "properties": {
             "reset": {
+              "x-trust": "executed:scripts/lib/step/reset.js#generateReset",
               "anyOf": [
                 {
                   "enum": [
@@ -4241,6 +4228,7 @@
               "description": "Derived from outputs.invalidates. Never declared."
             },
             "interrupted": {
+              "x-trust": "executed:scripts/lib/step/staleness.js#detectInterruptedRetraction",
               "description": "OPERATOR RULING R-B (2026-08-28, ADVERSARY DELTA — measured 2026-08-28: link_massing forced FULL killed mid-rebuild left parcel_buildings at 29,330/520,492 rows; the next run's gate read \"unchanged\" and went incremental, so the hole persisted). WHAT the step's recovery posture is when a process is killed mid-write. `force_full_on_next_run` is the truthful posture until the library implements the marker-based reader (deferred to pilot 4, declared gap filed in docs/reports/review_followups.md — a crashed/stuck-running row newer than the last completed run must read as a FULL signal). `none` is legal only with `interrupted_why` and is a WARN in conformance — every `outputs.writes[]` entry with `retract_when: full_only` or `retract: \"all\"` REQUIRES `interrupted: \"force_full_on_next_run\"` (step-conformance.infra.test.ts), because a crashed retraction on that target leaves a hole no incremental run's staleness gate can see.",
               "enum": [
                 "force_full_on_next_run",
@@ -4252,6 +4240,7 @@
               "$ref": "#/definitions/why"
             },
             "before_image": {
+              "x-trust": "executed:scripts/lib/step/index.js#beforeImageRow",
               "description": "OPERATOR RULING R-M (2026-08-28, LG-17). Any write target that RETRACTS (write_discipline.class \"set_based_null_retract\", or retract \"all\"/\"departed\") writes the rows it is about to retract (key columns + the columns it nulls/deletes) to a dated JSONL file (docs/reports/golden/<slug>/before-image/<RUN_AT ISO>-<target>.jsonl) INSIDE the same run, BEFORE the retraction statement — a destructive repair with no row-level before-image cannot be audited. `\"generated\"` means the runner writes this file automatically (scripts/lib/step/write.js writeBeforeImage, called from the runner before executeSetBasedClear/executeRetraction); on a write failure the run FAILS before retracting (fail loud, never a silent skip). `\"none\"` is legal only with `before_image_why` and is a WARN in conformance — every destructive-retraction target REQUIRES `before_image: \"generated\"` (step-conformance.infra.test.ts), same enforcement shape as `interrupted` above.",
               "enum": [
                 "generated",
@@ -4313,6 +4302,7 @@
       ],
       "properties": {
         "class": {
+          "x-trust": "executed:scripts/lib/step/index.js#assertDatabaseTarget",
           "enum": [
             "primary",
             "replica",
@@ -4321,6 +4311,7 @@
           "x-frozen": true
         },
         "min_migration": {
+          "x-trust": "executed:scripts/lib/step/index.js#assertDatabaseTarget",
           "description": "COUNT floor, not a filename number: the step refuses to run unless COUNT(*) FROM schema_migrations is >= this value (scripts/lib/resolve-db.js assertDbTarget, operator ruling P0 9e2da7b1). The migrations/ filename sequence has historical gaps (e.g. 43, 49, 50, 158), so a required migration's FILENAME number is always >= its true COUNT position once gaps exist — setting min_migration to the filename (LW-D8: 243 instead of 240 for migration 243_wsib_unlinked_partial_index.sql) makes the floor unreachable forever. Set this to the 1-based position of the required migration file in the sorted migrations/ directory listing.",
           "anyOf": [
             {
@@ -4333,6 +4324,7 @@
           ]
         },
         "assert_current_database": {
+          "x-trust": "executed:scripts/lib/step/index.js#assertDatabaseTarget",
           "anyOf": [
             {
               "const": "none"
@@ -4389,6 +4381,7 @@
           ],
           "properties": {
             "logic_variables": {
+              "x-trust": "executed:scripts/lib/step/config.js#resolveConfig",
               "type": "array",
               "items": {
                 "type": "object",
@@ -4450,6 +4443,7 @@
               "description": "link-wsib's A1/A2 fence: a SKIP-eligible step must never let an invalid threshold hide behind a green SKIPPED summary, so config validation runs ABOVE the lock and the gate."
             },
             "retired": {
+              "x-trust": "executed:scripts/lib/step/config.js#retiredVarRow",
               "description": "OPERATOR RULING R-A (2026-08-28). Retirement of a tunable is itself a declaration, never a live registry row: an operator-editable knob with zero effect is a FALSE AFFORDANCE. `retired ∩ logic_variables` MUST be empty (step-conformance.infra.test.ts) — a name lives in exactly one of the two arrays, never both. A retired name must appear in NO seed (scripts/seeds/logic_variables.json), NO GlobalConfigCard GROUPS entry and NO ctx.config read in the compute (same conformance suite). `scripts/lib/step/config.js resolveConfig` widens its declared-names presence SELECT to declared ∪ retired and stamps a `retired_var_row_present` audit row (WARN when the row still exists, INFO once an operator has deleted it) until the row is gone — ADVERSARY DELTA R-A.",
               "type": "array",
               "items": {
@@ -4732,7 +4726,7 @@
       "then": { "properties": { "staleness": { "type": "object", "required": ["skip_scope"], "properties": { "skip_scope": { "const": "all_primaries" } } } } }
     },
     {
-      "x-profile": "INGESTOR — write_discipline + retract + replay + empty_source all required (write_discipline/retract/replay are required on every write globally; what the profile adds is that outputs may not be \"none\"). AMENDED AT BATCH-2 ROW 3.1 c0e (2026-09-23): a write with a `columns[].bind: \"wkb_geometry\"` target REQUIRES a declared `outputs.writes[].geometry_kind`. SCOPED TO THIS PROFILE ON PURPOSE — the requirement is about the VALIDATOR, and only the ingest phase runs `validateGeometries`; a LINK/CASCADE/MATERIALIZER plan binds geometry from a server-side SELECT and never reads the kind, so a step-wide rule would force a fabricated value onto plans whose SQL ignores it (measured: a plan-level throw sent 0 write statements through the LINK dry-run path, REDing LW-D15 and Fold D). The INGESTOR is the archetype whose write is fed by `validateGeometries`, which is exactly the population that must declare the family. Global fields (columns/key/write_discipline/…) stay on the item; only the requirement moves.",
+      "x-profile": "INGESTOR — write_discipline + retract + empty_source all required (write_discipline/retract are required on every write globally; what the profile adds is that outputs may not be \"none\"). AMENDED AT BATCH-2 ROW 3.1 c0e (2026-09-23): a write with a `columns[].bind: \"wkb_geometry\"` target REQUIRES a declared `outputs.writes[].geometry_kind`. SCOPED TO THIS PROFILE ON PURPOSE — the requirement is about the VALIDATOR, and only the ingest phase runs `validateGeometries`; a LINK/CASCADE/MATERIALIZER plan binds geometry from a server-side SELECT and never reads the kind, so a step-wide rule would force a fabricated value onto plans whose SQL ignores it (measured: a plan-level throw sent 0 write statements through the LINK dry-run path, REDing LW-D15 and Fold D). The INGESTOR is the archetype whose write is fed by `validateGeometries`, which is exactly the population that must declare the family. Global fields (columns/key/write_discipline/…) stay on the item; only the requirement moves.",
       "if": {
         "properties": {
           "identity": {
@@ -4869,7 +4863,7 @@
       }
     },
     {
-      "x-profile": "ENRICHER — claim #54: a staleness.scope on a lineage column IMPLIES a declared invalidator. This is the centroid defect made UNEXPRESSIBLE rather than merely visible. AMENDED AT PILOT 9 (2026-09-04): `execution.phases[]` is REQUIRED too — an enricher declares its passes, in order, each with its own transaction membership, write target, row scope, invalidator and bound. Scoped to this archetype alone: the other seven profiles are byte-untouched, and none of the 8 converted descriptors is an ENRICHER. AMENDED AT BATCH-2 PHASE 0.10 (2026-09-15): `execution.heartbeat_minutes_from_config` and `execution.lock_timeout_ms_from_config` are REQUIRED too — `runEnrichPhase` used to read both out of two hardcoded `config.enrich_parcels_*` keys, so a SECOND enrich-shaped step resolved both to NaN and silently ran with NO heartbeat ticker and NO `SET LOCAL lock_timeout` at all (ER-D1, Spec 48 §3.6). Required rather than optional because a non-finite resolution now THROWS: an ENRICHER that declares neither would fail at run time, and a contract that can only be discovered at run time is not a contract. `enrich_parcels` is still the only ENRICHER in the estate, so exactly one descriptor is touched.",
+      "x-profile": "ENRICHER — claim #54: a pass whose execution.phases[].scope is incremental or deferred IMPLIES a declared invalidator (the phases discriminator; the original staleness.scope arm was deleted with #28 in the FLEET-2 RE-FREEZE, because an `if` on a deleted field can never fire). This is the centroid defect made UNEXPRESSIBLE rather than merely visible. AMENDED AT PILOT 9 (2026-09-04): `execution.phases[]` is REQUIRED too — an enricher declares its passes, in order, each with its own transaction membership, write target, row scope, invalidator and bound. Scoped to this archetype alone: the other seven profiles are byte-untouched, and none of the 8 converted descriptors is an ENRICHER. AMENDED AT BATCH-2 PHASE 0.10 (2026-09-15): `execution.heartbeat_minutes_from_config` and `execution.lock_timeout_ms_from_config` are REQUIRED too — `runEnrichPhase` used to read both out of two hardcoded `config.enrich_parcels_*` keys, so a SECOND enrich-shaped step resolved both to NaN and silently ran with NO heartbeat ticker and NO `SET LOCAL lock_timeout` at all (ER-D1, Spec 48 §3.6). Required rather than optional because a non-finite resolution now THROWS: an ENRICHER that declares neither would fail at run time, and a contract that can only be discovered at run time is not a contract. `enrich_parcels` is still the only ENRICHER in the estate, so exactly one descriptor is touched.",
       "if": {
         "properties": {
           "identity": {
@@ -4903,26 +4897,35 @@
         },
         "allOf": [
           {
+            "x-rule": "claim #54 (phases discriminator; registry-truth fold 13 / WF1 LDG-10 fold 1d, supersedes fold 12 F4's wording): an ENRICHER with ANY execution.phases[].scope in {incremental, deferred} must declare >= 1 outputs.invalidates entry — a row set narrowed by a lineage/recovery predicate goes stale and never comes back without an invalidator (the centroid defect). Keyed on the descriptor's own phases discriminator, independent of staleness.scope, so it survives the #28 deletion of staleness.scope.",
             "if": {
               "properties": {
-                "staleness": {
+                "execution": {
                   "properties": {
-                    "scope": {
-                      "not": {
-                        "enum": [
-                          "all",
-                          "none"
+                    "phases": {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "scope": {
+                            "enum": [
+                              "incremental",
+                              "deferred"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "scope"
                         ]
                       }
                     }
                   },
                   "required": [
-                    "scope"
+                    "phases"
                   ]
                 }
               },
               "required": [
-                "staleness"
+                "execution"
               ]
             },
             "then": {
@@ -4982,7 +4985,7 @@
       }
     },
     {
-      "x-profile": "RECORDER — outputs.publish required, and it may not be \"none\".",
+      "x-profile": "RECORDER — outputs may not be \"none\" (it must be an object). `outputs.publish` was deleted in the Phase 3 RE-FREEZE (DELETE row #22 — zero readers).",
       "if": {
         "properties": {
           "identity": {
@@ -5005,13 +5008,167 @@
           "outputs": {
             "type": "object",
             "properties": {
-              "publish": {
-                "enum": [
-                  "direct",
-                  "pointer"
+              
+            }
+          }
+        }
+      }
+    },
+    {
+      "x-profile": "MQ-A7 (fold 20, 2026-10-05; 2.8 RE-FREEZE row) — an INGESTOR whose guards.schema_drift declares \"pause\" (scalar, or any per-layer arm whose response is \"pause\") must declare override.force_run as an env var: force_run is the ONLY release of a paused drift, so pause with force_run \"none\" (or no override) could never be released.",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "INGESTOR"
+              }
+            },
+            "required": [
+              "archetype"
+            ]
+          },
+          "guards": {
+            "properties": {
+              "schema_drift": {
+                "anyOf": [
+                  {
+                    "const": "pause"
+                  },
+                  {
+                    "type": "array",
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "response": {
+                          "const": "pause"
+                        }
+                      },
+                      "required": [
+                        "response"
+                      ]
+                    }
+                  }
                 ]
               }
-            }
+            },
+            "required": [
+              "schema_drift"
+            ]
+          }
+        },
+        "required": [
+          "identity",
+          "guards"
+        ]
+      },
+      "then": {
+        "properties": {
+          "override": {
+            "type": "object",
+            "properties": {
+              "force_run": {
+                "$ref": "#/definitions/envVar"
+              }
+            },
+            "required": [
+              "force_run"
+            ]
+          }
+        },
+        "required": [
+          "override"
+        ]
+      }
+    },
+    {
+      "x-profile": "Fold 20 row 9 (2026-10-05; 2.8 RE-FREEZE row) — guards.schema_drift other than \"none\" is INGESTOR-only: its only executor is the ingest path (runIngestPhase -> schemaDriftDecision), so a non-INGESTOR propagate/pause would be declared and never executed (Rule 1 / R-AV).",
+      "if": {
+        "properties": {
+          "guards": {
+            "properties": {
+              "schema_drift": {
+                "not": {
+                  "const": "none"
+                }
+              }
+            },
+            "required": [
+              "schema_drift"
+            ]
+          }
+        },
+        "required": [
+          "guards"
+        ]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "INGESTOR"
+              }
+            },
+            "required": [
+              "archetype"
+            ]
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      }
+    },
+    {
+      "x-profile": "MQ-B1 (a) (fold 19, 2026-10-04; 2.8 RE-FREEZE row) — an INGESTOR with two or more write targets and execution.batch \"none\" must say why in execution.batch_why (the per-target maxRowsPerInsert stride means no single batch integer is true).",
+      "if": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "INGESTOR"
+              }
+            },
+            "required": [
+              "archetype"
+            ]
+          },
+          "execution": {
+            "properties": {
+              "batch": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "batch"
+            ]
+          },
+          "outputs": {
+            "type": "object",
+            "properties": {
+              "writes": {
+                "type": "array",
+                "minItems": 2
+              }
+            },
+            "required": [
+              "writes"
+            ]
+          }
+        },
+        "required": [
+          "identity",
+          "execution",
+          "outputs"
+        ]
+      },
+      "then": {
+        "properties": {
+          "execution": {
+            "required": [
+              "batch_why"
+            ]
           }
         }
       }

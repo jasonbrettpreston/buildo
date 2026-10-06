@@ -735,21 +735,17 @@
       "spec": "120 §6",
       "title": "4 new state tables",
       "promised": "4 new tables at migrations 245-248: pipeline_intervals, published_batch, step_error, step_quarantine",
-      "status": "NOT_STARTED",
-      "evidence": "migrations/ 240-245 exist, 246 does not (no published_batch table). RECLASSIFIED 2026-09-03 — WF1 'state tables reset' Fold A operator ruling (.cursor/wf1_state_tables_reset_active_task.md Fold A item 2): outputs.publish/recovery.rollback \"pointer\" are schema enums with ZERO implementation (step.schema.json:987, index.js:45 comment only) and grep '\"publish\"' scripts/*.descriptor.json -> all 7 real declarers (assert_schema has outputs:\"none\", ASSERT profile) say \"direct\", 0 say \"pointer\" — published_batch has no writer without a pointer-publish producer, so migration 246 is deferred until one exists rather than landing with an unimplemented owner. Reclassified batching_prereq -> cutover_prereq with applies_when so it structurally cannot block today's freeze-after-the-eighth decision (0 converted slugs declare outputs.publish:\"pointer\") but is armed the moment blocks[] names a slug that does. The published_batch column shape is recorded as FIRST-DESIGN text at docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5a (2026-09-03), cross-referencing the §7.4 A3 reconcile rollback sentence (:1066) that will own it.",
+      "status": "SUPERSEDED",
+      "evidence": "SUPERSEDED 2026-10-03 (registry-truth plan, fold 8 Phase 3 DELETE row #22 — FLEET-2 prep seat D): `outputs.publish` is DELETED from step.schema.json and from every converted descriptor, so this item's applies_when (descriptor_path \"outputs.publish\" equals \"pointer\") can never match any descriptor and the gate can never fire. The pointer-publish design it waited on was never implemented and is retired with the field; a future pointer-publish producer would re-open it as a new item with its own schema home, not revive this id. Prior evidence, kept for history: migrations/ 240-245 exist, 246 does not (no published_batch table). RECLASSIFIED 2026-09-03 — WF1 'state tables reset' Fold A operator ruling (.cursor/wf1_state_tables_reset_active_task.md Fold A item 2): outputs.publish/recovery.rollback \"pointer\" are schema enums with ZERO implementation (step.schema.json:987, index.js:45 comment only) and grep '\"publish\"' scripts/*.descriptor.json -> all 7 real declarers (assert_schema has outputs:\"none\", ASSERT profile) say \"direct\", 0 say \"pointer\" — published_batch has no writer without a pointer-publish producer, so migration 246 is deferred until one exists rather than landing with an unimplemented owner. Reclassified batching_prereq -> cutover_prereq with applies_when so it structurally cannot block today's freeze-after-the-eighth decision (0 converted slugs declare outputs.publish:\"pointer\") but is armed the moment blocks[] names a slug that does. The published_batch column shape is recorded as FIRST-DESIGN text at docs/specs/01-pipeline/122_pipeline_step_optimization.md §7.5a (2026-09-03), cross-referencing the §7.4 A3 reconcile rollback sentence (:1066) that will own it.",
       "owner": {
-        "kind": "wf",
-        "ref": "wf: programme-STA-1"
+        "kind": "none",
+        "ref": ""
       },
       "gate": {
-        "kind": "cutover_prereq",
-        "blocks": [],
-        "applies_when": {
-          "descriptor_path": "outputs.publish",
-          "equals": "pointer"
-        }
+        "kind": "nice_to_have",
+        "blocks": []
       },
-      "last_reviewed": "2026-09-03"
+      "last_reviewed": "2026-10-03"
     },
     {
       "id": "STA-2",
@@ -1405,17 +1401,17 @@
       "spec": "124 §2",
       "title": "assert_health[] — a closed-shape category for health/liveness checks, left dormant",
       "promised": "Ask 4 (R-T addendum plan, 2026-08-29): a dedicated, closed-vocabulary assert_health[] descriptor category was proposed for RECORDER/ENRICHER health-liveness checks, distinct from checks[]/invariants[]/plausibility[]",
-      "status": "NOT_STARTED",
-      "evidence": "no assert_health field exists in scripts/steps/_schema/step.schema.json as of R-T addendum commit 7 (2026-08-30) — Ask 4's own default was accepted: \"left dormant, filed as an idea,\" not built this WF. No RECORDER/ENRICHER has converted yet (pilots 7/8, Spec 124 §8), so the category has no real descriptor to prove itself against today.",
+      "status": "SUPERSEDED",
+      "evidence": "SUPERSEDED 2026-10-03 (registry-truth plan PHASE 3 DELETE row #7 + fold 13 a; fold 18 C5 — FLEET-2 prep seat D): inputs.reads.steps[].assert_health is DELETED from step.schema.json together with version_pin (zero runtime consumers, enrich_ravines RV-L1 measured 2026-09-18), and staleness.pins[] (LDG-10 class 3) is the declared home for cross-step producer pins, so this dormant category has no field to revive. A future health/liveness category would open a new item with its own schema home, not revive this id. Prior evidence, kept for history (note: by 2026-10-03 the field did exist in the schema as a dormant reads.steps[] key with zero declarers): no assert_health field exists in scripts/steps/_schema/step.schema.json as of R-T addendum commit 7 (2026-08-30) — Ask 4's own default was accepted: \"left dormant, filed as an idea,\" not built this WF. No RECORDER/ENRICHER has converted yet (pilots 7/8, Spec 124 §8), so the category has no real descriptor to prove itself against today.",
       "owner": {
-        "kind": "followup",
-        "ref": "review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4"
+        "kind": "none",
+        "ref": ""
       },
       "gate": {
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-08-30"
+      "last_reviewed": "2026-10-03"
     },
     {
       "id": "PSA-CHECK-IDS",
@@ -1525,7 +1521,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 654 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 655 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"

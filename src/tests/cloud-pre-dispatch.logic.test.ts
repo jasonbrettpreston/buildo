@@ -749,8 +749,8 @@ describe('probeRequirement — extracted from index.js, and the runner still cal
   it('index.js exposes probeRequirement and its guard block calls it', () => {
     expect(typeof stepLib.probeRequirement).toBe('function');
     // The guard block (assertRequirements) references the extracted function — this is
-    // the lock that the runner did not keep a second, drifted copy of the probe.
-    expect(indexSrc).toMatch(/async function assertRequirements[\s\S]{0,1200}probeRequirement\(pool, r\)/);
+    // the lock that the runner did not keep a second, drifted copy of the probe. (MQ-D3: the descriptor is passed so the trigger body check uses its by:"trigger" columns).
+    expect(indexSrc).toMatch(/async function assertRequirements[\s\S]{0,1200}probeRequirement\(pool, r, descriptor\)/);
   });
 
   it('probeRequirement reports present:true when the probe returns a row', async () => {
@@ -809,5 +809,221 @@ describe('the seven checks cover the runbook §3c pre-checks\' DB-side items', (
     expect(md).toContain(report.verdict);
     expect(md).toContain('stranded_running_rows');
     expect(cloudPre.renderConsoleTable(report.rows)).toContain('stranded_running_rows');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LDG-10 T14/T16 — the `trigger` requirement kind + no vacuous pass for an unknown kind.
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.4 / §6.6 (LDG-10 class 4)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('LDG-10 — guards.requires kind "trigger" (T14) and unknown-kind refusal (T16)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const stepLib = require('../../scripts/lib/step/index.js') as unknown as {
+    probeRequirement: (pool: unknown, requirement: Record<string, unknown>, descriptor?: unknown) => Promise<{ present: boolean; detail: string }>;
+    assertRequirements: (pool: unknown, descriptor: unknown, opts: { log: { warn: () => void }; tag: string }) => Promise<Record<string, boolean>>;
+    triggerInvalidatedColumns: (d: unknown, name: string) => string[];
+    triggerBodyMissingColumns: (prosrc: unknown, cols: string[]) => string[];
+  };
+
+  /**
+   * A tiny pg_trigger catalog simulator: answers a pg_trigger probe from `triggers`, applying
+   * ONLY the filters the probe's own SQL text states. So a DISABLED trigger reads present
+   * unless the SQL itself carries the enabled filter — the lock is on the SQL, not on the mock.
+   */
+  function triggerCatalogPool(triggers: Array<{ relname: string; tgname: string; tgenabled: string; tgisinternal: boolean }>) {
+    const calls: Array<{ text: string; values: unknown[] | undefined }> = [];
+    return {
+      calls,
+      async query(text: string, values?: unknown[]) {
+        calls.push({ text, values });
+        if (!text.includes('FROM pg_trigger')) return { rows: [] };
+        const [rel, name] = (values ?? []) as string[];
+        const rows = triggers.filter((t) => t.relname === rel && t.tgname === name
+          && (!/NOT t\.tgisinternal/.test(text) || !t.tgisinternal)
+          && (!/t\.tgenabled IN \('O','A'\)/.test(text) || t.tgenabled === 'O' || t.tgenabled === 'A'));
+        return { rows: rows.map(() => ({ '?column?': 1 })) };
+      },
+    };
+  }
+
+  /**
+   * D3: a pool that additionally answers the `prosrc` body query. Records `calls` like
+   * `triggerCatalogPool`. A query whose text includes `prosrc` returns the function body
+   * (`null` → no row); any other `FROM pg_trigger` query is the presence probe.
+   */
+  function bodyPool(prosrc: string | null, present = true) {
+    const calls: Array<{ text: string; values: unknown[] | undefined }> = [];
+    return {
+      calls,
+      async query(text: string, values?: unknown[]) {
+        calls.push({ text, values });
+        if (!text.includes('FROM pg_trigger')) return { rows: [] };
+        if (text.includes('prosrc')) return { rows: prosrc === null ? [] : [{ prosrc }] };
+        return { rows: present ? [{ '?column?': 1 }] : [] };
+      },
+    };
+  }
+
+  const REQ = { kind: 'trigger', name: 'parcels.trg_parcels_geom_invalidation', on_missing: 'fail' };
+
+  /** Build a descriptor whose `outputs.invalidates[]` claims each column is stamped by the trigger. */
+  const inv = (cols: string[], trigger = 'parcels.trg_parcels_geom_invalidation') => ({
+    guards: { requires: [REQ] },
+    outputs: { invalidates: cols.map((c) => ({ table: 'parcels', column: c, when: 'x', by: 'trigger', trigger })) },
+  });
+
+  /** A trigger body whose two arms stamp both invalidated columns. */
+  const BODY_OK = 'BEGIN\n  IF NEW.geom IS DISTINCT FROM OLD.geom THEN\n    NEW.zoning_enriched_at := NULL;\n    NEW.heritage_dataset_version_when_enriched := NULL;\n  END IF;\n  RETURN NEW;\nEND;';
+
+  it('GREEN: an ENABLED (origin) trigger reads present, and the probe splits <table>.<trigger>', async () => {
+    const pool = triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'O', tgisinternal: false }]);
+    const out = await stepLib.probeRequirement(pool, REQ);
+    expect(out.present).toBe(true);
+    expect(pool.calls[0]?.values).toEqual(['parcels', 'trg_parcels_geom_invalidation']);
+    expect(out.detail).toMatch(/tgenabled IN \('O','A'\)/);
+  });
+
+  it('GREEN: an ALWAYS-enabled trigger reads present', async () => {
+    const pool = triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'A', tgisinternal: false }]);
+    expect((await stepLib.probeRequirement(pool, REQ)).present).toBe(true);
+  });
+
+  it('RED: a DISABLED trigger (tgenabled D) reads ABSENT', async () => {
+    const pool = triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'D', tgisinternal: false }]);
+    expect((await stepLib.probeRequirement(pool, REQ)).present).toBe(false);
+  });
+
+  it('RED: a replica-only trigger (tgenabled R) and an internal trigger read ABSENT', async () => {
+    expect((await stepLib.probeRequirement(triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'R', tgisinternal: false }]), REQ)).present).toBe(false);
+    expect((await stepLib.probeRequirement(triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'O', tgisinternal: true }]), REQ)).present).toBe(false);
+  });
+
+  it('RED: an absent trigger reads ABSENT, and the runner refuses the step on on_missing "fail"', async () => {
+    const pool = triggerCatalogPool([]);
+    expect((await stepLib.probeRequirement(pool, REQ)).present).toBe(false);
+    await expect(stepLib.assertRequirements(pool, { guards: { requires: [REQ] } }, { log: { warn: () => {} }, tag: '[test]' }))
+      .rejects.toThrow(/required trigger "parcels\.trg_parcels_geom_invalidation" is ABSENT/);
+  });
+
+  it('cloud:pre declared_guards_present probes a trigger requirement: DISABLED flips the row FAIL naming slug:name', async () => {
+    const descriptors = fakeDescriptors({ compute_centroids: { guards: { requires: [REQ] } } });
+    const disabled = triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'D', tgisinternal: false }]);
+    const r = await cloudPre.checkDeclaredGuardsPresent(disabled, descriptors);
+    expect(r.severity).toBe('FAIL');
+    expect(r.value).toEqual(['compute_centroids:parcels.trg_parcels_geom_invalidation']);
+    expect(r.limit).toMatch(/index\/extension\/function\/column\/trigger present/);
+    const enabled = triggerCatalogPool([{ relname: 'parcels', tgname: 'trg_parcels_geom_invalidation', tgenabled: 'O', tgisinternal: false }]);
+    const g = await cloudPre.checkDeclaredGuardsPresent(enabled, descriptors);
+    expect(g.severity).toBe('INFO');
+    expect(g.value).toEqual([]);
+  });
+
+  it('T16 RED: a kind missing from BOTH the probes and the owned-elsewhere set is REFUSED by probeRequirement (no vacuous pass)', async () => {
+    await expect(stepLib.probeRequirement(emptyPool(), { kind: 'srid', name: 'parcels.geom' }))
+      .rejects.toThrow(/has no catalog probe and is not owned elsewhere/);
+  });
+
+  it('T16 RED: assertRequirements refuses a step declaring an unknown kind instead of skipping it', async () => {
+    await expect(stepLib.assertRequirements(emptyPool(), { guards: { requires: [{ kind: 'srid', name: 'parcels.geom', on_missing: 'fail' }] } }, { log: { warn: () => {} }, tag: '[test]' }))
+      .rejects.toThrow(/has no catalog probe and is not owned elsewhere/);
+  });
+
+  it('T16 GREEN: rls_bypass_or_policy keeps its documented skip (owned by write.assertWritePrivileges) — never probed, never refused', async () => {
+    const pool = emptyPool();
+    const out = await stepLib.probeRequirement(pool, { kind: 'rls_bypass_or_policy', name: 'parcels' });
+    expect(out.present).toBe(true);
+    const measured = await stepLib.assertRequirements(pool, { guards: { requires: [{ kind: 'rls_bypass_or_policy', name: 'parcels', on_missing: 'fail' }] } }, { log: { warn: () => {} }, tag: '[test]' });
+    expect(measured).toEqual({});
+    expect(pool.calls).toHaveLength(0);
+  });
+
+  // FLEET-2 MQ-D3 (a) — the `trigger` guard probe also checks the live function body.
+  // R-BF "declared == observed": a trigger whose function lacks the stamp arm makes the
+  // step's `outputs.invalidates[] by:"trigger"` claim false at runtime.
+
+  it('D3-1 RED: triggerInvalidatedColumns derives the columns a trigger claims to stamp', () => {
+    // RED today: the derivation helper does not exist yet.
+    expect(stepLib.triggerInvalidatedColumns(inv(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']), REQ.name))
+      .toEqual(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']);
+    // A row naming a DIFFERENT trigger, or stamped by the step, is excluded.
+    expect(stepLib.triggerInvalidatedColumns({
+      guards: { requires: [REQ] },
+      outputs: { invalidates: [
+        { table: 'parcels', column: 'zoning_enriched_at', when: 'x', by: 'trigger', trigger: 'parcels.other_trigger' },
+        { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'x', by: 'step' },
+      ] },
+    }, REQ.name)).toEqual([]);
+    // `outputs: "none"` → no columns.
+    expect(stepLib.triggerInvalidatedColumns({ outputs: 'none' }, REQ.name)).toEqual([]);
+  });
+
+  it('D3-2 RED: triggerBodyMissingColumns matches the stamp arms, comment- and case-insensitively', () => {
+    // RED today: the body matcher does not exist yet.
+    expect(stepLib.triggerBodyMissingColumns(BODY_OK, ['zoning_enriched_at', 'heritage_dataset_version_when_enriched'])).toEqual([]);
+    // A commented-out arm never passes.
+    expect(stepLib.triggerBodyMissingColumns('-- NEW.zoning_enriched_at := NULL;\n/* NEW.heritage_dataset_version_when_enriched := NULL; */', ['zoning_enriched_at', 'heritage_dataset_version_when_enriched']))
+      .toEqual(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']);
+    // Case- and whitespace-insensitive.
+    expect(stepLib.triggerBodyMissingColumns('new.ZONING_ENRICHED_AT:=null;', ['zoning_enriched_at'])).toEqual([]);
+    // A null body means every column is missing.
+    expect(stepLib.triggerBodyMissingColumns(null, ['a'])).toEqual(['a']);
+  });
+
+  it('D3-3 GREEN: a trigger present whose body stamps both columns reads present, with exactly 2 queries', async () => {
+    // GREEN control: the presence probe plus ONE prosrc query.
+    const pool = bodyPool(BODY_OK);
+    const out = await stepLib.probeRequirement(pool, REQ, inv(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']));
+    expect(out.present).toBe(true);
+    expect(pool.calls).toHaveLength(2);
+    expect(pool.calls[1]?.text).toContain('prosrc');
+    expect(pool.calls[1]?.values).toEqual(['parcels', 'trg_parcels_geom_invalidation']);
+  });
+
+  it('D3-4 RED: a body with only the zoning arm reads ABSENT, naming the missing column', async () => {
+    // RED today: the body is never read, so the missing arm goes unnoticed.
+    const body = 'BEGIN\n  IF NEW.geom IS DISTINCT FROM OLD.geom THEN\n    NEW.zoning_enriched_at := NULL;\n  END IF;\n  RETURN NEW;\nEND;';
+    const out = await stepLib.probeRequirement(bodyPool(body), REQ, inv(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']));
+    expect(out.present).toBe(false);
+    expect(out.detail).toContain('heritage_dataset_version_when_enriched');
+  });
+
+  it('D3-5 RED: an arm commented out reads ABSENT', async () => {
+    // RED today: the commented arm is treated as a stamp.
+    const body = 'BEGIN\n  NEW.zoning_enriched_at := NULL;\n  -- NEW.heritage_dataset_version_when_enriched := NULL;\n  RETURN NEW;\nEND;';
+    const out = await stepLib.probeRequirement(bodyPool(body), REQ, inv(['zoning_enriched_at', 'heritage_dataset_version_when_enriched']));
+    expect(out.present).toBe(false);
+  });
+
+  it('D3-6 GREEN: with no invalidates the presence-only path is said out loud (1 query)', async () => {
+    // GREEN control (link_massing shape): nothing to check in the body, and the detail says so.
+    const pool = bodyPool(null);
+    const out = await stepLib.probeRequirement(pool, REQ, { guards: { requires: [REQ] } });
+    expect(out.present).toBe(true);
+    expect(out.detail).toContain('presence only');
+    expect(pool.calls).toHaveLength(1);
+  });
+
+  it('D3-7 RED: an ABSENT trigger short-circuits — no prosrc query is issued', async () => {
+    // RED today: the body query is issued even when the trigger is absent.
+    const pool = bodyPool(BODY_OK, false);
+    const out = await stepLib.probeRequirement(pool, REQ, inv(['zoning_enriched_at']));
+    expect(out.present).toBe(false);
+    expect(pool.calls).toHaveLength(1);
+  });
+
+  it('D3-8 RED: the runner refuses a step whose trigger body lacks the stamp arm', async () => {
+    // RED today: only presence is proven, so the runner passes.
+    await expect(stepLib.assertRequirements(bodyPool('BEGIN RETURN NEW; END;'), inv(['zoning_enriched_at']), { log: { warn: () => {} }, tag: '[test]' }))
+      .rejects.toThrow(/required trigger "parcels\.trg_parcels_geom_invalidation" is ABSENT/);
+  });
+
+  it('D3-9 RED: cloud:pre uses the same probe and the same derived columns', async () => {
+    // RED today: cloud:pre passes no descriptor, so the body is never read.
+    const bad = await cloudPre.checkDeclaredGuardsPresent(bodyPool('BEGIN RETURN NEW; END;'), fakeDescriptors({ enrich_parcels: inv(['zoning_enriched_at']) }));
+    expect(bad.severity).toBe('FAIL');
+    expect(bad.value).toEqual(['enrich_parcels:parcels.trg_parcels_geom_invalidation']);
+    const ok = await cloudPre.checkDeclaredGuardsPresent(bodyPool(BODY_OK), fakeDescriptors({ enrich_parcels: inv(['zoning_enriched_at']) }));
+    expect(ok.severity).toBe('INFO');
   });
 });

@@ -149,7 +149,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
 
   it('outputs.invalidates[] declares the lineage-column invalidator, and phases[0].invalidator_ref points at it [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
-    expect(descriptor.staleness.scope).toMatch(/heritage_dataset_version_when_enriched/);
+    // staleness.scope retired by FLEET-2 Phase 3 (#28); the lineage scope is execution.phases[0].scope 'incremental' (asserted below) — claim #54 binds on that.
     expect(descriptor.outputs.invalidates).toHaveLength(1);
     expect(descriptor.outputs.invalidates[0].column).toBe('heritage_dataset_version_when_enriched');
     expect(descriptor.execution.phases[0].invalidator_ref).toBe(0);
@@ -176,10 +176,10 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
     expect(e.enrich_hooks.post_phase).toBe('computePostPhase');
   });
 
-  it('override.force_full names ENRICH_HERITAGE_FORCE_FULL and staleness.mode_select is tri_state (H-A1 (a), RULED) [flips at commit 2]', () => {
+  it('override.force_full names ENRICH_HERITAGE_FORCE_FULL and staleness.mode_select is none — the enrich runner never selects a mode (registry-truth fold 8 item 8 supersedes the tri_state pin) [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.override.force_full).toBe('ENRICH_HERITAGE_FORCE_FULL');
-    expect(descriptor.staleness.mode_select).toBe('tri_state');
+    expect(descriptor.staleness.mode_select, 'ENRICHER => none: runEnrichPhase reads --full / override.force_full, never mode_select').toBe('none');
     expect(descriptor.execution.phases[0].scope).toBe('incremental');
   });
 });
@@ -329,5 +329,17 @@ describe('enrich_heritage — cutover-only claim (structurally cannot land befor
     expect(reg.converted).toContain(STEP_REL);
     const stillPending = (reg.pending || []).some((p: { file: string }) => p.file === STEP_REL);
     expect(stillPending).toBe(false);
+  });
+
+  it('C1 (LDG-10 O2-A, plan fold 18) — the dataset-version stamp is invalidated by the parcels geom trigger, and the step requires that trigger', () => {
+    const descriptor = loadDescriptor();
+    const TRIGGER = 'parcels.trg_parcels_geom_invalidation';
+    const row = descriptor.outputs.invalidates[0];
+    expect(row.column).toBe('heritage_dataset_version_when_enriched');
+    expect(row.by).toBe('trigger');
+    expect(row.trigger).toBe(TRIGGER);
+    expect(row.step).toBeUndefined();
+    const guards = (descriptor.guards.requires as Array<{ kind: string; name: string; on_missing: string }>).filter((g) => g.kind === 'trigger');
+    expect(guards).toEqual([{ kind: 'trigger', name: TRIGGER, on_missing: 'fail' }]);
   });
 });

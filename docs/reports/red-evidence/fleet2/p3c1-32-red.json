@@ -1,0 +1,56 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "red",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "pre-edit copies of scripts/lib/step/index.js, write.js and scripts/lib/compute/refresh-snapshot.js swapped in, then restored (cmp-verified)",
+ "tests": [
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E1 consumer, empty — a zero-row source halts with an errored FAIL gate row",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E2 consumer, non-empty — a populated source yields one INFO row carrying the count",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E3 array form — every named table is counted and the empty one halts",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E4 none — guards.empty_source \"none\" issues zero queries and no row",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E5 INGESTOR never counts pre-compute — the ingest phase owns its own target",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E6 emptySourceRefusal — an INGESTOR refuses only a zero-row acquisition",
+   "status": "failed",
+   "failure": "TypeError: runner.emptySourceRefusal is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E7 emptySourceRows — a refusal becomes an errored FAIL row, a non-refusal an INFO row",
+   "status": "failed",
+   "failure": "TypeError: runner.emptySourceRows is not a function"
+  },
+  {
+   "file": "p3c1-32.logic.test.ts",
+   "test": "E8 ingest wiring — refusal runs before the pre-write gate and surfaces a supervisor row",
+   "status": "failed",
+   "failure": "AssertionError: expected -1 to be greater than -1"
+  }
+ ]
+}

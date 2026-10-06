@@ -80,6 +80,13 @@ const stepAnswer = (text: string, values: unknown[]): Answer | null => {
     const n = (text.match(/\),\s*\(/g) || []).length + 1;
     return { rows: Array.from({ length: n }, () => ({ is_insert: true })), rowCount: n };
   }
+  // FLEET-2 B-1 soft-retire (fold 10): the MARK/UNMARK pair and the mass-guard candidates count.
+  // The fixture's CSV is the whole corpus, so nothing is stale: 0 candidates of the loaded active rows.
+  if (/AS candidates,/.test(text) && /FROM address_points/.test(text)) {
+    const active = Array.isArray(values[0]) ? (values[0] as unknown[]).length : 0;
+    return { rows: [{ candidates: '0', active: String(active) }], rowCount: 1 };
+  }
+  if (/^UPDATE address_points SET retired_at/.test(text.trim())) return { rows: [], rowCount: 0 };
   return null;
 };
 

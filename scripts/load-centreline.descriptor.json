@@ -27,8 +27,6 @@
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip",
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "CENTREL2",
-          "cache": "revalidate",
-          "cache_ttl": "none",
           "on_head_error": "warn_row"
         }
       ]
@@ -86,35 +84,24 @@
             "liveness": { "kind": "table", "ref": "toronto_centreline" }
           }
         },
-        "retract": "all",
-        "replay": "full_replace",
-        "replay_why": {
-          "text": "Every run is an UNCONDITIONAL whole-table replace: the DELETE removes all ~47K rows and the INSERT…SELECT re-stages them from the temp table, so the source must be replayed in full and the prior contents carry no per-row reuse. This is the natural replay mode for class-C staging_full_replace with retract:\"all\" on a source the loader owns end-to-end (toronto_centreline is written by this step alone), and it is why the crash posture is force_full_on_next_run (LC-D5).",
-          "liveness": { "kind": "table", "ref": "toronto_centreline" }
-        },
-        "source_key_policy": { "unique": true, "on_collision": "dedupe_upstream", "key_space_migration": "none" }
+        "retract": "all"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
-      "statements": 4,
+      "statements": 3,
       "why": {
-        "text": "Four statements reach the database: CREATE TEMP TABLE, the batched staged INSERT, the DELETE, and the INSERT...SELECT back. The batched geometry validation is a pure SELECT and writes nothing.",
+        "text": "Three write statements reach the database: the batched staged INSERT, the DELETE, and the INSERT...SELECT back. The CREATE TEMP TABLE that holds the staged rows is DDL, not a step write, and the batched geometry validation is a pure SELECT.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
       }
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": [
       { "signal": "source_validator", "position": "pre_acquisition", "external": "ckan:toronto-centreline-tcl-shp" },
       { "signal": "content_hash", "position": "post_acquisition", "external": "ckan:toronto-centreline-tcl-shp" }
     ],
     "mode_select": "skip",
-    "checkpoint": "none",
-    "interval": "none",
     "logic_version": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/source-version.js", "scripts/lib/step/acquire.js"],
@@ -161,15 +148,10 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "40m",
     "batch": 3449,
-    "needs_disk_mb": 400,
-    "partial_fill": "atomic",
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A street whose geometry the validation cannot reduce to a valid LineString is dropped and counted, and the load continues — the tolerance is bounded by the declared FAIL-severity check `centreline_geometry_skipped_pct` (LC-D8: a single-member MultiLineString residue is a pinned DEFECT, so the dropped count is the liveness evidence, never a silent pass). The row is a counted loss, not a run-stopper: the source is 47K streets and one unrepairable line must not empty the network enrich-centreline joins.",
@@ -182,15 +164,12 @@
       "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
       "timeout": "600000ms",
       "timeout_from_config": "load_centreline_download_timeout_ms",
       "retries": 2,
       "retries_from_config": "load_centreline_download_retries",
-      "retry_backoff_from_config": "load_centreline_download_retry_backoff_ms",
-      "redact": "none"
+      "retry_backoff_from_config": "load_centreline_download_retry_backoff_ms"
     },
     "invocation": {
       "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
@@ -271,7 +250,7 @@
       "accept_until": "none",
       "retighten_when": "never — the centreline is re-published daily and an age leg above 7 days is a legitimate publisher cadence, not a defect; this row is a standing WARN (R-H) and retires only if the source's cadence is proven static",
       "why": {
-        "text": "LC-D13 / R-H standing-WARN posture. The threshold is read in compute via `datasetAgeStatus(headAgeDays, config.centrelineSkipCheckThresholdDays)`'s successor — `load_centreline_dataset_age_warn_days` (seed 7, the daily-publish cadence knob) — never a bare literal [READ load-centreline.js:444, :52]. The legacy pushed INFO below the bound and WARN above it; this row carries the WARN so the age of a daily-published source that legitimately exceeds 7d reads as a STANDING WARN, never as a conversion defect.",
+        "text": "LC-D13 / R-H standing-WARN posture. The threshold is read in compute via `datasetAgeStatus(headAgeDays, config.centrelineSkipCheckThresholdDays)`'s successor — `load_centreline_dataset_age_warn_days` (seed 7, the daily-publish cadence knob) — never a bare literal [READ load-centreline.js:444, :52]. The legacy pushed INFO below the bound and WARN above it; this row carries the WARN so the age of a daily-published source that legitimately exceeds 7d reads as a STANDING WARN, never as a conversion defect. It must never be 'fixed' by moving the threshold (promoted from the notes suspicious_if, 2026-10-03).",
         "liveness": { "kind": "external", "ref": "ckan0.cf.opendata.inter.prod-toronto.ca" }
       }
     },
@@ -695,7 +674,7 @@
     }
   ],
 
-  "interpretation": { "file": "load-centreline.notes.json", "entries": 10 },
+  "interpretation": { "file": "load-centreline.notes.json" },
 
   "recovery": {
     "reset": "TRUNCATE is never correct here — every run IS a full replace inside ONE transaction, so re-run with CENTRELINE_FORCE_RELOAD=1 to bypass both staleness triggers and rewrite toronto_centreline through the same staged DELETE + INSERT…SELECT.",
@@ -723,11 +702,10 @@
   },
 
   "counters": {
-    "records_total": { "source": "acquired.feature_count", "scoped_by": "source_id" },
-    "records_new": { "source": "written.inserted", "scoped_by": "source_id" },
+    "records_total": { "source": "acquired.feature_count" },
+    "records_new": { "source": "written.inserted" },
     "records_updated": {
       "source": "records_meta.centreline_load.features_updated",
-      "scoped_by": "source_id",
       "why": {
         "text": "A full replace has NO per-row update: the write is DELETE-the-table-then-INSERT…SELECT, so `written.updated` does not exist and the frozen producer block pins `features_updated: 0` forever (LC-D14 / the legacy literal `records_updated: 0` in skeletonLoadMeta, load-centreline.js:687). The truthful source is therefore the emit's own field, read back from `records_meta.centreline_load.features_updated` — the value enrich_centreline already consumes — rather than a counter the write path never produces. `written.updated` would be a phantom; this is the load counting its OWN per-row updates as the zero it declares.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-centreline.js" }
@@ -747,7 +725,18 @@
       { "name": "load_centreline_max_detail_keys", "min": 1, "max": 1000, "on_invalid": "fail" }
     ],
     "validation": "strict",
-    "hoisted_above_gate": true
+    "hoisted_above_gate": true,
+    "retired": [
+      {
+        "name": "centrelineMinFeatureCount",
+        "since": "2026-09-24",
+        "why": {
+          "text": "LC-D3. The legacy literal 40000 was never read: the L7 count check is a RATIO against the prior run, and the F-C1 empty-guard's bound is the staged-row count (zero), not a floor. The floor that actually exists is sources_centreline_floor, owned by assert_data_bounds — declaring 40000 here would be a phantom consumer (Rule 3's purpose, not its letter). Promoted from the notes decisions block 2026-10-03.",
+          "liveness": { "kind": "spec", "ref": "docs/specs/01-pipeline/62_source_centreline.md" }
+        },
+        "ledger": "LC-D3"
+      }
+    ]
   },
 
   "sharing": {
@@ -756,7 +745,7 @@
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "none",
-      "phase": { "sources": 63 },
+      "phase": { "sources": 8 },
       "audit_table": "one",
       "scope": "none"
     },

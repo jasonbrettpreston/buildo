@@ -9,7 +9,8 @@
 // `scripts/steps/_schema/execution-posture-disposition.json`.
 //
 // (`execution-budget-disposition.json`/its own infra test, R-AJ, already covers the
-// `execution.*` DURATION declarations — budget/txn_budget/statement_timeout/step_timeout —
+// `execution.*` DURATION declarations — statement_timeout/step_timeout (budget/txn_budget
+// deleted in the Phase 3 RE-FREEZE) —
 // a free-form `duration` value, not a frozen enum. This is the sibling registry for the
 // frozen ENUM postures, mirroring `write-class-disposition.json`'s own shape instead.)
 //

@@ -20,12 +20,53 @@
   },
   "inputs": {
     "reads": {
-      "steps": [],
+      "steps": [
+        {
+          "step": "backfill_realtor_permit_trades"
+        },
+        {
+          "step": "classify_inspection_status"
+        },
+        {
+          "step": "classify_lifecycle_phase"
+        },
+        {
+          "step": "classify_permit_phase"
+        },
+        {
+          "step": "classify_permits"
+        },
+        {
+          "step": "close_stale_permits"
+        },
+        {
+          "step": "coa"
+        },
+        {
+          "step": "compute_coa_cost_estimates"
+        },
+        {
+          "step": "compute_cost_estimates"
+        },
+        {
+          "step": "enrich_coa_zoning"
+        },
+        {
+          "step": "inspections"
+        },
+        {
+          "step": "link_coa"
+        },
+        {
+          "step": "permits"
+        }
+      ],
       "tables": [
         {
           "table": "address_points",
           "columns": [
-            "address_point_id"
+            "address_point_id",
+            "retired_at"
           ]
         },
         {
@@ -80,7 +121,8 @@
         {
           "table": "parcels",
           "columns": [
-            "lot_size_sqm"
+            "lot_size_sqm",
+            "parcel_id"
           ]
         },
         {
@@ -147,7 +189,6 @@
   },
   "outputs": "none",
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "always",
@@ -155,8 +196,6 @@
       }
     ],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/assert-data-bounds-fields.js"
@@ -168,18 +207,13 @@
     "requires": [],
     "srid": "none",
     "empty_source": "none",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "execution": {
-    "budget": "10m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -191,7 +225,6 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "permits": {
@@ -1776,7 +1809,7 @@
       "checks": "per_chain",
       "phase": {
         "permits": 22,
-        "coa": 11,
+        "coa": 13,
         "sources": 27,
         "deep_scrapes": 5
       },
@@ -1814,6 +1847,26 @@
         "warnings": "array",
         "audit_table": "object",
         "config": "object"
+      }
+    },
+    {
+      "id": "checks_passed_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "MQ-A4 (a), registry-truth fold 19 (#75): a WARN row stands and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS) instead of all_checks_passed. It declares no checks_passed: the runner keeps the legacy semantics, checks_passed is 'all' only when errors AND warnings are both empty (scripts/lib/step/index.js), so a WARN run never carries it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
       }
     },
     {

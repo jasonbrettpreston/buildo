@@ -33,6 +33,8 @@ const EXTENSION_SQL_NEEDLE = 'FROM pg_extension';
 
 type PoolOpts = {
   postgisPresent?: boolean;
+  /** LDG-10 — the declared geom-invalidation trigger (guards.requires kind "trigger"). */
+  triggerPresent?: boolean;
   migrations?: number;
   backlogCount?: number;
   updateReturnsIds?: number[];
@@ -69,6 +71,15 @@ function backfillPool(opts: PoolOpts = {}) {
     if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };
     if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 4242 }] };
     if (text.includes(EXTENSION_SQL_NEEDLE)) return { rows: opts.postgisPresent === false ? [] : [{ '?column?': 1 }] };
+    // MQ-D3 (a): the trigger probe also reads the live function body. Model the migration-245 body: one
+    // NEW.<col> := NULL arm for every outputs.invalidates[] by:"trigger" column THIS descriptor declares.
+    if (text.includes('SELECT p.prosrc')) {
+      const arms = ((DESCRIPTOR.outputs.invalidates ?? []) as Array<{ column: string; by?: string }>)
+        .filter((r) => r.by === 'trigger').map((r) => `NEW.${r.column} := NULL;`).join(' ');
+      return { rows: opts.triggerPresent === false ? [] : [{ prosrc: `BEGIN ${arms} RETURN NEW; END;` }] };
+    }
+    // LDG-10: guards.requires {kind:"trigger"} (parcels.trg_parcels_geom_invalidation) — present unless a test opts out.
+    if (text.includes('FROM pg_trigger')) return { rows: opts.triggerPresent === false ? [] : [{ '?column?': 1 }] };
     if (text.trim().startsWith('SELECT NOW()')) return { rows: [{ now: new Date('2026-08-29T00:00:00Z') }] };
     if (text.includes(UPDATE_SQL_NEEDLE)) {
       return { rows: (opts.updateReturnsIds ?? []).map((id) => ({ id })) };

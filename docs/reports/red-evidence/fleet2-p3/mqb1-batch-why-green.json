@@ -1,0 +1,16 @@
+{
+  "wf": "registry-truth fold 19 MQ-B1 (a) — execution.batch_why",
+  "date": "2026-10-05",
+  "phase": "GREEN",
+  "command": "VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest run src/tests/mq-b1-batch-why.logic.test.ts src/tests/fold20-schema-drift-rules.logic.test.ts src/tests/step-schema.logic.test.ts (DB env unset)",
+  "passed": 93,
+  "failed": 2,
+  "failing": [
+    "the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, decl",
+    "the committed artifact is up to date (regenerate → identical)"
+  ],
+  "after_vocab_regen": "122-vocabulary.md regenerated (470 rows, --check clean); its step-schema test then passes",
+  "known_residual": [
+    "step-schema UNAFFECTED: git-dirty half only (FLEET-2 changes many converted descriptors; the schema-validity half passes after seat B moved the 12 non-INGESTOR descriptors to none)"
+  ]
+}

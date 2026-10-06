@@ -1,0 +1,305 @@
+{
+  "probe": "#75 terminals.records_meta vs golden POST over the live p3 fleet, then with lib/ldg10/desc terminals[] edits (vs tip a7a60e30) overlaid in memory; goldens = p3 tree (pre fleet #2)",
+  "date": "2026-10-03",
+  "live": {
+    "pass": false,
+    "checked": 321,
+    "unwitnessed": 136,
+    "violations": [
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden deep_scrapes.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden deep_scrapes.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      }
+    ]
+  },
+  "overlay_changes": [
+    "link_wsib terminals <- desc",
+    "enrich_parcels terminals <- desc"
+  ],
+  "overlay_unparsable": [
+    "desc:scripts/link-neighbourhoods.descriptor.json Expected ',' or '}' after property value in JSON at position 14096 (line 189 column 403)"
+  ],
+  "simulated": {
+    "pass": false,
+    "checked": 333,
+    "unwitnessed": 136,
+    "violations": [
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_schema",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_schema: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier1_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier1_confidence_updated_at (string) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier2_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier2_confidence_updated_at (string) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier3_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier3_confidence_updated_at (string) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier1_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier1_confidence_updated_at (string) but golden sources-full-forced-4.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier2_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier2_confidence_updated_at (string) but golden sources-full-forced-4.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier3_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier3_confidence_updated_at (string) but golden sources-full-forced-4.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.skip_gated_no_activity.records_meta.tier1_confidence_updated_at",
+        "detail": "link_wsib: terminal \"skip_gated_no_activity\" declares records_meta.tier1_confidence_updated_at (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.skip_gated_no_activity.records_meta.tier2_confidence_updated_at",
+        "detail": "link_wsib: terminal \"skip_gated_no_activity\" declares records_meta.tier2_confidence_updated_at (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.skip_gated_no_activity.records_meta.tier3_confidence_updated_at",
+        "detail": "link_wsib: terminal \"skip_gated_no_activity\" declares records_meta.tier3_confidence_updated_at (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier1_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier1_confidence_updated_at (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier2_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier2_confidence_updated_at (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "link_wsib",
+        "item": "terminals.linked_incremental.records_meta.tier3_confidence_updated_at",
+        "detail": "link_wsib: terminal \"linked_incremental\" declares records_meta.tier3_confidence_updated_at (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_global_coverage",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_global_coverage: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden coa.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden deep_scrapes.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.warnings",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.warnings (array) but golden deep_scrapes.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden permits.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_data_bounds",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_data_bounds: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden sources.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.checks_passed",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.checks_passed (string) but golden standalone.json does not carry it — the declared shape is false"
+      },
+      {
+        "step": "assert_parcel_sanity",
+        "item": "terminals.all_checks_passed.records_meta.errors",
+        "detail": "assert_parcel_sanity: terminal \"all_checks_passed\" declares records_meta.errors (array) but golden standalone.json does not carry it — the declared shape is false"
+      }
+    ]
+  }
+}

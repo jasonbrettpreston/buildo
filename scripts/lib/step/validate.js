@@ -45,23 +45,6 @@ const GUARD_PATH = 'outputs.writes[].write_discipline.guard';
  * to `GUARD_PATH`).
  */
 const CLASS_PATH = 'outputs.writes[].write_discipline.class';
-/**
- * Gate I #33 (Spec 124 §5 R-BA, Rule 9, WF2 "standardized gates", 2026-09-26)
- * — the descriptor path `x-banned-for-new` names for the replay-safety axis.
- * `replay` is a SIBLING of `write_discipline` on each write target (not
- * nested under it), so `assertGrandfathered`'s loop reads it directly off
- * `w`, not `w.write_discipline`.
- */
-const REPLAY_PATH = 'outputs.writes[].replay';
-/**
- * Gate I #33 — the descriptor path `x-banned-for-new` names for the
- * criticality axis. UNLIKE the three write-target paths above, this is a
- * SCALAR at `execution.criticality` (once per step, not once per write) and
- * carries no sibling `*_why` field in the schema — its `GRANDFATHERED_VALUE_PATHS`
- * entry below carries `scalar: true` so `assertGrandfathered` reads it once,
- * with no `outputs.writes[]` walk.
- */
-const CRITICALITY_PATH = 'execution.criticality';
 /** `columns[].source` value marking a column bound to the run clock (Spec 47 §R3.5). */
 const RUN_CLOCK_SOURCE = 'run_at';
 /** `guard_columns` shorthand the generator expands to every step-written non-key column. */
@@ -191,17 +174,13 @@ function assertNoRunClockGuard(descriptor, findings) {
  * by whoever wants the exception, an allowlist entry is a reviewed diff naming a SHA.
  */
 /**
- * WF3 (2026-09-24) + Gate I #33 (WF2 "standardized gates", 2026-09-26) — every
- * `x-banned-for-new.values` path this function enforces, each keyed to the
- * descriptor field it reads the declared value from. `nested` names the
- * object the field actually lives on relative to a write item
- * (`write_discipline` for guard/class; `null` for `replay`, a direct sibling
- * of `write_discipline` — measured 2026-09-26, `step.schema.json:1164`).
- * `scalar: true` (execution.criticality) marks a per-STEP field instead of a
- * per-write one — read directly off `descriptor`, no `outputs.writes[]`
- * walk, and no sibling `*_why` field exists for it in the schema (unlike
- * guard/class/replay, whose `whyField` AJV already requires once the value
- * is declared — a missing why is AJV's finding, not this function's).
+ * WF3 (2026-09-24) — every `x-banned-for-new.values` path this function
+ * enforces, each keyed to the descriptor field it reads the declared value
+ * from. `nested` names the object the field actually lives on relative to a
+ * write item (`write_discipline` for guard/class). `outputs.writes[].replay
+ * and execution.criticality were deleted with their x-banned-for-new keys in
+ * the Phase 3 RE-FREEZE (registry-truth plan, DELETE row #18/#45 — zero
+ * runtime readers).
  * `scripts/analysis/gates/registries.mjs`'s `enforcedBannedPaths` parses
  * this exact array's `path:` literals as the coverage answer (gate I #33) —
  * every entry MUST stay inside this one array text for that scan to see it.
@@ -209,8 +188,6 @@ function assertNoRunClockGuard(descriptor, findings) {
 const GRANDFATHERED_VALUE_PATHS = [
   { path: GUARD_PATH, field: 'guard', whyField: 'guard_why', nested: 'write_discipline' },
   { path: CLASS_PATH, field: 'class', whyField: 'why', nested: 'write_discipline' },
-  { path: REPLAY_PATH, field: 'replay', whyField: 'replay_why', nested: null },
-  { path: CRITICALITY_PATH, field: 'criticality', whyField: null, nested: null, scalar: true },
 ];
 
 function assertGrandfathered(descriptor, findings) {
@@ -219,24 +196,10 @@ function assertGrandfathered(descriptor, findings) {
   const slug = descriptor.identity && descriptor.identity.name;
   const entry = (loadGrandfathered().steps || {})[slug];
 
-  for (const { path: bannedPath, field, whyField, nested, scalar } of GRANDFATHERED_VALUE_PATHS) {
+  for (const { path: bannedPath, field, whyField, nested } of GRANDFATHERED_VALUE_PATHS) {
     const banned = values[bannedPath] || [];
     if (banned.length === 0) continue;
     const allowed = entry && entry.paths && banned.includes(entry.paths[bannedPath]);
-
-    if (scalar) {
-      // A per-STEP scalar (execution.criticality): read once, no write loop,
-      // no sibling why (AJV has none declared for it).
-      const value = descriptor.execution && descriptor.execution[field];
-      if (!banned.includes(value)) continue;
-      if (allowed) continue;
-      findings.push(
-        `  /execution/${field}: "${value}" is x-banned-for-new at ${bannedPath}, and "${slug}" has no `
-        + 'entry in scripts/steps/_schema/grandfathered.json. Declaring this value requires an adjudicated '
-        + 'allowlist entry (step, path, value, why, commit), not a descriptor-authored justification alone.',
-      );
-      continue;
-    }
 
     const outputs = descriptor.outputs;
     if (!outputs || outputs === 'none' || !Array.isArray(outputs.writes)) continue;
@@ -444,6 +407,4 @@ module.exports = {
   GRANDFATHERED_VALUE_PATHS,
   GUARD_PATH,
   CLASS_PATH,
-  REPLAY_PATH,
-  CRITICALITY_PATH,
 };

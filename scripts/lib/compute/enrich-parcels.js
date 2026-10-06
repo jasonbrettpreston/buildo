@@ -76,10 +76,9 @@
  *                                     pipeline.streamQuery itself (Rule 2, no ../pipeline import here).
  *
  * KNOWN-DEFECT pins (Spec 123 §3.1 — see docs/reports/defect-ledger.md EP-D1/EP-D8/EP-D9/EP-D10),
- * status as of pilot 9 commit 8 P3 (2026-09-08): **EP-D1/B4.5's guard half — CLOSED** (peel 8x,
- * commit 8 P2): pass 4's comps UPDATE now guards `IS DISTINCT FROM` over all 5 comp columns (the
- * never-refresh `comp_count IS NULL` half remains PIN — Fold G4 ruling, spec-supported disclaimed
- * limitation, not reopened). **EP-D9 — CLOSED** (this commit, P3): both comps `ORDER BY` clauses now
+ * status as of the O4 ruling (operator ruling 2026-10-03, registry-truth fold 14): **EP-D1 — CLOSED**
+ * (both halves). The guard half landed at peel 8x (commit 8 P2); the never-refresh `comp_count IS NULL`
+ * half is RETIRED by O4 rows 2+8 — pass 4 is ALWAYS full. **EP-D9 — CLOSED** (pilot 9 commit 8 P3):
  * carry a deterministic secondary tiebreak (`c.id` inner kNN, `near.id` outer rank). **EP-D10 —
  * CLOSED** (commit 8 P1): `enrich_parcels_pass3_scope`'s consumed rows are pruned at run end.
  * **EP-D8 — still OPEN, ported VERBATIM in its CURRENT WRONG FORM:** the generic-family comp-match
@@ -1025,9 +1024,11 @@ async function runPass3(client, ctx, config) {
 
 // ===========================================================================
 // PASS 4 — comparable-builds kNN (Spec 78 §Phase-3C). Verbatim from :1080-1236, with the ONE mandatory
-// seam substitution: now()::date -> a bound $N::date (ctx.clock.asOfDate()). Ports EP-D1/B4.5 (no
-// IS DISTINCT FROM guard), EP-D8 (no structure-scale/type filter on the generic fallback) and EP-D9
-// (no deterministic tiebreak on either ORDER BY) in their CURRENT WRONG FORM — Spec 123 §3.1 PIN.
+// seam substitution: now()::date -> a bound $N::date (ctx.clock.asOfDate()). EP-D1/B4.5 (the
+// IS DISTINCT FROM guard) and EP-D8 (the generic-fallback structure-scale/type filter) are FIXED;
+// EP-D9 (deterministic tiebreak on both ORDER BYs) is FIXED. O4 rows 2+8 (operator ruling
+// 2026-10-03, registry-truth fold 14): pass 4 is ALWAYS full — the incremental `comp_count IS NULL`
+// subject filter is deleted (the EP-D1 never-refresh half, retired).
 // ===========================================================================
 
 const COMP_WRITE_COLS = ['comparable_builds', 'comp_count', 'comp_dominant_build', 'comp_build_ratio_p50', 'comp_fsi_p50'];
@@ -1105,24 +1106,23 @@ function buildCompCandidatesIndexSql() {
  * SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only (never user input).
  * EP-D1/B4.5 FIXED (peel 8x, pilot 9 commit 8 P2, Spec 123 §3.1 pin-then-fix): the final UPDATE now
  * guards on IS DISTINCT FROM over all 5 comp columns — a genuinely unchanged parcel is skipped, not
- * rewritten every --full run (previously WHERE p.id = agg.id was the ONLY predicate; measured live,
+ * rewritten every run (previously WHERE p.id = agg.id was the ONLY predicate; measured live,
  * 354,679 parcels rewritten every run regardless of actual change). comp_build_ratio_p50/comp_fsi_p50
  * are cast ::numeric on the computed side before comparison — the target columns are unbounded NUMERIC
  * (migration 202/204) but percentile_cont() returns double precision; casting BOTH sides to the SAME
  * type avoids the float8-vs-NUMERIC IS DISTINCT FROM trap (lessons.md:28, fence 7e130bff) even though,
  * unlike that fence's NUMERIC(5,4) column, this column's own unbounded scale means no rounding occurs
  * on write — the cast here is precision-safe, not a lossy round(). comparable_builds (jsonb) and
- * comp_dominant_build (text) compare structurally/exactly, no cast needed. NOTE (Ask 4, EP-D9): the
- * comps candidate SELECT feeding `agg` still has NO deterministic tiebreak until EP-D9 (peel, commit
- * 8 P3) lands — a tied subject can therefore still compute a differently-ordered `comparable_builds`
- * array on a rerun over UNCHANGED data, which this guard then (correctly, not spuriously) treats as a
- * real change; idempotent_rerun:"zero_writes" (descriptor) is the declared value for the COMBINED
- * P2+P3 state, not P2 in isolation. EP-D8 PIN: the generic (s.subj_family='all') fallback carries no
- * structure-scale/type filter (still open, peel 8y, commit 8 P4). EP-D9 PIN: neither ORDER BY below
- * carries a deterministic secondary tiebreak (still open, commit 8 P3).
+ * comp_dominant_build (text) compare structurally/exactly, no cast needed. O4 rows 2+8 (operator ruling
+ * 2026-10-03, registry-truth fold 14): the subject filter is the SAME for every mode — the incremental
+ * `AND sp.comp_count IS NULL` guard is deleted (the EP-D1 never-refresh half, Fold G4 retired), so pass 4
+ * recomputes every eligible subject every run. `full` is kept as a parameter for callers but no longer
+ * changes the emitted text. EP-D8 FIXED: the generic fallback now requires near.comp_structure_type_known.
  */
+
+/** @param {{full?: boolean, scopeWhere?: string, comp?: object}} opts - `full` is accepted but inert (O4 rows 2+8). */
 function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', comp = {} } = {}) {
-  const incr = full ? '' : 'AND sp.comp_count IS NULL';
+  void full; // O4 rows 2+8 — the subject filter is the same for every mode; the param is kept for callers.
   const {
     lotTol, knnOverfetch, topN, overCaptureClamp, fsiMinPlausible, fsiMaxPlausible,
   } = comp;
@@ -1149,13 +1149,14 @@ function buildComparableBuildsUpdateSql({ full = false, scopeWhere = 'TRUE', com
         FILTER (WHERE m.permit_fsi IS NOT NULL AND m.work_type = 'new_build'
                 AND m.permit_fsi BETWEEN ${fsiMinPlausible} AND ${fsiMaxPlausible}) AS fsi_p50
     FROM (
-      -- subjects: residential parcels with a max-build envelope (scoped + incremental). Scoping HERE
-      -- (not just at the final UPDATE) is what keeps a scoped/test run from kNN-ing all 486K parcels.
+      -- subjects: residential parcels with a max-build envelope (scoped). Scoping HERE (not just at the
+      -- final UPDATE) is what keeps a scoped/test run from kNN-ing all 486K parcels. O4 rows 2+8: no
+      -- incremental subject filter — every eligible subject is recomputed every run.
       SELECT sp.id, sp.geom, sp.zoning_class, sp.lot_size_sqm, sp.frontage_m,
         (${bn.parcelFamilyFromZoningCaseSql('sp.zoning_class')}) AS subj_family  -- R4: the subject's dwelling family
       FROM parcels sp
       WHERE sp.max_buildable_footprint_sqm IS NOT NULL AND sp.lot_size_sqm > 0 AND sp.zoning_class IS NOT NULL
-        AND (${scopeWhere}) ${incr}
+        AND (${scopeWhere})
     ) s
     CROSS JOIN LATERAL (
       SELECT near.*
@@ -1221,7 +1222,10 @@ async function runPass4(client, ctx, config) {
   const windowYears = Number(config.enrich_parcels_comps_window_years);
   const eligible = `max_buildable_footprint_sqm IS NOT NULL AND lot_size_sqm > 0 AND zoning_class IS NOT NULL`;
   const scopeWhere = ctx.scopeWhere;
-  const full = ctx.full;
+  const full = true; // O4 rows 2+8 (operator ruling 2026-10-03, registry-truth fold 14): pass 4 is ALWAYS
+  // full — the incremental comp_count IS NULL skip never refreshed a parcel whose comps window changed
+  // (EP-D1 never-refresh half / Fold G4 retired). Live behaviour is unchanged: the only chain invocation
+  // is sources --full.
   // WF3: RESET stale comp_* on parcels that LOST eligibility (footprint -> NULL, e.g. a heritage-mislink
   // freeze) — the eligible-only reset below skips them, leaving a stale comp_fsi_p50 forever (same gated-pass
   // gap the optconfig reset fixes). Always-on (not just --full).
@@ -1241,8 +1245,9 @@ async function runPass4(client, ctx, config) {
   await client.query(buildCompCandidatesIndexSql());
   const cand = (await client.query('SELECT count(*)::int AS n FROM comp_cand')).rows[0].n;
   const upd = await client.query(buildComparableBuildsUpdateSql({ full, scopeWhere, comp }));
-  // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker, so the
-  // incremental comp_count IS NULL skip is correct and the zero-comp count is real, not hidden as NULL).
+  // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker; the
+  // zero-comp count is real, not hidden as NULL). O4 rows 2+8: there is no incremental skip to keep
+  // correct any more — pass 4 recomputes every eligible subject every run.
   const zeroFilled = await client.query(
     `UPDATE parcels p SET comp_count = 0 WHERE ${eligible} AND p.comp_count IS NULL AND (${scopeWhere})`);
   const dist = (await client.query(

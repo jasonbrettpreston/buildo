@@ -1,0 +1,51 @@
+{
+  "probe": "P2-C5 gate over the p3 fleet with seat B (Buildo-wt-fleet2-desc) mode_select/emits/invalidates edits + ldg10 invalidates[].by rows overlaid in memory (fields changed vs tip a7a60e30); goldens = p3 tree",
+  "date": "2026-10-03",
+  "seatB_plus_ldg10": {
+    "changes": [
+      "load_ravines invalidates<-+ldg10 full_rescan=",
+      "link_massing mode_select<-B none",
+      "link_massing invalidates<-B+ldg10 full_rescan=parcel_buildings.parcel_id",
+      "link_wsib mode_select<-B none",
+      "link_wsib emits<-B (13)",
+      "link_wsib invalidates<-B+ldg10 full_rescan=wsib_registry.linked_entity_id,entities.is_wsib_registered",
+      "link_parcel_addresses emits<-B (3)",
+      "compute_centroids emits<-B (6)",
+      "compute_centroids invalidates<-+ldg10 full_rescan=",
+      "link_parcels mode_select<-B none",
+      "link_parcels emits<-B (15)",
+      "link_parcels invalidates<-B+ldg10 full_rescan=permits.parcel_linked_at,permits.zoning_enriched_at",
+      "refresh_snapshot emits<-B (4)",
+      "enrich_parcels emits<-B (10)",
+      "enrich_parcels invalidates<-+ldg10 full_rescan=permits.issued_date",
+      "assert_engine_health emits<-B (5)",
+      "link_neighbourhoods invalidates<-+ldg10 full_rescan=permits.neighbourhood_id",
+      "geocode_permits emits<-B (8)",
+      "geocode_permits invalidates<-B+ldg10 full_rescan=permits.geo_id",
+      "enrich_ravines invalidates<-+ldg10 full_rescan=",
+      "enrich_heritage invalidates<-+ldg10 full_rescan=",
+      "compute_parcel_cost_estimates emits<-B (20)",
+      "parcels invalidates<-+ldg10 full_rescan=",
+      "load_heritage emits<-B (1)"
+    ],
+    "pass": false,
+    "checked": 410,
+    "violations": [
+      {
+        "step": "enrich_parcels",
+        "item": "staleness.mode_select",
+        "detail": "enrich_parcels: ENRICHER declares mode_select \"tri_state\"; allowed none"
+      },
+      {
+        "step": "enrich_heritage",
+        "item": "staleness.mode_select",
+        "detail": "enrich_heritage: ENRICHER declares mode_select \"tri_state\"; allowed none"
+      }
+    ]
+  },
+  "plus_handoffD_P2C6_enricher_none": {
+    "pass": true,
+    "checked": 410,
+    "violations": []
+  }
+}

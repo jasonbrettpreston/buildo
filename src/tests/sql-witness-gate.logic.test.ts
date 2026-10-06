@@ -40,6 +40,7 @@ type EvaluateArgs = {
 type GateModule = {
   evaluateWitness: (args: EvaluateArgs) => { answer: string; rows: string[]; hardStop: boolean };
   selfTest: () => { ok: boolean; detail: string };
+  undeclaredItems: (descriptor: unknown, touched: unknown) => string[];
 };
 
 const MODULE_PATH = path.join(process.cwd(), 'scripts/analysis/gates/witness.mjs');
@@ -236,6 +237,51 @@ describe('gate #44 (a) — traced subset of declared (contract: FAIL:WITNESS:<sl
   it('GREEN control: the declared fixture trace yields no (a) rows', () => {
     const out = run();
     expect(out.rows.filter((r) => r.startsWith('FAIL:WITNESS:sources:a:'))).toEqual([]);
+  });
+});
+
+// MQ-A9 (a) / Spec 124 R-BJ (fold 9 C7-1): a check's measurement read is declared in checks[].reads
+// (outside inputs.reads, never an ordering edge); #44 (a) accounts traced reads against
+// inputs.reads ∪ checks[].reads. Both directions.
+describe('gate #44 (a) — the checks[].reads home counts as declared (R-BJ, MQ-A9 a)', () => {
+  const touchedWith = (extra: Record<string, string[]>) => {
+    const t = trace();
+    t.touched = { reads: { parcels: ['id', 'geom'], ...extra }, writes: { parcels: ['a', 'b'] } };
+    return t;
+  };
+  const withCheckReads = (reads: Array<{ table: string; columns?: string[] }>) => {
+    const d = makeDescriptor() as Record<string, unknown>;
+    const checks = (Array.isArray(d.checks) ? (d.checks as Array<Record<string, unknown>>) : []).map((c) => ({ ...c }));
+    checks.push({ id: 'hb_today', kind: 'field_coverage', reads });
+    return { ...d, checks };
+  };
+
+  it('RED: a traced read declared ONLY in checks[].reads is accounted (no :a: row for it)', () => {
+    const out = run({ descriptor: withCheckReads([{ table: 'engine_health_snapshots', columns: ['captured_at'] }]) as never, postTraces: { sources: touchedWith({ engine_health_snapshots: ['captured_at'] }) } });
+    expect(out.rows.filter((r) => r.includes(':a:engine_health_snapshots'))).toEqual([]);
+  });
+
+  it('GREEN fence: a traced read declared NOWHERE still fails (a)', () => {
+    const out = run({ postTraces: { sources: touchedWith({ engine_health_snapshots: ['captured_at'] }) } });
+    expect(out.rows).toContain('FAIL:WITNESS:sources:a:engine_health_snapshots.*');
+  });
+
+  it('GREEN fence: checks[].reads covers only its own columns — another column of that table still fails (a)', () => {
+    const out = run({ descriptor: withCheckReads([{ table: 'engine_health_snapshots', columns: ['captured_at'] }]) as never, postTraces: { sources: touchedWith({ engine_health_snapshots: ['captured_at', 'dead_ratio'] }) } });
+    expect(out.rows).toContain('FAIL:WITNESS:sources:a:engine_health_snapshots.dead_ratio');
+    expect(out.rows).not.toContain('FAIL:WITNESS:sources:a:engine_health_snapshots.captured_at');
+  });
+
+  it('GREEN control: undeclaredItems is the shared helper (the fixture guard uses it too) and honours checks[].reads', () => {
+    const items = G.undeclaredItems(withCheckReads([{ table: 'engine_health_snapshots', columns: ['captured_at'] }]), { reads: { engine_health_snapshots: ['captured_at'] }, writes: {} });
+    expect(items).toEqual([]);
+  });
+
+  it('GREEN fence (amendment A1): a traced WRITE to a check-read column still fails (a)', () => {
+    const t = trace();
+    t.touched = { reads: { parcels: ['id', 'geom'] }, writes: { parcels: ['a', 'b'], engine_health_snapshots: ['captured_at'] } };
+    const out = run({ descriptor: withCheckReads([{ table: 'engine_health_snapshots', columns: ['captured_at'] }]) as never, postTraces: { sources: t } });
+    expect(out.rows).toContain('FAIL:WITNESS:sources:a:engine_health_snapshots.*');
   });
 });
 
@@ -843,7 +889,7 @@ describe('gate #44 (e) — reads.steps equals the derived set (contract: FAIL:WI
       inputs: {
         reads: {
           tables: [{ table: 'parcels', columns: ['id', 'geom'] }],
-          steps: steps.map((step) => ({ step, version_pin: 'gte' })),
+          steps: steps.map((step) => ({ step })),
         },
       },
     };

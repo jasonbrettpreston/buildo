@@ -118,7 +118,6 @@ function Z3() {
       page_size_from_config: 'load_zoning_datastore_page_size',
     },
     key_property: '_id',
-    cache: 'none',
     target,
     ...(onFailure ? { on_failure: onFailure } : {}),
   });
@@ -175,12 +174,8 @@ function Z3() {
           why: { text: 'The zoning layers are replaced layer by layer.', liveness: { kind: 'table', ref: table } },
         },
         retract: 'departed',
-        replay: 'idempotent_upsert',
-        source_key_policy: { unique: true, on_collision: 'dedupe_upstream', key_space_migration: 'none' },
       })),
-      cascades: 'none',
       invalidates: [],
-      publish: 'direct',
       write_inventory: {
         statements: 3,
         why: { text: 'One guarded upsert per declared target.', liveness: { kind: 'file', ref: 'scripts/lib/step/write.js' } },
@@ -188,7 +183,6 @@ function Z3() {
     },
 
     staleness: {
-      scope: 'none',
       trigger: [
         {
           signal: 'source_validator',
@@ -200,8 +194,6 @@ function Z3() {
       ],
       skip_scope: 'all_primaries',
       mode_select: 'skip',
-      checkpoint: 'none',
-      interval: 'none',
       fingerprint: 'derived',
       fingerprint_inputs: ['scripts/lib/source-version.js'],
       logic_version: 'none',
@@ -212,15 +204,10 @@ function Z3() {
     guards: { requires: [], srid: 'none', empty_source: 'none', schema_drift: 'pause' },
 
     execution: {
-      budget: '10m',
       txn_scope: 'step',
-      txn_budget: '5m',
-      chunked: true,
       statement_timeout: 'none',
       step_timeout: '15m',
       batch: 10000,
-      needs_disk_mb: 64,
-      partial_fill: 'atomic',
       shape: 'ingest',
       on_row_error: 'skip',
       on_row_error_why: {
@@ -230,13 +217,10 @@ function Z3() {
       on_batch_error: 'fail_step',
       on_check_error: 'fail_step',
       on_degrade: 'none',
-      criticality: 'required',
       network: {
-        egress: ['ex'],
         timeout: '60000ms',
         timeout_from_config: 'load_zoning_download_timeout_ms',
         retries: 0,
-        redact: 'none',
       },
       invocation: {
         sources: { argv: [], env: { PIPELINE_CHAIN: 'sources' } },
@@ -293,12 +277,14 @@ function Z3() {
 
     invariants: 'none',
     plausibility: 'none',
-    override: 'none',
+    // FLEET-2 MQ-A7 (step.schema.json allOf[11]): schema_drift "pause" requires override.force_run as an env var.
+    // Same shape as the real load-zoning descriptor.
+    override: { force_full: 'none', force_run: 'ZONING_FORCE_RELOAD', dry_run: 'none' },
 
     counters: {
-      records_total: { source: 'acquired.feature_count', scoped_by: 'zone_id' },
-      records_new: { source: 'written.inserted', scoped_by: 'zone_id' },
-      records_updated: { source: 'written.updated', scoped_by: 'zone_id' },
+      records_total: { source: 'acquired.feature_count' },
+      records_new: { source: 'written.inserted' },
+      records_updated: { source: 'written.updated' },
     },
 
     config: {
@@ -389,7 +375,6 @@ describe('INGESTOR prerequisite 0y — ckan_datastore + ckan + trigger style + s
           package_url: 'https://ex/api/3/action/package_show?id=p',
           page_size_from_config: 'load_zoning_datastore_page_size',
         },
-        cache: 'none',
         target: 'tbase',
       });
     });
@@ -625,7 +610,6 @@ describe('INGESTOR prerequisite 0y — fixture preconditions', () => {
       expect(external.format).toBe('ckan_datastore');
       expect(external.kind).toBe('http_api');
       expect(external.target).toBeTruthy();
-      expect(external.cache).toBe('none');
       expect(external.key_property).toBe('_id');
       expect(external.url).not.toContain('?');
       expect(external.ckan.package_url).toBe('https://ex/api/3/action/package_show?id=p');

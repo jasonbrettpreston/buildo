@@ -4,8 +4,8 @@
     "",
     "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
     "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
-    "do_not_reflag · how_to_investigate · limitations · constants. This file carries 8,",
-    "and descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
     "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
     "There is no overflow file and no overflow block.",
     "",
@@ -46,7 +46,7 @@
   ],
   "read_this_way": [
     {
-      "what": "`duplicate_key_count` ~1,107 is NORMAL, not a defect. The source has no id property, so source_id is md5(geometry) and identical geometries collide: the P-M probe measured 961 duplicate-geometry groups carrying 1,107 extra rows (428,184 − 427,077), of which only 28 groups differ in attributes. The step resolves duplicates LAST-wins by file order (source_key_policy {unique:false, on_collision:\"last_write_wins\"}, the same rule the legacy within-batch Map dedupe applied), so the surviving row is the last occurrence's — a duplicate split across two batches resolves the same way it always did. A non-zero count here is the source's own redundancy, not a run failure.",
+      "what": "`duplicate_key_count` ~1,107 is NORMAL, not a defect. The source has no id property, so source_id is md5(geometry) and identical geometries collide: the P-M probe measured 961 duplicate-geometry groups carrying 1,107 extra rows (428,184 − 427,077), of which only 28 groups differ in attributes. The step resolves duplicates LAST-wins by file order (the compute's dedupeBySourceId keeps the last feature per source_id before the upsert — M-D3, the same rule the legacy within-batch Map dedupe applied), so the surviving row is the last occurrence's — a duplicate split across two batches resolves the same way it always did. A non-zero count here is the source's own redundancy, not a run failure.",
       "measured": {
         "value": {
           "duplicate_key_count": 1107,
@@ -165,7 +165,7 @@
     {
       "const": "the CKAN resource id in ZIP_URL rotates; the durable fix is NOT in this conversion",
       "value": "inputs.reads.externals[].url carries the current resource id as data; the package_show resolution stays a review_followups item",
-      "incident": "The dataset id is stable but the CKAN resource id is not: the previous id 404'd on 2026-08-03 (run 30842232783, 86 min into the chain) after a re-registration, while the filename part was unchanged. Because the converted step re-fetches from CKAN every run (cache:\"none\", M-D10), a rotation now fails AFTER the download attempt rather than being masked by a stale local extract. Durable fix — resolve the newest resource at runtime via CKAN package_show instead of hardcoding — was filed 2026-08-03 and remains a separate change, not folded here.",
+      "incident": "The dataset id is stable but the CKAN resource id is not: the previous id 404'd on 2026-08-03 (run 30842232783, 86 min into the chain) after a re-registration, while the filename part was unchanged. Because the converted step re-fetches from CKAN every run (staleness.trigger \"none\": no pre-acquisition gate, and acquire.js downloads into a per-run temp root it removes, so no local extract survives between runs — M-D10), a rotation now fails AFTER the download attempt rather than being masked by a stale local extract. Durable fix — resolve the newest resource at runtime via CKAN package_show instead of hardcoding — was filed 2026-08-03 and remains a separate change, not folded here.",
       "commit": "pending (batch-2 row 3.6 ②)",
       "lock_test": "src/tests/steps/massing/violations.test.ts"
     }

@@ -101,7 +101,9 @@ const AFTER_COUNTS_SQL = `
  *
  * There is deliberately NO incremental predicate: every permit with a numeric `geo_id` is
  * re-joined on every run and the guard — not a lineage scope — is what makes the write cheap
- * (`staleness.scope: "all"`, and both phases declare `scope: "full"`).
+ * (`staleness.mode_select: "none"`, and both phases declare `scope: "full"`).
+ *
+ * Fold 10 item 4 (registry-truth plan, 2026-10-03): only live address points (`ap.retired_at IS NULL`) are joined; a permit whose geo_id names a soft-retired point is no longer refreshed by this UPDATE (its existing coordinates are left as they are — phase 2 retracts only empty geo_ids).
  */
 function buildGeocodeSql() {
   return `
@@ -114,6 +116,7 @@ function buildGeocodeSql() {
         AND p.geo_id != ''
         AND p.geo_id ~ '^[0-9]+$'
         AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]+$' THEN p.geo_id::INTEGER END
+        AND ap.retired_at IS NULL
         AND (p.latitude IS DISTINCT FROM ap.latitude
           OR p.longitude IS DISTINCT FROM ap.longitude)
   `;
@@ -130,7 +133,7 @@ function buildGeocodeSql() {
 async function runGeocodePass(client, ctx) {
   const before = await client.query(BEFORE_COUNTS_SQL);
   const b = before.rows[0];
-  const addressPoints = await client.query('SELECT COUNT(*) AS count FROM address_points');
+  const addressPoints = await client.query('SELECT COUNT(*) AS count FROM address_points WHERE retired_at IS NULL');
 
   const updated = await ctx.joinUpdate(0, buildGeocodeSql(), [ctx.clock.now()]);
   ctx.onProgress(updated);
@@ -340,10 +343,11 @@ const CHECKS = {
  * The step's `records_meta` block — the human-scannable run-level roll-up beside the
  * per-check rows.
  *
- * `code_version` is a SELF-CONSUMED PRODUCER FIELD: `staleness.measureTrigger` reads it back
- * off the PRIOR run to decide whether the declared `logic_version` moved, and the baseline is
- * CHAIN-SCOPED, so `permits:geocode_permits` and `sources:geocode_permits` keep independent
- * baselines. Dropping the key makes that signal silently never close.
+ * `code_version` records the declared `staleness.logic_version` on every run, for the
+ * operator. It is NOT read back: this step's only staleness trigger is `always`, and
+ * `staleness.measureTrigger` reads a prior run's `code_version` only for a step that declares
+ * a `code_version` trigger (the descriptor emits it with `consumers: []`). Corrected
+ * 2026-10-03 (P1-C8a): the earlier text claimed a self-consumed trigger that was never declared.
  *
  * `has_geo_id_no_match` is carried here and NOT as a check row — GP-L2, pinned.
  */

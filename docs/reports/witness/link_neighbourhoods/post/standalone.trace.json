@@ -1,0 +1,467 @@
+{
+  "trace_version": 1,
+  "step": "scripts/link-neighbourhoods.js",
+  "chain": "none",
+  "source_fingerprint": "80a76951c2a7022ece062a67318a1ffbae13af2fd43868c5790a22d4c8d699be",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 32,
+    "distinct": 28,
+    "utility": 7,
+    "tracer_self_ms": 9.707,
+    "wall_ms": 31242
+  },
+  "statements": [
+    {
+      "fingerprint": "03da0afeb7289cd8",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "geometry",
+          "id"
+        ],
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "0f30e885298513d2",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "neighbourhoods": [
+          "geom",
+          "id"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "neighbourhood_id"
+        ]
+      },
+      "excluded": [],
+      "error": "FAIL:INPUT:column:longitude"
+    },
+    {
+      "fingerprint": "17b1f71be1fb27b3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          29556,
+          null,
+          2333,
+          0,
+          0,
+          0,
+          "{\"duration_ms\":25680,\"code_version\":\"v1-postgis-containment\",\"permits_processed\":0,\"permits_linked\":0,\"no_match_count\":0,\"neighbourhoods_loaded\":158,\"config\":{\"sources_neighbourhoods_floor\":158,\"link_neighbourhoods_link_rate_warn_pct\":95,\"link_neighbourhoods_link_rate_fail_pct\":50,\"link_neighbourhoods_no_match_warn_count\":0},\"terminal\":\"linked_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"link_rate: 91.28155477365574\",\"neighbourhood_id_unreachable_no_coords: 10486\"],\"audit_table\":{\"phase\":0,\"name\":\"Neighbourhood Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"neighbourhoods_loaded_before_write\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE\",\"guarantee\":\"the neighbourhood polygon corpus is loaded and counted BEFORE any permits.neighbourhood_id write is issued — Spec 60's own numbered contract orders the boundary load (step 1) ahead of the stamp (step 3), and with an empty corpus every eligible permit would be walked, matched against nothing, and left NULL while the run still reported a completed terminal. ANCHOR RE-POINTED at the cutover commit, in the SAME commit that amended the spec: the previous anchor was the literal sentence `3. Update `permits.neighbourhood_id` (sentinel `-1` for unmatched)`, which the amendment DELETES because it described the retired sentinel (LN-D1). `checkOrderGuaranteesCited` resolves an anchor by a plain whole-file substring test with no normalisation and no section scoping, and Spec 60 has no `60a_` appendix to fall back to, so a spec amendment without this re-point in the same commit reds Rule 11 and the step's own standing anchor lock.\"},\"observed\":\"before_write\"},{\"metric\":\"permits_processed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"neighbourhoods_loaded\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"value_min 1\",\"observed\":\"after_write\"},{\"metric\":\"run_linked\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate_floor\",\"value\":91.28155477365574,\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_neighbourhood_match\",\"value\":0,\"threshold\":\"viol <= 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"sentinel_residue\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0 rls_enabled=true\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"neighbourhood_id_orphans\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"negative_neighbourhood_ids\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"linked_permit_outside_its_own_neighbourhood\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"stamped_permits_with_null_coordinates\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"neighbourhood_id_unreachable_no_coords\",\"value\":10486,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"neighbourhoods\":158},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"neighbourhoods\":158},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_neighbourhood_id_orphans_duration_ms\",\"value\":561,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_negative_neighbourhood_ids_duration_ms\",\"value\":94,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_linked_permit_outside_its_own_neighbourhood_duration_ms\",\"value\":3258,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_stamped_permits_with_null_coordinates_duration_ms\",\"value\":2590,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_neighbourhood_id_unreachable_no_coords_duration_ms\",\"value\":2192,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":29555,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "57eabdf15af539c8",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "id"
+        ],
+        "permits": [
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "link_neighbourhoods",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "permits:link_neighbourhoods"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7b4eb0456eb9e172",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "neighbourhoods": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "9c57529e722552a2",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "geom",
+          "id"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9d45977f936e5c93",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "aa9b6d67491dd63d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "geom"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "baeea274acbc0915",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_constraint"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 4,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cbee6488915475d7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ce97bb2bc8d71035",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f86400f6a51f4cfe",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "0f30e885298513d2",
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "neighbourhoods": [
+        "geom",
+        "id"
+      ],
+      "parcels": [
+        "geometry",
+        "id"
+      ],
+      "permit_parcels": [
+        "parcel_id",
+        "permit_num",
+        "revision_num"
+      ],
+      "permits": [
+        "latitude",
+        "longitude",
+        "neighbourhood_id",
+        "permit_num",
+        "revision_num"
+      ]
+    },
+    "writes": {
+      "permits": [
+        "neighbourhood_id"
+      ]
+    }
+  },
+  "errors": [
+    "FAIL:INPUT:column:longitude"
+  ]
+}

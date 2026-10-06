@@ -41,13 +41,14 @@
           { "name": "dead_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           { "name": "seq_scan", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           { "name": "idx_scan", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "seq_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+          { "name": "seq_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "captured_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
         ],
         "write_discipline": {
           "class": "guarded_upsert",
           "set_source": "compute",
           "guard": "is_distinct_from",
-          "guard_columns": "all_declared",
+          "guard_columns": ["n_live_tup", "n_dead_tup", "dead_ratio", "seq_scan", "idx_scan", "seq_ratio"],
           "scope": "snapshot_date = CURRENT_DATE",
           "expected_change_ratio": "none",
           "idempotent_rerun": "declared_drift",
@@ -56,7 +57,7 @@
             "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
           },
           "guard_columns_why": {
-            "text": "LG-9 escape hatch, moot here — guard_columns is only consulted to build the IS DISTINCT FROM clause when guard != \"none\", and \"all_declared\" resolves to exactly the 6 columns[] entries above, none of which is a run_at-sourced column (captured_at is a bookkeeping timestamp stamped by the write statement's own SET clause, not declared in columns[] — same convention refresh_snapshot's own created_at uses).",
+            "text": "The guard is the 6 metric columns, exactly the statement's WHERE … IS DISTINCT FROM list (scripts/lib/compute/assert-engine-health.js). captured_at is declared as a written column (the statement's SET clause stamps captured_at = NOW(); the SQL witness resolver records it as a write) but is NOT a guard term: a bookkeeping timestamp that differs on every run would make the guard always true. Listed explicitly rather than all_declared so the declared guard matches the executed one.",
             "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
           },
           "txn_scope": "statement",
@@ -65,14 +66,10 @@
             "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
       "statements": 1,
       "why": {
@@ -83,14 +80,11 @@
   },
 
   "staleness": {
-    "scope": "none",
     "trigger": "none",
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/compute/assert-engine-health.js"],
-    "logic_version": "v1-batch1-i3",
+    "logic_version": "none",
     "on_fingerprint_change": "none"
   },
 
@@ -102,15 +96,10 @@
   },
 
   "execution": {
-    "budget": "5m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "atomic",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -119,7 +108,6 @@
       "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
@@ -262,7 +250,7 @@
       "sql": "SELECT count(*)::int AS c FROM (SELECT table_name, snapshot_date FROM engine_health_snapshots GROUP BY table_name, snapshot_date HAVING count(*) > 1) d",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post",
       "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-14T00:00:00.000Z", "commit": "PENDING", "cost_ms": 5, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T18:00:55.712Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3, "sample_n": 5, "source_run": { "run_id": "2265", "chain": null, "event": "golden_capture" } },
       "why": {
         "text": "Mirrors the live UNIQUE(table_name, snapshot_date) DB constraint as a declared, observable check rather than an implicit reliance on the constraint alone (Rule 1, nothing hidden) — same convention refresh_snapshot's own duplicate_snapshot_date_count invariant uses.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
@@ -273,7 +261,13 @@
 
   "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
 
-  "emits": "none",
+  "emits": [
+    { "key": "tables_checked", "type": "int", "consumers": [] },
+    { "key": "tables_vacuumed", "type": "int", "consumers": [] },
+    { "key": "vacuumed_tables", "type": "array", "consumers": [] },
+    { "key": "records_updated", "type": "int", "consumers": [] },
+    { "key": "engine_health", "type": "array", "consumers": ["src/components/FreshnessTimeline.tsx"] }
+  ],
 
   "deviations": [
     {
@@ -342,9 +336,9 @@
   },
 
   "counters": {
-    "records_total": { "source": "records_meta.tables_checked", "scoped_by": "step" },
+    "records_total": { "source": "records_meta.tables_checked" },
     "records_new": "none",
-    "records_updated": { "source": "records_meta.records_updated", "scoped_by": "step" }
+    "records_updated": { "source": "records_meta.records_updated" }
   },
 
   "config": {
@@ -368,7 +362,7 @@
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "per_chain",
-      "phase": { "permits": 16, "coa": 9, "sources": 15, "deep_scrapes": 6 },
+      "phase": { "permits": 23, "coa": 14, "sources": 28, "deep_scrapes": 6 },
       "audit_table": "per_chain",
       "scope": "none"
     },

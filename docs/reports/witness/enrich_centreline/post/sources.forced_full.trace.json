@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "accb5384e6dc05b338bb25145184130111ec4c2903a007a91e5645e5d4cee483",
-  "git_head": "a2cd2d3720eed7b243d15fe61ed9d4b440b0a32b",
+  "source_fingerprint": "53ef7ad75616c8aaff7688181fbf69fe9546f33919856cf68f6adb397c7020f8",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 46,
-    "distinct": 30,
+    "calls": 50,
+    "distinct": 33,
     "utility": 13,
-    "tracer_self_ms": 18.735,
-    "wall_ms": 1716707
+    "tracer_self_ms": 12.999,
+    "wall_ms": 413479
   },
   "statements": [
     {
@@ -21,6 +21,20 @@
       "reads": {},
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "19592461e878698f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_proc",
+        "pg_trigger"
+      ],
       "error": null
     },
     {
@@ -58,7 +72,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 2000,
+      "rowCount": 0,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -90,6 +104,19 @@
       "writes": {},
       "excluded": [
         "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "58b5b1e7c754cb2b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_trigger"
       ],
       "error": null
     },
@@ -338,7 +365,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -411,6 +438,18 @@
       "error": null
     },
     {
+      "fingerprint": "f25ef8a48360ab09",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "f5168ad53ef26d36",
       "kind": "read",
       "count": 1,
@@ -445,7 +484,7 @@
   ],
   "transactions": [
     {
-      "client": "18492:3",
+      "client": "18312:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

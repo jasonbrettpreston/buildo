@@ -189,11 +189,13 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     const permits = manifest.chains.permits ?? [];
     const coa = manifest.chains.coa ?? [];
     const sources = manifest.chains.sources ?? [];
-    expect(permits.indexOf('assert_global_coverage'), 'permits chain position').toBe(31); // 32 of 33
-    expect(permits.length).toBe(33);
+    // FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
+    expect(permits.indexOf('assert_global_coverage'), 'permits chain position').toBe(permits.length - 2); // second-to-last, before backup_db (derived)
+    expect(permits).not.toContain('link_massing');
     expect(coa.indexOf('assert_global_coverage'), 'coa chain position').toBe(15); // 16 of 16, last
     expect(coa.length).toBe(16);
-    expect(sources.indexOf('assert_global_coverage'), 'sources chain position').toBe(23); // 24 of 28
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    expect(sources.indexOf('assert_global_coverage'), 'sources chain position').toBe(sources.indexOf('refresh_snapshot') + 1); // MQ-A8: right after refresh_snapshot
     expect(sources.length).toBe(28);
   });
 
@@ -576,5 +578,27 @@ describe('assert_global_coverage — descriptor/compute claims, all flipped plai
   it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-111 constant (thin shell)', () => { // flipped at: commit 7 (the frozen shell already lands here, not deferred to commit 9)
     expect(src()).toContain('ADVISORY_LOCK_ID = 111');
     expect(src()).toMatch(/pipeline\.step\(/);
+  });
+});
+
+// MQ-A9 (a) (fold 21 row 1; Spec 124 R-BJ): the `<table>.today` freshness heartbeats are CHECK measurement reads
+// (checks[].reads), never inputs.reads — so they are no ordering edge in a chain whose branch never runs them.
+describe('MQ-A9 (a) — heartbeat reads live in checks[].reads', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const d = require('../../../../scripts/quality/assert-global-coverage.descriptor.json') as {
+    inputs: { reads: { tables: Array<{ table: string; columns: string[] }> } };
+    checks: Array<{ id: string; expect: { field: string }; reads?: Array<{ table: string; columns?: string[] }> }>;
+  };
+  const heartbeats = d.checks.filter((c) => /^engine_health_snapshots\.today$/.test(c.expect.field));
+  it('every engine_health_snapshots.today check declares its read in checks[].reads (2 checks; amendment A2)', () => {
+    expect(heartbeats.map((c) => c.id).sort()).toEqual(['coa_step11_engine_health_today', 'p_step20_engine_health_today']);
+    for (const c of heartbeats) expect(c.reads && c.reads.length, c.id).toBeGreaterThan(0);
+    expect(heartbeats.find((c) => c.id === 'p_step20_engine_health_today')!.reads).toEqual([{ table: 'engine_health_snapshots', columns: ['captured_at'] }]);
+    for (const id of ['coa_step9_snapshot_today', 'p_step18_snapshot_today']) expect(d.checks.find((c) => c.id === id)!.reads, id).toBeUndefined(); // A2: stays in inputs.reads
+  });
+  it('inputs.reads.tables no longer declares engine_health_snapshots; data_quality_snapshots stays (amendment A2)', () => {
+    const tables = d.inputs.reads.tables.map((t) => t.table);
+    expect(tables).not.toContain('engine_health_snapshots');
+    expect(tables).toContain('data_quality_snapshots');
   });
 });

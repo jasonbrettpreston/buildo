@@ -1,0 +1,978 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "none",
+  "source_fingerprint": "a0adfdf6b3fbb114aa4acff968f5eddf45e6caa6bc90fbb25aa356914d9ad416",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 65,
+    "distinct": 63,
+    "utility": 5,
+    "tracer_self_ms": 27.339,
+    "wall_ms": 52720
+  },
+  "statements": [
+    {
+      "fingerprint": "00aaa1d6eb081c02",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "naics_code"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "03ed392c5cea1168",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "16829f563838219a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "lot_size_sqm",
+          "max_buildable_gfa_sqm"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1cb03eaa0b923689",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2610621b8d6de01f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "322a246ffcaacb50",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3e459b54ccadb1d0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "last_seen_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3ebdbf12e8fe3c30",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_trades": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "406d4f390b155b62",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "44696041e638c22a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "50770c39d83205a4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "lot_size_sqm"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          50153,
+          null,
+          2336,
+          null,
+          null,
+          null,
+          "{\"config\":{\"cost_outlier_ceiling_cad\":2000000000,\"desc_null_rate_warn_pct\":5,\"builder_null_rate_warn_pct\":95,\"cost_est_null_rate_warn_pct\":80,\"cost_est_min_tiers\":2,\"coa_forward_link_sub085_warn_pct\":59,\"cost_est_legacy_cost_ceiling_cad\":50000000,\"cost_est_legacy_gfa_ceiling_sqm\":50000,\"cost_outlier_count_warn_max\":20,\"sources_address_points_floor\":500000,\"sources_parcels_floor\":460000,\"sources_building_footprints_floor\":400000,\"sources_neighbourhoods_floor\":158,\"sources_ravines_floor\":500,\"sources_heritage_properties_floor\":8000,\"sources_heritage_districts_floor\":20,\"sources_centreline_floor\":40000,\"coa_null_address_count_warn_max\":10,\"coa_ancient_hearing_count_warn_max\":5,\"coa_future_hearing_window_years\":2,\"coa_cost_gt_threshold_cad\":10000000,\"coa_cost_gt_threshold_warn_max\":80,\"coa_fsi_gt_threshold\":5,\"coa_gfa_over_lot_multiple\":3,\"coa_gfa_over_lot_warn_max\":45,\"inspection_ancient_dates_count_warn_max\":5},\"terminal\":\"checks_passed_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"ghost_permits_30d: 207632\",\"parcel_lot_outliers: 8\"],\"audit_table\":{\"phase\":0,\"name\":\"Data Quality Checks\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"cost_outliers\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_descriptions_24h\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_builders_24h\",\"value\":0,\"threshold\":\"pct <= 95\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status_24h\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_trades\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphaned_permit_parcels\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_pk_groups\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimate_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"modeled_gfa_over_ceiling\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ghost_permits_30d\",\"value\":207632,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_null_rate\",\"value\":39.8,\"threshold\":\"pct <= 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"cost_estimates_min_tiers\",\"value\":5,\"threshold\":\"value_min 2\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_link_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_forward_link_sub085_pct\",\"value\":53.9,\"threshold\":\"pct <= 59\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_address\",\"value\":3,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_app_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_hearing\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_hearing\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_estimated_cost_gt10m\",\"value\":66,\"threshold\":\"value_max 80\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_app_fsi_gt5\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_maxbuild_gfa_gt3lot\",\"value\":30,\"threshold\":\"value_max 45\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_permits_pre_permit_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_points_count\",\"value\":525343,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"address_point_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcels_count\",\"value\":496536,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_lot_outliers\",\"value\":8,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_footprints_count\",\"value\":427077,\"threshold\":\"value_min 400000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"building_height_outliers\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhoods_count\",\"value\":158,\"threshold\":\"value_min 158\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"neighbourhood_dupes\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ravines_count\",\"value\":854,\"threshold\":\"value_min 500\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_properties_count\",\"value\":8848,\"threshold\":\"value_min 8000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"heritage_districts_count\",\"value\":29,\"threshold\":\"value_min 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"toronto_centreline_count\",\"value\":47330,\"threshold\":\"value_min 40000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_legal_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_no_g_class\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_invalid_naics\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"wsib_orphaned_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_permit_num\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_stage_name\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"null_scraped_at\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"orphan_inspections\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"invalid_status\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"outstanding_with_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"completed_without_date\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_stages\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"future_dates\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"ancient_dates\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"date_before_permit_year\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":50151,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "574a959894d77d34",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5fe780bc5fdcec75",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "607cf4785ded09f9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "61c41a8bf8930ae6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "predominant_class",
+          "subclass"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "assert_data_bounds",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "660e059dcd3f3c3a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "linked_permit_num"
+        ],
+        "permits": [
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "69fbf029af67beaf",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "permits": [
+          "permit_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6b0d05187c574964",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "linked_confidence",
+          "linked_permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6d042e3f02eecb68",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "hearing_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "733945a26fc299a0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77e953f5bd839589",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "816d332b87948107",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "address"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "83be752ff8c8b8c9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "max_height_m"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 26,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8a3fdaffbd95aa55",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9266b8dc6417153e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "93205e5bf08a588d",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "estimated_cost"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "966105b90f5fcbf2",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "966dedbaf1a563b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "99aa249a62f08c7a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "99e3a163b821a7ad",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a2b680c0f1bcacc3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "coa_fsi"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a396e1259239e95a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "scraped_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "aa8ee5dc67d3c676",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost",
+          "modeled_gfa_sqm",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ad755006610387dc",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "permit_num",
+          "stage_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ae6b216c68a21103",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "hearing_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b4ad994f7dc67438",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "permit_num"
+        ],
+        "permits": [
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b50797ee0e642bf0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b827b04bdb64375b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "cost_tier"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b940d51ca7d64005",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "ba40144a8ab77c37",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "baf3c2f88898a011",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id"
+        ],
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "bef7eea0fa5d1e78",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c00b5eb8f5d23571",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c39db32925b12934",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c70057054ad0cbec",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "stage_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d4c3034a807c8ce5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "ravines": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d883ca1927a7784c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e2f299b85f242e59",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ecc49ba7ca853b58",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "last_seen_at",
+          "lifecycle_phase"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f00b6618ba232c78",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "legal_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f14564e0b446e2c1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "est_const_cost"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f4a18475e2c49258",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "address_point_id",
+        "retired_at"
+      ],
+      "building_footprints": [
+        "max_height_m"
+      ],
+      "coa_applications": [
+        "address",
+        "application_number",
+        "coa_fsi",
+        "estimated_cost",
+        "hearing_date",
+        "linked_confidence",
+        "linked_permit_num",
+        "lot_size_sqm",
+        "max_buildable_gfa_sqm"
+      ],
+      "cost_estimates": [
+        "cost_tier",
+        "estimated_cost",
+        "modeled_gfa_sqm",
+        "permit_num"
+      ],
+      "entities": [
+        "id"
+      ],
+      "heritage_districts": [],
+      "heritage_properties": [],
+      "neighbourhoods": [
+        "neighbourhood_id"
+      ],
+      "parcels": [
+        "lot_size_sqm",
+        "parcel_id"
+      ],
+      "permit_inspections": [
+        "inspection_date",
+        "permit_num",
+        "scraped_at",
+        "stage_name",
+        "status"
+      ],
+      "permit_parcels": [
+        "permit_num",
+        "revision_num"
+      ],
+      "permit_trades": [
+        "permit_num",
+        "revision_num"
+      ],
+      "permits": [
+        "est_const_cost",
+        "last_seen_at",
+        "lifecycle_phase",
+        "permit_num",
+        "permit_type",
+        "revision_num"
+      ],
+      "ravines": [],
+      "toronto_centreline": [],
+      "wsib_registry": [
+        "legal_name",
+        "linked_entity_id",
+        "naics_code",
+        "predominant_class",
+        "subclass"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

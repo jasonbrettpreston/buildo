@@ -27,6 +27,7 @@
         "parcels": [
           "addr_num_normalized",
           "address_number",
+          "centreline_dataset_version_when_enriched",
           "date_effective",
           "depth_ft",
           "depth_m",
@@ -35,12 +36,14 @@
           "frontage_m",
           "geom",
           "geometry",
+          "heritage_dataset_version_when_enriched",
           "is_irregular",
           "linear_name_full",
           "lot_size_source",
           "lot_size_sqft",
           "lot_size_sqm",
           "parcel_id",
+          "ravine_dataset_version_when_enriched",
           "stated_area_raw",
           "street_name_normalized",
           "street_type_normalized"

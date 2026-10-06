@@ -41,7 +41,7 @@ const readJson = (rel: string): any => JSON.parse(read(rel));
 const schemaFixture = {
   'x-banned-for-new': {
     values: {
-      'outputs.writes[].replay': ['append_unsafe'],
+      'outputs.writes[].fixture_banned': ['append_unsafe'],
       'outputs.writes[].write_discipline.guard': ['none'],
     },
   },
@@ -57,7 +57,7 @@ const validateSourcePartial = [
 const validateSourceFull = validateSourcePartial.replace(
   "  { path: GUARD_PATH, field: 'guard', whyField: 'guard_why' },",
   "  { path: GUARD_PATH, field: 'guard', whyField: 'guard_why' },\n"
-  + "  { path: 'outputs.writes[].replay', field: 'replay', whyField: 'replay_why' },",
+  + "  { path: 'outputs.writes[].fixture_banned', field: 'fixture_banned', whyField: 'fixture_banned_why' },",
 );
 
 const censusFixture = {
@@ -80,7 +80,7 @@ describe('gate I — registry coverage (#33-#36)', () => {
     it('T2a: RED — a banned path with no enforcer is a violation naming the path', () => {
       const out = reg.bannedCoverage({ schema: schemaFixture, validateSource: validateSourcePartial });
       expect(out.pass).toBe(false);
-      expect(out.violations.map((v) => v.path)).toEqual(['outputs.writes[].replay']);
+      expect(out.violations.map((v) => v.path)).toEqual(['outputs.writes[].fixture_banned']);
       expect(out.enforcedPaths).toEqual(['outputs.writes[].write_discipline.guard']);
     });
 
@@ -89,7 +89,7 @@ describe('gate I — registry coverage (#33-#36)', () => {
       expect(out.pass).toBe(true);
       expect(out.violations).toEqual([]);
       expect(out.bannedPaths).toEqual([
-        'outputs.writes[].replay',
+        'outputs.writes[].fixture_banned',
         'outputs.writes[].write_discipline.guard',
       ]);
     });
@@ -109,21 +109,17 @@ describe('gate I — registry coverage (#33-#36)', () => {
   });
 
   describe('T3: #33 over the LIVE tree — landed GREEN (2026-09-26 orchestrator wiring)', () => {
-    it('T3: the live schema names 4 banned paths, all 4 now enforced', () => {
+    it('T3: the live schema names 2 banned paths, both enforced', () => {
       const out = reg.bannedCoverage({
         schema: readJson(reg.SCHEMA_REL_PATH),
         validateSource: read(reg.VALIDATE_REL_PATH),
       });
-      // Landed 2026-09-26: validate.js's GRANDFATHERED_VALUE_PATHS gained a
-      // `scalar: true` entry for execution.criticality (per-step, no
-      // outputs.writes[] walk, no sibling *_why field) alongside the
-      // existing guard/class/replay entries.
-      expect(out.bannedPaths).toHaveLength(4);
-      expect(out.enforcedPaths).toHaveLength(4);
+      // outputs.writes[].replay and execution.criticality were deleted with
+      // their x-banned-for-new keys in the Phase 3 RE-FREEZE (DELETE row #18/#45).
+      expect(out.bannedPaths).toHaveLength(2);
+      expect(out.enforcedPaths).toHaveLength(2);
       expect(out.enforcedPaths).toContain('outputs.writes[].write_discipline.guard');
       expect(out.enforcedPaths).toContain('outputs.writes[].write_discipline.class');
-      expect(out.enforcedPaths).toContain('outputs.writes[].replay');
-      expect(out.enforcedPaths).toContain('execution.criticality');
       expect(out.violations).toEqual([]);
       expect(out.pass).toBe(true);
     });
@@ -325,13 +321,14 @@ describe('gate I — registry coverage (#33-#36)', () => {
       expect(stdout).not.toMatch(/#33:.*FAIL|#34:.*FAIL|#35:.*FAIL|#36:.*FAIL/);
     });
 
-    it('T8c: validate.js exports GRANDFATHERED_VALUE_PATHS with a scalar execution.criticality entry', async () => {
+    it('T8c: validate.js no longer exports the deleted replay/criticality enforcer paths', async () => {
       const v = (await import(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'))) as {
         GRANDFATHERED_VALUE_PATHS: Array<{ path: string; scalar?: boolean }>;
-        CRITICALITY_PATH: string;
       };
-      const row = v.GRANDFATHERED_VALUE_PATHS.find((r) => r.path === v.CRITICALITY_PATH);
-      expect(row?.scalar).toBe(true);
+      expect(v.GRANDFATHERED_VALUE_PATHS.map((r) => r.path)).toEqual([
+        'outputs.writes[].write_discipline.guard',
+        'outputs.writes[].write_discipline.class',
+      ]);
     });
   });
 });

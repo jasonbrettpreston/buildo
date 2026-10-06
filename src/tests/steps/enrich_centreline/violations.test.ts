@@ -418,7 +418,7 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     const d = loadDescriptor();
     const byKey = Object.fromEntries(d.emits.map((e: AnyObj) => [e.key, e]));
     expect(Object.keys(byKey).sort()).toEqual(['centreline_enrich', 'code_version', 'duration_ms']);
-    expect(byKey.centreline_enrich).toMatchObject({ type: 'object', consumers: ['enrich_centreline'] });
+    expect(byKey.centreline_enrich).toMatchObject({ type: 'object', consumers: ['enrich_centreline', 'scripts/analysis/enrich-centreline-cohort-differential.js'] }); // gate D: the ③ cohort differential reads it (load_heritage precedent)
     // mode_select/logic_version "none": registry-truth plan fold 8 ruling 8 (operator 2026-10-03) — no enrich runner branch calls selectMode; trigger is `always`.
     expect(d.staleness).toMatchObject({ mode_select: 'none', logic_version: 'none', fingerprint: 'derived', fingerprint_inputs: [COMPUTE_REL], on_fingerprint_change: 'run' });
   });

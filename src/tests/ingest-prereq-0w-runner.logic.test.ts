@@ -46,7 +46,7 @@ const PRIMARY_ID = LOAD_RAVINES.inputs.reads.externals[0].id;
 
 /** The 0w lookup: an xlsx side-source, declared with a role and no key_property. */
 const LOOKUP = {
-  id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup', cache: 'none',
+  id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup',
 };
 
 type FakePoolOpts = { logicVars?: Record<string, unknown> };
@@ -235,7 +235,7 @@ describe('INGESTOR prerequisite 0w — runner lookups', () => {
   // -------------------------------------------------------------------------
   it('T2 — a 2nd url-bearing external with NO role rejects /exactly ONE/ and fetches nothing', async () => {
     const d = clone(LOAD_RAVINES) as { inputs: { reads: { externals: Array<Record<string, unknown>> } } };
-    d.inputs.reads.externals.push({ id: 'l', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv', cache: 'none' });
+    d.inputs.reads.externals.push({ id: 'l', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv' });
     const compute = computeWithFns();
     restored = stubsFor();
 

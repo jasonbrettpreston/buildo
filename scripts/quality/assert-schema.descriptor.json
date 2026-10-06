@@ -21,15 +21,15 @@
       "steps": [],
       "tables": [{ "table": "logic_variables", "columns": ["variable_key"] }],
       "externals": [
-        { "id": "ckan_datastore_api", "kind": "http_api", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search", "cache": "none" },
-        { "id": "address_points_csv", "kind": "http_file", "cache": "none" },
-        { "id": "parcels_csv", "kind": "http_file", "cache": "none" },
-        { "id": "massing_zip", "kind": "http_file", "cache": "none" },
-        { "id": "ravine_zip", "kind": "http_file", "cache": "none" },
-        { "id": "heritage_register_zip", "kind": "http_file", "cache": "none" },
-        { "id": "heritage_hcd_zip", "kind": "http_file", "cache": "none" },
-        { "id": "centreline_zip", "kind": "http_file", "cache": "none" },
-        { "id": "neighbourhoods_geojson", "kind": "http_file", "cache": "none" }
+        { "id": "ckan_datastore_api", "kind": "http_api", "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search" },
+        { "id": "address_points_csv", "kind": "http_file" },
+        { "id": "parcels_csv", "kind": "http_file" },
+        { "id": "massing_zip", "kind": "http_file" },
+        { "id": "ravine_zip", "kind": "http_file" },
+        { "id": "heritage_register_zip", "kind": "http_file" },
+        { "id": "heritage_hcd_zip", "kind": "http_file" },
+        { "id": "centreline_zip", "kind": "http_file" },
+        { "id": "neighbourhoods_geojson", "kind": "http_file" }
       ]
     },
     "expect_nonempty": false,
@@ -39,11 +39,8 @@
   "outputs": "none",
 
   "staleness": {
-    "scope": "none",
     "trigger": [{ "signal": "always", "position": "pre_compute" }],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/address-points-csv-drift.js"],
     "logic_version": "none",
@@ -54,19 +51,14 @@
     "requires": [],
     "srid": "none",
     "empty_source": "none",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
 
   "execution": {
-    "budget": "10m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -75,12 +67,9 @@
       "liveness": { "kind": "check", "ref": "permit_cost_type_sample" }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
       "timeout": "none",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } },
@@ -97,6 +86,7 @@
       "expect": [
         "accessory_max_coverage_pct",
         "address_points_download_timeout_ms",
+        "address_points_mass_retire_max_pct",
         "address_points_null_address_number_max_pct",
         "address_points_skip_rate_max_pct",
         "assert_schema_csv_header_bytes",
@@ -255,10 +245,10 @@
         "link_parcels_retraction_ratio_fail_pct",
         "link_wsib_entity_fanin_warn",
         "link_wsib_link_rate_warn_pct",
+        "link_wsib_mass_relink_max_pct",
         "link_wsib_tier1_confidence",
         "link_wsib_tier2_confidence",
         "link_wsib_tier3_confidence",
-        "link_wsib_tier3_full_max_iterations",
         "link_wsib_tier3_token_overlap_fail_pct",
         "load_centreline_count_drift_fail_pct",
         "load_centreline_dataset_age_warn_days",
@@ -635,7 +625,7 @@
     }
   ],
 
-  "interpretation": { "file": "assert-schema.notes.json", "entries": 9 },
+  "interpretation": { "file": "assert-schema.notes.json" },
 
   "recovery": "none",
 
@@ -658,6 +648,7 @@
     "probe_presence": [
       "accessory_max_coverage_pct",
       "address_points_download_timeout_ms",
+      "address_points_mass_retire_max_pct",
       "address_points_null_address_number_max_pct",
       "address_points_skip_rate_max_pct",
       "assert_schema_csv_header_bytes",
@@ -816,10 +807,10 @@
       "link_parcels_retraction_ratio_fail_pct",
       "link_wsib_entity_fanin_warn",
       "link_wsib_link_rate_warn_pct",
+      "link_wsib_mass_relink_max_pct",
       "link_wsib_tier1_confidence",
       "link_wsib_tier2_confidence",
       "link_wsib_tier3_confidence",
-      "link_wsib_tier3_full_max_iterations",
       "link_wsib_tier3_token_overlap_fail_pct",
       "load_centreline_count_drift_fail_pct",
       "load_centreline_dataset_age_warn_days",
@@ -960,7 +951,7 @@
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "per_chain",
-      "phase": { "permits": 1, "coa": 1, "sources": 1 },
+      "phase": { "permits": 1, "coa": 1, "sources": 2 },
       "audit_table": "per_chain",
       "scope": "per_chain"
     },

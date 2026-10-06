@@ -23,7 +23,7 @@
 //                                               entries on parcel_buildings IN ORDER: E1 `set_based_scoped`
 //                                               (`guard:"none"` + `guard_why` + `scope` + `declared_drift`),
 //                                               E2 `guarded_upsert` with `guard_columns` EXACTLY the four
-//                                               (D-5) + `retract:"all"` + `retract_when:"full_only"` (W1);
+//                                               (D-5) + `retract:"all"` + `retract_when:"full_only"` (W1) — RETIRED by O4 row 5 (fold 14/15, LM-D17);
 //                                               composite key [parcel_id, building_id] (D-7); `config`
 //                                               declares T1–T7 with `limit_from_config` on the verdict
 //                                               bound (T4); `guards.requires` = postgis extension (fail,
@@ -41,7 +41,7 @@
 //                                               (A-8 OVERRIDE: no haversine / grid / turf / reproject);
 //                                               no fs/pg/pipeline/argv/env
 //   scripts/lib/step/staleness.js            — LG-7/LG-10: reads argv `--full` / `override.force_full` →
-//                                               `mode_select: tri_state`
+//                                               `mode_select: tri_state` → none (O4 row 5, fold 17 item 1)
 //   scripts/lib/step/write.js                — LG-2/LG-3: composite key + ordered targets + `retract_when`
 //   scripts/lib/step/index.js                — LG-1: `runLinkPhase`, `pre_write` gate BEFORE writes[0]
 //   scripts/steps/_schema/grandfathered.json — Fold B item 2: lists link_massing for `guard:"none"`
@@ -57,8 +57,8 @@
 //   · `fences[]` lives in link-massing.notes.json under the top-level key `fences`. Each entry:
 //     {const, value, incident, commit, lock_test}.
 //   · The self-consumed emit (`code_version`, `building_footprints_count`) names the manifest slug
-//     `link_massing` as its consumer; the reader after conversion is scripts/lib/massing-full-gate.js
-//     (`fingerprint_inputs`), so BOTH the descriptor and that file must carry the two field names.
+//     `link_massing` as its consumer; the reader after conversion is the generic staleness.js mode gate
+//     (prior[emit_key]) — massing-full-gate.js was retired at FLEET-2 P2-C6 — so the descriptor's trigger emit_keys carry the two names.
 //   · The must-fail world (#165) is the ctx contract A-1(a) implies: `ctx.written` is PER-TARGET keyed
 //     (`e1`, `e2` — LG-5), `ctx.matched` carries the join counters the compute observes, `ctx.cumulative`
 //     the link-rate numerator/denominator, `ctx.prior` the prior run's self-consumed block, `ctx.gate`
@@ -114,8 +114,13 @@ const RUN_CLOCK_COLUMN = 'linked_at';
 /** Fold B item 1 — the two ordered write targets. */
 const E1_CLASS = 'set_based_scoped';
 const E2_CLASS = 'guarded_upsert';
-/** E1 — the override env (E1 in the P4 inventory has a home: override.force_full). */
-const FORCE_FULL_ENV = 'LINK_MASSING_FORCE_FULL';
+/**
+ * E1 — RETIRED by MQ-B2 (fold 19): under O4 row 5 (`mode_select: "none"`, every run a full rescan)
+ * `LINK_MASSING_FORCE_FULL` changed nothing, so `override.force_full` is "none" and the env var is a
+ * `deviations[]` entry. The name survives ONLY to recognise the HISTORICAL forced-FULL captures
+ * (pre/ + post/sources-full-forced-*.json, the LM-D13 evidence) — no new forced capture can exist.
+ */
+const RETIRED_FORCE_FULL_ENV = 'LINK_MASSING_FORCE_FULL';
 /** A-7 — live catalog 2026-08-27 (pg_indexes / pg_constraint on parcel_buildings). */
 const RLS_REQUIREMENT_KIND = 'rls_bypass_or_policy';
 const REQUIRED_NAMES = [
@@ -133,7 +138,7 @@ const REQUIRED_NAMES = [
   'idx_parcel_buildings_parcel',
   'idx_parcel_buildings_building',
 ];
-/** Cross-layer contract (3) — the self-consumed gate fields read by evaluateMassingFullGate. */
+/** Cross-layer contract (3) — the self-consumed gate fields read back by the generic staleness.js mode gate (selectMode). */
 const SELF_CONSUMED_FIELDS = ['code_version', 'building_footprints_count'];
 const SELF_CONSUMER_SLUG = 'link_massing';
 /** D-4 — the INFO metric ids that must survive as declared INFO checks (chain.logic.test.ts asserts the last by name). */
@@ -192,6 +197,9 @@ const FIXTURE_MAX_AGE_DAYS = 180;
 
 /** Measured live 2026-08-27 (127.0.0.1:54322/postgres, 242 migrations). */
 const LIVE_ROWS = 520_492;
+// FLEET-2 §5 triage 2026-10-06: the POST captures were re-taken at a3418800 after the parcels/footprints reloads —
+// measured parcel_buildings row_count 534,989 in all three post/*.json. PRE stays the frozen 520,492 above.
+const POST_LIVE_ROWS = 534_989;
 const LIVE_LINKED_PARCELS = 485_135;
 const LIVE_PARCELS_WITH_CENTROID = 486_530;
 const LIVE_BUILDING_FOOTPRINTS = 427_077;
@@ -214,7 +222,9 @@ const LIVE_CODE_VERSION = 'v2-building-centroid-in-parcel';
  * standing, falsifiable assertion rather than becoming folklore the moment the file count
  * dropped to one.
  */
-const LM_D13_FIXED_HASH = '329bbcb6ccd5c32d8b8e9ffca77ff255';
+// FLEET-2 §5 triage 2026-10-06: re-pinned after the corpus reload — three independent FULL re-derives at a3418800
+// (post/sources-full, post/sources-full-forced-1, post/standalone) all measured 84357131…; the peel-8b-era value was 329bbcb6ccd5c32d8b8e9ffca77ff255.
+const LM_D13_FIXED_HASH = '84357131681b91bff1a5c4db3eec9c7b';
 
 // ONE compiler, the same one pipeline.step() validates with.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
@@ -266,7 +276,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[] }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   database: { min_migration: number | 'none' };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };
   config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }>; hoisted_above_gate: boolean };
@@ -429,16 +439,25 @@ function writes(d: Descriptor): WriteSpec[] {
   return (d.outputs as { writes: WriteSpec[] }).writes;
 }
 
-/** Fold B item 1 — E1 is the is_primary clear, E2 the guarded upsert; BOTH on the junction, in that order. */
-function writeTargets(d: Descriptor): { e1: WriteSpec; e2: WriteSpec } {
+/**
+ * Fold B item 1 — E1 is the is_primary clear, E2 the guarded upsert; BOTH on the junction, in that order.
+ * O4 row 5 (fold 14/15, LM-D17): FOUR ordered outputs.writes[] — E1 clear · E2 upsert ·
+ * E3 keyed stale-link delete · E4 lost-link flag.
+ */
+function writeTargets(d: Descriptor): { e1: WriteSpec; e2: WriteSpec; e3: WriteSpec; e4: WriteSpec } {
   const w = writes(d);
-  expect(w.length, 'D-6: TWO outputs.writes[] entries on parcel_buildings (E1 clear · E2 upsert)').toBe(2);
-  const [e1, e2] = w as [WriteSpec, WriteSpec];
+  expect(w.length, 'O4 row 5 (fold 14/15, LM-D17): FOUR ordered outputs.writes[] — E1 clear · E2 upsert · E3 keyed stale-link delete · E4 lost-link flag').toBe(4);
+  const [e1, e2, e3, e4] = w as [WriteSpec, WriteSpec, WriteSpec, WriteSpec];
   expect(e1.table).toBe(WRITE_TABLE);
   expect(e2.table).toBe(WRITE_TABLE);
   expect(e1.write_discipline.class, 'writes[0] = E1 set_based_scoped (the is_primary=false clear, B-8)').toBe(E1_CLASS);
   expect(e2.write_discipline.class, 'writes[1] = E2 guarded_upsert (W3)').toBe(E2_CLASS);
-  return { e1, e2 };
+  expect(e3.table).toBe(WRITE_TABLE);
+  expect(e3.write_discipline.class, 'writes[2] = E3 link_full_retraction (the keyed "no longer derived" delete)').toBe('link_full_retraction');
+  expect(e4.table).toBe('parcels');
+  expect(e4.write_discipline.class, 'writes[3] = E4 the lost-link flag').toBe('set_based_scoped');
+  expect(e4.columns.map((c) => c.name)).toEqual(['massing_enriched_at']);
+  return { e1, e2, e3, e4 };
 }
 
 function emitsOf(d: Descriptor): Array<{ key: string; type: string; consumers: string[] }> {
@@ -575,7 +594,13 @@ function assertActuallyForcedFull(doc: GoldenDoc): void {
   const m = capturedMeta(doc);
   expect(m.skipped, `${doc.file}: this capture is a SKIP (${String(m.reason)}), not a forced FULL relink`).not.toBe(true);
   expect(m.full_mode, `${doc.file}: capture is named "forced" but its own records_meta says full_mode !== true`).toBe(true);
-  expect(String(m.full_mode_reason ?? ''), `${doc.file}: a forced run's gate reason must name the override`).toContain('force_full');
+  // FLEET-2 §5 triage 2026-10-06: LINK_MASSING_FORCE_FULL is retired (MQ-B2) and every run is a full re-derive (O4 row 5),
+  // so a POST capture's gate reason is full_rescan (measured: post/sources-full-forced-1.json); only the historical PRE pair names the override.
+  if (isOld(doc)) {
+    expect(String(m.full_mode_reason ?? ''), `${doc.file}: a historical forced run's gate reason must name the override`).toContain('force_full');
+  } else {
+    expect(m.full_mode_reason, `${doc.file}: since MQ-B2 the env does nothing — a POST run's gate reason is full_rescan, never an override`).toBe('full_rescan');
+  }
 }
 
 function invariant(doc: GoldenDoc, name: string): number {
@@ -584,10 +609,19 @@ function invariant(doc: GoldenDoc, name: string): number {
   return Number((inv as { value: unknown }).value);
 }
 
-/** Finding 5 — `sources` runs with --full (manifest chain_args), `permits` bare, standalone with neither. */
+/**
+ * Finding 5 — `sources` runs with --full (manifest chain_args); standalone with neither.
+ * Derived from the descriptor (FLEET-2 2.1 removed the permits invocation).
+ */
+// FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
+// Finding 5 — DERIVED from the descriptor's execution.invocation (sources --full; permits removed by 2.1) + standalone:
+// the capture name is `<chain>-full` when the invocation passes --full, else `<chain>`.
 const INVOCATIONS: Array<{ name: string; chain: string | null; argv: string[] }> = [
-  { name: 'sources-full', chain: 'sources', argv: ['--full'] },
-  { name: 'permits', chain: 'permits', argv: [] },
+  ...Object.entries(
+    (JSON.parse(fs.readFileSync(path.join(process.cwd(), DESCRIPTOR_REL), 'utf8')) as {
+      execution: { invocation: Record<string, { argv: string[] }> };
+    }).execution.invocation,
+  ).map(([chain, inv]) => ({ name: inv.argv.includes('--full') ? `${chain}-full` : chain, chain, argv: inv.argv })),
   { name: 'standalone', chain: null, argv: [] },
 ];
 const OLD_RE = /old|before|baseline|run[-_]?\d/i;
@@ -602,9 +636,9 @@ function docsFor(docs: GoldenDoc[], inv: { name: string; chain: string | null; a
 }
 function isOld(d: GoldenDoc): boolean { return d.file.startsWith('pre/') || (OLD_RE.test(path.basename(d.file)) && !NEW_RE.test(path.basename(d.file))); }
 function isNew(d: GoldenDoc): boolean { return d.file.startsWith('post/') || NEW_RE.test(path.basename(d.file)); }
-/** D-19 — a FORCED FULL capture: `--full` under LINK_MASSING_FORCE_FULL=1 (the gate alone would go incremental). */
+/** D-19 — a HISTORICAL forced-FULL capture (`--full` under the now-retired LINK_MASSING_FORCE_FULL=1, MQ-B2): the LM-D13 evidence pair; since O4 row 5 every run is a full rescan, so no new forced capture is taken. */
 function isForcedFull(d: GoldenDoc): boolean {
-  return /force/i.test(path.basename(d.file)) || JSON.stringify(d.env ?? {}).includes(FORCE_FULL_ENV) || JSON.stringify(d.args ?? []).includes(FORCE_FULL_ENV);
+  return /force/i.test(path.basename(d.file)) || JSON.stringify(d.env ?? {}).includes(RETIRED_FORCE_FULL_ENV) || JSON.stringify(d.args ?? []).includes(RETIRED_FORCE_FULL_ENV);
 }
 
 // ---------------------------------------------------------------------------
@@ -625,6 +659,7 @@ interface World {
   written: {
     e1: { scanned: number; updated: number };
     e2: { scanned: number; inserted: number; updated: number; retracted: number; rows_changed: number };
+    e3: { scanned: number; deleted: number; rows_changed: number };
     privilege: { bypassrls: boolean; policies: number };
   };
   prior: { code_version: string; building_footprints_count: string } | null;
@@ -654,6 +689,7 @@ function healthyWorld(): World {
     written: {
       e1: { scanned: 0, updated: 0 },
       e2: { scanned: 0, inserted: 0, updated: 0, retracted: 0, rows_changed: 0 },
+      e3: { scanned: 0, deleted: 0, rows_changed: 0 },
       privilege: { bypassrls: true, policies: 0 },
     },
     prior: { code_version: LIVE_CODE_VERSION, building_footprints_count: String(LIVE_BUILDING_FOOTPRINTS) },
@@ -673,7 +709,7 @@ const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
   [/shared_primary/i, (w) => { w.matched.shared_primary = { buildings: 200_000, parcels: 450_000 }; }],
   [/confidence|vocab/i, (w) => { w.matched.confidence_off_domain = 5; }], // invariant (4)
   [/empty|zero_footprint|footprints_count|building_footprints/i, (w) => { w.matched.building_footprints_count = 0; w.gate = { mode: 'full', reason: 'massing_count_changed(427077->0)', explicit_full: true }; }], // D-20: the unguarded W1 against an empty corpus
-  [/retract|mass_delete|ghost|full_delete/i, (w) => { w.gate = { mode: 'full', reason: 'code_version_changed', explicit_full: true }; w.written.e2.retracted = LIVE_ROWS; w.written.e2.inserted = 0; w.matched.parcels_processed = LIVE_PARCELS_WITH_CENTROID; w.matched.no_match = LIVE_PARCELS_WITH_CENTROID; }],
+  [/retract|mass_delete|ghost|full_delete/i, (w) => { w.gate = { mode: 'full', reason: 'code_version_changed', explicit_full: true }; w.written.e3.deleted = LIVE_ROWS; w.written.e2.scanned = 0; w.matched.parcels_processed = LIVE_PARCELS_WITH_CENTROID; w.matched.no_match = LIVE_PARCELS_WITH_CENTROID; }], // O4 row 5 (ASSEMBLY 1.16): the keyed delete removes every link and nothing is derived
   [/privilege|rls|policy/i, (w) => { w.written.privilege = { bypassrls: false, policies: 0 }; }], // A-7: silent 0-row write
   [/invalid_geom|geometry|pip_swallow|swallow/i, (w) => { w.matched.invalid_geometry_count = 40; }], // §1.6 the silent swallow, now counted
   [/rows_changed|change_ratio|churn|drift/i, (w) => { w.written.e2.scanned = LIVE_ROWS; w.written.e2.updated = LIVE_ROWS; w.written.e2.rows_changed = LIVE_ROWS; }], // finding 2 reproduced: every row rewritten
@@ -801,6 +837,7 @@ const F1_CONSTRUCT = 'is_primary cleared for the batch\'s parcels BEFORE the ups
 const F2_COMMIT = 'b36d0596';
 const F2_CONSTRUCT = 'the IS DISTINCT FROM guard names EXACTLY is_primary/structure_type/match_type/confidence and NEVER linked_at (D-5) — or every one of 520,492 rows rewrites per run and enrich_parcels re-scopes 485,135 parcels';
 const F3_COMMIT = 'b16c036d';
+// SUPERSEDED by O4 row 5 (fold 14/15, LM-D17) — the historical construct, quoted in the F3 SUPERSEDED test title.
 const F3_CONSTRUCT = 'the FULL mass-DELETE is scoped IDENTICALLY to the parcels re-evaluated (baseFilter centroid_lat/centroid_lng IS NOT NULL) and runs ONLY in full mode (retract:all + retract_when:full_only) — never an unscoped or incremental retraction';
 const F4_COMMIT = 'd324ab27';
 const F4_CONSTRUCT = 'the nearest-fallback cap comes from massing_nearest_max_distance_m (T3), never a 50 literal, and the bbox prefilter (ST_Expand) precedes the geography ST_DWithin (B-10)';
@@ -952,16 +989,7 @@ function detectNearestTiebreakFence(sql: string): string[] {
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4–§3.4b) — the notes.json seven (vacuity risk: a REAL notes file) ──
 
-  it('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
-    const d = loadDescriptor();
-    const notes = loadNotes();
-    expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none" — this step has MORE genuine interpretation content than either prior pilot (b16c036 rationale, /78000, the tail)').not.toBe('none');
-    const interp = d.interpretation as { file: string; entries: number };
-    const entries = notesEntries(notes);
-    expect(entries.length, 'prose entries across the capped blocks').toBeLessThanOrEqual(NOTES_CAP);
-    expect(entries.length, 'interpretation.entries must equal the real prose count').toBe(interp.entries);
-    expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
-  });
+  // #30 retired (Phase 3 RE-FREEZE): interpretation.entries is deleted; the <=12 prose cap is ONE notes-file check — step-validate fast invariant #45 NOTES-CAP (scripts/analysis/gates/notes-cap.mjs).
 
   it('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
     const d = loadDescriptor();
@@ -1104,7 +1132,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     // signature of an order-dependent row selection — the population is right and the
     // ASSIGNMENT is not — and it is why a FULL-path hash was declared unstable-by-pin (D-22).
     const oldForced = docs.filter((d) => isOld(d) && isForcedFull(d));
-    expect(oldForced.length, `commit 5 captured TWO forced FULL relinks of the OLD script (${FORCE_FULL_ENV}=1)`).toBeGreaterThanOrEqual(2);
+    expect(oldForced.length, `commit 5 captured TWO forced FULL relinks of the OLD script (${RETIRED_FORCE_FULL_ENV}=1)`).toBeGreaterThanOrEqual(2);
     for (const d of oldForced) assertActuallyForcedFull(d);
     const oldHashes = new Set(oldForced.map((d) => junctionState(d).content_hash));
     expect(oldHashes.size, `LM-D13: the OLD forced pair must DIFFER (${LM_D13_FLIPPABLE_LINKS.toLocaleString()} of ${LIVE_NEAREST_LINKS.toLocaleString()} nearest links can flip, ${LM_D13_ZERO_DISTANCE_TIES.toLocaleString()} of them tied at distance 0). If these ever agree, the evidence this peel is built on has evaporated and the fix is unproven, not unnecessary`).toBeGreaterThan(1);
@@ -1130,7 +1158,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(newHashes[0], `the retained forced-FULL capture must hash-equal the peel-8b/R-C pinned value (twice-run determinism, commit 68b8e361)`).toBe(LM_D13_FIXED_HASH);
     expect(oldHashes.has(newHashes[0] as string), 'the post-tiebreak hash is a NEW junction state — the fix MOVES ROWS, which is why it could not ride the no-op conversion diff').toBe(false);
     for (const d of newForced) {
-      expect(junctionState(d).row_count, `${d.file}: the tiebreak changes WHICH building a tied parcel links, never HOW MANY rows exist`).toBe(LIVE_ROWS);
+      expect(junctionState(d).row_count, `${d.file}: the tiebreak changes WHICH building a tied parcel links, never HOW MANY rows exist`).toBe(POST_LIVE_ROWS);
       expect(junctionInvariants(d), `${d.file}: the POST forced pair must agree on every invariant`).toEqual(junctionInvariants(newForced[0] as GoldenDoc));
     }
   });
@@ -1354,9 +1382,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     }
     // G8(c) / D-19: exactly the budgeted forced-FULL half — declared, with the 520,492-row result pinned.
     const forced = docs.filter(isForcedFull);
-    expect(forced.length, `no forced-FULL capture (${FORCE_FULL_ENV}=1) — the W1 retraction + E1/E2 write path is never exercised (finding 5 / D-19)`).toBeGreaterThan(0);
+    expect(forced.length, `no historical forced-FULL capture (${RETIRED_FORCE_FULL_ENV}=1) — the LM-D13 evidence pair is gone (finding 5 / D-19; the env var itself is retired, MQ-B2)`).toBeGreaterThan(0);
     for (const f of forced) assertActuallyForcedFull(f);
-    for (const f of forced) expect(junctionState(f).row_count, `${f.file}: a forced FULL relink must rebuild exactly ${LIVE_ROWS} rows (A-6: a FULL relink moves none of the 7 numbers)`).toBe(LIVE_ROWS);
+    // FLEET-2 §5 triage 2026-10-06: PRE forced captures are the frozen 520,492; the POST recapture is the measured 534,989.
+    for (const f of forced) expect(junctionState(f).row_count, `${f.file}: a forced FULL relink must rebuild exactly ${isOld(f) ? LIVE_ROWS : POST_LIVE_ROWS} rows (A-6: a FULL relink moves none of the 7 numbers)`).toBe(isOld(f) ? LIVE_ROWS : POST_LIVE_ROWS);
   });
 
   it('#162 The same pass never both discovers and retires a fence', () => {
@@ -1497,9 +1526,21 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
 
   it('#176 Generator correctness is tested per branch — E1 UPDATE · E2 insert / composite conflict-target / distinct-noop / full-only retraction, over the SQL write.js generates', () => {
     const d = loadDescriptor();
-    const src = stripComments(computeSource());
+    // O4 row 5 (folds 14 + 15): the ONLY compute-authored write statements are the two DESCRIPTIVE-class
+    // targets (link_full_retraction keyed DELETE, set_source:"compute" lost-link flag — the LG-24 / LG-22
+    // precedent), inside ONE marked block. Everything outside it is still held to "the class SELECTS the
+    // generated SQL", and the block itself may hold nothing else.
+    const raw = computeSource();
+    const open = raw.indexOf('// <o4-row5-descriptive-class-sql>');
+    const close = raw.indexOf('// </o4-row5-descriptive-class-sql>');
+    expect(open > 0 && close > open, 'the O4 row 5 descriptive-class statement block is marked').toBe(true);
+    const src = stripComments(raw.slice(0, open) + raw.slice(close));
     expect(/\b(INSERT INTO|UPDATE\s+\w+\s+SET|DELETE FROM|ON CONFLICT)\b/i.test(src), 'hand-written write SQL in the compute — §1.4: the class SELECTS the generated SQL').toBe(false);
-    const { e1, e2 } = writeTargets(d);
+    const block = stripComments(raw.slice(open, close));
+    expect(/\b(INSERT INTO|ON CONFLICT)\b/i.test(block), 'the descriptive-class block never inserts or upserts').toBe(false);
+    expect(block.match(/\bDELETE FROM\s+\w+/gi), 'the block deletes only from parcel_buildings (the keyed stale-link delete)').toEqual(['DELETE FROM parcel_buildings']);
+    expect(block.match(/\bUPDATE\s+\w+\s+SET/gi), 'the block updates only parcels (the lost-link flag), never parcel_buildings').toEqual(['UPDATE parcels SET']);
+    const { e1, e2, e3 } = writeTargets(d);
     const sqlE1 = generatedSqlFor(d, e1);
     expect(/UPDATE\s+parcel_buildings\s+SET\s+is_primary\s*=\s*false/i.test(sqlE1), 'E1: the set-based is_primary clear').toBe(true);
     expect(/WHERE[\s\S]*parcel_id\s*=\s*ANY/i.test(sqlE1), 'E1: scoped to the batch\'s parcels').toBe(true);
@@ -1508,8 +1549,10 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/ON CONFLICT\s*\(\s*parcel_id\s*,\s*building_id\s*\)\s*DO UPDATE/i.test(sqlE2), 'branch:conflict-target — the COMPOSITE key (LG-2)').toBe(true);
     expect(/DO UPDATE SET[\s\S]*linked_at\s*=\s*EXCLUDED\.linked_at/i.test(sqlE2), 'branch:update — linked_at IS in the SET list').toBe(true);
     expect(/WHERE[\s\S]*IS DISTINCT FROM/i.test(sqlE2), 'branch:distinct-noop').toBe(true);
-    expect(/DELETE FROM\s+parcel_buildings/i.test(sqlE2), 'W1: the retract:"all" statement is generated for E2').toBe(true);
-    expect(/<>\s*ALL/i.test(sqlE2), 'NO departure delete — this is retract:"all", not class B (finding 3)').toBe(false);
+    expect(/DELETE FROM/i.test(sqlE2), 'O4 row 5 (fold 14/15, LM-D17): E2 is retract "none" — the full-mode mass DELETE (W1) is retired; stale links go through E3').toBe(false);
+    expect(/<>\s*ALL/i.test(sqlE2), 'NO departure delete on E2').toBe(false);
+    expect(e3.retract).toBe('none');
+    expect(String(e3.write_discipline.scope), 'E3 is scoped to the batch\'s parcels — never an unscoped retraction (b16c036d intent kept)').toMatch(/parcel_id = ANY/);
     // A-7: the generated column list is exhaustive — the never-written DB defaults ('other', 'polygon', 0.85) must not be adopted silently.
     const insertCols = /INSERT INTO\s+parcel_buildings\s*\(([^)]*)\)/i.exec(sqlE2)?.[1]?.split(',').map((s) => s.trim()) ?? [];
     expect(insertCols.sort()).toEqual([...WRITE_COLUMNS].sort());
@@ -1569,12 +1612,12 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     const d = loadDescriptor();
     const src = stripComments(computeSource());
     expect(d.counters, 'a LINK declares its counters (LINK/MATCHER profile: counters scoped by writes.key)').not.toBe('none');
-    const c = d.counters as { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };
+    const c = d.counters as { records_total: { source: string }; records_new: { source: string }; records_updated: { source: string } };
     expect(c.records_total.source, 'records_total = written.e2.scanned (not `processed`, the permanently-unmatchable tail)').toMatch(/^written\.e2\.scanned$/);
     expect(c.records_new.source, 'records_new = written.e2.inserted (today a hardcoded 0)').toMatch(/^written\.e2\.inserted$/);
     expect(c.records_updated.source, 'records_updated = written.e2.updated').toMatch(/^written\.e2\.updated$/);
     for (const k of ['records_total', 'records_new', 'records_updated'] as const) expect(/^\d+$/.test(c[k].source), `${k}.source is a literal`).toBe(false);
-    expect(/parcel_id[\s\S]*building_id|writes\.key|writes\[\d\]\.key/.test(JSON.stringify(c.records_total.scoped_by)), 'scoped_by the composite write key').toBe(true);
+    // counters.<slot>.scoped_by deleted in the Phase 3 RE-FREEZE (#69, zero runtime readers)
     expect(/records_total|records_new|records_updated/.test(src), 'the compute assigns a counter the library derives from `counters` (Fold B item 6: compute returns NO counters)').toBe(false);
   });
 
@@ -1591,7 +1634,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(tiers.every((t) => t === 'tier_1_exact_address'), 'conditionally vacuous for this step, executed').toBe(true);
   });
 
-  it('#203 Frozen `records_meta` producer/consumer blocks — the SELF-CONSUMED gate fields (code_version · building_footprints_count as a STRING) declared, in the success terminal, and read by massing-full-gate.js', () => {
+  it('#203 Frozen `records_meta` producer/consumer blocks — the SELF-CONSUMED gate fields (code_version · building_footprints_count as a STRING) declared, in the success terminal, and read by the generic staleness.js mode gate', () => {
     const d = loadDescriptor();
     const emits = emitsOf(d);
     for (const f of SELF_CONSUMED_FIELDS) {
@@ -1601,16 +1644,22 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
       expect(consumerFile(SELF_CONSUMER_SLUG)).toBe(STEP_REL);
     }
     const bfc = emits.find((x) => x.key === 'building_footprints_count') as { type: string };
-    expect(bfc.type, 'Fold A: building_footprints_count is a STRING ("427077") — evaluateMassingFullGate compares String(prevCount); the byte-stable contract keeps the type').toBe('string');
+    expect(bfc.type, 'Fold A: building_footprints_count is a STRING ("427077") — staleness.selectMode compares String(prior) to String(current); the byte-stable contract keeps the type').toBe('string');
     const success = d.terminals.find((t) => t.kind === 'success');
     expect(success, 'a success terminal').toBeDefined();
     const shape = (success as { records_meta: Record<string, string> }).records_meta;
     for (const f of SELF_CONSUMED_FIELDS) expect(Object.keys(shape), `${f} is not in the success terminal's records_meta shape`).toContain(f);
-    // The reader after conversion is the fingerprint input, not the step: both must carry the names.
-    const gateSrc = fs.readFileSync(abs(GATE_LIB_REL), 'utf8');
-    for (const f of SELF_CONSUMED_FIELDS) expect(gateSrc.includes(f), `${GATE_LIB_REL} does not read ${f}`).toBe(true);
-    expect(gateSrc.includes("status = 'completed'"), 'B-6: the gate reads the LAST COMPLETED PRIOR run').toBe(true);
-    expect(JSON.stringify(d.staleness.fingerprint_inputs), 'S10 / §1.5: fingerprint_inputs names massing-full-gate.js').toContain(GATE_LIB_REL);
+    // The reader after conversion is the GENERIC runner (FLEET-2 P2-C6 retired massing-full-gate.js):
+    // the field names live in the descriptor's trigger emit_keys, and staleness.js reads prior[emit_key].
+    const trigger = d.staleness.trigger as unknown as Array<{ emit_key?: string; signal: string }>;
+    const triggerKeys = trigger.map((t) => t.emit_key ?? t.signal).sort();
+    expect(triggerKeys, 'the two pre_compute triggers carry exactly the self-consumed keys').toEqual([...SELF_CONSUMED_FIELDS].sort());
+    const stalenessCode = stripComments(readText(STALENESS_REL));
+    expect(stalenessCode.includes('const key = trigger.emit_key || trigger.signal;'), `${STALENESS_REL} measureTrigger keys the baseline by emit_key`).toBe(true);
+    expect(stalenessCode.includes('prior[measured.key]'), `${STALENESS_REL} selectMode reads the prior run's value under that key`).toBe(true);
+    const svCode = stripComments(readText('scripts/lib/source-version.js'));
+    expect(svCode.includes("status IN ('completed', 'completed_with_warnings')"), 'B-6: the prior read is the LAST COMPLETED run (R-BG (iv): completed_with_warnings counts)').toBe(true);
+    expect(d.staleness.fingerprint_inputs, 'S10 / §1.5 after P2-C6: the compute is the only fingerprint input').toEqual([COMPUTE_REL]);
   });
 
   it('#204 `RUN_AT` captured once — the midnight-cross fence (B-11: DB clock, library-owned, before any write; zero clock reads in the compute)', () => {
@@ -1726,8 +1775,11 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     const invocation = d.execution.invocation as Record<string, { argv: string[] }>;
     const chainArgs = manifest().scripts.link_massing?.chain_args ?? {};
     expect(invocation.sources?.argv, 'sources invocation argv').toEqual(['--full']);
-    expect(invocation.permits?.argv, 'permits invocation argv').toEqual([]);
-    for (const chain of ['sources', 'permits']) expect(invocation[chain]?.argv, `execution.invocation.${chain}.argv ≡ manifest.chain_args`).toEqual(chainArgs[chain] ?? []);
+    // FLEET-2 §2 item 2.1: the invocation keys are EXACTLY the manifest chains that list link_massing (two directions).
+    const memberChains = Object.keys(manifest().chains).filter((c) => manifest().chains[c]!.includes('link_massing')).sort();
+    expect(Object.keys(invocation).sort(), 'execution.invocation keys ≡ the chains listing link_massing').toEqual(memberChains);
+    expect(memberChains).not.toContain('permits');
+    for (const chain of memberChains) expect(invocation[chain]?.argv, `execution.invocation.${chain}.argv ≡ manifest.chain_args`).toEqual(chainArgs[chain] ?? []);
     // P4 — T1–T6 declared; T4 verdict-bound via limit_from_config; T3 clamps
     expect(d.config, 'config:"none" while 3 registered + 3 proposed knobs exist').not.toBe('none');
     const cfg = d.config as { logic_variables: Array<{ name: string; on_invalid: string; min: unknown; max: unknown }>; hoisted_above_gate: boolean };
@@ -1751,7 +1803,10 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     // E1 / E2 — override
     expect(d.override).not.toBe('none');
     const o = d.override as { force_full: string; force_run: string };
-    expect(o.force_full, 'E1 has a home').toBe(FORCE_FULL_ENV);
+    // MQ-B2 (fold 19): E1 is RETIRED — a declared override that changes nothing is hidden behaviour (Rule 1).
+    expect(o.force_full, 'E1 retired: override.force_full is "none"').toBe('none');
+    const devs = ((d as unknown as { deviations?: Array<Record<string, unknown>> }).deviations ?? []).map((x) => JSON.stringify(x));
+    expect(devs.some((x) => x.includes(RETIRED_FORCE_FULL_ENV)), 'the retired env var is recorded as a deviations[] entry (R-AV / R-AZ retirement pattern)').toBe(true);
     // A-7 — guards.requires: postgis (A-8 override: fail-loud), the partial unique index, 2 GiST, FK pair, 2 btree, RLS
     const req = d.guards.requires;
     const postgis = req.find((r) => r.kind === 'extension' && r.name === 'postgis');
@@ -1785,29 +1840,35 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(e1.write_discipline.declared_drift, 'E1 always rewrites the batch\'s primaries — declared_drift').toBeDefined();
     expect(e2.write_discipline.guard).toBe('is_distinct_from');
     expect(e2.write_discipline.guard_columns, 'D-5: EXPLICIT, never all_declared').toEqual(GUARD_COLUMNS);
-    expect(e2.retract, 'W1 is E2\'s retraction').toBe('all');
-    expect(e2.retract_when, 'C3 pre-pull: retract_when full_only').toBe('full_only');
+    expect(e2.retract, 'O4 row 5 (fold 14/15, LM-D17): E2 retracts nothing — W1 is retired').toBe('none');
+    expect(e2.retract_when, 'no retract_when once W1 is retired').toBeUndefined();
     expect(e1.retract, 'the clear retracts nothing').toBe('none');
     expect(e2.columns.map((c) => c.name).sort(), 'all 7 step-written columns (D-2)').toEqual([...WRITE_COLUMNS].sort());
     for (const c of e2.columns) expect(c.written ?? 'step', `${c.name} is written by the step`).toBe('step');
     expect(d.execution.txn_scope).not.toBe('none');
     // D-17 — the LINK profile
     expect(JSON.stringify((d.outputs as { invalidates: unknown }).invalidates), 'outputs.invalidates → parcels.massing_enriched_at (LG-6)').toMatch(/massing_enriched_at/);
-    // S10 / LG-7 — staleness: code_version + upstream count, tri_state
+    // S10 / LG-7 — staleness: code_version + upstream count, mode_select none (O4 row 5)
     const triggers = d.staleness.trigger as Array<{ signal: string }>;
     expect(Array.isArray(triggers)).toBe(true);
     expect(triggers.some((t) => t.signal === 'code_version'), 'S10: code_version trigger').toBe(true);
     expect(triggers.some((t) => t.signal === 'upstream_ledger'), 'the building_footprints count signal').toBe(true);
-    expect(d.staleness.mode_select, 'LG-7/LG-10: the output is a MODE').toBe('tri_state');
+    expect(d.staleness.mode_select, 'fold 17 item 1: a LINK with a full_rescan invalidates row declares mode_select none, resolved by resolveLinkGate (O4 row 5)').toBe('none');
+    expect(((d.outputs as { invalidates: Array<{ table: string; column: string; by?: string }> }).invalidates).some((r) => r.table === WRITE_TABLE && r.column === 'parcel_id' && r.by === 'full_rescan'), 'O4 row 5: the full_rescan invalidates row on parcel_buildings.parcel_id').toBe(true);
     // D-13 — the floor is the DDL, not the head
     expect(d.database.min_migration).toBe(MIN_MIGRATION);
     // D-16 / S11 — sharing
-    expect(d.sharing.varies_by_chain.phase, 'S12: an explicit map, never a ternary').toEqual({ sources: 8, permits: 9 });
+    // FLEET-2 §5 triage 2026-10-06: FLEET-2 §2.1 dropped link_massing from the permits chain and #73 generates the map from the
+    // 1-based manifest position — measured: manifest chains.sources position 16, no other chain lists link_massing.
+    expect(d.sharing.varies_by_chain.phase, 'S12: an explicit map, never a ternary').toEqual({ sources: 16 });
     expect(d.sharing.slug_forms ?? 'derived', 'S11: slug_forms derived, never declared').toBe('derived');
     // D-4 / D-20 — checks
     for (const c of d.checks) expect(c.blocking, `check ${c.id} is blocking — smuggles a chain-halt into a "no-op diff"`).toBe(false);
     for (const id of INFO_METRIC_IDS) expect(checkById(d, id).severity, `D-4: ${id} survives as an INFO check (parcel_buildings_written is asserted BY NAME in chain.logic.test.ts)`).toBe('INFO');
-    expect(d.checks.some((c) => c.when === 'pre_write'), 'D-20: a pre_write mass-retraction guard on W1 (today the FULL DELETE has no guard)').toBe(true);
+    // D-20, re-pointed by FLEET-2 A-1 ruling 4: the empty-corpus guard is the RUNNER's guards.empty_source row
+    // (measured before any phase or compute), not a compute check — the hand-rolled empty_source_guard is retired.
+    expect(d.guards.empty_source, 'D-20: the runner guards an empty building_footprints corpus').toBe('building_footprints');
+    expect(d.checks.some((c) => c.id === 'empty_source_guard'), 'A-1 ruling 4: no compute-reported empty_source_guard check').toBe(false);
     // LG-6 — terminals
     expect(d.terminals.length, `G0: ≥${TERMINAL_COUNT_MIN} terminals`).toBeGreaterThanOrEqual(TERMINAL_COUNT_MIN);
     expect(d.terminals.some((x) => x.kind === 'skip_lock_contention'), 'D-14: 6 live skipped rows').toBe(true);
@@ -1871,6 +1932,13 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     const classify = mod.classifyStructure as (area: number, all: number[], shed: number, garage: number) => string;
     expect(classify(300, [300, 40], 20, 60)).toBe('primary');
     expect(classify(15, [300, 15], 20, 60)).toBe('shed');
+  });
+
+  it('MQ-B2 — the retired override_force_full_present observer is gone from the compute dispatch (link_wsib keeps its own)', () => {
+    const src = computeSource();
+    expect(src, 'link-massing.js: the override_force_full_present function is deleted (MQ-B2, fold 19)').not.toMatch(/function override_force_full_present\b/);
+    expect(src).not.toMatch(/\boverride_force_full_present,/);
+    expect(readText('scripts/lib/compute/link-wsib.js'), 'link_wsib keeps its live override observer').toMatch(/function override_force_full_present\b/);
   });
 
   it('the step file is the §5.1 frozen shape (no pipeline.run, no env/argv/fetch/fs, ast-grep silent), SPEC LINK kept, lock 91 textual', () => {
@@ -2086,16 +2154,22 @@ describe('G4d fence locks', () => {
     expect(detectGuardFence({ ...current, guardColumns: expanded }).some((f) => /linked_at is in the guard/.test(f)), 'all_declared reaching the guard went undetected').toBe(true);
   });
 
-  it(`F3 ${F3_COMMIT} — present in the converted step (retract:all + retract_when:full_only + the scoped generated DELETE + tri_state): ${F3_CONSTRUCT}`, () => {
+  it(`F3 ${F3_COMMIT} — SUPERSEDED by O4 row 5 (fold 14/15, LM-D17): the full-mode mass DELETE is retired; its intent (never an unscoped or incremental retraction) is now carried by the keyed per-batch stale-link delete E3 (was: ${F3_CONSTRUCT})`, () => {
     const d = loadDescriptor();
-    const { e2 } = writeTargets(d);
-    const sql = generatedSqlFor(d, e2);
-    const del = /DELETE FROM\s+parcel_buildings[\s\S]*?(?:;|$)/i.exec(sql)?.[0] ?? '';
-    expect(detectRetractionFence({ deleteSql: del, fullOnly: e2.retract === 'all' && e2.retract_when === 'full_only' }), 'the converted retraction no longer encodes B-7 / b16c036').toEqual([]);
-    expect(d.staleness.mode_select).toBe('tri_state');
-    expect(JSON.stringify(e2.write_discipline.scope), 'E2 scope names the baseFilter').toMatch(/centroid_lat IS NOT NULL/);
+    const { e2, e3 } = writeTargets(d);
+    expect(writes(d).some((w) => w.retract === 'all'), 'no write target keeps retract "all" — the runner refuses it under mode_select none').toBe(false);
+    expect(e2.retract).toBe('none');
+    expect(d.staleness.mode_select).toBe('none');
+    expect(String(e3.write_discipline.scope)).toMatch(/parcel_id = ANY/);
+    const mod = loadComputeModule();
+    const m = (mod.buildMatchSql as (dd: Descriptor) => Record<string, unknown>)(d);
+    const del = String(m.stale_link_delete_sql ?? '');
+    expect(del, 'E3 SQL deletes only from parcel_buildings, scoped to the batch\'s parcel ids').toMatch(/^DELETE FROM parcel_buildings pb\s+WHERE pb\.parcel_id = ANY\(\$1::int\[\]\)/);
+    expect(del, 'E3 deletes only links this batch no longer derives').toContain(String(mod.NOT_DERIVED));
+    expect(String(m.lost_link_flag_sql ?? ''), 'fold 15 row 5: a parcel that lost a link is flagged').toMatch(/^UPDATE parcels SET massing_enriched_at = NULL/);
     const fence = (loadNotes().fences ?? []).find((f) => f.commit.startsWith(F3_COMMIT));
-    expect(fence, `notes.fences carries ${F3_COMMIT}`).toBeDefined();
+    expect(fence, `notes.fences keeps ${F3_COMMIT}`).toBeDefined();
+    expect(String((fence as { const?: string }).const ?? ''), 'the fence is marked SUPERSEDED, not silently dropped').toMatch(/^SUPERSEDED/);
   });
 
   it(`F3 ${F3_COMMIT} — reversion is detectable: an unscoped DELETE, a non-baseFilter scope, or a DELETE outside if (FULL_MODE) makes the lock fire (over today's source)`, () => {

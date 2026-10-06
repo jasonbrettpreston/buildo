@@ -39,7 +39,7 @@
  *   · ctx.gate        — the tri-state mode decision and the reason it resolved that way
  *   · ctx.prior       — the prior COMPLETED run's records_meta, i.e. this step's own
  *                       baseline (the two gate fields are self-consumed)
- *   · ctx.overrides   — the resolved override.force_full flag
+ *   · ctx.overrides   — the resolved overrides (force_full is retired here, MQ-B2: "none")
  *   · ctx.config      — the seven declared logic variables, resolved and bounds-checked
  *                       before this file runs, frozen, projected to the declared names
  *
@@ -109,6 +109,36 @@ const PARCEL_ELIGIBILITY = 'centroid_lat IS NOT NULL AND centroid_lng IS NOT NUL
  * open review_followups finding that parcels.centroid_lat/lng has no invalidator.
  */
 const UNLINKED_ONLY = 'NOT EXISTS (SELECT 1 FROM parcel_buildings pb WHERE pb.parcel_id = parcels.id)';
+
+/**
+ * O4 ROW 5 — FULL RESCAN, REWRITE ONLY CHANGED LINKS (operator ruling 2026-10-03, registry-truth
+ * folds 14 + 15). The NOT-DERIVED predicate: a parcel_buildings row whose (parcel_id, building_id) is
+ * NOT among the keys this batch just derived. ONE fragment, used by the before-image/flag SELECT and the
+ * keyed DELETE, so the two cannot drift apart (E1's generated clear carries the same guard, unaliased, in
+ * PRIMARY_CLEAR_SCOPE below — bound to the derived PRIMARY keys only).
+ *
+ * Params (every statement that uses it): $1 = every parcel id in the batch (the scope — a parcel with
+ * zero derived links is still in the batch, so its stale links are still reached), $2/$3 = the derived
+ * keys as two aligned int arrays (parcel_id[], building_id[]). Empty $2/$3 means "nothing derived":
+ * every link of the batch's parcels is stale — which is why the runner's guards.empty_source row (corpus 0, measured before compute — FLEET-2 A-1 ruling 4)
+ * must keep firing BEFORE these statements.
+ */
+const NOT_DERIVED = 'NOT EXISTS (SELECT 1 FROM unnest($2::int[], $3::int[]) AS d(parcel_id, building_id)'
+  + ' WHERE d.parcel_id = pb.parcel_id AND d.building_id = pb.building_id)';
+
+/**
+ * O4 ROW 5 — E1's declared `write_discipline.scope` (seat B copies this string into
+ * link-massing.descriptor.json outputs.writes[0]; write.js generates the clear from it, so E1 stays a
+ * codegen'd set_based_scoped target). The primary clear is GUARDED against the derived primary: $1 =
+ * every parcel of the batch, $2/$3 = the derived PRIMARY keys. An unchanged primary is never cleared,
+ * so the guarded upsert finds it unchanged and linked_at does not move; a primary that is no longer the
+ * derived primary IS cleared first, so idx_parcel_buildings_one_primary never sees two primaries
+ * (fence 5bb31faf / B-8). Unaliased (`parcel_buildings.`) because write.js renders
+ * `UPDATE parcel_buildings SET … WHERE <scope>` with no alias.
+ */
+const PRIMARY_CLEAR_SCOPE = 'parcel_id = ANY($1) AND is_primary = true'
+  + ' AND NOT EXISTS (SELECT 1 FROM unnest($2::int[], $3::int[]) AS d(parcel_id, building_id)'
+  + ' WHERE d.parcel_id = parcel_buildings.parcel_id AND d.building_id = parcel_buildings.building_id)';
 
 // ===========================================================================
 // A-2 option 2 — the SQL text builder. Pure: no pool, no client, no execution.
@@ -252,6 +282,34 @@ function buildMatchSql(descriptor, config, mode) {
       + '     FROM (SELECT COUNT(*) AS n FROM parcel_buildings WHERE is_primary\n'
       + '            GROUP BY building_id HAVING COUNT(*) > 1) s) AS shared_primary;',
     cumulative_params: [centroidConfidence, nearestConfidence],
+    // ── O4 row 5 — the keyed per-batch statements (folds 14 + 15). The runner executes, inside the batch
+    // transaction: E1's GENERATED clear (scope = PRIMARY_CLEAR_SCOPE) → guarded upsert → stale SELECT →
+    // flag → DELETE. Only the two DESCRIPTIVE-class write statements below are compute-authored (the
+    // LG-24 link_full_retraction / LG-22 set_source:"compute" precedent); lock #176 exempts exactly the
+    // marked block and nothing else.
+    // <o4-row5-descriptive-class-sql>
+    // The rows the keyed DELETE is about to remove ($2/$3 = ALL derived keys): read once, inside the
+    // transaction, for the R-M / LG-17 before-image and for the set of parcels that lost a link.
+    stale_link_select_sql:
+      'SELECT pb.parcel_id, pb.building_id, pb.is_primary, pb.structure_type, pb.match_type, pb.confidence, pb.linked_at\n'
+      + '  FROM parcel_buildings pb\n'
+      + ' WHERE pb.parcel_id = ANY($1::int[])\n'
+      + `   AND ${NOT_DERIVED};`,
+    // Operator ruling (fold 15): a parcel that LOST a link is flagged so enrich_parcels recomputes just
+    // that parcel — buildMassingScopeWhere selects `massing_enriched_at IS NULL`. A deletion moves no
+    // linked_at, so without this flag a parcel that only lost a link would never be re-enriched.
+    // $1 = the distinct parcel ids of the stale rows.
+    lost_link_flag_sql:
+      'UPDATE parcels SET massing_enriched_at = NULL\n'
+      + ' WHERE id = ANY($1::int[]) AND massing_enriched_at IS NOT NULL\n'
+      + ' RETURNING id;',
+    // The keyed "no longer derived" DELETE (link_keyed precedent, LG-24 shape). Same WHERE as the
+    // SELECT above, same params.
+    stale_link_delete_sql:
+      'DELETE FROM parcel_buildings pb\n'
+      + ' WHERE pb.parcel_id = ANY($1::int[])\n'
+      + `   AND ${NOT_DERIVED};`,
+    // </o4-row5-descriptive-class-sql>
     // The names the two passes are counted under. Supplied BY THE STEP because they are
     // this step's match_type vocabulary — the runner may not spell a domain value, and a
     // counter named by the library would drift from the column it describes (claim #149).
@@ -371,21 +429,6 @@ function structure_thresholds(ctx) {
       garage_max_sqm: ctx.config.massing_garage_max_sqm,
     },
   });
-}
-
-function override_force_full_present(ctx) {
-  const standing = ctx.overrides.force_full === true;
-  ctx.report('override_force_full_present', { violations: standing ? 1 : 0, detail: standing });
-}
-
-/**
- * D-20, at `when: "pre_write"`. The only check whose FAIL must stop a statement being
- * issued: the very next thing the runner does is the full-mode retraction, and against
- * an empty upstream corpus that deletes every link and rebuilds nothing.
- */
-function empty_source_guard(ctx) {
-  const corpus = ctx.matched.building_footprints_count;
-  ctx.report('empty_source_guard', { violations: corpus > 0 ? 0 : 1, detail: corpus });
 }
 
 function parcels_processed(ctx) {
@@ -517,15 +560,21 @@ function shared_primary_buildings(ctx) {
   });
 }
 
-/** The post-write half of D-20: retracted and NOT rebuilt is the shape of a broken run. */
+/**
+ * The post-write half of D-20, re-pointed by O4 row 5 (fold 14/15, LM-D17; ASSEMBLY 1.16): the
+ * full-mode mass retraction is retired, so the measured deletion is the keyed per-batch stale-link
+ * delete (writes[2] = written.e3). Value = stale links deleted over all of the batch's links
+ * (deleted + derived, writes[1] scanned): a broken predicate that derives nothing reads 1.0; a
+ * healthy full rescan with a few demolished buildings reads ~0.
+ */
 function mass_retraction_ratio(ctx) {
-  const w = upsert(ctx);
-  const retracted = w.retracted || 0;
-  const rebuilt = w.inserted || 0;
-  const ratio = retracted > 0 ? Math.max(0, retracted - rebuilt) / retracted : 0;
+  const deleted = (ctx.written && ctx.written.e3 && ctx.written.e3.deleted) || 0;
+  const derived = upsert(ctx).scanned || 0;
+  const total = deleted + derived;
+  const ratio = total > 0 ? deleted / total : 0;
   ctx.report('mass_retraction_ratio', {
     value: ratio,
-    detail: { retracted, rebuilt, unrestored_ratio: round(ratio) },
+    detail: { deleted, derived, deleted_ratio: round(ratio) },
   });
 }
 
@@ -612,8 +661,6 @@ const CHECKS = {
   building_footprints_count,
   full_mode_gate,
   structure_thresholds,
-  override_force_full_present,
-  empty_source_guard,
   parcels_processed,
   run_matched,
   match_centroid_in_parcel,
@@ -679,3 +726,5 @@ module.exports.buildLinkMeta = buildLinkMeta;
 module.exports.DEGREES_PER_METRE_DIVISOR = DEGREES_PER_METRE_DIVISOR;
 module.exports.PARCEL_ELIGIBILITY = PARCEL_ELIGIBILITY;
 module.exports.UNLINKED_ONLY = UNLINKED_ONLY;
+module.exports.NOT_DERIVED = NOT_DERIVED;
+module.exports.PRIMARY_CLEAR_SCOPE = PRIMARY_CLEAR_SCOPE;

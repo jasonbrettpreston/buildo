@@ -22,15 +22,25 @@
     "reads": {
       "steps": [
         {
-          "step": "enrich_parcels",
-          "version_pin": "none"
+          "step": "enrich_parcels"
         },
         {
-          "step": "compute_parcel_cost_estimates",
-          "version_pin": "none"
+          "step": "compute_parcel_cost_estimates"
+        },
+        {
+          "step": "parcels"
         }
       ],
       "tables": [
+        {
+          "table": "parcel_buildings",
+          "columns": [
+            "building_id",
+            "is_primary",
+            "match_type",
+            "parcel_id"
+          ]
+        },
         {
           "table": "parcels",
           "columns": [
@@ -43,14 +53,16 @@
             "cost_addition_total",
             "cost_coa_total",
             "cost_fb_total",
+            "cost_gut_total",
             "cost_solar_total",
             "cur_floor_gfa_sqm",
             "depth_m",
             "envelope_constraint_reason",
             "existing_greenspace_sqm",
-            "feature_type",
             "frontage_m",
+            "geom",
             "id",
+            "lot_size_source",
             "lot_size_sqm",
             "max_build_fsi",
             "max_build_height_m",
@@ -81,7 +93,6 @@
   "override": "none",
   "interpretation": "none",
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "always",
@@ -89,8 +100,6 @@
       }
     ],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/assert-parcel-sanity-fields.js"
@@ -102,7 +111,7 @@
     "requires": [],
     "srid": "none",
     "empty_source": "none",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "database": {
     "class": "primary",
@@ -110,20 +119,14 @@
     "assert_current_database": "postgres"
   },
   "execution": {
-    "budget": "30m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "25m",
     "step_timeout": "45m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "maintenance": "none",
     "invocation": {
@@ -1352,15 +1355,15 @@
       },
       "retighten_when": "zero rows — closes when slice 1's on-lot apportionment (enrich_parcels cur_floor_gfa_sqm = ST_Intersection area, not the whole polygon) makes on-lot share genuinely 1.0 for every non-shared structure; RD/attached remain two different legitimate floors even after slice 1 (attached party-wall sharing is real, not a defect).",
       "last_measured": {
-        "value": 59661,
-        "at": "2026-09-22T00:00:00.000Z",
-        "commit": "06dcd330",
-        "cost_ms": 14708,
+        "value": 61560,
+        "at": "2026-10-06T20:14:41.632Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 15062,
         "sample_n": 1,
         "source_run": {
           "run_id": null,
           "chain": null,
-          "event": "manual_timing"
+          "event": "step_validate_write"
         }
       },
       "why": {
@@ -1386,18 +1389,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 2,
-          "worst": "2.00"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 1158,
-        "sample_n": 5,
+        "value": "2 outliers (worst 2.00)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1421,18 +1421,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 799,
-          "worst": "5.93"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2650,
-        "sample_n": 5,
+        "value": "811 outliers (worst 5.93)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1456,18 +1453,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 12,
-          "worst": "1.05"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2737,
-        "sample_n": 5,
+        "value": "12 outliers (worst 1.05)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1491,18 +1485,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 91,
-          "worst": "54.00"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2929,
-        "sample_n": 5,
+        "value": "129 outliers (worst 75.00)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1526,18 +1517,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 181,
-          "worst": "109124.33"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2860,
-        "sample_n": 5,
+        "value": "0 outliers",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1561,18 +1549,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 3134,
-          "worst": "3843.42"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2574,
-        "sample_n": 5,
+        "value": "3198 outliers (worst 5137.98)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1596,18 +1581,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 205,
-          "worst": "6.62"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 1822,
-        "sample_n": 5,
+        "value": "210 outliers (worst 6.62)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -1631,18 +1613,15 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": {
-          "viol": 4311,
-          "worst": "543499.59"
-        },
-        "at": "2026-09-18T17:31:32.549Z",
-        "commit": "6aeed5b267ceaf25314b7d0caf6fdd9f7860bfd1",
-        "cost_ms": 2494,
-        "sample_n": 5,
+        "value": "4381 outliers (worst 543499.59)",
+        "at": "2026-10-05T19:53:01.605Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 0,
+        "sample_n": 2,
         "source_run": {
-          "run_id": null,
+          "run_id": "2300",
           "chain": null,
-          "event": "manual_measurement"
+          "event": "golden_capture"
         }
       },
       "why": {
@@ -2012,7 +1991,7 @@
     "varies_by_chain": {
       "checks": "none",
       "phase": {
-        "sources": 25
+        "sources": 26
       },
       "audit_table": "one",
       "scope": "none"
@@ -2048,6 +2027,26 @@
         "warnings": "array",
         "audit_table": "object",
         "config": "object"
+      }
+    },
+    {
+      "id": "checks_passed_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "MQ-A4 (a), registry-truth fold 19 (#75): a WARN row stands and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS) instead of all_checks_passed. It declares no checks_passed: the runner keeps the legacy semantics, checks_passed is 'all' only when errors AND warnings are both empty (scripts/lib/step/index.js), so a WARN run never carries it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
       }
     },
     {

@@ -186,19 +186,26 @@ describe('tiebreak-determinism — declared pa.id ASC (LM-D13 precedent)', () =>
     expect(run1).toBe(12903); // the LOWER id wins under `, pa.id ASC` — never the higher one
   });
 
-  it('twice-run idempotency lock — LG-24\'s own scoped retract-and-rebuild resolves to an identical set both times (Fold A I-1, structural proof against the declared write shape, not a live DB run)', () => {
+  it('twice-run idempotency lock — O4 row 7 (registry-truth fold 14/15 row 7, fold 16 row 2): every run re-checks every eligible permit (mode_select none) and LG-24\'s keyed delete is the ONLY retraction, so two runs over one corpus resolve to an identical set (structural proof against the declared write shape, not a live DB run)', () => {
     const descriptor = JSON.parse(readText(DESCRIPTOR_REL)) as {
-      outputs: { writes: Array<{ table: string; retract: string; retract_when?: string; write_discipline: { scope?: string } }> };
+      staleness: { mode_select: string };
+      outputs: { writes: Array<{ table: string; retract: string; retract_when?: string; write_discipline: { class: string; scope?: string } }> };
     };
-    const massRetraction = descriptor.outputs.writes.find((w) => w.retract === 'all');
-    expect(massRetraction, 'no declared retract:"all" target found').toBeTruthy();
-    expect(massRetraction?.retract_when).toBe('full_only');
-    expect(massRetraction?.write_discipline.scope).toBe("match_type = 'spatial'");
-    // A scoped retraction (fully clears the scoped population) followed by a
-    // deterministic rebuild (pa.id ASC tiebreak, proven above) is idempotent BY
-    // CONSTRUCTION: there is no accumulation and no order-dependent residue between two
-    // consecutive full runs — the SAME argument Fold A I-1 made for link_parcels' own
-    // scoped mass retraction, structurally verified here against the declared shape.
+    // The full-mode match_type='spatial' mass retraction is RETIRED (the runner refuses retract "all" under mode_select "none", R7-5).
+    expect(descriptor.outputs.writes.some((w) => w.retract === 'all'), 'O4 row 7: no write target keeps retract "all"').toBe(false);
+    expect(descriptor.staleness.mode_select, 'O4 row 7: link_parcels re-checks every eligible permit every run').toBe('none');
+    const upsert = descriptor.outputs.writes[0];
+    expect(upsert?.write_discipline.class).toBe('guarded_upsert');
+    // U2 (ASSEMBLY 1.22): the upsert's scope is the matcher's eligibility filter, never a match_type slice.
+    expect(String(upsert?.write_discipline.scope)).toMatch(/^\(street_num IS NOT NULL AND street_num != '' AND street_name IS NOT NULL AND street_name != ''\) OR \(latitude IS NOT NULL AND longitude IS NOT NULL\)/);
+    expect(String(upsert?.write_discipline.scope)).not.toContain("match_type = 'spatial'");
+    const keyedDelete = descriptor.outputs.writes.find((w) => w.write_discipline.class === 'link_full_retraction');
+    expect(keyedDelete, 'LG-24\'s keyed delete is the retraction').toBeTruthy();
+    expect(keyedDelete?.table).toBe('permit_parcels');
+    expect(String(keyedDelete?.write_discipline.scope), 'the keyed delete is scoped to the batch\'s own keys — never unscoped').toMatch(/permit_num = ANY/);
+    // A guarded upsert (rewrites only a changed link) plus a keyed delete of the links this batch no longer derives,
+    // over a deterministic derivation (pa.id ASC tiebreak, proven above), is idempotent BY CONSTRUCTION: a second
+    // run over an unchanged corpus finds nothing to rewrite and nothing to delete.
   });
 });
 

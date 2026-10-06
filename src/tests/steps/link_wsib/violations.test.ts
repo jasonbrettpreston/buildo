@@ -106,7 +106,7 @@ const NULL_RETRACT_CLASS = 'set_based_null_retract';
 const ENTITIES_CLASS = 'set_based_scoped';
 /** E1/E2/E3 — already-homed overrides. */
 const FORCE_FULL_ENV = 'LINK_WSIB_FORCE_FULL';
-/** T1–T7, the P4 tunable inventory (§ P4 tunable inventory of the plan). */
+/** T1–T8, the P4 tunable inventory (§ P4 tunable inventory of the plan). T7 (link_wsib_tier3_full_max_iterations) RETIRED by O4 row 6 (LW-D23, config.retired). */
 const CONFIG_VARS = {
   T1: 'wsib_fuzzy_match_threshold',
   T2: 'link_wsib_link_rate_warn_pct',
@@ -114,10 +114,9 @@ const CONFIG_VARS = {
   T4: 'link_wsib_tier2_confidence',
   T5: 'link_wsib_tier3_confidence',
   T6: 'link_wsib_entity_fanin_warn',
-  T7: 'link_wsib_tier3_full_max_iterations',
   T8: 'link_wsib_tier3_token_overlap_fail_pct',
 } as const;
-const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T6, CONFIG_VARS.T8];
+const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T2, CONFIG_VARS.T6, CONFIG_VARS.T8, 'link_wsib_mass_relink_max_pct']; // O4 row 6 mass guard (LW-D23)
 const WARN_CHECK_IDS = ['link_rate_warn', 'entity_fanin_warn'] as const;
 const INFO_CHECK_IDS = ['tier_1_trade_matches', 'tier_2_legal_matches', 'tier_3_fuzzy_matches', 'no_match'] as const;
 
@@ -135,7 +134,6 @@ const NOTES_PROSE_BLOCKS = [
   'expected', 'known_normal', 'known_bad', 'do_not_reflag', 'how_to_investigate', 'limitations',
 ];
 const NOTES_MEASURED_EXEMPT = new Set(['decisions']);
-const NOTES_CAP = 12;
 
 const FIXTURE_REVIEWED = '2026-08-28';
 const FIXTURE_MAX_AGE_DAYS = 180;
@@ -152,7 +150,6 @@ const LIVE_MAGNET_COUNT = 171;
 const CLEAN_LINK_RATE_PCT = 4.55;
 const T2_DEFAULT = 5;
 const T6_DEFAULT = 20;
-const T7_DEFAULT = 20;
 const INVOCATIONS = [
   { name: 'permits', chain: 'permits' },
   { name: 'sources', chain: 'sources' },
@@ -202,7 +199,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[] }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   database: { min_migration: number | 'none' };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };
   config: 'none' | { logic_variables: Array<{ name: string; min: number | 'none'; max: number | 'none'; on_invalid: string }>; hoisted_above_gate: boolean };
@@ -242,7 +239,8 @@ interface World {
     registered_entities_with_zero_links: number;
     entities_count: number;
     entities_with_link_count: number;
-    tier3_full: { exhausted: boolean; contacts_cleared?: number } | null;
+    linked_start: number;
+    diff: { set: number; move: number; vanish: number };
     entity_fanin_max: number;
     magnet_entities_fanin_ge_10: number;
     tier3_token_overlap_pass_pct: number;
@@ -514,7 +512,7 @@ function confidenceOutsideClosedSet(d: GoldenDoc): unknown {
 }
 
 // ---------------------------------------------------------------------------
-// The 5 named fence-lock pure detectors (LG-11, LG-16, LG-15, A-8, T7) — each
+// The 4 named fence-lock pure detectors (LG-11, LG-16, LG-15, A-8; T7's retired by O4 row 6) — each
 // tested against a SYNTHETIC subject (proving the detector is not vacuous)
 // AND against the future descriptor (guaranteed red today via artifact()).
 // ---------------------------------------------------------------------------
@@ -528,14 +526,14 @@ function detectJoinUpdateNoInsertFence(sql: string): string[] {
   return findings;
 }
 
-/** LG-16 — A-7's tier-3 repair retraction must NULL the 3 columns, never DELETE the row. */
+/** LG-16 — the keyed vanish retraction (O4 row 6) must NULL the 3 columns, keyed by (id, old link), never DELETE the row. */
 function detectUpdateToNullNeverDeleteFence(sql: string): string[] {
   const findings: string[] = [];
   if (/DELETE\s+FROM\s+wsib_registry/i.test(sql)) findings.push('DELETE FROM wsib_registry present — wsib_registry rows are owned by load-wsib.js, not this step');
   if (!/SET[\s\S]*linked_entity_id\s*=\s*NULL/i.test(sql)) findings.push('linked_entity_id is not set to NULL');
   if (!/match_confidence\s*=\s*NULL/i.test(sql)) findings.push('match_confidence is not set to NULL');
   if (!/matched_at\s*=\s*NULL/i.test(sql)) findings.push('matched_at is not set to NULL');
-  if (!/match_confidence\s*=\s*0\.6/i.test(sql)) findings.push('the retraction is not scoped to match_confidence = 0.60 (tier 3 only)');
+  if (!/\(id,\s*linked_entity_id,\s*match_confidence\)\s+IN\s+\(SELECT \* FROM unnest\(/i.test(sql)) findings.push('the retraction is not keyed by (id, old link) — a scope-wide retraction would NULL and re-link its whole scope on every full-rescan run (O4 row 6)');
   return findings;
 }
 
@@ -555,28 +553,10 @@ function detectA8UnchangedCorpusFence(subject: { trigger: Array<{ signal: string
   return findings;
 }
 
-/** T7 — the tier-3-full convergence loop must be bounded by a declared, WARN-not-fail-on-exhaustion iteration cap. */
-function detectConvergenceLoopFence(subject: { hasBoundedIterations: boolean; boundedByConfigVar: string | null; exhaustionSeverity: string | null }): string[] {
-  const findings: string[] = [];
-  if (!subject.hasBoundedIterations) findings.push('the tier-3-full re-evaluation loop has no declared iteration bound — TIER3_SELECT is capped LIMIT 1000/invocation, so an unbounded loop over ~5,515 clean rows never terminates by construction');
-  if (subject.boundedByConfigVar !== CONFIG_VARS.T7) findings.push(`the iteration bound is not sourced from ${CONFIG_VARS.T7} (T7) — a hardcoded cap is the exact P4 violation this pilot exists to close`);
-  if (subject.exhaustionSeverity === 'FAIL') findings.push('exhaustion (loop did not converge within the bound) is FAIL — must be WARN (tier3_full_not_converged), never FAIL, per R-H');
-  return findings;
-}
-
 describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // ── A.3 Interpretation (§3.4–§3.4b) — the notes.json seven ──
 
-  it('#30 Cap of 12 prose entries — add a 13th → build fails', () => {
-    const d = loadDescriptor();
-    const notes = loadNotes();
-    expect(d.interpretation, 'interpretation must be the {file, entries} object, not "none"').not.toBe('none');
-    const interp = d.interpretation as { file: string; entries: number };
-    const entries = notesEntries(notes);
-    expect(entries.length, 'prose entries across the capped blocks').toBeLessThanOrEqual(NOTES_CAP);
-    expect(entries.length, 'interpretation.entries must equal the real prose count').toBe(interp.entries);
-    expect(() => validateDescriptor({ ...d, interpretation: { ...interp, entries: NOTES_CAP + 1 } })).toThrow(/interpretation/);
-  });
+  // #30 retired (Phase 3 RE-FREEZE): interpretation.entries is deleted; the <=12 prose cap is ONE notes-file check — step-validate fast invariant #45 NOTES-CAP (scripts/analysis/gates/notes-cap.mjs).
 
   it('#31 Exactly two legal resolutions — promote or delete; no overflow file', () => {
     const d = loadDescriptor();
@@ -881,8 +861,8 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
   // itself covered only 2 of the descriptor's 3 WARN checks and 0 of its 5 FAIL checks.
   // Fixed by porting link_massing's proven `runCompute`/`configProjection`/`resolvedDescriptor`
   // pattern (§ Must-fail fixture machinery below) and extending `sabotageFor` to all 8
-  // non-INFO checks (3 WARN: link_rate_warn/T2, entity_fanin_warn/T6, tier3_full_not_converged;
-  // 5 FAIL: full_repair_empty_source_guard, orphan_linked_entity_id,
+  // non-INFO checks (2 WARN: link_rate_warn/T2, entity_fanin_warn/T6 — tier3_full_not_converged retired by O4 row 6;
+  // 5 FAIL: link_wsib_mass_relink_pct (O4 row 6), orphan_linked_entity_id, (full_repair_empty_source_guard moved to the runner row empty_source_guard, A-1 #32)
   // confidence_outside_closed_set, registered_entities_with_zero_links, write_privilege).
   it('#165 Every declared check has a must-fail fixture (WARN: healthy PASS → sabotaged WARN; INFO: INFO both ways) — the LG-11 write-executor lock is written first (finding 3, LG-11)', async () => {
     const d = loadDescriptor();
@@ -1130,7 +1110,8 @@ function healthyWorld(): World {
       registered_entities_with_zero_links: 0,
       entities_count: LIVE_ENTITIES_TOTAL,
       entities_with_link_count: 500, // LW-D18: healthy — 500/3,948 ≈ 12.7%, comfortably >= the T2 5% floor
-      tier3_full: null, // mode never resolves full in this fixture set — T7/A-7 is commit 8's budgeted act
+      linked_start: LIVE_WSIB_LINKED,
+      diff: { set: 0, move: 0, vanish: 0 }, // O4 row 6: steady state — the full-rescan diff is empty (design §11 M1)
       entity_fanin_max: 12, // healthy: below the T6 default (20)
       magnet_entities_fanin_ge_10: 0,
       tier3_token_overlap_pass_pct: 100, // LW-D14: healthy post-fix — buildFuzzyMatchSql requires overlap at write time
@@ -1148,9 +1129,9 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
   [CONFIG_VARS.T2]: (w) => { w.matched = { ...w.matched, entities_with_link_count: 1 }; }, // LW-D18: 1/3,948 ≈ 0.025% entity link rate vs the 5% floor
   [CONFIG_VARS.T6]: (w) => { w.matched = { ...w.matched, entity_fanin_max: LIVE_FANIN_MAX, magnet_entities_fanin_ge_10: LIVE_MAGNET_COUNT }; }, // 2,118 vs the 20 default
   [CONFIG_VARS.T8]: (w) => { w.matched = { ...w.matched, tier3_token_overlap_pass_pct: 10.49 }; }, // LW-D14: live pre-fix measurement, 840/8,009 vs the 50% floor
+  link_wsib_mass_relink_max_pct: (w) => { w.matched = { ...w.matched, linked_start: 872, diff: { set: 0, move: 0, vanish: 256 } }; }, // O4 row 6, design §11 M3: a +0.05 threshold raise vanished 256 of 872 links (29%) vs the 0.10 bound
 };
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
-  [/tier3_full_not_converged|convergence/i, (w) => { w.matched.tier3_full = { exhausted: true, contacts_cleared: 0 }; }], // T7 exhaustion, WARN not FAIL (R-H)
   [/full_repair_empty_source/i, (w) => { w.gate = { ...w.gate, mode: 'full' }; w.matched.entities_count = 0; }], // D-20: mode full against an empty entities corpus
   [/orphan_linked_entity_id/i, (w) => { w.matched.orphan_linked_entity_id = 5; }], // linked_entity_id set with a NULL confidence/matched_at pair
   [/confidence_outside_closed_set/i, (w) => { w.matched.confidence_outside_closed_set = 3; }], // a match_confidence outside {0.95, 0.90, 0.60}
@@ -1345,7 +1326,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the MATCH
   });
 });
 
-describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 convergence)', () => {
+describe('G4d fence locks — the 4 named locks (A-8, LG-11, LG-15, LG-16; T7 convergence retired by O4 row 6)', () => {
   it('LG-11 write-executor lock — present in the converted step: the wsib_registry write target class is set_based_join_update, INSERT structurally forbidden (finding 3)', () => {
     const d = loadDescriptor();
     const { wsibJoinUpdate } = writeTargets(d);
@@ -1363,15 +1344,17 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectJoinUpdateNoInsertFence(noUpdate).some((f) => /no UPDATE wsib_registry/.test(f))).toBe(true);
   });
 
-  it('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — present in the converted step: the tier-3 retraction target NULLs linked_entity_id/match_confidence/matched_at, scoped to match_confidence=0.60, never DELETEs', () => {
+  it('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — present in the converted step: the vanish retraction target NULLs linked_entity_id/match_confidence/matched_at, keyed by (id, old link) (O4 row 6), never DELETEs', () => {
     const d = loadDescriptor();
     const { wsibNullRetract } = writeTargets(d);
     expect(wsibNullRetract, 'A-7 is ruled ACCEPT (per the plan) — a null-retract target must exist').toBeDefined();
-    expect(wsibNullRetract?.retract_when, 'the retraction is full_only (Spec 124 Rule 12)').toBe('full_only');
+    expect(wsibNullRetract?.retract, 'O4 row 6: the retraction is keyed, never scope-wide (retract "none")').toBe('none');
+    expect(wsibNullRetract?.retract_when, 'O4 row 6: no full_only arm — every run is a full rescan').toBeUndefined();
+    expect(wsibNullRetract?.write_discipline.scope, 'the declared scope is the keyed vanish scope (VANISH_RETRACT_SCOPE)').toBe('(id, linked_entity_id, match_confidence) IN (SELECT * FROM unnest($1::int[], $2::int[], $3::numeric[]))');
   });
 
-  it('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — reversion is detectable: a DELETE FROM wsib_registry, or a missing NULL on any of the 3 columns, or an unscoped retraction, makes the lock fire', () => {
-    const goodSql = "UPDATE wsib_registry SET linked_entity_id = NULL, match_confidence = NULL, matched_at = NULL WHERE match_confidence = 0.60";
+  it('A-7 UPDATE-to-NULL-never-DELETE lock (LG-16) — reversion is detectable: a DELETE FROM wsib_registry, or a missing NULL on any of the 3 columns, or an unkeyed (scope-wide) retraction, makes the lock fire', () => {
+    const goodSql = "UPDATE wsib_registry SET linked_entity_id = NULL, match_confidence = NULL, matched_at = NULL WHERE (id, linked_entity_id, match_confidence) IN (SELECT * FROM unnest($1::int[], $2::int[], $3::numeric[]))";
     expect(detectUpdateToNullNeverDeleteFence(goodSql), 'the lock fires on the un-reverted subject').toEqual([]);
     const deleteSql = "DELETE FROM wsib_registry WHERE match_confidence = 0.60";
     const findings = detectUpdateToNullNeverDeleteFence(deleteSql);
@@ -1381,7 +1364,9 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(f2.some((f) => /match_confidence is not set to NULL/.test(f))).toBe(true);
     expect(f2.some((f) => /matched_at is not set to NULL/.test(f))).toBe(true);
     const unscoped = "UPDATE wsib_registry SET linked_entity_id = NULL, match_confidence = NULL, matched_at = NULL";
-    expect(detectUpdateToNullNeverDeleteFence(unscoped).some((f) => /not scoped to match_confidence = 0.60/.test(f)), 'an unscoped retraction (touches ALL tiers, not just tier 3) went undetected').toBe(true);
+    expect(detectUpdateToNullNeverDeleteFence(unscoped).some((f) => /not keyed by \(id, old link\)/.test(f)), 'an unscoped retraction went undetected').toBe(true);
+    const tier3Scoped = "UPDATE wsib_registry SET linked_entity_id = NULL, match_confidence = NULL, matched_at = NULL WHERE match_confidence = 0.60";
+    expect(detectUpdateToNullNeverDeleteFence(tier3Scoped).some((f) => /not keyed by \(id, old link\)/.test(f)), 'the retired pre-O4-row-6 tier-3 scope-wide retraction went undetected').toBe(true);
   });
 
   it('LG-15 gated-skip lock — present: mode_select carries a skip value (or a declared skip terminal), distinct from full|incremental (staleness.js\'s selectMode is strictly full|incremental today — CONFIRMED genuinely new by Fold B)', () => {
@@ -1413,29 +1398,6 @@ describe('G4d fence locks — the 5 named locks (A-8, LG-11, LG-15, LG-16, T7 co
     expect(detectA8UnchangedCorpusFence(scheduled).some((f) => /never by schedule/.test(f)), 'a schedule-based full trigger went undetected — A-8 explicitly forbids this').toBe(true);
     const noFingerprint: Parameters<typeof detectA8UnchangedCorpusFence>[0] = { trigger: [], hasScheduleTrigger: false, hasCorpusFingerprint: false };
     expect(detectA8UnchangedCorpusFence(noFingerprint).some((f) => /no wsib_registry corpus fingerprint/.test(f)), 'a missing corpus fingerprint went undetected').toBe(true);
-  });
-
-  it('convergence-loop lock (T7) — present: the tier-3-full re-evaluation loop is bounded by link_wsib_tier3_full_max_iterations (default 20), exhaustion is WARN not FAIL', () => {
-    const d = loadDescriptor();
-    const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
-    const t7 = cfg.logic_variables.find((v) => v.name === CONFIG_VARS.T7);
-    expect(t7, 'T7 not declared').toBeDefined();
-    expect(t7?.min).toBe(1);
-    expect(t7?.max).toBe(100);
-    const exhaustionCheck = d.checks.find((c) => c.id === 'tier3_full_not_converged');
-    expect(exhaustionCheck, 'no tier3_full_not_converged check declared').toBeDefined();
-    expect(exhaustionCheck?.severity, 'R-H: exhaustion must be WARN, never FAIL').toBe('WARN');
-  });
-
-  it('convergence-loop lock (T7) — reversion is detectable: an unbounded loop, a loop bounded by a literal (not T7), or a FAIL-severity exhaustion, makes the lock fire', () => {
-    const good = { hasBoundedIterations: true, boundedByConfigVar: CONFIG_VARS.T7, exhaustionSeverity: 'WARN' };
-    expect(detectConvergenceLoopFence(good), 'the lock fires on the un-reverted subject').toEqual([]);
-    const unbounded = { hasBoundedIterations: false, boundedByConfigVar: null, exhaustionSeverity: null };
-    expect(detectConvergenceLoopFence(unbounded).some((f) => /never terminates by construction/.test(f)), 'an unbounded convergence loop went undetected — TIER3_SELECT LIMIT 1000/invocation over ~5,515 clean rows needs ~6+ iterations').toBe(true);
-    const literalBound = { hasBoundedIterations: true, boundedByConfigVar: null, exhaustionSeverity: 'WARN' };
-    expect(detectConvergenceLoopFence(literalBound).some((f) => /not sourced from/.test(f)), 'a hardcoded iteration cap went undetected — this is the exact P4 violation this pilot exists to close').toBe(true);
-    const failSeverity = { hasBoundedIterations: true, boundedByConfigVar: CONFIG_VARS.T7, exhaustionSeverity: 'FAIL' };
-    expect(detectConvergenceLoopFence(failSeverity).some((f) => /must be WARN/.test(f)), 'FAIL-severity exhaustion went undetected — R-H requires WARN + a declared retighten path').toBe(true);
   });
 
   it('the fence corpus is the fix( commits, not the Severity: footer — every locked SHA is a fix( commit on the step file and the footer census is 0', () => {

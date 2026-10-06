@@ -322,7 +322,7 @@ describe('step-validate.mjs — programme section', () => {
       out = String((err as { stdout?: string }).stdout ?? '');
     }
     expect(threw, 'the NAMED slug\'s own --fast run must still hard-stop').toBe(true);
-    expect(out).not.toMatch(/informational — does not name a slug in this run/);
+    expect(out).not.toMatch(/#9:[^\n]*informational — does not name a slug in this run/);
   });
 
   it('GREEN — the same slug, same shape, but the item is BUILT — passes clean (proves the finding names the STATUS, not the fixture)', () => {
@@ -593,6 +593,8 @@ describe('checkCutoverPrereqs predicate — gate.applies_when (RS-D-STA)', () =>
 //    correctly discriminates "outputs.publish" using a fixture item shaped
 //    identically to STA-1 but with blocks naming a slug, the same technique
 //    section 7 above uses for STA-2/STA-3's "recovery.reset" condition.
+//
+//    SUPERSEDED 2026-10-03: outputs.publish is deleted (fold 8 Phase 3 #22); the fixture tests below keep proving the generic applies_when mechanism.
 // ---------------------------------------------------------------------------
 
 describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA follow-on)', () => {
@@ -634,12 +636,15 @@ describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA f
     expect(checkCutoverPrereqsMirror(CONVERTED, [item], descriptorsBySlug)).toEqual([]);
   });
 
-  it('the REAL STA-1 entry in programme-items.json carries exactly this reclassified shape', () => {
+  it('the REAL STA-1 entry is SUPERSEDED — outputs.publish was deleted (fold 8 Phase 3 DELETE row #22), so its applies_when could never fire', () => {
     const sta1 = ITEMS.find((i) => i.id === 'STA-1');
     expect(sta1, 'STA-1 must still exist in programme-items.json').toBeDefined();
-    expect(sta1!.gate.kind).toBe('cutover_prereq');
+    expect(sta1!.status).toBe('SUPERSEDED');
+    expect(sta1!.owner.kind).toBe('none');
+    expect(sta1!.gate.kind).toBe('nice_to_have');
     expect(sta1!.gate.blocks).toEqual([]);
-    expect(sta1!.gate.applies_when).toEqual({ descriptor_path: 'outputs.publish', equals: 'pointer' });
+    expect(sta1!.gate.applies_when).toBeUndefined();
+    expect(sta1!.evidence).toContain('fold 8 Phase 3 DELETE row #22');
   });
 });
 

@@ -5,6 +5,7 @@
   "suites": {
     "src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts": {
       "reads": {
+        "coa_applications": [],
         "engine_health_snapshots": [
           "dead_ratio",
           "idx_scan",
@@ -14,10 +15,12 @@
           "seq_scan",
           "snapshot_date",
           "table_name"
-        ]
+        ],
+        "permit_inspections": []
       },
       "writes": {
         "engine_health_snapshots": [
+          "captured_at",
           "dead_ratio",
           "idx_scan",
           "n_dead_tup",

@@ -41,7 +41,7 @@ COALESCE preserves existing entity data — WSIB contacts only fill gaps.
 The forward fill-only flow above says nothing about what happens when a link that fed a
 contact field is later **retracted** — A-7's tier-3 repair (`link-wsib.js` Tier 3 only,
 `retract_when: full_only`) is the one mechanism that retracts an already-written link, and
-it did not exist when this section was first written.
+it did not exist when this section was first written. **FLEET-2 (O4 row 6):** A-7's repair loop is retired; a link can now move or vanish on any run (link_wsib is full_rescan, Spec 60 §3 Link WSIB), and the reverse clear binds per (old entity, value) pair instead of pooling the retracted values (lock W3 in `src/tests/steps/link_wsib/o4-row6-full-rescan.logic.test.ts`).
 
 **The reverse-clear contract:** when a `wsib_registry` row's link is retracted, an
 entity's contact field is cleared **only when its current value equals a value that
@@ -57,10 +57,10 @@ negative (a genuinely-retracted-source value is never left dangling). Measured l
 exposure is 0 (the local dev `wsib_registry` carries zero contact values, so `link-wsib.js`
 has never actually copied a contact locally) — this does **not** bound a cloud database
 that has run Serper enrichment against `wsib_registry` itself; re-measure before any cloud
-FULL run.
+FULL run. **FLEET-2:** every link_wsib run is full, so this means before the first post-FLEET-2 cloud run.
 
 **Audit row:** `contacts_cleared_on_retraction` (link_wsib's own declared check) counts
-entities affected per FULL run.
+entities affected per ~~FULL~~ run (every run is full after FLEET-2).
 </architecture>
 
 ---
@@ -124,7 +124,7 @@ only"), `wsib_registry` row count and content unaffected (121,116, unchanged). S
 - WSIB CSV reload → enriched contacts preserved (load-wsib.js UPSERT doesn't touch contact columns)
 - Same company with multiple WSIB entries (different subclasses) → each enriched independently
 - Malformed mailing addresses (PO Box, Suite) → city extraction falls back to subsequent address parts
-- **Empty-source guard before the A-7/LG-16 full-mode repair's retraction (D-20, WF2 "Rules 10/11/12 mechanical checkers", C2, 2026-09-03).** A `retract_when: full_only` mode-full run retracts every tier-3 link before repairing them; abort BEFORE that retraction runs whenever the `entities` corpus is empty, or the run would retract every tier-3 link and repair nothing. `link-wsib.js`'s `full_repair_empty_source_guard` check (`checks[].when:"pre_write"`) is the runtime enforcement — an unaccepted FAIL there means no retraction statement is issued. Never fires in incremental mode.
+- **Empty-source guard before the A-7/LG-16 full-mode repair's retraction (D-20, WF2 "Rules 10/11/12 mechanical checkers", C2, 2026-09-03).** A `retract_when: full_only` mode-full run retracts every tier-3 link before repairing them; abort BEFORE that retraction runs whenever the `entities` corpus is empty, or the run would retract every tier-3 link and repair nothing. `link-wsib.js`'s `full_repair_empty_source_guard` check (`checks[].when:"pre_write"`) is the runtime enforcement — an unaccepted FAIL there means no retraction statement is issued. ~~Never fires in incremental mode.~~ FLEET-2: the mode is always full, so the check is evaluated on every run.
 </behavior>
 
 ---
@@ -150,11 +150,12 @@ only"), `wsib_registry` row count and content unaffected (121,116, unchanged). S
   - `scripts/link-wsib.descriptor.json`
   - `scripts/link-wsib.notes.json`
   - `scripts/lib/compute/link-wsib.js`
+  - `src/tests/steps/link_wsib/o4-row6-full-rescan.logic.test.ts`
   - `src/tests/steps/link_wsib/violations.test.ts`
   - data (descriptor): `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
   - upstream: builders · load_wsib
-  - downstream: assert_data_bounds · assert_global_coverage
-  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/app/api/admin/stats/route.ts (table entities: 2 columns) · src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn) · src/features/leads/lib/get-lead-feed.ts (table entities: 3 columns) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 1 column) · src/lib/builders/enrichment.ts (table entities: 4 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 1 column) · src/lib/leads/lead-inspect-query.ts (table entities: 1 column) · src/lib/quality/metrics.ts (table entities: 4 columns)
+  - downstream: assert_data_bounds · assert_global_coverage · refresh_snapshot
+  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta tier1_confidence_updated_at) · link_wsib (records_meta tier2_confidence_updated_at) · link_wsib (records_meta tier3_confidence_updated_at) · link_wsib (records_meta wsib_registry_count) · src/app/api/admin/stats/route.ts (table entities: 2 columns) · src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn) · src/features/leads/lib/get-lead-feed.ts (table entities: 3 columns) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 1 column) · src/lib/builders/enrichment.ts (table entities: 4 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 1 column) · src/lib/leads/lead-inspect-query.ts (table entities: 1 column) · src/lib/quality/metrics.ts (table entities: 4 columns)
 <!-- /generated:target-files -->
 - `scripts/enrich-wsib.js` (new)
 - `scripts/manifest.json` (wsib chain array, enrich_wsib_registry entry)

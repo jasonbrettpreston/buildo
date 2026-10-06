@@ -344,8 +344,11 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
 
   it('the 18 write columns + geom are declared, and outputs.invalidates[] carries the 3 DEC-FENCE2 stamps with set_null_on_change_of:"geom" (plan D1 REVISED prerequisite 0l; watch column moved to the derived geom, WF3 2026-09-28)', () => {
     const d = loadDescriptor();
-    const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
+    const cols = writes(d)[0]!.columns.filter((c) => c.written !== 'db_default').map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
+    // FLEET-2 unproduced reads (fold 14 db_default channel): parcels.id (SERIAL) is declared so the src reads of it
+    // resolve to this producer, and the step never writes it — the ONLY db_default column here.
+    expect(writes(d)[0]!.columns.filter((c) => c.written === 'db_default').map((c) => c.name)).toEqual(['id']);
     const outs = d.outputs as { invalidates: Array<{ table: string; column: string; when: string; set_null_on_change_of?: string }> };
     expect(outs.invalidates, 'plan D1 — three outputs.invalidates[] entries, one per DEC-FENCE2 stamp').toHaveLength(3);
     const names = outs.invalidates.map((i) => i.column).sort();
@@ -384,11 +387,11 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect((gc as string[]).includes('geometry'), 'WF3 2026-09-28 — `geometry`, the raw jsonb source, is DECLARED as a plain structural guard term').toBe(true);
   });
 
-  it('execution.on_batch_error is drop_batch (PR-D1 pin) and network declares the shared timeout var', () => {
+  it('execution.on_batch_error is fail_step (PR-D1 FIXED-BY-RUNNER, MQ-B5 (a)) and network declares the shared timeout var', () => {
     const d = loadDescriptor();
-    expect(d.execution.on_batch_error).toBe('drop_batch');
-    expect(d.execution.on_batch_error_why).toBeDefined();
-    expect(/PR-D1|#68|batch.*drop/i.test(JSON.stringify(d.execution.on_batch_error_why))).toBe(true);
+    // MQ-B5 (a) (2026-10-05): the Spec 123 §3.1 flip — executeWrite has no catch inside its one transaction.
+    expect(d.execution.on_batch_error).toBe('fail_step');
+    expect(d.execution.on_batch_error_why).toBeUndefined();
     expect(d.execution.network.timeout_from_config).toBe('parcels_download_timeout_ms');
   });
 
@@ -573,7 +576,9 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
     // orthogonal to the on_empty/set_null_on_change_of axes under test here, exactly
     // as T5/T7 exclude the `${geomLine}` slot from their own comparison.
     const actualTail = sql.slice(sql.indexOf('\nON CONFLICT')).replace(/;$/, '');
-    const actualNorm = normalizeWs(actualTail.replace('geom = EXCLUDED.geom,', ''));
+    // Both sides are compared WITHOUT SQL comments: the legacy fixture already goes through stripSqlComments, and the
+    // codegen's only comment is the db_default note for parcels.id (FLEET-2) — a comment is not executable SQL.
+    const actualNorm = normalizeWs(stripSqlComments(actualTail).replace('geom = EXCLUDED.geom,', ''));
 
     // The fixture is the HISTORICAL record and stays byte-identical; the comparison applies
     // EXACTLY the two declared WF3-2026-09-28 deltas to it (`applyWf3Deltas`, knowingly
@@ -1060,10 +1065,9 @@ describe('row 3.7 — deviations carry the plan\'s D1/D3/D4 adjudications verbat
     expect(/R-AZ/.test(text)).toBe(true);
   });
 
-  it('PR-D1 (batch drop, #68) is pinned as a KNOWN-DEFECT, carried not fixed', () => {
+  it('PR-D1 (batch drop, #68) is closed FIXED-BY-RUNNER and recorded as a deviation (MQ-B5 (a))', () => {
     const d = loadDescriptor();
-    const text = JSON.stringify(d.deviations) + JSON.stringify(d.limitations);
-    expect(/PR-D1/.test(text), 'the divergence is pinned with its ledger id').toBe(true);
+    expect(/PR-D1/.test(JSON.stringify(d.deviations)) && /MQ-B5 \(a\)/.test(JSON.stringify(d.deviations)), 'the PR-D1 retirement is a deviations[] row naming its ruling').toBe(true);
   });
 
   it('PR-D2 (parcels_null_address_pct structurally-unsatisfiable WARN) is a named limitation, the check is NOT retired', () => {
@@ -1220,7 +1224,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[]; skeleton?: unknown }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   recovery: { reset: unknown; resume: unknown; force: unknown; rollback: unknown; verify_clean: unknown; cascades: unknown; interrupted: string; interrupted_why: unknown; before_image: string; before_image_why: unknown };
   database: { class: unknown; min_migration: number | 'none'; assert_current_database: string };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };

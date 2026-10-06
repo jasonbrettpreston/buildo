@@ -1,0 +1,43 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "green",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "current lib tree",
+ "tests": [
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N1 halt — an empty declared read table halts with an errored FAIL gate row",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N2 warn — the same empty table yields a WARN gate row that does not halt",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N3 run — the same empty table yields an INFO row and no halt",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N4 clean — every counted table non-zero yields one INFO row carrying the counts",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N5 self-written table excluded — the step never counts the table it writes",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N6 expect_nonempty false — no query and no row even when a read table is empty",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N7 runner wiring — measureInputGuards runs pre-dispatch and gates compute",
+   "status": "passed"
+  }
+ ]
+}

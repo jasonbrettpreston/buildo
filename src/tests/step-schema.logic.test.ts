@@ -98,6 +98,12 @@ const INVALID_FIXTURES: Array<{
     keyword: 'minItems',
   },
   {
+    file: 'enricher-incremental-phase-without-invalidator.json',
+    rule: 'claim #54 (phases discriminator, fold 13) — an ENRICHER with an incremental/deferred phase cannot omit its invalidator, independent of staleness.scope',
+    path: '/outputs/invalidates',
+    keyword: 'minItems',
+  },
+  {
     file: 'checks-none.json',
     rule: 'claim #7 — `checks` is the ONE category that may never be "none"',
     path: '/checks',
@@ -137,6 +143,59 @@ const INVALID_FIXTURES: Array<{
     path: '/checks/10/order_guarantee',
     keyword: 'required',
     param: ['missingProperty', 'anchor'],
+  },
+  {
+    file: 'pins-item-missing-step.json',
+    rule: 'LDG-10 class 3 (T1) — a staleness.pins[] item must name its producer step',
+    path: '/staleness/pins/0',
+    keyword: 'required',
+    param: ['missingProperty', 'step'],
+  },
+  {
+    file: 'pins-item-unknown-key.json',
+    rule: 'LDG-10 class 3 (T1) — staleness.pins[] items are CLOSED (the deleted version_pin cannot ride in)',
+    path: '/staleness/pins/0',
+    keyword: 'additionalProperties',
+    param: ['additionalProperty', 'version_pin'],
+  },
+  {
+    file: 'pins-equals-on-column-stamp.json',
+    rule: 'LDG-10 class 3 (T1) — `equals` is for records_meta stamps only; a <table>.<column> watermark stamp cannot carry one',
+    path: '/staleness/pins/0/stamp',
+    keyword: 'pattern',
+  },
+  {
+    file: 'invalidates-missing-by.json',
+    rule: 'LDG-10 class 4 (T2) — every outputs.invalidates[] row declares its machine-resolvable invalidator `by`',
+    path: '/outputs/invalidates/0',
+    keyword: 'required',
+    param: ['missingProperty', 'by'],
+  },
+  {
+    file: 'invalidates-set-null-by-without-field.json',
+    rule: 'LDG-10 class 4 (T2) — by "set_null_on_change_of" must name the watched column',
+    path: '/outputs/invalidates/0',
+    keyword: 'required',
+    param: ['missingProperty', 'set_null_on_change_of'],
+  },
+  {
+    file: 'invalidates-field-without-by.json',
+    rule: 'LDG-10 class 4 (T2) — a set_null_on_change_of field without by "set_null_on_change_of" is a direction mismatch',
+    path: '/outputs/invalidates/0/by',
+    keyword: 'const',
+  },
+  {
+    file: 'invalidates-trigger-without-name.json',
+    rule: 'LDG-10 class 4 (T2) — by "trigger" must name the trigger as <table>.<trigger>',
+    path: '/outputs/invalidates/0',
+    keyword: 'required',
+    param: ['missingProperty', 'trigger'],
+  },
+  {
+    file: 'requires-trigger-bad-name.json',
+    rule: 'LDG-10 class 4 (T3) — a guards.requires kind "trigger" name is <table>.<trigger> (parcels.trg_parcels_geom_invalidation)',
+    path: '/guards/requires/2/name',
+    keyword: 'pattern',
   },
 ];
 
@@ -424,6 +483,89 @@ describe('step.schema.json — the canonical vocabulary (Spec 122 S1)', () => {
     expect(posOut.invalidates.length).toBeGreaterThan(0);
     expect(negOut.invalidates).toHaveLength(0);
   });
+
+  it('the #54 phases-discriminator lock is proven in BOTH directions (fold 13)', () => {
+    // FOLD 13 / WF1 fold 1d supersedes fold 12 F4's wording: the discriminator is
+    // `execution.phases[].scope` — ANY phase whose scope is "incremental" or "deferred"
+    // requires outputs.invalidates minItems 1. `staleness.scope` was deleted by FLEET-2
+    // Phase 3 (#28), so the old step-level #54 arm can no longer fire and NO neutralisation
+    // is needed. The fixture above (`enricher-pending-without-invalidator`) now fires through
+    // the phases arm (its phase is incremental), so it still cannot distinguish the two. The
+    // assertion that pins the phases arm is minItems at `/outputs/invalidates`; and every
+    // positive control differs from its paired negative by EXACTLY the mutations named in its
+    // own comment.
+    const exemplar = readJson(path.join(FIXTURES, 'valid', 'enrich_heritage.descriptor.json'));
+    const clone = (): Record<string, unknown> => JSON.parse(JSON.stringify(exemplar)) as Record<string, unknown>;
+    type PhaseLike = { scope: string; invalidator_ref?: number };
+
+    // (i) RED — the invalidators dropped, AND the phase left `scope: "incremental"`.
+    const i = clone();
+    (i.outputs as { invalidates: unknown[] }).invalidates = [];
+    delete ((i.execution as { phases: PhaseLike[] }).phases[0] as PhaseLike).invalidator_ref;
+    expect(validate(i), 'the phases discriminator must fire on an incremental phase with an empty outputs.invalidates — a fixture that does not fire proves nothing').toBe(false);
+    const iErrors = (validate.errors ?? []) as unknown as AjvErrorLike[];
+    const iHit = iErrors.find((e) => errPath(e) === '/outputs/invalidates' && e.keyword === 'minItems');
+    expect(
+      iHit,
+      `expected minItems at "/outputs/invalidates"; got ${iErrors.map((e) => `${errPath(e)}:${e.keyword}`).join(', ')}`,
+    ).toBeDefined();
+
+    // (ii) GREEN control — the exemplar as-is, invalidates populated: the rule fires on the
+    // phase's scope, not on any step-level scope.
+    const ii = clone();
+    expect(validate(ii), JSON.stringify(validate.errors, null, 1)).toBe(true);
+    expect((ii.outputs as { invalidates: unknown[] }).invalidates.length).toBeGreaterThan(0);
+
+    // (iii) GREEN control — an enricher whose phases are ALL "full" owes no invalidator, so
+    // an empty invalidates[] is legal once no phase is incremental/deferred.
+    const iii = clone();
+    (iii.outputs as { invalidates: unknown[] }).invalidates = [];
+    const phases = (iii.execution as { phases: PhaseLike[] }).phases;
+    for (const p of phases) {
+      p.scope = 'full';
+      delete p.invalidator_ref;
+    }
+    expect(validate(iii), JSON.stringify(validate.errors, null, 1)).toBe(true);
+
+    // (iv) RED — as (i), but the phase scope is "deferred": the discriminator is the SET
+    // {incremental, deferred}, not one value. phases[0] is a shared-txn phase, so making it
+    // deferred breaks the array-level post_commit_last rule TOO (a post_commit phase may
+    // never be followed) — so the new arm must be pinned WITHOUT the otherwise-unavoidable
+    // /execution/phases maxItems error. The invariant that isolates it: the same deferred
+    // phase in the LAST slot validates (the scope value itself is admitted by the schema),
+    // and inserting an invalidator-free deferred phase BEFORE a post_commit phase is EXACTLY
+    // the same deferred-phase mutation with one extra admitted phase appended.
+    const iv = clone();
+    (iv.outputs as { invalidates: unknown[] }).invalidates = [];
+    const ivPhases = (iv.execution as { phases: PhaseLike[] }).phases;
+    ivPhases[0]!.scope = 'deferred';
+    delete ivPhases[0]!.invalidator_ref;
+    ivPhases.push({
+      name: 'post_commit_tail',
+      order: 2,
+      txn: 'post_commit',
+      writes_ref: 0,
+      scope: 'full',
+      timeout_minutes_from_config: 'none',
+    } as unknown as PhaseLike);
+    expect(validate(iv), 'the phases discriminator must fire for "deferred" too — a fixture that does not fire proves nothing').toBe(false);
+    const ivErrors = (validate.errors ?? []) as unknown as AjvErrorLike[];
+    const ivHit = ivErrors.find((e) => errPath(e) === '/outputs/invalidates' && e.keyword === 'minItems');
+    expect(
+      ivHit,
+      `expected minItems at "/outputs/invalidates"; got ${ivErrors.map((e) => `${errPath(e)}:${e.keyword}`).join(', ')}`,
+    ).toBeDefined();
+    expect(
+      ivErrors.some((e) => errPath(e) === '/execution/phases' && e.keyword === 'maxItems'),
+      'the deferred phase sits FIRST with a post_commit phase after it — that arm must be silent, or this RED is firing for the wrong reason',
+    ).toBe(false);
+    // ...and the SAME deferred mutation in the LAST slot is admitted by the schema as written
+    // (green today), which is the positive half of the same discriminator value.
+    const ivControl = clone();
+    const ivControlPhases = (ivControl.execution as { phases: PhaseLike[] }).phases;
+    ivControlPhases[0]!.scope = 'deferred';
+    expect(validate(ivControl), JSON.stringify(validate.errors, null, 1)).toBe(true);
+  });
 });
 
 describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', () => {
@@ -446,23 +588,25 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(conditional?.contains).toBeDefined();
   });
 
-  it('V4 — append_unsafe stays declarable but is machine-readably banned for new steps', () => {
-    const replay = at('definitions.write.properties.replay');
-    expect(replay.enum).toContain('append_unsafe');
-    expect(replay['x-banned']).toEqual(['append_unsafe']);
+  it('V4 — SUPERSEDED (Phase 3 RE-FREEZE): outputs.writes[].replay is deleted with its x-banned-for-new key', () => {
+    const writeProps = at('definitions.write.properties');
+    expect(writeProps.replay).toBeUndefined();
+    expect(writeProps.replay_why).toBeUndefined();
+    expect(writeProps.source_key_policy).toBeUndefined();
     const bfn = schema['x-banned-for-new'] as { values: Record<string, string[]> };
-    expect(bfn.values['outputs.writes[].replay']).toEqual(['append_unsafe']);
+    expect(Object.keys(bfn.values)).not.toContain('outputs.writes[].replay');
   });
 
   it('V5 — staleness is three axes plus fingerprint_inputs, and `pending` is gone', () => {
     const props = at('properties.staleness.properties');
     expect(Object.keys(props)).toEqual(
-      expect.arrayContaining(['scope', 'trigger', 'mode_select', 'fingerprint_inputs']),
+      expect.arrayContaining(['trigger', 'mode_select', 'fingerprint_inputs']),
     );
+    expect(props.scope).toBeUndefined();
     expect(props.pending).toBeUndefined();
   });
 
-  it('R6 — acquisition is a trigger POSITION and an externals cache policy, not a category', () => {
+  it('R6 — acquisition is a trigger POSITION, not a category (the externals cache policy was deleted in the Phase 3 RE-FREEZE)', () => {
     expect(schema['x-categories']).not.toContain('acquisition');
     const pos = at('properties.staleness.properties.trigger').anyOf as Array<Record<string, unknown>>;
     const arr = pos.find((b) => b.type === 'array') as { items: { properties: Record<string, { enum?: string[] }> } };
@@ -470,7 +614,7 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     const cache = at('properties.inputs.properties.reads.properties.externals').items as {
       properties: Record<string, { enum?: string[] }>;
     };
-    expect(cache.properties.cache?.enum).toContain('reuse_if_present');
+    expect(cache.properties.cache).toBeUndefined();
   });
 
   it('R6 — maintenance is an execution field that constrains txn_scope, not a category', () => {
@@ -522,13 +666,11 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(cls['x-banned']).toBeUndefined();
   });
 
-  it('§12.3 — all five missing fields exist', () => {
+  it('§12.3 — the missing fields exist (network.redact was deleted in the Phase 3 RE-FREEZE)', () => {
     expect(at('definitions.write.properties.columns').items).toHaveProperty('properties.vocabulary');
     expect(at('definitions.check.properties.accept_until')).toBeDefined();
     expect(at('properties.outputs').anyOf).toBeDefined();
     expect(at('definitions.why').properties).toHaveProperty('liveness');
-    const net = (at('properties.execution.properties.network').anyOf as Array<{ properties?: object }>).find((b) => b.properties);
-    expect(net?.properties).toHaveProperty('redact');
     const outObj = (at('properties.outputs').anyOf as Array<{ required?: string[] }>).find((b) => b.required);
     expect(outObj?.required).toContain('write_inventory');
   });
@@ -578,6 +720,18 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(writeRules.some((r) => String(r['x-rule'] ?? '').includes('no_retraction'))).toBe(true);
     const wdRules = at('definitions.writeDiscipline').allOf as Array<{ 'x-rule'?: string }>;
     expect(wdRules.some((r) => String(r['x-rule'] ?? '').includes('unscoped_set_based'))).toBe(true);
+  });
+
+  it('LDG-10 — invalidates[].by is a CLOSED five-value enum (no escape value), requirement kind gains trigger, staleness.pins exists with x-trust', () => {
+    const inv = at('properties.outputs').anyOf as Array<Record<string, unknown>>;
+    const obj = inv.find((b) => b.type === 'object') as { properties: { invalidates: { items: { properties: { by: { enum: string[]; 'x-trust'?: string } } } } } };
+    expect(obj.properties.invalidates.items.properties.by.enum).toEqual(['trigger', 'set_null_on_change_of', 'step', 'pin', 'full_rescan']);
+    expect(obj.properties.invalidates.items.properties.by['x-trust']).toBe('witnessed:#44');
+    expect(at('definitions.requirement.properties.kind').enum as string[]).toContain('trigger');
+    const pins = at('properties.staleness.properties.pins') as { type?: string; 'x-trust'?: string; 'x-ruling'?: { rungs_tried?: unknown[] } };
+    expect(pins.type).toBe('array');
+    expect(pins['x-trust']).toBe('executed:scripts/lib/compute/enrich-ravines.js#pinnedSpecVersion');
+    expect(Array.isArray(pins['x-ruling']?.rungs_tried) && (pins['x-ruling']?.rungs_tried?.length ?? 0) > 0).toBe(true);
   });
 });
 
@@ -800,6 +954,30 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
       // on_batch_error_why + the PR-D1 residue deferral). Prose only — no field value changes;
       // load-address-points.descriptor.json (AP-D3) carries the same note and is already listed.
       'scripts/load-parcels.descriptor.json',
+      // LDG-10 rider (WF1 LDG-10 Step 2, FLEET-2 RE-FREEZE): outputs.invalidates[].by on every row, staleness.pins on the readers.
+      'scripts/enrich-heritage.descriptor.json',
+      'scripts/enrich-ravines.descriptor.json',
+      'scripts/link-massing.descriptor.json',
+      'scripts/link-parcels.descriptor.json',
+      'scripts/link-wsib.descriptor.json',
+      'scripts/load-ravines.descriptor.json',
+      // FLEET-2 (2026-10-06, registry-truth folds 14–21; ASSEMBLY A25–A33): registry-truth declarations
+      // (checks[].reads R-BJ, write_inventory R-BK, staleness pins/invalidators R-BL, db_default
+      // columns, emits consumers), the W1–W4/W6 #44 read fixes, the P2-C4 last_measured sidecar
+      // regeneration (outside source_fingerprint), and generated phase/target-file blocks. Every POST
+      // golden for these steps was re-captured on these exact bytes (fleet recapture, §5).
+      'scripts/enrich-centreline.descriptor.json',
+      'scripts/link-parcel-addresses.descriptor.json',
+      'scripts/load-centreline.descriptor.json',
+      'scripts/load-heritage.descriptor.json',
+      'scripts/load-massing.descriptor.json',
+      'scripts/load-neighbourhoods.descriptor.json',
+      'scripts/load-wsib.descriptor.json',
+      'scripts/load-zoning.descriptor.json',
+      'scripts/quality/assert-data-bounds.descriptor.json',
+      'scripts/quality/assert-engine-health.descriptor.json',
+      'scripts/quality/assert-global-coverage.descriptor.json',
+      'scripts/quality/assert-parcel-sanity.descriptor.json',
     ]);
     const descriptorPaths = converted.map((f) => f.replace(/\.js$/, '.descriptor.json'));
     const enrichers: string[] = [];
@@ -822,7 +1000,12 @@ describe('execution.shape "enrich" + the ENRICHER execution.phases[] profile (pi
     // Byte-identical, not merely still-valid, for every descriptor EXCEPT the one known,
     // declared exception above — each of the other seven is still an R-C golden fingerprint.
     const unexpectedTargets = descriptorPaths.filter((rel) => !KNOWN_CHANGED_THIS_COMMIT.has(rel));
-    const dirty = execFileSync('git', ['status', '--porcelain', '--', ...unexpectedTargets], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+    // Guard (FLEET-2, 2026-10-06): `git status --porcelain --` with an EMPTY pathspec reports the whole
+    // repository, so once every converted descriptor is a declared exception the check must be vacuous
+    // rather than red on unrelated files.
+    const dirty = unexpectedTargets.length === 0
+      ? ''
+      : execFileSync('git', ['status', '--porcelain', '--', ...unexpectedTargets], { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
     expect(dirty, `converted descriptors changed UNEXPECTEDLY (not the one known, declared exception):\n${dirty}`).toBe('');
   });
 });

@@ -224,7 +224,7 @@
  */
 'use strict';
 
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -260,6 +260,11 @@ import { setAsConverted } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
+import { checkNotesCap, loadDeclaringNotes, selfTest as notesCapSelfTest } from './gates/notes-cap.mjs';
+import { homesReport, loadConvertedFleetDescriptors, selfTest as schemaHomesSelfTest } from './gates/schema-homes.mjs';
+import { checkModeEmitsType, loadModeEmitsFleet, selfTest as modeEmitsTypeSelfTest } from './gates/mode-emits-type.mjs';
+import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfTest } from './gates/logic-version.mjs';
+import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, LIB_FINGERPRINT_ITEM, EXPLAINED_REPORT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
@@ -2124,8 +2129,8 @@ function fastInvariants(rows, converted, pending) {
   // gates", 2026-09-26) — every `step.schema.json` `x-banned-for-new.values` key
   // must be ENFORCED by `scripts/lib/step/validate.js` (a declared ban with no
   // enforcer is metadata nobody checks). Fixed live 2026-09-26: `GRANDFATHERED_VALUE_PATHS`
-  // now covers all 4 keys (guard, class, replay, criticality — the last via its
-  // own scalar-value enforcer, `assertBannedScalarValue`). Registry-scoped, no
+  // now covers both remaining keys (guard, class); replay and criticality were deleted with
+  // their x-banned-for-new keys in the Phase 3 RE-FREEZE). Registry-scoped, no
   // ledger escape (a missing enforcer is a code gap, not a per-step exception).
   // `scripts/analysis/gates/registries.mjs` owns the answer set.
   {
@@ -2410,6 +2415,84 @@ function fastInvariants(rows, converted, pending) {
       pass: prefixes42.pass,
       blockedSlugs: prefixes42.blockedSlugs,
       detail: prefixes42.detail,
+    });
+  }
+
+  // 45. NOTES-CAP (Phase 3 RE-FREEZE, registry-truth plan fold 8c item 1 / fold 8b item 1)
+  // — the <=12 prose-entry cap is ONE check over every declaring notes file,
+  // counted with NOTES_PROSE_BLOCKS (scripts/analysis/gates/notes-cap.mjs). Replaces
+  // the deleted descriptor `interpretation.entries` count and the per-suite #30
+  // assertions. Registry-scoped with `blockedSlugs` (the id-9/22/25-31 shape); a
+  // missing/unparsable notes file is a RED row, never skipped.
+  {
+    const notesCap45 = checkNotesCap(loadDeclaringNotes(REPO_ROOT));
+    results.push({
+      id: 45,
+      slug: '(registry)',
+      pass: notesCap45.pass,
+      blockedSlugs: notesCap45.blockedSlugs,
+      detail: notesCap45.detail,
+    });
+  }
+
+  // 46. SCHEMA-HOMES (registry-truth plan fold 9 C7-1/C7-2) — REPORT-ONLY until the
+  // FLEET-2 landing commit populates `checks[].reads` and `outputs.write_inventory.by_mode`.
+  // Prints adoption on every run; `pass` is always true and `blockedSlugs` is empty, so
+  // it can never hard-stop (no exception file — the row itself is the visible gap).
+  {
+    const homes46 = homesReport(loadConvertedFleetDescriptors(REPO_ROOT));
+    results.push({ id: 46, slug: '(registry)', pass: homes46.pass, blockedSlugs: [], detail: homes46.detail });
+  }
+
+  // 47. MODE-EMITS-TYPE (registry-truth plan P2-C5 — fold 8 item 8, fold 11 item 5,
+  // fold 17 item 1) — `staleness.mode_select` per archetype (LINK/MATCHER ⇒ tri_state,
+  // or none with a `by: "full_rescan"` invalidator; INGESTOR + source_validator ⇒ skip;
+  // else none) and every golden POST records_meta value vs its declared `emits[].type`
+  // (null accepted for any type, int for number). Registry-scoped with `blockedSlugs`;
+  // no allowlist (R-BC). Lands inside the FLEET-2 landing commit with P2-C6.
+  {
+    const modeEmits47 = checkModeEmitsType(loadModeEmitsFleet(REPO_ROOT));
+    results.push({
+      id: 47,
+      slug: '(registry)',
+      pass: modeEmits47.pass,
+      blockedSlugs: modeEmits47.blockedSlugs,
+      detail: modeEmits47.detail,
+    });
+  }
+
+  // 48. LOGIC-VERSION (registry-truth plan P2-C3 — fold 8 item 1 (b2), fold 8c item 4) —
+  // `staleness.logic_version` stays hand-bumped: ≠ "none" ⇔ a `code_version` trigger is
+  // declared (both directions RED); every `staleness.fingerprint_inputs` entry is a real
+  // import of the step (relative require/import walk from its step file) or a declared
+  // `<table>:count` / `<table>:<column>_null_count` data signal. Moves groups #25/#27 from
+  // declared-only to E (replaces the abandoned files-hash generator, fold 8 item 1). Registry-
+  // scoped with `blockedSlugs`; no allowlist (R-BC). Lands inside the FLEET-2 landing commit.
+  {
+    const logicVersion48 = checkLogicVersion(loadLogicVersionFleet(REPO_ROOT));
+    results.push({
+      id: 48,
+      slug: '(registry)',
+      pass: logicVersion48.pass,
+      blockedSlugs: logicVersion48.blockedSlugs,
+      detail: logicVersion48.detail,
+    });
+  }
+
+  // 49. TERMINALS-RECORDS-META (registry-truth plan Phase 3 → E row #75, fold 11 item 6) —
+  // every golden POST capture ends on a declared `terminals[].id`, and that terminal's
+  // declared `records_meta` keys are all present with their declared type (P2-C5's
+  // valueMatchesType). Undeclared extra keys are gate C's; a terminal no capture exercises
+  // is printed as unwitnessed, never red. A red is fixed by reconciling the terminal key
+  // list in the same commit. Registry-scoped with `blockedSlugs`; no allowlist (R-BC).
+  {
+    const terminals49 = checkTerminalsRecordsMeta(loadTerminalsFleet(REPO_ROOT));
+    results.push({
+      id: 49,
+      slug: '(registry)',
+      pass: terminals49.pass,
+      blockedSlugs: terminals49.blockedSlugs,
+      detail: terminals49.detail,
     });
   }
 
@@ -5031,7 +5114,7 @@ function selfTest() {
     // GREEN — records_meta resolves for EVERY shape (deriveCounters spreads it in),
     // including the ASSERT path where counterScope is null (shape resolves to null).
     const assertShape = checkCounterSourceRoots(
-      [{ slug: 'assert_engine_health', shape: null, inferred: false, sources: [{ slot: 'records_total', source: 'records_meta.tables_checked' }] }],
+      [{ slug: 'assert_engine_health', shape: null, inferred: false, sources: [{ slot: 'records_total', source: 'records_meta.' + 'tables_checked' }] }], // §2 2.4: split so gate D's scan does not read this self-test literal as a consumer
       parsed.rootsByShape,
     );
     if (!assertShape.pass) throw new Error(`self-test FAILED: checkCounterSourceRoots must PASS a records_meta.* source on the ASSERT path (${JSON.stringify(assertShape)})`);
@@ -5093,6 +5176,16 @@ function selfTest() {
   // entirely in scripts/analysis/gates/closed-bounds.mjs (its own selfTest, run
   // here so this file's single `selfTest()` entry point covers it too).
   closedBoundsSelfTest();
+  // NOTES-CAP (fast invariant #45) — its fixtures live in scripts/analysis/gates/notes-cap.mjs.
+  notesCapSelfTest();
+  // SCHEMA-HOMES (fast invariant #46, report-only) — its fixtures live in scripts/analysis/gates/schema-homes.mjs.
+  schemaHomesSelfTest();
+  // MODE-EMITS-TYPE (fast invariant #47) — its fixtures live in scripts/analysis/gates/mode-emits-type.mjs.
+  modeEmitsTypeSelfTest();
+  // LOGIC-VERSION (fast invariant #48) — its fixtures live in scripts/analysis/gates/logic-version.mjs.
+  logicVersionSelfTest();
+  // TERMINALS-RECORDS-META (fast invariant #49) — its fixtures live in scripts/analysis/gates/terminals-records-meta.mjs.
+  terminalsRecordsMetaSelfTest();
   // ON-INVALID-CLOSED (fast invariant #29, Spec 124 §5 R-BA gate B, Rule 3,
   // §5 R-G, WF2 "standardized gates", 2026-09-26) — the closed on_invalid answer
   // set + the orphan direction live entirely in scripts/analysis/gates/on-invalid.mjs
@@ -5578,6 +5671,26 @@ function getDataValidatorPool() {
 }
 
 /**
+ * P2-C4 second input (MQ-A3 (a), fold 19: "validate_only entries keep `step-validate --write`
+ * as their source"; operator R1 2026-10-06). The run-end hook never fires a validate_only entry,
+ * so the capture sidecar `measured.json` can never carry one; this folds the validate_only
+ * entries a `--write` pass executed into the slug's `measured-validate.json`, the second input of
+ * `scripts/analysis/generate-last-measured.mjs`. PURE. Only a MEASURED entry folds (status ok and a
+ * finite `duration_ms`): an every_run entry never does (its source is the capture sidecar), an
+ * errored or untimed one is not a measurement. `sample_n` follows capture-step-golden.js
+ * `mergeMeasured` (latest wins per entry, +1 per fold).
+ * @returns {{measured: Record<string, object>, doc: {entries: Record<string, object>}}}
+ */
+export function foldValidateOnlyMeasured(existing, results, { at, commit }) {
+  const measured = {};
+  for (const r of results || []) {
+    if (!r || r.frequency !== 'validate_only' || r.status !== 'ok' || !Number.isFinite(r.duration_ms)) continue;
+    measured[r.id] = { value: r.value, cost_ms: r.duration_ms, at, commit, run_id: null, chain: null, event: 'step_validate_write' };
+  }
+  return { measured, doc: harness.mergeMeasured(existing, measured) };
+}
+
+/**
  * R-T addendum (Spec 124 §2 Rule 13, commit 3) — `--write`'s cutover/backfill context runs
  * the SAME executor (scripts/lib/step/plausibility.js) `--full` invariants[]/plausibility[]
  * for BOTH frequencies (unlike the run-end hook, which only fires `every_run`). No-op when
@@ -5601,12 +5714,31 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
       const verdict = obs && obs.error
         ? { status: 'ERROR', detail: String(obs.error && obs.error.message || obs.error) }
         : { status: 'ok', value: obs ? obs.value : undefined };
-      results.push({ id: check.id, source: check.source, frequency, ...verdict });
+      results.push({ id: check.id, source: check.source, frequency, ...verdict, duration_ms: obs ? obs.duration_ms : undefined });
     }
   }
   console.log(`[step-validate] ${row.slug}: data validator (--write, both frequencies) — ${results.length} entries executed:`);
   for (const r of results) {
     console.log(`  ${r.id} (${r.source}, ${r.frequency}): ${r.status === 'ERROR' ? `ERROR — ${r.detail}` : `value=${JSON.stringify(r.value)}`}`);
+  }
+  // P2-C4 R1 (2026-10-06) — fold the validate_only measurements into measured-validate.json, the
+  // second input generate-last-measured.mjs writes their descriptor last_measured from.
+  {
+    const slug = d.identity && d.identity.name;
+    const { measured, doc } = foldValidateOnlyMeasured(
+      slug && existsSync(path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured-validate.json'))
+        ? JSON.parse(readFileSync(path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured-validate.json'), 'utf8'))
+        : null,
+      results,
+      { at: new Date().toISOString(), commit: harness.gitHead() },
+    );
+    const n = Object.keys(measured).length;
+    if (slug && n > 0) {
+      const sidecarPath = path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured-validate.json');
+      mkdirSync(path.dirname(sidecarPath), { recursive: true });
+      writeFileSync(sidecarPath, JSON.stringify(doc, null, 2) + '\n');
+      console.log(`[step-validate] ${row.slug}: measured ${n} validate_only entr${n === 1 ? 'y' : 'ies'} -> ${path.relative(REPO_ROOT, sidecarPath)}`);
+    }
   }
   // GATE H (Spec 124 Rule 13; Spec 121 §12b.6) — the policy matrix never counts
   // what did not run. Every direction proven in-memory.

@@ -344,11 +344,11 @@ describe('row 3.6 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(d.identity?.archetype).toBe('INGESTOR'); // corrected at ②: archetype lives at identity.archetype
   });
 
-  it('externals[0] is a cacheless shapefile_zip with no key_property (Fold SF-1)', () => {
+  it('externals[0] is a shapefile_zip with no key_property (Fold SF-1)', () => {
     const d = loadDescriptor();
     const ext = ((d.inputs?.reads?.externals ?? [])[0] ?? {}) as Record<string, unknown>;
     expect(ext.format).toBe('shapefile_zip');
-    expect(ext.cache).toBe('none');
+    // inputs.reads.externals[].cache deleted in the Phase 3 RE-FREEZE (#11, zero runtime readers)
     // Fold SF-1: with no OBJECTID/ID in the DBF, the key is derived from geometry in compute;
     // the descriptor names NO source property for it (a `key_property` here would be fiction).
     expect(ext.key_property).toBeUndefined();
@@ -363,7 +363,7 @@ describe('row 3.6 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(w.write_discipline?.class).toBe(WRITE_CLASS); // corrected at ②: class lives at write_discipline.class
     expect(w.retract).toBe('none');
     expect(w.write_discipline?.txn_scope).toBe('step'); // corrected at ②: txn_scope lives at write_discipline.txn_scope
-    expect((d.outputs as { cascades?: string }).cascades).toBe('none'); // corrected at ②: cascades is outputs-level
+    // outputs.cascades deleted in the Phase 3 RE-FREEZE (#21, zero runtime readers)
   });
 
   it('the geom column is an unrepaired 3857 insert-only wkb_geometry', () => {
@@ -406,12 +406,8 @@ describe('row 3.6 — the artifacts exist and validate (Spec 122 §5.1, Spec 123
     expect(declared).not.toContain('estimated_stories');
   });
 
-  it('source_key_policy resolves a re-key last-write-wins and declares no migrations', () => {
-    const s = write0(loadDescriptor()).source_key_policy ?? {}; // corrected at ②: source_key_policy is a WRITE-level field
-    expect(s.on_collision).toBe('last_write_wins');
-    expect(s.key_space_migration ?? 'none').toBe('none');
-    expect(s.unique).toBe(false); // corrected at ②: source_id = md5(geometry), collisions are expected
-  });
+  // source_key_policy deleted in the Phase 3 RE-FREEZE (#18, zero runtime readers); the LAST-wins
+  // duplicate resolution is compute behaviour, recorded in load-massing.notes.json.
 
   it('execution.maintenance[0] vacuums building_footprints, self-owned (S9 / M-D12)', () => {
     const m = ((loadDescriptor().execution?.maintenance ?? [])[0] ?? {}) as Record<string, unknown>;

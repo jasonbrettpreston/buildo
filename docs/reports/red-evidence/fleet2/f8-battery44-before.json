@@ -1,0 +1,764 @@
+{
+ "generated_from": "committed docs/reports/witness/<slug>/post/*.trace.json (resolved reads/writes as committed); currentFingerprint = each trace own source_fingerprint so STALE is suppressed; derivedReadsSteps omitted (check e not evaluated)",
+ "git_head": "a7a60e30",
+ "slugs": {
+  "assert_schema": {
+   "invocations": [
+    "coa",
+    "permits",
+    "sources",
+    "standalone"
+   ],
+   "answer": "FAIL:WITNESS:assert_schema:a:unwitnessed:logic_variables.variable_key",
+   "rows": [
+    "FAIL:WITNESS:assert_schema:a:unwitnessed:logic_variables.variable_key"
+   ],
+   "traced_writes": {
+    "coa": {},
+    "permits": {},
+    "sources": {},
+    "standalone": {}
+   }
+  },
+  "load_ravines": {
+   "invocations": [
+    "sources.forced",
+    "sources",
+    "standalone"
+   ],
+   "answer": "FAIL:WITNESS:load_ravines:a:coa_applications.*",
+   "rows": [
+    "FAIL:WITNESS:load_ravines:a:coa_applications.*",
+    "FAIL:WITNESS:load_ravines:a:parcels.*",
+    "FAIL:WITNESS:load_ravines:a:permits.*"
+   ],
+   "traced_writes": {
+    "sources.forced": {
+     "ravines": [
+      "geom",
+      "source_dataset_version",
+      "source_id",
+      "updated_at"
+     ]
+    },
+    "sources": {},
+    "standalone": {}
+   }
+  },
+  "link_massing": {
+   "invocations": [
+    "permits",
+    "sources-full",
+    "standalone"
+   ],
+   "answer": "FAIL:WITNESS:link_massing:a:parcels.lot_size_sqm",
+   "rows": [
+    "FAIL:WITNESS:link_massing:a:parcels.lot_size_sqm"
+   ],
+   "traced_writes": {
+    "permits": {},
+    "sources-full": {},
+    "standalone": {}
+   }
+  },
+  "link_wsib": {
+   "invocations": [
+    "permits",
+    "standalone"
+   ],
+   "answer": "FAIL:INPUT:link_wsib:permits:FAIL:INPUT:column:primary_phone",
+   "rows": [
+    "FAIL:INPUT:link_wsib:permits:FAIL:INPUT:column:primary_phone",
+    "FAIL:INPUT:link_wsib:standalone:FAIL:INPUT:column:primary_phone",
+    "FAIL:WITNESS:link_wsib:c:statements:10!=6"
+   ],
+   "traced_writes": {
+    "permits": {
+     "entities": [
+      "is_wsib_registered",
+      "primary_email",
+      "primary_phone",
+      "website"
+     ],
+     "wsib_registry": [
+      "linked_entity_id",
+      "match_confidence",
+      "matched_at"
+     ]
+    },
+    "standalone": {
+     "entities": [
+      "is_wsib_registered",
+      "primary_email",
+      "primary_phone",
+      "website"
+     ],
+     "wsib_registry": [
+      "linked_entity_id",
+      "match_confidence",
+      "matched_at"
+     ]
+    }
+   }
+  },
+  "link_parcel_addresses": {
+   "invocations": [],
+   "answer": "UNWITNESSED:link_parcel_addresses",
+   "rows": [
+    "UNWITNESSED:link_parcel_addresses"
+   ],
+   "traced_writes": {}
+  },
+  "compute_centroids": {
+   "invocations": [],
+   "answer": "UNWITNESSED:compute_centroids",
+   "rows": [
+    "UNWITNESSED:compute_centroids"
+   ],
+   "traced_writes": {}
+  },
+  "link_parcels": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:link_parcels:src/tests/steps/link_parcels/witness-fixture.logic.test.ts:input:FAIL:INPUT:column:permit_num",
+   "rows": [
+    "FAIL:FIXTURE:link_parcels:src/tests/steps/link_parcels/witness-fixture.logic.test.ts:input:FAIL:INPUT:column:permit_num",
+    "UNWITNESSED:link_parcels"
+   ],
+   "traced_writes": {}
+  },
+  "refresh_snapshot": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.cost_source",
+   "rows": [
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.cost_source",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.latitude",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.lead_id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.lifecycle_group",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.linked_confidence",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.linked_permit_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:coa_applications.longitude",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:data_quality_snapshots.cost_estimates_liar_gate_overrides",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:data_quality_snapshots.cost_estimates_zero_total_bypass",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:data_quality_snapshots.created_at",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:data_quality_snapshots.id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:data_quality_snapshots.snapshot_date",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.google_place_id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.is_wsib_registered",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.last_enriched_at",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.primary_email",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.primary_phone",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:entities.website",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:parcel_buildings.parcel_id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_inspections.permit_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_inspections.status",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_parcels.confidence",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_parcels.match_type",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_parcels.permit_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_parcels.revision_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_trades.confidence",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_trades.permit_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_trades.revision_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permit_trades.tier",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.builder_name",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.description",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.est_const_cost",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.first_seen_at",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.geo_id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.issued_date",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.last_seen_at",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.latitude",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.longitude",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.neighbourhood_id",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.permit_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.scope_tags",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.status",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.street_name",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:permits.street_num",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:sync_runs.started_at",
+    "FAIL:FIXTURE:refresh_snapshot:src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts:a:sync_runs.status",
+    "UNWITNESSED:refresh_snapshot"
+   ],
+   "traced_writes": {}
+  },
+  "enrich_parcels": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:building_footprints.*",
+   "rows": [
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:building_footprints.*",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.additions_5yr",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.build_ratio_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.coa_approval_rate",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.coa_approved",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.coa_refused",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.coa_total",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.computed_at",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.data_provenance",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.demos_5yr",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.existing_build_ratio_p25",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.existing_build_ratio_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.id",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.low_sample",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.neighbourhood_id",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.new_builds_5yr",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.realized_coverage_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.realized_coverage_p90",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.realized_fsi_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.realized_fsi_p90",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.reno_bath_pct",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.reno_kitchen_pct",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.reno_mix",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.renos_5yr",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.sample_n",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.storeys_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.storeys_p90",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.structure_family",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.suites_5yr",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.window_end",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_build_norms.window_start",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_storey_norms.neighbourhood_id",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_storey_norms.storeys_p50",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhood_storey_norms.storeys_p90",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhoods.avg_household_income",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhoods.geom",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhoods.id",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:neighbourhoods.name",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcel_buildings.building_id",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.abuts_laneway",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.depth_m",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.is_corner_lot",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.is_heritage_designated",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.is_in_ravine_protection_area",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.is_through_lot",
+    "FAIL:FIXTURE:enrich_parcels:src/tests/steps/enrich_parcels/violations.test.ts:a:parcels.parcel_id",
+    "UNWITNESSED:enrich_parcels"
+   ],
+   "traced_writes": {}
+  },
+  "assert_global_coverage": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.existing_structure_confidence",
+   "rows": [
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.existing_structure_confidence",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.garage_permission",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.last_seen_at",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.max_build_confidence",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.max_buildable_gfa_basis",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:coa_applications.rear_suite_permission",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:cost_estimates.lead_id",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:cost_estimates.permit_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:cost_estimates.revision_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:parcel_buildings.building_id",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:parcels.centroid_lat",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:parcels.centroid_lng",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:parcels.id",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:parcels.zoning_enriched_at",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permit_parcels.revision_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permit_trades.permit_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permit_trades.revision_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.existing_structure_confidence",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.garage_permission",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.lead_id",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.max_build_confidence",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.max_buildable_gfa_basis",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.permit_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.rear_suite_permission",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:permits.revision_num",
+    "FAIL:FIXTURE:assert_global_coverage:src/tests/steps/assert_global_coverage/witness-fixture.logic.test.ts:a:trade_forecasts.revision_num",
+    "UNWITNESSED:assert_global_coverage"
+   ],
+   "traced_writes": {}
+  },
+  "assert_data_bounds": {
+   "invocations": [],
+   "answer": "UNWITNESSED:assert_data_bounds",
+   "rows": [
+    "UNWITNESSED:assert_data_bounds"
+   ],
+   "traced_writes": {}
+  },
+  "assert_engine_health": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:assert_engine_health:src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts:a:engine_health_snapshots.snapshot_date",
+   "rows": [
+    "FAIL:FIXTURE:assert_engine_health:src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts:a:engine_health_snapshots.snapshot_date",
+    "FAIL:FIXTURE:assert_engine_health:src/tests/steps/assert_engine_health/witness-fixture.logic.test.ts:a:engine_health_snapshots.table_name",
+    "UNWITNESSED:assert_engine_health"
+   ],
+   "traced_writes": {}
+  },
+  "link_neighbourhoods": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:link_neighbourhoods:src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts:a:parcels.*",
+   "rows": [
+    "FAIL:FIXTURE:link_neighbourhoods:src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts:a:parcels.*",
+    "FAIL:FIXTURE:link_neighbourhoods:src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts:a:permit_parcels.*",
+    "UNWITNESSED:link_neighbourhoods"
+   ],
+   "traced_writes": {}
+  },
+  "geocode_permits": {
+   "invocations": [],
+   "answer": "UNWITNESSED:geocode_permits",
+   "rows": [
+    "UNWITNESSED:geocode_permits"
+   ],
+   "traced_writes": {}
+  },
+  "assert_parcel_sanity": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "FAIL:WITNESS:assert_parcel_sanity:a:parcel_buildings.*",
+   "rows": [
+    "FAIL:WITNESS:assert_parcel_sanity:a:parcel_buildings.*",
+    "FAIL:WITNESS:assert_parcel_sanity:a:parcels.cost_gut_total",
+    "FAIL:WITNESS:assert_parcel_sanity:a:parcels.geom",
+    "FAIL:WITNESS:assert_parcel_sanity:a:parcels.lot_size_source",
+    "FAIL:WITNESS:assert_parcel_sanity:a:unwitnessed:parcels.feature_type"
+   ],
+   "traced_writes": {
+    "sources": {},
+    "standalone": {}
+   }
+  },
+  "enrich_ravines": {
+   "invocations": [],
+   "answer": "UNWITNESSED:enrich_ravines",
+   "rows": [
+    "UNWITNESSED:enrich_ravines"
+   ],
+   "traced_writes": {}
+  },
+  "enrich_heritage": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:enrich_heritage:src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts:a:parcels.zoning_class",
+   "rows": [
+    "FAIL:FIXTURE:enrich_heritage:src/tests/steps/enrich_heritage/witness-fixture.logic.test.ts:a:parcels.zoning_class",
+    "UNWITNESSED:enrich_heritage"
+   ],
+   "traced_writes": {}
+  },
+  "compute_parcel_cost_estimates": {
+   "invocations": [],
+   "answer": "FAIL:FIXTURE:compute_parcel_cost_estimates:src/tests/steps/compute_parcel_cost_estimates/violations.test.ts:a:parcels.nan",
+   "rows": [
+    "FAIL:FIXTURE:compute_parcel_cost_estimates:src/tests/steps/compute_parcel_cost_estimates/violations.test.ts:a:parcels.nan",
+    "UNWITNESSED:compute_parcel_cost_estimates"
+   ],
+   "traced_writes": {}
+  },
+  "address_points": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "PASS",
+   "rows": [],
+   "traced_writes": {
+    "sources": {
+     "address_points": [
+      "addr_num_normalized",
+      "address_class_desc",
+      "address_full",
+      "address_number",
+      "address_point_id",
+      "address_status",
+      "class_family_desc",
+      "geom",
+      "hi_num",
+      "latitude",
+      "linear_name_full",
+      "linear_name_normalized",
+      "lo_num",
+      "longitude",
+      "maint_stage",
+      "place_name"
+     ]
+    },
+    "standalone": {
+     "address_points": [
+      "addr_num_normalized",
+      "address_class_desc",
+      "address_full",
+      "address_number",
+      "address_point_id",
+      "address_status",
+      "class_family_desc",
+      "geom",
+      "hi_num",
+      "latitude",
+      "linear_name_full",
+      "linear_name_normalized",
+      "lo_num",
+      "longitude",
+      "maint_stage",
+      "place_name"
+     ]
+    }
+   }
+  },
+  "parcels": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "FAIL:FIXTURE:parcels:src/tests/steps/parcels/witness-fixture.logic.test.ts:a:parcels.centreline_dataset_version_when_enriched",
+   "rows": [
+    "FAIL:FIXTURE:parcels:src/tests/steps/parcels/witness-fixture.logic.test.ts:a:parcels.centreline_dataset_version_when_enriched",
+    "FAIL:FIXTURE:parcels:src/tests/steps/parcels/witness-fixture.logic.test.ts:a:parcels.heritage_dataset_version_when_enriched",
+    "FAIL:FIXTURE:parcels:src/tests/steps/parcels/witness-fixture.logic.test.ts:a:parcels.ravine_dataset_version_when_enriched",
+    "FAIL:WITNESS:parcels:a:parcels.centreline_dataset_version_when_enriched",
+    "FAIL:WITNESS:parcels:a:parcels.heritage_dataset_version_when_enriched",
+    "FAIL:WITNESS:parcels:a:parcels.ravine_dataset_version_when_enriched"
+   ],
+   "traced_writes": {
+    "sources": {
+     "parcels": [
+      "addr_num_normalized",
+      "address_number",
+      "date_effective",
+      "depth_ft",
+      "depth_m",
+      "feature_type",
+      "frontage_ft",
+      "frontage_m",
+      "geom",
+      "geometry",
+      "is_irregular",
+      "linear_name_full",
+      "lot_size_source",
+      "lot_size_sqft",
+      "lot_size_sqm",
+      "parcel_id",
+      "stated_area_raw",
+      "street_name_normalized",
+      "street_type_normalized"
+     ]
+    },
+    "standalone": {
+     "parcels": [
+      "addr_num_normalized",
+      "address_number",
+      "date_effective",
+      "depth_ft",
+      "depth_m",
+      "feature_type",
+      "frontage_ft",
+      "frontage_m",
+      "geom",
+      "geometry",
+      "is_irregular",
+      "linear_name_full",
+      "lot_size_source",
+      "lot_size_sqft",
+      "lot_size_sqm",
+      "parcel_id",
+      "stated_area_raw",
+      "street_name_normalized",
+      "street_type_normalized"
+     ]
+    }
+   }
+  },
+  "load_centreline": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "FAIL:WITNESS:load_centreline:c:statements:4!=3",
+   "rows": [
+    "FAIL:WITNESS:load_centreline:c:statements:4!=3"
+   ],
+   "traced_writes": {
+    "sources": {
+     "toronto_centreline": [
+      "feature_code_desc",
+      "from_intersection_id",
+      "geom",
+      "hi_num_l",
+      "hi_num_r",
+      "jurisdiction",
+      "linear_name",
+      "linear_name_dir",
+      "linear_name_full",
+      "linear_name_type",
+      "lo_num_l",
+      "lo_num_r",
+      "oneway_dir_code_desc",
+      "parity_l",
+      "parity_r",
+      "source_dataset_version",
+      "source_id",
+      "to_intersection_id",
+      "updated_at"
+     ]
+    },
+    "standalone": {
+     "toronto_centreline": [
+      "feature_code_desc",
+      "from_intersection_id",
+      "geom",
+      "hi_num_l",
+      "hi_num_r",
+      "jurisdiction",
+      "linear_name",
+      "linear_name_dir",
+      "linear_name_full",
+      "linear_name_type",
+      "lo_num_l",
+      "lo_num_r",
+      "oneway_dir_code_desc",
+      "parity_l",
+      "parity_r",
+      "source_dataset_version",
+      "source_id",
+      "to_intersection_id",
+      "updated_at"
+     ]
+    }
+   }
+  },
+  "massing": {
+   "invocations": [
+    "sources.forced",
+    "sources",
+    "standalone"
+   ],
+   "answer": "PASS",
+   "rows": [],
+   "traced_writes": {
+    "sources.forced": {
+     "building_footprints": [
+      "centroid_lat",
+      "centroid_lng",
+      "elev_z",
+      "estimated_stories",
+      "footprint_area_sqft",
+      "footprint_area_sqm",
+      "geom",
+      "geometry",
+      "max_height_m",
+      "min_height_m",
+      "source_id"
+     ]
+    },
+    "sources": {
+     "building_footprints": [
+      "centroid_lat",
+      "centroid_lng",
+      "elev_z",
+      "estimated_stories",
+      "footprint_area_sqft",
+      "footprint_area_sqm",
+      "geom",
+      "geometry",
+      "max_height_m",
+      "min_height_m",
+      "source_id"
+     ]
+    },
+    "standalone": {
+     "building_footprints": [
+      "centroid_lat",
+      "centroid_lng",
+      "elev_z",
+      "estimated_stories",
+      "footprint_area_sqft",
+      "footprint_area_sqm",
+      "geom",
+      "geometry",
+      "max_height_m",
+      "min_height_m",
+      "source_id"
+     ]
+    }
+   }
+  },
+  "neighbourhoods": {
+   "invocations": [
+    "sources.forced",
+    "sources",
+    "standalone"
+   ],
+   "answer": "PASS",
+   "rows": [],
+   "traced_writes": {
+    "sources.forced": {
+     "neighbourhoods": [
+      "avg_household_income",
+      "avg_individual_income",
+      "couples_pct",
+      "english_knowledge_pct",
+      "geom",
+      "geometry",
+      "immigrant_pct",
+      "lone_parent_pct",
+      "low_income_pct",
+      "married_pct",
+      "median_household_income",
+      "name",
+      "neighbourhood_id",
+      "period_of_construction",
+      "tenure_owner_pct",
+      "tenure_renter_pct",
+      "university_degree_pct",
+      "visible_minority_pct"
+     ]
+    },
+    "sources": {
+     "neighbourhoods": [
+      "avg_household_income",
+      "avg_individual_income",
+      "couples_pct",
+      "english_knowledge_pct",
+      "geom",
+      "geometry",
+      "immigrant_pct",
+      "lone_parent_pct",
+      "low_income_pct",
+      "married_pct",
+      "median_household_income",
+      "name",
+      "neighbourhood_id",
+      "period_of_construction",
+      "tenure_owner_pct",
+      "tenure_renter_pct",
+      "university_degree_pct",
+      "visible_minority_pct"
+     ]
+    },
+    "standalone": {
+     "neighbourhoods": [
+      "avg_household_income",
+      "avg_individual_income",
+      "couples_pct",
+      "english_knowledge_pct",
+      "geom",
+      "geometry",
+      "immigrant_pct",
+      "lone_parent_pct",
+      "low_income_pct",
+      "married_pct",
+      "median_household_income",
+      "name",
+      "neighbourhood_id",
+      "period_of_construction",
+      "tenure_owner_pct",
+      "tenure_renter_pct",
+      "university_degree_pct",
+      "visible_minority_pct"
+     ]
+    }
+   }
+  },
+  "load_wsib": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "PASS",
+   "rows": [],
+   "traced_writes": {
+    "sources": {
+     "wsib_registry": [
+      "business_size",
+      "is_gta",
+      "last_seen_at",
+      "legal_name",
+      "legal_name_normalized",
+      "mailing_address",
+      "naics_code",
+      "naics_description",
+      "predominant_class",
+      "subclass",
+      "subclass_description",
+      "trade_name",
+      "trade_name_normalized"
+     ]
+    },
+    "standalone": {
+     "wsib_registry": [
+      "business_size",
+      "is_gta",
+      "last_seen_at",
+      "legal_name",
+      "legal_name_normalized",
+      "mailing_address",
+      "naics_code",
+      "naics_description",
+      "predominant_class",
+      "subclass",
+      "subclass_description",
+      "trade_name",
+      "trade_name_normalized"
+     ]
+    }
+   }
+  },
+  "load_heritage": {
+   "invocations": [
+    "sources",
+    "standalone"
+   ],
+   "answer": "PASS",
+   "rows": [],
+   "traced_writes": {
+    "sources": {
+     "heritage_districts": [
+      "bylaw_no",
+      "designated_date",
+      "geom",
+      "hcd_type",
+      "name",
+      "source_dataset_version",
+      "source_id",
+      "updated_at",
+      "wards"
+     ],
+     "heritage_properties": [
+      "address_text",
+      "building_type",
+      "bylaw_no",
+      "construction_year",
+      "designated_date",
+      "geom",
+      "htg_conser_name",
+      "reason",
+      "source_dataset_version",
+      "source_id",
+      "status",
+      "updated_at"
+     ]
+    },
+    "standalone": {
+     "heritage_districts": [
+      "bylaw_no",
+      "designated_date",
+      "geom",
+      "hcd_type",
+      "name",
+      "source_dataset_version",
+      "source_id",
+      "updated_at",
+      "wards"
+     ],
+     "heritage_properties": [
+      "address_text",
+      "building_type",
+      "bylaw_no",
+      "construction_year",
+      "designated_date",
+      "geom",
+      "htg_conser_name",
+      "reason",
+      "source_dataset_version",
+      "source_id",
+      "status",
+      "updated_at"
+     ]
+    }
+   }
+  }
+ }
+}

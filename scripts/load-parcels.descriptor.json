@@ -30,7 +30,6 @@
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv",
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "PARCELID",
-          "cache": "none",
           "csv_options": {
             "bom": false,
             "relax_quotes": true
@@ -49,25 +48,135 @@
         "key_sql_type": "TEXT",
         "geometry_kind": "polygon",
         "columns": [
-          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "feature_type", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "address_number", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
-          { "name": "linear_name_full", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
-          { "name": "addr_num_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
-          { "name": "street_name_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
-          { "name": "street_type_normalized", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve" },
-          { "name": "stated_area_raw", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "lot_size_sqm", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
-          { "name": "lot_size_sqft", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
-          { "name": "lot_size_source", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
-          { "name": "frontage_m", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "frontage_ft", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "depth_m", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "depth_ft", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "geometry", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "date_effective", "vocabulary": "none", "written": "step", "bind": "value", "on_empty": "preserve_null" },
-          { "name": "is_irregular", "vocabulary": "none", "written": "step", "bind": "value" },
-          { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" }
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "feature_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve"
+          },
+          {
+            "name": "linear_name_full",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve"
+          },
+          {
+            "name": "addr_num_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve"
+          },
+          {
+            "name": "street_name_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve"
+          },
+          {
+            "name": "street_type_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve"
+          },
+          {
+            "name": "stated_area_raw",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "lot_size_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve_null"
+          },
+          {
+            "name": "lot_size_sqft",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve_null"
+          },
+          {
+            "name": "lot_size_source",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve_null"
+          },
+          {
+            "name": "frontage_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "frontage_ft",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "depth_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "depth_ft",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geometry",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "date_effective",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve_null"
+          },
+          {
+            "name": "is_irregular",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "geom",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "wkb_geometry"
+          },
+          {
+            "name": "id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
         ],
         "write_discipline": {
           "class": "guarded_upsert",
@@ -96,37 +205,32 @@
             }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [
       {
         "table": "parcels",
         "column": "ravine_dataset_version_when_enriched",
         "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
-        "set_null_on_change_of": "geom"
+        "set_null_on_change_of": "geom",
+        "by": "set_null_on_change_of"
       },
       {
         "table": "parcels",
         "column": "heritage_dataset_version_when_enriched",
         "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
-        "set_null_on_change_of": "geom"
+        "set_null_on_change_of": "geom",
+        "by": "set_null_on_change_of"
       },
       {
         "table": "parcels",
         "column": "centreline_dataset_version_when_enriched",
         "when": "this write changes parcels.geom (the stored shape every enrich-* step reads) — the DEC-FENCE2 CASE arm, #418; WF3 2026-09-28",
-        "set_null_on_change_of": "geom"
+        "set_null_on_change_of": "geom",
+        "by": "set_null_on_change_of"
       }
     ],
-    "publish": "direct",
     "write_inventory": {
       "statements": 1,
       "why": {
@@ -139,11 +243,8 @@
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": "none",
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -182,15 +283,10 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "30m",
     "txn_scope": "step",
-    "txn_budget": "20m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "45m",
-    "batch": 1000,
-    "needs_disk_mb": 512,
-    "partial_fill": "atomic",
+    "batch": 3449,
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A source row the step refuses to carry is counted and the load continues: FEATURE_TYPE CORRIDOR/RESERVE (:487), an expired non-sentinel DATE_EXPIRY (:495) and an empty PARCELID (:500) each `continue`, and a row that yields no dimensions still loads with null frontage/depth. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
@@ -199,14 +295,7 @@
         "ref": "skip_rate_pct"
       }
     },
-    "on_batch_error": "drop_batch",
-    "on_batch_error_why": {
-      "text": "PR-D1 (PIN, DO NOT FIX — Spec 123 §3.1, review_followups #68). A failed flushBatch() logs, `errors++`, and DROPS the batch's rows for the run [READ scripts/load-parcels.js:550-554; the same in the truncated-CSV recovery path :571-575], and records_unchanged is then inflated by the dropped count [:401's own comment]. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it; fail_step would be a behaviour change smuggled into a no-op-diff commit. The post-cutover fix, if any, is a separate commit with its own RED lock. UPDATE 2026-09-27 (conversion-simplification item 8, operator-authorized; review_followups #69): records_unchanged is now MEASURED by the write (written.unchanged = rows the guarded upsert submitted but did not change), never derived, so the \"inflated by the dropped count\" clause above is RETIRED; runIngestPhase's row-conservation identity (scripts/lib/step/conservation.js) throws on any unaccounted row. The batch-drop itself (#68) is untouched by this change.",
-      "liveness": {
-        "kind": "file",
-        "ref": "scripts/load-parcels.js"
-      }
-    },
+    "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {
       "text": "Every check here reads a value the library already measured (missing CSV header columns, null-address rows, skipped rows, the rows-read total, the geometry-parse fallback count), so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
@@ -216,15 +305,10 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "60000ms",
       "timeout_from_config": "parcels_download_timeout_ms",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "sources": {
@@ -240,7 +324,9 @@
     {
       "id": "csv_header_drift",
       "kind": "invariant",
-      "expect": { "missing_required_columns": 0 },
+      "expect": {
+        "missing_required_columns": 0
+      },
       "limit": "viol == 0",
       "severity": "WARN",
       "blocking": false,
@@ -258,7 +344,10 @@
     {
       "id": "null_address_pct",
       "kind": "bound",
-      "expect": { "of": "rows with an empty ADDRESS_NUMBER over rows attempted", "direction": "max" },
+      "expect": {
+        "of": "rows with an empty ADDRESS_NUMBER over rows attempted",
+        "direction": "max"
+      },
       "limit": "pct <= 0.1",
       "limit_from_config": "parcels_null_address_pct_max",
       "severity": "WARN",
@@ -277,7 +366,10 @@
     {
       "id": "skip_rate_pct",
       "kind": "bound",
-      "expect": { "of": "skipped rows over rows_read", "direction": "max" },
+      "expect": {
+        "of": "skipped rows over rows_read",
+        "direction": "max"
+      },
       "limit": "pct <= 10",
       "limit_from_config": "parcels_skip_rate_max_pct",
       "severity": "FAIL",
@@ -296,7 +388,10 @@
     {
       "id": "rows_read_floor",
       "kind": "bound",
-      "expect": { "of": "rows_read", "direction": "min" },
+      "expect": {
+        "of": "rows_read",
+        "direction": "min"
+      },
       "limit": "value_min 450000",
       "limit_from_config": "sources_parcels_floor",
       "severity": "WARN",
@@ -315,7 +410,10 @@
     {
       "id": "records_errors",
       "kind": "bound",
-      "expect": { "of": "errors counted during the run", "direction": "max" },
+      "expect": {
+        "of": "errors counted during the run",
+        "direction": "max"
+      },
       "limit": "viol == 0",
       "severity": "FAIL",
       "blocking": false,
@@ -333,7 +431,9 @@
     {
       "id": "geom_parse_failures",
       "kind": "field_coverage",
-      "expect": { "reports": "source rows whose `geometry` value would not JSON.parse, counted not gated" },
+      "expect": {
+        "reports": "source rows whose `geometry` value would not JSON.parse, counted not gated"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -351,7 +451,9 @@
     {
       "id": "shaped_skipped",
       "kind": "field_coverage",
-      "expect": { "reports": "rows the compute's shapeRecord refused to carry (feature-type / expiry / empty key)" },
+      "expect": {
+        "reports": "rows the compute's shapeRecord refused to carry (feature-type / expiry / empty key)"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -369,7 +471,9 @@
     {
       "id": "stated_area_unparsed",
       "kind": "field_coverage",
-      "expect": { "reports": "non-empty STATEDAREA values parseStatedArea refused (unknown / None / zero / negative / unrecognised shape)" },
+      "expect": {
+        "reports": "non-empty STATEDAREA values parseStatedArea refused (unknown / None / zero / negative / unrecognised shape)"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
@@ -396,7 +500,9 @@
     {
       "key": "audit_table",
       "type": "object",
-      "consumers": ["assert_data_bounds"],
+      "consumers": [
+        "assert_data_bounds"
+      ],
       "skeleton": {
         "phase": 4,
         "name": "Parcels Ingestion",
@@ -407,7 +513,9 @@
     {
       "key": "parcels_load",
       "type": "object",
-      "consumers": ["parcels"],
+      "consumers": [
+        "parcels"
+      ],
       "skeleton": {
         "duration_ms": 0,
         "rows_read": 0,
@@ -479,6 +587,18 @@
       },
       "adjudicated_by": "operator authorization 2026-10-01 + plan panel (Integration C1, Regression Guardian D1) [READ .cursor/wf3_parcels_lot_size_wipe_active_task.md]",
       "date": "2026-10-01"
+    },
+    {
+      "from": "the legacy batch-drop catch (PR-D1, scripts/load-parcels.js:550-554 / :571-575 pre-conversion) and its execution.on_batch_error \"drop_batch\" declaration",
+      "why": {
+        "text": "FIXED BY THE RUNNER, recorded at FLEET-2 (operator ruling MQ-B5 (a) + compliance amendment, morning batch 2, 2026-10-05). Since the conversion (1414cb73) this step writes through scripts/lib/step/write.js executeWrite, whose batch loop runs inside ONE pipeline.withTransaction with no try/catch: a failed batch throws, rolls back the whole step and fails the run, so no batch is dropped. on_batch_error is now \"fail_step\", the measured posture; the drop_batch declaration and its batch-drop limitation are retired, PR-D1 is closed as FIXED-BY-RUNNER in docs/reports/defect-ledger.md and review_followups #68 / #69 are closed. The compute's batch_errors read (scripts/lib/compute/load-parcels.js:576) has no producer and is filed as a follow-up.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "Operator ruling MQ-B5 (a) + compliance amendment (ASSEMBLY morning batch 2)",
+      "date": "2026-10-05"
     }
   ],
   "limitations": [
@@ -508,11 +628,6 @@
       "check_id": "none"
     },
     {
-      "what": "PR-D1 residue — a failed batch's rows are logged, counted in `errors`, and DROPPED for the run, so the load can complete with fewer than the source's rows and no per-row evidence of which; `records_unchanged` is inflated by the dropped count. Declared via execution.on_batch_error:\"drop_batch\". RETIRED 2026-09-27 for records_unchanged (conversion-simplification item 8: now measured, see on_batch_error_why); the batch-drop clause stands.",
-      "measured": "load-parcels.js:550-554 (catch → log.error, errors++, batch = []) and :401's own 'lost rows inflate this count' comment [MEASURED 2026-09-24, report §5.1 PR-D1]",
-      "check_id": "records_errors"
-    },
-    {
       "what": "The PostGIS-absent arm, SUPERSEDED by plan D1 REVISED: the legacy script probed pg_extension for postgis (:239-241) and set `geomLine = ''` when absent (:293-296), so on a PostGIS-less database parcels.geometry was written while parcels.geom stayed NULL, with no audit row naming the divergence. The converted step has NO equivalent runtime branch — DEFAULT codegen's `geom` column (bind:\"wkb_geometry\") unconditionally renders `ST_GeomFromWKB`, and `guards.requires` above already declares the `idx_parcels_geom_gist` index fail-loud on_missing — a PostGIS-less database fails the guard BEFORE acquisition rather than silently degrading to a geometry-only write. This is a genuine behaviour change from silent-degrade to fail-loud, judged consistent with the guard's own stated posture (\"declared fail-loud\") rather than a new divergence to hide.",
       "measured": "load-parcels.js:239-241 (pg_extension probe, legacy) and :293-296 (geomLine conditional, legacy) [READ 2026-09-24; report §1.2 and §R LOW-CONFIDENCE #4]; scripts/lib/step/write.js default codegen has no hasPostGIS branch [READ 2026-09-24, row 3.7 ② D1 REVISED]",
       "check_id": "none"
@@ -524,8 +639,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-parcels.notes.json",
-    "entries": 11
+    "file": "load-parcels.notes.json"
   },
   "recovery": {
     "reset": "none",
@@ -555,25 +669,47 @@
   },
   "counters": {
     "records_total": {
-      "source": "written.inserted + written.updated",
-      "scoped_by": "parcel_id"
+      "source": "written.inserted + written.updated"
     },
     "records_new": {
-      "source": "written.inserted",
-      "scoped_by": "parcel_id"
+      "source": "written.inserted"
     },
     "records_updated": {
-      "source": "written.updated",
-      "scoped_by": "parcel_id"
+      "source": "written.updated"
     }
   },
   "config": {
     "logic_variables": [
-      { "name": "parcels_irregularity_threshold", "min": 0.5, "max": 1.0, "on_invalid": "fail" },
-      { "name": "parcels_null_address_pct_max", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "sources_parcels_floor", "min": 1, "max": 5000000, "on_invalid": "fail" },
-      { "name": "parcels_skip_rate_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
-      { "name": "parcels_download_timeout_ms", "min": 1000, "max": 1800000, "on_invalid": "fail" }
+      {
+        "name": "parcels_irregularity_threshold",
+        "min": 0.5,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_null_address_pct_max",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "sources_parcels_floor",
+        "min": 1,
+        "max": 5000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_skip_rate_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_download_timeout_ms",
+        "min": 1000,
+        "max": 1800000,
+        "on_invalid": "fail"
+      }
     ],
     "validation": "strict",
     "hoisted_above_gate": true

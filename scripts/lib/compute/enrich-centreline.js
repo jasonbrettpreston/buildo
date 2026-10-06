@@ -32,7 +32,16 @@ const PRODUCER_NAME = 'sources:load_centreline';
 const SELF_NAME = 'sources:enrich_centreline';
 const PRODUCER_FORMS = Object.freeze(['sources:load_centreline', 'load_centreline', 'load-centreline']);
 const SELF_FORMS = Object.freeze(['sources:enrich_centreline', 'enrich_centreline', 'enrich-centreline']);
-const SPEC_VERSION = '1.1'; // L10
+// L10 contract pin — DECLARED in this step's descriptor (staleness.pins, LDG-10 class 3), never a
+// hard-coded const here: declared == executed. Read once at require() time (enrich-heritage.js
+// precedent); a missing pin throws at load (fail-closed).
+const DESCRIPTOR = require('../../enrich-centreline.descriptor.json');
+const { pinnedEquals } = require('../staleness-pins');
+const PRODUCER_STEP = 'load_centreline';
+const PIN_STAMP = 'records_meta.centreline_load.spec_version';
+/** The producer spec_version this reader halts on anything but (pinnedSpecVersion = the descriptor pin). */
+const pinnedSpecVersion = () => pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP);
+const SPEC_VERSION = pinnedSpecVersion();
 const TAG = '[enrich-centreline]';
 
 /** Separate DROP for the scoped build (legacy :382): a parameterized query is single-statement. */

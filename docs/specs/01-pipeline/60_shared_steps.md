@@ -40,6 +40,8 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 
 **Edge Cases:** a permit whose `geo_id` matches no address point keeps NULL coordinates and is skipped by downstream spatial linking — reported as `has_geo_id_no_match` in `records_meta` (14,492 live, and it has NO audit row: `GP-L2`, a declared blind spot). A permit the feed gives no `geo_id` for is permanently ungeocodable by this step and is reported as `no_geo_id` (7,660 live) — the tail that puts a structural ceiling of ~97 % on `geocode_coverage`. An `address_points` table truncated to zero rows produces a run indistinguishable from a healthy zero-work one (`guards.empty_source: "none"`, a declared blind spot with a filed peel candidate).
 
+**FLEET-2 (plan fold 10, fold 16 row 3):** the Phase 1 join and the `address_points_loaded` count read only `address_points` rows with `retired_at IS NULL` (lock `src/tests/address-points-active-readers.infra.test.ts`). A permit whose `geo_id` names a retired point is no longer refreshed and keeps its last coordinates, because `zombie_cleanup` clears only permits that lost their `geo_id`.
+
 **Converted** to the Spec 122 step standard at batch-2 I5 (2026-09-16), ENRICHER archetype, advisory lock 5. Behaviour: `./geocode-permits.descriptor.json` · compute: `./lib/compute/geocode-permits.js` · assessment: `docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md`.
 
 **Testing:** `geocoding.logic.test.ts`, `src/tests/geocode-permits.infra.test.ts` (paired-UPDATE atomicity), `src/tests/steps/geocode_permits/violations.test.ts` (the four fence locks)
@@ -88,17 +90,21 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 > baseline — filed in `review_followups.md`. See [pilot 7 assessment](../../reports/2026-08-30-pilot7-link-parcels-assessment.md)
 > §17 and `defect-ledger.md` `LP-D17`.
 
+> **As-built addendum (FLEET-2, O4 row 7, plan folds 14–16):** supersedes the **Modes** line above. `link-parcels.descriptor.json` declares `staleness.mode_select: "none"` with an `outputs.invalidates[]` row `permits.parcel_linked_at` `by: "full_rescan"`, so `resolveLinkGate` resolves every run `full` and no argv or env changes the mode. Every permit is re-checked on every run, but `permits.parcel_linked_at` is written only for a permit whose link changed this run: a `permit_parcels` row inserted or value-changed by the guarded upsert (a same-parcel `match_type` or `confidence` change counts, fold 16 row 2), or a row removed by the keyed DELETE. The `match_type='spatial'` full-only mass retraction is retired (the runner refuses `retract: "all"` under `mode_select: "none"`), and the keyed DELETE's before-image now reads the DELETE's own predicate. The `address_points_exact` CTE reads only `retired_at IS NULL` points (Spec 54). Locks: R7-1…R7-5 in `src/tests/steps/link_parcels/o4-row7-stamp-changed.logic.test.ts` (fake pool); `src/tests/db/link-parcels-watermark.db.test.ts` T1–T5 is written but has not run against a database at drafting.
+
 ---
 
 ### Link Neighbourhoods (`link-neighbourhoods.js`)
 **Method:** PostGIS `ST_Contains` against `neighbourhoods.geom`, over the GiST index `idx_neighbourhoods_geom_gist` — ONE set-based join UPDATE, no per-permit loop. CONVERTED step (Spec 122 batch-2 I4, 2026-09-16): `scripts/link-neighbourhoods.js` is the frozen shell; the logic lives in `scripts/lib/compute/link-neighbourhoods.js` and `scripts/link-neighbourhoods.descriptor.json`.
 
 1. Load and COUNT the neighbourhood polygon corpus (`geom IS NOT NULL`), gated at the `sources_neighbourhoods_floor` registry row before any write is issued
-2. Select the eligible permits — `neighbourhood_id IS NULL AND latitude IS NOT NULL AND longitude IS NOT NULL`
+2. Select the eligible permits — ~~`neighbourhood_id IS NULL AND`~~ `latitude IS NOT NULL AND longitude IS NOT NULL` (FLEET-2, O4 row 1: every geocoded permit, on every run)
 3. Update `permits.neighbourhood_id` from the containing polygon's `neighbourhoods.id` in ONE set-based join UPDATE
 4. Report the CUMULATIVE link rate and the unmatched tail as their own declared check rows
 
 **Edge Cases:** a permit with no coordinates is outside the eligibility scope and is never walked — it is neither stamped nor counted as work (the pre-conversion step counted a wider `coords OR parcel geometry` set it could not process, LN-D6). An unmatched geocoded permit is left NULL and counted by the `no_neighbourhood_match` row; the `-1` no-match sentinel is RETIRED (unwriteable under `fk_permits_neighbourhoods`, LN-D1), as is the Turf.js fallback branch (LN-D2). A missing PostGIS extension, `neighbourhoods.geom`, GiST index or FK HALTS the step (`guards.requires`, `on_missing: "fail"`) rather than silently answering with a second algorithm.
+
+**FLEET-2 (O4 row 1, plan fold 14):** full_rescan — `staleness.mode_select: "none"` and an `outputs.invalidates[]` row `permits.neighbourhood_id` `by: "full_rescan"`. The ONE set-based UPDATE re-derives every geocoded permit on every run, writes only where `neighbourhood_id IS DISTINCT FROM` the derived id, and sets it NULL on a stamped permit that has lost its coordinates or no longer falls inside any polygon (this supersedes the edge case above for a permit stamped before it lost its coordinates); the statement text is the same in every mode. Locks N1–N5 in `src/tests/steps/link_neighbourhoods/o4-full-rescan.logic.test.ts`.
 
 **Testing:** `neighbourhood.logic.test.ts`, `src/tests/steps/link_neighbourhoods/violations.test.ts`
 
@@ -106,6 +112,7 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 
 ### Link Massing (`link-massing.js`)
 **Modes:** Incremental / Full (`--full` in sources chain)
+**FLEET-2:** `mode_select: "none"` (full_rescan; only changed links are rewritten) — see Spec 56 §3; the **Modes** line above is superseded.
 **Method:** Nearest-neighbour spatial match within bbox
 **Safeguard:** Parameter flush at 30,000 params (§9.2)
 
@@ -125,10 +132,12 @@ These 8 transformation steps run in multiple chains — they can't live inside a
 
 1. Tier 1 — exact trade-name match (`wsib_registry.trade_name_normalized = entities.name_normalized`) → 0.95 confidence
 2. Tier 2 — exact legal-name match (`wsib_registry.legal_name_normalized = entities.name_normalized`) → 0.90 confidence
-3. Tier 3 — `pg_trgm` fuzzy match via `similarity()` over GIN trigram indexes, article-stripped first-letter blocking (`d704a447`) **AND** a token-overlap requirement (LW-D14, 2026-08-28, widened LW-D18, 2026-08-29: the WSIB name and the matched entity name must share at least one non-generic token — both names have `-`/`.`/`'`/`&`/`+` stripped (so "T.T.S." tokenizes identically to "TTS"), are tokenized on whitespace, generic stopwords stripped (31 words: CONSTRUCTION/CONTRACTING/BUILDERS/HOMES/GROUP/INC/LTD/LIMITED/CO/COMPANY/CORP/ENTERPRISES/DEVELOPMENTS/SERVICES/ONTARIO/CANADA/GENERAL/RENOVATION/RENOVATIONS/MANAGEMENT/DESIGN/BUILD/CUSTOM/HOME/IMPROVEMENT/IMPROVEMENTS/BUILDING/ASSOCIATES/TOP/ALL/QUALITY) along with purely-numeric tokens, and the two token sets must overlap — `similarity() > threshold` blocking alone let two differently-named companies match on a shared generic word) → 0.60 confidence, capped at 1,000 matches per invocation
+3. Tier 3 — `pg_trgm` fuzzy match via `similarity()` over GIN trigram indexes, article-stripped first-letter blocking (`d704a447`) **AND** a token-overlap requirement (LW-D14, 2026-08-28, widened LW-D18, 2026-08-29: the WSIB name and the matched entity name must share at least one non-generic token — both names have `-`/`.`/`'`/`&`/`+` stripped (so "T.T.S." tokenizes identically to "TTS"), are tokenized on whitespace, generic stopwords stripped (31 words: CONSTRUCTION/CONTRACTING/BUILDERS/HOMES/GROUP/INC/LTD/LIMITED/CO/COMPANY/CORP/ENTERPRISES/DEVELOPMENTS/SERVICES/ONTARIO/CANADA/GENERAL/RENOVATION/RENOVATIONS/MANAGEMENT/DESIGN/BUILD/CUSTOM/HOME/IMPROVEMENT/IMPROVEMENTS/BUILDING/ASSOCIATES/TOP/ALL/QUALITY) along with purely-numeric tokens, and the two token sets must overlap — `similarity() > threshold` blocking alone let two differently-named companies match on a shared generic word) → 0.60 confidence, ~~capped at 1,000 matches per invocation~~ (cap retired at FLEET-2, below)
 4. Each tier writes `wsib_registry.linked_entity_id`/`match_confidence`/`matched_at`, then `entities.is_wsib_registered` (once), then fills empty `entities` contact columns (`primary_phone`/`primary_email`/`website`) from the matched `wsib_registry` row — never overwriting an existing value
 
-**Edge Cases:** Generic names → may match wrong WSIB entry — this was the fan-in / magnet-entity concentration named in `docs/specs/01-pipeline/122_pipeline_step_optimization.md` C1 pilot 4; LW-D14's token-overlap requirement (above) is the fix, measured live pre-fix at only 10.49% (840/8,009) of Tier-3 links sharing a genuine non-generic token. A declared check `tier3_token_overlap` (FAIL below `link_wsib_tier3_token_overlap_fail_pct`, default 50) makes any regression visible post-write. LW-D18 (2026-08-29): a 60-row precision sample of the LW-D14-fixed population still measured only 15–25% genuine matches — 80% of the confirmed failures shared one of 15 more industry-generic words (now stopworded, above) or a punctuation-only naming variant (now normalized, above). A fresh 60-row post-fix sample measured 31.7%–46.7% (assessment §8d) — real, but still not complete: several MORE generic industry words (RESTORATION, PROPERTIES, STRUCTURES, MECHANICAL, ENGINEERING, DRYWALL, CARPENTRY, FIRE, PROTECTION, CONSTRUCTORS), the filler word "AND", a singular/plural stopword gap (DEVELOPMENT vs DEVELOPMENTS), and single-letter-initial token collisions from the punctuation strip (`D & D` → a bare "D" token) remain as named, filed residuals (`docs/reports/review_followups.md`) — a token-overlap requirement narrows the false-match surface, it does not eliminate it; same-first-name/different-surname pairs (e.g. two different "Michael"s) are a structural floor no token rule can resolve without a second signal (phone/address/permit co-occurrence). `link_rate_warn` (T2) is entity-scoped (`entities.is_wsib_registered = true` count / total entities), not row-scoped — a single magnet entity's many contaminated rows no longer inflate the ratio. WSIB refresh (`load_wsib`, annual cadence) → newly-unlinked rows are matched on the next incremental run; an already-linked row is never re-evaluated except by the operator-invoked tier-3 repair (A-7).
+**Edge Cases:** Generic names → may match wrong WSIB entry — this was the fan-in / magnet-entity concentration named in `docs/specs/01-pipeline/122_pipeline_step_optimization.md` C1 pilot 4; LW-D14's token-overlap requirement (above) is the fix, measured live pre-fix at only 10.49% (840/8,009) of Tier-3 links sharing a genuine non-generic token. A declared check `tier3_token_overlap` (FAIL below `link_wsib_tier3_token_overlap_fail_pct`, default 50) makes any regression visible post-write. LW-D18 (2026-08-29): a 60-row precision sample of the LW-D14-fixed population still measured only 15–25% genuine matches — 80% of the confirmed failures shared one of 15 more industry-generic words (now stopworded, above) or a punctuation-only naming variant (now normalized, above). A fresh 60-row post-fix sample measured 31.7%–46.7% (assessment §8d) — real, but still not complete: several MORE generic industry words (RESTORATION, PROPERTIES, STRUCTURES, MECHANICAL, ENGINEERING, DRYWALL, CARPENTRY, FIRE, PROTECTION, CONSTRUCTORS), the filler word "AND", a singular/plural stopword gap (DEVELOPMENT vs DEVELOPMENTS), and single-letter-initial token collisions from the punctuation strip (`D & D` → a bare "D" token) remain as named, filed residuals (`docs/reports/review_followups.md`) — a token-overlap requirement narrows the false-match surface, it does not eliminate it; same-first-name/different-surname pairs (e.g. two different "Michael"s) are a structural floor no token rule can resolve without a second signal (phone/address/permit co-occurrence). `link_rate_warn` (T2) is entity-scoped (`entities.is_wsib_registered = true` count / total entities), not row-scoped — a single magnet entity's many contaminated rows no longer inflate the ratio. WSIB refresh (`load_wsib`, annual cadence) → newly-unlinked rows are matched on the next incremental run; ~~an already-linked row is never re-evaluated except by the operator-invoked tier-3 repair (A-7).~~ (FLEET-2: every row is re-evaluated on every run, below.)
+
+**FLEET-2 (O4 row 6, plan fold 16 row 1; design `.cursor/o4-row6-link-wsib-design-2026-10-03.md` §11):** MATCHER `staleness.mode_select: "none"` with an `outputs.invalidates[]` row `wsib_registry.linked_entity_id` `by: "full_rescan"`. One read-only derivation, in its own transaction, computes every `wsib_registry` row's best link (no `linked_entity_id IS NULL` scope, no LIMIT) and diffs it against the stored link; one write transaction then applies only the difference — set and move rows through one compare-and-set UPDATE keyed on the old link (a row that moved after the derivation writes 0), vanish rows through the keyed UPDATE-to-NULL (never a DELETE). The contacts reverse clear binds per (old entity, value) pair. `TIER3_LIMIT` (1,000) and the tier-3 convergence loop are retired. The `pre_write` FAIL check `link_wsib_mass_relink_pct` — (moves + vanishes) / links at run start, bound `link_wsib_mass_relink_max_pct` (default 0.10) — stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays. `--dry-run` runs the derivation and writes nothing. Locks W1–W6 and W-DR in `src/tests/steps/link_wsib/o4-row6-full-rescan.logic.test.ts` (fake pool); `src/tests/db/link-wsib-full-rescan.db.test.ts` T1–T4 is written but has not run at drafting (its fuzzy similarities are emulated, not measured).
 
 **Testing:** `wsib.logic.test.ts`, `src/tests/steps/link_wsib/violations.test.ts`
 
@@ -306,51 +315,55 @@ dedicated test files went unnamed.
   - `src/tests/steps/geocode_permits/violations.test.ts`
   - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: address_points · permits
-  - downstream: assert_global_coverage · enrich_parcels · link_coa · link_neighbourhoods · link_parcels
+  - downstream: assert_global_coverage · link_coa · link_neighbourhoods · link_parcels · refresh_snapshot
   - consumers: src/app/api/admin/stats/route.ts (table permits: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric geocode_coverage) · src/features/leads/lib/get-lead-feed.ts (table permits: 2 columns) · src/lib/leads/lead-detail-query.ts (table permits: 2 columns) · src/lib/leads/lead-inspect-query.ts (table permits: 2 columns) · src/lib/quality/metrics.ts (table permits: 2 columns) · src/lib/sync/process.ts (table permits: 3 columns)
 - `link_parcels` — LINK · converted · owner specs: 60
   - `scripts/link-parcels.js`
   - `scripts/link-parcels.descriptor.json`
   - `scripts/link-parcels.notes.json`
   - `scripts/lib/compute/link-parcels.js`
+  - `src/tests/steps/link_parcels/o4-row7-stamp-changed.logic.test.ts`
   - `src/tests/steps/link_parcels/violations.test.ts`
   - `src/tests/steps/link_parcels/witness-fixture.logic.test.ts`
-  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` writes (migrations/012_permit_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
+  - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` reads+writes (migrations/012_permit_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: address_points · geocode_permits · link_parcel_addresses · parcels · permits
-  - downstream: assert_data_bounds · assert_global_coverage · compute_cost_estimates · enrich_permits
+  - downstream: assert_data_bounds · assert_global_coverage · compute_cost_estimates · enrich_permits · refresh_snapshot
   - consumers: link_parcels (records_meta code_version) · src/app/api/admin/stats/route.ts (table permit_parcels: 3 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/features/leads/lib/timing.ts (table permit_parcels: 3 columns) · src/lib/leads/lead-inspect-query.ts (table permit_parcels: 3 columns) · src/lib/quality/metrics.ts (table permit_parcels: 4 columns) · src/lib/sync/process.ts (table permits: 1 column)
 - `link_neighbourhoods` — LINK · converted · owner specs: 60
   - `scripts/link-neighbourhoods.js`
   - `scripts/link-neighbourhoods.descriptor.json`
   - `scripts/link-neighbourhoods.notes.json`
   - `scripts/lib/compute/link-neighbourhoods.js`
+  - `src/tests/steps/link_neighbourhoods/o4-full-rescan.logic.test.ts`
   - `src/tests/steps/link_neighbourhoods/violations.test.ts`
   - `src/tests/steps/link_neighbourhoods/witness-fixture.logic.test.ts`
   - data (descriptor): `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: geocode_permits · neighbourhoods · permits
-  - downstream: assert_global_coverage · compute_storey_norms
+  - downstream: assert_global_coverage · compute_storey_norms · refresh_snapshot
   - consumers: link_neighbourhoods (records_meta code_version) · src/app/api/admin/stats/route.ts (table permits: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/features/leads/lib/get-lead-feed.ts (table permits: 1 column) · src/lib/leads/lead-detail-query.ts (table permits: 1 column) · src/lib/leads/lead-inspect-query.ts (table permits: 1 column) · src/lib/market-metrics/queries.ts (table permits: 1 column) · src/lib/quality/metrics.ts (table permits: 1 column) · src/lib/sync/process.ts (table permits: 1 column)
 - `link_wsib` — MATCHER · converted · owner specs: 60 · 46
   - `scripts/link-wsib.js`
   - `scripts/link-wsib.descriptor.json`
   - `scripts/link-wsib.notes.json`
   - `scripts/lib/compute/link-wsib.js`
+  - `src/tests/steps/link_wsib/o4-row6-full-rescan.logic.test.ts`
   - `src/tests/steps/link_wsib/violations.test.ts`
   - data (descriptor): `entities` reads+writes (migrations/042_entities.sql); `wsib_registry` reads+writes (migrations/040_wsib_registry.sql)
   - upstream: builders · load_wsib
-  - downstream: assert_data_bounds · assert_global_coverage
-  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta wsib_registry_count) · src/app/api/admin/stats/route.ts (table entities: 2 columns) · src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn) · src/features/leads/lib/get-lead-feed.ts (table entities: 3 columns) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 1 column) · src/lib/builders/enrichment.ts (table entities: 4 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 1 column) · src/lib/leads/lead-inspect-query.ts (table entities: 1 column) · src/lib/quality/metrics.ts (table entities: 4 columns)
+  - downstream: assert_data_bounds · assert_global_coverage · refresh_snapshot
+  - consumers: link_wsib (records_meta threshold_updated_at) · link_wsib (records_meta tier1_confidence_updated_at) · link_wsib (records_meta tier2_confidence_updated_at) · link_wsib (records_meta tier3_confidence_updated_at) · link_wsib (records_meta wsib_registry_count) · src/app/api/admin/stats/route.ts (table entities: 2 columns) · src/app/api/admin/stats/route.ts (table wsib_registry: 1 column) · src/app/api/entities/[id]/route.ts (table wsib_registry: 1 column) · src/components/FreshnessTimeline.tsx (audit_metric link_rate_warn) · src/features/leads/lib/get-lead-feed.ts (table entities: 3 columns) · src/features/leads/lib/get-lead-feed.ts (table wsib_registry: 1 column) · src/lib/builders/enrichment.ts (table entities: 4 columns) · src/lib/builders/enrichment.ts (table wsib_registry: 1 column) · src/lib/leads/lead-inspect-query.ts (table entities: 1 column) · src/lib/quality/metrics.ts (table entities: 4 columns)
 - `refresh_snapshot` — RECORDER · converted · owner specs: 60
   - `scripts/refresh-snapshot.js`
   - `scripts/refresh-snapshot.descriptor.json`
   - `scripts/refresh-snapshot.notes.json`
   - `scripts/lib/compute/refresh-snapshot.js`
+  - `src/tests/steps/refresh_snapshot/u1-run-clock.logic.test.ts`
   - `src/tests/steps/refresh_snapshot/violations.test.ts`
   - `src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts`
-  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
-  - upstream: compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · link_coa_to_parcels
-  - downstream: none
-  - consumers: src/lib/quality/metrics.ts (table data_quality_snapshots: 68 columns)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` reads+writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
+  - upstream: backfill_realtor_permit_trades · classify_inspection_status · classify_lifecycle_phase · classify_permit_phase · classify_permits · classify_scope · close_stale_permits · compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · geocode_permits · inspections · link_coa · link_coa_to_parcels · link_massing · link_neighbourhoods · link_parcels · link_similar · link_wsib · permits
+  - downstream: assert_global_coverage
+  - consumers: src/lib/quality/metrics.ts (table data_quality_snapshots: 71 columns)
 - `assert_data_bounds` — ASSERT · converted · owner specs: 60
   - `scripts/quality/assert-data-bounds.js`
   - `scripts/quality/assert-data-bounds.descriptor.json`
@@ -358,7 +371,7 @@ dedicated test files went unnamed.
   - `src/tests/steps/assert_data_bounds/missing-table-guard.test.ts`
   - `src/tests/steps/assert_data_bounds/violations.test.ts`
   - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `entities` reads (migrations/042_entities.sql); `heritage_districts` reads (migrations/170_create_heritage_tables.sql); `heritage_properties` reads (migrations/170_create_heritage_tables.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcels` reads (migrations/011_parcels.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `ravines` reads (migrations/167_create_ravines_table.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql); `wsib_registry` reads (migrations/040_wsib_registry.sql)
-  - upstream: address_points · backfill_realtor_permit_trades · classify_inspection_status · classify_lifecycle_phase · classify_permit_phase · classify_permits · close_stale_permits · coa · compute_coa_cost_estimates · compute_cost_estimates · create_pre_permits · enrich_coa_zoning · inspections · link_coa · link_parcels · link_wsib · load_wsib · massing · neighbourhoods · parcels · permits
+  - upstream: address_points · backfill_realtor_permit_trades · classify_inspection_status · classify_lifecycle_phase · classify_permit_phase · classify_permits · close_stale_permits · coa · compute_coa_cost_estimates · compute_cost_estimates · enrich_coa_zoning · inspections · link_coa · link_parcels · link_wsib · load_wsib · massing · neighbourhoods · parcels · permits
   - downstream: none
   - consumers: src/app/api/admin/control-panel/resync/route.ts (records_meta audit_table) · src/components/DataQualityDashboard.tsx (records_meta audit_table) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/admin/funnel.ts (records_meta audit_table) · src/lib/quality/types.ts (records_meta audit_table)
 - `assert_engine_health` — RECORDER · converted · owner specs: 60
@@ -370,7 +383,7 @@ dedicated test files went unnamed.
   - data (descriptor): `coa_applications` reads (migrations/009_coa_applications.sql); `engine_health_snapshots` writes (migrations/051_engine_health_snapshots.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `pg_stat_user_tables` reads (no CREATE migration)
   - upstream: none
   - downstream: none
-  - consumers: assert_engine_health (records_meta records_updated) · assert_engine_health (records_meta tables_checked)
+  - consumers: assert_engine_health (records_meta records_updated) · assert_engine_health (records_meta tables_checked) · src/components/FreshnessTimeline.tsx (records_meta engine_health)
 <!-- /generated:target-files -->
 - `scripts/link-coa.js`
 - `scripts/create-pre-permits.js`

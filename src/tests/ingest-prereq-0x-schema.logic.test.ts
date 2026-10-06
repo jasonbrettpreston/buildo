@@ -144,7 +144,6 @@ describe('INGESTOR prerequisite 0x — multi-primary externals[].target + on_fai
       url: 'http://ex/p.xlsx',
       format: 'xlsx',
       role: 'lookup',
-      cache: 'none',
       target: 'ta',
     });
     expect(validate(d), 'a lookup folds into another external\'s rows — it fills no target').toBe(false);

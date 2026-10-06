@@ -1,0 +1,10 @@
+{
+  "what": "WF1 fold-1 item 6 grep: every converted guarded_upsert's rendered ON CONFLICT DO UPDATE SET targets vs its declared outputs.writes[].columns (db_default or undeclared)",
+  "method": "buildWritePlan(writeSpec, descriptor).upsert_sql over every scripts/steps/_schema/converted.json descriptor, SET clause targets parsed, compared to columns[].written",
+  "tree": "wf2/fleet2-prep-lib (uncommitted, resolver F8 fix applied), 2026-10-03",
+  "db_default_set_targets": [],
+  "undeclared_set_targets": {
+    "parcels": ["ravine_dataset_version_when_enriched", "heritage_dataset_version_when_enriched", "centreline_dataset_version_when_enriched"]
+  },
+  "consequence": "With F8 these three become traced WRITES of parcels. witness.mjs declaredWrites() reads only columns[].name, so the fleet #2 parcels traces will carry FAIL:WITNESS:parcels:a:parcels.<col> (undeclared write) unless the declared side honours set_null_on_change_of (P1-C7 triage row p1c7-triage-2026-10-03.md:48) in the same FLEET-2 tree."
+}

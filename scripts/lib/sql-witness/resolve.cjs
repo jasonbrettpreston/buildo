@@ -552,6 +552,14 @@ function resolveNode(node, fp, catalog) {
   if (key === 'CreateStmt') {
     const isTemp = inner.relation && inner.relation.relpersistence === 't';
     if (isStagingCreate(inner, isTemp)) return result('utility', fp, {}, {}, [], null);
+    // WF3 resolver five defects (e) — Spec 124 R-BG (ii): a TEMP that shadows a catalog table is
+    // FAIL:INPUT, the same rule (and text) as the CREATE TABLE … AS branch above. A staging of a
+    // catalog table (isCatalogStaging) is not a shadow; an uncatalogued temp is a session temp.
+    const rv = inner.relation;
+    if (rv && isRangeVar(rv) && isTempRel(rv) && !isCatalogStaging(rv.relname, catalog)
+      && Object.prototype.hasOwnProperty.call(catalog, rv.relname)) {
+      currentErrors.push(`FAIL:INPUT:temp-shadows:${rv.relname}`);
+    }
     return result('utility', fp, {}, {}, [], null);
   }
 
@@ -782,6 +790,18 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
     if (inner.onConflictClause) {
       const scope = conflictScope(inner, targetRel, cols);
       const conflict = unwrap(inner.onConflictClause);
+      // F8 (WF1 LDG-10 fold-1 item 6, registry-truth fold 12) — a `DO UPDATE SET <col> = …`
+      // target is a WRITE of the INSERT target even when `<col>` is not in the INSERT column
+      // list (load_parcels' `*_dataset_version_when_enriched` set_null_on_change_of arms were
+      // traced as reads only); the SET right-hand sides stay reads below. `DO NOTHING` has no
+      // targetList, so it adds nothing.
+      if (targetRel && Array.isArray(conflict.targetList)) {
+        for (const t of conflict.targetList) {
+          if (t && t.ResTarget && typeof t.ResTarget.name === 'string') {
+            recordWrite(writes, excluded, targetRel, t.ResTarget.name);
+          }
+        }
+      }
       const pieces = [
         conflict.targetList,
         conflict.whereClause,
@@ -918,8 +938,21 @@ function buildWriteScope(inner, targetRel, writeColumns) {
     scope.relations.push(makeRel(rv.relname, rv.schemaname, alias));
   };
   const rvKeys = ['usingClause', 'fromClause'];
+  // WF3 resolver five defects (a): the write statement's OWN scope only. A `FROM (subquery) s`
+  // binds `s` as a derived source (same rule as a SELECT scope); the subquery's own tables are
+  // its own scope, resolved by resolveWrite's resolveScope(n.subquery) walk, never relations here.
   for (const k of rvKeys) {
-    if (inner[k] !== undefined) walk(inner[k], (n) => { if (isRangeVar(n)) pushRv(n); });
+    if (inner[k] === undefined) continue;
+    walkOwnScope(inner[k], (n) => {
+      if (isRangeVar(n)) { pushRv(n); return; }
+      if (isRangeSubselect(n)) {
+        const alias = n.alias && typeof n.alias.aliasname === 'string' ? n.alias.aliasname : null;
+        if (alias) {
+          scope.derived.add(alias);
+          scope.subselectRels.push({ alias });
+        }
+      }
+    });
   }
   // WF3 C2c: `FROM/USING unnest(...) AS u(a, b)` binds u's columns as a derived source.
   scope.funcCols = new Map();

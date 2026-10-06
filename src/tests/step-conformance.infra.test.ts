@@ -1668,17 +1668,22 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
 
 const LWD10_STEP = 'scripts/link-wsib.js';
 const LWD10_VAR = 'link_wsib_tier3_full_max_iterations';
+// O4 row 6 (2026-10-03, LW-D23): T7 is RETIRED (config.retired) with the convergence loop.
+// The CURRENT-tree half of this fixture re-points to the tunable that replaced it and has
+// the same shape — consumed ONLY via checks[].limit_from_config, never a compute
+// ctx.config read. The pre-fix-commit half (344e9452) below keeps T7: that is history.
+const LWD10_LIVE_VAR = 'link_wsib_mass_relink_max_pct';
 
 describe('LW-D10 — a declared tunable consumed ONLY via a library *_from_config field (no compute ctx.config read) is NOT a dead declaration; a tunable named ONLY in prose IS', () => {
-  it('the fixture is non-vacuous — T7 is declared, and the descriptor really carries a *_from_config reference for it that is NOT also a compute ctx.config read', () => {
+  it('the fixture is non-vacuous — the live library-only tunable (T7\'s replacement) is declared, and the descriptor really carries a *_from_config reference for it that is NOT also a compute ctx.config read', () => {
     const { declared } = declaredConfigVars(LWD10_STEP);
-    expect(declared, 'link-wsib.descriptor.json no longer declares T7 — fixture stale').toContain(LWD10_VAR);
+    expect(declared, 'link-wsib.descriptor.json no longer declares link_wsib_mass_relink_max_pct — fixture stale').toContain(LWD10_LIVE_VAR);
     const refs = runnerConsumedVars(LWD10_STEP);
-    expect(refs, 'no *_from_config reference names T7 — the tiers[].max_iterations_from_config fix regressed').toContain(LWD10_VAR);
+    expect(refs, 'no *_from_config reference names link_wsib_mass_relink_max_pct — the checks[].limit_from_config wiring regressed').toContain(LWD10_LIVE_VAR);
     const computeAbs = path.join(REPO_ROOT, `${COMPUTE_DIR}/link-wsib.js`);
     expect(
-      configReadsIn(computeAbs).includes(LWD10_VAR),
-      'T7 is ALSO read as ctx.config in the compute — the "library-only" half of this fixture is untested',
+      configReadsIn(computeAbs).includes(LWD10_LIVE_VAR),
+      'link_wsib_mass_relink_max_pct is ALSO read as ctx.config in the compute — the "library-only" half of this fixture is untested',
     ).toBe(false);
   });
 
@@ -1696,7 +1701,8 @@ describe('LW-D10 — a declared tunable consumed ONLY via a library *_from_confi
     // literally, per §3.4's own "may reference a check id but may NEVER quote a number"
     // discipline; checks[].why prose carries no such restriction, and does quote it.)
     const descriptorText = fs.readFileSync(path.join(REPO_ROOT, `${LWD10_STEP.slice(0, -3)}.descriptor.json`), 'utf8');
-    expect(descriptorText, 'checks[].why no longer names T7 in prose — the fixture premise (a coexisting text mention) is stale').toContain(LWD10_VAR);
+    // O4 row 6 (LW-D23): T7 is gone from the descriptor; the live library-only var is named in its text instead.
+    expect(descriptorText, 'the descriptor no longer names link_wsib_mass_relink_max_pct in its text — the fixture premise (a coexisting text mention) is stale').toContain(LWD10_LIVE_VAR);
     // The actual proof: configFindings/runnerConsumedVars/configReadsIn never read
     // checks[].why AT ALL — grep the source of THIS test file's own detectors for that
     // field name; it does not appear, so the prose site above is structurally incapable
@@ -2348,7 +2354,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // disposition: declaring it moves link_parcels' own seam pairs and staleness gating, out
     // of scope for a conversion that must not touch link_parcels' behaviour. Same ledger id
     // (LDG-D1), filed in review_followups.md.
-    link_parcels: { missing: ['address_points', 'compute_centroids', 'geocode_permits', 'parcels'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points and parcels became derivable at their own cutovers)
+    link_parcels: { missing: ['compute_centroids'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points and parcels became derivable at their own cutovers; narrowed 2026-10-03 by P1-C8a: address_points, geocode_permits, parcels now declared)
     refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
     // WIDENED at the batch-2 row 2.1 cutover (2026-09-18): enrich_ravines became a CONVERTED
     // producer that day, so the ledger's column-overlap derivation can now SEE a dependency
@@ -2381,19 +2387,14 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // the pocket-lookup LATERAL join and the neighbourhood_build_norms join). Same disposition as
     // RV-D5/EH-D4/massing: declaring it moves enrich_parcels' own seam pairs and staleness gating,
     // out of scope for a conversion that must not change enrich_parcels' behaviour.
-    // WIDENED AGAIN at the batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04): enrich_centreline became a
-    // CONVERTED producer, so the ledger can now see enrich_parcels' long-standing read of the columns it
-    // writes (scripts/lib/compute/enrich-parcels.js:463-466/1306 — is_corner_lot, is_through_lot,
-    // abuts_laneway: the corner/through setback arithmetic and the laneway-suite gate). Same disposition
-    // as RV-D5/EH-D4/massing/neighbourhoods: declaring it moves enrich_parcels' own seam pairs and
-    // staleness gating, out of scope for a conversion that must not change enrich_parcels' behaviour.
+    // CLOSED 2026-10-03 by P1-C8a (fold 9 D-C, narrowed in the same commit): enrich_parcels, enrich_ravines, enrich_heritage, link_massing now declare their derived producers.
     // WIDENED AGAIN at the batch-2 row 3.3 ③ (load_zoning, 2026-10-05): load_zoning became a CONVERTED
     // producer, so the ledger can now see enrich_parcels' long-standing §9 read of it
     // (scripts/lib/compute/enrich-parcels.js:169-192 — the latest sources:load_zoning run's
     // records_meta.zoning_layers_loaded, base must be loaded — plus the zoning tables). Same disposition
     // as enrich_centreline above: declaring it moves enrich_parcels' own seam pairs and staleness gating,
     // out of scope for a conversion that must not change enrich_parcels' behaviour.
-    enrich_parcels: { missing: ['enrich_centreline', 'enrich_heritage', 'enrich_ravines', 'load_zoning', 'massing', 'neighbourhoods', 'parcels'], extra: [] }, // RV-D5, EH-D4, batch-2 rows 3.7 + 3.6 + 3.8 + 3.10 + 3.3
+    // CLOSED at FLEET-2 assembly (2026-10-05): enrich_parcels now declares load_zoning in inputs.reads.steps too (P1-C8a rule), so no row remains.
     // NEW at the batch-2 row 3.7 cutover (2026-09-24): parcels becoming a CONVERTED producer
     // makes the ledger's column-overlap derivation newly VISIBLE for every OTHER converted
     // step whose compute reads the `parcels` table directly but has never declared a
@@ -2406,10 +2407,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // bounds/invariants; enrich_ravines and enrich_heritage each UPDATE `parcels` columns,
     // which the same column-overlap derivation also treats as a read dependency.
     link_neighbourhoods: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
-    assert_parcel_sanity: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
-    enrich_ravines: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
-    enrich_heritage: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
-    link_massing: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7 — link-massing.js reads parcels directly (building-centroid-in-parcel predicate)
+    // assert_parcel_sanity row CLOSED 2026-10-03 by P1-C8a (fold 9 D-C, narrowed in the same commit): it now declares parcels.
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {
@@ -2473,7 +2471,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
           .sort()
           .map((k) => [k, { missing: m[k]!.missing.slice().sort(), extra: m[k]!.extra.slice().sort() }]),
       );
-    expect(Object.keys(got).length).toBe(8);
+    expect(Object.keys(got).length).toBe(3);
     expect(norm(got)).toEqual(norm(KNOWN_GAPS));
   });
 });
@@ -3073,9 +3071,21 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
     expect(row).toContain('vacuously nothing to cite');
   });
 
+  // FLEET-2 A-1 ruling 4 (2026-10-04): link_massing's only pre_write check (empty_source_guard) was deleted. The guard
+  // is now the runner's input-guard row (index.js measureInputGuards, measured BEFORE any phase), so link_massing
+  // reports Rule 11 `vacuous` exactly like assert_schema above, and is pinned that way here.
+  it('link_massing: 0 when:"pre_write" checks after A-1 ruling 4 — Rule 11 vacuous (the guard is the runner row)', () => {
+    const run = spawnSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('vacuous');
+    expect(row).not.toContain('enforced-green');
+    expect(row).toContain('vacuously nothing to cite');
+  });
+
   it.each([
     ['load_ravines', 2],
-    ['link_massing', 1],
     ['link_wsib', 1],
   ])('%s: %d real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green', (slug, count) => {
     const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
@@ -3113,10 +3123,20 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
     expect(row).toContain('no reachability claim to verify');
   });
 
+  // FLEET-2 assembly A29 (2026-10-06): link_massing and link_parcels now declare recovery.interrupted "none" with an
+  // interrupted_why (every write is retract:"none" and every run is a full re-derive), so, like link_neighbourhoods
+  // below, they make NO reachability claim. They are pinned to that row here rather than dropped.
+  it.each([['link_massing'], ['link_parcels']])('%s: recovery.interrupted "none" (A29) — Rule 12 enforced-green, no reachability claim to verify', (slug) => {
+    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30_000 });
+    expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
+    const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
+    expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
+    expect(row).toContain('enforced-green');
+    expect(row).toContain('recovery.interrupted="none" — no reachability claim to verify');
+  });
+
   it.each([
-    ['link_massing', 'link', 'runLinkPhase'],
     ['link_wsib', 'cascade', 'runCascadePhase'],
-    ['link_parcels', 'link_keyed', 'runLinkKeyedPhase'],
     // NOTE: `link_neighbourhoods` (shape `link_column`, runner `runLinkColumnPhase`) is
     // deliberately ABSENT. This it.each is scoped to steps that DECLARE
     // `recovery.interrupted: "force_full_on_next_run"` — the whole assertion is that the
@@ -3286,8 +3306,13 @@ describe('PH-2 churn×complexity BATCH artifact (G2) — coverage + drift', () =
   it('RED — a hand-edited row fires --check (known-bad fixture, real CLI, not just the exported function)', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'g2-churn-fixture-'));
     const original = fs.readFileSync(TABLE_PATH, 'utf8');
-    const tampered = original.replace(/\|\s*bottom-right\s*\|/, '| top-right |');
-    expect(tampered, 'fixture setup: no "bottom-right" cell found to tamper with').not.toBe(original);
+    // Flip the FIRST quadrant cell the table actually carries. The regenerated table (window_end a3418800) has a
+    // median complexity of 0, so it carries no bottom-right row, and a hard-coded needle would have nothing to tamper.
+    const cell = /\|\s*(top-left|top-right|bottom-left|bottom-right)\s*\|/.exec(original);
+    expect(cell, 'fixture setup: no quadrant cell found to tamper with').not.toBeNull();
+    const flipped = cell![1] === 'top-right' ? 'bottom-left' : 'top-right';
+    const tampered = original.replace(cell![0], `| ${flipped} |`);
+    expect(tampered, 'fixture setup: the tamper did not change the table').not.toBe(original);
     const badTablePath = path.join(dir, 'bad-122-churn-complexity.md');
     fs.writeFileSync(badTablePath, tampered);
     const run = spawnSync('node', [GENERATOR, '--check'], {
@@ -3368,7 +3393,6 @@ describe('STA-2 — generateReset(descriptor) round-trips recovery.reset === "ge
           },
           retract: 'all',
           retract_when: 'always',
-          replay: 'idempotent_upsert',
         }],
       },
     };
@@ -3400,7 +3424,6 @@ describe('STA-2 — generateReset(descriptor) round-trips recovery.reset === "ge
             txn_scope: 'statement',
           },
           retract: 'none',
-          replay: 'idempotent_upsert',
         }],
       },
     };
@@ -3434,7 +3457,6 @@ describe('STA-2 — generateReset(descriptor) round-trips recovery.reset === "ge
             txn_scope: 'step',
           },
           retract: 'departed',
-          replay: 'idempotent_upsert',
         }],
       },
     };
@@ -3466,7 +3488,6 @@ describe('STA-2 — generateReset(descriptor) round-trips recovery.reset === "ge
             txn_scope: 'batch',
           },
           retract: 'none',
-          replay: 'idempotent_upsert',
         }],
       },
     };

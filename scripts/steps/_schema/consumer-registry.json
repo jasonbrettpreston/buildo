@@ -49,6 +49,14 @@
       "source": "counters"
     },
     {
+      "consumer": "compute_parcel_cost_estimates",
+      "producer": "compute_parcel_cost_estimates",
+      "kind": "records_meta",
+      "key": "stranded_cost_rows_retracted",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "enrich_centreline",
       "producer": "enrich_centreline",
       "kind": "records_meta",
@@ -69,6 +77,14 @@
       "producer": "load_heritage",
       "kind": "records_meta",
       "key": "heritage_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "enrich_parcels",
+      "producer": "load_zoning",
+      "kind": "records_meta",
+      "key": "base_layer_committed_after_overlays_failed",
       "value": "any",
       "source": "emits"
     },
@@ -180,6 +196,54 @@
       "consumer": "link_wsib",
       "producer": "link_wsib",
       "kind": "records_meta",
+      "key": "tier1_confidence_updated_at",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "tier1_confidence_updated_at",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "tier2_confidence_updated_at",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "tier2_confidence_updated_at",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "tier3_confidence_updated_at",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
+      "key": "tier3_confidence_updated_at",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_wsib",
+      "producer": "link_wsib",
+      "kind": "records_meta",
       "key": "wsib_registry_count",
       "value": "any",
       "source": "emits"
@@ -237,6 +301,22 @@
       "producer": "parcels",
       "kind": "records_meta",
       "key": "parcels_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/enrich-centreline-cohort-differential.js",
+      "producer": "enrich_centreline",
+      "kind": "records_meta",
+      "key": "centreline_enrich",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/load-heritage-cohort-differential.js",
+      "producer": "load_heritage",
+      "kind": "records_meta",
+      "key": "heritage_load",
       "value": "any",
       "source": "emits"
     },
@@ -402,6 +482,14 @@
     },
     {
       "consumer": "src/app/api/admin/stats/route.ts",
+      "producer": "address_points",
+      "kind": "table",
+      "key": "address_points.retired_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/stats/route.ts",
       "producer": "backfill_realtor_permit_trades",
       "kind": "table",
       "key": "permit_trades.permit_num",
@@ -442,22 +530,6 @@
     },
     {
       "consumer": "src/app/api/admin/stats/route.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_source",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/admin/stats/route.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_source",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/admin/stats/route.ts",
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
@@ -477,14 +549,6 @@
       "producer": "coa",
       "kind": "table",
       "key": "coa_applications.hearing_date",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/admin/stats/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
       "value": "any",
       "source": "src_sql"
     },
@@ -642,70 +706,6 @@
     },
     {
       "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.ward",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/builders/[id]/route.ts",
       "producer": "permits",
       "kind": "table",
       "key": "permits.city",
@@ -813,70 +813,6 @@
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/entities/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.ward",
       "value": "any",
       "source": "src_sql"
     },
@@ -1106,38 +1042,6 @@
     },
     {
       "consumer": "src/app/api/leads/flight-board/detail/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/detail/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/detail/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/detail/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/detail/[id]/route.ts",
       "producer": "permits",
       "kind": "table",
       "key": "permits.permit_num",
@@ -1242,38 +1146,6 @@
     },
     {
       "consumer": "src/app/api/leads/flight-board/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/flight-board/route.ts",
       "producer": "permits",
       "kind": "table",
       "key": "permits.permit_num",
@@ -1317,46 +1189,6 @@
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/search/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/search/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/search/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/search/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/leads/search/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
       "value": "any",
       "source": "src_sql"
     },
@@ -1419,38 +1251,6 @@
     {
       "consumer": "src/app/api/permits/[id]/route.ts",
       "producer": "close_stale_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/permits/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/permits/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/permits/[id]/route.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/app/api/permits/[id]/route.ts",
-      "producer": "create_pre_permits",
       "kind": "table",
       "key": "permits.status",
       "value": "any",
@@ -1548,6 +1348,14 @@
       "consumer": "src/app/api/permits/[id]/route.ts",
       "producer": "massing",
       "kind": "table",
+      "key": "building_footprints.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/permits/[id]/route.ts",
+      "producer": "massing",
+      "kind": "table",
       "key": "building_footprints.max_height_m",
       "value": "any",
       "source": "src_sql"
@@ -1589,6 +1397,14 @@
       "producer": "neighbourhoods",
       "kind": "table",
       "key": "neighbourhoods.english_knowledge_pct",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/permits/[id]/route.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
+      "key": "neighbourhoods.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -1669,6 +1485,14 @@
       "producer": "neighbourhoods",
       "kind": "table",
       "key": "neighbourhoods.tenure_renter_pct",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/permits/[id]/route.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
+      "key": "neighbourhoods.top_mother_tongue",
       "value": "any",
       "source": "src_sql"
     },
@@ -1853,6 +1677,14 @@
       "producer": "assert_data_bounds",
       "kind": "records_meta",
       "key": "audit_table",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "src/components/FreshnessTimeline.tsx",
+      "producer": "assert_engine_health",
+      "kind": "records_meta",
+      "key": "engine_health",
       "value": "any",
       "source": "emits"
     },
@@ -2189,62 +2021,6 @@
     },
     {
       "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/get-lead-feed.ts",
       "producer": "enrich_named_builders",
       "kind": "table",
       "key": "entities.primary_email",
@@ -2360,6 +2136,38 @@
       "producer": "load_wsib",
       "kind": "table",
       "key": "wsib_registry.is_gta",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/features/leads/lib/get-lead-feed.ts",
+      "producer": "load_wsib",
+      "kind": "table",
+      "key": "wsib_registry.last_enriched_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/features/leads/lib/get-lead-feed.ts",
+      "producer": "load_wsib",
+      "kind": "table",
+      "key": "wsib_registry.primary_phone",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/features/leads/lib/get-lead-feed.ts",
+      "producer": "load_wsib",
+      "kind": "table",
+      "key": "wsib_registry.website",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/features/leads/lib/get-lead-feed.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
+      "key": "neighbourhoods.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -2496,38 +2304,6 @@
       "producer": "compute_timing_calibration_v2",
       "kind": "table",
       "key": "phase_calibration.sample_size",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/timing.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/timing.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/timing.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/features/leads/lib/timing.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
       "value": "any",
       "source": "src_sql"
     },
@@ -2920,38 +2696,6 @@
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/analytics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/analytics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/analytics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/analytics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.ward",
       "value": "any",
       "source": "src_sql"
     },
@@ -3437,46 +3181,6 @@
     },
     {
       "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-detail-query.ts",
       "producer": "geocode_permits",
       "kind": "table",
       "key": "permits.latitude",
@@ -3552,6 +3256,14 @@
       "producer": "neighbourhoods",
       "kind": "table",
       "key": "neighbourhoods.avg_household_income",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-detail-query.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
+      "key": "neighbourhoods.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -3949,38 +3661,6 @@
     },
     {
       "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.project_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.project_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.completed_date",
@@ -4357,78 +4037,6 @@
     },
     {
       "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.application_date",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.last_seen_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "geocode_permits",
       "kind": "table",
       "key": "permits.latitude",
@@ -4567,6 +4175,14 @@
       "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "massing",
       "kind": "table",
+      "key": "building_footprints.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "massing",
+      "kind": "table",
       "key": "building_footprints.max_height_m",
       "value": "any",
       "source": "src_sql"
@@ -4583,6 +4199,14 @@
       "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "neighbourhoods",
       "kind": "table",
+      "key": "neighbourhoods.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
       "key": "neighbourhoods.name",
       "value": "any",
       "source": "src_sql"
@@ -4592,6 +4216,14 @@
       "producer": "neighbourhoods",
       "kind": "table",
       "key": "neighbourhoods.period_of_construction",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "parcels",
+      "kind": "table",
+      "key": "parcels.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -4829,46 +4461,6 @@
     },
     {
       "consumer": "src/lib/market-metrics/queries.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/market-metrics/queries.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/market-metrics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/market-metrics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/market-metrics/queries.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/market-metrics/queries.ts",
       "producer": "link_neighbourhoods",
       "kind": "table",
       "key": "permits.neighbourhood_id",
@@ -4888,6 +4480,14 @@
       "producer": "neighbourhoods",
       "kind": "table",
       "key": "neighbourhoods.avg_household_income",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/market-metrics/queries.ts",
+      "producer": "neighbourhoods",
+      "kind": "table",
+      "key": "neighbourhoods.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -5048,22 +4648,6 @@
       "producer": "compute_cost_estimates",
       "kind": "table",
       "key": "data_quality_snapshots.cost_estimates_zero_total_bypass",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/quality/metrics.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.last_seen_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/quality/metrics.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
       "value": "any",
       "source": "src_sql"
     },
@@ -5431,6 +5015,22 @@
       "consumer": "src/lib/quality/metrics.ts",
       "producer": "refresh_snapshot",
       "kind": "table",
+      "key": "data_quality_snapshots.created_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
       "key": "data_quality_snapshots.inspections_not_passed_count",
       "value": "any",
       "source": "src_sql"
@@ -5688,6 +5288,14 @@
       "producer": "refresh_snapshot",
       "kind": "table",
       "key": "data_quality_snapshots.sla_permits_ingestion_hours",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/quality/metrics.ts",
+      "producer": "refresh_snapshot",
+      "kind": "table",
+      "key": "data_quality_snapshots.snapshot_date",
       "value": "any",
       "source": "src_sql"
     },
@@ -5997,70 +5605,6 @@
     },
     {
       "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.project_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_classified_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_source",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_class",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.project_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_classified_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_source",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "classify_scope_tags",
-      "kind": "table",
-      "key": "permits.scope_tags",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.completed_date",
@@ -6072,86 +5616,6 @@
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.application_date",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.description",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.last_seen_at",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.permit_type",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.revision_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.status",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_name",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.street_num",
-      "value": "any",
-      "source": "src_sql"
-    },
-    {
-      "consumer": "src/lib/sync/process.ts",
-      "producer": "create_pre_permits",
-      "kind": "table",
-      "key": "permits.ward",
       "value": "any",
       "source": "src_sql"
     },

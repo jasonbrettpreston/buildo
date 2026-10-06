@@ -16,15 +16,15 @@
  * per-tier writes[]; what is left here, exactly per Rule 2 (compute is domain logic
  * only), is:
  *
- *   1. buildTierSql(descriptor, config, tier, runAt) — ruling A-2 option 2, same split as
- *      link_massing's buildMatchSql. The MATCH PREDICATE per tier (exact trade name,
- *      exact legal name, pg_trgm fuzzy) and the wsib_registry / entities-contacts UPDATE
- *      text are SQL TEXT, pure, no pool — the library executes it via
- *      write.executeSetBasedJoinUpdate (LG-11).
- *   2. buildRetractionSql / buildContactsReverseClearSql — A-7's tier-3 repair (LG-16),
- *      declared and wired, NOT exercised by commit 7 (mode never resolves "full" in any
- *      commit-7 invocation — A-8 fires only off the load_wsib corpus signal or
- *      LINK_WSIB_FORCE_FULL; the budgeted live repair run is commit 8's act).
+ *   1. buildDerivationSql(descriptor, config) — O4 row 6 (full rescan, operator ruling
+ *      2026-10-03, design .cursor/o4-row6-link-wsib-design-2026-10-03.md §11): ONE read-only
+ *      derivation of every wsib_registry row's best link (exact trade > exact legal > fuzzy),
+ *      diffed against the stored link. buildApplyLinksSql (the compare-and-set set/move write),
+ *      VANISH_RETRACT_SCOPE (the keyed UPDATE-to-NULL's declared scope) and buildTierSql (the
+ *      per-tier entities contacts statements) are SQL TEXT, pure, no pool — the library executes
+ *      them (LG-11 / LG-16 executors).
+ *   2. buildContactsReverseClearSql — A-7's provenance-by-equality reverse clear, keyed per
+ *      (old entity, value) pair, fired for the diff's moved + vanished rows of ANY tier.
  *   3. one named observer per declared check, reading what the library measured.
  *
  * LW-D19 (2026-08-29 operator ruling) — `entities.is_wsib_registered` is a product-visible
@@ -38,9 +38,9 @@
  * exact-tier link", both directions, every run.
  *
  * THE CTX CONTRACT (what the library hands a MATCHER compute):
- *   · ctx.matched     — what the cascade produced this run: the pre-run unlinked count,
- *                       per-tier link counts, the fan-in max, the LW-D19 correction count,
- *                       and (mode full only) the retraction counts
+ *   · ctx.matched     — what the cascade produced this run: the pre-run unlinked/linked
+ *                       counts, the diff's set/move/vanish counts (O4 row 6), per-tier link
+ *                       counts, the fan-in max, the LW-D19 correction count, contacts cleared
  *   · ctx.cumulative  — the runner's generic cumulative-rate field (link_massing still
  *                       reads it); link_wsib's `link_rate_warn` no longer does (LW-D18,
  *                       2026-08-29) — the rate is now entities-with-a-link over total
@@ -64,8 +64,6 @@
 const EXACT_LENGTH_FLOOR = 3;
 /** S2 — the length floor inside the fuzzy tier's CTEs (higher: a fuzzy match on a short string is garbage). */
 const FUZZY_LENGTH_FLOOR = 5;
-/** S3 — the Tier 3 safety cap, per invocation. Structural, not an operator knob (raising it changes worst-case cost, not match quality). */
-const TIER3_LIMIT = 1000;
 
 /** `execution.tiers[].id` values, in cascade order (highest confidence first). */
 const TIER_IDS = Object.freeze({
@@ -136,245 +134,218 @@ function exactTierConfidences(descriptor, config) {
 }
 
 /**
- * ONE tier's full statement set, as text, derived from the descriptor + resolved config.
+ * The resolved confidence of ONE declared tier (`execution.tiers[].confidence_from_config`), by tier id.
+ */
+function tierConfidence(descriptor, config, tierId) {
+  const t = descriptor.execution.tiers.find((tt) => tt.id === tierId);
+  if (!t) throw new Error(`[link_wsib compute] descriptor.execution.tiers has no "${tierId}" entry`);
+  return config[t.confidence_from_config];
+}
+
+/**
+ * ONE tier's entities statements, as text, derived from the descriptor + resolved config.
  *
- * ⚠️ d704a447 — THE ARTICLE-STRIPPING BLOCKING PREDICATE (LW-D notes, §2 of the
- * assessment). Both the exact tiers' JOIN and the fuzzy tier's CTEs compare the first
- * letter of each name AFTER stripping a leading THE/A/AN, which is what keeps the
- * trigram GIN index selective (without it, "THE ABC COMPANY" and "ABC COMPANY" land in
- * different first-letter buckets and never compare). This is the MOST consequential
- * fence in the 17-commit corpus: everything the `wsib_tier3_current_predicate_pass_rate_pct`
- * invariant measures is "did this row's link satisfy the predicate AS IT STANDS TODAY" —
- * because the `WHERE linked_entity_id IS NULL` scope is monotone (a row can only be
- * matched ONCE, ever), a fix here can never retroactively repair a link written under a
- * prior algorithm. That is LW-D5's whole root cause and A-7's whole reason to exist.
+ * O4 row 6 (operator ruling 2026-10-03, registry-truth folds 14 + 15) — the per-tier
+ * wsib_registry fill-once UPDATEs (`WHERE linked_entity_id IS NULL`, the tier-3 `LIMIT 1000`)
+ * are RETIRED: every row's link is derived ONCE by `buildDerivationSql` and only the difference
+ * is written (`buildApplyLinksSql` + `VANISH_RETRACT_SCOPE`). What stays per tier is
+ * copyContacts, parameterized by the tier's confidence, and the LW-D19 flag scope params
+ * (ALWAYS the two exact tiers' confidences, `exactTierConfidences`).
  *
- * LW-D15 (2026-08-28) — each returned shape also carries a `*_count_sql`/`*_count_params`
- * sibling: the SAME predicate as a plain `SELECT count(*)::int AS n`, no write. This is
- * the declared dry-run mechanism (Spec 124 §7 rung (e)) — `runCascadePhase` issues the
- * count variant instead of the write variant when `ctx.overrides.dry_run` is set, so a
- * `--dry-run` invocation issues ZERO UPDATE/INSERT/DELETE statements (the old
- * pre-conversion `link-wsib.js`, `5de41cc1`, took the identical approach: "Dry-run now
- * simulates match counts using read-only COUNT queries with the same CTE logic" — mirrored
- * here rather than the alternative of executing-then-ROLLBACK, which would still ISSUE the
- * write statement text). The count SQL text is a deliberate near-duplicate of the write
- * SQL's predicate (matching `5de41cc1`'s own precedent of hand-duplicated dry-run counts,
- * not a shared-fragment refactor) — SQL TEXT is compute's declared domain (ruling A-2
- * option 2), and a literal duplicate is safer here than string-surgery on the write SQL.
+ * LW-D15 — each statement carries a `*_count_sql` read-only mirror, which `runCascadePhase`
+ * issues instead of the write under `--dry-run`.
  *
  * @param {object} descriptor
  * @param {Readonly<Record<string, number>>} config - ctx.config
  * @param {{id: string, confidence_from_config: string}} tier
- * @param {Date} runAt - the single DB-clock capture for this run (Spec 47 §R3.5)
- * @returns {{wsib_update_sql: string, wsib_update_params: unknown[], wsib_count_sql: string, wsib_count_params: unknown[], entities_flag_scope_params: unknown[], entities_flag_count_sql: string, entities_flag_count_params: unknown[], entities_contacts_sql: string, entities_contacts_params: unknown[], entities_contacts_count_sql: string, entities_contacts_count_params: unknown[]}}
+ * @returns {{entities_flag_scope_params: unknown[], entities_flag_count_sql: string, entities_flag_count_params: unknown[], entities_contacts_sql: string, entities_contacts_params: unknown[], entities_contacts_count_sql: string, entities_contacts_count_params: unknown[]}}
  */
-function buildTierSql(descriptor, config, tier, runAt) {
+function buildTierSql(descriptor, config, tier) {
+  if (!Object.values(TIER_IDS).includes(tier.id)) {
+    throw new Error(`[link_wsib compute] buildTierSql: unknown tier id "${tier.id}"`);
+  }
   const confidence = config[tier.confidence_from_config];
-  // LW-D19 — the entities.is_wsib_registered fill-true target is ALWAYS scoped to the two
-  // EXACT tiers' confidences, regardless of which tier's own pass is currently running (the
-  // fuzzy tier's pass issues the identical statement, with the identical params, as the two
-  // exact tiers' passes — a genuine no-op for tier-3-only rows, never a branch). See
-  // `exactTierConfidences`'s doc comment.
   const entitiesFlagParams = exactTierConfidences(descriptor, config);
-  const entitiesContactsSql = buildContactsSql();
-  const entitiesContactsCountSql = buildContactsCountSql();
-  const entitiesFlagCountSql = buildEntitiesFlagCountSql();
-  if (tier.id === TIER_IDS.EXACT_TRADE) {
-    return {
-      wsib_update_sql: buildExactMatchSql('trade_name_normalized'),
-      wsib_update_params: [runAt, confidence],
-      wsib_count_sql: buildExactMatchCountSql('trade_name_normalized'),
-      wsib_count_params: [],
-      entities_flag_scope_params: entitiesFlagParams,
-      entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: entitiesFlagParams,
-      entities_contacts_sql: entitiesContactsSql,
-      entities_contacts_params: [confidence],
-      entities_contacts_count_sql: entitiesContactsCountSql,
-      entities_contacts_count_params: [confidence],
-    };
-  }
-  if (tier.id === TIER_IDS.EXACT_LEGAL) {
-    return {
-      wsib_update_sql: buildExactMatchSql('legal_name_normalized'),
-      wsib_update_params: [runAt, confidence],
-      wsib_count_sql: buildExactMatchCountSql('legal_name_normalized'),
-      wsib_count_params: [],
-      entities_flag_scope_params: entitiesFlagParams,
-      entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: entitiesFlagParams,
-      entities_contacts_sql: entitiesContactsSql,
-      entities_contacts_params: [confidence],
-      entities_contacts_count_sql: entitiesContactsCountSql,
-      entities_contacts_count_params: [confidence],
-    };
-  }
-  if (tier.id === TIER_IDS.FUZZY) {
-    const wsibFuzzyMatchThreshold = config.wsib_fuzzy_match_threshold;
-    const stopwords = tokenOverlapStopwords(descriptor);
-    return {
-      wsib_update_sql: buildFuzzyMatchSql(stopwords),
-      // $1 RUN_AT, $2 similarity threshold (set_config + both CTE comparisons), $3 confidence
-      wsib_update_params: [runAt, wsibFuzzyMatchThreshold, confidence],
-      wsib_count_sql: buildFuzzyMatchCountSql(stopwords),
-      // $1 similarity threshold only — the count variant has no SET clause to bind RUN_AT/confidence to.
-      wsib_count_params: [wsibFuzzyMatchThreshold],
-      // LW-D19 — the fuzzy tier's own pass NEVER confers is_wsib_registered: scoped to the
-      // two EXACT tiers' confidences (same as the exact tiers' own passes above), so this
-      // statement matches zero NEW rows off a fuzzy-only link — Spec 124 §7 rung (b).
-      entities_flag_scope_params: entitiesFlagParams,
-      entities_flag_count_sql: entitiesFlagCountSql,
-      entities_flag_count_params: entitiesFlagParams,
-      entities_contacts_sql: entitiesContactsSql,
-      entities_contacts_params: [confidence],
-      entities_contacts_count_sql: entitiesContactsCountSql,
-      entities_contacts_count_params: [confidence],
-    };
-  }
-  throw new Error(`[link_wsib compute] buildTierSql: unknown tier id "${tier.id}"`);
-}
-
-/** Tier 1 / Tier 2 — exact name match, one wsib_registry column vs entities.name_normalized. */
-function buildExactMatchSql(wsibColumn) {
-  return `WITH matched AS (
-  SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
-  FROM wsib_registry w
-  JOIN entities e ON e.name_normalized = w.${wsibColumn}
-  WHERE w.linked_entity_id IS NULL
-    AND w.${wsibColumn} IS NOT NULL
-    AND LENGTH(w.${wsibColumn}) >= ${EXACT_LENGTH_FLOOR}
-  ORDER BY w.id, e.permit_count DESC
-)
-UPDATE wsib_registry w
-SET linked_entity_id = m.entity_id,
-    match_confidence = $2,
-    matched_at = $1::timestamptz
-FROM matched m
-WHERE w.id = m.wsib_id`;
-}
-
-/** LW-D15 — read-only mirror of `buildExactMatchSql`'s predicate; zero params (no SET clause to bind). */
-function buildExactMatchCountSql(wsibColumn) {
-  return `WITH matched AS (
-  SELECT DISTINCT ON (w.id) w.id AS wsib_id, e.id AS entity_id
-  FROM wsib_registry w
-  JOIN entities e ON e.name_normalized = w.${wsibColumn}
-  WHERE w.linked_entity_id IS NULL
-    AND w.${wsibColumn} IS NOT NULL
-    AND LENGTH(w.${wsibColumn}) >= ${EXACT_LENGTH_FLOOR}
-  ORDER BY w.id, e.permit_count DESC
-)
-SELECT count(*)::int AS n FROM matched`;
+  return {
+    entities_flag_scope_params: entitiesFlagParams,
+    entities_flag_count_sql: buildEntitiesFlagCountSql(),
+    entities_flag_count_params: entitiesFlagParams,
+    entities_contacts_sql: buildContactsSql(),
+    entities_contacts_params: [confidence],
+    entities_contacts_count_sql: buildContactsCountSql(),
+    entities_contacts_count_params: [confidence],
+  };
 }
 
 /**
- * Tier 3 — pg_trgm fuzzy match across BOTH trade_name and legal_name, GIN-index-backed.
+ * O4 row 6 — FULL RESCAN (operator ruling 2026-10-03, registry-truth folds 14 + 15; design and
+ * Idempotency Lens ruling in .cursor/o4-row6-link-wsib-design-2026-10-03.md §11, D1–D5 all (a)).
  *
- * `set_config('pg_trgm.similarity_threshold', $2::text, true)` is TRANSACTION-scoped
- * (`is_local = true`), not session-scoped like the pre-conversion `SET .../RESET ...`
- * pair — a deliberate, declared improvement (G-10's guarantee is honoured: the GUC is
- * set on the SAME client the query runs on, before the query, and it can never leak to
- * later work on a pooled connection because it auto-resets at COMMIT/ROLLBACK, which a
- * forgotten manual RESET could not guarantee). `d704a447`'s article-stripping predicate
- * and `647d0935`'s trade/legal CTE split (for GIN index use, avoiding the ~394M-row
- * nested loop the OR-joined version produced) are both preserved verbatim. LW-D14
- * (2026-08-28) adds the shared-non-generic-token requirement (`tokenOverlapClause`) to
- * BOTH CTEs — `similarity() > threshold` + first-letter blocking alone accepted two
- * unrelated companies that merely share a generic word ("* CONTRACTING").
+ * ONE derivation of EVERY wsib_registry row's best link — no `linked_entity_id IS NULL` scope, so
+ * a stored link is re-derived every run (a better new entity wins, an exact match that appeared
+ * later replaces a fuzzy link, a vanished match is NULLed) — diffed against the stored
+ * `(linked_entity_id, match_confidence)`. The rows returned are ONLY the rows whose link changes:
+ *   set     old NULL, new present
+ *   move    old present, new present with a different entity or confidence (matched_at moves
+ *           too: a confidence change is a tier change, §11 L3)
+ *   vanish  old present, new NULL
+ * each with its OLD link + matched_at (the R-M / LG-17 before-image and the compare-and-set key)
+ * and its contact values (the A-7 reverse clear's provenance-by-equality values).
  *
- * @param {string[]} stopwords - `tokenOverlapStopwords(descriptor)`
+ * Tier rank: exact trade (T1) > exact legal (T2, anti-joined on T1) > fuzzy (anti-joined on both
+ * exact arms, §11 L8 — also the cheaper form: the fuzzy CTEs skip exact-matched rows).
+ * `entities.name_normalized` is UNIQUE (entities_name_normalized_key), so an exact arm yields at
+ * most one entity per row and needs no tiebreak. The fuzzy order is TOTAL —
+ * `score DESC, permit_count DESC, name_normalized ASC`: the third key is new and load-bearing
+ * (§11 L14) — without it two equal-score, equal-permit_count candidates resolve by plan order and
+ * the same input could re-point a link on every run. `name_normalized` (unique, natural) rather
+ * than the surrogate `entities.id`, so a re-import that re-sequences ids changes nothing.
+ *
+ * ⚠️ d704a447 — THE ARTICLE-STRIPPING BLOCKING PREDICATE, preserved verbatim: both fuzzy CTEs
+ * compare the first letter of each name AFTER stripping a leading THE/A/AN, which keeps the
+ * trigram comparison selective ("THE ABC COMPANY" and "ABC COMPANY" land in the same bucket).
+ * `647d0935`'s trade/legal CTE split (GIN-index use, avoiding the ~394M-row nested loop of the
+ * OR-joined form) and LW-D14's shared-non-generic-token requirement (`tokenOverlapClause`) are
+ * preserved verbatim too. The old monotone `IS NULL` scope meant a predicate fix could never repair
+ * a link written under a prior algorithm (LW-D5, A-7's whole reason to exist); under full rescan
+ * every link is re-checked against the predicate AS IT STANDS TODAY, on every run.
+ *
+ * ⚠️ set_config is its OWN statement (`setup_sql`), never a `WITH _cfg AS (SELECT set_config(...))`
+ * CTE: Postgres does not evaluate a SELECT CTE the primary query never references, so the old CTE
+ * form never set the GUC (the `%` operator ran at the default threshold; the explicit
+ * `similarity() > threshold` filter kept the result correct). The library runs `setup_sql`, then
+ * `diff_sql`, on ONE client inside ONE read-only transaction (G-10: `is_local = true` is
+ * transaction-scoped and resets at COMMIT/ROLLBACK, so it can never leak to a pooled connection).
+ *
+ * @param {object} descriptor
+ * @param {Readonly<Record<string, number>>} config - ctx.config
+ * @returns {{setup_sql: string, setup_params: unknown[], diff_sql: string, diff_params: unknown[]}}
  */
-function buildFuzzyMatchSql(stopwords) {
-  return `WITH _cfg AS (SELECT set_config('pg_trgm.similarity_threshold', $2::text, true)),
-trade_matches AS (
-  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
-         similarity(w.trade_name_normalized, e.name_normalized) AS score
+function buildDerivationSql(descriptor, config) {
+  const stopwords = tokenOverlapStopwords(descriptor);
+  const threshold = config.wsib_fuzzy_match_threshold;
+  return {
+    setup_sql: "SELECT set_config('pg_trgm.similarity_threshold', $1::text, true)",
+    setup_params: [threshold],
+    diff_sql: `WITH exact1 AS (
+  SELECT w.id AS wsib_id, e.id AS entity_id
   FROM wsib_registry w
-  JOIN entities e ON w.trade_name_normalized % e.name_normalized
-    AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1)
-      = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
-    AND ${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}
-  WHERE w.linked_entity_id IS NULL
-    AND w.trade_name_normalized IS NOT NULL
-    AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND similarity(w.trade_name_normalized, e.name_normalized) > $2::float
+  JOIN entities e ON e.name_normalized = w.trade_name_normalized
+  WHERE w.trade_name_normalized IS NOT NULL
+    AND LENGTH(w.trade_name_normalized) >= ${EXACT_LENGTH_FLOOR}
 ),
-legal_matches AS (
-  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
-         similarity(w.legal_name_normalized, e.name_normalized) AS score
+exact2 AS (
+  SELECT w.id AS wsib_id, e.id AS entity_id
   FROM wsib_registry w
-  JOIN entities e ON w.legal_name_normalized % e.name_normalized
-    AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
-      = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
-    AND ${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}
-  WHERE w.linked_entity_id IS NULL
-    AND LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND similarity(w.legal_name_normalized, e.name_normalized) > $2::float
+  JOIN entities e ON e.name_normalized = w.legal_name_normalized
+  WHERE w.legal_name_normalized IS NOT NULL
+    AND LENGTH(w.legal_name_normalized) >= ${EXACT_LENGTH_FLOOR}
+    AND NOT EXISTS (SELECT 1 FROM exact1 x WHERE x.wsib_id = w.id)
 ),
-combined AS (
-  SELECT * FROM trade_matches
+exact AS (
+  SELECT wsib_id FROM exact1
   UNION ALL
-  SELECT * FROM legal_matches
+  SELECT wsib_id FROM exact2
 ),
-matched AS (
-  SELECT DISTINCT ON (wsib_id) wsib_id, entity_id
-  FROM combined
-  ORDER BY wsib_id, score DESC, permit_count DESC
-  LIMIT ${TIER3_LIMIT}
-)
-UPDATE wsib_registry w
-SET linked_entity_id = m.entity_id,
-    match_confidence = $3,
-    matched_at = $1::timestamptz
-FROM matched m
-WHERE w.id = m.wsib_id`;
-}
-
-/** LW-D15 — read-only mirror of `buildFuzzyMatchSql`'s predicate; $1 is the similarity threshold only. LW-D14 — same token-overlap requirement, mirrored. */
-function buildFuzzyMatchCountSql(stopwords) {
-  return `WITH _cfg AS (SELECT set_config('pg_trgm.similarity_threshold', $1::text, true)),
 trade_matches AS (
-  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count, e.name_normalized,
          similarity(w.trade_name_normalized, e.name_normalized) AS score
   FROM wsib_registry w
   JOIN entities e ON w.trade_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.trade_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
     AND ${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}
-  WHERE w.linked_entity_id IS NULL
-    AND w.trade_name_normalized IS NOT NULL
+  WHERE w.trade_name_normalized IS NOT NULL
     AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND similarity(w.trade_name_normalized, e.name_normalized) > $1::float
+    AND NOT EXISTS (SELECT 1 FROM exact x WHERE x.wsib_id = w.id)
 ),
 legal_matches AS (
-  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count,
+  SELECT w.id AS wsib_id, e.id AS entity_id, e.permit_count, e.name_normalized,
          similarity(w.legal_name_normalized, e.name_normalized) AS score
   FROM wsib_registry w
   JOIN entities e ON w.legal_name_normalized % e.name_normalized
     AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
     AND ${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}
-  WHERE w.linked_entity_id IS NULL
-    AND LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+  WHERE LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
     AND similarity(w.legal_name_normalized, e.name_normalized) > $1::float
+    AND NOT EXISTS (SELECT 1 FROM exact x WHERE x.wsib_id = w.id)
 ),
-combined AS (
-  SELECT * FROM trade_matches
-  UNION ALL
-  SELECT * FROM legal_matches
-),
-matched AS (
+fuzzy AS (
   SELECT DISTINCT ON (wsib_id) wsib_id, entity_id
-  FROM combined
-  ORDER BY wsib_id, score DESC, permit_count DESC
-  LIMIT ${TIER3_LIMIT}
+  FROM (
+    SELECT * FROM trade_matches
+    UNION ALL
+    SELECT * FROM legal_matches
+  ) combined
+  ORDER BY wsib_id, score DESC, permit_count DESC, name_normalized ASC
+),
+derived AS (
+  SELECT wsib_id, entity_id, $2::numeric(3,2) AS confidence FROM exact1
+  UNION ALL
+  SELECT wsib_id, entity_id, $3::numeric(3,2) FROM exact2
+  UNION ALL
+  SELECT wsib_id, entity_id, $4::numeric(3,2) FROM fuzzy
 )
-SELECT count(*)::int AS n FROM matched`;
+SELECT w.id,
+       w.linked_entity_id AS old_entity_id,
+       w.match_confidence AS old_confidence,
+       w.matched_at AS old_matched_at,
+       d.entity_id AS new_entity_id,
+       d.confidence AS new_confidence,
+       w.primary_phone, w.primary_email, w.website
+FROM wsib_registry w
+LEFT JOIN derived d ON d.wsib_id = w.id
+WHERE (w.linked_entity_id, w.match_confidence) IS DISTINCT FROM (d.entity_id, d.confidence)
+ORDER BY w.id`,
+    // $1 similarity threshold; $2/$3/$4 the tier-1/2/3 confidences, cast to the column's own
+    // NUMERIC(3,2) so a stored value and its re-derived value compare equal (never churn).
+    diff_params: [
+      threshold,
+      tierConfidence(descriptor, config, TIER_IDS.EXACT_TRADE),
+      tierConfidence(descriptor, config, TIER_IDS.EXACT_LEGAL),
+      tierConfidence(descriptor, config, TIER_IDS.FUZZY),
+    ],
+  };
 }
+
+/**
+ * O4 row 6 — W-set (writes[0], `set_based_join_update`; LG-11's executor refuses INSERT / ON
+ * CONFLICT): the diff's set + move rows in ONE keyed UPDATE, COMPARE-AND-SET on the OLD link
+ * (§11 L13, operator D3(a)). The derivation ran in its own earlier read-only transaction, so a row
+ * whose stored link changed since then matches 0 rows here and is re-derived next run — never
+ * overwritten from a stale read. The second guard (IS DISTINCT FROM the new link) keeps a
+ * same-transaction replay a zero-write no-op. `matched_at` is the run clock: in the SET list,
+ * NEVER in a guard (LG-9 — a clock column inside IS DISTINCT FROM makes every run a change).
+ * Params: $1 RUN_AT, $2 ids, $3 new entity ids, $4 new confidences, $5 old entity ids (NULL for a
+ * set), $6 old confidences (NULL for a set). Always JS arrays (empty → 0 rows), never NULL.
+ */
+function buildApplyLinksSql() {
+  return `UPDATE wsib_registry w
+SET linked_entity_id = u.new_entity_id,
+    match_confidence = u.new_confidence,
+    matched_at = $1::timestamptz
+FROM unnest($2::int[], $3::int[], $4::numeric[], $5::int[], $6::numeric[])
+  AS u(id, new_entity_id, new_confidence, old_entity_id, old_confidence)
+WHERE w.id = u.id
+  AND (w.linked_entity_id, w.match_confidence) IS NOT DISTINCT FROM (u.old_entity_id, u.old_confidence)
+  AND (w.linked_entity_id, w.match_confidence) IS DISTINCT FROM (u.new_entity_id, u.new_confidence)`;
+}
+
+/**
+ * O4 row 6 — W-vanish's DECLARED scope (writes[3], `set_based_null_retract`, codegen'd by write.js
+ * as `UPDATE wsib_registry SET linked_entity_id = null, match_confidence = null, matched_at = null
+ * WHERE <scope> AND (linked_entity_id IS DISTINCT FROM null)` — never a DELETE, LG-16). KEYED by
+ * the diff's vanish ids AND compare-and-set on each row's old link (a row re-linked since the
+ * derivation does not match). Replaces `match_confidence = $1` + `retract: "all"` /
+ * `retract_when: "full_only"` (the tier-3-only, scope-wide retraction): a vanished EXACT link is
+ * NULLed too. Exported so the descriptor's declared scope and the runner's binding ($1 ids, $2 old
+ * entity ids, $3 old confidences) cannot disagree.
+ */
+const VANISH_RETRACT_SCOPE = '(id, linked_entity_id, match_confidence) IN (SELECT * FROM unnest($1::int[], $2::int[], $3::numeric[]))';
 
 /**
  * The entities.is_wsib_registered flag flip's SCOPE — declared columns[]/write_discipline
@@ -397,10 +368,9 @@ function buildEntitiesFlagCountSql() {
  * (match_confidence 0.60) — i.e. it has no EXACT-tier link at all. Runs every invocation,
  * unconditional of mode (unlike A-7/LG-16's retraction, never gated to mode "full"): the
  * fill-true target above only ever transitions false→true, so this is the ONLY mechanism
- * that ever corrects a row set true by pre-LW-D19 code, or a future edge case (e.g. an
- * entity's only exact-tier link is itself later retracted — not currently possible, wsib_
- * registry rows outside `retract_when: full_only`'s tier-3 scope are never retracted, but
- * this target's scope makes that hypothetical safe too, not just today's known-bad rows).
+ * that ever corrects a row set true by pre-LW-D19 code, or an entity whose only exact-tier
+ * link vanished or moved to the fuzzy tier under the O4 row 6 full rescan (the keyed
+ * UPDATE-to-NULL now NULLs a vanished link of ANY tier).
  * "is_wsib_registered ≡ EXISTS an exact-tier link", both directions, self-healing every run.
  */
 const ENTITIES_UNFLAG_SCOPE = 'is_wsib_registered = true AND id NOT IN (SELECT linked_entity_id FROM wsib_registry WHERE match_confidence IN ($1, $2))';
@@ -459,53 +429,36 @@ WHERE (
 }
 
 // ===========================================================================
-// A-7 — the tier-3 repair (LG-16). Declared and wired; NOT exercised by commit 7.
+// A-7 — the contacts repair for links that moved away or vanished (O4 row 6)
 // ===========================================================================
 
 /**
- * The LG-16 UPDATE-to-NULL retraction, scoped to the fuzzy tier's confidence value —
- * never DELETE (wsib_registry rows are load-wsib.js's exclusive territory; retracting a
- * LINK is not retracting the ROW). `$1` is the tier-3 confidence, matching
- * `write_discipline.scope: "match_confidence = $1"`.
- */
-function buildRetractionScopeParams(config, tiers) {
-  const fuzzyTier = tiers.find((t) => t.id === TIER_IDS.FUZZY);
-  return [config[fuzzyTier.confidence_from_config]];
-}
-
-/**
- * The entities.is_wsib_registered CASCADE for A-7: an entity whose ONLY links were just
- * retracted must lose the flag too (LG-16's declared consequence, Fold B item 1).
- */
-function buildEntitiesUnflagSql() {
-  return `UPDATE entities e
-SET is_wsib_registered = false
-WHERE e.is_wsib_registered = true
-  AND NOT EXISTS (SELECT 1 FROM wsib_registry w WHERE w.linked_entity_id = e.id)`;
-}
-
-/**
- * A-7's copyContacts REVERSE pass (Fold B BLOCKING a) — provenance-by-equality: clear a
- * contact field ONLY where the entity's CURRENT value equals a value that existed on one
- * of the now-retracted wsib rows for that entity. Declared limitation (recorded in
- * descriptor.limitations[]): a contact that coincidentally matches a retracted row's
- * value is cleared and re-copied on relink — false-positive exposure measured 0 locally
- * (§ PH-6 of the assessment; the local dev DB carries zero wsib_registry contact values),
- * NOT bounded for cloud.
+ * A-7's copyContacts REVERSE pass (Fold B BLOCKING a) — provenance-by-equality, KEYED PER
+ * (entity, value) PAIR (O4 row 6, §11 L4, operator D5(a)): clear an entity's contact field ONLY
+ * where its CURRENT value equals a value carried by one of the wsib rows whose link TO THAT ENTITY
+ * moved away or vanished this run. The previous form pooled every retracted value into one array
+ * and applied it to every affected entity, so entity A could lose a value that came from entity B's
+ * row. copyContacts (per tier, afterwards) refills from whatever links remain. Declared limitation
+ * (descriptor.limitations[]), unchanged: a contact that coincidentally equals such a value is
+ * cleared, and refilled only if a remaining link carries it — exposure measured 0 locally
+ * (wsib_registry carries 0 contact values, §11 M5), NOT bounded for cloud.
  *
- * @param {Array<{id:number, primary_phone:string|null, primary_email:string|null, website:string|null}>} retractedWsibRows
- *   the wsib_registry rows' contact-adjacent values AS THEY WERE before the retraction
- *   (the caller must read these BEFORE issuing the LG-16 UPDATE, in the same transaction)
+ * Params, one element per (old entity, wsib row) pair: $1 old entity ids, $2 phones, $3 emails,
+ * $4 websites (NULL where the row carries none). Always JS arrays (empty → 0 rows).
  */
 function buildContactsReverseClearSql() {
-  return `UPDATE entities e
-SET primary_phone = CASE WHEN e.primary_phone = ANY($1::text[]) THEN NULL ELSE e.primary_phone END,
-    primary_email = CASE WHEN e.primary_email = ANY($2::text[]) THEN NULL ELSE e.primary_email END,
-    website = CASE WHEN e.website = ANY($3::text[]) THEN NULL ELSE e.website END
-WHERE e.id = ANY($4::int[])
-  AND (
-    e.primary_phone = ANY($1::text[]) OR e.primary_email = ANY($2::text[]) OR e.website = ANY($3::text[])
-  )`;
+  return `WITH c AS (
+  SELECT * FROM unnest($1::int[], $2::text[], $3::text[], $4::text[]) AS c(entity_id, phone, email, site)
+)
+UPDATE entities e
+SET primary_phone = CASE WHEN EXISTS (SELECT 1 FROM c WHERE c.entity_id = e.id AND c.phone = e.primary_phone) THEN NULL ELSE e.primary_phone END,
+    primary_email = CASE WHEN EXISTS (SELECT 1 FROM c WHERE c.entity_id = e.id AND c.email = e.primary_email) THEN NULL ELSE e.primary_email END,
+    website = CASE WHEN EXISTS (SELECT 1 FROM c WHERE c.entity_id = e.id AND c.site = e.website) THEN NULL ELSE e.website END
+WHERE EXISTS (
+  SELECT 1 FROM c
+  WHERE c.entity_id = e.id
+    AND (c.phone = e.primary_phone OR c.email = e.primary_email OR c.site = e.website)
+)`;
 }
 
 // ===========================================================================
@@ -522,7 +475,7 @@ WHERE e.id = ANY($4::int[])
 /**
  * LW-D14 (2026-08-28) — CUMULATIVE_SQL became a FUNCTION of `descriptor` (was a bare
  * string constant) so `tier3_token_overlap_pass_pct` can read its stopword list the
- * same declared way `buildFuzzyMatchSql` does (Rule 1 — never a literal in compute).
+ * same declared way `buildDerivationSql` does (Rule 1 — never a literal in compute).
  * `runCascadePhase` (scripts/lib/step/index.js) is the ONLY caller and link_wsib the
  * ONLY cascade compute today, so widening the generic CASCADE contract from "a string"
  * to "a function of descriptor" costs no per-step branch (Gate 0) — it changes what
@@ -574,9 +527,9 @@ function tier_3_fuzzy_matches(ctx) {
   ctx.report('tier_3_fuzzy_matches', { violations: 0, detail: tierCount(ctx, 'tier3_fuzzy') });
 }
 
+/** O4 row 6 — rows unlinked at run start that this run did not link: unlinked_start minus the diff's NEW links (a move re-points an existing link; it is not a match of an unlinked row). */
 function no_match(ctx) {
-  const linked = totalTierLinked(ctx);
-  const noMatch = Math.max(0, ((ctx.matched && ctx.matched.unlinked_start) || 0) - linked);
+  const noMatch = Math.max(0, ((ctx.matched && ctx.matched.unlinked_start) || 0) - newLinks(ctx));
   ctx.report('no_match', { violations: 0, detail: noMatch });
 }
 
@@ -641,7 +594,7 @@ function entity_fanin_warn(ctx) {
 /**
  * LW-D14 (2026-08-28) — the SAME declared post-write-observation mechanism `link_rate_warn`
  * uses: `runCascadePhase` runs `buildCumulativeSql(descriptor)` (whose `tier3_token_overlap_pass_pct`
- * column embeds the SAME `tokenOverlapClause` predicate `buildFuzzyMatchSql` now enforces at
+ * column embeds the SAME `tokenOverlapClause` predicate `buildDerivationSql` now enforces at
  * write time) once, post-write, and merges it generically onto `ctx.matched` — no second query
  * here. Measured live pre-fix: 10.49% (840 of 8,009 tier-3 links). FAIL, per Spec 124 Rule 3 —
  * this is a verdict-affecting measurement of the write predicate's own correctness, not a
@@ -651,7 +604,7 @@ function entity_fanin_warn(ctx) {
  * Post-repair diagnostic (WF3-F, same session): a first draft of this column tokenized
  * `COALESCE(NULLIF(w.trade_name_normalized, ''), w.legal_name_normalized)` — ONE field — against
  * the entity name. Measured 86.2% (not ~100%) against the live post-repair corpus. Root cause:
- * `buildFuzzyMatchSql` is a UNION of two INDEPENDENT CTEs (`trade_matches` checks trade_name
+ * `buildDerivationSql`'s fuzzy arm is a UNION of two INDEPENDENT CTEs (`trade_matches` checks trade_name
  * overlap, `legal_matches` checks legal_name overlap) — a row written via the legal-name branch
  * can have a non-empty `trade_name_normalized` that never overlapped anything (it wasn't the
  * field the write predicate checked), and COALESCE always prefers a non-empty trade name over
@@ -686,7 +639,7 @@ function registered_entities_with_zero_links(ctx) {
 }
 
 /** G-4's port: reports whether a standing full-mode override is set (same class as link_massing's override_force_full_present). */
-/** INFO (not WARN, unlike link_massing's precedent): kept as a pure descriptive flag so #165's 3-check sabotage-fixture gap (link_rate_warn/entity_fanin_warn/tier3_full_not_converged) stays exactly the 3 non-INFO checks the fixture machinery names — see the assessment's peel 8b note. */
+/** INFO (not WARN, unlike link_massing's precedent): kept as a pure descriptive flag so #165's 3-check sabotage-fixture gap (link_rate_warn/entity_fanin_warn/link_wsib_mass_relink_pct) stays exactly the 3 non-INFO checks the fixture machinery names — see the assessment's peel 8b note. */
 function override_force_full_present(ctx) {
   const standing = (ctx.overrides && ctx.overrides.force_full) === true;
   ctx.report('override_force_full_present', { violations: 0, detail: standing });
@@ -701,26 +654,9 @@ function gate_decision(ctx) {
   });
 }
 
-/** T7's exhaustion row — WARN, never FAIL (R-H). INFO (detail = the non-full placeholder text) whenever mode does not resolve full. */
-function tier3_full_not_converged(ctx) {
-  const info = (ctx.matched && ctx.matched.tier3_full) || null;
-  const exhausted = Boolean(info && info.exhausted);
-  ctx.report('tier3_full_not_converged', { violations: exhausted ? 1 : 0, detail: info || 'not run this invocation (mode != full)' });
-}
-
-/** LW-D10 (commit 8b, 2026-08-28) — T7's own convergence audit row: how many passes the mode-full tier-3 loop took and the total relinked across them. INFO, always. */
-function tier3_full_iterations(ctx) {
-  const info = (ctx.matched && ctx.matched.tier3_full) || null;
-  const detail = info && typeof info.iterations === 'number'
-    ? { iterations: info.iterations, relinked_total: info.relinked_total }
-    : 'not run this invocation (mode != full)';
-  ctx.report('tier3_full_iterations', { violations: 0, detail });
-}
-
-/** A-7's audit row for the reverse copyContacts-clear pass — 0 by construction until commit 8's live repair. */
+/** A-7's audit row for the reverse copyContacts-clear pass — O4 row 6: entities whose contact field was cleared because a link carrying that value moved away or vanished this run (0 under --dry-run, a declared limitation). */
 function contacts_cleared_on_retraction(ctx) {
-  const info = (ctx.matched && ctx.matched.tier3_full) || null;
-  ctx.report('contacts_cleared_on_retraction', { violations: 0, detail: info ? info.contacts_cleared : 0 });
+  ctx.report('contacts_cleared_on_retraction', { violations: 0, detail: (ctx.matched && ctx.matched.contacts_cleared) || 0 });
 }
 
 /**
@@ -740,18 +676,24 @@ function is_wsib_registered_corrected(ctx) {
 }
 
 /**
- * D-20-class guard for A-7's tier-3 repair (LG-16), scored `when: "pre_write"`. The
- * retraction + entities cascade is destructive; against an empty `entities` corpus it
- * would unlink everything the fuzzy tier ever matched and repair nothing. INFO on every
- * incremental run (mode never resolves full outside a genuine corpus/FORCE_FULL signal,
- * A-8) — the FAIL branch is reachable only in mode full against a corpus this pilot's
- * commit 7 does not exercise (commit 8's budgeted act).
+ * O4 row 6 (§11 L6, operator D2(a)) — the mass-change guard, scored `when: "pre_write"` over the
+ * read-only derivation's diff (ctx.matched.diff), BEFORE the write transaction opens: (moves +
+ * vanishes) over the rows linked at run start (ctx.matched.linked_start), as a FRACTION. New links
+ * (set) are growth, not damage, and do not count; an exact vanish counts the same as a fuzzy one
+ * (one rule). Limit from config (`link_wsib_mass_relink_max_pct`, default 0.10). A deliberate
+ * threshold raise (+0.05 vanished 29% locally, §11 M3) sets LINK_WSIB_ACCEPT_MASS_RELINK=1
+ * (override.accept_anomaly): the run writes and the FAIL row stays. Steady state measured 0
+ * (§11 M1). Replaces S3 (the tier-3 LIMIT 1000) and the convergence loop (operator D1(a)).
  */
-function full_repair_empty_source_guard(ctx) {
-  const mode = ctx.gate && ctx.gate.mode;
-  const entitiesCount = (ctx.matched && ctx.matched.entities_count) || null;
-  const violates = mode === 'full' && (entitiesCount === 0 || entitiesCount === null);
-  ctx.report('full_repair_empty_source_guard', { violations: violates ? 1 : 0, detail: { mode, entities_count: entitiesCount } });
+function link_wsib_mass_relink_pct(ctx) {
+  const m = ctx.matched || {};
+  const d = m.diff || { set: 0, move: 0, vanish: 0 };
+  const linked = m.linked_start || 0;
+  const pct = linked > 0 ? (d.move + d.vanish) / linked : 0;
+  ctx.report('link_wsib_mass_relink_pct', {
+    value: round(pct),
+    detail: { set: d.set, move: d.move, vanish: d.vanish, linked_start: linked },
+  });
 }
 
 function write_privilege(ctx) {
@@ -775,13 +717,19 @@ function totalTierLinked(ctx) {
   return Object.values(tiers).reduce((sum, t) => sum + (t.linked || 0), 0);
 }
 
+/** O4 row 6 — the diff's NEW links (old NULL → new present); a move is not a new link. */
+function newLinks(ctx) {
+  return (ctx.matched && ctx.matched.diff && ctx.matched.diff.set) || 0;
+}
+
 function round(n) {
   return Math.round(n * 10000) / 10000;
 }
 
 /**
- * The step's `records_meta` block. `threshold_updated_at` (G-13) is a SELF-CONSUMED
- * producer/consumer contract, re-stamped on every real run so the NEXT run's
+ * The step's `records_meta` block. `threshold_updated_at` (G-13) and the three
+ * `tier{1,2,3}_confidence_updated_at` (O4 row 6) stamps are SELF-CONSUMED
+ * producer/consumer contracts, re-stamped on every real run so the NEXT run's
  * config_version signal compares against what was true as of THIS run.
  */
 function buildLinkMeta(ctx) {
@@ -794,8 +742,13 @@ function buildLinkMeta(ctx) {
     matches_tier_1_trade: tierCount(ctx, 'tier1_exact_trade'),
     matches_tier_2_legal: tierCount(ctx, 'tier2_exact_legal'),
     matches_tier_3_fuzzy: tierCount(ctx, 'tier3_fuzzy'),
-    no_match_count: Math.max(0, (m.unlinked_start || 0) - linked),
+    no_match_count: Math.max(0, (m.unlinked_start || 0) - newLinks(ctx)),
     threshold_updated_at: (ctx.gate && ctx.gate.configVersionUpdatedAt) || null,
+    // O4 row 6 (fold 16 row 1 (d)) — the three tier-confidence config_version stamps, self-consumed
+    // like threshold_updated_at: re-stamped every real run so the NEXT run compares against THIS one.
+    tier1_confidence_updated_at: (ctx.gate && ctx.gate.configVersions && ctx.gate.configVersions.tier1_confidence_updated_at) || null,
+    tier2_confidence_updated_at: (ctx.gate && ctx.gate.configVersions && ctx.gate.configVersions.tier2_confidence_updated_at) || null,
+    tier3_confidence_updated_at: (ctx.gate && ctx.gate.configVersions && ctx.gate.configVersions.tier3_confidence_updated_at) || null,
     // LW-D19 — always observable, per run, even when 0 (the expected steady state).
     is_wsib_registered_corrected: m.is_wsib_registered_corrected || 0,
     // WF3 GC-5 (2026-09-26) — the self-consumed producer half of the declared
@@ -821,7 +774,7 @@ function buildLinkMeta(ctx) {
 const CHECKS = {
   gate_decision,
   override_force_full_present,
-  full_repair_empty_source_guard,
+  link_wsib_mass_relink_pct,
   unlinked_start,
   tier_1_trade_matches,
   tier_2_legal_matches,
@@ -835,8 +788,6 @@ const CHECKS = {
   dead_bucket_count,
   registered_entities_with_zero_links,
   is_wsib_registered_corrected,
-  tier3_full_not_converged,
-  tier3_full_iterations,
   contacts_cleared_on_retraction,
   write_privilege,
 };
@@ -863,15 +814,14 @@ module.exports = compute;
 module.exports.compute = compute;
 module.exports.checks = CHECKS;
 module.exports.buildTierSql = buildTierSql;
+module.exports.buildDerivationSql = buildDerivationSql;
+module.exports.buildApplyLinksSql = buildApplyLinksSql;
+module.exports.VANISH_RETRACT_SCOPE = VANISH_RETRACT_SCOPE;
 module.exports.exactTierConfidences = exactTierConfidences;
 module.exports.buildEntitiesUnflagCorrectionCountSql = buildEntitiesUnflagCorrectionCountSql;
 module.exports.ENTITIES_UNFLAG_SCOPE = ENTITIES_UNFLAG_SCOPE;
-module.exports.buildExactMatchCountSql = buildExactMatchCountSql;
-module.exports.buildFuzzyMatchCountSql = buildFuzzyMatchCountSql;
 module.exports.buildEntitiesFlagCountSql = buildEntitiesFlagCountSql;
 module.exports.buildContactsCountSql = buildContactsCountSql;
-module.exports.buildRetractionScopeParams = buildRetractionScopeParams;
-module.exports.buildEntitiesUnflagSql = buildEntitiesUnflagSql;
 module.exports.buildContactsReverseClearSql = buildContactsReverseClearSql;
 module.exports.buildCumulativeSql = buildCumulativeSql;
 module.exports.tokenOverlapClause = tokenOverlapClause;
@@ -881,5 +831,4 @@ module.exports.ENTITIES_FLAG_SCOPE = ENTITIES_FLAG_SCOPE;
 module.exports.TIER_IDS = TIER_IDS;
 module.exports.EXACT_LENGTH_FLOOR = EXACT_LENGTH_FLOOR;
 module.exports.FUZZY_LENGTH_FLOOR = FUZZY_LENGTH_FLOOR;
-module.exports.TIER3_LIMIT = TIER3_LIMIT;
 module.exports.buildLinkMeta = buildLinkMeta;

@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 494 declarable fields
+# The step contract — 20 categories, 470 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,22 +15,22 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 36 | 9 | 0 |
-| 3 | `outputs` | 103 | 31 | 2 |
-| 4 | `staleness` | 28 | 9 | 0 |
+| 2 | `inputs` | 27 | 6 | 0 |
+| 3 | `outputs` | 90 | 26 | 1 |
+| 4 | `staleness` | 30 | 9 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 77 | 16 | 1 |
-| 7 | `checks` | 32 | 7 | 0 |
+| 6 | `execution` | 74 | 15 | 0 |
+| 7 | `checks` | 35 | 7 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
 | 10 | `override` | 11 | 1 | 0 |
 | 11 | `emits` | 4 | 1 | 0 |
 | 12 | `deviations` | 8 | 1 | 0 |
 | 13 | `limitations` | 3 | 0 | 0 |
-| 14 | `interpretation` | 2 | 0 | 0 |
+| 14 | `interpretation` | 1 | 0 | 0 |
 | 15 | `recovery` | 18 | 8 | 0 |
 | 16 | `database` | 3 | 1 | 0 |
-| 17 | `counters` | 24 | 3 | 0 |
+| 17 | `counters` | 21 | 3 | 0 |
 | 18 | `config` | 22 | 4 | 0 |
 | 19 | `sharing` | 9 | 4 | 0 |
 | 20 | `terminals` | 9 | 3 | 0 |
@@ -49,9 +49,12 @@
 | `?` | staleness.skip_scope declared |
 | `INGESTOR` | outputs is object · **if outputs.writes is a predicate ⇒ outputs.writes** |
 | `LINK / MATCHER` | outputs.invalidates min 1 · counters is object |
-| `ENRICHER` | outputs is object · execution is object · **if staleness.scope is a predicate ⇒ outputs.invalidates min 1** |
+| `ENRICHER` | outputs is object · execution is object · **if execution.phases is a predicate ⇒ outputs.invalidates min 1** |
 | `MATERIALIZER / BACKFILL` | outputs is object · recovery.reset != `none` |
-| `RECORDER` | outputs.publish in `direct`/`pointer` |
+| `RECORDER` | outputs is an object |
+| `INGESTOR` | override.force_run declared |
+| `?` | identity |
+| `INGESTOR` | execution |
 
 ## Mechanic semantics (V7)
 
@@ -70,10 +73,8 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Banned values |
 |---|---|
-| `outputs.writes[].replay` | `append_unsafe` |
 | `outputs.writes[].write_discipline.guard` | `none` |
 | `outputs.writes[].write_discipline.class` | `staging_full_replace` |
-| `execution.criticality` | `best_effort` |
 
 **Rules, not fused class identities (V7).** A ban evaluated over the decoupled axes says what is actually wrong; a ban carried inside a class name says only what the label was.
 
@@ -114,14 +115,14 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | **V1** | identity.archetype uses FULL WORDS; the ING|MAT|... forms are display shorthand only and are not legal values. |
 | **V2** | identity.lock is unique across manifest UNION one-time/ UNION backfill/ — the wider universe, not the generated registry alone. Cross-file uniqueness is a validator-side check (S2); JSON Schema cannot express it. |
 | **V3** | guards.schema_drift is none|propagate|pause. 'warn' is DROPPED — a drift response is an action; warn-ness belongs to the orthogonal severity/blocking axes. |
-| **V4** | outputs.writes[].replay keeps append_unsafe in the enum but BANNED FOR NEW STEPS via x-banned-for-new, so an existing step can still declare its truth. |
-| **V5** | staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs. |
+| **V4** | outputs.writes[].replay keeps append_unsafe in the enum but BANNED FOR NEW STEPS via x-banned-for-new, so an existing step can still declare its truth. SUPERSEDED (Phase 3 RE-FREEZE, registry-truth plan DELETE row #18): outputs.writes[].replay is deleted — zero runtime readers. |
+| **V5** | staleness.pending is DISSOLVED into three axes: scope (which rows) / trigger (what makes the step eligible) / mode_select (what the trigger chooses), plus fingerprint_inputs. AMENDED (Phase 3 RE-FREEZE, DELETE row #28): the `scope` axis (with checkpoint/interval) is deleted — prose with zero readers; claim #54's schema replacement rides the same RE-FREEZE (fold 12 F4). |
 | **V6** | guards.empty_source is the typed form <table> | [<table>,...] | none — AS AMENDED 2026-08-24. The original ruling typed the scalar form only; the array form is a ratified amendment recorded in Spec 122's V-table, needed because a step may guard on more than one source table (enrich_heritage guards on heritage_properties AND heritage_districts, Spec 120 §3.3). Recorded as an amendment rather than restated silently. |
-| **R6-acquisition** | NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache. |
+| **R6-acquisition** | NOT a category. Absorbed as staleness.trigger[].position (the acquisition lifecycle position) + inputs.reads.externals[].cache (the cache fields are deleted in the Phase 3 RE-FREEZE, DELETE row #11 — zero readers). |
 | **R6-maintenance** | NOT a category. Absorbed as execution.maintenance — declares targets and CONSTRAINS txn_scope (RE-FREEZE #6, EP-D17 2026-09-10: narrows txn_scope to statement|batch|step|none when maintenance is declared, since the VACUUM statement itself must never run inside a transaction regardless of the declaring step's own txn_scope value — the executor always runs it autocommit on a dedicated connection). |
 | **R6-terminals** | A NEW CATEGORY (the 18th). Declared exit paths, each with its records_meta shape. Retires the hand-written per-terminal 'PASS'. |
 | **R6-plan_shape** | NOT a category. A checks[].kind value. |
-| **R6-source_key_policy** | NOT a category. A per-target field: outputs.writes[].source_key_policy. |
+| **R6-source_key_policy** | NOT a category. A per-target field: outputs.writes[].source_key_policy. DELETED in the Phase 3 RE-FREEZE (DELETE row #18 — zero runtime readers). |
 | **R6-on_missing** | guards.requires[].on_missing is fail|degrade; degrade requires why AND algorithm, because a degraded branch makes outputs.columns a fiction. |
 | **V7** | DECOUPLE MECHANIC FROM GUARD (operator ruling, 2026-08-24, closing the S1 menu-completeness gap). write_discipline.class names the write MECHANIC only; guardedness is `guard` (is_distinct_from|none, none requires a why and is grandfathered-only), scope is `scope`, retraction is `retract`. The D and H bans are restated as VALIDATOR RULES over those axes — banned-for-new = (insert-only mechanic AND retract:none) and (set-based mechanic AND scope:none) — not as fused class identities. |
 | **R6-schema_drift-conditional** | guards.schema_drift may be a SCALAR or a CONDITIONAL PER-LAYER ARRAY (the load-zoning.js:405-407 shape: base layers FAIL/pause, non-base WARN/propagate). A scalar cannot express it. |
@@ -160,14 +161,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `reads` | object {steps, tables, externals} | † |
-| `reads.steps` | list of object {step, version_pin, assert_health} | † |
+| `reads.steps` | list of object {step} | † |
 | `reads.steps[].step` | string `^[a-z][a-z0-9_]*$` | † |
-| `reads.steps[].version_pin` | `exact` · `gte` · `none` | † ! |
-| `reads.steps[].assert_health` | list of string | — |
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, ckan, key_property, cache, cache_why, cache_ttl} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, ckan, key_property} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
 | `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` · `ckan_datastore` | ! |
@@ -186,13 +185,6 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.externals[].ckan.package_url` | string | † |
 | `reads.externals[].ckan.page_size_from_config` | string | † |
 | `reads.externals[].key_property` | string | — |
-| `reads.externals[].cache` | `none` · `revalidate` · `reuse_if_fresh` · `reuse_if_present` | † ! |
-| `reads.externals[].cache_why` | object {text, liveness} | — |
-| `reads.externals[].cache_why.text` | string | † |
-| `reads.externals[].cache_why.liveness` | `none` \| object {kind, ref} | † |
-| `reads.externals[].cache_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `reads.externals[].cache_why.liveness.ref` | string | † |
-| `reads.externals[].cache_ttl` | string `^([0-9]+(ms|s|m|h))$|^none$` | — |
 | `expect_nonempty` | `true` · `false` | † |
 | `on_missing` | `halt` · `warn` · `run` | † ! |
 
@@ -200,7 +192,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, replay, replay_why, source_key_policy, line_validity, geometry_kind} | † |
+| `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, retire_max_pct_from_config, line_validity, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty, derived_from_geometry} | † |
@@ -255,54 +247,41 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].write_discipline.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `writes[].write_discipline.why.liveness.ref` | string | † |
 | `writes[].write_discipline.set_source` | `compute` | ! |
-| `writes[].retract` | `none` · `departed` · `all` | † ! |
+| `writes[].retract` | `none` · `departed` · `all` · `departed_mark` | † ! |
 | `writes[].retract_when` | `always` · `full_only` | ! |
-| `writes[].replay` | `idempotent_upsert` · `full_replace` · `append_unsafe` ⛔ **banned for new:** `append_unsafe` | † ! |
-| `writes[].replay_why` | object {text, liveness} | — |
-| `writes[].replay_why.text` | string | † |
-| `writes[].replay_why.liveness` | `none` \| object {kind, ref} | † |
-| `writes[].replay_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `writes[].replay_why.liveness.ref` | string | † |
-| `writes[].source_key_policy` | object {unique, on_collision, on_collision_why, key_space_migration} | † |
-| `writes[].source_key_policy.unique` | `true` · `false` | † |
-| `writes[].source_key_policy.on_collision` | `not_applicable` · `fail` · `last_write_wins` · `first_write_wins` · `dedupe_upstream` | † ! |
-| `writes[].source_key_policy.on_collision_why` | object {text, liveness} | — |
-| `writes[].source_key_policy.on_collision_why.text` | string | † |
-| `writes[].source_key_policy.on_collision_why.liveness` | `none` \| object {kind, ref} | † |
-| `writes[].source_key_policy.on_collision_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `writes[].source_key_policy.on_collision_why.liveness.ref` | string | † |
-| `writes[].source_key_policy.key_space_migration` | `none` \| object {from, to, why} | † |
-| `writes[].source_key_policy.key_space_migration.from` | string | † |
-| `writes[].source_key_policy.key_space_migration.to` | string | † |
-| `writes[].source_key_policy.key_space_migration.why` | object {text, liveness} | † |
-| `writes[].source_key_policy.key_space_migration.why.text` | string | † |
-| `writes[].source_key_policy.key_space_migration.why.liveness` | `none` \| object {kind, ref} | † |
-| `writes[].source_key_policy.key_space_migration.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `writes[].source_key_policy.key_space_migration.why.liveness.ref` | string | † |
+| `writes[].retire_max_pct_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `writes[].line_validity` | `length_and_simple` | ! |
 | `writes[].geometry_kind` | `polygon` · `point` · `line` · `multiline` | ! |
-| `cascades` | `none` \| list (min 1) of object {table, owned_by, operation, why} | † |
-| `cascades[].table` | string `^[a-z_][a-z0-9_]*$` | † |
-| `cascades[].owned_by` | string `^[a-z][a-z0-9_]*$` | † |
-| `cascades[].operation` | `delete` · `update` · `insert` | † ! |
-| `cascades[].why` | object {text, liveness} | † |
-| `cascades[].why.text` | string | † |
-| `cascades[].why.liveness` | `none` \| object {kind, ref} | † |
-| `cascades[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `cascades[].why.liveness.ref` | string | † |
-| `invalidates` | list of object {table, column, when, set_null_on_change_of} | † |
+| `invalidates` | list of object {table, column, when, by, trigger, step, set_null_on_change_of} | † |
 | `invalidates[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `invalidates[].column` | string `^[a-z_][a-z0-9_]*$` | † |
 | `invalidates[].when` | string | † |
+| `invalidates[].by` | `trigger` · `set_null_on_change_of` · `step` · `pin` · `full_rescan` | † ! |
+| `invalidates[].trigger` | string `^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$` | — |
+| `invalidates[].step` | string `^[a-z][a-z0-9_]*$` | — |
 | `invalidates[].set_null_on_change_of` | string `^[a-z_][a-z0-9_]*$` | — |
-| `publish` | `direct` · `pointer` · `none` | † ! |
-| `write_inventory` | object {statements, why} | † |
+| `write_inventory` | object {statements, why, by_mode} | † |
 | `write_inventory.statements` | integer >= 0 | † |
 | `write_inventory.why` | object {text, liveness} | — |
 | `write_inventory.why.text` | string | † |
 | `write_inventory.why.liveness` | `none` \| object {kind, ref} | † |
 | `write_inventory.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `write_inventory.why.liveness.ref` | string | † |
+| `write_inventory.by_mode` | object {full, incremental} | — |
+| `write_inventory.by_mode.full` | object {statements, why} | — |
+| `write_inventory.by_mode.full.statements` | integer >= 0 | † |
+| `write_inventory.by_mode.full.why` | object {text, liveness} | — |
+| `write_inventory.by_mode.full.why.text` | string | † |
+| `write_inventory.by_mode.full.why.liveness` | `none` \| object {kind, ref} | † |
+| `write_inventory.by_mode.full.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `write_inventory.by_mode.full.why.liveness.ref` | string | † |
+| `write_inventory.by_mode.incremental` | object {statements, why} | — |
+| `write_inventory.by_mode.incremental.statements` | integer >= 0 | † |
+| `write_inventory.by_mode.incremental.why` | object {text, liveness} | — |
+| `write_inventory.by_mode.incremental.why.text` | string | † |
+| `write_inventory.by_mode.incremental.why.liveness` | `none` \| object {kind, ref} | † |
+| `write_inventory.by_mode.incremental.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `write_inventory.by_mode.incremental.why.liveness.ref` | string | † |
 
 ### staleness
 
@@ -310,7 +289,15 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `scope` | `all` \| `none` \| string | † |
+| `pins` | list (min 1) of object {step, stamp, equals, why} | — |
+| `pins[].step` | string `^[a-z][a-z0-9_]*$` | † |
+| `pins[].stamp` | string `^(records_meta(\.[a-z_][a-z0-9_]*)+|[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)$` | † |
+| `pins[].equals` | string | — |
+| `pins[].why` | object {text, liveness} | — |
+| `pins[].why.text` | string | † |
+| `pins[].why.liveness` | `none` \| object {kind, ref} | † |
+| `pins[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `pins[].why.liveness.ref` | string | † |
 | `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key, style, max_age_days_from_config, variable} | † |
 | `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `config_version` · `interval` · `always` | † ! |
 | `trigger[].position` | `pre_acquisition` · `acquisition` · `post_acquisition` · `pre_compute` | † ! |
@@ -321,12 +308,6 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `trigger[].max_age_days_from_config` | string | — |
 | `trigger[].variable` | string | — |
 | `mode_select` | `skip` · `incremental` · `full` · `defer` · `tri_state` · `none` | † ! |
-| `checkpoint` | `none` \| object {cursor, ordered} | † |
-| `checkpoint.cursor` | string | † |
-| `checkpoint.ordered` | `true` · `false` | † |
-| `interval` | `none` \| object {column, grain} | † |
-| `interval.column` | string `^[a-z_][a-z0-9_]*$` | † |
-| `interval.grain` | `hour` · `day` · `week` · `month` · `quarter` · `year` | † ! |
 | `fingerprint` | `derived` | † ~ |
 | `fingerprint_inputs` | `none` \| list (min 1) of string | † |
 | `logic_version` | `none` \| string | † |
@@ -344,7 +325,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | Field | Menu | Markers |
 |---|---|---|
 | `requires` | list of object {kind, name, on_missing, algorithm, why} | † |
-| `requires[].kind` | `extension` · `index` · `function` · `column` · `fk` · `rls_bypass_or_policy` | † ! |
+| `requires[].kind` | `extension` · `index` · `function` · `column` · `fk` · `rls_bypass_or_policy` · `trigger` | † ! |
 | `requires[].name` | string | † |
 | `requires[].on_missing` | `fail` · `degrade` | † ! |
 | `requires[].algorithm` | string | — |
@@ -382,15 +363,17 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `tiers[].id` | string `^[a-z][a-z0-9_]*$` | † |
 | `tiers[].confidence_from_config` | string | † |
 | `tiers[].max_iterations_from_config` | string | — |
-| `budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `txn_scope` | `statement` · `batch` · `step` · `none` | † ! |
-| `txn_budget` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
-| `chunked` | `true` · `false` | † |
 | `statement_timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `statement_timeout_minutes_from_config` | string | — |
 | `phase_deadline_minutes_from_config` | string | — |
 | `step_timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `batch` | `none` \| integer >= 1 | † |
+| `batch_why` | object {text, liveness} | — |
+| `batch_why.text` | string | † |
+| `batch_why.liveness` | `none` \| object {kind, ref} | † |
+| `batch_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `batch_why.liveness.ref` | string | † |
 | `heartbeat_minutes_from_config` | string | — |
 | `lock_timeout_ms_from_config` | string | — |
 | `enrich_hooks` | object {contract_read, defer_scope, post_phase} | — |
@@ -400,8 +383,6 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `enrich_hooks.defer_scope.threshold_from_config` | string | † |
 | `enrich_hooks.post_phase` | string | — |
 | `batch_size_from_config` | string | — |
-| `needs_disk_mb` | `none` \| integer >= 1 | † |
-| `partial_fill` | `atomic` · `batched` · `staged` · `mixed` · `none` | † ! |
 | `on_row_error` | `fail_fast` · `quarantine` · `skip` | † ! |
 | `on_row_error_max_pct` | `none` \| number >= 0, <= 1 | — |
 | `on_row_error_why` | object {text, liveness} | — |
@@ -427,15 +408,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `on_degrade_why.liveness` | `none` \| object {kind, ref} | † |
 | `on_degrade_why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `on_degrade_why.liveness.ref` | string | † |
-| `criticality` | `required` · `best_effort` ⛔ **banned for new:** `best_effort` | † ! |
-| `network` | `none` \| object {egress, timeout, timeout_from_config, retries_from_config, retry_backoff_from_config, retries, redact} | † |
-| `network.egress` | list (min 1) of string | † |
+| `network` | `none` \| object {timeout, timeout_from_config, retries_from_config, retry_backoff_from_config, retries} | † |
 | `network.timeout` | string `^([0-9]+(ms|s|m|h))$|^none$` | † |
 | `network.timeout_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retries_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retry_backoff_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retries` | integer >= 0 | † |
-| `network.redact` | `none` \| list (min 1) of string | † |
 | `invocation` | `none` \| map of object {argv, env} | † |
 | `maintenance` | `none` \| list (min 1) of object {operation, table, owned_by, why} | † |
 | `maintenance[].operation` | `vacuum` · `analyze` · `vacuum_analyze` · `reindex` | † ! |
@@ -480,6 +458,9 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `[].why.liveness.ref` | string | † |
 | `[].retighten_when` | string | — |
+| `[].reads` | list (min 1) of object {table, columns} | — |
+| `[].reads[].table` | string `^[a-z_][a-z0-9_]*$` | † |
+| `[].reads[].columns` | list (min 1) of string `^[a-z_][a-z0-9_]*$` | — |
 | `[].order_guarantee` | object {guarantee, spec_ref, anchor} | — |
 | `[].order_guarantee.guarantee` | string | † |
 | `[].order_guarantee.spec_ref` | string `^docs/specs/.+\.md$` | † |
@@ -621,12 +602,11 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 ### interpretation
 
-> Prose lives in <slug>.notes.json, capped at 12 entries. Checks are uncapped; prose is capped — the cheapest way to keep knowledge is to make it measurable. May reference a check id but may NEVER quote a number.
+> Prose lives in <slug>.notes.json, capped at 12 entries. The cap is ONE notes-file check (step-validate fast invariant #45 NOTES-CAP, scripts/analysis/gates/notes-cap.mjs); the descriptor no longer carries an `entries` count (deleted, Phase 3 RE-FREEZE DELETE row #64). Checks are uncapped; prose is capped — the cheapest way to keep knowledge is to make it measurable. May reference a check id but may NEVER quote a number.
 
 | Field | Menu | Markers |
 |---|---|---|
 | `file` | string `^[a-z0-9_\-]+\.notes\.json$` | † |
-| `entries` | integer >= 1, <= 12 | † |
 
 ### recovery
 
@@ -667,25 +647,22 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `records_total` | `none` \| object {source, scoped_by, why} | † |
+| `records_total` | `none` \| object {source, why} | † |
 | `records_total.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
-| `records_total.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_total.why` | object {text, liveness} | — |
 | `records_total.why.text` | string | † |
 | `records_total.why.liveness` | `none` \| object {kind, ref} | † |
 | `records_total.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `records_total.why.liveness.ref` | string | † |
-| `records_new` | `none` \| object {source, scoped_by, why} | † |
+| `records_new` | `none` \| object {source, why} | † |
 | `records_new.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
-| `records_new.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_new.why` | object {text, liveness} | — |
 | `records_new.why.text` | string | † |
 | `records_new.why.liveness` | `none` \| object {kind, ref} | † |
 | `records_new.why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `records_new.why.liveness.ref` | string | † |
-| `records_updated` | `none` \| object {source, scoped_by, why} | † |
+| `records_updated` | `none` \| object {source, why} | † |
 | `records_updated.source` | string `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*(\s*\+\s*[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*)*$` | † |
-| `records_updated.scoped_by` | `step` \| string `^[a-z_][a-z0-9_]*$` \| list of string `^[a-z_][a-z0-9_]*$` | † |
 | `records_updated.why` | object {text, liveness} | — |
 | `records_updated.why.text` | string | † |
 | `records_updated.why.liveness` | `none` \| object {kind, ref} | † |
