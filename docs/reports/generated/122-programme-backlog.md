@@ -10,10 +10,10 @@ Total items: **130**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 28 |
+| ⬜ NOT_STARTED | 26 |
 | ⚠️ PARTIAL | 16 |
 | ✅ BUILT | 82 |
-| ⏭️ SUPERSEDED | 4 |
+| ⏭️ SUPERSEDED | 6 |
 
 **blocks batching: 0**
 
@@ -28,13 +28,12 @@ Total items: **130**
 | `WD-1` | 122 §1.4 | class-enum-without-write.js-branch lock | ✅ BUILT | wf: wf: programme-WD1, WD-1 WF5+WF2 commits 1-3 | batching | 2026-09-09 |
 | `ADMIN-1` | 124 §2 Rule 3 | admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason | ✅ BUILT | wf: wf: programme-ADMIN-1 | batching | 2026-09-09 |
 
-## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (23)
+## Cutover prerequisite — blocks a specific pilot slug registering in converted.json (22)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
 | `LDG-10` | 122 §6 / 124 R-AQ.1 | Cross-step ledger COMPLETE for the sources chain — proven by a gate, not assumed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — cross-step ledger completeness gate (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
 | `CHAIN-TOOLING` | 124 chain completion (e) | Chain completion (e): tooling integration — new gates wired into hooks within a speed budget, preflight shows chain status, cloud:pre covers every seed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — chain tooling integration (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
-| `STA-1` | 120 §6 | 4 new state tables | ⬜ NOT_STARTED | wf: wf: programme-STA-1 | — | 2026-09-03 |
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `CLOUDPARITY` | 122 R-D | cloud database must run apply-logic-variables.js before any cloud cutover | ✅ BUILT | followup: review_followups.md HIGH ops entry (filed 2026-08-27, peel 8c); EP-D13 (filed 2026-09-08, defect-ledger.md); pilot 9 commit 9 acceptance run (orchestrator, 2026-09-10) | cloud_deploy, enrich_parcels, geocode_permits | 2026-09-10 |
@@ -56,7 +55,7 @@ Total items: **130**
 | `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ✅ BUILT | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-23 |
 | `B2-OWNER-SPEC-DIFF` | 123 §7 row 9(b); 124 §5 R-BB | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ✅ BUILT | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-29 |
 
-## Nice-to-have — real gap, not currently blocking (101)
+## Nice-to-have — real gap, not currently blocking (102)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -92,6 +91,7 @@ Total items: **130**
 | `VAL-6` | 122 R-R | step-validate.mjs is the ONE validation command | ✅ BUILT | wf: R-R, landed | — | 2026-08-29 |
 | `VAL-7` | 121 §6.4 | stopping rule: saturation + gate + time-box | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `VAL-8` | 121 §7.3 | method_version stamp + MAJOR-bump re-audit | ⬜ NOT_STARTED | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
+| `STA-1` | 120 §6 | 4 new state tables | ⏭️ SUPERSEDED | — | — | 2026-10-03 |
 | `STA-4` | 120 §6c | admin surface: check-list-as-data etc. | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `PRG-1` | 122 R3 | clean cloud chain_sources run gates C1 | ⚠️ PARTIAL | followup: review_followups.md (2026-08-29 programme backlog filing) | — | 2026-08-29 |
 | `PRG-2` | 122 R4 | S2 is a vertical slice, not a monolith | ✅ BUILT | wf: ongoing | — | 2026-08-29 |
@@ -124,7 +124,7 @@ Total items: **130**
 | `VAL-WF2` | 124 §2 Rule 13 | Validator v2 - a DATA-plausibility validator, distinct from the process scorecard | ✅ BUILT | wf: R-T addendum, "The Step Validator, Data-First" (2026-08-30) | — | 2026-08-30 |
 | `LG-21` | 122 §5.5 | runPhaseScaffold(descriptor, phaseBody) - shared phase-runner scaffold | ⏭️ SUPERSEDED | — | — | 2026-09-04 |
 | `G-DEREGEX` | 124 §2 Rule 13 | Gates G0/G1/G3/G4/G5/G9 still prose-regex-scraped, not structured artifacts | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 3 | — | 2026-08-30 |
-| `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Ask 4 | — | 2026-08-30 |
+| `ASSERT-HEALTH-SHAPE` | 124 §2 | assert_health[] — a closed-shape category for health/liveness checks, left dormant | ⏭️ SUPERSEDED | — | — | 2026-10-03 |
 | `PSA-CHECK-IDS` | 124 §2 Rule 13 | parcel-sanity-audit.js's 42 CHECKS[] entries have no per-check id — plausibility[] SQL is duplicated, not referenced | ✅ BUILT | followup: .cursor/batch2_p1_1_assert_parcel_sanity_active_task.md Ask A1 | — | 2026-09-18 |
 | `TRIPWIRE-T4T5` | 124 §8 | run-step.mjs tripwires T4/T5 stay N/A-MANUAL for both converted ingest_linkage steps | ⬜ NOT_STARTED | followup: review_followups.md (R-T addendum commit 7 filing, 2026-08-30); Fold A-4e | — | 2026-08-30 |
 | `R-W` | 124 §2 Rule 2 addendum | Compute must not branch on PostGIS availability — guards.requires is the only legal form | ✅ BUILT | wf: WF6, docs(122_step_optimization) pilot7 ruling + R-W commit, 2026-08-30 | — | 2026-08-30 |

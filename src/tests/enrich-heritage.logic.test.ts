@@ -34,7 +34,7 @@ describe('enrich-heritage — module contract (RE-DERIVED against the descriptor
 
   it('the producer pin (DEC-C: the chain-scoped slug, not Spec 61\'s own name) lives in inputs.reads.steps[0], not a JS constant', () => {
     expect(eh.descriptor.inputs.reads.steps[0].step).toBe('load_heritage');
-    expect(eh.descriptor.inputs.reads.steps[0].version_pin).toBe('exact');
+    expect(eh.descriptor.inputs.reads.steps[0]).not.toHaveProperty('version_pin'); // #7 deleted in the FLEET-2 RE-FREEZE; staleness.pins[] is the replacement
     expect(eh.compute.PRODUCER_NAME).toBe('sources:load_heritage');
   });
 });

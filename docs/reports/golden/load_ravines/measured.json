@@ -1,0 +1,58 @@
+{
+  "entries": {
+    "ravines_distinct_source_dataset_version": {
+      "value": 1,
+      "cost_ms": 6,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    },
+    "ravines_area_km2": {
+      "value": 110.995,
+      "cost_ms": 480,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    },
+    "parcels_sign_law_violations": {
+      "value": 0,
+      "cost_ms": 12245,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    },
+    "permits_sign_law_violations": {
+      "value": 0,
+      "cost_ms": 2990,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    },
+    "coa_sign_law_violations": {
+      "value": 0,
+      "cost_ms": 364,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    },
+    "parcels_lineage_mismatch": {
+      "value": 1,
+      "cost_ms": 12246,
+      "at": "2026-10-05T18:15:10.865Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2274",
+      "chain": null,
+      "sample_n": 4
+    }
+  }
+}

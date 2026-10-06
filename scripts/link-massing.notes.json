@@ -128,9 +128,9 @@
       "lock_test": "src/tests/steps/link_massing/violations.test.ts"
     },
     {
-      "const": "the full-mode retraction is ONE statement, before the loop, scoped identically to the parcels being re-evaluated",
-      "value": "retract \"all\" + retract_when \"full_only\" + write_discipline.scope = the centroid base filter",
-      "incident": "The predicate flip left GHOST LINKS: rows that matched under the old parcel-centroid-in-building test and not under the new one. The cleanup must retract exactly the set the run rebuilds — a wider scope empties the junction for parcels this run never revisits, and an ungated one would retract 520,492 rows on an incremental run that rebuilds only the 1,395-parcel tail. B-7.",
+      "const": "SUPERSEDED (registry-truth O4 row 5, folds 14 + 15, operator 2026-10-03; lands in the FLEET-2 commit) — was: the full-mode retraction is ONE statement, before the loop, scoped identically to the parcels being re-evaluated",
+      "value": "now: staleness.mode_select \"none\" (every eligible parcel re-derived every run); writes[1] retract \"none\"; the stale links are removed per batch by writes[2] (class link_full_retraction, scope = this batch's parcels AND (parcel_id, building_id) NOT IN this batch's derived keys); writes[3] NULLs parcels.massing_enriched_at for a parcel that lost a link. was: retract \"all\" + retract_when \"full_only\" + write_discipline.scope = the centroid base filter",
+      "incident": "The predicate flip left GHOST LINKS: rows that matched under the old parcel-centroid-in-building test and not under the new one. The cleanup must retract exactly the set the run rebuilds — a wider scope empties the junction for parcels this run never revisits, and an ungated one would retract 520,492 rows on an incremental run that rebuilds only the 1,395-parcel tail. B-7. Superseded 2026-10-03: the ghost-link concern is now met per batch — a link no longer derived for a re-evaluated parcel is deleted in the same transaction (writes[2]), so no full-mode mass DELETE remains; the over-wide-scope concern is met because writes[2] is scoped to the batch's own parcels.",
       "commit": "b16c036d",
       "lock_test": "src/tests/steps/link_massing/violations.test.ts"
     },

@@ -1,0 +1,25 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "red",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "pre-edit copies of scripts/lib/step/index.js, write.js and scripts/lib/compute/refresh-snapshot.js swapped in, then restored (cmp-verified)",
+ "tests": [
+  {
+   "file": "steps/refresh_snapshot/u1-run-clock.logic.test.ts",
+   "test": "U1a: binds the run clock for created_at and emits no NOW()",
+   "status": "failed",
+   "failure": "AssertionError: expected 'INSERT INTO data_quality_snapshots (\\…' not to match /NOW\\(\\)/i"
+  },
+  {
+   "file": "steps/refresh_snapshot/u1-run-clock.logic.test.ts",
+   "test": "U1b: snapshot_date still binds the server-side CURRENT_DATE literal (unchanged)",
+   "status": "passed"
+  },
+  {
+   "file": "steps/refresh_snapshot/u1-run-clock.logic.test.ts",
+   "test": "U1c: throws on a missing run clock — never falls back to NOW()",
+   "status": "failed",
+   "failure": "AssertionError: expected [Function] to throw an error"
+  }
+ ]
+}

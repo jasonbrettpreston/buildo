@@ -170,15 +170,17 @@ describe('sql-witness resolver — R14: runner ledger SQL has no a:<cte> rows at
     const st = require(path.join(process.cwd(), 'scripts/lib/step/staleness.js'));
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const A = require(path.join(process.cwd(), 'scripts/lib/sql-witness/assemble.cjs'));
+    // FLEET-2 §5 triage 2026-10-06: link_massing's recovery.interrupted became "none" (FLEET-2 R2), so detectInterruptedRetraction
+    // returns before querying; link_wsib still declares force_full_on_next_run, so the real CTE query is still exercised here.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const linkMassing = require(path.join(process.cwd(), 'scripts/link-massing.descriptor.json')); // declares force_full_on_next_run
+    const linkWsib = require(path.join(process.cwd(), 'scripts/link-wsib.descriptor.json')); // declares force_full_on_next_run
     const { pathToFileURL } = await import('url');
     const G = await import(pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/witness.mjs')).href);
 
     const captured: Array<{ text: string; params: unknown[] }> = [];
     const pool = { query: async (text: string, params: unknown[]) => { captured.push({ text, params }); return { rows: [] }; } };
     await sv.runLedgerGateDecision(pool, { ownSlugs: ['sources:x'], upstreamSlugs: ['sources:y'] });
-    await st.detectInterruptedRetraction(pool, linkMassing, {});
+    await st.detectInterruptedRetraction(pool, linkWsib, {});
     expect(captured.length).toBe(2);
 
     const lines = [
@@ -530,7 +532,7 @@ describe('sql-witness resolver — real pipeline SQL shapes (orchestrator probe 
     };
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const D = require(path.join(process.cwd(), 'scripts/load-parcels.descriptor.json')) as {
-      outputs: { writes: Array<{ columns: Array<{ name: string }> }> };
+      outputs: { writes: Array<{ columns: Array<{ name: string; written?: string }> }> };
     };
     const writeSpec = D.outputs.writes[0]!;
     const sql = write.buildWritePlan(writeSpec, D).upsertSqlFor(2);
@@ -550,7 +552,9 @@ describe('sql-witness resolver — real pipeline SQL shapes (orchestrator probe 
     // `geom` is written via an expression (ST_GeomFromWKB), so the resolver may or
     // may not report it; it is included only if it appears. Every other declared
     // column must land in writes.parcels.
-    const declared = writeSpec.columns.map((c) => c.name).filter((n) => n !== 'geom');
+    // A written:"db_default" column (parcels.id, FLEET-2 unproduced reads) is declared precisely as one the
+    // statement never writes (write.js keeps it out of INSERT / SET / guard), so it is excluded here.
+    const declared = writeSpec.columns.filter((c) => c.written !== 'db_default').map((c) => c.name).filter((n) => n !== 'geom');
     expect(r.writes.parcels).toEqual(expect.arrayContaining(declared));
   });
 });
@@ -723,5 +727,78 @@ describe('sql-witness resolver — a TEMP *_staging that stages no catalog table
     const r = R.resolveStatement('SELECT note FROM parcels_staging', SCAT);
     expect(r.reads).toEqual({ parcels_staging: ['note'] });
     expect(r.error).toBeNull();
+  });
+});
+
+describe('sql-witness resolver — F8: ON CONFLICT DO UPDATE SET targets are writes (WF1 LDG-10 T6)', () => {
+  // The real load_parcels statement and its committed catalog snapshot. The catalog file
+  // is `{catalog_version, source, tables: {<table>: [...]}}`, so the resolver is handed
+  // `.tables` (a plain table -> columns map) — the shape `resolveStatement` expects.
+  const loadCatalog = (): Record<string, string[]> => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const snap = require(path.join(process.cwd(), 'docs/reports/witness/_catalog.json')) as {
+      tables: Record<string, string[]>;
+    };
+    return snap.tables;
+  };
+  const realUpsertSql = (): string => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const write = require(path.join(process.cwd(), 'scripts/lib/step/write.js')) as {
+      buildWritePlan: (writeSpec: unknown, descriptor: unknown) => { upsert_sql: string };
+    };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const D = require(path.join(process.cwd(), 'scripts/load-parcels.descriptor.json')) as {
+      outputs: { writes: unknown[] };
+    };
+    return write.buildWritePlan(D.outputs.writes[0], D).upsert_sql;
+  };
+
+  it('T6 RED: `INSERT … ON CONFLICT (id) DO UPDATE SET s = …` writes the unlisted SET target `t.s`', () => {
+    // RED today — resolveWrite's InsertStmt ON CONFLICT branch resolves the SET right-hand
+    // sides as READS but never calls recordWrite for a ResTarget.name, so `s` (a SET target
+    // absent from the INSERT column list) never reaches writes.t.
+    const r = R.resolveStatement(
+      'INSERT INTO t (id, a) VALUES ($1, $2) ' +
+        'ON CONFLICT (id) DO UPDATE SET a = EXCLUDED.a, ' +
+        's = CASE WHEN t.a IS DISTINCT FROM EXCLUDED.a THEN NULL ELSE t.s END ' +
+        'WHERE t.a IS DISTINCT FROM EXCLUDED.a',
+      { t: ['id', 'a', 's'] },
+    );
+    expect(r.error).toBeNull();
+    expect(r.kind).toBe('write');
+    expect(r.writes.t).toContain('s');
+    expect(r.writes.t).toEqual(expect.arrayContaining(['id', 'a']));
+  });
+
+  it('T6b RED: the REAL load_parcels upsert writes all three `*_dataset_version_when_enriched` columns', () => {
+    // RED today — measured against the committed witness trace: the live `upsert_sql` SETs
+    // these three columns (none of them is in the INSERT column list), but the resolver
+    // reports them under reads.parcels and NOT under writes.parcels.
+    const r = R.resolveStatement(realUpsertSql(), loadCatalog());
+    expect(r.error).toBeNull();
+    expect(r.writes.parcels).toEqual(
+      expect.arrayContaining([
+        'ravine_dataset_version_when_enriched',
+        'heritage_dataset_version_when_enriched',
+        'centreline_dataset_version_when_enriched',
+      ]),
+    );
+  });
+
+  it('GREEN control: a plain INSERT with no ON CONFLICT still writes exactly its column list', () => {
+    // GREEN control — no ON CONFLICT clause at all, so the INSERT column list is the whole
+    // write set: unchanged by any fix to the DO UPDATE SET target handling.
+    const r = R.resolveStatement('INSERT INTO t (id, a) VALUES ($1, $2)', { t: ['id', 'a', 's'] });
+    expect(sorted(r.writes.t!)).toEqual(['a', 'id']);
+  });
+
+  it('GREEN control: ON CONFLICT DO NOTHING adds no write beyond the INSERT column list', () => {
+    // GREEN control — DO NOTHING has no ResTargets, so it can never add a write: the write
+    // set stays exactly the INSERT column list.
+    const r = R.resolveStatement(
+      'INSERT INTO t (id, a) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING',
+      { t: ['id', 'a', 's'] },
+    );
+    expect(sorted(r.writes.t!)).toEqual(['a', 'id']);
   });
 });

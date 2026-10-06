@@ -1,0 +1,23 @@
+{
+  "wf": "registry-truth Fold 20 (MQ-A7 schema half + row 9)",
+  "date": "2026-10-05",
+  "command": "VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest run <files> (DB env unset)",
+  "phase": "GREEN",
+  "schema": "current (MQ-A7 + row 9)",
+  "fixtures": "moved (none)",
+  "files": [
+    "src/tests/fold20-schema-drift-rules.logic.test.ts",
+    "src/tests/step-schema.logic.test.ts",
+    "src/tests/phase3-deletions.logic.test.ts"
+  ],
+  "known_residual": [
+    "claim #54 fixture: pre-existing (D-4 d4-green.json; fires once lib phases arm merges)",
+    "UNAFFECTED: pre-existing git-dirty red PLUS row 9 reds the 11 p3 non-INGESTOR pause descriptors until seat B moves them to none"
+  ],
+  "passed": 109,
+  "failed": 2,
+  "failing": [
+    "enricher-pending-without-invalidator.json — claim #54 — an ENRICHER with a lineage-predicate staleness.scope cannot omit its invalidator (the centroid defect made unexpressible)",
+    "the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe"
+  ]
+}

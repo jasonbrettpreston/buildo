@@ -936,6 +936,59 @@ function postCaptureGuard({ step, runStepValidate }) {
   return { slug, decision };
 }
 
+/**
+ * P2-C4 (registry-truth PLAN :223; fold 19 MQ-A3 (a) + compliance amendment) — the
+ * `last_measured` SIDECAR. A capture's RAW summary still carries every executed
+ * invariants[]/plausibility[] entry's audit row and its `sys_<id>_duration_ms` cost row (both
+ * scrubbed from the normalised form, which is why goldens cannot be the source). The harness
+ * folds them into `docs/reports/golden/<slug>/measured.json`; `generate-last-measured.mjs`
+ * writes each descriptor entry's `last_measured` from it and `--check` reds a hand edit.
+ * Reduction rule (fixed now, so `--check` never flaps): the LATEST capture per entry wins;
+ * `sample_n` counts the captures folded in and is informational only. `validate_only`
+ * entries never run in the runner, so they are absent here (their source is a second input).
+ * `last_measured` is outside `source_fingerprint` (§stripLastMeasuredForFingerprint).
+ */
+function measuredPathFor(slug) {
+  return path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured.json');
+}
+
+function measuredFromCapture(doc, descriptor, at) {
+  const rows = (doc && doc.summary && doc.summary.records_meta && doc.summary.records_meta.audit_table
+    && Array.isArray(doc.summary.records_meta.audit_table.rows)) ? doc.summary.records_meta.audit_table.rows : [];
+  const byMetric = new Map(rows.map((r) => [r && r.metric, r]));
+  const runs = doc && Array.isArray(doc.pipeline_runs) ? doc.pipeline_runs : [];
+  const lastRun = runs.length > 0 ? runs[runs.length - 1] : null;
+  const runId = lastRun && lastRun.id !== undefined && lastRun.id !== null ? String(lastRun.id) : null;
+  const chain = doc && doc.chain === 'none' ? null : ((doc && doc.chain) ?? null);
+  const out = {};
+  for (const cat of ['invariants', 'plausibility']) {
+    const entries = descriptor && Array.isArray(descriptor[cat]) ? descriptor[cat] : [];
+    for (const e of entries) {
+      if (!e || !byMetric.has(e.id)) continue;
+      const cost = byMetric.get(`sys_${e.id}_duration_ms`);
+      out[e.id] = {
+        value: byMetric.get(e.id).value,
+        cost_ms: cost && Number.isFinite(cost.value) ? cost.value : null,
+        at,
+        commit: (doc && doc.git_head) ?? null,
+        run_id: runId,
+        chain,
+      };
+    }
+  }
+  return out;
+}
+
+function mergeMeasured(existing, measured) {
+  const prior = (existing && existing.entries && typeof existing.entries === 'object') ? existing.entries : {};
+  const entries = { ...prior };
+  for (const [id, m] of Object.entries(measured || {})) {
+    const n = prior[id] && Number.isInteger(prior[id].sample_n) ? prior[id].sample_n : 0;
+    entries[id] = { ...m, sample_n: n + 1 };
+  }
+  return { entries };
+}
+
 function buildCapture(raw) {
   const { normalised, nondeterminism } = normalise(raw);
   const verdict = raw.summary?.records_meta?.audit_table?.verdict ?? null;
@@ -1203,6 +1256,18 @@ async function main() {
     }
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(doc, null, 2) + '\n');
+    // P2-C4 — fold this capture's measured invariants[]/plausibility[] values into the slug's
+    // sidecar (latest capture wins per entry). Only a written golden feeds it.
+    if (descriptor && descriptor.identity && descriptor.identity.name) {
+      const measured = measuredFromCapture(doc, descriptor, new Date().toISOString());
+      if (Object.keys(measured).length > 0) {
+        const sidecarPath = measuredPathFor(descriptor.identity.name);
+        const existing = fs.existsSync(sidecarPath) ? JSON.parse(fs.readFileSync(sidecarPath, 'utf8')) : null;
+        fs.mkdirSync(path.dirname(sidecarPath), { recursive: true });
+        fs.writeFileSync(sidecarPath, JSON.stringify(mergeMeasured(existing, measured), null, 2) + '\n');
+        console.log(`[capture-step-golden] measured: ${Object.keys(measured).length} entr${Object.keys(measured).length === 1 ? 'y' : 'ies'} -> ${sidecarPath}`);
+      }
+    }
     console.log(`${line}\n[capture-step-golden] wrote ${outPath}`);
   } else {
     console.log(line);
@@ -1250,6 +1315,9 @@ module.exports = {
   computeSourceFingerprint,
   computeLibFingerprint,
   stripLastMeasuredForFingerprint,
+  measuredPathFor,
+  measuredFromCapture,
+  mergeMeasured,
   computePathFor,
   notesPathFor,
   gitHead,

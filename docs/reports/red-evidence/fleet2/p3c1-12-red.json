@@ -1,0 +1,50 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "red",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "pre-edit copies of scripts/lib/step/index.js, write.js and scripts/lib/compute/refresh-snapshot.js swapped in, then restored (cmp-verified)",
+ "tests": [
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N1 halt — an empty declared read table halts with an errored FAIL gate row",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N2 warn — the same empty table yields a WARN gate row that does not halt",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N3 run — the same empty table yields an INFO row and no halt",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N4 clean — every counted table non-zero yields one INFO row carrying the counts",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N5 self-written table excluded — the step never counts the table it writes",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N6 expect_nonempty false — no query and no row even when a read table is empty",
+   "status": "failed",
+   "failure": "TypeError: runner.measureInputGuards is not a function"
+  },
+  {
+   "file": "p3c1-12.logic.test.ts",
+   "test": "N7 runner wiring — measureInputGuards runs pre-dispatch and gates compute",
+   "status": "failed",
+   "failure": "AssertionError: expected -1 to be greater than -1"
+  }
+ ]
+}

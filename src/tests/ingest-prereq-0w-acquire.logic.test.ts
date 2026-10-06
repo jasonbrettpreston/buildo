@@ -150,7 +150,7 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
     const xlsxBytes = fs.readFileSync(file);
     const descriptor = clone(LOAD_RAVINES) as { identity: { name: string } };
     const external = {
-      id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup', cache: 'none',
+      id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup',
     };
     const fetchImpl = fetchOf([
       { status: 200 }, // HEAD
@@ -214,12 +214,12 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
     });
 
     // A lookup that is NOT xlsx → refused by name.
-    const lookupCsv = args({ id: 'l', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv', role: 'lookup', cache: 'none' });
+    const lookupCsv = args({ id: 'l', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv', role: 'lookup' });
     await expect(acquireLib.acquireExternal(lookupCsv)).rejects.toThrow(/lookup/);
     expect(lookupCsv.ctxFetch, 'the pairing is refused BEFORE any fetch').not.toHaveBeenCalled();
 
     // xlsx with NO role (i.e. primary) → refused by name.
-    const primaryXlsx = args({ id: 'p', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', cache: 'none' });
+    const primaryXlsx = args({ id: 'p', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx' });
     await expect(acquireLib.acquireExternal(primaryXlsx)).rejects.toThrow(/xlsx/);
     expect(primaryXlsx.ctxFetch, 'the pairing is refused BEFORE any fetch').not.toHaveBeenCalled();
   });
@@ -231,7 +231,7 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
   // -------------------------------------------------------------------------
   it('T4 — a no-role csv external still consults the gate (once) and a {skip:true} reason resolves skipped', async () => {
     const descriptor = clone(LOAD_RAVINES) as { identity: { name: string } };
-    const external = { id: 'p', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv', cache: 'none' };
+    const external = { id: 'p', kind: 'http_file', url: 'http://ex/p.csv', format: 'csv' };
     const fetchImpl = fetchOf([{ status: 200 }]); // HEAD only — the gate skips before GET
     const gate = vi.fn(() => ({ skip: true, reason: 'x' }));
     const r = await acquireLib.acquireExternal({
@@ -278,20 +278,20 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
     };
     const errText = (errors: unknown) => JSON.stringify(errors ?? []);
 
-    const lookup = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup', cache: 'none' });
+    const lookup = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup' });
     expect(lookup.valid, `a lookup xlsx external is valid: ${errText(lookup.errors)}`).toBe(true);
 
-    const primary = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'primary', cache: 'none' });
+    const primary = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'primary' });
     expect(primary.valid, `"primary" is an allowed role value: ${errText(primary.errors)}`).toBe(true);
 
     // The pre-0w descriptors declare NO role: still valid (absent = primary).
     expect(Object.prototype.hasOwnProperty.call(LOAD_RAVINES.inputs.reads.externals[0], 'role')).toBe(false);
     expect(validate(clone(LOAD_RAVINES)), 'role is optional — every existing descriptor is byte-identical').toBe(true);
 
-    const join = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'join', cache: 'none' });
+    const join = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'join' });
     expect(join.valid, 'role is a closed enum — "join" is not one of its two values').toBe(false);
 
-    const pdf = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.pdf', format: 'pdf', cache: 'none' });
+    const pdf = withExternal({ id: 'l', kind: 'http_file', url: 'http://ex/p.pdf', format: 'pdf' });
     expect(pdf.valid, 'format is a closed enum — "pdf" is not one of its four values').toBe(false);
   });
 });

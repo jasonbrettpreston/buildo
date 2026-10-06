@@ -11,13 +11,15 @@
 //   UNWITNESSED:<slug>                              no post trace captured at all
 //   FAIL:INPUT:<slug>:<invocation>:<error>          a trace carried errors[] entries
 //   FAIL:STALE:<slug>:<invocation>                  source_fingerprint != currentFingerprint
-//   FAIL:WITNESS:<slug>:a:<table>.<col>|a:<table>.* traced read/write not declared
+//   FAIL:WITNESS:<slug>:a:<table>.<col>|a:<table>.* traced read/write not declared (declared = inputs.reads ∪ checks[].reads ∪ writes, R-BJ)
 //   FAIL:WITNESS:<slug>:a:unwitnessed:<table>.<col>|.*  a declared read touched by no fresh trace and no fixture record (P1-C4a)
 //   FAIL:WITNESS:<slug>:b:<table>[.<col>]           written tables must EQUAL declared write tables
 //   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory
 //   FAIL:WITNESS:<slug>:d:txn_scope:<declared>:<observed>
 //   FAIL:WITNESS:<slug>:g:<key>                     PRE key absent from POST and unexplained
 //   FAIL:WITNESS:<slug>:e:missing:<step>|e:extra:<step>  inputs.reads.steps != the derived producer set (P1-C5)
+//   FAIL:WITNESS:<slug>:full_rescan:arm:<table>.<col>    an invalidates[] row declares `by: "full_rescan"` but the descriptor's write targets do NOT re-derive it every run (O4 fold 14)
+//   UNWITNESSED:<slug>:full_rescan:<table>.<col>         ...and no fresh post trace witnesses the write (declared but unproven)
 //   FAIL:PRODUCER:<slug>:<invocation-param>:status  a pipeline_runs read filtered to completed-only
 //   FAIL:FIXTURE:<slug>:<suite>:<item>              a fixture-guard violation (a:<t>.<c>) or input:<error> (P1-C4a)
 //
@@ -45,6 +47,23 @@ export function declaredReads(descriptor) {
   for (const t of tables) {
     if (!t || typeof t.table !== 'string') continue;
     out.push({ table: t.table, cols: Array.isArray(t.columns) ? t.columns : [] });
+  }
+  return out;
+}
+
+/**
+ * R-BJ (fold 9 C7-1; MQ-A9 a): every `checks[i].reads` entry → `[{table, cols}]` — the reads a check's
+ * own measurement executes, declared OUTSIDE inputs.reads (never an ordering edge). #44 (a) accounts a
+ * traced read against inputs.reads ∪ checks[].reads; the declared ⊆ witnessed half stays inputs-only.
+ */
+export function declaredCheckReads(descriptor) {
+  const checks = descriptor && Array.isArray(descriptor.checks) ? descriptor.checks : [];
+  const out = [];
+  for (const c of checks) {
+    for (const r of c && Array.isArray(c.reads) ? c.reads : []) {
+      if (!r || typeof r.table !== 'string') continue;
+      out.push({ table: r.table, cols: Array.isArray(r.columns) ? r.columns : ['*'] });
+    }
   }
   return out;
 }
@@ -166,6 +185,7 @@ function hasWrite(trace) {
  * (a) traced ⊆ declared, for reads AND writes alike. Declared columns are the UNION of
  * `inputs.reads.tables[]` and `outputs.writes[]` — a traced write to a declared column is
  * declared too (brief §(a)); `*` in a read column list means the whole table.
+ * Declared = inputs.reads ∪ outputs.writes; checks[].reads (R-BJ) additionally allows traced READS only (amendment A1).
  *
  * @param {unknown} descriptor
  * @param {{reads?: object, writes?: object}} touched a trace's `touched` map (may be malformed)
@@ -192,14 +212,25 @@ export function undeclaredItems(descriptor, touched) {
     for (const c of w.cols) set.add(c);
     declaredCols.set(w.table, set);
   }
+  // R-BJ / MQ-A9 amendment A1: checks[].reads widens the allowed traced READS only — never declaredTables
+  // and never the writes-accepted set (a traced WRITE to a check-read column still fails (a)).
+  const checkCols = new Map();
+  const checkWhole = new Set();
+  for (const r of declaredCheckReads(descriptor)) {
+    if (isWholeTable(r.cols)) checkWhole.add(r.table);
+    const set = checkCols.get(r.table) || new Set();
+    for (const c of r.cols) if (c !== '*') set.add(c);
+    checkCols.set(r.table, set);
+  }
   for (const kind of ['reads', 'writes']) {
     for (const [table, cols] of Object.entries(t[kind])) {
-      if (!tables.has(table)) {
+      const checkRead = kind === 'reads' && checkCols.has(table);
+      if (!tables.has(table) && !checkRead) {
         items.push(`a:${table}.*`); // one row per table, not per column
         continue;
       }
-      if (whole.has(table)) continue;
-      const allowed = declaredCols.get(table) || new Set();
+      if (whole.has(table) || (kind === 'reads' && checkWhole.has(table))) continue;
+      const allowed = new Set([...(declaredCols.get(table) || []), ...(kind === 'reads' ? (checkCols.get(table) || []) : [])]);
       for (const col of Array.isArray(cols) ? cols : []) {
         if (!allowed.has(col)) items.push(`a:${table}.${col}`);
       }
@@ -386,6 +417,155 @@ export function readsStepsItems(descriptor, derived) {
   return [...new Set(items)].sort();
 }
 
+/** `IS NULL` / `NOT EXISTS` markers in a declared write scope (case-insensitive). */
+const IS_NULL_RE = /\bIS\s+NULL\b/i;
+const NOT_EXISTS_RE = /\bNOT\s+EXISTS\b/i;
+
+/**
+ * `outputs.writes[]` entries (with their index) whose table is `table` and whose
+ * `columns[].name` includes `column`.
+ * @returns {Array<{index: number, write: object}>}
+ */
+function writersFor(writes, table, column) {
+  const out = [];
+  writes.forEach((w, index) => {
+    if (!w || w.table !== table) return;
+    const cols = Array.isArray(w.columns) ? w.columns : [];
+    if (cols.some((c) => c && c.name === column)) out.push({ index, write: w });
+  });
+  return out;
+}
+
+/**
+ * A `write_discipline.scope` as a string, or `''` for a missing/non-string/`'none'` scope.
+ * @returns {string}
+ */
+function disciplineScope(write) {
+  const wd = write && write.write_discipline;
+  const scope = wd ? wd.scope : null;
+  return typeof scope === 'string' && scope !== 'none' ? scope : '';
+}
+
+/**
+ * Does ONE raw post-trace object witness a write of `<table>.<column>`? TRUE iff some
+ * `statements[]` entry has `kind === 'write'` whose `writes[<table>]` array includes
+ * `<column>`.
+ *
+ * @param {unknown} trace a raw post-trace object
+ * @param {string} table
+ * @param {string} column
+ * @returns {boolean}
+ */
+function traceWitnessesWrite(trace, table, column) {
+  if (!trace || typeof trace !== 'object') return false;
+  const statements = Array.isArray(trace.statements) ? trace.statements : [];
+  for (const s of statements) {
+    if (!s || s.kind !== 'write') continue;
+    const writes = s.writes;
+    if (writes && Array.isArray(writes[table]) && writes[table].includes(column)) return true;
+  }
+  return false;
+}
+
+/**
+ * The WITNESSED half: does any fresh trace write `<table>.<column>`?
+ *
+ * Two input shapes are accepted, so both a direct caller and `evaluateWitness` can use the
+ * same rule: a flat `{table: string[]}` write union (the `touchedOf` shape, e.g. the test
+ * fixtures) is consulted by table key; otherwise each member of the map/array is treated as a
+ * raw post-trace object and checked statement-by-statement (`kind === 'write'`).
+ *
+ * @param {Array<object>|Record<string, object>} freshTraces
+ * @param {string} table
+ * @param {string} column
+ * @returns {boolean}
+ */
+function witnessedBy(freshTraces, table, column) {
+  if (!freshTraces || typeof freshTraces !== 'object') return false;
+  const values = Array.isArray(freshTraces) ? freshTraces : Object.values(freshTraces);
+  const flat = !Array.isArray(freshTraces)
+    && values.length > 0
+    && values.every((v) => Array.isArray(v));
+  if (flat) return Array.isArray(freshTraces[table]) && freshTraces[table].includes(column);
+  return values.some((t) => traceWitnessesWrite(t, table, column));
+}
+
+/**
+ * O4 ruling 2026-10-03, registry-truth fold 14 — the `full_rescan` EVIDENCE rule.
+ *
+ * An `outputs.invalidates[]` row with `by === 'full_rescan'` claims the writer re-derives the
+ * named column on EVERY run, so no other invalidator is needed. That claim is ARMED only when
+ * BOTH halves hold:
+ *   (1) DECLARED — the descriptor's own write targets really do a full rewrite. For an ENRICHER
+ *       this is its `execution.phases[]`: every phase whose `writes_ref` points at a write target
+ *       that writes `<table>.<column>` must declare `scope === 'full'`, and at least one such
+ *       phase must exist. For any other archetype, `staleness.mode_select === 'none'` AND every
+ *       write target writing `<table>.<column>` has a `write_discipline.scope` carrying neither an
+ *       `IS NULL` predicate nor a `NOT EXISTS` anti-join (case-insensitive; `IS NOT NULL` /
+ *       `IS DISTINCT FROM` are fine) — a narrowed scope is the incremental write, not a full one.
+ *   (2) WITNESSED — at least one FRESH (non-stale) post trace writes `<table>.<column>`.
+ *
+ * UNWITNESSED until traced: a declared-but-unwitnessed row is an open obligation, not a pass.
+ *
+ * @param {unknown} descriptor the step descriptor
+ * @param {Array<object>|Record<string, object>} freshTraces the FRESH (non-stale) post traces —
+ *   raw trace objects (`{statements: [...]}`) or a flat `{table: string[]}` write union
+ * @returns {string[]} sorted unique items WITHOUT the `FAIL:WITNESS:<slug>:` prefix:
+ *   `full_rescan:arm:<table>.<column>` when (1) FAILS (including when no declared write target
+ *   writes the column at all), `full_rescan:unwitnessed:<table>.<column>` when (1) holds and (2)
+ *   fails; NOTHING for an armed row, a row without `by`, or a row with a different `by`.
+ */
+export function fullRescanItems(descriptor, freshTraces) {
+  const invalidates = descriptor && descriptor.outputs
+    && Array.isArray(descriptor.outputs.invalidates)
+    ? descriptor.outputs.invalidates
+    : [];
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes)
+    ? descriptor.outputs.writes
+    : [];
+  const archetype = descriptor && descriptor.identity ? descriptor.identity.archetype : null;
+  const modeSelect = descriptor && descriptor.staleness ? descriptor.staleness.mode_select : null;
+  const phases = descriptor && descriptor.execution && Array.isArray(descriptor.execution.phases)
+    ? descriptor.execution.phases
+    : [];
+
+  const items = [];
+  for (const row of invalidates) {
+    if (!row || row.by !== 'full_rescan') continue;
+    const table = row.table;
+    const column = row.column;
+    if (typeof table !== 'string' || typeof column !== 'string') continue;
+    const writers = writersFor(writes, table, column);
+
+    let armed;
+    if (archetype === 'ENRICHER') {
+      const writerIdx = new Set(writers.map((w) => w.index));
+      const filling = phases.filter(
+        (p) => p && typeof p === 'object' && writerIdx.has(p.writes_ref),
+      );
+      armed = writers.length > 0
+        && filling.length > 0
+        && filling.every((p) => p.scope === 'full');
+    } else {
+      armed = writers.length > 0
+        && modeSelect === 'none'
+        && writers.every(({ write }) => {
+          const scope = disciplineScope(write);
+          return !IS_NULL_RE.test(scope) && !NOT_EXISTS_RE.test(scope);
+        });
+    }
+
+    if (!armed) {
+      items.push(`full_rescan:arm:${table}.${column}`);
+      continue;
+    }
+    if (!witnessedBy(freshTraces, table, column)) {
+      items.push(`full_rescan:unwitnessed:${table}.${column}`);
+    }
+  }
+  return [...new Set(items)].sort();
+}
+
 /**
  * Gate #44 (slice A) for ONE slug.
  *
@@ -416,6 +596,7 @@ export function evaluateWitness({
   const invocations = Object.keys(posts);
   const rows = [];
   const witnessedTouched = [];
+  const freshTraces = [];
 
   if (invocations.length === 0) {
     // Nothing captured at all: not a FAIL, and nothing else is evaluated.
@@ -433,6 +614,7 @@ export function evaluateWitness({
       rows.push(...checkTraceAgainstDescriptor(slug, descriptor, trace));
       rows.push(...producerRows(slug, trace));
       witnessedTouched.push(touchedOf(trace));
+      freshTraces.push(trace);
     }
   }
 
@@ -462,6 +644,17 @@ export function evaluateWitness({
     }
     for (const item of unwitnessedItems(descriptor, witnessed)) {
       rows.push(`FAIL:WITNESS:${slug}:${item}`);
+    }
+  }
+
+  // O4 fold 14 — full_rescan EVIDENCE. Declaration-only for the arm half (so it fires with no
+  // traces at all); the unwitnessed half uses the FRESH (non-stale) post traces only.
+  for (const item of fullRescanItems(descriptor, freshTraces)) {
+    if (item.startsWith('full_rescan:arm:')) {
+      rows.push(`FAIL:WITNESS:${slug}:${item}`);
+    } else {
+      // `full_rescan:unwitnessed:<t>.<c>` → `UNWITNESSED:<slug>:full_rescan:<t>.<c>`
+      rows.push(`UNWITNESSED:${slug}:full_rescan:${item.slice('full_rescan:unwitnessed:'.length)}`);
     }
   }
 

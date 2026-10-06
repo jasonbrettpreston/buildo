@@ -78,6 +78,9 @@ function silenceLogs() {
 describe('P1-C4b — link_neighbourhoods lifecycle on a guarded recording pool (no DB)', () => {
   it('runs the REAL LINK_COLUMN over a 150-polygon corpus, stamps one permit through the single set-based join UPDATE and must issue its pre-write read, its write and its post-write round trip', async () => {
     const stepAnswer = (text: string): Answer | null => {
+      // FLEET-2 A-1: the runner's input guards (#12 inputs.expect_nonempty / #32 guards.empty_source) COUNT each
+      // declared table before compute and halt on 0 — this fixture models a POPULATED corpus.
+      if (/^SELECT COUNT\(\*\)::bigint AS n FROM \w+$/.test(text.trim())) return { rows: [{ n: '1' }] };
       // neighbourhoods_loaded_before_write (pre-write gate): a non-empty boundary table, above the seeded floor.
       if (text.includes('count(*)::int AS n FROM neighbourhoods')) return { rows: [{ n: 150 }] };
       if (/UPDATE permits/i.test(text)) return { rows: [{ permit_num: '24 100001 BLD', revision_num: '00' }], rowCount: 1 };

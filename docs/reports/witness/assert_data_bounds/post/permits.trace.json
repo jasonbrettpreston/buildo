@@ -1,0 +1,408 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "permits",
+  "source_fingerprint": "a0adfdf6b3fbb114aa4acff968f5eddf45e6caa6bc90fbb25aa356914d9ad416",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 27,
+    "distinct": 26,
+    "utility": 5,
+    "tracer_self_ms": 13.701,
+    "wall_ms": 20805
+  },
+  "statements": [
+    {
+      "fingerprint": "00aaa1d6eb081c02",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "naics_code"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1cb03eaa0b923689",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2610621b8d6de01f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3e459b54ccadb1d0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "last_seen_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3ebdbf12e8fe3c30",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_trades": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "406d4f390b155b62",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5fe780bc5fdcec75",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "61c41a8bf8930ae6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "predominant_class",
+          "subclass"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "69fbf029af67beaf",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "permit_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 26,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "aa8ee5dc67d3c676",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost",
+          "modeled_gfa_sqm",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b827b04bdb64375b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "cost_tier"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "baf3c2f88898a011",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id"
+        ],
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c00b5eb8f5d23571",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e2f299b85f242e59",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "estimated_cost",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ecc49ba7ca853b58",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "last_seen_at",
+          "lifecycle_phase"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f00b6618ba232c78",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "legal_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f14564e0b446e2c1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "est_const_cost"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "cost_estimates": [
+        "cost_tier",
+        "estimated_cost",
+        "modeled_gfa_sqm",
+        "permit_num"
+      ],
+      "entities": [
+        "id"
+      ],
+      "permit_parcels": [
+        "permit_num",
+        "revision_num"
+      ],
+      "permit_trades": [
+        "permit_num",
+        "revision_num"
+      ],
+      "permits": [
+        "est_const_cost",
+        "last_seen_at",
+        "lifecycle_phase",
+        "permit_num",
+        "permit_type",
+        "revision_num"
+      ],
+      "wsib_registry": [
+        "legal_name",
+        "linked_entity_id",
+        "naics_code",
+        "predominant_class",
+        "subclass"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

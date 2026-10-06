@@ -110,16 +110,27 @@ describe('generate-target-files — the CLI and the generator (gtf-02)', () => {
       const entry = effective[slug]!;
       const [table, column] = firstReadColumn(slug)!;
 
+      // FLEET-2 MQ-C1 (a): effectiveLedger DROPS a snapshot row with no manifest.scripts entry (ORDER-RETIRED), so an
+      // invented slug is no longer an edge. The extra write goes on an EXISTING live, snapshot-only producer that shares
+      // a chain with the chosen row and does not already write the column, so the drift is a real new upstream edge.
+      type SnapRow = { chains?: string[]; writes?: Record<string, string[]>; [k: string]: unknown };
+      const effAll = inputs.ledger.inchain as Record<string, SnapRow & { source?: string }>;
+      const writerSlug = Object.keys(effAll).find((n) => {
+        const e = effAll[n]!;
+        const snapRow = (inchain as Record<string, SnapRow>)[n];
+        return e.source === 'snapshot' && n !== slug && snapRow !== undefined
+          && (e.chains || []).some((c) => entry.chains.includes(c))
+          && !((snapRow.writes || {})[table] || []).includes(column);
+      });
+      expect(writerSlug, 'no live snapshot-only producer shares a chain with the chosen row').toBeTruthy();
+      const writerRow = (inchain as Record<string, SnapRow>)[writerSlug!]!;
       const drifted = {
         ...snapshot,
         inchain: {
           ...inchain,
-          zz_fixture_writer: {
-            chains: [...entry.chains],
-            script: 'scripts/zz-fixture.js',
-            reads: {},
-            writes: { [table]: [column] },
-            external: [],
+          [writerSlug!]: {
+            ...writerRow,
+            writes: { ...(writerRow.writes || {}), [table]: [...((writerRow.writes || {})[table] || []), column] },
           },
         },
       };

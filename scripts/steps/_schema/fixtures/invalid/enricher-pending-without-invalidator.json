@@ -22,12 +22,7 @@
     "reads": {
       "steps": [
         {
-          "step": "load_heritage",
-          "version_pin": "exact",
-          "assert_health": [
-            "feature_count",
-            "drift_check_passed"
-          ]
+          "step": "load_heritage"
         }
       ],
       "tables": [
@@ -75,24 +70,15 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step"
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "not_applicable",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
       "statements": 1
     }
   },
   "staleness": {
-    "scope": "heritage_dataset_version_when_enriched IS DISTINCT FROM :version",
     "trigger": [
       {
         "signal": "upstream_ledger",
@@ -104,8 +90,6 @@
       }
     ],
     "mode_select": "tri_state",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -129,7 +113,7 @@
       "heritage_properties",
       "heritage_districts"
     ],
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "execution": {
     "phases": [
@@ -143,20 +127,14 @@
         "timeout_minutes_from_config": "none"
       }
     ],
-    "budget": "20m",
     "txn_scope": "step",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "sources": {
@@ -221,13 +199,11 @@
   },
   "counters": {
     "records_total": {
-      "source": "candidateParcels",
-      "scoped_by": "id"
+      "source": "candidateParcels"
     },
     "records_new": "none",
     "records_updated": {
-      "source": "stampedParcels",
-      "scoped_by": "id"
+      "source": "stampedParcels"
     }
   },
   "config": "none",

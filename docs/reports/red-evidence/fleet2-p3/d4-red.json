@@ -1,0 +1,25 @@
+{
+  "source": "vitest --reporter=json, summarized; full report kept outside the repo at C:/Users/User/fleet2-p3-tools/d4-red.json",
+  "numTotalTests": 38,
+  "numPassedTests": 32,
+  "numFailedTests": 6,
+  "files": 2,
+  "failing": [
+    {
+      "file": "src/tests/phase3-deletions.logic.test.ts",
+      "failed": [
+        "no schema rule keys an `if` on the deleted staleness.scope (the dead claim-#54 arm is removed; the phases arm is the survivor)"
+      ]
+    },
+    {
+      "file": "src/tests/spec-version-disposition.infra.test.ts",
+      "failed": [
+        "the registry carries a spec_version disposition block",
+        "the cited executor resolves (file exists and names the symbol)",
+        "every converted step appears exactly once across executed[] and not_executed{}",
+        "executed[] is exactly the INGESTOR set (the acquire skip path is the only executor)",
+        "every not_executed row carries a non-empty why.text"
+      ]
+    }
+  ]
+}

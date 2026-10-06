@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/load-parcels.js",
   "chain": "sources",
-  "source_fingerprint": "5c9643596acc24cd48059b5dc31cd1d1487d1a155c79146bab147d92df4da9db",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "ae15fd6a8f747e01866c9e440c48237306c583b64d5ac54e809faddc7c3585b4",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 161,
+    "calls": 162,
     "distinct": 14,
     "utility": 8,
-    "tracer_self_ms": 9990.204,
-    "wall_ms": 299113
+    "tracer_self_ms": 7469.585,
+    "wall_ms": 228577
   },
   "statements": [
     {
       "fingerprint": "36792c4b7d22fd4c",
       "kind": "read",
       "count": 1,
-      "rowCount": 495496,
+      "rowCount": 495494,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -52,8 +52,8 @@
     {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -91,7 +91,7 @@
       "fingerprint": "7e9953ff29309ce6",
       "kind": "write",
       "count": 144,
-      "rowCount": 200,
+      "rowCount": 414,
       "reads": {
         "parcels": [
           "addr_num_normalized",
@@ -115,6 +115,7 @@
         "parcels": [
           "addr_num_normalized",
           "address_number",
+          "centreline_dataset_version_when_enriched",
           "date_effective",
           "depth_ft",
           "depth_m",
@@ -123,12 +124,14 @@
           "frontage_m",
           "geom",
           "geometry",
+          "heritage_dataset_version_when_enriched",
           "is_irregular",
           "linear_name_full",
           "lot_size_source",
           "lot_size_sqft",
           "lot_size_sqm",
           "parcel_id",
+          "ravine_dataset_version_when_enriched",
           "stated_area_raw",
           "street_name_normalized",
           "street_type_normalized"
@@ -185,7 +188,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -216,7 +219,7 @@
   ],
   "transactions": [
     {
-      "client": "1496:3",
+      "client": "26556:3",
       "write_fingerprints": [
         "7e9953ff29309ce6"
       ]
@@ -254,6 +257,7 @@
       "parcels": [
         "addr_num_normalized",
         "address_number",
+        "centreline_dataset_version_when_enriched",
         "date_effective",
         "depth_ft",
         "depth_m",
@@ -262,12 +266,14 @@
         "frontage_m",
         "geom",
         "geometry",
+        "heritage_dataset_version_when_enriched",
         "is_irregular",
         "linear_name_full",
         "lot_size_source",
         "lot_size_sqft",
         "lot_size_sqm",
         "parcel_id",
+        "ravine_dataset_version_when_enriched",
         "stated_area_raw",
         "street_name_normalized",
         "street_type_normalized"

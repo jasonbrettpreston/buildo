@@ -841,6 +841,22 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
     }
   });
 
+  it('#75 reconcile (fold 11 item 6) — a clean ASSERT run emits errors:[] and warnings:[] (the all_checks_passed terminal declares both as arrays); checks_passed stays "all"', async () => {
+    // RED before the runner change: both keys were omitted (undefined) on a clean run.
+    const pool = fakePool();
+    const cap = captureEmissions();
+    try {
+      await pipeline.step(ASSERT_SCHEMA, allClean).run({ pool, chainId: 'sources' });
+      const meta = cap.summary().records_meta;
+      expect(meta.errors).toEqual([]);
+      expect(meta.warnings).toEqual([]);
+      expect(meta.checks_passed).toBe('all');
+      expect(meta.checks_failed).toBe(0);
+    } finally {
+      cap.restore();
+    }
+  });
+
   it('LW-D13 — records_meta.ledger_row is stamped from ownsLedgerRow(chainId): "chain_owned" in-chain', async () => {
     const pool = fakePool();
     const cap = captureEmissions();
@@ -1889,23 +1905,49 @@ describe('override.force_run — the arm that makes a frozen source loadable (A-
   // here, and on a descriptor that declares `force_full: "none"` so the flag cannot be
   // armed by an env var it never named.
   it('ctx.overrides.force_full reflects the env too — the DECISION and the AUDIT ROW read the same source', () => {
+    // MQ-B2 (a), registry-truth fold 19 (operator 2026-10-04): link_massing / link_parcels retired their
+    // no-op LINK_*_FORCE_FULL (mode_select none: every run is already full). This lock moved to link_wsib,
+    // whose override still bypasses the ledger-gated skip — the link step where force_full is live.
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
-    const LINK_MASSING = require(join(process.cwd(), 'scripts/link-massing.descriptor.json'));
-    const FULL_ENV = stalenessLib.forceFullEnv(LINK_MASSING);
-    expect(FULL_ENV, 'link_massing declares override.force_full').toBe('LINK_MASSING_FORCE_FULL');
-    const armed = stalenessLib.resolveOverrides(LINK_MASSING, { [FULL_ENV]: '1' });
+    const LINK_WSIB = require(join(process.cwd(), 'scripts/link-wsib.descriptor.json'));
+    const FULL_ENV = stalenessLib.forceFullEnv(LINK_WSIB);
+    expect(FULL_ENV, 'link_wsib declares override.force_full (still live: bypasses the ledger-gated skip)').toBe('LINK_WSIB_FORCE_FULL');
+    const armed = stalenessLib.resolveOverrides(LINK_WSIB, { [FULL_ENV]: '1' });
     expect(armed.force_full, 'a standing force-full env must be OBSERVABLE, not only obeyed').toBe(true);
     expect(Object.isFrozen(armed)).toBe(true);
-    expect(stalenessLib.resolveOverrides(LINK_MASSING, {}).force_full).toBe(false);
+    expect(stalenessLib.resolveOverrides(LINK_WSIB, {}).force_full).toBe(false);
     // Never truthiness — same rule as force_run.
     for (const v of ['true', 'yes', '0', '', undefined]) {
-      expect(stalenessLib.resolveOverrides(LINK_MASSING, { [FULL_ENV]: v }).force_full, `env "${String(v)}"`).toBe(false);
+      expect(stalenessLib.resolveOverrides(LINK_WSIB, { [FULL_ENV]: v }).force_full, `env "${String(v)}"`).toBe(false);
     }
     // A descriptor declaring force_full: "none" can never be armed.
     expect(stalenessLib.forceFullEnv(LOAD_RAVINES)).toBeNull();
     expect(stalenessLib.resolveOverrides(LOAD_RAVINES, { [FULL_ENV]: '1' }).force_full).toBe(false);
     // And the DECISION still agrees with the row: same env, same source.
-    expect(stalenessLib.forceFullRequested(LINK_MASSING, { [FULL_ENV]: '1' })).toBe(true);
+    expect(stalenessLib.forceFullRequested(LINK_WSIB, { [FULL_ENV]: '1' })).toBe(true);
+  });
+
+  it('MQ-B2 (a) negative lock — link_massing and link_parcels declare NO force_full (retired as a no-op), the retired env arms nothing, and the retirement is a declared deviation', () => {
+    const RETIRED = [
+      ['scripts/link-massing.descriptor.json', 'LINK_MASSING_FORCE_FULL'],
+      ['scripts/link-parcels.descriptor.json', 'LINK_PARCELS_FORCE_FULL'],
+    ] as const;
+    for (const [file, env] of RETIRED) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
+      const d = require(join(process.cwd(), file)) as {
+        override: { force_full: string }; recovery: { force: string };
+        checks: Array<{ id: string }>; deviations: Array<{ from: string; adjudicated_by: string }>;
+      };
+      expect(d.override.force_full, `${file}: override.force_full`).toBe('none');
+      expect(d.recovery.force, `${file}: recovery.force`).toBe('none');
+      expect(stalenessLib.forceFullEnv(d), `${file}: no force-full env is read`).toBeNull();
+      expect(stalenessLib.resolveOverrides(d, { [env]: '1' }).force_full, `${file}: ${env}=1 must arm nothing`).toBe(false);
+      expect(stalenessLib.forceFullRequested(d, { [env]: '1' }), `${file}: ${env}=1 must request nothing`).toBe(false);
+      expect(d.checks.some((c) => c.id === 'override_force_full_present'), `${file}: the retired standing-override check`).toBe(false);
+      const dev = d.deviations.find((x) => x.from.includes(env));
+      expect(dev, `${file}: the retired ${env} must be a deviations[] entry (R-AV / R-AZ retirement pattern)`).toBeDefined();
+      expect(dev?.adjudicated_by).toMatch(/MQ-B2 \(a\)/);
+    }
   });
 
   it('TIER 1 — unforced skips on equal validators; forced LOADS with reason "force_run" (both directions)', () => {
@@ -2403,12 +2445,17 @@ describe('Fold D — write.js refuses what it cannot generate, and types its cas
     const plan = writeLib.buildWritePlan(LINK_MASSING.outputs.writes[1], LINK_MASSING);
     expect(plan.keys).toEqual(['parcel_id', 'building_id']);
     expect(plan.upsert_sql).toMatch(/ON CONFLICT \(parcel_id, building_id\) DO UPDATE/);
-    // No geometry column and no departure delete on this target, which is exactly why the
-    // narrowed refusal lets it through — and its retraction is the scoped `retract: "all"`
-    // form, which takes a predicate rather than a key array.
     expect(plan.geometry_columns).toEqual([]);
-    expect(plan.delete_sql).not.toMatch(/<> ALL/);
-    expect(plan.delete_sql).toMatch(/^DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
+    // O4 row 5 (registry-truth fold 14/15, LM-D17): writes[1] retracts nothing now — the full-mode mass DELETE is retired, so the real target builds no delete. The generic composite-key retract "all" codegen (LG-2/LG-3) stays locked below on a clone that carries the pre-O4 scope.
+    expect(plan.delete_sql ?? null, 'O4 row 5: the real junction target builds no delete').toBeNull();
+    const legacy = JSON.parse(JSON.stringify(LINK_MASSING.outputs.writes[1]));
+    legacy.retract = 'all';
+    legacy.retract_when = 'full_only';
+    legacy.write_discipline.scope = 'parcel_id IN (SELECT id FROM parcels WHERE centroid_lat IS NOT NULL AND centroid_lng IS NOT NULL)';
+    const legacyPlan = writeLib.buildWritePlan(legacy, LINK_MASSING);
+    expect(legacyPlan.keys).toEqual(['parcel_id', 'building_id']);
+    expect(legacyPlan.delete_sql).not.toMatch(/<> ALL/);
+    expect(legacyPlan.delete_sql).toMatch(/^DELETE FROM parcel_buildings WHERE parcel_id IN \(SELECT id FROM parcels/);
   });
 
   it('⚠️ a SECOND wkb_geometry column THROWS — it would be bound NULL on every row, silently', () => {
@@ -2603,67 +2650,9 @@ describe('Fold D — the three loss counters the library measures are REPORTED (
   });
 });
 
-// ---------------------------------------------------------------------------
-// LW-D10 (commit 8b, 2026-08-28) — the T7 tier-3 convergence loop's own MECHANISM,
-// unit-tested in isolation. Before this fix, runCascadePhase's mode-"full" block
-// hardcoded `{ exhausted: false, iterations: 1 }` — a converged-looking result that
-// was never actually computed. `runTierToConvergence` is the extracted loop; these
-// locks pin its two directions with a fixture "pass" function (no pool, no
-// transaction — the loop's CALLER, runCascadePhase, wires the real SQL-issuing
-// passes, proven separately by the step-conformance/violations suites' live-DB and
-// descriptor-shape coverage).
-// ---------------------------------------------------------------------------
-describe('LW-D10 — runTierToConvergence: loops while matched > 0 and iterations < the bound; exhausted only when the bound stops a still-matching pass', () => {
-  /** A fixture "pass" that returns the next canned linked count each call, and counts its own calls. */
-  function fixturePass(linkedSequence: number[]): { run: () => Promise<{ linked: number; flagged: number; contacts: number }>; calls: number[] } {
-    const calls: number[] = [];
-    let i = 0;
-    return {
-      calls,
-      run: async () => {
-        const linked = linkedSequence[Math.min(i, linkedSequence.length - 1)] ?? 0;
-        calls.push(linked);
-        i += 1;
-        return { linked, flagged: linked, contacts: linked };
-      },
-    };
-  }
-
-  it('loops === false — runs the pass EXACTLY ONCE, unconditionally (incremental mode / a tier with no declared bound — the pre-LW-D10 behaviour, byte-identical)', async () => {
-    const fx = fixturePass([1000, 1000, 320, 0]); // would keep going if loops were true
-    const result = await stepLib.runTierToConvergence(fx.run, false, 20);
-    expect(fx.calls, 'loops:false must call the pass exactly once, regardless of what it returns').toEqual([1000]);
-    expect(result).toEqual({ iterations: 1, linked_total: 1000, flagged_total: 1000, contacts_total: 1000, exhausted: false });
-  });
-
-  it('loops === true, converges naturally — 1000,1000,320,0 → 4 iterations, 2,320 relinked total, NOT exhausted (this is the ruling\'s own worked example)', async () => {
-    const fx = fixturePass([1000, 1000, 320, 0]);
-    const result = await stepLib.runTierToConvergence(fx.run, true, 20);
-    expect(fx.calls, 'must stop at the first 0-matched pass, never call a 5th time').toEqual([1000, 1000, 320, 0]);
-    expect(result).toEqual({ iterations: 4, linked_total: 2320, flagged_total: 2320, contacts_total: 2320, exhausted: false });
-  });
-
-  it('loops === true, bound hit while still matching — WARN-worthy: iterations caps at maxIterations, exhausted TRUE', async () => {
-    const fx = fixturePass([500, 500, 500, 500, 500]); // never reaches 0 within the bound
-    const result = await stepLib.runTierToConvergence(fx.run, true, 3);
-    expect(fx.calls, 'must stop at exactly maxIterations passes, never a 4th').toEqual([500, 500, 500]);
-    expect(result).toEqual({ iterations: 3, linked_total: 1500, flagged_total: 1500, contacts_total: 1500, exhausted: true });
-  });
-
-  it('loops === true, bound hit on a pass that ITSELF matched 0 — a normal converged stop, NOT exhaustion', async () => {
-    const fx = fixturePass([500, 0]);
-    const result = await stepLib.runTierToConvergence(fx.run, true, 2);
-    expect(fx.calls).toEqual([500, 0]);
-    expect(result.exhausted, 'the bound and a natural convergence landed on the same iteration — this must read as converged, not exhausted').toBe(false);
-  });
-
-  it('loops === true, first pass already 0 — 1 iteration, never exhausted (the "nothing to repair" case)', async () => {
-    const fx = fixturePass([0]);
-    const result = await stepLib.runTierToConvergence(fx.run, true, 20);
-    expect(fx.calls).toEqual([0]);
-    expect(result).toEqual({ iterations: 1, linked_total: 0, flagged_total: 0, contacts_total: 0, exhausted: false });
-  });
-});
+// LW-D10's runTierToConvergence locks were retired with the convergence loop itself (O4 row 6, operator
+// ruling 2026-10-03 D1(a): full rescan + a pre_write mass-relink guard replace the tier-3 LIMIT 1000 and
+// the loop). The loop's absence is pinned by src/tests/steps/link_wsib/o4-row6-full-rescan.logic.test.ts W1.
 
 // ---------------------------------------------------------------------------
 // LW-D15 — --dry-run must issue ZERO UPDATE/INSERT/DELETE statements, in BOTH the
@@ -2766,43 +2755,47 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
     });
   });
 
-  it('runCascadePhase (link_wsib, cloned) issues zero UPDATE/INSERT/DELETE under --dry-run; the count-mirror SELECTs still run and report the real would-be counts', async () => {
+  it('runCascadePhase (link_wsib, cloned) issues zero UPDATE/INSERT/DELETE under --dry-run; the read-only derivation and the count mirrors still run and report the real would-be counts', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real descriptor, not a fixture copy
     const descriptor = clone(require(join(process.cwd(), 'scripts/link-wsib.descriptor.json')));
     descriptor.guards.requires = [];
     descriptor.staleness.trigger = 'none';
     descriptor.override.dry_run = '--dry-run';
+    // O4 row 6 — the null-retract target is KEYED (retract "none"); the runner refuses a scope-wide one.
+    descriptor.outputs.writes[3].retract = 'none';
+    delete descriptor.outputs.writes[3].retract_when;
+    descriptor.outputs.writes[3].write_discipline.scope = '(id, linked_entity_id, match_confidence) IN (SELECT * FROM unnest($1::int[], $2::int[], $3::numeric[]))';
 
-    const tierSql = {
-      wsib_count_sql: 'STUB_LW_TIER_COUNT', wsib_count_params: [],
-      entities_flag_count_sql: 'STUB_LW_FLAG_COUNT', entities_flag_count_params: [],
-      entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
-      // The WRITE-side SQL a live (non-dry-run) pass would issue — included so a
-      // regression that reaches the write branch under dry-run is caught by the
-      // write-statement assertion below, not masked by a missing field.
-      wsib_update_sql: 'UPDATE wsib_registry SET linked_entity_id = 1', wsib_update_params: [],
-      entities_flag_scope_params: [],
-      entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
-    };
     const compute = {
-      buildRetractionScopeParams: () => [0.6],
-      buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
+      buildDerivationSql: () => ({ setup_sql: 'STUB_LW_SETUP', setup_params: [], diff_sql: 'STUB_LW_DIFF', diff_params: [] }),
+      // The WRITE-side SQL a live (non-dry-run) run would issue — included so a regression that
+      // reaches the write branch under dry-run is caught by the write-statement assertion below.
+      buildApplyLinksSql: () => 'UPDATE wsib_registry SET linked_entity_id = 1',
       buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
-      buildTierSql: () => tierSql,
+      buildTierSql: () => ({
+        entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
+        entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
+      }),
       // LW-D19: the is_wsib_registered fill-true scope AND the unconditional self-heal
       // correction both read the two exact-tier confidences via this helper.
       exactTierConfidences: () => [0.95, 0.9],
+      buildEntitiesFlagCountSql: () => 'STUB_LW_FLAG_COUNT',
       buildEntitiesUnflagCorrectionCountSql: () => 'STUB_LW_UNFLAG_COUNT',
-      // LW-D14: every cascade compute's CUMULATIVE_SQL is now a function of `descriptor`
-      // (was a bare string) so a step's invariant can read declared descriptor data
-      // (link_wsib's token-overlap stopword list) the way the write-side SQL builders do.
+      // LW-D14: every cascade compute's CUMULATIVE_SQL is a function of `descriptor`.
       buildCumulativeSql: () => 'STUB_LW_CUMULATIVE',
     };
+    const config = { link_wsib_tier1_confidence: 0.95, link_wsib_tier2_confidence: 0.9, link_wsib_tier3_confidence: 0.6 };
 
     await withDryRunArgv(async () => {
       const pool = dryRunFakePool((text: string) => {
-        if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', entities_count: '3' }] };
-        if (text === 'STUB_LW_TIER_COUNT') return { rows: [{ n: 2 }] };
+        if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', linked_start: '2', entities_count: '3' }] };
+        // One new fuzzy link (row 1) and one vanished exact link (row 2).
+        if (text === 'STUB_LW_DIFF') {
+          return { rows: [
+            { id: 1, old_entity_id: null, old_confidence: null, old_matched_at: null, new_entity_id: 7, new_confidence: '0.60' },
+            { id: 2, old_entity_id: 5, old_confidence: '0.95', old_matched_at: null, new_entity_id: null, new_confidence: null },
+          ] };
+        }
         if (text === 'STUB_LW_FLAG_COUNT') return { rows: [{ n: 1 }] };
         if (text === 'STUB_LW_CONTACTS_COUNT') return { rows: [{ n: 0 }] };
         if (text === 'STUB_LW_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
@@ -2810,21 +2803,20 @@ describe('LW-D15 — --dry-run issues ZERO write statements (LINK + CASCADE/MATC
         return undefined;
       });
       const result = await stepLib.runCascadePhase({
-        descriptor, pool, compute, config: {}, chainId: null,
+        descriptor, pool, compute, config, chainId: null,
         log: NOOP_LOG, tag: '[link_wsib]', clockNow: new Date('2026-08-28T00:00:00Z'),
       });
       expect(result.overrides.dry_run, 'ctx.overrides.dry_run must be exposed (LW-D15)').toBe(true);
       expect(result.skipped, 'dry-run must BYPASS the ledger gated-skip (mirrors the pre-conversion bypassGate = dryRun fix, A2) — never SKIP').toBeFalsy();
       const writes = pool.sql.filter((s: string) => /^\s*(UPDATE|INSERT|DELETE)\b/i.test(s));
       expect(writes, 'a --dry-run CASCADE-phase run must issue ZERO write statements').toEqual([]);
-      expect(pool.sql.includes('STUB_LW_TIER_COUNT'), 'the count-mirror SELECT must still run under dry-run').toBe(true);
+      expect(pool.sql.includes('STUB_LW_DIFF'), 'the read-only derivation must still run under dry-run — its rows ARE the would-be write set').toBe(true);
       expect(pool.sql.includes('STUB_LW_UNFLAG_COUNT'), 'LW-D19: the self-heal correction count-mirror SELECT must still run under dry-run').toBe(true);
       expect(result.matched.is_wsib_registered_corrected, 'LW-D19: the dry-run would-be correction count is the real count-mirror value, not zeroed').toBe(4);
-      const tierIds = Object.keys(result.matched.tiers);
-      expect(tierIds.length, 'every declared tier still reports a would-be count').toBeGreaterThan(0);
-      for (const id of tierIds) {
-        expect(result.matched.tiers[id].linked, `tiers.${id}.linked is the real count-mirror value, not zeroed`).toBe(2);
-      }
+      expect(result.matched.diff, 'the would-be diff is reported, not zeroed').toEqual({ set: 1, move: 0, vanish: 1 });
+      expect(result.matched.tiers.tier3_fuzzy.linked, 'the would-be new fuzzy link is counted on its tier').toBe(1);
+      const targetKeys = Object.keys(result.written).filter((k) => k.startsWith('e'));
+      for (const k of targetKeys) expect(result.written[k].rows_changed, `written.${k}.rows_changed`).toBe(0);
     });
   });
 
@@ -3113,22 +3105,23 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
     descriptor.guards.requires = [];
     descriptor.staleness.trigger = 'none'; // orthogonal to this claim — same simplification the dry-run sibling test uses
     descriptor.override.dry_run = '--dry-run'; // keeps this fake-pool run from needing real write-statement answers — orthogonal to the claim under test
-    // Same tierSql/compute shape the KNOWN-WORKING "runCascadePhase (link_wsib, cloned)"
-    // dry-run test above uses — runCascadePhase always calls these regardless of mode.
-    const tierSql = {
-      wsib_count_sql: 'STUB_LW_TIER_COUNT', wsib_count_params: [],
-      entities_flag_count_sql: 'STUB_LW_FLAG_COUNT', entities_flag_count_params: [],
-      entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
-      wsib_update_sql: 'UPDATE wsib_registry SET linked_entity_id = 1', wsib_update_params: [],
-      entities_flag_scope_params: [],
-      entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
-    };
+    // Pinned explicitly: the interrupted-retraction reason is a tri_state selectMode answer (resolveLinkGate falls
+    // through to selectMode for tri_state). O4 row 6 — the null-retract target is KEYED (retract "none").
+    descriptor.staleness.mode_select = 'tri_state';
+    descriptor.outputs.writes[3].retract = 'none';
+    delete descriptor.outputs.writes[3].retract_when;
+    descriptor.outputs.writes[3].write_discipline.scope = '(id, linked_entity_id, match_confidence) IN (SELECT * FROM unnest($1::int[], $2::int[], $3::numeric[]))';
+    // Same compute shape the KNOWN-WORKING "runCascadePhase (link_wsib, cloned)" dry-run test above uses.
     const compute = {
-      buildRetractionScopeParams: () => [0.6],
-      buildEntitiesUnflagSql: () => 'UPDATE entities SET is_wsib_registered = false',
+      buildDerivationSql: () => ({ setup_sql: 'STUB_LW_SETUP', setup_params: [], diff_sql: 'STUB_LW_DIFF', diff_params: [] }),
+      buildApplyLinksSql: () => 'UPDATE wsib_registry SET linked_entity_id = 1',
       buildContactsReverseClearSql: () => 'UPDATE entities SET primary_phone = NULL',
-      buildTierSql: () => tierSql,
+      buildTierSql: () => ({
+        entities_contacts_sql: 'UPDATE entities SET primary_phone = 1', entities_contacts_params: [],
+        entities_contacts_count_sql: 'STUB_LW_CONTACTS_COUNT', entities_contacts_count_params: [],
+      }),
       exactTierConfidences: () => [0.95, 0.9],
+      buildEntitiesFlagCountSql: () => 'STUB_LW_FLAG_COUNT',
       buildEntitiesUnflagCorrectionCountSql: () => 'STUB_LW_UNFLAG_COUNT',
       buildCumulativeSql: () => 'STUB_LW_CUMULATIVE',
     };
@@ -3144,8 +3137,8 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
       if (text.includes('own_last') && text.includes('upstream_since')) {
         return { rows: [{ own_started: '2026-08-29T00:00:00Z', own_completed: '2026-08-29T00:00:00Z', own_last_records_meta: {}, non_completed: '0', completed_with_changes: '0', stale_running: '0' }] };
       }
-      if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', entities_count: '3' }] };
-      if (text === 'STUB_LW_TIER_COUNT') return { rows: [{ n: 2 }] };
+      if (/unlinked_start/i.test(text)) return { rows: [{ unlinked_start: '5', linked_start: '0', entities_count: '3' }] };
+      if (text === 'STUB_LW_DIFF') return { rows: [] };
       if (text === 'STUB_LW_FLAG_COUNT') return { rows: [{ n: 1 }] };
       if (text === 'STUB_LW_CONTACTS_COUNT') return { rows: [{ n: 0 }] };
       if (text === 'STUB_LW_CUMULATIVE') return { rows: [{ linked: 1, total: 1 }] };
@@ -3207,9 +3200,13 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
         wsib_fuzzy_match_threshold: 0.6, link_wsib_link_rate_warn_pct: 5,
         link_wsib_tier1_confidence: 0.95, link_wsib_tier2_confidence: 0.9,
         link_wsib_tier3_confidence: 0.6, link_wsib_entity_fanin_warn: 20,
-        link_wsib_tier3_full_max_iterations: 20, link_wsib_tier3_token_overlap_fail_pct: 50,
+        link_wsib_mass_relink_max_pct: 0.1, link_wsib_tier3_token_overlap_fail_pct: 50,
+        // O4 row 6 (fold 16 row 1): + link_wsib_mass_relink_max_pct (mass guard, default 0.10); link_wsib_tier3_full_max_iterations is retired.
       };
       const pool = dryRunFakePool((text: string, values: unknown) => {
+        // FLEET-2 A-1: the runner's input guards COUNT each declared table before dispatch and halt on 0 —
+        // this fixture models a populated corpus so the run reaches runCascadePhase.
+        if (/^SELECT COUNT\(\*\)::bigint AS n FROM \w+$/.test(text.trim())) return { rows: [{ n: '1' }] };
         if (text.includes(INTERRUPTED_QUERY_MARK)) {
           // Simulates the REAL WHERE clause's `$2::integer IS NULL OR p.id <> $2::integer`
           // exclusion (staleness.js) rather than asserting on it after the fact — this fake
@@ -6190,7 +6187,7 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     // table equals the write target's table (the validated shape prerequisite 0l requires).
     write.table = 'ravines';
     (d.outputs as Record<string, unknown>).invalidates = [{
-      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom',
+      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom', by: 'set_null_on_change_of',
     }];
     const plan = writeLib.buildWritePlan(write, d);
     const sql = plan.upsertSqlFor(1) as string;
@@ -6215,7 +6212,7 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
       // must be silently excluded from the RENDERED plan (never a foreign-table CASE arm).
       { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'source_dataset_version changes — declarative only' },
       // A matching-table entry watching a bind:"value" column.
-      { table: 'ravines', column: 'source_dataset_version', when: 'source_dataset_version changes', set_null_on_change_of: 'source_dataset_version' },
+      { table: 'ravines', column: 'source_dataset_version', when: 'source_dataset_version changes', set_null_on_change_of: 'source_dataset_version', by: 'set_null_on_change_of' },
     ];
     const plan = writeLib.buildWritePlan(write, d);
     const sql = plan.upsertSqlFor(1) as string;
@@ -6251,7 +6248,7 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     const acceptedCols = acceptedWrite.columns as Array<Record<string, unknown>>;
     (acceptedCols.find((c) => c.name === 'source_dataset_version')!).on_empty = 'preserve';
     (accepted.outputs as Record<string, unknown>).invalidates = [{
-      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom',
+      table: 'ravines', column: 'source_dataset_version', when: 'geom changes', set_null_on_change_of: 'geom', by: 'set_null_on_change_of',
     }];
     expect(() => pipeline.step(accepted, noop)).not.toThrow();
 
@@ -6266,7 +6263,7 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
     // declares — AJV cannot catch a cross-array reference, so validate.js does.
     const foreignTable = clone(LOAD_RAVINES) as Record<string, unknown>;
     (foreignTable.outputs as Record<string, unknown>).invalidates = [{
-      table: 'parcel_buildings', column: 'some_stamp', when: 'geom changes', set_null_on_change_of: 'geom',
+      table: 'parcel_buildings', column: 'some_stamp', when: 'geom changes', set_null_on_change_of: 'geom', by: 'set_null_on_change_of',
     }];
     expect(() => pipeline.step(foreignTable, noop)).toThrow(/violates a semantic rule/);
     const findings = validateLib.semanticFindings(foreignTable);
@@ -6357,9 +6354,9 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
       col('is_irregular'),
     ];
     (d.outputs as Record<string, unknown>).invalidates = [
-      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
-      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
-      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
+      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
+      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
     ];
 
     expect(() => pipeline.step(d, noop)).not.toThrow();
@@ -6485,9 +6482,9 @@ describe('write.js declared upsert axes — columns[].on_empty:"preserve" + outp
       col('is_irregular'),
     ];
     (d.outputs as Record<string, unknown>).invalidates = [
-      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
-      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
-      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry' },
+      { table: 'parcels', column: 'ravine_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
+      { table: 'parcels', column: 'heritage_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
+      { table: 'parcels', column: 'centreline_dataset_version_when_enriched', when: 'geometry changes', set_null_on_change_of: 'geometry', by: 'set_null_on_change_of' },
     ];
 
     expect(() => pipeline.step(d, noop)).not.toThrow();

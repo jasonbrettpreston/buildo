@@ -20,9 +20,9 @@ As a lead generator, I want Committee of Adjustment variance hearings imported, 
 ```
 assert_schema → coa → assert_coa_freshness →
 link_coa_to_parcels → enrich_coa_zoning → classify_coa_scope → classify_coa_trades →
-compute_coa_cost_estimates → link_coa → refresh_snapshot →
-assert_data_bounds → assert_engine_health → classify_lifecycle_phase →
-assert_lifecycle_phase_distribution → compute_phase_calibration → assert_global_coverage
+compute_coa_cost_estimates → link_coa → classify_lifecycle_phase →
+assert_lifecycle_phase_distribution → refresh_snapshot → assert_data_bounds →
+assert_engine_health → compute_phase_calibration → assert_global_coverage
 ```
 
 ### Step Breakdown
@@ -38,13 +38,15 @@ assert_lifecycle_phase_distribution → compute_phase_calibration → assert_glo
 | 7 | `classify_coa_trades` | `classify-coa-trades.js` | Consumes the prior step's `scope_tags` through the R5.1 `TAG_TRADE_MATRIX` substrate (the same tag→trade matrix `classify-permits.js` runs inline — **not** a JOIN against `trade_mapping_rules`, which has 0 Tier-3 description rules in production). Writes 0..N lead-keyed trade rows per CoA plus an optional realtor row when the CoA is residential (the permit-side `backfill_realtor_permit_trades` fan-out is BUNDLED here, §6.5 step 14), then stamps `coa_applications.trade_classified_at`. Pure classifier in `scripts/lib/coa-trade-classifier.js` with the Spec 84 §7 TS twin | lead_trades, lead_products, coa_applications |
 | 8 | `compute_coa_cost_estimates` | `compute-coa-cost-estimates.js` | CoA-side cost estimator: streams CoAs joined with parcel/building/neighbourhood/trade context through the Spec 88 archetype ladder (`tryArchetypeCost` via `scripts/lib/coa-cost-model.js`) FIRST, falling through to the legacy geometric path (`estimateCostShared`) for T4. CoA carries no applicant-declared area, so the ladder's own-area rungs (T1/T3) never fire — CoA prices **T2** (the parcel line total) or **T4**. A `cost_estimates` row is written ONLY when the Brain returns a non-NULL `estimated_cost`; the `coa_applications` cost columns (`modeled_gfa_sqm`, `estimated_cost`, `cost_source`, `cost_classified_at`) are written for every processed CoA. §3-ARCHETYPE (WF2 Phase C) ACTIVATED CoA costing — the old geometric-only path always matrix-missed the Spec 83 Surgical Triangle and priced nothing | coa_applications, cost_estimates |
 | 9 | `link_coa` | `link-coa.js` | Address matching via `street_name_normalized` columns + confidence matrix (ward as booster) | coa_applications |
-| 10 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics snapshot | data_quality_snapshots |
-| 11 | `assert_data_bounds` | `quality/assert-data-bounds.js` | CoA-scoped: row counts, null rates, linkage integrity | pipeline_runs |
-| 12 | `assert_engine_health` | `quality/assert-engine-health.js` | CoA table engine health | engine_health_snapshots |
-| 13 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Runs the lifecycle classifier synchronously to pick up any permits whose `last_seen_at` was bumped by `link_coa` in step 9. Same advisory-locked single-threaded script the permits chain uses. | permits, coa_applications |
-| 14 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: validates phase distribution bands after the classifier runs. Uses advisory lock 109 — skips gracefully if classifier from a concurrent permits chain is still writing. **Halting only for its HALTING classes** (E.5 per-seq band violations + the `unclassified_count` hard limit); `cross_check_*` failures are **non-halting** — still FAIL in the audit verdict, but they do not stop the chain (C1/D1, 2026-08-11). | pipeline_runs |
+| 10 | `classify_lifecycle_phase` | `classify-lifecycle-phase.js` | Runs the lifecycle classifier synchronously to pick up any permits whose `last_seen_at` was bumped by `link_coa` in step 9. Same advisory-locked single-threaded script the permits chain uses. | permits, coa_applications |
+| 11 | `assert_lifecycle_phase_distribution` | `quality/assert-lifecycle-phase-distribution.js` | Tier 3 CQA: validates phase distribution bands after the classifier runs. Uses advisory lock 109 — skips gracefully if classifier from a concurrent permits chain is still writing. **Halting only for its HALTING classes** (E.5 per-seq band violations + the `unclassified_count` hard limit); `cross_check_*` failures are **non-halting** — still FAIL in the audit verdict, but they do not stop the chain (C1/D1, 2026-08-11). | pipeline_runs |
+| 12 | `refresh_snapshot` | `refresh-snapshot.js` | Update dashboard metrics snapshot | data_quality_snapshots |
+| 13 | `assert_data_bounds` | `quality/assert-data-bounds.js` | CoA-scoped: row counts, null rates, linkage integrity | pipeline_runs |
+| 14 | `assert_engine_health` | `quality/assert-engine-health.js` | CoA table engine health | engine_health_snapshots |
 | 15 | `compute_phase_calibration` | `compute-phase-calibration.js` | Per-cohort phase-stay percentile statistics (median, p25, p75 days in phase), read from TWO transition ledgers — legacy `permit_phase_transitions` (permit-side 2-tuple cohorts, preserved verbatim) and `lifecycle_transitions` (the CoA-side granular 5-tuple `(NULL, project_type, coa_type_class, from_seq, to_seq)` cohorts added in Phase E.3, §6.7 step 6). Atomic temp-table swap, not DELETE+INSERT, so downstream consumers never see a transient empty table. Runs in **both** the permits and coa chains (added to `chains.coa` in Phase E.3) — a shared step, not a CoA-only one | phase_stay_calibration |
 | 16 | `assert_global_coverage` | `quality/assert-global-coverage.js` | Tier 3 CQA: field-level coverage profile scoped to CoA tables and linked data. Thresholds from logic_variables. Non-halting (observational). Uses advisory lock 111. | pipeline_runs |
+
+**Re-ordered (FLEET-2, 2026-10-05, ASSEMBLY MQ-C8 a2):** `classify_lifecycle_phase` and its gate `assert_lifecycle_phase_distribution` (kept adjacent) now run right after `link_coa`, followed by `refresh_snapshot`, `assert_data_bounds` and `assert_engine_health`. The bounds and the dashboard snapshot (`coa_applications.lifecycle_group`) read this run's classifier output. An exception-halt in `assert_data_bounds` / `assert_engine_health` no longer stops the classifier and its gate; it still stops `compute_phase_calibration` and `assert_global_coverage`. Row numbers in older prose predate this move.
 
 **Table drift, corrected in part (batch1 I2 commit 9, 2026-09-13, PH-0/§5 spec-diff obligation):** row 8's step number is stale. Measured against `scripts/manifest.json.chains.coa` this session: `assert_data_bounds` sits at position **11 of 16** (0-indexed 10), directly after `refresh_snapshot` and before `assert_engine_health` — not position 8. The stale "8" predates a larger, still-uncorrected drift in this table: the live `coa` chain also carries five steps this table omits entirely (`enrich_coa_zoning`, `classify_coa_scope`, `classify_coa_trades`, `compute_coa_cost_estimates`, `link_coa_to_parcels`, all between `link_coa` and `refresh_snapshot`) while still listing two steps Phase G already removed (`create_pre_permits` row 5, `assert_pre_permit_aging` row 6 — see this spec's own §6.11/Phase G text). A full table rewrite (content + renumbering for all 12+ real steps) is out of scope for this commit — filed as a HIGH item in `docs/reports/review_followups.md` for a dedicated doc-fix pass. This note corrects only the ONE claim this conversion's PH-0 measured and depends on (assert_data_bounds's true chain position), per plan §0 row 3 / §5. **SUPERSEDED by the reconciliation note below — the rewrite landed in WF2 SPECTBL-1, 2026-09-15. Kept for the record; note that its "five steps this table omits" undercounted (see below), so do not re-derive membership from it.**
 
@@ -150,11 +152,11 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 - `classify_coa_trades` — `scripts/classify-coa-trades.js`
 - `compute_coa_cost_estimates` — `scripts/compute-coa-cost-estimates.js`
 - `link_coa` — `scripts/link-coa.js`
+- `classify_lifecycle_phase` — `scripts/classify-lifecycle-phase.js`
+- `assert_lifecycle_phase_distribution` — `scripts/quality/assert-lifecycle-phase-distribution.js`
 - `refresh_snapshot` — `scripts/refresh-snapshot.js`
 - `assert_data_bounds` — `scripts/quality/assert-data-bounds.js`
 - `assert_engine_health` — `scripts/quality/assert-engine-health.js`
-- `classify_lifecycle_phase` — `scripts/classify-lifecycle-phase.js`
-- `assert_lifecycle_phase_distribution` — `scripts/quality/assert-lifecycle-phase-distribution.js`
 - `compute_phase_calibration` — `scripts/compute-phase-calibration.js`
 - `assert_global_coverage` — `scripts/quality/assert-global-coverage.js`
 <!-- /generated:chain-members:coa -->

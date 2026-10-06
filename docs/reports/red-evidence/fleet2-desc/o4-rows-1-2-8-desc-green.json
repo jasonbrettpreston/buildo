@@ -1,0 +1,100 @@
+{
+  "mode": "green",
+  "measured_at": "2026-10-04T00:45:12.633Z",
+  "probe": "fullRescanItems (Buildo-wt-fleet2-dry witness.mjs) + validateDescriptor on the lib+ldg10+p3 merged schema (scratch mtree; version_pin/chunked/needs_disk_mb/partial_fill stripped for p3 D-1; missing invalidates[].by injected from ldg10)",
+  "steps": {
+    "link_neighbourhoods": {
+      "full_rescan_items": [
+        "full_rescan:unwitnessed:permits.neighbourhood_id"
+      ],
+      "schema": "VALID",
+      "mode_select": "none",
+      "invalidates": [
+        "permits.neighbourhood_id:full_rescan"
+      ],
+      "writes_scope": [
+        "p.latitude IS NOT NULL AND p.longitude IS NOT NULL"
+      ]
+    },
+    "enrich_parcels": {
+      "full_rescan_items": [
+        "full_rescan:unwitnessed:parcels.comp_count"
+      ],
+      "schema": "VALID",
+      "mode_select": "none",
+      "invalidates": [
+        "parcels.comp_count:full_rescan",
+        "parcels.zoning_enriched_at:-",
+        "parcels.massing_enriched_at:-"
+      ],
+      "writes_scope": [
+        "buildPass1ScopeWhere({full}) — TRUE under --full (the only cloud invocation); otherwise (p.zoning_enriched_at IS NULL OR",
+        "buildPass2ScopeWhere({full}) — TRUE under --full; otherwise gated on parcel_buildings.linked_at > parcels.massing_enrich",
+        "buildPass3ScopeWhere({full}) — TRUE under --full; otherwise gated on massing/building linkage change, minus any parcel_i",
+        "comp candidate CTE (comp_cand, GiST kNN LATERAL) joined against parcels — WHERE p.id = agg.id AND an IS DISTINCT FROM gu",
+        "batched WITH incoming(...) AS (VALUES ...) ... UPDATE, fed by the enrich_parcels_pass3_scope deferred-rows union plus th",
+        "each stamp fires alongside its own owning pass's UPDATE (zoning_enriched_at inside pass 1's statement; massing_enriched_",
+        "pass 3's own scope-deferred rows this run (INSERT); pass 5's own consumed set this run (consumed_at UPDATE)"
+      ],
+      "extra": {
+        "phase4": {
+          "name": "comparable_builds",
+          "order": 4,
+          "txn": "shared",
+          "writes_ref": 3,
+          "scope": "full",
+          "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes"
+        }
+      }
+    },
+    "link_parcels": {
+      "full_rescan_items": [
+        "full_rescan:unwitnessed:permits.parcel_linked_at"
+      ],
+      "schema": "VALID",
+      "mode_select": "none",
+      "invalidates": [
+        "permits.parcel_linked_at:full_rescan"
+      ],
+      "writes_scope": [
+        "(street_num IS NOT NULL AND street_num != '' AND street_name IS NOT NULL AND street_name != '') OR (latitude IS NOT NULL",
+        "permit_num = ANY(batch keys) AND revision_num = ANY(batch keys) AND (keep_parcel_id IS NULL OR parcel_id != keep_parcel_",
+        "(permit_num, revision_num) IN (this batch's own keys) AND (a permit_parcels row of the permit was written this run, link"
+      ]
+    },
+    "geocode_permits": {
+      "full_rescan_items": [
+        "full_rescan:unwitnessed:permits.latitude",
+        "full_rescan:unwitnessed:permits.longitude"
+      ],
+      "schema": "VALID",
+      "mode_select": "none",
+      "invalidates": [
+        "permits.latitude:full_rescan",
+        "permits.longitude:full_rescan"
+      ],
+      "writes_scope": [
+        "p.geo_id IS NOT NULL AND p.geo_id != '' AND p.geo_id ~ '^[0-9]+$' AND ap.address_point_id = CASE WHEN p.geo_id ~ '^[0-9]",
+        "(geo_id IS NULL OR geo_id = '') AND geocoded_at IS NOT NULL"
+      ]
+    },
+    "refresh_snapshot": {
+      "full_rescan_items": [],
+      "schema": "VALID",
+      "mode_select": "none",
+      "invalidates": [],
+      "writes_scope": [
+        "snapshot_date = CURRENT_DATE"
+      ],
+      "extra": {
+        "created_at": {
+          "name": "created_at",
+          "vocabulary": "none",
+          "written": "step",
+          "bind": "value",
+          "source": "run_at"
+        }
+      }
+    }
+  }
+}

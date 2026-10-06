@@ -98,6 +98,9 @@ describe('P1-C4b — link_parcels lifecycle on a guarded recording pool (no DB)'
       { permit_num: '24 100002 BLD', revision_num: '00', street_num: '102', street_name: 'DAVENPORT', street_type: 'RD', latitude: 43.671, longitude: -79.391 },
     ];
     const stepAnswer = (text: string): Answer | null => {
+      // FLEET-2 A-1: the runner's input guards (#12 inputs.expect_nonempty / #32 guards.empty_source) COUNT each
+      // declared table before compute and halt on 0 — this fixture models a POPULATED corpus.
+      if (/^SELECT COUNT\(\*\)::bigint AS n FROM \w+$/.test(text.trim())) return { rows: [{ n: '1' }] };
       const t = text.trim();
       // the keyed-delete / retraction before-image reads (R-M): no prior rows to preserve on this fixture.
       if (/^SELECT permit_num, revision_num, parcel_id, match_type, confidence, linked_at FROM permit_parcels/.test(t)) return { rows: [] };

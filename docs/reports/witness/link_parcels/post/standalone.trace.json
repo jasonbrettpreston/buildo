@@ -1,0 +1,2716 @@
+{
+  "trace_version": 1,
+  "step": "scripts/link-parcels.js",
+  "chain": "none",
+  "source_fingerprint": "460f847d39a8a5244b6fe1da73575db40217567d791d717d985601653aa2d6e2",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 2585,
+    "distinct": 38,
+    "utility": 517,
+    "tracer_self_ms": 2819.333,
+    "wall_ms": 151302
+  },
+  "statements": [
+    {
+      "fingerprint": "0a2f12d349bd46ce",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "27ad22e2b6acf4ea",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "latitude",
+          "longitude",
+          "street_name",
+          "street_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4186d9e06ce96029",
+      "kind": "read",
+      "count": 256,
+      "rowCount": 254045,
+      "reads": {
+        "permits": [
+          "latitude",
+          "longitude",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num",
+          "street_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "48133808461e0df8",
+      "kind": "write",
+      "count": 255,
+      "rowCount": 0,
+      "reads": {
+        "permit_parcels": [
+          "linked_at",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "parcel_linked_at",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {
+        "permits": [
+          "parcel_linked_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "49d408e53cb4b746",
+      "kind": "read",
+      "count": 255,
+      "rowCount": 38732,
+      "reads": {
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          150035,
+          null,
+          2338,
+          242416,
+          0,
+          0,
+          "{\"duration_ms\":148326,\"code_version\":\"v1-knn-boundary-distance\",\"permits_processed\":254045,\"matches_tier_1_exact\":198053,\"matches_tier_1_via_bridge\":196540,\"matches_tier_2_name\":5242,\"matches_tier_3_spatial\":39461,\"matches_tier_3_polygon\":38732,\"matches_tier_3_fallback\":729,\"no_match_count\":11629,\"null_coordinate_permits\":11629,\"street_type_mismatch_count\":0,\"permits_watermarked_count\":0,\"db_upserted\":0,\"permit_parcels_deleted_count\":0,\"config\":{\"spatial_match_max_distance_m\":100,\"spatial_match_confidence\":0.65,\"link_parcels_confidence_address_points_exact\":0.97,\"link_parcels_confidence_exact_address\":0.95,\"link_parcels_confidence_spatial_polygon\":0.9,\"link_parcels_confidence_name_only\":0.8,\"link_parcels_link_rate_warn_pct\":25,\"link_parcels_retraction_ratio_fail_pct\":0.05},\"terminal\":\"linked_incremental_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"spatial_null_coordinate_permits: 11629\"],\"audit_table\":{\"phase\":0,\"name\":\"Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"permits_processed\",\"value\":254045,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_exact_address\",\"value\":198053,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_via_bridge\",\"value\":196540,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_name_only\",\"value\":5242,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_spatial\",\"value\":39461,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_polygon\",\"value\":38732,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"run_matched\",\"value\":242756,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permit_parcels_written\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permits_watermarked\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcel_retraction_ratio\",\"value\":{\"deleted\":0,\"derived\":242416,\"deleted_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"spatial_null_coordinate_permits\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"street_type_conflict\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":95.41,\"unlinked_pct\":4.59,\"linked\":242416,\"total\":254082},\"threshold\":\"pct <= 25\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"pp_unique_triple_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_duplicate_permit_pairs\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_spatial_null_coordinate_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"spatial_fallback_distance_within_cap\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"address_points\":525668,\"parcel_address_points\":526534},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"permits\":254082},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:permit_parcels.match_type\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_pp_unique_triple_violations_duration_ms\",\"value\":466,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_duplicate_permit_pairs_duration_ms\",\"value\":647,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_spatial_null_coordinate_count_duration_ms\",\"value\":119,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_spatial_fallback_distance_within_cap_duration_ms\",\"value\":715,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1615.83,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":150026,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5459ad2be5bf706c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "link_parcels",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b016cb0d3bcc7c3",
+      "kind": "read",
+      "count": 255,
+      "rowCount": 0,
+      "reads": {
+        "permit_parcels": [
+          "confidence",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:link_parcels"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 256,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 8,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8c27fe6b15243e4e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "match_type",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a025629160aa7bc6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "id",
+          "street_type_normalized"
+        ],
+        "permit_parcels": [
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "permit_num",
+          "revision_num",
+          "street_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 256,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b840e8f1c3dadb40",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "baeea274acbc0915",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_constraint"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c0df9f04cf51caeb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c10cd7338ceb2234",
+      "kind": "read",
+      "count": 255,
+      "rowCount": 203295,
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_point_id",
+          "address_status",
+          "linear_name_normalized",
+          "maint_stage",
+          "retired_at"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "addr_num_normalized",
+          "id",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 4,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ca1977ce546a4423",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 5,
+      "reads": {
+        "permit_parcels": [
+          "match_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cd1cc61b707c5527",
+      "kind": "write",
+      "count": 255,
+      "rowCount": 0,
+      "reads": {
+        "permit_parcels": [
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {
+        "permit_parcels": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cd2c1ef371f50a6f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ce97bb2bc8d71035",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "dea6ea71ec6d3d8c",
+      "kind": "read",
+      "count": 255,
+      "rowCount": 729,
+      "reads": {
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f843e59db0603511",
+      "kind": "write",
+      "count": 255,
+      "rowCount": 0,
+      "reads": {
+        "permit_parcels": [
+          "confidence",
+          "match_type"
+        ]
+      },
+      "writes": {
+        "permit_parcels": [
+          "confidence",
+          "linked_at",
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fedd16cf06d056de",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ffe6d96cb7ff679e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "geom",
+          "id"
+        ],
+        "permit_parcels": [
+          "match_type",
+          "parcel_id",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "longitude",
+          "permit_num",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    },
+    {
+      "client": "25320:2",
+      "write_fingerprints": [
+        "48133808461e0df8",
+        "cd1cc61b707c5527",
+        "f843e59db0603511"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "addr_num_normalized",
+        "address_point_id",
+        "address_status",
+        "linear_name_normalized",
+        "maint_stage",
+        "retired_at"
+      ],
+      "parcel_address_points": [
+        "address_point_id",
+        "parcel_id"
+      ],
+      "parcels": [
+        "addr_num_normalized",
+        "geom",
+        "id",
+        "street_name_normalized",
+        "street_type_normalized"
+      ],
+      "permit_parcels": [
+        "confidence",
+        "linked_at",
+        "match_type",
+        "parcel_id",
+        "permit_num",
+        "revision_num"
+      ],
+      "permits": [
+        "latitude",
+        "longitude",
+        "parcel_linked_at",
+        "permit_num",
+        "revision_num",
+        "street_name",
+        "street_num",
+        "street_type"
+      ]
+    },
+    "writes": {
+      "permit_parcels": [
+        "confidence",
+        "linked_at",
+        "match_type",
+        "parcel_id",
+        "permit_num",
+        "revision_num"
+      ],
+      "permits": [
+        "parcel_linked_at"
+      ]
+    }
+  },
+  "errors": []
+}

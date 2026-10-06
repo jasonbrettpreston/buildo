@@ -20,7 +20,77 @@
   },
   "inputs": {
     "reads": {
-      "steps": [],
+      "steps": [
+        {
+          "step": "backfill_realtor_permit_trades"
+        },
+        {
+          "step": "builders"
+        },
+        {
+          "step": "classify_coa_scope"
+        },
+        {
+          "step": "classify_coa_trades"
+        },
+        {
+          "step": "classify_lifecycle_phase"
+        },
+        {
+          "step": "classify_permit_phase"
+        },
+        {
+          "step": "classify_permits"
+        },
+        {
+          "step": "classify_scope"
+        },
+        {
+          "step": "close_stale_permits"
+        },
+        {
+          "step": "coa"
+        },
+        {
+          "step": "compute_coa_cost_estimates"
+        },
+        {
+          "step": "compute_cost_estimates"
+        },
+        {
+          "step": "compute_opportunity_scores"
+        },
+        {
+          "step": "compute_phase_calibration"
+        },
+        {
+          "step": "compute_timing_calibration_v2"
+        },
+        {
+          "step": "compute_trade_forecasts"
+        },
+        {
+          "step": "enrich_coa_zoning"
+        },
+        {
+          "step": "enrich_permits"
+        },
+        {
+          "step": "link_coa"
+        },
+        {
+          "step": "link_coa_to_parcels"
+        },
+        {
+          "step": "link_similar"
+        },
+        {
+          "step": "permits"
+        },
+        {
+          "step": "update_tracked_projects"
+        }
+      ],
       "tables": [
         {
           "table": "building_footprints",
@@ -40,7 +110,6 @@
             "bylaw_max_fsi",
             "bylaw_max_height_m",
             "coa_fsi",
-            "columns_present",
             "comp_count",
             "cost_addition_total",
             "cost_basement_per_sqm",
@@ -61,17 +130,13 @@
             "cur_gfa_range_basis",
             "cur_pot_2story_gfa_sqm",
             "cur_pot_3story_gfa_sqm",
-            "days_since_latest",
             "decision",
-            "duplicate_pks",
             "envelope_constrained",
             "estimated_cost",
             "exception_number",
             "existing_greenspace_sqm",
-            "existing_structure_confidence_high",
-            "existing_structure_confidence_low",
-            "garage_permission_as_of_right",
-            "garage_permission_coa_required",
+            "existing_structure_confidence",
+            "garage_permission",
             "garden_suite_fits",
             "heritage_designation_date",
             "heritage_designation_type",
@@ -81,20 +146,18 @@
             "is_heritage_designated",
             "is_in_ravine_protection_area",
             "is_through_lot",
+            "last_seen_at",
+            "lead_id",
             "lifecycle_classified_at",
             "lifecycle_phase",
             "lifecycle_stalled",
             "linked_confidence",
             "linked_permit_num",
             "lot_size_confidence",
-            "max_build_confidence_high",
-            "max_build_confidence_low",
-            "max_build_confidence_medium",
+            "max_build_confidence",
             "max_build_fsi",
             "max_buildable_footprint_sqm",
-            "max_buildable_gfa_basis_coverage_box",
-            "max_buildable_gfa_basis_coverage_only",
-            "max_buildable_gfa_basis_fsi",
+            "max_buildable_gfa_basis",
             "max_buildable_gfa_sqm",
             "max_garage_gfa_sqm",
             "max_newbuild_coa_gfa_sqm",
@@ -104,14 +167,12 @@
             "primary_frontage_street_name",
             "ravine_distance_m",
             "realized_fsi_p90",
-            "rear_suite_permission_as_of_right",
-            "rear_suite_permission_coa_required",
+            "rear_suite_permission",
             "rear_suite_type",
             "scope_classified_at",
             "scope_tags",
             "structure_type",
             "trade_classified_at",
-            "unclassified_count",
             "variance_context",
             "ward",
             "zoning_class",
@@ -124,7 +185,6 @@
         {
           "table": "cost_estimates",
           "columns": [
-            "coa_rows",
             "complexity_score",
             "computed_at",
             "cost_range_high",
@@ -134,25 +194,19 @@
             "effective_area_sqm",
             "estimated_cost",
             "is_geometric_override",
+            "lead_id",
             "model_version",
             "modeled_gfa_sqm",
-            "permits_covered",
+            "permit_num",
             "premium_factor",
+            "revision_num",
             "trade_contract_values"
           ]
         },
         {
           "table": "data_quality_snapshots",
           "columns": [
-            "snapshot_date",
-            "today"
-          ]
-        },
-        {
-          "table": "engine_health_snapshots",
-          "columns": [
-            "captured_at",
-            "today"
+            "snapshot_date"
           ]
         },
         {
@@ -171,29 +225,23 @@
         },
         {
           "table": "lead_analytics",
-          "columns": [
-            "lead_id",
-            "rows"
-          ]
+          "columns": []
         },
         {
           "table": "lead_parcels",
           "columns": [
-            "coa_rows",
             "lead_id"
           ]
         },
         {
           "table": "lead_products",
           "columns": [
-            "coa_rows",
             "lead_id"
           ]
         },
         {
           "table": "lead_trades",
           "columns": [
-            "coa_rows",
             "lead_id",
             "trade_id"
           ]
@@ -207,10 +255,10 @@
         {
           "table": "parcel_buildings",
           "columns": [
+            "building_id",
             "confidence",
             "is_primary",
             "linked_at",
-            "linked_parcels",
             "match_type",
             "parcel_id",
             "structure_type"
@@ -220,10 +268,13 @@
           "table": "parcels",
           "columns": [
             "bylaw_max_fsi",
+            "centroid_lat",
+            "centroid_lng",
             "comp_count",
             "cost_fb_total",
             "envelope_constrained",
             "envelope_constraint_reason",
+            "id",
             "lot_size_sqm",
             "max_build_stories",
             "max_buildable_footprint_sqm",
@@ -233,18 +284,15 @@
             "opt_coa_gfa_sqm",
             "opt_config_confidence",
             "parcel_cost_menu",
-            "with_centroid",
-            "zoning_class"
+            "zoning_class",
+            "zoning_enriched_at"
           ]
         },
         {
           "table": "permit_parcels",
           "columns": [
-            "confidence",
-            "linked_at",
-            "match_type",
             "permit_num",
-            "permits_linked"
+            "revision_num"
           ]
         },
         {
@@ -260,8 +308,9 @@
             "confidence",
             "is_active",
             "lead_score",
-            "permits_with_active_trade",
+            "permit_num",
             "phase",
+            "revision_num",
             "tier",
             "trade_id"
           ]
@@ -287,7 +336,6 @@
             "category",
             "city",
             "coa_fsi",
-            "columns_present",
             "comp_count",
             "completed_date",
             "cost_addition_total",
@@ -312,7 +360,6 @@
             "current_use",
             "data_hash",
             "description",
-            "duplicate_pks",
             "dwelling_units_created",
             "dwelling_units_lost",
             "enriched_status",
@@ -320,10 +367,8 @@
             "est_const_cost",
             "exception_number",
             "existing_greenspace_sqm",
-            "existing_structure_confidence_high",
-            "existing_structure_confidence_low",
-            "garage_permission_as_of_right",
-            "garage_permission_coa_required",
+            "existing_structure_confidence",
+            "garage_permission",
             "garden_suite_fits",
             "geo_id",
             "geocoded_at",
@@ -339,20 +384,17 @@
             "issued_date",
             "last_seen_at",
             "latitude",
+            "lead_id",
             "lifecycle_classified_at",
             "lifecycle_phase",
             "lifecycle_stalled",
             "location",
             "longitude",
             "lot_size_confidence",
-            "max_build_confidence_high",
-            "max_build_confidence_low",
-            "max_build_confidence_medium",
+            "max_build_confidence",
             "max_build_fsi",
             "max_buildable_footprint_sqm",
-            "max_buildable_gfa_basis_coverage_box",
-            "max_buildable_gfa_basis_coverage_only",
-            "max_buildable_gfa_basis_fsi",
+            "max_buildable_gfa_basis",
             "max_buildable_gfa_sqm",
             "max_garage_gfa_sqm",
             "max_newbuild_coa_gfa_sqm",
@@ -360,6 +402,7 @@
             "opt_config_confidence",
             "overlay_summary",
             "owner",
+            "permit_num",
             "permit_type",
             "phase_started_at",
             "postal",
@@ -369,9 +412,9 @@
             "ravine_distance_m",
             "raw_json",
             "realized_fsi_p90",
-            "rear_suite_permission_as_of_right",
-            "rear_suite_permission_coa_required",
+            "rear_suite_permission",
             "rear_suite_type",
+            "revision_num",
             "scope_classified_at",
             "scope_source",
             "scope_tags",
@@ -383,7 +426,6 @@
             "street_num",
             "street_type",
             "structure_type",
-            "unclassified_count",
             "ward",
             "work",
             "zoning_class",
@@ -396,14 +438,12 @@
         {
           "table": "phase_calibration",
           "columns": [
-            "median_days",
-            "rows_with_median"
+            "median_days"
           ]
         },
         {
           "table": "phase_stay_calibration",
           "columns": [
-            "coa_rows",
             "permit_type"
           ]
         },
@@ -430,7 +470,6 @@
         {
           "table": "tracked_projects",
           "columns": [
-            "active",
             "status"
           ]
         },
@@ -445,8 +484,8 @@
             "p25_days",
             "p75_days",
             "permit_num",
-            "permits_covered",
             "predicted_start",
+            "revision_num",
             "sample_size",
             "target_window",
             "trade_slug",
@@ -475,7 +514,6 @@
   },
   "outputs": "none",
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "always",
@@ -483,8 +521,6 @@
       }
     ],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/assert-global-coverage-fields.js"
@@ -496,18 +532,13 @@
     "requires": [],
     "srid": "none",
     "empty_source": "none",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "execution": {
-    "budget": "10m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -519,7 +550,6 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "permits": {
@@ -2622,7 +2652,7 @@
       "id": "coa_step9_snapshot_today",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 9 — refresh_snapshot",
+        "step_target": "CoA Step 11 — refresh_snapshot",
         "field": "data_quality_snapshots.today"
       },
       "limit": "viol == 0",
@@ -2634,7 +2664,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 9 — refresh_snapshot / data_quality_snapshots.today. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 11 — refresh_snapshot / data_quality_snapshots.today. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2645,7 +2675,7 @@
       "id": "coa_step10_duplicate_pks",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 10 — assert_data_bounds",
+        "step_target": "CoA Step 12 — assert_data_bounds",
         "field": "coa_applications.duplicate_pks"
       },
       "limit": "viol == 0",
@@ -2657,7 +2687,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 10 — assert_data_bounds / coa_applications.duplicate_pks. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 12 — assert_data_bounds / coa_applications.duplicate_pks. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2668,7 +2698,7 @@
       "id": "coa_step11_engine_health_today",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 11 — assert_engine_health",
+        "step_target": "CoA Step 13 — assert_engine_health",
         "field": "engine_health_snapshots.today"
       },
       "limit": "viol == 0",
@@ -2680,18 +2710,26 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 11 — assert_engine_health / engine_health_snapshots.today. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 13 — assert_engine_health / engine_health_snapshots.today. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
         }
-      }
+      },
+      "reads": [
+        {
+          "table": "engine_health_snapshots",
+          "columns": [
+            "captured_at"
+          ]
+        }
+      ]
     },
     {
       "id": "coa_step12_lifecycle_phase",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 12 — classify_lifecycle_phase",
+        "step_target": "CoA Step 9 — classify_lifecycle_phase",
         "field": "coa_applications.lifecycle_phase"
       },
       "limit": "pct >= 90",
@@ -2703,7 +2741,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 12 — classify_lifecycle_phase / coa_applications.lifecycle_phase. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 9 — classify_lifecycle_phase / coa_applications.lifecycle_phase. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2717,7 +2755,7 @@
       "id": "coa_step12_lifecycle_stalled",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 12 — classify_lifecycle_phase",
+        "step_target": "CoA Step 9 — classify_lifecycle_phase",
         "field": "coa_applications.lifecycle_stalled"
       },
       "limit": "viol == 0",
@@ -2729,7 +2767,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 12 — classify_lifecycle_phase / coa_applications.lifecycle_stalled. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 9 — classify_lifecycle_phase / coa_applications.lifecycle_stalled. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2740,7 +2778,7 @@
       "id": "coa_step12_lifecycle_classified_at",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 12 — classify_lifecycle_phase",
+        "step_target": "CoA Step 9 — classify_lifecycle_phase",
         "field": "coa_applications.lifecycle_classified_at"
       },
       "limit": "pct >= 90",
@@ -2752,7 +2790,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 12 — classify_lifecycle_phase / coa_applications.lifecycle_classified_at. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 9 — classify_lifecycle_phase / coa_applications.lifecycle_classified_at. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -2766,7 +2804,7 @@
       "id": "coa_step13_unclassified_count",
       "kind": "field_coverage",
       "expect": {
-        "step_target": "CoA Step 13 — assert_lifecycle_phase_distribution",
+        "step_target": "CoA Step 10 — assert_lifecycle_phase_distribution",
         "field": "coa_applications.unclassified_count"
       },
       "limit": "viol == 0",
@@ -2778,7 +2816,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 13 — assert_lifecycle_phase_distribution / coa_applications.unclassified_count. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
+        "text": "Ported verbatim from scripts/quality/assert-global-coverage.js (pre-conversion) — CoA Step 10 — assert_lifecycle_phase_distribution / coa_applications.unclassified_count. Report: docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md §2.3 (row-builder census).",
         "liveness": {
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
@@ -7146,7 +7184,15 @@
           "kind": "spec",
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
         }
-      }
+      },
+      "reads": [
+        {
+          "table": "engine_health_snapshots",
+          "columns": [
+            "captured_at"
+          ]
+        }
+      ]
     },
     {
       "id": "p_step21_lifecycle_phase",
@@ -8161,9 +8207,9 @@
     "varies_by_chain": {
       "checks": "per_chain",
       "phase": {
-        "permits": 32,
+        "permits": 31,
         "coa": 16,
-        "sources": 24
+        "sources": 25
       },
       "audit_table": "per_chain",
       "scope": "per_chain"
@@ -8199,6 +8245,26 @@
         "warnings": "array",
         "audit_table": "object",
         "config": "object"
+      }
+    },
+    {
+      "id": "checks_passed_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "MQ-A4 (a), registry-truth fold 19 (#75): a WARN row stands and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS) instead of all_checks_passed. It declares no checks_passed: the runner keeps the legacy semantics, checks_passed is 'all' only when errors AND warnings are both empty (scripts/lib/step/index.js), so a WARN run never carries it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
       }
     },
     {

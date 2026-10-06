@@ -1,0 +1,25 @@
+{
+  "probe": "P2-C5 gate over the live p3 converted fleet (uncommitted tree)",
+  "tree": "Buildo-wt-fleet2-p3",
+  "date": "2026-10-03",
+  "pass": false,
+  "checked": 247,
+  "detail": "MODE-EMITS-TYPE (P2-C5): 3 violation(s) [enrich_parcels staleness.mode_select; link_neighbourhoods staleness.mode_select; enrich_heritage staleness.mode_select]; 247 emits.type check(s)",
+  "violations": [
+    {
+      "step": "enrich_parcels",
+      "item": "staleness.mode_select",
+      "detail": "enrich_parcels: ENRICHER declares mode_select \"tri_state\"; allowed none — LINK/MATCHER ⇒ staleness.mode_select tri_state, OR none WITH an outputs.invalidates[] row `by: \"full_rescan\"`; INGESTOR with a staleness.trigger[] entry `signal: \"source_validator\"` ⇒ skip; every other archetype/case ⇒ none."
+    },
+    {
+      "step": "link_neighbourhoods",
+      "item": "staleness.mode_select",
+      "detail": "link_neighbourhoods: LINK declares mode_select \"none\"; allowed tri_state — LINK/MATCHER ⇒ staleness.mode_select tri_state, OR none WITH an outputs.invalidates[] row `by: \"full_rescan\"`; INGESTOR with a staleness.trigger[] entry `signal: \"source_validator\"` ⇒ skip; every other archetype/case ⇒ none."
+    },
+    {
+      "step": "enrich_heritage",
+      "item": "staleness.mode_select",
+      "detail": "enrich_heritage: ENRICHER declares mode_select \"tri_state\"; allowed none — LINK/MATCHER ⇒ staleness.mode_select tri_state, OR none WITH an outputs.invalidates[] row `by: \"full_rescan\"`; INGESTOR with a staleness.trigger[] entry `signal: \"source_validator\"` ⇒ skip; every other archetype/case ⇒ none."
+    }
+  ]
+}

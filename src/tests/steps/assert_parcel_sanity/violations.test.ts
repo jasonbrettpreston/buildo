@@ -112,8 +112,9 @@ describe('1. descriptor shape + Rule 3 (both facts true today at commit 1)', () 
 describe('assert_parcel_sanity — descriptor generator drift lock (both directions)', () => {
   const GENERATOR_PATH = path.join(ROOT, 'scripts/generate-assert-parcel-sanity-descriptor.js');
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS generator
-  const { buildDescriptor } = require(GENERATOR_PATH) as {
-    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[], distDefs: unknown[], distMeasured: unknown, invariantDefs?: unknown[]) => unknown;
+  const { buildDescriptor, sidecarLastMeasured } = require(GENERATOR_PATH) as {
+    buildDescriptor: (checkDefs: unknown[], logicVarDefs: unknown[], distDefs: unknown[], distMeasured: unknown, invariantDefs?: unknown[], measured?: unknown) => unknown;
+    sidecarLastMeasured: () => unknown;
   };
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, INVARIANT_DEFS } = require('../../../../scripts/lib/assert-parcel-sanity-fields.js') as {
@@ -125,16 +126,17 @@ describe('assert_parcel_sanity — descriptor generator drift lock (both directi
   const DIST_MEASURED_PATH = path.join(ROOT, 'scripts/quality/generated/assert-parcel-sanity.dist-measured.json');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const distMeasured = require(DIST_MEASURED_PATH);
+  const measured = sidecarLastMeasured(); // P2-C4 R1: the same sidecar last_measured the CLI generator reads
 
   it('regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)', () => {
-    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS), null, 2)}\n`;
+    const regenerated = `${JSON.stringify(buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS, measured), null, 2)}\n`;
     const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
     expect(regenerated).toBe(committed);
   });
 
   it('the drift lock is not vacuous: a mutated in-memory CHECK_DEFS fixture produces a descriptor that differs from the committed file', () => {
     const mutated = CHECK_DEFS.map((d, i) => (i === 0 ? { ...d, id: `${d.id}_mutated_for_drift_lock_test` } : d));
-    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS), null, 2)}\n`;
+    const regenerated = `${JSON.stringify(buildDescriptor(mutated, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS, measured), null, 2)}\n`;
     const committed = fs.readFileSync(DESCRIPTOR_PATH, 'utf8');
     expect(regenerated).not.toBe(committed);
   });
@@ -322,15 +324,15 @@ describe('5. unhappy paths (descriptor-declared facts true at commit 1; runtime 
 });
 
 describe('6. chain wiring (fact, unchanged by this conversion)', () => {
-  it('chain.logic ordering + length are untouched: compute_parcel_cost_estimates < assert_global_coverage < assert_parcel_sanity < refresh_snapshot, length 28', () => {
+  it('chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 28 (FLEET-2 manifest variant c2)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const manifest = require('../../../../scripts/manifest.json');
     const chain: string[] = manifest.chains.sources;
     expect(chain).toHaveLength(28);
     const idx = (s: string) => chain.indexOf(s);
-    expect(idx('compute_parcel_cost_estimates')).toBeLessThan(idx('assert_global_coverage'));
+    expect(idx('compute_parcel_cost_estimates')).toBeLessThan(idx('refresh_snapshot'));
+    expect(idx('refresh_snapshot')).toBeLessThan(idx('assert_global_coverage'));
     expect(idx('assert_global_coverage')).toBeLessThan(idx('assert_parcel_sanity'));
-    expect(idx('assert_parcel_sanity')).toBeLessThan(idx('refresh_snapshot'));
   });
 });
 

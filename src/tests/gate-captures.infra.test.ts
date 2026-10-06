@@ -357,8 +357,12 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     'enrich_parcels:parcels',
     'enrich_ravines:parcels',
     'geocode_permits:permits',
+    // FLEET-2 §5 (2026-10-06): link_massing's two targets ledgered pending_recapture (A31: the steady-state re-derive
+    // wrote 0; closing brief = a healing cohort capture). link_parcel_addresses:parcel_address_points CLOSED: its
+    // sources POST now writes 36 new links (measured), and its ledger row was deleted (A29).
+    'link_massing:parcel_buildings',
+    'link_massing:parcels',
     'link_neighbourhoods:permits',
-    'link_parcel_addresses:parcel_address_points',
     'link_parcels:permit_parcels',
     'link_parcels:permits',
     'link_wsib:entities',

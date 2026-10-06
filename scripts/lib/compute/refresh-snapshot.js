@@ -573,11 +573,15 @@ function buildRow(results, prevRow, prior, config) {
  * per GAP-2 (Rule 9 grandfathered: a metrics-recording row's entire purpose is to
  * differ from the prior value every run, so an IS DISTINCT FROM guard is
  * near-vacuous), `snapshot_date` bound via the SAME server-side `CURRENT_DATE`
- * literal as before, never a JS-computed date value.
+ * literal as before, never a JS-computed date value. `created_at`, by contrast, IS a
+ * run-clock value: it binds the caller's `runAt` (FLEET-2 U1, source "run_at"), never
+ * the server-side `NOW()` this function used to emit.
  * @param {Record<string, unknown>} row - from `buildRow()`
+ * @param {Date|string} runAt - the run clock (pipeline.getDbTimestamp); created_at binds it (FLEET-2 U1, source "run_at")
  * @returns {{ sql: string, params: unknown[] }}
  */
-function buildWriteSql(row) {
+function buildWriteSql(row, runAt) {
+  if (runAt === undefined || runAt === null) throw new Error('refresh_snapshot buildWriteSql: the run clock (runAt) is required — created_at binds it, never NOW() (FLEET-2 U1)');
   const cols = [
     'total_permits', 'active_permits',
     'permits_with_trades', 'trade_matches_total', 'trade_avg_confidence',
@@ -607,19 +611,22 @@ function buildWriteSql(row) {
   ];
   const jsonbCols = new Set(['scope_project_type_breakdown', 'scope_tags_top', 'schema_column_counts']);
   const placeholders = cols.map((c, i) => `$${i + 1}${jsonbCols.has(c) ? '::jsonb' : ''}`);
+  const runAtParam = `$${cols.length + 1}::timestamptz`;
   const setClause = cols.map((c) => `${c}=EXCLUDED.${c}`).join(', ');
   const sql = `INSERT INTO ${TABLE} (
         snapshot_date,
+        created_at,
         ${cols.join(',\n        ')}
       ) VALUES (
         CURRENT_DATE,
+        ${runAtParam},
         ${placeholders.join(',')}
       )
       ON CONFLICT (snapshot_date) DO UPDATE SET
         ${setClause},
-        created_at=NOW()
+        created_at=${runAtParam}
       RETURNING (xmax::text::int = 0) AS is_insert, snapshot_date;`;
-  const params = cols.map((c) => row[c]);
+  const params = [...cols.map((c) => row[c]), runAt];
   return { sql, params };
 }
 

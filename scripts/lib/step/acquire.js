@@ -525,7 +525,7 @@ function locateShapefile(extractDir) {
  *   domain-free. The 2nd argument is DATA ONLY (`{ geojson }` — the string built once from
  *   the feature's geometry, reused by the push; Rule 2), which is what makes a
  *   geometry-derived key (massing's `hash_`) expressible without `crypto` reaching this file.
- * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}>}
+ * @returns {Promise<{features: Array<{[keyColumn]: number, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number, recordFields: string[]|null}>}
  *   `rowsParsed` (INGESTOR prerequisite 0o, 2026-09-24) is EVERY feature the source
  *   handed back, counted BEFORE the `badKey`/`nullGeometry` filters below drop a row —
  *   the raw count `ctx.acquired.rows_read` reports, as distinct from `features.length`
@@ -537,11 +537,16 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
   let badKey = 0;
   let nullGeometry = 0;
   let rowsParsed = 0;
+  // #33 (fold 19 MQ-A2 (a)): the RAW header of the FIRST record, captured BEFORE any key/geometry
+  // drop (the ckan arm's `record_fields` precedent) — the `guards.schema_drift` baseline is the
+  // prior completed run's recorded header. `null` on an empty source.
+  let recordFields = null;
   for (;;) {
     const r = await source.read();
     if (r.done) break;
     rowsParsed++;
     const props = r.value.properties || {};
+    if (recordFields === null) recordFields = Object.keys(props);
     // ── 0s: A GEOMETRY-DERIVED KEY IS REACHABLE (2026-09-24) ────────────────────
     // The founding case is row 3.6 `massing`: its shapefile carries NO id column, so the
     // legacy loader derives the primary key FROM the geometry (`scripts/load-massing.js`:
@@ -561,7 +566,7 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
     // carries the DBF properties verbatim — the ONE seam `compute.shapeRecord` reads.
     features.push({ [keyColumn]: key, geojson, record: props });
   }
-  return { features, badKey, nullGeometry, rowsParsed };
+  return { features, badKey, nullGeometry, rowsParsed, recordFields };
 }
 
 /**
@@ -590,7 +595,7 @@ async function parseShapefile(shpPath, dbfPath, keyProperty, coerceKey, keyColum
  * @param {(raw: unknown) => number|null} coerceKey - the step's own pure coercion
  * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper
  *   reads the same field name its descriptor declares
- * @returns {Promise<{features: Array<{record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}>}
+ * @returns {Promise<{features: Array<{record: object}>, badKey: number, nullGeometry: number, rowsParsed: number, recordFields: string[]|null}>}
  *   `nullGeometry` is structurally 0 here — a CSV has no geometry-less rows at PARSE
  *   time; a blank geometry cell is the step's `shapeRecord` problem, not the parser's,
  *   and the field is carried so `acquired.null_geometry_count` keeps its meaning.
@@ -610,15 +615,19 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
   const features = [];
   let badKey = 0;
   let rowsParsed = 0;
+  // #33 (fold 19 MQ-A2 (a)): the RAW header of the FIRST record, captured BEFORE any key drop
+  // (the ckan arm's `record_fields` precedent) — `null` on an empty source.
+  let recordFields = null;
   // `for await` over the piped parser — the same backpressure-shaped loop the
   // pre-conversion CSV loaders used, so a 200 MB source never buffers whole (§9.5).
   for await (const record of stream) {
     rowsParsed++;
+    if (recordFields === null) recordFields = Object.keys(record);
     const key = coerceKey(record[keyProperty]);
     if (key == null) { badKey++; continue; }
     features.push({ [keyColumn]: key, record });
   }
-  return { features, badKey, nullGeometry: 0, rowsParsed };
+  return { features, badKey, nullGeometry: 0, rowsParsed, recordFields };
 }
 
 /**
@@ -660,7 +669,7 @@ async function parseCsv(filePath, csvOptions, keyProperty, coerceKey, keyColumn)
  *   contract `parseShapefile` carries.
  * @param {string} keyColumn - `outputs.writes[].key`, so a step's own dedupe helper reads
  *   the same field name its descriptor declares.
- * @returns {{features: Array<{[keyColumn]: number|string, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number}}
+ * @returns {{features: Array<{[keyColumn]: number|string, geojson: string, record: object}>, badKey: number, nullGeometry: number, rowsParsed: number, recordFields: string[]|null}}
  * @throws {Error} on malformed JSON (the legacy loader's message form, file + the parser's
  *   own reason — the 100-char prefix is not reproducible without buffering, which §9.5
  *   forbids) or on a document whose `features` is not an array — refused BY NAME by
@@ -672,6 +681,9 @@ async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
   let badKey = 0;
   let nullGeometry = 0;
   let rowsParsed = 0;
+  // #33 (fold 19 MQ-A2 (a)): the RAW header of the FIRST record, captured BEFORE any key/geometry
+  // drop (the ckan arm's `record_fields` precedent) — `null` on an empty source.
+  let recordFields = null;
   try {
     await streamPipeline(
       fs.createReadStream(filePath),
@@ -694,6 +706,7 @@ async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
         for await (const { value: f } of source) {
           rowsParsed++;
           const props = (f && f.properties) || {};
+          if (recordFields === null) recordFields = Object.keys(props);
           const geometry = f ? f.geometry : null;
           // Built ONCE, reused by the push AND handed to `coerceKey` (0s) — one stringify per
           // feature, and the same string the write plan's `wkb_geometry` column receives.
@@ -713,7 +726,7 @@ async function parseGeoJson(filePath, keyProperty, coerceKey, keyColumn) {
     if (err instanceof GeoJsonFeaturesShapeError) throw err;
     throw geoJsonFileError(filePath, err);
   }
-  return { features, badKey, nullGeometry, rowsParsed };
+  return { features, badKey, nullGeometry, rowsParsed, recordFields };
 }
 
 /**
@@ -874,8 +887,9 @@ async function ckanResourceValidators(ctxFetch, external, timeoutMs, cache) {
 // under 0x postures base FAIL / overlay WARN+skip: outcome parity with the legacy String(runAt)
 // TIMESTAMPTZ reject (ZN-D6, §1.5). The row is NEVER written with a NULL version.
 // `record_fields` = `Object.keys` of the FIRST RAW record (before any drop, so ZN-D3 stays
-// carryable), or `null` on an empty source. `pages_fetched`/`record_fields` are ABSENT on other arms
-// (the 0fs `source_path` precedent), so no other descriptor's golden moves.
+// carryable), or `null` on an empty source. `pages_fetched` is ABSENT on other arms (the 0fs
+// `source_path` precedent); `record_fields` is recorded by EVERY feature arm (#33, fold 19 MQ-A2
+// (a): the `guards.schema_drift` baseline is the prior completed run's recorded header).
 // @param {object} args - `{ ctxFetch, log, tag, external, descriptor, config, head, base, tier1,
 //   keyProperty, keyColumn, coerceKey, validatorCache }` — the exact object brief 16 dispatches.
 async function acquireCkanDatastore({
@@ -1227,6 +1241,7 @@ async function acquireExternal({
         bad_key_count: parsed.badKey,
         null_geometry_count: parsed.nullGeometry,
         rows_parsed: parsed.rowsParsed,
+        record_fields: parsed.recordFields,
       },
       tier1,
       tier2,

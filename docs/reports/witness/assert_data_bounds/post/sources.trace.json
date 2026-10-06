@@ -1,0 +1,392 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-data-bounds.js",
+  "chain": "sources",
+  "source_fingerprint": "a0adfdf6b3fbb114aa4acff968f5eddf45e6caa6bc90fbb25aa356914d9ad416",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 28,
+    "distinct": 27,
+    "utility": 5,
+    "tracer_self_ms": 14.434,
+    "wall_ms": 44864
+  },
+  "statements": [
+    {
+      "fingerprint": "00aaa1d6eb081c02",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "naics_code"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "322a246ffcaacb50",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "50770c39d83205a4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "lot_size_sqm"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "61c41a8bf8930ae6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "predominant_class",
+          "subclass"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77e953f5bd839589",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "address_point_id",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "83be752ff8c8b8c9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "max_height_m"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 26,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8a3fdaffbd95aa55",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9266b8dc6417153e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "99aa249a62f08c7a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b50797ee0e642bf0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": [
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "ba40144a8ab77c37",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "baf3c2f88898a011",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id"
+        ],
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "bef7eea0fa5d1e78",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c00b5eb8f5d23571",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c39db32925b12934",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d4c3034a807c8ce5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "ravines": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d883ca1927a7784c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f00b6618ba232c78",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "legal_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "address_point_id",
+        "retired_at"
+      ],
+      "building_footprints": [
+        "max_height_m"
+      ],
+      "entities": [
+        "id"
+      ],
+      "heritage_districts": [],
+      "heritage_properties": [],
+      "neighbourhoods": [
+        "neighbourhood_id"
+      ],
+      "parcels": [
+        "lot_size_sqm",
+        "parcel_id"
+      ],
+      "ravines": [],
+      "toronto_centreline": [],
+      "wsib_registry": [
+        "legal_name",
+        "linked_entity_id",
+        "naics_code",
+        "predominant_class",
+        "subclass"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

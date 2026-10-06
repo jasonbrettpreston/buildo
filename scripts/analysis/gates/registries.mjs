@@ -299,7 +299,7 @@ export function checkDefectIdUniqueness(repoRoot = REPO_ROOT) {
 
 export function selfTestCases() {
   const schema = { 'x-banned-for-new': { values: {
-    'outputs.writes[].replay': ['append_unsafe'],
+    'outputs.writes[].fixture_banned': ['append_unsafe'],
     'outputs.writes[].write_discipline.guard': ['none'],
   } } };
   const guardEntry = "  { path: GUARD_PATH, field: 'guard', whyField: 'guard_why' },";
@@ -314,9 +314,9 @@ export function selfTestCases() {
   const assessment = { file: 'docs/reports/2026-08-25-pilot1-assert-schema-assessment.md' };
 
   return [
-    { name: '#33 RED — a banned path with no enforcer', run: () => bannedCoverage({ schema, validateSource: src }), expect: { pass: false, violations: 1, path: 'outputs.writes[].replay' } },
+    { name: '#33 RED — a banned path with no enforcer', run: () => bannedCoverage({ schema, validateSource: src }), expect: { pass: false, violations: 1, path: 'outputs.writes[].fixture_banned' } },
     { name: '#33 GREEN — every banned path enforced', expect: { pass: true, violations: 0 },
-      run: () => bannedCoverage({ schema, validateSource: src.replace(guardEntry, `${guardEntry}\n  { path: 'outputs.writes[].replay', field: 'replay', whyField: 'replay_why' },`) }) },
+      run: () => bannedCoverage({ schema, validateSource: src.replace(guardEntry, `${guardEntry}\n  { path: 'outputs.writes[].fixture_banned', field: 'fixture_banned', whyField: 'fixture_banned_why' },`) }) },
     { name: '#34 RED — an absent registry is RED, never vacuous', expect: { violations: 1, item: 'registry' },
       run: () => stalenessDispositionFindings({ repoRoot: '/nonexistent-repo', exists: () => false, read: () => null }) },
     { name: '#34 RED — an executed row whose executor symbol does not resolve', expect: { violations: 1, item: X },

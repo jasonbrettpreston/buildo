@@ -21,6 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { phaseMapFor } = require('./generate-sharing-phase'); // #73: phase = manifest position, generated (MQ-B4 (a), fold 19)
 const { RES, ZC } = require('./lib/assert-parcel-sanity-fields');
 
 const OUT = path.join(__dirname, 'quality', 'assert-parcel-sanity.descriptor.json');
@@ -58,18 +59,44 @@ function checkWhy(def) {
 
 // 24 declared columns (assert-parcel-sanity.js emitMeta) + 9 APS-D1 additions the
 // compute's SQL actually touches (finding APS-D1, closed here — Nothing Hidden).
+// P1-C8a (2026-10-03, gate #44 (a)): + cost_gut_total, geom, lot_size_source (read by
+// CHECK_DEFS predicates, witnessed by both POST traces); − feature_type (its only
+// predicate was removed by the 2026-10-01 inert fix; it survives only in a why string).
 const PARCELS_COLUMNS = [
   'bylaw_max_coverage_pct', 'bylaw_max_fsi', 'bylaw_max_height_m', 'bylaw_max_stories',
   'coa_fsi', 'comp_fsi_p50', 'cost_addition_total', 'cost_coa_total', 'cost_fb_total',
   'cost_solar_total', 'cur_floor_gfa_sqm', 'depth_m', 'envelope_constraint_reason',
-  'existing_greenspace_sqm', 'feature_type', 'frontage_m', 'id', 'lot_size_sqm',
+  'existing_greenspace_sqm', 'frontage_m', 'id', 'lot_size_sqm',
   'max_build_fsi', 'max_build_height_m', 'max_build_length_m', 'max_build_stories',
   'max_build_stories_basis', 'max_build_width_m', 'max_buildable_footprint_sqm',
   'max_buildable_gfa_basis', 'max_buildable_gfa_sqm', 'opt_aor_gfa_sqm', 'opt_aor_storeys',
   'opt_coa_gfa_sqm', 'opt_coa_storeys', 'realized_fsi_p90', 'zoning_class',
+  'cost_gut_total', 'geom', 'lot_size_source',
 ].sort();
 
-function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS = []) {
+// parcel_buildings columns read by the two existing_structure_shared_* EXISTS predicates.
+const PARCEL_BUILDINGS_COLUMNS = ['building_id', 'is_primary', 'match_type', 'parcel_id'];
+
+/**
+ * P2-C4 (fold 19 MQ-A3 (a); R1 2026-10-06) — `last_measured` has ONE source: the measured
+ * sidecars `docs/reports/golden/assert_parcel_sanity/measured.json` (captures) and
+ * `measured-validate.json` (step-validate --write, validate_only entries), rendered by
+ * generate-last-measured.mjs's own lastMeasuredFromSidecar. Returns `{ <entry id>: last_measured }`
+ * for every sidecar entry with a measured cost; buildDescriptor prefers it over its fallback
+ * (dist-measured.json / the INVARIANT_DEFS seed), so this generator and generate-last-measured.mjs
+ * render the same bytes instead of overwriting each other.
+ */
+function sidecarLastMeasured(slug = 'assert_parcel_sanity') {
+  const { measuredEntriesFor, lastMeasuredFromSidecar } = require('./analysis/generate-last-measured.mjs');
+  const out = {};
+  for (const [id, e] of Object.entries(measuredEntriesFor(slug))) {
+    const lm = lastMeasuredFromSidecar(e);
+    if (lm) out[id] = lm;
+  }
+  return out;
+}
+
+function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS = [], measured = {}) {
   const checks = CHECK_DEFS.map((def) => ({
     id: def.id,
     kind: 'bound',
@@ -128,7 +155,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
     statement_timeout: 'none',
     zone_by: 'zoning_class',
     kind: 'distribution',
-    last_measured: distMeasured[d.id],
+    last_measured: measured[`dist_${d.id}`] || distMeasured[d.id],
     why: why(
       `Per-zone outlier visibility; INFO-only and never verdict-driving (F4) — outliers fluctuate on a 437,279-parcel set (legacy docblock, carried verbatim). Percentile/multiplier/floor are parcel_sanity_distribution_* logic variables consumed by the compute's SQL, not by this bound string (a name used by all 8 entries cannot be a 1:1 limit_from_config binding).`,
       { kind: 'file', ref: 'scripts/lib/step/plausibility.js' },
@@ -158,11 +185,16 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
         // LDG-4 (batch2 P1.1, 2026-09-18): the folded scan reads many parcels columns
         // enrich_parcels writes (opt_aor_gfa_sqm, max_buildable_gfa_sqm, etc.), not
         // only compute_parcel_cost_estimates' own cost columns — both declared.
+        // P1-C8a (2026-10-03): + parcels, the writer of geom / lot_size_sqm / lot_size_source (LDG-4 row closed).
         steps: [
-          { step: 'enrich_parcels', version_pin: 'none' },
-          { step: 'compute_parcel_cost_estimates', version_pin: 'none' },
+          { step: 'enrich_parcels' },
+          { step: 'compute_parcel_cost_estimates' },
+          { step: 'parcels' },
         ],
-        tables: [{ table: 'parcels', columns: PARCELS_COLUMNS }],
+        tables: [
+          { table: 'parcel_buildings', columns: PARCEL_BUILDINGS_COLUMNS },
+          { table: 'parcels', columns: PARCELS_COLUMNS },
+        ],
         externals: [],
       },
       expect_nonempty: false,
@@ -176,36 +208,27 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
     interpretation: 'none',
 
     staleness: {
-      scope: 'none',
       trigger: [{ signal: 'always', position: 'pre_compute' }],
       mode_select: 'none',
-      checkpoint: 'none',
-      interval: 'none',
       fingerprint: 'derived',
       fingerprint_inputs: ['scripts/lib/assert-parcel-sanity-fields.js'],
       logic_version: 'none',
       on_fingerprint_change: 'queue',
     },
 
-    guards: { requires: [], srid: 'none', empty_source: 'none', schema_drift: 'pause' },
+    guards: { requires: [], srid: 'none', empty_source: 'none', schema_drift: 'none' },
 
     database: { class: 'primary', min_migration: 244, assert_current_database: 'postgres' },
 
     execution: {
-      budget: '30m',
       txn_scope: 'none',
-      txn_budget: 'none',
-      chunked: false,
       statement_timeout: '25m',
       step_timeout: '45m',
       batch: 'none',
-      needs_disk_mb: 'none',
-      partial_fill: 'none',
       on_row_error: 'fail_fast',
       on_batch_error: 'fail_step',
       on_check_error: 'fail_step',
       on_degrade: 'none',
-      criticality: 'required',
       network: 'none',
       maintenance: 'none',
       invocation: { sources: { argv: [], env: { PIPELINE_CHAIN: 'sources' } } },
@@ -217,7 +240,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
     // statement_timeout, real last_measured from a live execution). Empty array stays
     // 'none' (fleet convention: no declared invariants[] renders as the string 'none',
     // never an empty array — see e.g. compute-parcel-cost-estimates.descriptor.json).
-    invariants: INVARIANT_DEFS.length ? INVARIANT_DEFS : 'none',
+    invariants: INVARIANT_DEFS.length ? INVARIANT_DEFS.map((e) => (measured[e.id] ? { ...e, last_measured: measured[e.id] } : e)) : 'none',
     plausibility,
 
     emits: [
@@ -311,7 +334,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
       chains: 'derived',
       shared: 'derived',
       slug_forms: 'derived',
-      varies_by_chain: { checks: 'none', phase: { sources: 25 }, audit_table: 'one', scope: 'none' },
+      varies_by_chain: { checks: 'none', phase: phaseMapFor('assert_parcel_sanity'), audit_table: 'one', scope: 'none' },
       on_contention: 'self_skip',
     },
 
@@ -333,6 +356,16 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
         records_meta: { checks_passed: 'string', checks_failed: 'int', checks_warned: 'int', errors: 'array', warnings: 'array', audit_table: 'object', config: 'object' },
       },
       {
+        id: 'checks_passed_with_warnings',
+        kind: 'success',
+        status: 'completed_with_warnings',
+        records_meta: { checks_failed: 'int', checks_warned: 'int', errors: 'array', warnings: 'array', audit_table: 'object', config: 'object' },
+        why: why(
+          'MQ-A4 (a), registry-truth fold 19 (#75): a WARN row stands and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS) instead of all_checks_passed. It declares no checks_passed: the runner keeps the legacy semantics, checks_passed is \'all\' only when errors AND warnings are both empty (scripts/lib/step/index.js), so a WARN run never carries it.',
+          { kind: 'file', ref: 'scripts/lib/step/index.js' },
+        ),
+      },
+      {
         id: 'parcel_sanity_gate_failed',
         kind: 'fail_check',
         status: 'completed',
@@ -346,7 +379,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
   };
 }
 
-module.exports = { buildDescriptor, PARCELS_COLUMNS };
+module.exports = { buildDescriptor, sidecarLastMeasured, PARCELS_COLUMNS };
 
 if (require.main === module) {
   const { CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, INVARIANT_DEFS } = require('./lib/assert-parcel-sanity-fields');
@@ -355,7 +388,7 @@ if (require.main === module) {
     process.exit(1);
   }
   const distMeasured = JSON.parse(fs.readFileSync(DIST_MEASURED_PATH, 'utf8'));
-  const descriptor = buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS || []);
+  const descriptor = buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, INVARIANT_DEFS || [], sidecarLastMeasured());
   const rendered = `${JSON.stringify(descriptor, null, 2)}\n`;
 
   if (process.argv.includes('--check')) {

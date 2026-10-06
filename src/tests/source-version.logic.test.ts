@@ -16,8 +16,8 @@
 //      (the adoption lock: the lib having the function is not the same as the gate firing).
 //   4. streamFileHash — correct hash AND streamed (createReadStream, no readFileSync);
 //      no loader buffers a whole download/file either (§9.5).
-//   5. The started_at DESC standardization + the two NAMED-EXCLUDED consumer-side
-//      completed_at readers (massing-full-gate.js, enrich-permits.js assertCentrelineEnriched).
+//   5. The started_at DESC standardization + the NAMED-EXCLUDED consumer-side
+//      completed_at reader (enrich-permits.js assertCentrelineEnriched; a second was retired at FLEET-2 P2-C6).
 //   6. buildSkipReEmitMeta — the DS4 skip-emits-a-COMPLETED-row merge shape
 //      (pins after the prior spread — the load-ravines BUG-2 rule).
 
@@ -408,8 +408,8 @@ describe('readPriorRunMeta — started_at DESC standardization', () => {
     const nullMeta = { query: async () => ({ rows: [{ records_meta: null }] }) };
     await expect(sv.readPriorRunMeta(nullMeta, 'x')).resolves.toBeNull();
   });
-  it('source-lock: the header NAMES the two consumer-side completed_at readers as EXCLUDED from the standardization', () => {
-    expect(LIB_SOURCE).toContain('massing-full-gate.js');
+  it('source-lock: the header NAMES the consumer-side completed_at reader as EXCLUDED, and no longer names the retired massing-full-gate.js (FLEET-2 P2-C6)', () => {
+    expect(LIB_SOURCE, 'massing-full-gate.js was retired at FLEET-2 P2-C6 — the header must not name it').not.toContain('massing-full-gate');
     expect(LIB_SOURCE).toContain('enrich-permits.js');
     expect(LIB_SOURCE).toContain('assertCentrelineEnriched');
   });

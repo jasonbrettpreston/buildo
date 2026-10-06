@@ -1,0 +1,12 @@
+{
+  "detail": "X-TRUST (P3-C5): 344 leaf field(s); 181 violation(s) [unclassed 181, bad-class 0, missing-mechanism 0, prose-non-string 0]",
+  "mapped_fields": 85,
+  "mapped_violations": [],
+  "sample_paths": [
+    "identity.name",
+    "identity.display_name",
+    "identity.owner",
+    "identity.description",
+    "identity.lock"
+  ]
+}

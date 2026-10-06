@@ -1,0 +1,314 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-engine-health.js",
+  "chain": "none",
+  "source_fingerprint": "89060617d20fc3bc9e8b0c8da2717335569c9db0a5d87c6e7b42a9b9aacebe5d",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 123,
+    "distinct": 19,
+    "utility": 5,
+    "tracer_self_ms": 25.559,
+    "wall_ms": 1454
+  },
+  "statements": [
+    {
+      "fingerprint": "21dd0ae63c63676e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "23265920758bf06c",
+      "kind": "write",
+      "count": 103,
+      "rowCount": 10,
+      "reads": {
+        "engine_health_snapshots": [
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan"
+        ]
+      },
+      "writes": {
+        "engine_health_snapshots": [
+          "captured_at",
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan",
+          "snapshot_date",
+          "table_name"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "34958cc103bfee4f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3878721184ec49c9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 100,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "3ea24924e88a2420",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "4253520a71996e5c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed_with_warnings",
+          479,
+          null,
+          2265,
+          103,
+          null,
+          10,
+          "{\"tables_checked\":103,\"tables_vacuumed\":0,\"vacuumed_tables\":[],\"records_updated\":10,\"engine_health\":[{\"table_name\":\"_backup_null_lot_20261001\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":7,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"_wsib_isgta_bak_20261001\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"address_points\",\"n_live_tup\":525668,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":276,\"idx_scan\":7883045,\"seq_ratio\":0},{\"table_name\":\"address_points_cohort_bak_20261002t2313z\",\"n_live_tup\":200,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":33,\"idx_scan\":15,\"seq_ratio\":0.6875},{\"table_name\":\"address_points_cohort_bak_20261003t0138z\",\"n_live_tup\":200,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":9,\"idx_scan\":2,\"seq_ratio\":0.8182},{\"table_name\":\"address_points_retired_bak_20261003\",\"n_live_tup\":325,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":12,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"admin_audit_log\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_backup_codes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"admin_watchlist\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"archetype_cost_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"building_footprints\",\"n_live_tup\":427072,\"n_dead_tup\":6649,\"dead_ratio\":0.0156,\"seq_scan\":219,\"idx_scan\":3012265,\"seq_ratio\":0.0001},{\"table_name\":\"coa_applications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":26,\"idx_scan\":7,\"seq_ratio\":0.7879},{\"table_name\":\"cost_estimates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":2,\"seq_ratio\":0.3333},{\"table_name\":\"data_quality_snapshots\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":8,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"device_tokens\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"engine_health_snapshots\",\"n_live_tup\":1546,\"n_dead_tup\":16,\"dead_ratio\":0.0103,\"seq_scan\":24,\"idx_scan\":412,\"seq_ratio\":0.055},{\"table_name\":\"enrich_parcels_pass3_scope\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entities\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":983,\"idx_scan\":3379,\"seq_ratio\":0.2254},{\"table_name\":\"entitlements\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_contacts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"entity_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"heritage_districts\",\"n_live_tup\":29,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":120,\"idx_scan\":603,\"seq_ratio\":0.166},{\"table_name\":\"heritage_properties\",\"n_live_tup\":8848,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":25,\"idx_scan\":133177,\"seq_ratio\":0.0002},{\"table_name\":\"inspection_stage_map\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_analytics\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":2,\"seq_ratio\":0.3333},{\"table_name\":\"lead_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_trades\",\"n_live_tup\":0,\"n_dead_tup\":2,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":2,\"seq_ratio\":0},{\"table_name\":\"lead_view_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lead_views\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"lifecycle_status_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"lifecycle_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"logic_variables\",\"n_live_tup\":43,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":208,\"idx_scan\":3979,\"seq_ratio\":0.0497},{\"table_name\":\"mv_monthly_permit_stats\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"neighbourhood_build_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":5,\"seq_ratio\":0.1667},{\"table_name\":\"neighbourhood_storey_norms\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"neighbourhoods\",\"n_live_tup\":183,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":20,\"idx_scan\":702028,\"seq_ratio\":0},{\"table_name\":\"notification_dispatches\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"notifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"parcel_address_points\",\"n_live_tup\":526532,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":37,\"idx_scan\":11063675,\"seq_ratio\":0},{\"table_name\":\"parcel_address_points_retired_bak_20261003\",\"n_live_tup\":344,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":10,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"parcel_buildings\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":373,\"idx_scan\":7550147,\"seq_ratio\":0},{\"table_name\":\"parcel_cost_lines\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"parcels\",\"n_live_tup\":500144,\"n_dead_tup\":9184,\"dead_ratio\":0.0184,\"seq_scan\":1624,\"idx_scan\":7355494,\"seq_ratio\":0.0002},{\"table_name\":\"parcels_centreline_bak_20261002t1848z\",\"n_live_tup\":496510,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":3,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"parcels_centreline_bak_20261002t1854z\",\"n_live_tup\":496510,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":3,\"idx_scan\":5,\"seq_ratio\":0.375},{\"table_name\":\"parcels_centreline_bak_20261003t1441z\",\"n_live_tup\":496510,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":5,\"idx_scan\":18,\"seq_ratio\":0.2174},{\"table_name\":\"parcels_cohort_bak_20261002t2344z\",\"n_live_tup\":200,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":8,\"idx_scan\":1,\"seq_ratio\":0.8889},{\"table_name\":\"permit_history\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_inspections\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":5,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"permit_parcels\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":111,\"idx_scan\":105247,\"seq_ratio\":0.0011},{\"table_name\":\"permit_phase_transitions\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcome_rollup\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permit_scrape_outcomes\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"permit_trades\",\"n_live_tup\":0,\"n_dead_tup\":2,\"dead_ratio\":0,\"seq_scan\":7,\"idx_scan\":6,\"seq_ratio\":0.5385},{\"table_name\":\"permit_type_classifications\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"permits\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":249,\"idx_scan\":175453,\"seq_ratio\":0.0014},{\"table_name\":\"phase_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"phase_stay_calibration\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"pipeline_runs\",\"n_live_tup\":2223,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":64,\"idx_scan\":2646,\"seq_ratio\":0.0236},{\"table_name\":\"pipeline_schedules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"product_groups\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"ravines\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":88,\"idx_scan\":4278,\"seq_ratio\":0.0202},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":71,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":2,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"schema_migrations\",\"n_live_tup\":2,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":436,\"idx_scan\":12,\"seq_ratio\":0.9732},{\"table_name\":\"scope_intensity_matrix\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"scraper_queue\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"spatial_ref_sys\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":900,\"idx_scan\":2126,\"seq_ratio\":0.2974},{\"table_name\":\"stripe_webhook_events\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"subscribe_nonces\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"supplier_trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"sync_runs\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"toronto_centreline\",\"n_live_tup\":47330,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":96,\"idx_scan\":3900920,\"seq_ratio\":0},{\"table_name\":\"tracked_projects\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_configurations\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":151,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"trade_forecasts\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":1,\"idx_scan\":4,\"seq_ratio\":0.2},{\"table_name\":\"trade_mapping_rules\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_products\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_sqft_rates\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trade_suppliers\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"trades\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":6,\"seq_ratio\":0},{\"table_name\":\"universal_stream_catalog\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"universal_stream_trade_signals\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":0,\"idx_scan\":0,\"seq_ratio\":0},{\"table_name\":\"user_profiles\",\"n_live_tup\":0,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":4,\"idx_scan\":0,\"seq_ratio\":1},{\"table_name\":\"wsib_registry\",\"n_live_tup\":0,\"n_dead_tup\":800,\"dead_ratio\":0,\"seq_scan\":124,\"idx_scan\":488608,\"seq_ratio\":0.0003},{\"table_name\":\"wsib_registry_cohort_bak_20261002t2315z\",\"n_live_tup\":200,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":2,\"seq_ratio\":0.75},{\"table_name\":\"wsib_registry_cohort_bak_20261002t2316z\",\"n_live_tup\":200,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":6,\"idx_scan\":2,\"seq_ratio\":0.75},{\"table_name\":\"zoning_building_setback_overlay\",\"n_live_tup\":0,\"n_dead_tup\":48,\"dead_ratio\":0,\"seq_scan\":77,\"idx_scan\":95,\"seq_ratio\":0.4477},{\"table_name\":\"zoning_bylaw_areas\",\"n_live_tup\":11719,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":45,\"idx_scan\":94202,\"seq_ratio\":0.0005},{\"table_name\":\"zoning_height_overlay\",\"n_live_tup\":2528,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":22,\"idx_scan\":20987,\"seq_ratio\":0.001},{\"table_name\":\"zoning_lot_coverage_overlay\",\"n_live_tup\":1242,\"n_dead_tup\":68,\"dead_ratio\":0.0548,\"seq_scan\":36,\"idx_scan\":10406,\"seq_ratio\":0.0034},{\"table_name\":\"zoning_parking_zone_overlay\",\"n_live_tup\":913,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":55,\"idx_scan\":7779,\"seq_ratio\":0.007},{\"table_name\":\"zoning_policy_area_overlay\",\"n_live_tup\":352,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":79,\"idx_scan\":3099,\"seq_ratio\":0.0249},{\"table_name\":\"zoning_policy_road_overlay\",\"n_live_tup\":8913,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":22,\"idx_scan\":71587,\"seq_ratio\":0.0003},{\"table_name\":\"zoning_priority_retail_overlay\",\"n_live_tup\":643,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":55,\"idx_scan\":5332,\"seq_ratio\":0.0102},{\"table_name\":\"zoning_queenstw_eat_overlay\",\"n_live_tup\":4,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":82,\"idx_scan\":119,\"seq_ratio\":0.408},{\"table_name\":\"zoning_rooming_house_overlay\",\"n_live_tup\":506,\"n_dead_tup\":0,\"dead_ratio\":0,\"seq_scan\":74,\"idx_scan\":4890,\"seq_ratio\":0.0149}],\"config\":{\"engine_health_dead_tuple_ratio_warn_max\":0.1,\"engine_health_seq_scan_ratio_warn_max\":0.8,\"engine_health_seq_scan_min_rows\":10000,\"engine_health_ping_pong_ratio_warn_max\":10,\"engine_health_insp_dead_tuple_fail_pct\":10,\"engine_health_insp_update_insert_fail_ratio\":5,\"engine_health_dead_tuple_min_rows\":1000},\"terminal\":\"recorded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"seq_scan_ratio_high: [{\\\"idx\\\":0,\\\"seq\\\":3,\\\"seq_ratio\\\":1,\\\"table\\\":\\\"parcels_centreline_bak_20261002t1848z\\\"}]\",\"update_ping_pong_high: [{\\\"ins\\\":326,\\\"ratio\\\":19.8,\\\"table\\\":\\\"address_points\\\",\\\"upd\\\":6462},{\\\"ins\\\":5,\\\"ratio\\\":17,\\\"table\\\":\\\"neighbourhoods\\\",\\\"upd\\\":85}]\"],\"audit_table\":{\"phase\":0,\"name\":\"Engine Health & Volume Volatility\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dead_tuple_ratio_high\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"seq_scan_ratio_high\",\"value\":[{\"table\":\"parcels_centreline_bak_20261002t1848z\",\"seq_ratio\":1,\"seq\":3,\"idx\":0}],\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"update_ping_pong_high\",\"value\":[{\"table\":\"address_points\",\"ratio\":19.8,\"upd\":6462,\"ins\":326},{\"table\":\"neighbourhoods\",\"ratio\":17,\"upd\":85,\"ins\":5}],\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"insp_dead_tuple_pct\",\"value\":{\"live\":0,\"dead\":0,\"deadPct\":0,\"uiRatio\":0,\"lastAutovacuum\":null},\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"insp_update_insert_ratio\",\"value\":{\"live\":0,\"dead\":0,\"deadPct\":0,\"uiRatio\":0,\"lastAutovacuum\":null},\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"coa_dead_tuple_pct\",\"value\":{\"live\":0,\"dead\":0,\"deadPct\":0,\"uiRatio\":0,\"lastAutovacuum\":null},\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"engine_health_write_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"engine_health_vacuum_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"duplicate_snapshot_key_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"before_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"pg_stat_user_tables\":154,\"permit_inspections\":816,\"coa_applications\":33400},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_duplicate_snapshot_key_count_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":215.48,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":478,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "assert_engine_health",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 7,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c2f235fe83c1f3e8",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "engine_health_snapshots": [
+          "snapshot_date",
+          "table_name"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e923f9ba2635da6b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 103,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [
+    "23265920758bf06c",
+    "528151b0515ba432",
+    "6447cd32076ed957"
+  ],
+  "touched": {
+    "reads": {
+      "coa_applications": [],
+      "engine_health_snapshots": [
+        "captured_at",
+        "dead_ratio",
+        "idx_scan",
+        "n_dead_tup",
+        "n_live_tup",
+        "seq_ratio",
+        "seq_scan",
+        "snapshot_date",
+        "table_name"
+      ],
+      "permit_inspections": []
+    },
+    "writes": {
+      "engine_health_snapshots": [
+        "captured_at",
+        "dead_ratio",
+        "idx_scan",
+        "n_dead_tup",
+        "n_live_tup",
+        "seq_ratio",
+        "seq_scan",
+        "snapshot_date",
+        "table_name"
+      ]
+    }
+  },
+  "errors": []
+}

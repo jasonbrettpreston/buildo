@@ -22,12 +22,10 @@
     "reads": {
       "steps": [
         {
-          "step": "load_centreline",
-          "version_pin": "exact"
+          "step": "load_centreline"
         },
         {
-          "step": "parcels",
-          "version_pin": "gte"
+          "step": "parcels"
         }
       ],
       "tables": [
@@ -135,24 +133,18 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step"
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "not_applicable",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [
       {
         "table": "parcels",
         "column": "centreline_dataset_version_when_enriched",
-        "when": "load_parcels' #418 DEC-FENCE2 NULLs the stamp when a parcel's geom changes (scripts/load-parcels.descriptor.json, set_null_on_change_of geom), which makes a moved parcel stale for the next incremental run. An address-only change does NOT re-stale (EC-D3, declared limitation). A load_centreline source_dataset_version change stales every parcel through the mode gate (full mode), not through this column."
+        "when": "trg_parcels_geom_invalidation (the LDG-10 O2-A fifth-arm migration) NULLs the stamp on ANY write that changes a parcel's geom, which makes a moved parcel stale for the next incremental run; load_parcels' #418 DEC-FENCE2 arm (scripts/load-parcels.descriptor.json, set_null_on_change_of geom) is KEPT as the loader-path fence. An address-only change does NOT re-stale (EC-D3, declared limitation). A load_centreline source_dataset_version change stales every parcel through the mode gate (full mode), not through this column.",
+        "by": "trigger",
+        "trigger": "parcels.trg_parcels_geom_invalidation"
       }
     ],
-    "publish": "none",
     "write_inventory": {
       "statements": 1,
       "why": {
@@ -165,7 +157,6 @@
     }
   },
   "staleness": {
-    "scope": "valid-geom parcels whose centreline_dataset_version_when_enriched IS DISTINCT FROM the producer's current source_dataset_version (incremental); all valid-geom parcels (full); none (skip)",
     "trigger": [
       {
         "signal": "always",
@@ -173,14 +164,23 @@
       }
     ],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": [
       "scripts/lib/compute/enrich-centreline.js"
     ],
     "logic_version": "none",
-    "on_fingerprint_change": "run"
+    "on_fingerprint_change": "run",
+    "pins": [
+      {
+        "step": "load_centreline",
+        "stamp": "records_meta.centreline_load.spec_version",
+        "equals": "1.1",
+        "why": {
+          "text": "Spec 62 §9 contract pin (L10): readCentrelineContract HALTs unless the producer's stamped spec_version equals this value; read from this descriptor by scripts/lib/compute/enrich-centreline.js",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-centreline.js" }
+        }
+      }
+    ]
   },
   "guards": {
     "requires": [
@@ -303,11 +303,16 @@
             "ref": "parcels.centreline_dataset_version_when_enriched"
           }
         }
+      },
+      {
+        "kind": "trigger",
+        "name": "parcels.trg_parcels_geom_invalidation",
+        "on_missing": "fail"
       }
     ],
     "srid": "none",
     "empty_source": "toronto_centreline",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "execution": {
     "shape": "enrich",
@@ -328,15 +333,10 @@
         "timeout_minutes_from_config": "enrich_centreline_phase_timeout_minutes"
       }
     ],
-    "budget": "100m",
     "txn_scope": "step",
-    "txn_budget": "95m",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "240m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "atomic",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -348,7 +348,6 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "maintenance": "none",
     "invocation": {
@@ -712,7 +711,7 @@
       ],
       "accept_until": "none",
       "why": {
-        "text": "Ported by name from the legacy reduced-mode row (:450); null in full mode (additive, explained diff).",
+        "text": "Ported by name from the legacy reduced-mode row (:450); null in full mode (additive, explained diff). Normal (EC-D2): a steady, non-zero stale count on unchanged days is the never-linked out-of-range tail (plus any newly loaded parcels), not churn; it shrinks only when load_parcels adds or moves parcels near a street. Suspicious: an incremental run whose count is far above the usual tail size with no new load_parcels geometry means something NULLed the stamps in bulk (a manual reset, a load_parcels fence change); the run is correct but the cause needs a name.",
         "liveness": {
           "kind": "column",
           "ref": "parcels.centreline_dataset_version_when_enriched"
@@ -796,18 +795,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": {
-        "value": 0,
-        "at": "2026-09-30T00:00:00.000Z",
-        "commit": "enrich-centreline-commit-1",
-        "cost_ms": 1500,
-        "sample_n": 1,
-        "source_run": {
-          "run_id": null,
-          "chain": null,
-          "event": "manual_timing"
-        }
-      },
+      "last_measured": { "value": 0, "at": "2026-10-05T19:25:20.357Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 904, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan Fold A7 (iv): a corner or through lot abuts two NAMED streets (both names NOT NULL), so the frontage resolution always has a candidate. A port error in parcel_frontage or the final SELECT breaks this while every count row stays green. WARN (additive row, never a new FAIL). MEASURED 0 on the local dev DB, 2026-09-30. Fold A7 (iii) is structural in the SQL (new_is_through_lot requires seg_count >= 2) and not table-checkable: parcels stores no segment count.",
         "liveness": {
@@ -829,18 +817,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a floor on the corner share of the parcel fabric; a collapse below it means the node-share or abut-both rule stopped matching. Measured 11.01%.",
-      "last_measured": {
-        "value": 11.01,
-        "at": "2026-09-30T00:00:00.000Z",
-        "commit": "enrich-centreline-commit-1",
-        "cost_ms": 1500,
-        "sample_n": 1,
-        "source_run": {
-          "run_id": null,
-          "chain": null,
-          "event": "manual_timing"
-        }
-      },
+      "last_measured": { "value": 11.2569963485053, "at": "2026-10-05T19:25:20.357Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 1472, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4 (WARN only, after A7): corner share in [8, 14]% of geom-bearing parcels (4-way + T ceiling ~13%). The #431 over-flag class read 24%; a collapse reads near 0.",
         "liveness": {
@@ -860,18 +837,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — the ceiling that catches the #431 over-flag class (the 20 m radius alone read 24%). Measured 11.01%.",
-      "last_measured": {
-        "value": 11.01,
-        "at": "2026-09-30T00:00:00.000Z",
-        "commit": "enrich-centreline-commit-1",
-        "cost_ms": 1500,
-        "sample_n": 1,
-        "source_run": {
-          "run_id": null,
-          "chain": null,
-          "event": "manual_timing"
-        }
-      },
+      "last_measured": { "value": 11.2569963485053, "at": "2026-10-05T19:25:20.357Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 1527, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: the mirror of centreline_corner_share_min_pct.",
         "liveness": {
@@ -891,18 +857,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — a floor on the through-lot share; a collapse means the parallel / opposite-sides rule stopped matching. Measured 0.96%.",
-      "last_measured": {
-        "value": 0.96,
-        "at": "2026-09-30T00:00:00.000Z",
-        "commit": "enrich-centreline-commit-1",
-        "cost_ms": 1500,
-        "sample_n": 1,
-        "source_run": {
-          "run_id": null,
-          "chain": null,
-          "event": "manual_timing"
-        }
-      },
+      "last_measured": { "value": 1.00481562267753, "at": "2026-10-05T19:25:20.357Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 1531, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: through share in [0.2, 3]% of geom-bearing parcels.",
         "liveness": {
@@ -922,18 +877,7 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "never — the ceiling that catches the #431-FU class (named rear laneways counted as a second frontage read 11.3%). Measured 0.96%.",
-      "last_measured": {
-        "value": 0.96,
-        "at": "2026-09-30T00:00:00.000Z",
-        "commit": "enrich-centreline-commit-1",
-        "cost_ms": 1500,
-        "sample_n": 1,
-        "source_run": {
-          "run_id": null,
-          "chain": null,
-          "event": "manual_timing"
-        }
-      },
+      "last_measured": { "value": 1.00481562267753, "at": "2026-10-05T19:25:20.357Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 1531, "sample_n": 3, "source_run": { "run_id": null, "chain": "sources", "event": "golden_capture" } },
       "why": {
         "text": "Plan §7 / D4: the mirror of centreline_through_share_min_pct.",
         "liveness": {
@@ -953,7 +897,8 @@
       "key": "centreline_enrich",
       "type": "object",
       "consumers": [
-        "enrich_centreline"
+        "enrich_centreline",
+        "scripts/analysis/enrich-centreline-cohort-differential.js"
       ]
     },
     {
@@ -1075,8 +1020,7 @@
     }
   ],
   "interpretation": {
-    "file": "enrich-centreline.notes.json",
-    "entries": 9
+    "file": "enrich-centreline.notes.json"
   },
   "recovery": {
     "reset": "No TRUNCATE/rebuild mechanism and none is needed — NULLing parcels.centreline_dataset_version_when_enriched for a scoped set of parcels makes the next incremental run recompute exactly those; ENRICH_CENTRELINE_FORCE_FULL recomputes every valid-geom parcel.",
@@ -1110,7 +1054,6 @@
   "counters": {
     "records_total": {
       "source": "matched.compute.parcels_scanned",
-      "scoped_by": "step",
       "why": {
         "text": "A4 ruling (ENRICHER precedent) + plan Fold A8: the population this mode scanned — full: valid-geom parcels; incremental: the stale count the gate measured; skip: 0. The legacy emitted null (explained diff).",
         "liveness": {
@@ -1121,7 +1064,6 @@
     },
     "records_new": {
       "source": "matched.compute.records_new_aggregate",
-      "scoped_by": "step",
       "why": {
         "text": "This step INSERTs nothing — class N's executor refuses INSERT INTO / ON CONFLICT text. A finite literal 0 rather than the legacy null, because null reads as 'not counted' (explained diff).",
         "liveness": {
@@ -1132,7 +1074,6 @@
     },
     "records_updated": {
       "source": "written.e1.updated",
-      "scoped_by": "step",
       "why": {
         "text": "COUNTER-ROOT: the rowCount of the sole declared write target, owned by the ctx.joinUpdate seam — one-to-one with the legacy records_updated: rowCount.",
         "liveness": {
@@ -1270,7 +1211,7 @@
     "varies_by_chain": {
       "checks": "none",
       "phase": {
-        "sources": 64
+        "sources": 14
       },
       "audit_table": "one",
       "scope": "none"

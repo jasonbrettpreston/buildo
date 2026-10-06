@@ -174,9 +174,9 @@ function d(): Record<string, unknown> {
   descriptor.invariants = 'none';
   descriptor.plausibility = 'none';
   descriptor.counters = {
-    records_total: { source: 'written.inserted + written.updated', scoped_by: 'source_id' },
-    records_new: { source: 'written.inserted', scoped_by: 'source_id' },
-    records_updated: { source: 'written.updated', scoped_by: 'source_id' },
+    records_total: { source: 'written.inserted + written.updated' },
+    records_new: { source: 'written.inserted' },
+    records_updated: { source: 'written.updated' },
   };
   return descriptor as unknown as Record<string, unknown>;
 }

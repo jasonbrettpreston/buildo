@@ -844,11 +844,29 @@ function buildWritePlan(writeSpec, descriptor) {
   // `parcel_buildings`'s real conflict target `(parcel_id, building_id)` be declared at
   // all. Widening it silently would be the failure the original throw guarded against:
   // a scoped DELETE that retracts by half a key.
-  if (keys.length > 1 && retract === 'departed') {
-    throw new Error(`[write_discipline] ${table}: retract "departed" is not supported on a composite key `
+  if (keys.length > 1 && (retract === 'departed' || retract === 'departed_mark')) {
+    throw new Error(`[write_discipline] ${table}: retract "${retract}" is not supported on a composite key `
       + `(declared key: ${keys.join(', ')}). The departure DELETE casts a SINGLE key array `
       + `(<key> <> ALL($1::${keyType}[])), which cannot express a tuple — it would retract by half a key. `
       + 'Declare a single-column key, or retract "all" with a write_discipline.scope, or extend write.js first.');
+  }
+  // registry-truth fold 10 (operator ruling 2026-10-03) — soft-retire: departed keys are
+  // MARKED (`retired_at = now()`), never deleted; a reappearing key is UNMARKED.
+  //
+  // Both refusals below are DECLARATION defects, not data conditions: the three MARK/UNMARK/
+  // candidates statements index ONE key column (`keys[0]`) and write ONE column (`retired_at`),
+  // and they run only from `executeWrite`'s ARM 0 — after the guarded upsert, inside the same
+  // transaction. A different class has a different executor that never issues them, so the
+  // declaration would be a promise nothing keeps.
+  if (retract === 'departed_mark' && writeSpec.write_discipline.class !== 'guarded_upsert') {
+    throw new Error(`[write_discipline] ${table}: retract "departed_mark" is supported only on write_discipline.class guarded_upsert (declared: ${writeSpec.write_discipline.class}). The soft-retire MARK/UNMARK statements run after the guarded upsert inside executeWrite; no other executor issues them.`);
+  }
+  // The column the MARK/UNMARK statements write, and why it must be `insert_only`: the upsert
+  // never binds it (the INSERT seeds NULL — a new key is live), so a step-bound `retired_at`
+  // would be in the `DO UPDATE SET` and let a reload WIPE a retirement the guard just set.
+  if (retract === 'departed_mark'
+    && !writeSpec.columns.some((c) => c.name === 'retired_at' && c.written === 'insert_only')) {
+    throw new Error(`[write_discipline] ${table}: retract "departed_mark" requires a declared retired_at column with written "insert_only" — the upsert seeds it NULL on INSERT and never rewrites it on conflict; only the MARK/UNMARK statements change it.`);
   }
   if (keys.length > 1 && geometryColumns.length > 0) {
     throw new Error(`[write_discipline] ${table}: a wkb_geometry column with a composite key `
@@ -1304,6 +1322,18 @@ function buildWritePlan(writeSpec, descriptor) {
           ? `DELETE FROM ${table};`
           : `DELETE FROM ${table} WHERE ${scope};`)
         : null),
+    // ── `retract: "departed_mark"` — the SOFT-RETIRE statements (fold 10) ─────────
+    // `delete_sql` stays `null` for this axis (the ternary above yields null for any retract
+    // other than 'departed'/'all'): a departed key is MARKED, never deleted.
+    //
+    // The guard is the change predicate (`retired_at IS NULL` on MARK keeps the FIRST
+    // retirement stamp; `IS DISTINCT FROM NULL` on UNMARK touches only retired rows), so an
+    // unchanged source writes zero rows. All three read `$1` = the key array of the rows THIS
+    // run carried, and all three index the single key column (`keys[0]` — a composite key was
+    // refused above).
+    mark_sql: retract === 'departed_mark' ? `UPDATE ${table} SET retired_at = now() WHERE ${keys[0]} <> ALL($1::${keyType}[]) AND retired_at IS NULL;` : null,
+    unmark_sql: retract === 'departed_mark' ? `UPDATE ${table} SET retired_at = NULL WHERE ${keys[0]} = ANY($1::${keyType}[]) AND retired_at IS DISTINCT FROM NULL;` : null,
+    mark_candidates_sql: retract === 'departed_mark' ? `SELECT count(*) FILTER (WHERE ${keys[0]} <> ALL($1::${keyType}[]) AND retired_at IS NULL)::bigint AS candidates, count(*) FILTER (WHERE retired_at IS NULL)::bigint AS active FROM ${table};` : null,
     // Not a string, so it is never mistaken for a statement: the batched builder.
     upsertSqlFor: (rowCount) => head
       + Array.from({ length: rowCount }, (_, r) => valuesGroup(1 + r * stepColumns.length)).join(', ')
@@ -1475,7 +1505,7 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
  *   write-discipline check reads, including `rows_scanned` / `rows_changed`.
  */
 async function executeWrite(pool, {
-  plan, writeSpec, carried, columnValues, shouldSkipDelete, log, tag,
+  plan, writeSpec, carried, columnValues, shouldSkipDelete, retireMaxPct, log, tag,
 }) {
   const keyColumn = plan.keys[0];
   const loadedKeys = carried.map((r) => r[keyColumn]);
@@ -1483,6 +1513,16 @@ async function executeWrite(pool, {
   let updated = 0;
   let deleted = 0;
   let deleteSkippedEmptyGuard = false;
+  // fold 10 soft-retire counters. Declared unconditionally (never inside the ARM 0 branch) so
+  // the returned object's spread below reads a bound name; the keys themselves are only added
+  // to the result when `plan.mark_sql` is truthy, so every non-departed_mark plan's result
+  // shape is byte-identical to the pre-fold one.
+  let retired = 0;
+  let unretired = 0;
+  let retireCandidates = 0;
+  let retirePct = 0;
+  let retireSuppressedMassGuard = false;
+  let retireSkippedEmptyGuard = false;
 
   const batchSize = pipeline.maxRowsPerInsert(plan.columnsPerRow);
   await pipeline.withTransaction(pool, async (client) => {
@@ -1503,7 +1543,53 @@ async function executeWrite(pool, {
     // ARM 2 — the empty-set guard, because `<> ALL('{}')` matches every row and
     // would retract the entire table on an empty parse.
     // ARM 3 — retract: departed — the scoped departure DELETE.
-    if (!plan.delete_sql) {
+    // ARM 0 — `retract: "departed_mark"` (fold 10, operator ruling 2026-10-03): the
+    // SOFT-RETIRE. It runs FIRST in the gate chain and is selected by `plan.mark_sql`
+    // ALONE, never by the retract string — a plan without the statement falls straight
+    // through to the class-A/B arms below, byte-identically.
+    //
+    // FAIL CLOSED before anything else: the bound must be a RESOLVED number. "I have no
+    // bound" is not "the bound is 1.0" — a missing config row must refuse the run rather
+    // than silently marking (or silently not marking).
+    //
+    // The empty-set guard HERE is LIBRARY-owned and is NOT the compute's `shouldSkipDelete`:
+    // `<> ALL('{}')` matches every row, so zero carried rows would retire the WHOLE table.
+    // Calling the compute predicate in this arm would be a per-caller escape hatch over a
+    // property of the declared write class, and the SR7/SR8/SR9/SR10 locks pass a
+    // `shouldSkipDelete` that THROWS if it is ever consulted here.
+    //
+    // The mass-retire guard is the mass-delete threshold pattern: departed over prior
+    // ACTIVE rows, `pct <=` passes AT the bound (the fleet's pct grammar), and the bound
+    // comes from a declared logic variable (`retire_max_pct_from_config`) — raising that
+    // variable is the acknowledgement for a genuine mass retirement.
+    if (plan.mark_sql) {
+      if (typeof retireMaxPct !== 'number' || !Number.isFinite(retireMaxPct)) {
+        throw new Error(`[write_discipline] ${plan.table}: retract "departed_mark" needs a resolved retire_max_pct (the logic variable named by retire_max_pct_from_config); got ${retireMaxPct}`);
+      }
+      if (loadedKeys.length === 0) {
+        retireSkippedEmptyGuard = true;
+        log.warn(tag, 'empty-set guard: the soft-retire MARK/UNMARK was suppressed');
+      } else {
+        // 1. UNMARK first: a carried row that is active again is revived regardless of
+        //    whether the retire below is suppressed — the suppression is about DESTROYING
+        //    too much, not about reviving too little.
+        const un = await client.query(plan.unmark_sql, [loadedKeys]);
+        unretired = un.rowCount || 0;
+        // 2. The candidates SELECT — the count the guard MEASURES, before the MARK runs.
+        const cand = await client.query(plan.mark_candidates_sql, [loadedKeys]);
+        retireCandidates = Number(cand.rows[0].candidates) || 0;
+        const active = Number(cand.rows[0].active) || 0;
+        retirePct = active > 0 ? retireCandidates / active : 0;
+        // 3. The MARK — only if the measured ratio is inside the declared bound.
+        if (retirePct > retireMaxPct) {
+          retireSuppressedMassGuard = true;
+          log.warn(tag, `mass-retire guard: ${retireCandidates}/${active} (${retirePct}) > ${retireMaxPct} — the MARK was suppressed`);
+        } else {
+          const m = await client.query(plan.mark_sql, [loadedKeys]);
+          retired = m.rowCount || 0;
+        }
+      }
+    } else if (!plan.delete_sql) {
       // Class A: no retraction declared. Nothing to do — deliberately silent: a
       // warn here would fire on every clean class-A run and drown the guard's.
     } else if (shouldSkipDelete(loadedKeys)) {
@@ -1534,6 +1620,10 @@ async function executeWrite(pool, {
     expected_change_ratio: writeSpec.write_discipline.expected_change_ratio,
     idempotent_rerun: writeSpec.write_discipline.idempotent_rerun,
     delete_skipped_empty_guard: deleteSkippedEmptyGuard,
+    // fold 10 soft-retire counters — present ONLY on a `departed_mark` plan (`plan.mark_sql`
+    // is the axis's own switch), so every other plan's `ctx.written` block is byte-identical
+    // to the pre-fold one (SR12 pins the absence of `retired` on the retract-none target).
+    ...(plan.mark_sql ? { retired, unretired, retire_candidates: retireCandidates, retire_pct: retirePct, retire_suppressed_mass_guard: retireSuppressedMassGuard, retire_skipped_empty_guard: retireSkippedEmptyGuard, retire_max_pct: retireMaxPct } : {}),
   };
 }
 
@@ -2074,7 +2164,46 @@ async function executeStagingReplace(pool, {
   };
 }
 
+/**
+ * P3-C1 #17 (registry-truth Phase 3 WIRE, PLAN :238; FLEET-2 A-2) — the POST-WRITE vocabulary
+ * measurement. For every declared write column whose `vocabulary` is an object, read the stored
+ * distinct non-NULL values back and compare them with the declared closed set: one audit row per
+ * column, INFO when every value is declared, otherwise FAIL (`on_unknown: "fail"`), WARN
+ * (`"warn"`) or FAIL (`"quarantine"` — no executor and no declarer exists, so it takes the
+ * strictest arm). Before this, `on_unknown` had zero readers (trust audit row 77).
+ *
+ * @param {{query: Function}} pool
+ * @param {object} descriptor
+ * @returns {Promise<Array<object>>}
+ */
+async function vocabularyRows(pool, descriptor) {
+  const out = descriptor && descriptor.outputs;
+  if (!out || out === 'none' || !Array.isArray(out.writes)) return [];
+  const rows = [];
+  for (const w of out.writes) {
+    for (const c of (w && Array.isArray(w.columns) ? w.columns : [])) {
+      const vocab = c && c.vocabulary;
+      if (!vocab || typeof vocab !== 'object' || !Array.isArray(vocab.values)) continue;
+      const declared = new Set(vocab.values.map(String));
+      const { rows: found } = await pool.query(
+        `SELECT DISTINCT ${c.name}::text AS v FROM ${w.table} WHERE ${c.name} IS NOT NULL`,
+      );
+      const values = (found || []).map((r) => String(r.v));
+      const unknown = [...new Set(values.filter((v) => !declared.has(v)))].sort();
+      const metric = `vocabulary:${w.table}.${c.name}`;
+      const threshold = `every stored value is a declared vocabulary value (on_unknown: ${vocab.on_unknown})`;
+      if (unknown.length === 0) {
+        rows.push({ metric, value: `within declared values (${values.length} distinct)`, threshold, status: 'INFO' });
+      } else {
+        rows.push({ metric, value: `unknown: ${unknown.join(', ')}`, threshold, status: vocab.on_unknown === 'warn' ? 'WARN' : 'FAIL', source: 'gate' });
+      }
+    }
+  }
+  return rows;
+}
+
 module.exports = {
+  vocabularyRows,
   buildWritePlan,
   generateWriteSql,
   targetKey,

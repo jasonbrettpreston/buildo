@@ -1,0 +1,55 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "red",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "pre-edit copies of scripts/lib/step/index.js, write.js and scripts/lib/compute/refresh-snapshot.js swapped in, then restored (cmp-verified)",
+ "tests": [
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V1 — on_unknown:\"fail\" turns a stored value outside the declared set into a FAIL gate row",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V2 — on_unknown:\"warn\" reports the same unknowns as a WARN gate row, never a FAIL",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V3 — on_unknown:\"quarantine\" takes the strictest arm (FAIL) until an executor exists",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V4 — a column whose every stored value is declared reads INFO with its distinct count",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V5 — SQL shape: exactly one DISTINCT read, for the vocabulary column only",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V6 — outputs:\"none\" yields no rows and runs no statement",
+   "status": "failed",
+   "failure": "TypeError: write.vocabularyRows is not a function"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V7 — the four real descriptors declare their vocabularies as OBJECTS with on_unknown:\"fail\"",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V8 — runWithPool calls write.vocabularyRows AFTER compute and folds it into extraRows",
+   "status": "failed",
+   "failure": "AssertionError: the post-write vocabulary read is wired into runWithPool: expected -1 to be greater than -1"
+  }
+ ]
+}

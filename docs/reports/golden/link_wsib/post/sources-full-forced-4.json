@@ -3,26 +3,29 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-wsib.js",
   "chain": "sources",
-  "git_head": "c5ec4d91bd60cdf1ef91c2601f30178fb11dc41f",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
     "records_total": 120244,
-    "records_new": 548,
-    "records_updated": 548,
+    "records_new": 0,
+    "records_updated": 0,
     "records_meta": {
-      "duration_ms": 457132,
+      "duration_ms": 124578,
       "unlinked_start": 120244,
-      "run_matched": 548,
+      "run_matched": 0,
       "matches_tier_1_trade": 0,
       "matches_tier_2_legal": 0,
-      "matches_tier_3_fuzzy": 548,
-      "no_match_count": 119696,
+      "matches_tier_3_fuzzy": 0,
+      "no_match_count": 120244,
       "threshold_updated_at": "2026-06-10T14:01:54.545Z",
+      "tier1_confidence_updated_at": "2026-08-28T18:24:11.177Z",
+      "tier2_confidence_updated_at": "2026-08-28T18:24:11.182Z",
+      "tier3_confidence_updated_at": "2026-08-28T18:24:11.186Z",
       "is_wsib_registered_corrected": 0,
       "wsib_registry_count": "121116",
       "gate": {
-        "reason": "force_full_env",
+        "reason": "full_rescan",
         "gated_skip": false
       },
       "config": {
@@ -32,18 +35,21 @@
         "link_wsib_tier2_confidence": 0.9,
         "link_wsib_tier3_confidence": 0.6,
         "link_wsib_entity_fanin_warn": 20,
-        "link_wsib_tier3_full_max_iterations": 20,
-        "link_wsib_tier3_token_overlap_fail_pct": 50
+        "link_wsib_tier3_token_overlap_fail_pct": 50,
+        "link_wsib_mass_relink_max_pct": 0.1
       },
       "terminal": "linked_incremental",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
       "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
-        "phase": 19,
+        "phase": 20,
         "name": "WSIB Registry Matching",
         "verdict": "PASS",
         "rows": [
@@ -51,68 +57,78 @@
             "metric": "gate_decision",
             "value": {
               "mode": "full",
-              "reason": "force_full_env",
+              "reason": "full_rescan",
               "gated_skip": false
             },
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "override_force_full_present",
             "value": true,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
-            "metric": "full_repair_empty_source_guard",
+            "metric": "link_wsib_mass_relink_pct",
             "value": {
-              "mode": "full",
-              "entities_count": 3948
+              "set": 0,
+              "move": 0,
+              "vanish": 0,
+              "linked_start": 872
             },
-            "threshold": "viol == 0",
+            "threshold": "pct <= 0.1",
             "status": "PASS",
             "source": "check",
             "order_guarantee": {
-              "anchor": "abort BEFORE that retraction runs whenever the `entities` corpus is empty",
-              "guarantee": "A-7/LG-16's full-mode repair must abort BEFORE that retraction runs whenever the `entities` corpus is empty, or it would retract every tier-3 link and repair nothing."
-            }
+              "anchor": "60:stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays",
+              "guarantee": "link_wsib must abort BEFORE any link write whenever the moved + vanished links exceed the configured fraction of the links held at run start, unless LINK_WSIB_ACCEPT_MASS_RELINK accepts it."
+            },
+            "observed": "before_write"
           },
           {
             "metric": "unlinked_start",
             "value": 120244,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "tier_1_trade_matches",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "tier_2_legal_matches",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "tier_3_fuzzy_matches",
-            "value": 548,
+            "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "no_match",
-            "value": 119696,
+            "value": 120244,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "link_rate_warn",
@@ -124,7 +140,8 @@
             },
             "threshold": "pct >= 5",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "entity_fanin_warn",
@@ -134,7 +151,8 @@
             },
             "threshold": "viol <= 20",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "tier3_token_overlap",
@@ -143,215 +161,214 @@
             },
             "threshold": "pct >= 50",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "orphan_linked_entity_id",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "confidence_outside_closed_set",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "dead_bucket_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "registered_entities_with_zero_links",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "is_wsib_registered_corrected",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "tier3_full_not_converged",
-            "value": {
-              "retracted": 548,
-              "contacts_cleared": 0,
-              "iterations": 2,
-              "relinked_total": 548,
-              "exhausted": false
-            },
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "tier3_full_iterations",
-            "value": {
-              "iterations": 2,
-              "relinked_total": 548
-            },
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "contacts_cleared_on_retraction",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "write_privilege",
             "value": "bypassrls=true policies=0",
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_tier3_current_predicate_pass_rate_pct",
             "value": 100,
             "threshold": "value_max 100",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_entity_fanin_p99",
             "value": 10,
             "threshold": "value_min 0",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_magnet_entities_fanin_ge_10",
             "value": 7,
             "threshold": "value_min 0",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_orphan_linked_entity_id",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_registry_total_rows",
             "value": 121116,
             "threshold": "value_min 0",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "entities_wsib_registered_count",
             "value": 301,
             "threshold": "value_min 0",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_registered_entities_without_exact_tier_link",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_tier_confidence_split",
             "value": "unevaluable: check reported no numeric value for value_min",
             "threshold": "value_min 0",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "wsib_cumulative_link_rate_pct",
             "value": 0.72,
             "threshold": "value_max 100",
             "status": "INFO",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
-            "metric": "before_image_written:wsib_registry",
+            "metric": "empty_source_guard",
             "value": {
-              "path": "docs/reports/golden/link_wsib/before-image/2026-09-26T13-49-20.559Z-wsib_registry.jsonl",
-              "rows": 548
+              "entities": 3948
             },
-            "threshold": null,
+            "threshold": "guards.empty_source table(s) non-empty",
+            "status": "INFO"
+          },
+          {
+            "metric": "vocabulary:wsib_registry.match_confidence",
+            "value": "within declared values (3 distinct)",
+            "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_tier3_current_predicate_pass_rate_pct_duration_ms",
-            "value": 46,
+            "value": 8,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_entity_fanin_p99_duration_ms",
-            "value": 452,
+            "value": 20,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_magnet_entities_fanin_ge_10_duration_ms",
-            "value": 474,
+            "value": 20,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_orphan_linked_entity_id_duration_ms",
-            "value": 474,
+            "value": 21,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_registry_total_rows_duration_ms",
-            "value": 103,
+            "value": 28,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_entities_wsib_registered_count_duration_ms",
-            "value": 25,
+            "value": 3,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_registered_entities_without_exact_tier_link_duration_ms",
-            "value": 31,
+            "value": 4,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_tier_confidence_split_duration_ms",
-            "value": 114,
+            "value": 28,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_cumulative_link_rate_pct_duration_ms",
-            "value": 182,
+            "value": 31,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 262.59,
+            "value": 964.07,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 457922,
+            "value": 124725,
             "threshold": null,
             "status": "INFO"
           }
@@ -402,10 +419,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=245 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (force_full_env)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":548,\"records_updated\":548,\"records_meta\":{\"duration_ms\":457132,\"unlinked_start\":120244,\"run_matched\":548,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":548,\"no_match_count\":119696,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"is_wsib_registered_corrected\":0,\"wsib_registry_count\":\"121116\",\"gate\":{\"reason\":\"force_full_env\",\"gated_skip\":false},\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_full_max_iterations\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"force_full_env\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"full_repair_empty_source_guard\",\"value\":{\"mode\":\"full\",\"entities_count\":3948},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE that retraction runs whenever the `entities` corpus is empty\",\"guarantee\":\"A-7/LG-16's full-mode repair must abort BEFORE that retraction runs whenever the `entities` corpus is empty, or it would retract every tier-3 link and repair nothing.\"}},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":548,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"no_match\",\"value\":119696,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"tier3_full_not_converged\",\"value\":{\"retracted\":548,\"contacts_cleared\":0,\"iterations\":2,\"relinked_total\":548,\"exhausted\":false},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"tier3_full_iterations\",\"value\":{\"iterations\":2,\"relinked_total\":548},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"wsib_tier3_current_predicate_pass_rate_pct\",\"value\":100,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_entity_fanin_p99\",\"value\":10,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_magnet_entities_fanin_ge_10\",\"value\":7,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"wsib_registry_total_rows\",\"value\":121116,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"entities_wsib_registered_count\",\"value\":301,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_registered_entities_without_exact_tier_link\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"wsib_tier_confidence_split\",\"value\":\"unevaluable: check reported no numeric value for value_min\",\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"wsib_cumulative_link_rate_pct\",\"value\":0.72,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\"},{\"metric\":\"before_image_written:wsib_registry\",\"value\":{\"path\":\"docs/reports/golden/link_wsib/before-image/2026-09-26T13-49-20.559Z-wsib_registry.jsonl\",\"rows\":548},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier3_current_predicate_pass_rate_pct_duration_ms\",\"value\":46,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_entity_fanin_p99_duration_ms\",\"value\":452,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_magnet_entities_fanin_ge_10_duration_ms\",\"value\":474,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_orphan_linked_entity_id_duration_ms\",\"value\":474,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registry_total_rows_duration_ms\",\"value\":103,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_entities_wsib_registered_count_duration_ms\",\"value\":25,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registered_entities_without_exact_tier_link_duration_ms\",\"value\":31,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier_confidence_split_duration_ms\",\"value\":114,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_cumulative_link_rate_pct_duration_ms\",\"value\":182,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":262.59,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":457922,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 457.9s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=247 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":124578,\"unlinked_start\":120244,\"run_matched\":0,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":0,\"no_match_count\":120244,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"tier1_confidence_updated_at\":\"2026-08-28T18:24:11.177Z\",\"tier2_confidence_updated_at\":\"2026-08-28T18:24:11.182Z\",\"tier3_confidence_updated_at\":\"2026-08-28T18:24:11.186Z\",\"is_wsib_registered_corrected\":0,\"wsib_registry_count\":\"121116\",\"gate\":{\"reason\":\"full_rescan\",\"gated_skip\":false},\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50,\"link_wsib_mass_relink_max_pct\":0.1},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":20,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_wsib_mass_relink_pct\",\"value\":{\"set\":0,\"move\":0,\"vanish\":0,\"linked_start\":872},\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"60:stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays\",\"guarantee\":\"link_wsib must abort BEFORE any link write whenever the moved + vanished links exceed the configured fraction of the links held at run start, unless LINK_WSIB_ACCEPT_MASS_RELINK accepts it.\"},\"observed\":\"before_write\"},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier3_current_predicate_pass_rate_pct\",\"value\":100,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_entity_fanin_p99\",\"value\":10,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_magnet_entities_fanin_ge_10\",\"value\":7,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registry_total_rows\",\"value\":121116,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"entities_wsib_registered_count\",\"value\":301,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registered_entities_without_exact_tier_link\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier_confidence_split\",\"value\":\"unevaluable: check reported no numeric value for value_min\",\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_cumulative_link_rate_pct\",\"value\":0.72,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"entities\":3948},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:wsib_registry.match_confidence\",\"value\":\"within declared values (3 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier3_current_predicate_pass_rate_pct_duration_ms\",\"value\":8,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_entity_fanin_p99_duration_ms\",\"value\":20,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_magnet_entities_fanin_ge_10_duration_ms\",\"value\":20,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_orphan_linked_entity_id_duration_ms\",\"value\":21,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registry_total_rows_duration_ms\",\"value\":28,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_entities_wsib_registered_count_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registered_entities_without_exact_tier_link_duration_ms\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier_confidence_split_duration_ms\",\"value\":28,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_cumulative_link_rate_pct_duration_ms\",\"value\":31,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":964.07,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":124725,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 124.7s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2008,
+  "pipeline_runs_max_id_before": 2345,
   "table_state": [
     {
       "table": "entities",
@@ -443,8 +460,8 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "entities": 32,
-    "wsib_registry": 1453
+    "entities": 4,
+    "wsib_registry": 100
   },
   "table_specs": {
     "entities": {
@@ -514,11 +531,12 @@
     }
   ],
   "invariants_file": null,
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
     "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
     "key:summary.records_meta.duration_ms",
     "pattern:duration_literal",
     "pattern:iso_timestamp",
@@ -542,42 +560,48 @@
       "records_meta": {
         "audit_table": {
           "name": "WSIB Registry Matching",
-          "phase": 19,
+          "phase": 20,
           "rows": [
             {
               "metric": "gate_decision",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": {
                 "gated_skip": false,
                 "mode": "full",
-                "reason": "force_full_env"
+                "reason": "full_rescan"
               }
             },
             {
               "metric": "override_force_full_present",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": true
             },
             {
-              "metric": "full_repair_empty_source_guard",
+              "metric": "link_wsib_mass_relink_pct",
+              "observed": "before_write",
               "order_guarantee": {
-                "anchor": "abort BEFORE that retraction runs whenever the `entities` corpus is empty",
-                "guarantee": "A-7/LG-16's full-mode repair must abort BEFORE that retraction runs whenever the `entities` corpus is empty, or it would retract every tier-3 link and repair nothing."
+                "anchor": "60:stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays",
+                "guarantee": "link_wsib must abort BEFORE any link write whenever the moved + vanished links exceed the configured fraction of the links held at run start, unless LINK_WSIB_ACCEPT_MASS_RELINK accepts it."
               },
               "source": "check",
               "status": "PASS",
-              "threshold": "viol == 0",
+              "threshold": "pct <= 0.1",
               "value": {
-                "entities_count": 3948,
-                "mode": "full"
+                "linked_start": 872,
+                "move": 0,
+                "set": 0,
+                "vanish": 0
               }
             },
             {
               "metric": "unlinked_start",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -585,6 +609,7 @@
             },
             {
               "metric": "tier_1_trade_matches",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -592,6 +617,7 @@
             },
             {
               "metric": "tier_2_legal_matches",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -599,20 +625,23 @@
             },
             {
               "metric": "tier_3_fuzzy_matches",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 548
+              "value": 0
             },
             {
               "metric": "no_match",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 119696
+              "value": 120244
             },
             {
               "metric": "link_rate_warn",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "pct >= 5",
@@ -625,6 +654,7 @@
             },
             {
               "metric": "entity_fanin_warn",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol <= 20",
@@ -635,6 +665,7 @@
             },
             {
               "metric": "tier3_token_overlap",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "pct >= 50",
@@ -644,6 +675,7 @@
             },
             {
               "metric": "orphan_linked_entity_id",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -651,6 +683,7 @@
             },
             {
               "metric": "confidence_outside_closed_set",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -658,6 +691,7 @@
             },
             {
               "metric": "dead_bucket_count",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -665,6 +699,7 @@
             },
             {
               "metric": "registered_entities_with_zero_links",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -672,36 +707,15 @@
             },
             {
               "metric": "is_wsib_registered_corrected",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 0
             },
             {
-              "metric": "tier3_full_not_converged",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": {
-                "contacts_cleared": 0,
-                "exhausted": false,
-                "iterations": 2,
-                "relinked_total": 548,
-                "retracted": 548
-              }
-            },
-            {
-              "metric": "tier3_full_iterations",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": {
-                "iterations": 2,
-                "relinked_total": 548
-              }
-            },
-            {
               "metric": "contacts_cleared_on_retraction",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -709,6 +723,7 @@
             },
             {
               "metric": "write_privilege",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -716,6 +731,7 @@
             },
             {
               "metric": "wsib_tier3_current_predicate_pass_rate_pct",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_max 100",
@@ -723,6 +739,7 @@
             },
             {
               "metric": "wsib_entity_fanin_p99",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
@@ -730,6 +747,7 @@
             },
             {
               "metric": "wsib_magnet_entities_fanin_ge_10",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
@@ -737,6 +755,7 @@
             },
             {
               "metric": "wsib_orphan_linked_entity_id",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -744,6 +763,7 @@
             },
             {
               "metric": "wsib_registry_total_rows",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
@@ -751,6 +771,7 @@
             },
             {
               "metric": "entities_wsib_registered_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
@@ -758,6 +779,7 @@
             },
             {
               "metric": "wsib_registered_entities_without_exact_tier_link",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -765,6 +787,7 @@
             },
             {
               "metric": "wsib_tier_confidence_split",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
@@ -772,19 +795,25 @@
             },
             {
               "metric": "wsib_cumulative_link_rate_pct",
+              "observed": "after_write",
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_max 100",
               "value": 0.72
             },
             {
-              "metric": "before_image_written:wsib_registry",
+              "metric": "empty_source_guard",
               "status": "INFO",
-              "threshold": null,
+              "threshold": "guards.empty_source table(s) non-empty",
               "value": {
-                "path": "docs/reports/golden/link_wsib/before-image/2026-09-26T13-49-20.559Z-wsib_registry.jsonl",
-                "rows": 548
+                "entities": 3948
               }
+            },
+            {
+              "metric": "vocabulary:wsib_registry.match_confidence",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+              "value": "within declared values (3 distinct)"
             }
           ],
           "verdict": "PASS"
@@ -795,33 +824,38 @@
         "config": {
           "link_wsib_entity_fanin_warn": 20,
           "link_wsib_link_rate_warn_pct": 5,
+          "link_wsib_mass_relink_max_pct": 0.1,
           "link_wsib_tier1_confidence": 0.95,
           "link_wsib_tier2_confidence": 0.9,
           "link_wsib_tier3_confidence": 0.6,
-          "link_wsib_tier3_full_max_iterations": 20,
           "link_wsib_tier3_token_overlap_fail_pct": 50,
           "wsib_fuzzy_match_threshold": 0.6
         },
+        "errors": [],
         "gate": {
           "gated_skip": false,
-          "reason": "force_full_env"
+          "reason": "full_rescan"
         },
         "is_wsib_registered_corrected": 0,
         "ledger_row": "chain_owned",
         "matches_tier_1_trade": 0,
         "matches_tier_2_legal": 0,
-        "matches_tier_3_fuzzy": 548,
-        "no_match_count": 119696,
+        "matches_tier_3_fuzzy": 0,
+        "no_match_count": 120244,
         "pool_errors": 0,
-        "run_matched": 548,
+        "run_matched": 0,
         "terminal": "linked_incremental",
         "threshold_updated_at": "<TS>",
+        "tier1_confidence_updated_at": "<TS>",
+        "tier2_confidence_updated_at": "<TS>",
+        "tier3_confidence_updated_at": "<TS>",
         "unlinked_start": 120244,
+        "warnings": [],
         "wsib_registry_count": "121116"
       },
-      "records_new": 548,
+      "records_new": 0,
       "records_total": 120244,
-      "records_updated": 548
+      "records_updated": 0
     },
     "summary_count": 1,
     "meta": [
@@ -866,8 +900,8 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=245 (floor 240)\",\"tag\":\"[link_wsib]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"cascade mode gate: FULL (force_full_env)\",\"tag\":\"[link_wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=247 (floor 240)\",\"tag\":\"[link_wsib]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"cascade mode gate: FULL (full_rescan)\",\"tag\":\"[link_wsib]\"}",
       "[link_wsib] completed in <DUR>"
     ],
     "table_state": [
@@ -943,11 +977,38 @@
       }
     ]
   },
-  "source_fingerprint": "a919a446ceadb2de86c73d92f712d30c37a28060c8b1ca13ed485da869fd6c55",
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "entities",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      },
+      {
+        "table": "wsib_registry",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 2 table(s) [entities,wsib_registry]",
+    "txid_before_run2": 3246599,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "linked_incremental"
+    }
+  },
+  "source_fingerprint": "ede4d7587996fe4c281f73e13888c5c62faf0a31375cb59a4b10b8c764427698",
   "fingerprint_files": [
     "scripts/lib/compute/link-wsib.js",
     "scripts/link-wsib.descriptor.json",
     "scripts/link-wsib.js",
     "scripts/link-wsib.notes.json"
-  ]
+  ],
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

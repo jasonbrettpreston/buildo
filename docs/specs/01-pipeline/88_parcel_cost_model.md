@@ -243,7 +243,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
   - data (descriptor): `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `logic_variables` reads (migrations/092_control_panel.sql); `parcel_cost_lines` reads (migrations/248_parcel_cost_lines.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: enrich_parcels · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity
-  - consumers: none
+  - consumers: compute_parcel_cost_estimates (records_meta stranded_cost_rows_retracted)
 <!-- /generated:target-files -->
 - `scripts/lib/parcel-cost.js` (pure — engine + local line→field map + `area_confidence` + SOLAR/BAS-UNDERPIN; since batch-2 row 2.4 it takes its tunables through a REQUIRED `opts.config`, §2.8; since batch-2 row 2.5 it also takes a REQUIRED `opts.lines`, exporting `mergeCostLines`), `scripts/lib/parcel-cost-cols.js` (the §2.5/§2.10 column contract — a dependency-free leaf shared by this step and `enrich-permits.js`'s §4D propagator), `scripts/manifest.json` (sources chain, after `enrich_parcels` before `refresh_snapshot`), `scripts/enrich-permits.js` (`COST_PROP_COLS` propagation), `scripts/analysis/wf3-cost-coherence-sanity.js` + `scripts/analysis/wf3-sample-full-dump.js` (non-step engine consumers, also pass `opts.lines` since batch-2 row 2.5).
 - `migrations/NNN` — `archetype_cost_rates` table + seed; `parcels` cost/FSI cols; `permits`+`coa_applications` cost/FSI cols. `migrations/248_parcel_cost_lines.sql` (batch-2 row 2.5 — the editable half of the §2.3 line catalogue, §2.8).

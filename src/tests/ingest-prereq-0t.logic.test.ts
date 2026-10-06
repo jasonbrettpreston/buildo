@@ -66,7 +66,9 @@ describe('INGESTOR prerequisite 0t — geometry_repair', () => {
       // parcels DESCRIPTOR's guard gained `geometry` and DEC-FENCE2 now watches `geom`; the
       // library and the repair axis are untouched — validation_sql's hash is unchanged).
       // → 7f537ed6a79d77da by WF3 lot-size 2026-10-01 (6fe38a4f: lot_size_sqm/lot_size_sqft/lot_size_source on_empty:preserve_null + lot_size_source guard term — the declared on_empty axis, not a geometry_repair/derived axis change)
-      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', '7f537ed6a79d77da'],
+      // → b1740319d469952d by FLEET-2 (Fold 14 P1-C6): the descriptor declares `id` written:"db_default", which adds ONE
+      // SQL comment line ("-- declared but never written by this step (DB default): id") before RETURNING; statement otherwise byte-identical.
+      ['load-parcels', LOAD_PARCELS, 'f36c68b29368ed2a', 'b1740319d469952d'],
     ];
     for (const [name, descriptor, validationHash, upsertHash] of cases) {
       const d = descriptor as { outputs: { writes: Array<Record<string, unknown>> } };

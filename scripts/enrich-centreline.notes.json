@@ -4,8 +4,8 @@
     "",
     "CAP: 12 prose categories across expected_shape · read_this_way · suspicious_if ·",
     "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
-    "do_not_reflag · how_to_investigate · limitations. This file carries 9, and",
-    "descriptor.interpretation.entries must equal that number.",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP).",
     "",
     "`fences` and `counts` are RECORD blocks, not prose — they are not counted against",
     "the cap. `fences` carries one row per intent-ledger fence the assessment",
@@ -28,9 +28,6 @@
   "suspicious_if": [
     {
       "signal": "A full run whose corner or through share leaves its plausibility band (centreline_corner_share_* / centreline_through_share_* WARN), or whose zero-intersection pct jumps, while load_centreline reports an unchanged feature count — the join, not the source, moved: check the geography GIST, the proximity / abut variables and the laneway vocabulary before the data."
-    },
-    {
-      "signal": "An incremental run whose `parcels_recomputed` is far above the usual tail size with no new load_parcels geometry — something NULLed the stamps in bulk (a manual reset, a load_parcels fence change); the run is correct but the cause needs a name."
     }
   ],
   "blind_spots": [
@@ -49,22 +46,8 @@
       "why": "The mode, skip_reason and parcels_recomputed are observables Spec 62 §3.11 names, and retiring the gate into the scope predicate (the enrich_heritage H-A1(a) route) would change the full-mode graded rows on every unchanged day. The gate lives in the contract_read hook (same SQL, same order as the legacy) and the pass honours a forced or interrupted run as full."
     },
     {
-      "what": "The laneway code, the both-names-NOT-NULL rule and the shared-node rule are vocabulary kept in compute — not Rule 3 tunables.",
-      "why": "Which segment is a lane and what makes two segments different streets are facts about the data model; an operator who could re-point them could silently redefine a corner lot. The distances, angles, cap and sample step ARE tunables and live in logic_variables."
-    },
-    {
       "what": "The SQL math guards GREATEST(ST_Length(...), 1.0) and LEAST(..., 1.0) stay literal.",
       "why": "The first is a divisor floor (a zero-length segment must not divide by zero) and the second clamps a line-locate fraction to the segment's end — neither is a threshold anyone would tune, and moving either changes the arithmetic, not a policy."
-    },
-    {
-      "what": "The non-empty toronto_centreline refusal stays at its legacy position, inside the transaction, in full and incremental mode only.",
-      "why": "guards.requires has no non-empty kind, and folding the probe into contract_read would run it on skip too — a second behaviour change on top of EC-D6. Keeping it in the pass makes the probe's reach identical to the legacy's."
-    }
-  ],
-  "known_normal": [
-    {
-      "check_id": "parcels_recomputed",
-      "what": "A steady, non-zero stale count on unchanged days is the never-linked out-of-range tail (plus any newly loaded parcels), not churn (EC-D2). It shrinks only when load_parcels adds or moves parcels near a street."
     }
   ],
   "known_bad": [
@@ -76,10 +59,6 @@
     {
       "what": "Reduced runs report the L21 gate and the three WARN diagnostics as `not measured` and still land PASS.",
       "why": "EC-D1, carried by the zero-behaviour-change conversion (Spec 121 §4.3) and pinned by the red suite; ④a grades a table-derived zero-pct every run in its own RED→GREEN commit. The rows are INERT (INFO), never a hidden PASS."
-    },
-    {
-      "what": "guards.requires lists four parcels columns and omits abuts_laneway.",
-      "why": "EC-D5, the legacy TARGET_COLS carried verbatim; ④c adds the fifth column in its own commit."
     }
   ],
   "how_to_investigate": [
@@ -106,5 +85,5 @@
     { "const": "frontage P1 name / P2 address range / P3 nearest segment", "value": "buildTempSql parcel_frontage", "incident": "WF2 DEC-B (c1161f38): under proximity there is no overlap length, so P3 is the nearest segment.", "lock_test": "src/tests/db/migration-174-centreline-enrich.db.test.ts" },
     { "const": "round1(1000·x/t)/10 percentages", "value": "enrich_centreline_round_scale (pctOf)", "incident": "Display rounding of the diagnostics (c1161f38); byte form pinned so the audit value does not drift.", "lock_test": "src/tests/steps/enrich_centreline/violations.test.ts" }
   ],
-  "counts": { "open_blind_spots": 2, "unpromoted_suspicious_if": 2 }
+  "counts": { "open_blind_spots": 2, "unpromoted_suspicious_if": 1 }
 }

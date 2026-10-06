@@ -1,0 +1,10 @@
+{
+ "phase": "green",
+ "tests": [
+  {
+   "file": "step-library.logic.test.ts",
+   "test": "#75 reconcile (fold 11 item 6) — a clean ASSERT run emits errors:[] and warnings:[] (the all_checks_passed terminal declares both as arrays); checks_passed stays \"all\"",
+   "status": "passed"
+  }
+ ]
+}

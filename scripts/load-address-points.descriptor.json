@@ -21,7 +21,15 @@
   "inputs": {
     "reads": {
       "steps": [],
-      "tables": [],
+      "tables": [
+        {
+          "table": "address_points",
+          "columns": [
+            "address_point_id",
+            "retired_at"
+          ]
+        }
+      ],
       "externals": [
         {
           "id": "ckan:address-points-4326",
@@ -30,7 +38,6 @@
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv",
           "license": "https://open.toronto.ca/open-data-license/",
           "key_property": "ADDRESS_POINT_ID",
-          "cache": "none",
           "csv_options": {
             "bom": false,
             "relax_quotes": true
@@ -156,6 +163,11 @@
             "vocabulary": "none",
             "written": "step",
             "bind": "wkb_geometry"
+          },
+          {
+            "name": "retired_at",
+            "vocabulary": "none",
+            "written": "insert_only"
           }
         ],
         "write_discipline": {
@@ -183,29 +195,22 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
           "why": {
-            "text": "Class A. The pre-conversion loader issued ONE statement shape — INSERT INTO address_points (...) VALUES ... ON CONFLICT (address_point_id) DO UPDATE SET ... WHERE <latitude, longitude, and 12 NULLIF/None-guarded source+normalized columns, plus geom> IS DISTINCT FROM — and NO DELETE anywhere in the file (0 grep matches for DELETE/TRUNCATE) [READ load-address-points.js:184-243]. The write class is therefore a guarded upsert with no retraction: a re-run of a byte-identical source updates zero rows, and no address point is ever removed by this step. The pre-conversion script wrapped each 1,000-row batch in its OWN withTransaction (:119-251, :371-383); the library wraps ALL insert batches in ONE step-scoped transaction (executeWrite, Fold B3) — declared here as the truth, with the atomicity-window widening recorded in deviations[]. The legacy COALESCE/NULLIF preservation on the 12 address columns (COALESCE(NULLIF(EXCLUDED.<col>, ''), address_points.<col>) over the 10 TEXT columns and the NULL-form COALESCE(EXCLUDED.<col>, address_points.<col>) over lo_num/hi_num, `git show 120b2b99:scripts/load-address-points.js:192-243`) is now declared via `columns[].on_empty` (RE-FREEZE #19) and executed by the shared codegen — AP-D7.",
+            "text": "Class A. The pre-conversion loader issued ONE statement shape — INSERT INTO address_points (...) VALUES ... ON CONFLICT (address_point_id) DO UPDATE SET ... WHERE <latitude, longitude, and 12 NULLIF/None-guarded source+normalized columns, plus geom> IS DISTINCT FROM — and NO DELETE anywhere in the file (0 grep matches for DELETE/TRUNCATE) [READ load-address-points.js:184-243]. The write class is therefore a guarded upsert with no retraction: a re-run of a byte-identical source updates zero rows, and no address point is ever removed by this step. The pre-conversion script wrapped each 1,000-row batch in its OWN withTransaction (:119-251, :371-383); the library wraps ALL insert batches in ONE step-scoped transaction (executeWrite, Fold B3) — declared here as the truth, with the atomicity-window widening recorded in deviations[]. The legacy COALESCE/NULLIF preservation on the 12 address columns (COALESCE(NULLIF(EXCLUDED.<col>, ''), address_points.<col>) over the 10 TEXT columns and the NULL-form COALESCE(EXCLUDED.<col>, address_points.<col>) over lo_num/hi_num, `git show 120b2b99:scripts/load-address-points.js:192-243`) is now declared via `columns[].on_empty` (RE-FREEZE #19) and executed by the shared codegen — AP-D7. SOFT-RETIRE (registry-truth fold 10, operator ruling 2026-10-03, AP-D9): retract \"departed_mark\" — a key the acquired CSV no longer carries is MARKED retired_at = now() (first stamp kept) and UNMARKED (retired_at = NULL) when it reappears, never deleted, in the same transaction as the upsert, behind the library empty-set guard and the mass-retire guard (retire_max_pct_from_config). Readers filter retired_at IS NULL (fold 16 row 3).",
             "liveness": {
               "kind": "table",
               "ref": "address_points"
             }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed_mark",
+        "retire_max_pct_from_config": "address_points_mass_retire_max_pct"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
-      "statements": 1,
+      "statements": 3,
       "why": {
-        "text": "Exactly ONE write statement reaches address_points: the batched guarded upsert. There is no departure DELETE (class A, retract none), no staging replace and no retraction of any kind, so the converted step's write inventory is the pre-conversion one's single statement (which the old script issued once per 1,000-row batch). No lineage column exists on address_points (no source_dataset_version / *_when_enriched), so outputs.invalidates is none — unlike load_ravines' parcels.ravine_dataset_version_when_enriched.",
+        "text": "THREE write statements reach address_points (registry-truth fold 10 soft-retire, AP-D9): the batched guarded upsert, the UNMARK UPDATE (keys back in the source: retired_at -> NULL) and the MARK UPDATE (keys absent from the source: retired_at = now(), first stamp kept). The candidates SELECT is a read. There is no departure DELETE and no staging replace. On a run where the mass-retire guard suppresses the MARK, only 2 write fingerprints are traced (#44 (c) then reads statements:3!=2), so the FLEET-2 capture must be a run the guard lets through. No lineage column exists on address_points (no source_dataset_version / *_when_enriched), so outputs.invalidates is none — unlike load_ravines' parcels.ravine_dataset_version_when_enriched.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/step/write.js"
@@ -214,11 +219,8 @@
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": "none",
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -257,15 +259,10 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": 1000,
-    "needs_disk_mb": 368,
-    "partial_fill": "atomic",
+    "batch": 3855,
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A row with no usable coordinate source (neither a parseable `geometry` GeoJSON Point/MultiPoint NOR numeric LATITUDE/LONGITUDE) is counted in `skipped` and the load continues — the loader's own isNaN(lat)||isNaN(lng) guard [READ load-address-points.js:317-322]. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",
@@ -274,14 +271,7 @@
         "ref": "skip_rate_pct"
       }
     },
-    "on_batch_error": "drop_batch",
-    "on_batch_error_why": {
-      "text": "AP-D3 (PIN, DO NOT FIX — Spec 123 §3.1). A failed batch flush is logged, `errors++`, and its rows DROPPED for the run [READ load-address-points.js:372-378]; the schema's own on_batch_error description cites this file. The conversion carries that behaviour as-is and DECLARES it here rather than silently reshaping it. The alternative (fail_step) would be a behaviour change smuggled into a no-op-diff commit; the post-cutover fix, if any, is a separate commit with its own RED lock. UPDATE 2026-09-27 (conversion-simplification item 8, operator-authorized; review_followups #69): records_unchanged is now MEASURED by the write (written.unchanged = rows the guarded upsert submitted but did not change), never derived, so the \"inflated by the dropped count\" clause above is RETIRED; runIngestPhase's row-conservation identity (scripts/lib/step/conservation.js) throws on any unaccounted row. The batch-drop itself (#68) is untouched by this change.",
-      "liveness": {
-        "kind": "file",
-        "ref": "scripts/load-address-points.js"
-      }
-    },
+    "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {
       "text": "Every check here reads a value the library already measured (missing header columns, null-address fractions, skip rate, the rows-read floor, the geometry-parse counter), so a check that throws is a library defect, not an upstream condition — it must redden the run rather than drop its row.",
@@ -291,15 +281,10 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": [
-        "ckan0.cf.opendata.inter.prod-toronto.ca"
-      ],
       "timeout": "60000ms",
       "timeout_from_config": "address_points_download_timeout_ms",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "sources": {
@@ -561,6 +546,18 @@
       },
       "adjudicated_by": "orchestrator ruling 2026-09-23 (operator budget session)",
       "date": "2026-09-23"
+    },
+    {
+      "from": "the legacy batch-drop catch (AP-D3, scripts/load-address-points.js:372-378 pre-conversion) and its execution.on_batch_error \"drop_batch\" declaration",
+      "why": {
+        "text": "FIXED BY THE RUNNER, recorded at FLEET-2 (operator ruling MQ-B5 (a) + compliance amendment, morning batch 2, 2026-10-05). Since the conversion (a8c1a42f) this step writes through scripts/lib/step/write.js executeWrite, whose batch loop runs inside ONE pipeline.withTransaction with no try/catch: a failed batch throws, rolls back the whole step and fails the run, so no batch is dropped. on_batch_error is now \"fail_step\", the measured posture; the drop_batch declaration and its batch-drop limitation are retired, AP-D3 is closed as FIXED-BY-RUNNER in docs/reports/defect-ledger.md and review_followups #68 / #69 are closed. The compute's batch_errors read (scripts/lib/compute/load-address-points.js:340) has no producer and is filed as a follow-up.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "Operator ruling MQ-B5 (a) + compliance amendment (ASSEMBLY morning batch 2)",
+      "date": "2026-10-05"
     }
   ],
   "limitations": [
@@ -575,11 +572,6 @@
       "check_id": "none"
     },
     {
-      "what": "The pre-conversion batch-drop path (AP-D3) means a failed batch's rows are logged, counted in `errors`, and DROPPED for the run — the load can complete with fewer than 525K rows and no per-row evidence of which. Declared via execution.on_batch_error:\"drop_batch\"; the converted runner's on_batch_error posture is the same shape, and a per-batch failure is surfaced through the run status rather than as one audit row per batch.",
-      "measured": "load-address-points.js:372-378 — catch logs, errors++, batch=[] (rows dropped); 'Note: if a batch flush fails, lost rows inflate this count slightly' at :407",
-      "check_id": "rows_read_floor"
-    },
-    {
       "what": "The `geometry` JSON.coordinates unwrap reads only the FIRST coordinate of a GeoJSON Point/MultiPoint (coordinates[0] if it is an array, else coordinates) [READ :298-303] — a MultiPoint with more than one coordinate loses all but the first, with no counter for it. Carried verbatim (zero-diff); the surviving coordinate is the one the pre-conversion loader used.",
       "measured": "load-address-points.js:298-303 — `const coord = Array.isArray(geom.coordinates[0]) ? geom.coordinates[0] : geom.coordinates; lng = coord[0]; lat = coord[1];`",
       "check_id": "geom_parse_failures"
@@ -591,8 +583,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-address-points.notes.json",
-    "entries": 6
+    "file": "load-address-points.notes.json"
   },
   "recovery": {
     "reset": "none",
@@ -622,16 +613,13 @@
   },
   "counters": {
     "records_total": {
-      "source": "written.inserted + written.updated",
-      "scoped_by": "address_point_id"
+      "source": "written.inserted + written.updated"
     },
     "records_new": {
-      "source": "written.inserted",
-      "scoped_by": "address_point_id"
+      "source": "written.inserted"
     },
     "records_updated": {
-      "source": "written.updated",
-      "scoped_by": "address_point_id"
+      "source": "written.updated"
     }
   },
   "config": {
@@ -658,6 +646,12 @@
         "name": "address_points_download_timeout_ms",
         "min": 1000,
         "max": 1800000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_mass_retire_max_pct",
+        "min": 0,
+        "max": 1,
         "on_invalid": "fail"
       }
     ],

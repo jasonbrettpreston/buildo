@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "rows": {
+      "value": 526570,
+      "cost_ms": 42,
+      "at": "2026-10-06T16:38:41.639Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2342",
+      "chain": null,
+      "sample_n": 6
+    },
+    "multi_parcel_address_count": {
+      "value": 1163,
+      "cost_ms": 182,
+      "at": "2026-10-06T16:38:41.639Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2342",
+      "chain": null,
+      "sample_n": 6
+    },
+    "dup_count": {
+      "value": 0,
+      "cost_ms": 201,
+      "at": "2026-10-06T16:38:41.639Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2342",
+      "chain": null,
+      "sample_n": 6
+    },
+    "fanout_max_noncondo": {
+      "value": 155,
+      "cost_ms": 1520,
+      "at": "2026-10-06T16:38:41.639Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2342",
+      "chain": null,
+      "sample_n": 6
+    },
+    "land_entrance_count": {
+      "value": 741,
+      "cost_ms": 43,
+      "at": "2026-10-06T16:38:41.639Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2342",
+      "chain": null,
+      "sample_n": 6
+    }
+  }
+}

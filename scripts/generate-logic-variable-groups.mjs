@@ -320,8 +320,8 @@ const GROUP_ORDER = [
       "link_wsib_tier2_confidence",
       "link_wsib_tier3_confidence",
       "link_wsib_entity_fanin_warn",
-      "link_wsib_tier3_full_max_iterations",
-      "link_wsib_tier3_token_overlap_fail_pct"
+      "link_wsib_tier3_token_overlap_fail_pct",
+      "link_wsib_mass_relink_max_pct"
     ]
   },
   {
@@ -516,6 +516,7 @@ const GROUP_ORDER = [
       "address_points_skip_rate_max_pct",
       "address_points_null_address_number_max_pct",
       "address_points_download_timeout_ms",
+      "address_points_mass_retire_max_pct",
       "parcels_irregularity_threshold",
       "parcels_skip_rate_max_pct",
       "parcels_download_timeout_ms",

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "2a241208d39e8a10ce3e1f9640614b693401cbeefb9f711462b11385ba2b5c04",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "3edbe516b076c85f4f1c0bdf95155cac089b2f2e7e0cc73d16a7727a5c0ea995",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 35,
+    "calls": 36,
     "distinct": 18,
     "utility": 9,
-    "tracer_self_ms": 1132.424,
-    "wall_ms": 120143
+    "tracer_self_ms": 440.875,
+    "wall_ms": 49264
   },
   "statements": [
     {
@@ -64,8 +64,8 @@
     {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -180,7 +180,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -297,7 +297,7 @@
   ],
   "transactions": [
     {
-      "client": "8268:3",
+      "client": "27480:3",
       "write_fingerprints": [
         "10fad24fafb14d6d",
         "bda9b1d341d87cda",

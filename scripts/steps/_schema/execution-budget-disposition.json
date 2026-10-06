@@ -116,14 +116,6 @@
         "role": "the acquisition seam's download retry loop (INGESTOR prerequisite 0q, 2026-09-24): `attempts = retries + 1` calls of `downloadArchive`, WARN per failed attempt, the partial dest removed between attempts, a constant `backoffMs` sleep, the LAST error rethrown. R-X's first NON-duration row — a count, not a duration. Scope is the DOWNLOAD path only: `headValidators` is never retried, and `resolveRetryPolicy(descriptor, config)` is what turns the frozen `retries` literal + its `retries_from_config` knob into this call's budget."
       },
       "why": "Measured 2026-09-24: `execution.network.retries` was a FROZEN schema field with NO reader anywhere in scripts/lib/ — the seam's one download (`downloadArchive`) made exactly ONE attempt, while the legacy loaders (scripts/load-neighbourhoods.js:52 downloadFile, copy-pasted into load-address-points/load-parcels/load-massing) retried three times. Cloud chain-sources run 34769829628 (2026-09-13) died on a single HTTP 502 at step 17/28 and 11 downstream steps never ran. SEAM-SCOPED, declared iff network?.retries !== undefined: assert_schema's OWN reference declarations carry a `retries: 0` (a shared listing of sources the ASSERT archetype never downloads) and are UNREAD by this executor — the row covers the descriptor-declared retry bound on a step that actually acquires, which is what downloadWithRetries consumes."
-    },
-    "budget": {
-      "disposition": "descriptive",
-      "why": "No executor exists anywhere in scripts/ (grep -rn '\\.budget' scripts/lib/ => zero hits, 2026-09-15). It documents the step's INTENDED wall-clock envelope for a human sizing a CI ceiling; nothing measures a run against it and nothing aborts on it. Kept (not removed) per R-X: a declaration with a disposition is legible; a deleted field is a silent loss of the sizing intent. The ENFORCED ceiling for a step is manifest.scripts[slug].step_timeout_minutes (see step_timeout above) — budget is the number an operator reads when choosing that one."
-    },
-    "txn_budget": {
-      "disposition": "descriptive",
-      "why": "No executor exists anywhere in scripts/ (grep -rn 'txn_budget' scripts/lib/ => zero hits, 2026-09-15). It documents how much of `budget` the step's own transaction is expected to hold open — the number that matters for vacuum-horizon reasoning (enrich_parcels' EP-D17 maintenance ruling is exactly this arithmetic done by hand). Enforcing it would require a transaction-scoped deadline distinct from the per-phase one EP-PHASE-DEADLINE built; that is a separate WF and is filed, not smuggled in here."
     }
   },
   "ladder": {

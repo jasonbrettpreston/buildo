@@ -29,7 +29,6 @@
           "path": "data/BusinessClassificationDetails*.csv",
           "format": "csv",
           "key_property": "Legal name",
-          "cache": "none",
           "csv_options": {
             "bom": true,
             "relax_quotes": false
@@ -127,6 +126,24 @@
             "vocabulary": "none",
             "written": "step",
             "bind": "value"
+          },
+          {
+            "name": "last_enriched_at",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          },
+          {
+            "name": "primary_phone",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          },
+          {
+            "name": "website",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
           }
         ],
         "write_discipline": {
@@ -155,18 +172,10 @@
             }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
       "statements": 1,
       "why": {
@@ -179,11 +188,8 @@
     }
   },
   "staleness": {
-    "scope": "none",
     "trigger": "none",
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -210,15 +216,10 @@
   },
   "execution": {
     "shape": "ingest",
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": "none",
-    "needs_disk_mb": 128,
-    "partial_fill": "atomic",
+    "batch": 5041,
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A source row the step refuses to carry is counted and the load continues: a row that is G on neither Predominant class nor Class/subclass (legacy :289-292, now shapeRecord reason \"non_g\") and a row whose Legal name normalizes to null (legacy :294-299, now the library bad_key_count). The tolerance is bounded by the declared wsib_no_name_skip_rate check; no bare percentage literal survives here (Rule 3).",
@@ -237,7 +238,6 @@
       }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "sources": {
@@ -483,7 +483,7 @@
     {
       "from": "the in-script batching literals DEDUP_FLUSH_SIZE 5000 (:186), BATCH 2000 (:200), the 65000-parameter guard (:220) and the 50000-row progress modulo (:335)",
       "why": {
-        "text": "Retired with the library whole-array path: write.js sizes each INSERT by pipeline.maxRowsPerInsert(columnsPerRow) (13 columns), so execution.batch is \"none\" and no per-step stride remains. No logic variable is declared for them: none governs a pass/fail bound, and a knob with no reader is a dead declaration (address_points commit 9 precedent).",
+        "text": "Retired with the library whole-array path: write.js sizes each INSERT by pipeline.maxRowsPerInsert(columnsPerRow) (13 columns), so no per-step stride literal remains; execution.batch now declares that same stride, generated (maxRowsPerInsert(13) = 5041, scripts/generate-ingest-batch.js, #37 / MQ-B1 (a), registry-truth fold 19). No logic variable is declared for them: none governs a pass/fail bound, and a knob with no reader is a dead declaration (address_points commit 9 precedent).",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/step/write.js"
@@ -622,8 +622,7 @@
     }
   ],
   "interpretation": {
-    "file": "load-wsib.notes.json",
-    "entries": 6
+    "file": "load-wsib.notes.json"
   },
   "recovery": {
     "reset": "none",
@@ -653,16 +652,13 @@
   },
   "counters": {
     "records_total": {
-      "source": "written.inserted + written.updated",
-      "scoped_by": "legal_name_normalized"
+      "source": "written.inserted + written.updated"
     },
     "records_new": {
-      "source": "written.inserted",
-      "scoped_by": "legal_name_normalized"
+      "source": "written.inserted"
     },
     "records_updated": {
-      "source": "written.updated",
-      "scoped_by": "legal_name_normalized"
+      "source": "written.updated"
     }
   },
   "config": {
@@ -690,7 +686,7 @@
     "varies_by_chain": {
       "checks": "none",
       "phase": {
-        "sources": 11
+        "sources": 19
       },
       "audit_table": "one",
       "scope": "none"

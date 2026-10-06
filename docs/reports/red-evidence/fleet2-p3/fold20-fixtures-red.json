@@ -1,0 +1,24 @@
+{
+  "wf": "registry-truth Fold 20 (MQ-A7 schema half + row 9)",
+  "date": "2026-10-05",
+  "command": "VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest run <files> (DB env unset)",
+  "phase": "RED (fixtures)",
+  "schema": "current (MQ-A7 + row 9)",
+  "fixtures": "ORIGINAL (pause) — shows why the 5 fixtures had to move",
+  "files": [
+    "src/tests/step-schema.logic.test.ts"
+  ],
+  "passed": 61,
+  "failed": 9,
+  "failing": [
+    "assert_schema.descriptor.json",
+    "enrich_heritage.descriptor.json",
+    "invariants-populated.descriptor.json",
+    "enricher-pending-without-invalidator.json — claim #54 — an ENRICHER with a lineage-predicate staleness.scope cannot omit its invalidator (the centroid defect made unexpressible)",
+    "the #54 lock is proven in BOTH directions",
+    "GREEN — the committed ENRICHER exemplar (one shared phase) validates",
+    "GREEN — a 5-phase enrich shape (4 shared + 1 post_commit, LAST) validates: enrich_parcels's real structure",
+    "the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe",
+    "the committed artifact is up to date (regenerate → identical)"
+  ]
+}

@@ -1548,13 +1548,13 @@ describe('Pipeline SDK', () => {
     // one contract, none of them stated. All three now name a MEASURED source scoped by the
     // declared write key, so the scope is readable instead of inferred. That is the property
     // the old lock was reaching for, and it is asserted here on the declaration.
-    it('link_massing counters name a measured source, scoped by the composite write key', () => {
+    it('link_massing counters name a measured source', () => {
       const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'link-massing.descriptor.json'), 'utf-8'));
       expect(d.counters.records_total.source).toBe('written.e2.scanned');
       expect(d.counters.records_new.source).toBe('written.e2.inserted');
       expect(d.counters.records_updated.source).toBe('written.e2.updated');
       for (const slot of ['records_total', 'records_new', 'records_updated']) {
-        expect(d.counters[slot].scoped_by, `${slot} must declare its scope`).toEqual(['parcel_id', 'building_id']);
+        // counters.<slot>.scoped_by deleted in the Phase 3 RE-FREEZE (#69, zero runtime readers)
         expect(/^[0-9]+$/.test(d.counters[slot].source), `${slot} is a literal, not a measurement`).toBe(false);
       }
       // written.e1 is the is_primary clear: its rows are excluded BY DECLARATION, because a
@@ -1911,7 +1911,7 @@ describe('Pipeline SDK', () => {
       const root = path.resolve(__dirname, '../..');
       const d = JSON.parse(fsStream.readFileSync(path.join(root, 'scripts/link-massing.descriptor.json'), 'utf-8'));
       expect(typeof d.execution.batch, 'the batch size must be a declared number, not "none"').toBe('number');
-      expect(d.staleness.checkpoint, 'a keyset cursor, declared').toMatchObject({ cursor: 'id', ordered: true });
+      // staleness.checkpoint deleted in the Phase 3 RE-FREEZE (#28, zero runtime readers)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const compute = require('../../scripts/lib/compute/link-massing.js');
       const plan = compute.buildMatchSql(d, null, 'incremental');
@@ -2206,7 +2206,9 @@ describe('Pipeline SDK', () => {
         expect(t.records_meta.audit_table).toBe('object');
         expect(t.why.text).toContain('bd9e67ab');
         // the per-chain phase the old duplicate block hand-wrote is now declared ONCE
-        expect(d.sharing.varies_by_chain.phase).toEqual({ permits: 8, sources: 10 });
+        // FLEET-2 B-4 / MQ-B4 (a): the phase map is GENERATED (generate-sharing-phase.js = 1-based manifest chain
+        // position). The hand-kept {permits: 8, sources: 10} was stale against the manifest; measured 11 / 18.
+        expect(d.sharing.varies_by_chain.phase).toEqual({ permits: 11, sources: 18 });
       });
 
       // load-wsib.js RE-HOMED (batch-2 row 3.5 ②, 2026-09-29). The hand-written chain-skip block that

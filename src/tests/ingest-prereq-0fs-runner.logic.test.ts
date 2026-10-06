@@ -74,7 +74,6 @@ const FS = {
   format: 'csv',
   csv_options: { bom: true, relax_quotes: false },
   key_property: 'Legal name',
-  cache: 'none',
 };
 
 /** The fail-closed terminal a path-bearing primary MUST declare (refusal vii). */
@@ -157,8 +156,6 @@ function D8(): Record<string, unknown> {
       },
     },
     retract: 'none',
-    replay: 'idempotent_upsert',
-    source_key_policy: { unique: true, on_collision: 'dedupe_upstream', key_space_migration: 'none' },
   };
   d.guards.srid = 'none';
   return d;
@@ -329,7 +326,7 @@ describe('INGESTOR prerequisite 0fs — runner: filesystem primary + no-geometry
   it('T6b(v) — a pathless filesystem external rejects naming its id and fetches nothing', async () => {
     const d = clone(LOAD_RAVINES) as Record<string, unknown>;
     (d as { inputs: { reads: { externals: Array<Record<string, unknown>> } } }).inputs.reads.externals
-      .push({ id: 'never_fetched_pathless_fs', kind: 'filesystem', cache: 'none' });
+      .push({ id: 'never_fetched_pathless_fs', kind: 'filesystem' });
     restored = stubsFor();
 
     // The refusal names the offending id AND says the external is not in `sourced`
@@ -349,7 +346,6 @@ describe('INGESTOR prerequisite 0fs — runner: filesystem primary + no-geometry
         path: 'data/x.csv',
         format: 'csv',
         csv_options: { bom: false, relax_quotes: false },
-        cache: 'none',
       });
     restored = stubsFor();
 
@@ -364,7 +360,7 @@ describe('INGESTOR prerequisite 0fs — runner: filesystem primary + no-geometry
   it('T6b(viii) — a path on a non-filesystem kind rejects naming its id and fetches nothing', async () => {
     const d = clone(LOAD_RAVINES) as Record<string, unknown>;
     (d as { inputs: { reads: { externals: Array<Record<string, unknown>> } } }).inputs.reads.externals
-      .push({ id: 'path_on_http_file', kind: 'http_file', path: 'data/x.csv', format: 'csv', csv_options: { bom: false, relax_quotes: false }, cache: 'none' });
+      .push({ id: 'path_on_http_file', kind: 'http_file', path: 'data/x.csv', format: 'csv', csv_options: { bom: false, relax_quotes: false } });
     restored = stubsFor();
 
     await expect(runPhase(d)).rejects.toThrow(/"path_on_http_file" declares a path with kind "http_file"/);
@@ -374,7 +370,7 @@ describe('INGESTOR prerequisite 0fs — runner: filesystem primary + no-geometry
   it('T6b(vi) — a lookup carrying a path rejects naming its id and fetches nothing', async () => {
     const d = clone(LOAD_RAVINES) as Record<string, unknown>;
     (d as { inputs: { reads: { externals: Array<Record<string, unknown>> } } }).inputs.reads.externals
-      .push({ id: 'lookup_with_path', kind: 'filesystem', path: 'data/x.xlsx', format: 'xlsx', role: 'lookup', cache: 'none' });
+      .push({ id: 'lookup_with_path', kind: 'filesystem', path: 'data/x.xlsx', format: 'xlsx', role: 'lookup' });
     restored = stubsFor();
 
     // `lookup_with_path` has no url, so today it is not a lookup at all — it is

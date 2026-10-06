@@ -74,6 +74,17 @@ function buildMatchSql(descriptor, config, mode) {
        OR (p.geocoded_at IS NOT NULL AND p.parcel_linked_at < p.geocoded_at))`;
   const extraFilter = mode === 'full' ? '' : incrementalFilter;
 
+  // O4 row 7 — the keyed DELETE's USING list and predicate, defined ONCE and shared by
+  // delete_by_key_sql and its exact before-image twin delete_by_key_select_sql (they cannot drift).
+  const DELETE_BY_KEY_USING = `(
+        SELECT unnest($1::text[]) AS permit_num,
+               unnest($2::text[]) AS revision_num,
+               unnest($3::int[])  AS keep_parcel_id
+      ) v`;
+  const DELETE_BY_KEY_WHERE = `WHERE pp.permit_num = v.permit_num
+        AND pp.revision_num = v.revision_num
+        AND (v.keep_parcel_id IS NULL OR pp.parcel_id != v.keep_parcel_id)`;
+
   return {
     eligible_count_sql:
       `SELECT COUNT(*) AS total FROM permits p WHERE (${addressFilter}) ${extraFilter};`,
@@ -117,6 +128,8 @@ function buildMatchSql(descriptor, config, mode) {
          AND ap.linear_name_normalized = ip.street_name
          AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
          AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
+         -- fold 10 item 4 (registry-truth, 2026-10-03): a soft-retired address point never matches.
+         AND ap.retired_at IS NULL
         JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
         JOIN parcels p ON p.id = pap.parcel_id
          AND p.street_type_normalized = ip.street_type
@@ -211,45 +224,48 @@ function buildMatchSql(descriptor, config, mode) {
     // revision_num[], $3 keep_parcel_id[] (nullable ints).
     delete_by_key_sql: `
       DELETE FROM permit_parcels pp
-      USING (
-        SELECT unnest($1::text[]) AS permit_num,
-               unnest($2::text[]) AS revision_num,
-               unnest($3::int[])  AS keep_parcel_id
-      ) v
-      WHERE pp.permit_num = v.permit_num
-        AND pp.revision_num = v.revision_num
-        AND (v.keep_parcel_id IS NULL OR pp.parcel_id != v.keep_parcel_id);`,
+      USING ${DELETE_BY_KEY_USING}
+      ${DELETE_BY_KEY_WHERE};`,
 
-    // LP-D10 (WF6 output-panel finding, restored commit 10, 2026-08-30) — the
-    // "evaluated" watermark, RESTORED. Fence a21b7b01 (2026-04-01): "Batch UPDATE
-    // parcel_linked_at = NOW() for ALL evaluated permits, regardless of match
-    // count" -- dropped nowhere-on-purpose during commit 7's consolidation into
-    // LG-24's single transaction; this statement is the whole reason the
-    // incremental filter (WHERE clause above, "parcel_linked_at IS NULL OR
-    // (geocoded_at IS NOT NULL AND parcel_linked_at < geocoded_at)") can ever
-    // EXCLUDE a no-match permit -- without it, a permit that matches nothing is
-    // re-evaluated on every single incremental run forever. Unconditional by
-    // design (matches every permit THIS BATCH processed, matched or not) --
-    // guarded by IS DISTINCT FROM anyway (not "guard: none") so a permit already
-    // stamped with the EXACT same RUN_AT (a same-transaction retry) is correctly
-    // excluded, which is MORE correct than the old code's own unconditional
-    // overwrite, not merely equivalent to it. Params: $1 permit_num[], $2
-    // revision_num[], $3 RUN_AT (bound, never interpolated -- a per-run value,
-    // not a declared constant, so this ships via the set_source:"compute" escape
-    // hatch (LG-22 precedent) rather than the plain declared-constant
-    // set_based_scoped codegen path, which sqlLiteral would refuse).
+    // O4 row 7 (folds 14 + 15) — the EXACT twin of delete_by_key_sql: the same USING list and the
+    // same WHERE (one definition each, above), read once inside the batch transaction BEFORE the
+    // DELETE. Its rows are (a) the R-M / LG-17 before-image — exactly what the DELETE removes, where
+    // the old before-image was every link of every permit in the batch (under full_rescan that superset
+    // would dump the whole junction to JSONL on every run) — and (b) the permits whose link the DELETE
+    // removes, which the watermark below must stamp. Same params as delete_by_key_sql.
+    delete_by_key_select_sql: `
+      SELECT pp.permit_num, pp.revision_num, pp.parcel_id, pp.match_type, pp.confidence, pp.linked_at
+        FROM permit_parcels pp, ${DELETE_BY_KEY_USING}
+      ${DELETE_BY_KEY_WHERE};`,
+
+    // LP-D10 → O4 row 7 (operator ruling 2026-10-03, registry-truth folds 14 + 15) — the watermark now
+    // stamps parcel_linked_at ONLY for a permit whose parcel link CHANGED this run:
+    //   (a) the guarded upsert wrote one of its permit_parcels rows this run — an insert (new or moved
+    //       link) or a match_type/confidence change; the upsert's IS DISTINCT FROM guard excludes
+    //       linked_at, so `pp.linked_at = RUN_AT` holds exactly for the rows written this run; or
+    //   (b) the keyed DELETE removed one of its rows ($4/$5 = the keys delete_by_key_select_sql read).
+    // Re-checked every run (full_rescan), so an unchanged permit is never rewritten: no ≈240K-row
+    // permits rewrite and no permits BEFORE UPDATE trigger storm per run.
+    // FENCE a21b7b01 / LP-D10 (stamp EVERY evaluated permit, matched or not) existed so the incremental
+    // filter could EXCLUDE a no-match permit; under staleness.mode_select "none" there is no incremental
+    // filter (the mode is "full" every run), so that reason is retired with it. A never-linked no-match
+    // permit keeps parcel_linked_at NULL. `IS DISTINCT FROM $3` stays as the same-transaction-retry net.
+    // Params: $1 permit_num[], $2 revision_num[] (the whole batch), $3 RUN_AT (bound, never
+    // interpolated — the set_source:"compute" escape hatch, LG-22 precedent), $4 permit_num[],
+    // $5 revision_num[] (the keys the keyed DELETE removes).
     watermark_update_sql: `
       UPDATE permits
       SET parcel_linked_at = $3::timestamptz
       WHERE (permit_num, revision_num) IN (SELECT unnest($1::text[]), unnest($2::text[]))
         AND parcel_linked_at IS DISTINCT FROM $3::timestamptz
+        AND (
+          EXISTS (SELECT 1 FROM permit_parcels pp
+                   WHERE pp.permit_num = permits.permit_num
+                     AND pp.revision_num = permits.revision_num
+                     AND pp.linked_at = $3::timestamptz)
+          OR (permit_num, revision_num) IN (SELECT unnest($4::text[]), unnest($5::text[]))
+        )
       RETURNING permit_num;`,
-
-    // The declared FULL-mode-only scoped mass retraction (Fold A I-1) — rendered here so
-    // it is visible beside the rest of the match SQL, but it is actually EXECUTED by
-    // write.js's generic W1 mechanism off `outputs.writes[0].write_discipline.scope` +
-    // `retract:"all"`/`retract_when:"full_only"`, never called directly by this file.
-    full_retraction_scope_sql_text: "match_type = 'spatial'",
 
     cumulative_sql:
       `SELECT
@@ -354,29 +370,18 @@ function permits_watermarked(ctx) {
   ctx.report('permits_watermarked', { violations: 0, detail: (w && w.rows_changed) || 0 });
 }
 
-/** LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — the
- * post-write half of the FULL-mode mass retraction (W1, writes[0]'s retract:"all" /
- * retract_when:"full_only", scope match_type='spatial'): retracted and NOT rebuilt is the
- * shape of a broken run, mirroring link_massing's own mass_retraction_ratio
- * (compute/link-massing.js:520-529) verbatim, including its {retracted, rebuilt,
- * unrestored_ratio} detail shape. e1 IS the upsert target here (unlike link_massing, where
- * e2 is the upsert) — both `retracted` (the mass-retraction counter) and `inserted` (the
- * batch loop's own insert counter) already accumulate on the SAME written.e1 object, so no
- * new counter plumbing is needed, only this check reading it. One declared asymmetry from
- * link_massing's shape: the FULL retraction is scoped to match_type='spatial' only, while
- * `rebuilt` (inserted) counts inserts across ALL match tiers this run — a permit retracted
- * from the spatial tier can legitimately re-land at tier 1/2 this same run. The ratio is
- * therefore a conservative bound ("spatial rows retracted and not replaced by anything, of
- * any tier"), not a tier-exact figure — a broken predicate or half-completed run still shows
- * as a non-zero ratio, which is the property this check exists to guarantee. */
+/** LP-D12, re-pointed by O4 row 7 (fold 14/15 row 7; ASSEMBLY 1.16): the full-mode match_type='spatial'
+ * mass retraction is retired, so the measured deletion is LG-24's keyed delete (writes[1] =
+ * written.e2). Value = links deleted over deleted + derived (writes[0] = written.e1 scanned):
+ * a broken run that derives nothing reads 1.0; a healthy run reads ~0. */
 function parcel_retraction_ratio(ctx) {
-  const w = ctx.written && ctx.written.e1;
-  const retracted = (w && w.retracted) || 0;
-  const rebuilt = (w && w.inserted) || 0;
-  const ratio = retracted > 0 ? Math.max(0, retracted - rebuilt) / retracted : 0;
+  const deleted = (ctx.written && ctx.written.e2 && ctx.written.e2.deleted) || 0;
+  const derived = (ctx.written && ctx.written.e1 && ctx.written.e1.scanned) || 0;
+  const total = deleted + derived;
+  const ratio = total > 0 ? deleted / total : 0;
   ctx.report('parcel_retraction_ratio', {
     value: ratio,
-    detail: { retracted, rebuilt, unrestored_ratio: round(ratio) },
+    detail: { deleted, derived, deleted_ratio: round(ratio) },
   });
 }
 

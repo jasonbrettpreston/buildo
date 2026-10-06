@@ -1,0 +1,78 @@
+{
+  "detail": "X-TRUST (P3-C5): 344 leaf field(s); 194 violation(s) [unclassed 194, bad-class 0, missing-mechanism 0, prose-non-string 0]",
+  "mapped_fields": 85,
+  "mapped_violations": [
+    {
+      "path": "identity.name",
+      "kind": "unclassed",
+      "detail": "identity.name: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "inputs.reads.steps[].step",
+      "kind": "unclassed",
+      "detail": "inputs.reads.steps[].step: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "inputs.reads.tables[].table",
+      "kind": "unclassed",
+      "detail": "inputs.reads.tables[].table: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].table",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].table: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].name",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].name: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.values",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.values: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.on_unknown",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.on_unknown: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.writes[].columns[].vocabulary.source",
+      "kind": "unclassed",
+      "detail": "outputs.writes[].columns[].vocabulary.source: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.invalidates[].table",
+      "kind": "unclassed",
+      "detail": "outputs.invalidates[].table: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "outputs.invalidates[].column",
+      "kind": "unclassed",
+      "detail": "outputs.invalidates[].column: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "execution.statement_timeout",
+      "kind": "unclassed",
+      "detail": "execution.statement_timeout: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "checks[].limit.warn",
+      "kind": "unclassed",
+      "detail": "checks[].limit.warn: no x-trust on the field or any ancestor"
+    },
+    {
+      "path": "checks[].limit.fail",
+      "kind": "unclassed",
+      "detail": "checks[].limit.fail: no x-trust on the field or any ancestor"
+    }
+  ],
+  "sample_paths": [
+    "identity.name",
+    "identity.display_name",
+    "identity.owner",
+    "identity.description",
+    "identity.lock"
+  ]
+}

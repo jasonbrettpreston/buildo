@@ -1,0 +1,16 @@
+{
+  "source": "vitest --reporter=json, summarized; full report kept outside the repo at C:/Users/User/fleet2-p3-tools/d4-green.json",
+  "numTotalTests": 153,
+  "numPassedTests": 151,
+  "numFailedTests": 2,
+  "files": 6,
+  "failing": [
+    {
+      "file": "src/tests/step-schema.logic.test.ts",
+      "failed": [
+        "enricher-pending-without-invalidator.json — claim #54 — an ENRICHER with a lineage-predicate staleness.scope cannot omit its invalidator (the centroid defect made unexpressible)",
+        "the other eight profiles are UNAFFECTED — every committed step descriptor still validates, and none of their files changed in this commit beyond the known, declared exceptions (Rule 3/claim #175 probe_presence fleet fix — assert-schema.descriptor.json; WF3 I3a gate_exempt correction — compute-centroids.descriptor.json/refresh-snapshot.descriptor.json, unrelated to any archetype-profile change); enrich_parcels is the ONE ENRICHER, assert_global_coverage/assert_data_bounds/assert_engine_health are the SECOND/THIRD ASSERT-and-RECORDER cutovers (batch1 I2 commit 9 2026-09-13 + batch1 I3 commit 9 2026-09-14 — converted.json at 12 entries; assert_engine_health's own descriptor is unchanged this commit — pure cutover, no probe_presence regen, since assert-schema's probe list only regenerates when a NEW logic_variables name enters the fleet, and this step's 7 vars all landed at commit 7/8)"
+      ]
+    }
+  ]
+}

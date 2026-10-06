@@ -1,0 +1,13 @@
+{
+ "scanner": "C:/Users/User/Buildo-wt-fleet2-ldg10",
+ "tree": "C:/Users/User/Buildo-wt-fleet2-p3",
+ "unallowed_total": 5,
+ "massing_full_gate_rows": [],
+ "unallowed": [
+  "scan.scripts/analysis/gates/consumer-registry.mjs.mystery_key",
+  "scan.scripts/analysis/gates/consumer-registry.mjs.tables_checked",
+  "scan.scripts/analysis/gates/consumer-registry.mjs.mystery_key",
+  "scan.scripts/analysis/load-heritage-cohort-differential.js.heritage_load",
+  "scan.scripts/analysis/load-heritage-cohort-differential.js.heritage_load"
+ ]
+}

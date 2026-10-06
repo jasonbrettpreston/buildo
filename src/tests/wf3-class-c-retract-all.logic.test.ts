@@ -157,7 +157,12 @@ describe('buildWritePlan — the retract-all/no-scope guard EXEMPTS class C only
       [k: string]: unknown;
     };
     expect(spec.write_discipline.class).toBe('guarded_upsert');
-    expect(spec.retract).toBe('all');
+    // FLEET-2 Row 7 retired link_parcels' spatial retraction: the committed writes[0] now declares retract "none".
+    // The subject (a SCOPED retract:"all" class-B plan) is therefore declared here, with the pre-FLEET-2 values
+    // restored (retract "all", scope "match_type = 'spatial'"). buildWritePlan's scoped branch is unchanged.
+    expect(spec.retract, 'the committed link_parcels writes[0] no longer retracts (FLEET-2 Row 7)').toBe('none');
+    spec.retract = 'all';
+    spec.write_discipline.scope = "match_type = 'spatial'";
     const plan = writeLib.buildWritePlan(spec, LINK_PARCELS);
     expect(norm(plan.delete_sql)).toBe(`DELETE FROM ${spec.table} WHERE ${spec.write_discipline.scope};`);
     expect(plan.delete_sql).not.toMatch(/^\s*DELETE FROM \w+;\s*$/);

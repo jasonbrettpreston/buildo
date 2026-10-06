@@ -54,6 +54,7 @@ const WRITE_COLUMNS = [
   'address_number', 'linear_name_full', 'address_full', 'lo_num', 'hi_num',
   'maint_stage', 'address_status', 'address_class_desc', 'class_family_desc', 'place_name',
   'addr_num_normalized', 'linear_name_normalized', 'geom',
+  'retired_at', // fold 10 soft-retire (AP-D9): written insert_only, seeded NULL, only MARK/UNMARK change it
 ];
 const WRITE_CLASS = 'guarded_upsert';
 /** The 13 guard columns from the WHERE clause :219-241 (12 bare/NULLIF + geom). */
@@ -79,6 +80,7 @@ const CONFIG_VARS: Record<string, number> = {
   address_points_skip_rate_max_pct: 5,
   address_points_null_address_number_max_pct: 0.1,
   address_points_download_timeout_ms: 60000,
+  address_points_mass_retire_max_pct: 0.02, // fold 10 soft-retire mass guard (fold 15 default)
 };
 /** The config variables that are REAL seeded variables minted by this step (sources_address_points_floor pre-exists). */
 const NEW_CONFIG_VARS = [
@@ -515,12 +517,12 @@ describe('row 3.1 — the descriptor declares class-A guarded_upsert (Spec 122 �
     expect(w[0]!.write_discipline.class).toBe(WRITE_CLASS);
     expect(w[0]!.write_discipline.guard, 'the guarded UPDATE clause').toBe('is_distinct_from');
     expect(w[0]!.write_discipline.scope, 'class A has no retraction scope').toBe('none');
-    expect(w[0]!.retract, 'NO DELETE anywhere in the loader = retract none').toBe('none');
+    expect(w[0]!.retract, 'fold 10 soft-retire (AP-D9): departed keys are MARKED retired_at, never deleted').toBe('departed_mark');
     expect(w[0]!.write_discipline.idempotent_rerun).toBe('zero_writes');
     expect(w[0]!.write_discipline.txn_scope, 'the runner wraps ALL batches in ONE transaction (Fold B3)').toBe('step');
   });
 
-  it('the 16 write columns are declared (3 base + 10 source + 2 normalized + geom)', () => {
+  it('the 17 write columns are declared (3 base + 10 source + 2 normalized + geom + retired_at)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
@@ -533,16 +535,16 @@ describe('row 3.1 — the descriptor declares class-A guarded_upsert (Spec 122 �
     expect(gc).toEqual(expect.arrayContaining(GUARD_COLUMNS));
   });
 
-  it('the external is the CKAN CSV, format csv, key ADDRESS_POINT_ID, no cache', () => {
+  it('the external is the CKAN CSV, format csv, key ADDRESS_POINT_ID', () => {
     const d = loadDescriptor();
     const ext = d.inputs.reads.externals[0]!;
     expect(ext.kind).toBe('http_file');
     expect(ext.format).toBe('csv');
     expect(ext.url).toContain(CSV_URL_HOST);
     expect(ext.key_property).toBe('ADDRESS_POINT_ID');
-    expect(ext.cache).toBe('none');
+    // inputs.reads.externals[].cache deleted in the Phase 3 RE-FREEZE (#11, zero runtime readers)
     expect(ext.csv_options, 'csv_options are REQUIRED for a csv external — honoured, never inferred').toBeDefined();
-    expect(d.inputs.reads.tables, 'address_points reads no table').toEqual([]);
+    expect(d.inputs.reads.tables, 'fold 10: MARK / UNMARK / candidates read address_points (address_point_id, retired_at)').toEqual([{ table: 'address_points', columns: ['address_point_id', 'retired_at'] }]);
   });
 });
 
@@ -551,7 +553,8 @@ describe('row 3.1 — staleness has NO gate today (declared honestly, Spec 54/12
     const d = loadDescriptor();
     const t = d.staleness.trigger;
     expect(t === 'none' || (Array.isArray(t) && t.length === 0), 'the loader has NO gate: every run loads').toBe(true);
-    expect(d.staleness.scope, 'no gate ⇒ no row eligibility narrowing').toBe('none');
+    // staleness.scope deleted in the Phase 3 RE-FREEZE (#28, zero runtime readers)
+    expect(writes(d)[0]!.write_discipline.scope, 'no gate ⇒ no row eligibility narrowing').toBe('none');
   });
 
   it('the skip-gate opportunity lives in limitations[], NOT in a forged staleness trigger', () => {
@@ -648,11 +651,14 @@ describe('row 3.1 — deviations carry the four adjudications verbatim (Fold B3 
     expect(/AP-D2/.test(JSON.stringify(checkById(d, 'geom_parse_failures').why ?? {})), 'AP-D2 pinned on its check').toBe(true);
   });
 
-  it('execution.on_batch_error is drop_batch with on_batch_error_why naming AP-D3', () => {
+  // MQ-B5 (a), morning batch 2 (2026-10-05): the Spec 123 §3.1 flip of the AP-D3 pin. The runner's
+  // write.js executeWrite runs every batch in ONE transaction with no catch, so a failed batch fails the
+  // step (nothing is dropped) — the declaration now says so, and the retirement is a deviations[] row.
+  it('execution.on_batch_error is fail_step (AP-D3 FIXED-BY-RUNNER, MQ-B5 (a)) and the retirement is a declared deviation', () => {
     const d = loadDescriptor();
-    expect(d.execution.on_batch_error, 'the loader logs, counts and DROPS a failed batch').toBe('drop_batch');
-    expect(d.execution.on_batch_error_why, 'a drop_batch declaration owes its why (schema allOf)').toBeDefined();
-    expect(/AP-D3/.test(JSON.stringify(d.execution.on_batch_error_why)), 'the why names AP-D3').toBe(true);
+    expect(d.execution.on_batch_error, 'a failed batch rolls back the one step transaction').toBe('fail_step');
+    expect(d.execution.on_batch_error_why, 'fail_step owes no why; the old drop_batch why is retired').toBeUndefined();
+    expect(/AP-D3/.test(JSON.stringify((d as unknown as { deviations: unknown }).deviations)) && /MQ-B5 \(a\)/.test(JSON.stringify((d as unknown as { deviations: unknown }).deviations)), 'the AP-D3 retirement is a deviations[] row').toBe(true);
   });
 });
 
@@ -755,7 +761,6 @@ describe('row 3.1 — the standard batteries (Spec 122 §5.5, Spec 122 §5.1, th
     expect(Array.isArray(notes.fences), 'notes.fences must be an explicit array').toBe(true);
     const d = loadDescriptor();
     expect((d.interpretation as { file: string }).file).toBe(path.basename(NOTES_REL));
-    expect((d.interpretation as { entries: number }).entries).toBe(n);
   });
 
   it('the report carries the "Peel ledger" with one row per folded peel concern (operator budget ruling)', () => {
@@ -811,7 +816,7 @@ interface Descriptor {
   emits: 'none' | Array<{ key: string; type: string; consumers: string[]; skeleton?: unknown }>;
   deviations: unknown;
   limitations: unknown;
-  interpretation: { file: string; entries: number } | 'none';
+  interpretation: { file: string } | 'none';
   recovery: { reset: unknown; resume: unknown; force: unknown; rollback: unknown; verify_clean: unknown; cascades: unknown; interrupted: string; interrupted_why: unknown; before_image: string; before_image_why: unknown };
   database: { class: unknown; min_migration: number | 'none'; assert_current_database: string };
   counters: 'none' | { records_total: { source: string; scoped_by: unknown }; records_new: { source: string }; records_updated: { source: string } };

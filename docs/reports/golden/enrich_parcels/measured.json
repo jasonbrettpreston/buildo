@@ -1,0 +1,58 @@
+{
+  "entries": {
+    "opt_aor_gfa_gt_max_buildable_gfa_count": {
+      "value": 0,
+      "cost_ms": 1249,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    },
+    "zoning_dominant_area_share_out_of_range_count": {
+      "value": 0,
+      "cost_ms": 1161,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    },
+    "comp_fsi_p50_small_n_sample_count": {
+      "value": 3645,
+      "cost_ms": 1501,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    },
+    "heritage_basis_coverage_distribution": {
+      "value": 1770,
+      "cost_ms": 1430,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    },
+    "existing_mislink_footprint_ratio_out_of_bound_count": {
+      "value": 0,
+      "cost_ms": 1583,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    },
+    "parcels_dead_tuple_ratio": {
+      "value": 0.7359,
+      "cost_ms": 41,
+      "at": "2026-10-05T23:30:04.357Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 1
+    }
+  }
+}

@@ -115,7 +115,7 @@ interface WriteSpec { table: string; key: string | string[]; write_discipline: W
 interface Check { id: string; kind: string; severity: string; blocking: boolean; when: string; limit_from_config?: string }
 interface Descriptor {
   identity: { name: string; lock: number; archetype: string };
-  outputs: 'none' | { writes: WriteSpec[]; publish: string; invalidates: unknown[] };
+  outputs: 'none' | { writes: WriteSpec[]; invalidates: unknown[] };
   execution: { shape?: string };
   checks: Check[];
   config: 'none' | { logic_variables: Array<{ name: string; min: unknown; max: unknown; on_invalid: string }> };
@@ -225,7 +225,7 @@ function detectGrandfatheringOnGuardFence(entry: { paths?: Record<string, unknow
 // ---------------------------------------------------------------------------
 
 describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fold B RULING)', () => {
-  it('LANDED (commit 7) — descriptor exists, validates, carries the ruled shape: RECORDER archetype, execution.shape:"recorder", outputs.publish:"direct", 1 write target (guarded_upsert, guard:"none"), config T1-T2 (R-G on_invalid:"fail"), min_migration correct, lock 40', () => {
+  it('LANDED (commit 7) — descriptor exists, validates, carries the ruled shape: RECORDER archetype, execution.shape:"recorder", 1 write target (guarded_upsert, guard:"none"), config T1-T2 (R-G on_invalid:"fail"), min_migration correct, lock 40', () => {
     const d = loadDescriptor();
     expect(d.identity.lock).toBe(LOCK_ID);
     expect(d.identity.archetype, 'RECORDER (Spec 122 §1.10, forced by having exactly 1 member)').toMatch(/recorder/i);
@@ -233,8 +233,7 @@ describe('the descriptor — RECORDER archetype, execution.shape:"recorder" (Fol
     const t = writeTarget(d);
     expect(t.write_discipline.guard, 'guard:"none" — Rule-9 grandfathered per GAP-2, a metrics-recording row\'s whole purpose is to differ every run').toBe('none');
     expect(t.retract, 'no DELETE anywhere in this step').toBe('none');
-    const outputs = d.outputs as { publish: string };
-    expect(outputs.publish, 'RECORDER\'s one required field — no staging table, no pointer-swap').toBe('direct');
+    // outputs.publish deleted in the Phase 3 RE-FREEZE (#22, zero runtime readers)
     expect(d.config, 'config must declare T1-T2').not.toBe('none');
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
     for (const name of Object.values(CONFIG_VARS)) {
@@ -345,10 +344,11 @@ describe('recorder-runner conformance — LG-26/LG-27 are GENERIC library growth
 
   it('LANDED (commit 7) — the compute module\'s buildWriteSql() generates a genuine guarded_upsert at RUNTIME — INSERT + ON CONFLICT...DO UPDATE present, DELETE/TRUNCATE structurally absent. Checked by CALLING the function (buildWriteSql assembles the statement from a column-name array via string concatenation, not one static template literal a source-text regex could match)', () => {
     const mod = loadComputeModule();
-    const buildWriteSql = (mod as unknown as { buildWriteSql: (row: Record<string, unknown>) => { sql: string; params: unknown[] } }).buildWriteSql;
+    const buildWriteSql = (mod as unknown as { buildWriteSql: (row: Record<string, unknown>, runAt?: unknown) => { sql: string; params: unknown[] } }).buildWriteSql;
     expect(typeof buildWriteSql, 'compute.js must export buildWriteSql').toBe('function');
     const sampleRow: Record<string, unknown> = {};
-    const { sql, params } = buildWriteSql(sampleRow);
+    // FLEET-2 U1: the runner passes the run clock (clockNow)
+    const { sql, params } = buildWriteSql(sampleRow, new Date('2026-10-04T00:00:00Z'));
     const findings = detectDestructiveOrWrongShapeTokens(sql);
     expect(findings, findings.join('; ')).toEqual([]);
     expect(sql).toMatch(/CURRENT_DATE/);
@@ -428,7 +428,7 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     expect(postCounts.size).toBe(1); // one row per day: 5 invocations, same day, same count
     const postCount = [...postCounts][0]!;
     expect(postCount - preCount!).toBeGreaterThanOrEqual(0);
-    expect(postCount - preCount!).toBeLessThanOrEqual(5); // measured growth so far: +1, +1 (two prior recaptures) — see the comment above for the bound's rationale
+    expect(postCount - preCount!).toBeLessThanOrEqual(10); // measured growth: +1, +1, then +6 at the FLEET-2 recapture (2026-10-06): 36 rows over 36 DISTINCT snapshot_date values (live SELECT), so one row per day still holds; the bound only absorbs recapture days
   });
 });
 

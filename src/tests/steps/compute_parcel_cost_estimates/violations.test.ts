@@ -198,7 +198,7 @@ describe('compute_parcel_cost_estimates — test 13: chain wiring', () => {
     expect(slugs).toHaveLength(28);
     expect(slugs.indexOf('compute_parcel_cost_estimates')).toBe(22);
     expect(slugs[21]).toBe('enrich_parcels');
-    expect(slugs[23]).toBe('assert_global_coverage');
+    expect(slugs[23]).toBe('refresh_snapshot'); // FLEET-2 manifest variant c2 moved refresh_snapshot ahead of the asserts
   });
 });
 
@@ -241,7 +241,17 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const seam: any = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
     const registry = seam.loadConvertedDescriptors();
-    expect(seam.deriveSeamPairs(registry).length).toBe(22);
+    // FLEET-2 assembly (r4, 2026-10-05): a registry-wide COUNT moved on every other step's cutover
+    // (22 -> 35 at the merge) and said nothing about this step. Pinned instead: THIS step's own pairs,
+    // derived from the converted registry — they move only when this step's declared edges do.
+    const own = seam.deriveSeamPairs(registry)
+      .filter((p: { upstream: string; downstream: string }) => p.upstream === 'compute_parcel_cost_estimates' || p.downstream === 'compute_parcel_cost_estimates')
+      .map((p: { upstream: string; downstream: string }) => `${p.upstream}>${p.downstream}`);
+    expect(own).toEqual([
+      'compute_parcel_cost_estimates>assert_parcel_sanity',
+      'enrich_parcels>compute_parcel_cost_estimates',
+      'parcels>compute_parcel_cost_estimates',
+    ]);
   });
 });
 
@@ -273,10 +283,10 @@ describe('compute_parcel_cost_estimates — test 16: the stream batch size is LI
 });
 
 describe('compute_parcel_cost_estimates — CPCE-A1: run-ledger gate retirement, declared', () => {
-  it('staleness.mode_select === "none", staleness.scope === "all", no gate-SKIP terminal is declared', () => {
+  it('staleness.mode_select === "none", no gate-SKIP terminal is declared', () => {
     const descriptor = loadDescriptor();
     expect(descriptor.staleness.mode_select).toBe('none');
-    expect(descriptor.staleness.scope).toBe('all');
+    // staleness.scope deleted in the Phase 3 RE-FREEZE (#28, zero runtime readers)
     expect(descriptor.terminals.map((t: { id: string }) => t.id)).not.toContain('gate_skip');
     const hit = descriptor.deviations.find((d: { from: string }) => /run-ledger gate/.test(d.from));
     expect(hit, 'a deviations[] entry naming the retired run-ledger gate').toBeDefined();

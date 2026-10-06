@@ -9,9 +9,9 @@
  * Link permits to parcels and write the permit_parcels junction.
  *
  * Usage: node scripts/link-parcels.js   ·   PIPELINE_CHAIN=sources node scripts/link-parcels.js --full
- * LINK_PARCELS_FORCE_FULL=1 forces a full relink unconditionally — the scoped mass
- * retraction (match_type='spatial' only) clears the tier Pilot 7's THE FIX changes, then
- * the same batch loop rebuilds it.
+ * LINK_PARCELS_FORCE_FULL is RETIRED (MQ-B2, fold 19): since O4 row 7 every run derives all
+ * links and rewrites only the changed ones, so the override changed nothing; the env var is
+ * a deviations[] entry in the descriptor and arms nothing.
  *
  * ⚠️ THE ENTIRE FILE SHAPE IS FROZEN (Spec 122 §5.1) and enforced by
  * scripts/ast-grep-rules/step-shape.yml over scripts/steps/_schema/converted.json.

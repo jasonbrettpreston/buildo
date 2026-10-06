@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/geocode-permits.js",
   "chain": "none",
-  "git_head": "4c8f30e307a3504929b2ce6f12698e799a86d581",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,14 +11,14 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 4885,
-      "code_version": "v1-address-point-geo-id-join",
+      "duration_ms": 8088,
+      "code_version": "none",
       "permits_total": 254082,
       "total_geocoded": 231930,
       "has_geo_id_no_match": 14492,
       "no_geo_id": 7660,
       "zombies_cleaned": 0,
-      "address_points_loaded": 525346,
+      "address_points_loaded": 525343,
       "config": {
         "geocode_permits_coverage_warn_pct": 95,
         "geocode_permits_heartbeat_minutes": 5,
@@ -27,9 +27,11 @@
       "terminal": "geocoded_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 1,
+      "errors": [],
       "warnings": [
         "geocode_coverage: 91.28155477365574"
       ],
@@ -43,93 +45,112 @@
             "value": 254082,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "already_geocoded",
             "value": 231930,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "newly_geocoded",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "total_geocoded",
             "value": 231930,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "geocode_coverage",
             "value": 91.28155477365574,
             "threshold": "pct >= 95",
             "status": "WARN",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "no_geo_id",
             "value": 7660,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "zombies_cleaned",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "backlog_remaining",
             "value": 14492,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "lat_xor_lng_null_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "geocoded_at_set_but_no_geo_id_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "invariant"
+            "source": "invariant",
+            "observed": "after_write"
           },
           {
             "metric": "coords_outside_toronto_bbox_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "plausibility"
+            "source": "plausibility",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "address_points": 525668
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
           },
           {
             "metric": "sys_lat_xor_lng_null_count_duration_ms",
-            "value": 467,
+            "value": 269,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_geocoded_at_set_but_no_geo_id_count_duration_ms",
-            "value": 465,
+            "value": 504,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_coords_outside_toronto_bbox_count_duration_ms",
-            "value": 274,
+            "value": 233,
             "threshold": null,
             "status": "INFO"
           },
@@ -141,7 +162,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 5631,
+            "value": 8867,
             "threshold": null,
             "status": "INFO"
           }
@@ -164,7 +185,8 @@
         "address_points": [
           "address_point_id",
           "latitude",
-          "longitude"
+          "longitude",
+          "retired_at"
         ]
       },
       "writes": {
@@ -181,16 +203,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=244 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode completed in 2470ms\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup completed in 2137ms\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":4885,\"code_version\":\"v1-address-point-geo-id-join\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525346,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":0,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":467,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":465,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":274,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":5631,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"geo_id\",\"latitude\",\"longitude\",\"geocoded_at\"],\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\"]},\"writes\":{\"permits\":[\"latitude\",\"longitude\",\"geocoded_at\"]}}\n\n[geocode_permits] completed in 5.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=247 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase geocode completed in 6269ms\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\"}\n{\"level\":\"INFO\",\"tag\":\"[geocode_permits]\",\"msg\":\"phase zombie_cleanup completed in 780ms\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":8088,\"code_version\":\"none\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525343,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":0,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"address_points\":525668},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":269,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":504,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":233,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":8867,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"geo_id\",\"latitude\",\"longitude\",\"geocoded_at\"],\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"retired_at\"]},\"writes\":{\"permits\":[\"latitude\",\"longitude\",\"geocoded_at\"]}}\n\n[geocode_permits] completed in 8.9s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 1902,
+      "id": 2321,
       "pipeline": "geocode_permits",
       "status": "completed_with_warnings",
-      "started_at": "2026-09-17T01:37:45.105Z",
-      "completed_at": "2026-09-17T01:37:50.706Z",
-      "duration_ms": 5632,
+      "started_at": "2026-10-06T12:08:02.660Z",
+      "completed_at": "2026-10-06T12:08:11.439Z",
+      "duration_ms": 8868,
       "records_total": 0,
       "records_new": 0,
       "records_updated": 0,
@@ -200,6 +222,8 @@
           "geocode_permits_coverage_warn_pct": 95,
           "geocode_permits_heartbeat_minutes": 5
         },
+        "errors": [],
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
         "terminal": "geocoded_with_warnings",
         "warnings": [
           "geocode_coverage: 91.28155477365574"
@@ -214,6 +238,7 @@
               "metric": "total_permits",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -221,6 +246,7 @@
               "metric": "already_geocoded",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -228,6 +254,7 @@
               "metric": "newly_geocoded",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -235,6 +262,7 @@
               "metric": "total_geocoded",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -242,6 +270,7 @@
               "metric": "geocode_coverage",
               "source": "check",
               "status": "WARN",
+              "observed": "after_write",
               "threshold": "pct >= 95"
             },
             {
@@ -249,6 +278,7 @@
               "metric": "no_geo_id",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -256,6 +286,7 @@
               "metric": "zombies_cleaned",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -263,6 +294,7 @@
               "metric": "backlog_remaining",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -270,6 +302,7 @@
               "metric": "lat_xor_lng_null_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -277,6 +310,7 @@
               "metric": "geocoded_at_set_but_no_geo_id_count",
               "source": "invariant",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -284,22 +318,31 @@
               "metric": "coords_outside_toronto_bbox_count",
               "source": "plausibility",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 467,
+              "value": {
+                "address_points": 525668
+              },
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
+            },
+            {
+              "value": 269,
               "metric": "sys_lat_xor_lng_null_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 465,
+              "value": 504,
               "metric": "sys_geocoded_at_set_but_no_geo_id_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 274,
+              "value": 233,
               "metric": "sys_coords_outside_toronto_bbox_count_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -311,7 +354,7 @@
               "threshold": null
             },
             {
-              "value": 5631,
+              "value": 8867,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -320,28 +363,28 @@
           "phase": 0,
           "verdict": "WARN"
         },
-        "duration_ms": 4885,
+        "duration_ms": 8088,
         "pool_errors": 0,
         "chain_run_id": null,
-        "code_version": "v1-address-point-geo-id-join",
+        "code_version": "none",
         "checks_failed": 0,
         "checks_warned": 1,
         "permits_total": 254082,
         "total_geocoded": 231930,
         "zombies_cleaned": 0,
         "has_geo_id_no_match": 14492,
-        "address_points_loaded": 525346
+        "address_points_loaded": 525343
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1901,
+  "pipeline_runs_max_id_before": 2320,
   "table_state": [
     {
       "table": "permits",
       "row_count": 254082,
       "ceiling_bypassed": "projected",
-      "content_hash": "d293118b48e81ada2b9ed158262f2bd7",
+      "content_hash": "3e353d210f51949d2f3a51cdc0e69555",
       "order_by": "explicit",
       "order_columns": [
         "permit_num",
@@ -358,7 +401,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "permits": 969
+    "permits": 1006
   },
   "table_specs": {
     "permits": {
@@ -411,7 +454,7 @@
     },
     {
       "name": "address_points_loaded",
-      "value": "525346"
+      "value": "525668"
     },
     {
       "name": "nonnumeric_geo_id_count",
@@ -419,7 +462,7 @@
     }
   ],
   "invariants_file": "docs/reports/golden/geocode_permits/invariants.json",
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -427,9 +470,11 @@
     "key:pipeline_runs[0].duration_ms",
     "key:pipeline_runs[0].id",
     "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
     "key:pipeline_runs[0].records_meta.duration_ms",
     "key:pipeline_runs[0].started_at",
     "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
     "key:summary.records_meta.duration_ms",
     "pattern:duration_literal",
     "row:sys_coords_outside_toronto_bbox_count_duration_ms",
@@ -444,13 +489,14 @@
     "exit_code": 0,
     "summary": {
       "records_meta": {
-        "address_points_loaded": 525346,
+        "address_points_loaded": 525343,
         "audit_table": {
           "name": "Permit Geocoding",
           "phase": 0,
           "rows": [
             {
               "metric": "total_permits",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -458,6 +504,7 @@
             },
             {
               "metric": "already_geocoded",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -465,6 +512,7 @@
             },
             {
               "metric": "newly_geocoded",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -472,6 +520,7 @@
             },
             {
               "metric": "total_geocoded",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -479,6 +528,7 @@
             },
             {
               "metric": "geocode_coverage",
+              "observed": "after_write",
               "source": "check",
               "status": "WARN",
               "threshold": "pct >= 95",
@@ -486,6 +536,7 @@
             },
             {
               "metric": "no_geo_id",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -493,6 +544,7 @@
             },
             {
               "metric": "zombies_cleaned",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -500,6 +552,7 @@
             },
             {
               "metric": "backlog_remaining",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -507,6 +560,7 @@
             },
             {
               "metric": "lat_xor_lng_null_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -514,6 +568,7 @@
             },
             {
               "metric": "geocoded_at_set_but_no_geo_id_count",
+              "observed": "after_write",
               "source": "invariant",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -521,22 +576,32 @@
             },
             {
               "metric": "coords_outside_toronto_bbox_count",
+              "observed": "after_write",
               "source": "plausibility",
               "status": "PASS",
               "threshold": "viol == 0",
               "value": 0
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "address_points": 525668
+              }
             }
           ],
           "verdict": "WARN"
         },
         "checks_failed": 0,
         "checks_warned": 1,
-        "code_version": "v1-address-point-geo-id-join",
+        "code_version": "none",
         "config": {
           "geocode_permits_coverage_warn_pct": 95,
           "geocode_permits_heartbeat_minutes": 5,
           "geocode_permits_lock_timeout_ms": 1800000
         },
+        "errors": [],
         "has_geo_id_no_match": 14492,
         "ledger_row": "owned",
         "no_geo_id": 7660,
@@ -560,7 +625,8 @@
           "address_points": [
             "address_point_id",
             "latitude",
-            "longitude"
+            "longitude",
+            "retired_at"
           ],
           "permits": [
             "permit_num",
@@ -586,13 +652,14 @@
         "error_message": null,
         "pipeline": "geocode_permits",
         "records_meta": {
-          "address_points_loaded": 525346,
+          "address_points_loaded": 525343,
           "audit_table": {
             "name": "Permit Geocoding",
             "phase": 0,
             "rows": [
               {
                 "metric": "total_permits",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -600,6 +667,7 @@
               },
               {
                 "metric": "already_geocoded",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -607,6 +675,7 @@
               },
               {
                 "metric": "newly_geocoded",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -614,6 +683,7 @@
               },
               {
                 "metric": "total_geocoded",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -621,6 +691,7 @@
               },
               {
                 "metric": "geocode_coverage",
+                "observed": "after_write",
                 "source": "check",
                 "status": "WARN",
                 "threshold": "pct >= 95",
@@ -628,6 +699,7 @@
               },
               {
                 "metric": "no_geo_id",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -635,6 +707,7 @@
               },
               {
                 "metric": "zombies_cleaned",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -642,6 +715,7 @@
               },
               {
                 "metric": "backlog_remaining",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -649,6 +723,7 @@
               },
               {
                 "metric": "lat_xor_lng_null_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -656,6 +731,7 @@
               },
               {
                 "metric": "geocoded_at_set_but_no_geo_id_count",
+                "observed": "after_write",
                 "source": "invariant",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -663,22 +739,32 @@
               },
               {
                 "metric": "coords_outside_toronto_bbox_count",
+                "observed": "after_write",
                 "source": "plausibility",
                 "status": "PASS",
                 "threshold": "viol == 0",
                 "value": 0
+              },
+              {
+                "metric": "inputs_nonempty",
+                "status": "INFO",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+                "value": {
+                  "address_points": 525668
+                }
               }
             ],
             "verdict": "WARN"
           },
           "checks_failed": 0,
           "checks_warned": 1,
-          "code_version": "v1-address-point-geo-id-join",
+          "code_version": "none",
           "config": {
             "geocode_permits_coverage_warn_pct": 95,
             "geocode_permits_heartbeat_minutes": 5,
             "geocode_permits_lock_timeout_ms": 1800000
           },
+          "errors": [],
           "has_geo_id_no_match": 14492,
           "ledger_row": "owned",
           "no_geo_id": 7660,
@@ -698,7 +784,7 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=244 (floor 18)\",\"tag\":\"[geocode_permits]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[geocode_permits] target: geocode_permits (descriptor.database) → database=postgres user=postgres migrations=247 (floor 18)\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase geocode starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase geocode completed in <DUR>\",\"tag\":\"[geocode_permits]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase zombie_cleanup starting (shared txn, timeout disabled (declared \\\"none\\\"))\",\"tag\":\"[geocode_permits]\"}",
@@ -714,7 +800,7 @@
           "latitude",
           "longitude"
         ],
-        "content_hash": "d293118b48e81ada2b9ed158262f2bd7",
+        "content_hash": "3e353d210f51949d2f3a51cdc0e69555",
         "order_by": "explicit",
         "order_columns": [
           "permit_num",
@@ -759,7 +845,7 @@
       },
       {
         "name": "address_points_loaded",
-        "value": "525346"
+        "value": "525668"
       },
       {
         "name": "nonnumeric_geo_id_count",
@@ -767,11 +853,31 @@
       }
     ]
   },
-  "source_fingerprint": "7fd812c9521aa01ef8f8f8846386ee83c27b34a86af970b3d78c9c4cd307ef2e",
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "permits",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 1 table(s) [permits]",
+    "txid_before_run2": 3230556,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "geocoded_with_warnings"
+    }
+  },
+  "source_fingerprint": "bb6e93b1db19513bc9ef871df84493c3a5f44259308b40e019cf269dbe2995b3",
   "fingerprint_files": [
     "scripts/geocode-permits.descriptor.json",
     "scripts/geocode-permits.js",
     "scripts/geocode-permits.notes.json",
     "scripts/lib/compute/geocode-permits.js"
-  ]
+  ],
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

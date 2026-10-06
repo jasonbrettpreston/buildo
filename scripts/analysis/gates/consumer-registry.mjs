@@ -45,8 +45,12 @@
 // alias `const meta = ...records_meta...; meta.key`, two-level alias
 // `const l = meta.key.leaf` (FIRST level only), and SQL `-> 'key'` / `#>> '{key,..}'`).
 // Concretely, every such read in the closed corpus
-// (`src/lib/admin/**`, `src/components/**`, `src/app/**`, plus the four named
-// chain scripts) on a line that is not a comment must resolve to RUNNER_META_KEYS
+// (`src/lib/admin/**`, `src/components/**`, `src/app/**`, plus every
+// `scripts/**` .js/.mjs/.ts/.cjs file except the schema fixtures — LDG-10)
+// A slug consumer row covers that step's §4.1 files (stepFileOwners); a key no converted
+// producer emits is LISTED unconverted_producer:<file>:<key> only when found in an
+// unconverted producer's source (O3), else RED.
+// Every such read on a line that is not a comment must resolve to RUNNER_META_KEYS
 // (gate C's export), CHAIN_META_KEYS (below — a step-independent key stamped by
 // the RUNNER/CHAIN layer, each entry citing its WRITER by greppable anchor,
 // verified by grep, 2026-09-26), or a registry row whose `consumer` is that same
@@ -63,7 +67,8 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { matchLedger, loadLedger, LEDGER_REL_PATH } from './ledger.mjs';
 import { loadConvertedDescriptors } from './closed-bounds.mjs';
-import { asConvertedFiles, withCommittedSet } from './converted-set.mjs';
+import { asConvertedFiles, withCommittedSet, readConvertedJson } from './converted-set.mjs';
+import { stepFiles } from './step-registry.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -80,15 +85,74 @@ const { effectiveLedger } = require(path.join(REPO_ROOT, 'scripts/lib/ledger.js'
 /**
  * The `unproduced` src read posture. Every unproduced read is printed and
  * COUNTED on every run — no exception file, no silent skip. The FLEET-2 landing
- * commit sets `mode: 'hard'` (the ONLY flip), after which each one is a gate-D
- * violation.
+ * commit set `mode: 'hard'` (the ONLY flip; registry-truth fold 14 P1-C6): each
+ * unproduced read is now a gate-D violation, closed only by declaring the column
+ * in its producer descriptor (written: step | insert_only | db_default) or
+ * dropping the read.
  * @type {Readonly<{mode: 'report-only' | 'hard', flips_hard_at: string, closes_by: string}>}
  */
 export const UNPRODUCED_POSTURE = Object.freeze({
-  mode: 'report-only',
+  mode: 'hard',
   flips_hard_at: 'the FLEET-2 landing commit (.cursor/wf2_registry_truth_active_task.md, Fold 14 P1-C6)',
   closes_by: 'declare the column in its producer descriptor (written: step | insert_only | db_default), or drop the read',
 });
+
+/**
+ * MQ-A5 (plan fold 19 row 5; Spec 124 §5 row + Operator-Ruling at landing): the write MECHANICS that
+ * INSERT rows into their declared target (Spec 122 §1 class table, Pattern column), and the ones that
+ * never do. Together they partition the frozen `write_discipline.class` enum (locked by the gate-D
+ * suite), so a new class can never default silently.
+ */
+export const ROW_INSERTING_CLASSES = Object.freeze([
+  'guarded_upsert', 'upsert_scoped_departure_delete', 'staging_full_replace',
+  'insert_only_no_retraction', 'link_full_retraction', 'snapshot_append',
+]);
+export const NON_INSERTING_CLASSES = Object.freeze([
+  'write_once_backfill', 'set_based_scoped', 'set_based_unscoped', 'temp_materialize', 'multi_pass_defer',
+  'derived_recompute', 'verdict_only', 'set_based_join_update', 'set_based_null_retract',
+]);
+
+/**
+ * Tables some converted descriptor declares an INSERTING write target on (its row producer is
+ * converted). Sorted, unique.
+ * @param {object[]} descriptors converted descriptors
+ * @returns {string[]}
+ */
+export function convertedInserterTables(descriptors) {
+  const out = new Set();
+  for (const d of descriptors || []) {
+    const writes = d && d.outputs && Array.isArray(d.outputs.writes) ? d.outputs.writes : [];
+    for (const w of writes) {
+      if (w && w.table && w.write_discipline && ROW_INSERTING_CLASSES.includes(w.write_discipline.class)) out.add(w.table);
+    }
+  }
+  return [...out].sort();
+}
+
+/**
+ * MQ-A5 predicate: an `unproduced:<file>:<table>.<column>` read is HARD when its table has a converted
+ * inserter; otherwise its row producer is unconverted — no descriptor exists to carry the declaration —
+ * and it is reported as `UNPRODUCED-UNWITNESSED:<file>:<table>.<column>` (printed, counted every run,
+ * ceiling-locked, report-only). It goes hard by itself when the inserter converts. Never a column list.
+ * Order preserved.
+ * @param {string[]} unproduced
+ * @param {Iterable<string>} inserterTables
+ * @returns {{hard: string[], unwitnessed: string[]}}
+ */
+export function splitUnproduced(unproduced, inserterTables) {
+  const tables = new Set(inserterTables || []);
+  const hard = [];
+  const unwitnessed = [];
+  for (const item of unproduced || []) {
+    const rest = item.slice('unproduced:'.length);
+    const idx = rest.lastIndexOf(':');
+    const tableColumn = rest.slice(idx + 1);
+    const table = tableColumn.slice(0, tableColumn.indexOf('.'));
+    if (tables.has(table)) hard.push(item);
+    else unwitnessed.push(`UNPRODUCED-UNWITNESSED:${rest}`);
+  }
+  return { hard, unwitnessed };
+}
 
 export const CONSUMER_REGISTRY_REL_PATH = 'scripts/steps/_schema/consumer-registry.json';
 export const FUNNEL_REL_PATH = 'src/lib/admin/funnel.ts';
@@ -111,17 +175,20 @@ export const CHAIN_META_KEYS = Object.freeze({
   gated_skip: 'scripts/lib/source-version.js:471 (buildSkipGateRecordsMeta: gated_skip: true)',
   pipeline_meta: 'scripts/run-chain.js:946 (recordsMeta = { ...(recordsMeta || {}), pipeline_meta: pipelineMeta })',
   telemetry: 'scripts/run-chain.js:956 (recordsMeta = { ...(recordsMeta || {}), telemetry })',
+  skipped: "scripts/lib/pipeline.js:1068 (records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' } — the advisory-lock SKIP summary)",
+  reason: "scripts/lib/pipeline.js:1068 (records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' } — the advisory-lock SKIP summary)",
 });
 
 /** Corpus roots the completeness scan walks (Rule 10/R-T closed corpus). */
 const CORPUS_DIRS = ['src/lib/admin', 'src/components', 'src/app'];
-const CORPUS_FILES = [
-  'scripts/run-chain.js',
-  'scripts/observe-chain.js',
-  'scripts/check-chain-verdict.js',
-  'scripts/analysis/step-validate.mjs',
-];
-const SCAN_EXT_RE = /\.(ts|tsx|js|mjs)$/;
+/**
+ * LDG-10 class-2 residual (WF1 LDG-10, 2026-10-03): EVERY source file under scripts/ — the four
+ * previously-named chain scripts are inside it. The schema fixtures are excluded: they are
+ * known-bad descriptor/compute fixtures, never readers.
+ */
+const SCRIPTS_CORPUS_ROOT = 'scripts';
+const SCRIPTS_CORPUS_EXCLUDE = ['scripts/steps/_schema/fixtures/'];
+const SCAN_EXT_RE = /\.(ts|tsx|js|mjs|cjs)$/;
 const SCAN_RE = /records_meta(?:\?\.|\.|->>?'|\[')([a-z_]+)/g;
 
 // The COMPLETENESS scan's extra read FORMS, alongside the regex above — a single
@@ -136,7 +203,12 @@ const SQL_RE = /records_meta\s*->>?\s*'([a-z_]+)'|records_meta\s*#>>?\s*'\{([a-z
 // optionally `|| {}` / `?? {}` / `as T` / `)`); a later line's `X.key`/`X['key']`
 // then reads a key too, until `X` is redeclared on a line of its own.
 const ALIAS_DECL_RE = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*[^;]*?\brecords_meta\s*(?:(?:\|\||\?\?)\s*\{\}\s*\)?\s*|as\s+[^;()?.\[\]{}]*?)?;?\s*$/;
-const aliasRedecl = (name) => new RegExp(`(?:const|let|var)\\s+${name}\\b`);
+const aliasRedecl = (name) => new RegExp(
+  `(?:const|let|var)\\s+${name}\\b`
+  + `|\\bfunction\\b[^(]*\\([^)]*(?<![\\w$])${name}(?![\\w$])[^)]*\\)`
+  + `|\\(([^()]*,\\s*)?${name}\\s*(,[^()]*)?\\)\\s*=>`
+  + `|(?<![\\w$.])${name}\\s*=>`,
+);
 const aliasDotUse = (name) => new RegExp(`(?<![\\w$.])${name}(?:\\?\\.|\\.)([a-z_]+)`, 'g');
 const aliasIdxUse = (name) => new RegExp(`(?<![\\w$.])${name}\\[['"]([a-z_]+)['"]\\]`, 'g');
 
@@ -159,7 +231,13 @@ function walkDir(absDir, out) {
 export function collectCorpusFiles(repoRoot = REPO_ROOT) {
   const out = [];
   for (const rel of CORPUS_DIRS) walkDir(path.join(repoRoot, rel), out);
-  for (const rel of CORPUS_FILES) out.push(path.join(repoRoot, rel));
+  const scripts = [];
+  walkDir(path.join(repoRoot, SCRIPTS_CORPUS_ROOT), scripts);
+  for (const abs of scripts) {
+    const rel = path.relative(repoRoot, abs).split(path.sep).join('/');
+    if (SCRIPTS_CORPUS_EXCLUDE.some((prefix) => rel.startsWith(prefix))) continue;
+    out.push(abs);
+  }
   return out;
 }
 
@@ -572,6 +650,9 @@ export function scanText(relPath, text, declaredKeysForFile) {
       violations.push({
         step: '(registry)',
         item: `scan.${relPath}.${key}`,
+        file: relPath,
+        key,
+        line: i + 1,
         detail: `${relPath}:${i + 1} reads records_meta.${key} — not in RUNNER_META_KEYS, CHAIN_META_KEYS, or a registry row whose consumer is this file (undeclared-consumer)`,
       });
     }
@@ -579,14 +660,110 @@ export function scanText(relPath, text, declaredKeysForFile) {
   return violations;
 }
 
-/** The completeness scan over the whole corpus. DISK for the file walk + reads. */
-export function scanConsumers(registry, repoRoot = REPO_ROOT) {
+/**
+ * file (repo-relative) → Set of manifest slugs whose §4.1 files include it (`stepFiles`: step file,
+ * descriptor, notes sidecar, compute module — the SAME set the step registry derives). A registry row
+ * whose consumer is a SLUG covers every one of these files (LDG-10: `enrich_heritage` covers
+ * `scripts/lib/compute/enrich-heritage.js`). DISK.
+ * @param {string} [repoRoot]
+ * @returns {Map<string, Set<string>>}
+ */
+export function stepFileOwners(repoRoot = REPO_ROOT) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'scripts/manifest.json'), 'utf8'));
+  const owners = new Map();
+  for (const [slug, entry] of Object.entries(manifest.scripts || {})) {
+    if (!entry || typeof entry.file !== 'string') continue;
+    for (const f of stepFiles({ slug, file: entry.file }, repoRoot).files) {
+      if (!owners.has(f)) owners.set(f, new Set());
+      owners.get(f).add(slug);
+    }
+  }
+  return owners;
+}
+
+/**
+ * O3 (operator 2026-10-03) — split raw completeness hits. PURE.
+ *   - key emitted by a CONVERTED producer (`convertedEmitKeys`) → RED (declare the consumer on that producer).
+ *   - else key FOUND in an unconverted producer's source on a non-comment line that is NOT itself a
+ *     read of that key → LISTED `unconverted_producer:<reader file>:<key>` (counted every run).
+ *   - else → RED (no producer is known to stamp it).
+ * The listing closes itself: once the producer converts, its key is in `convertedEmitKeys` (RED until
+ * the consumer is declared) or is no longer found in an unconverted source (RED).
+ * @param {Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>} violations
+ * @param {{convertedEmitKeys: Set<string>, producerSources: Array<{file:string,text:string}>}} ctx
+ * @returns {{red: Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>, listed: Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>}}
+ */
+export function classifyUndeclared(violations, { convertedEmitKeys, producerSources }) {
+  const red = [];
+  const listed = [];
+  const foundIn = new Map();
+  const producersOf = (key) => {
+    if (foundIn.has(key)) return foundIn.get(key);
+    const word = new RegExp(`(?<![\\w$])${key}(?![\\w$])`);
+    const hits = [];
+    for (const src of producerSources) {
+      const readLines = new Set(scanText(src.file, src.text, new Set()).filter((v) => v.key === key).map((v) => v.line));
+      const lines = String(src.text).split(/\r?\n/);
+      const found = lines.some((line, i) => {
+        const t = line.trim();
+        if (t.startsWith('*') || t.startsWith('//') || t.startsWith('#')) return false;
+        return !readLines.has(i + 1) && word.test(line);
+      });
+      if (found) hits.push(src.file);
+    }
+    foundIn.set(key, hits);
+    return hits;
+  };
+  for (const v of violations) {
+    if (!v.key) { red.push(v); continue; }
+    if (convertedEmitKeys.has(v.key)) { red.push(v); continue; }
+    const producers = producersOf(v.key);
+    if (producers.length > 0) {
+      listed.push({ ...v, item: `unconverted_producer:${v.file}:${v.key}`, detail: `${v.detail.split(' — ')[0]} — key found in unconverted producer source ${producers.join(', ')} (O3: listed until that producer converts)` });
+    } else {
+      red.push({ ...v, detail: `${v.detail} — no converted producer emits it and no unconverted producer source stamps it` });
+    }
+  }
+  return { red, listed };
+}
+
+/** The O3 inputs, from disk: converted emit keys + every unconverted manifest step's non-JSON §4.1 file text. */
+function undeclaredContext(repoRoot) {
+  const convertedEmitKeys = new Set();
+  for (const d of loadConvertedDescriptors(repoRoot)) {
+    for (const e of Array.isArray(d && d.emits) ? d.emits : []) if (e && typeof e.key === 'string') convertedEmitKeys.add(e.key);
+  }
+  const convertedFiles = new Set((readConvertedJson(repoRoot).converted || []).map((f) => String(f).split(path.sep).join('/')));
+  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'scripts/manifest.json'), 'utf8'));
+  const producerSources = [];
+  const seen = new Set();
+  for (const [slug, entry] of Object.entries(manifest.scripts || {})) {
+    if (!entry || typeof entry.file !== 'string' || convertedFiles.has(entry.file)) continue;
+    for (const f of stepFiles({ slug, file: entry.file }, repoRoot).files) {
+      if (f.endsWith('.json') || seen.has(f)) continue;
+      seen.add(f);
+      try {
+        producerSources.push({ file: f, text: fs.readFileSync(path.join(repoRoot, f), 'utf8') });
+      } catch {
+        // stepFiles only lists files that exist; an unreadable one contributes no source.
+      }
+    }
+  }
+  return { convertedEmitKeys, producerSources };
+}
+
+/**
+ * The completeness scan split into RED + LISTED (O3). DISK.
+ * @returns {{red: Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>, listed: Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>}}
+ */
+export function scanConsumersDetailed(registry, repoRoot = REPO_ROOT) {
   const consumerKeys = new Map();
   for (const row of Array.isArray(registry && registry.rows) ? registry.rows : []) {
     if (!consumerKeys.has(row.consumer)) consumerKeys.set(row.consumer, new Set());
     consumerKeys.get(row.consumer).add(row.key);
   }
-  const violations = [];
+  const owners = stepFileOwners(repoRoot);
+  const raw = [];
   for (const abs of collectCorpusFiles(repoRoot)) {
     const rel = path.relative(repoRoot, abs).split(path.sep).join('/');
     let text;
@@ -595,18 +772,34 @@ export function scanConsumers(registry, repoRoot = REPO_ROOT) {
     } catch {
       continue;
     }
-    violations.push(...scanText(rel, text, consumerKeys.get(rel)));
+    const declared = new Set(consumerKeys.get(rel) || []);
+    for (const slug of owners.get(rel) || []) for (const k of consumerKeys.get(slug) || []) declared.add(k);
+    raw.push(...scanText(rel, text, declared));
   }
-  return violations;
+  return classifyUndeclared(raw, undeclaredContext(repoRoot));
+}
+
+/** Every LISTED `unconverted_producer:<file>:<key>` item (O3), sorted. DISK. */
+export function unconvertedProducerReads(registry, repoRoot = REPO_ROOT) {
+  return [...new Set(scanConsumersDetailed(registry, repoRoot).listed.map((v) => v.item))].sort();
+}
+
+/**
+ * The completeness scan over the whole corpus. DISK for the file walk + reads.
+ * RED half only — LISTED (O3) items are counted by unconvertedProducerReads.
+ * @returns {Array<{step:string,item:string,detail:string,file:string,key:string,line:number}>}
+ */
+export function scanConsumers(registry, repoRoot = REPO_ROOT) {
+  return scanConsumersDetailed(registry, repoRoot).red;
 }
 
 /**
  * Gate D over the whole registry + corpus. An ORPHAN makes `pass` false (R-X).
  * @param {{rows: object[]}} registry
  * @param {string} [repoRoot]
- * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}}} [opts]
+ * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}, inserterTables?: Iterable<string>}} [opts]
  */
-export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE } = {}) {
+export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE, inserterTables } = {}) {
   const convertedSlugs = new Set(loadConvertedDescriptors(repoRoot).map((d) => d.identity && d.identity.name));
   const indexes = new Map();
   for (const slug of convertedSlugs) indexes.set(slug, loadGoldenAuditIndex(path.join(repoRoot, GOLDEN_DIR_REL, slug, 'post')));
@@ -615,7 +808,7 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
     ...scanConsumers(registry, repoRoot),
   ];
   if (posture && posture.mode === 'hard') {
-    for (const item of unproducedReads(effective || effectiveLedger())) {
+    for (const item of splitUnproduced(unproducedReads(effective || effectiveLedger()), inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot))).hard) {
       const rest = item.slice('unproduced:'.length);
       const idx = rest.lastIndexOf(':');
       const file = rest.slice(0, idx);
@@ -634,24 +827,30 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
  * @param {{rows: object[]}} registry
  * @param {object[]} ledgerRows
  * @param {string} [repoRoot]
- * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}}} [opts]
+ * @param {{effective?: {inchain?: object, src?: object}, posture?: {mode: string, flips_hard_at: string}, inserterTables?: Iterable<string>}} [opts]
  */
-export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE } = {}) {
-  const violations = allConsumerViolations(registry, repoRoot, { effective, posture });
+export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE, inserterTables } = {}) {
+  const violations = allConsumerViolations(registry, repoRoot, { effective, posture, inserterTables });
   const unproduced = unproducedReads(effective || effectiveLedger());
+  const split = splitUnproduced(unproduced, inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot)));
   const { unallowed, orphans, allowed } = matchLedger('D', violations, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const where = (v) => `${v.step} ${v.item}`;
-  const unproducedLine = `; ${unproduced.length} unproduced src read(s) (${posture.mode} until ${posture.flips_hard_at}) [${unproduced.join('; ')}]`;
+  const unproducedLine = `; ${unproduced.length} unproduced src read(s) (${posture.mode} until ${posture.flips_hard_at}) [${unproduced.join('; ')}]`
+    + `; UNPRODUCED-UNWITNESSED: ${split.unwitnessed.length} (report-only until the table's inserter converts) [${split.unwitnessed.join('; ')}]`;
+  const listed = unconvertedProducerReads(registry, repoRoot);
+  const listedLine = `; ${listed.length} unconverted-producer read(s) listed (O3, red once the producer converts) [${listed.join('; ')}]`;
   const detail = (unallowed.length || orphans.length)
     ? `CONSUMER-REGISTRY (gate D): ${unallowed.length} unallowed contract violation(s)`
       + (unallowed.length ? ` [${unallowed.map(where).join('; ')}]` : '')
       + `; ${orphans.length} orphan ledger row(s)` + (orphans.length ? ` [${orphans.map(where).join('; ')}]` : '')
       + unproducedLine
+      + listedLine
     : `CONSUMER-REGISTRY (gate D): ${violations.length} contract(s) checked, all closed `
       + `(${allowed.length} ledger-allowed, ${violations.length - allowed.length} present+typed/excluded)`
-      + unproducedLine;
-  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced };
+      + unproducedLine
+      + listedLine;
+  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced, unproducedHard: split.hard, unproducedUnwitnessed: split.unwitnessed, listed };
 }
 
 /** Both halves, disk-backed — what `step-validate.mjs` calls. Also verifies the registry is fresh (`--check`). */
@@ -725,24 +924,37 @@ export function selfTest() {
   if (skipped.length !== 0) throw new Error(`self-test FAILED (6): unconverted producer was checked (${JSON.stringify(skipped)})`);
 
   // (7) scan: a hit on an UNKNOWN key -> RED (undeclared-consumer).
-  const s7 = scanText('fixture.ts', "  x.records_meta?.mystery_key;\n", new Set());
+  const RM = 'records' + '_meta';
+  const s7 = scanText('fixture.ts', `  x.${RM}?.mystery_key;\n`, new Set());
   if (s7.length !== 1 || !s7[0].item.includes('mystery_key')) throw new Error(`self-test FAILED (7): unknown-key scan hit not RED (${JSON.stringify(s7)})`);
 
   // (8) scan: a hit on a RUNNER key -> GREEN (excluded).
-  const s8 = scanText('fixture.ts', "  x.records_meta.checks_failed;\n", new Set());
+  const s8 = scanText('fixture.ts', `  x.${RM}.checks_failed;\n`, new Set());
   if (s8.length !== 0) throw new Error(`self-test FAILED (8): runner-key scan hit not excluded (${JSON.stringify(s8)})`);
 
   // (9) scan: a hit on a CHAIN key -> GREEN (excluded).
-  const s9 = scanText('fixture.ts', "  x.records_meta.step_completeness;\n", new Set());
+  const s9 = scanText('fixture.ts', `  x.${RM}.step_completeness;\n`, new Set());
   if (s9.length !== 0) throw new Error(`self-test FAILED (9): chain-key scan hit not excluded (${JSON.stringify(s9)})`);
 
   // (10) scan: a hit declared for THIS file's own registry rows -> GREEN.
-  const s10 = scanText('fixture.ts', "  x.records_meta.tables_checked;\n", new Set(['tables_checked']));
+  const s10 = scanText('fixture.ts', `  x.${RM}.tables_checked;\n`, new Set(['tables_checked']));
   if (s10.length !== 0) throw new Error(`self-test FAILED (10): registry-declared scan hit not excluded (${JSON.stringify(s10)})`);
 
   // (11) scan: a comment line is never scanned, even naming an unknown key.
-  const s11 = scanText('fixture.ts', "  // records_meta.mystery_key is read below\n", new Set());
+  const s11 = scanText('fixture.ts', `  // ${RM}.mystery_key is read below\n`, new Set());
   if (s11.length !== 0) throw new Error(`self-test FAILED (11): comment line scanned (${JSON.stringify(s11)})`);
+
+  // (11b) a function PARAMETER re-binding an alias name ends the alias (LDG-10 widening).
+  const s11b = scanText('fixture.js', `const m7 = r.${RM};\nm7.real_key;\nfunction f(a, m7) {\n  m7.log;\n}\n`, new Set());
+  if (s11b.length !== 1 || s11b[0].key !== 'real_key') throw new Error(`self-test FAILED (11b): a parameter did not end the alias (${JSON.stringify(s11b)})`);
+
+  // (11c) O3: converted key -> RED; found outside a read in an unconverted source -> LISTED; read-only/nowhere -> RED.
+  const hit = scanText('fixture.js', `x.${RM}.one_key;\n`, new Set());
+  if (classifyUndeclared(hit, { convertedEmitKeys: new Set(['one_key']), producerSources: [] }).red.length !== 1) throw new Error('self-test FAILED (11c-1): converted key not RED');
+  const l = classifyUndeclared(hit, { convertedEmitKeys: new Set(), producerSources: [{ file: 'p.js', text: 'out.one_key = 1;\n' }] });
+  if (l.listed.length !== 1 || l.red.length !== 0) throw new Error(`self-test FAILED (11c-2): found key not LISTED (${JSON.stringify(l)})`);
+  const r = classifyUndeclared(hit, { convertedEmitKeys: new Set(), producerSources: [{ file: 'p.js', text: `y.${RM}.one_key;\n` }] });
+  if (r.red.length !== 1) throw new Error('self-test FAILED (11c-3): a read-only occurrence was taken as a producer');
 
   // (12) orphan ledger row (no live violation) -> RED. Exercises the SAME
   // `registryViolations` + `matchLedger` pairing `checkConsumerContracts` calls,

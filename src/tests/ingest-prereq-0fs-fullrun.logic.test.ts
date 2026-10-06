@@ -52,8 +52,9 @@ const clone = <T>(o: T): T => JSON.parse(JSON.stringify(o));
  *      matches nothing, which is the PREMISE of the test (no WSIB-style file has been
  *      dropped into `data/` yet). `url`, `license` and `on_head_error` are REMOVED rather
  *      than left inert: a url+path pair is a refusal (runner (viii)) and would turn this
- *      into a construction test wearing a full-run test's name. `cache:"none"` is kept —
- *      a local file is never a revalidated artifact.
+ *      into a construction test wearing a full-run test's name. `cache:"none"` was kept —
+ *      a local file is never a revalidated artifact — but the cache field itself was
+ *      DELETED in the Phase 3 RE-FREEZE, so it is no longer declared here.
  *
  *   2. The terminal `skipped_no_source_file` is APPENDED to `terminals[]`. Load-address-
  *      points declares no `skip_gated` terminal at all (its normal exit is `loaded`), so
@@ -78,7 +79,6 @@ function D(): Record<string, unknown> {
     format: source.format,
     csv_options: source.csv_options,
     key_property: source.key_property,
-    cache: 'none',
   };
   d.terminals.push({
     id: 'skipped_no_source_file',

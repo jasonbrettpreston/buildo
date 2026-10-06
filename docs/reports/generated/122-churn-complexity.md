@@ -4,51 +4,56 @@
 <!-- Regenerate: npm run churn-complexity -- --refresh -->
 
 > SPEC LINK: `docs/specs/01-pipeline/123_step_opt_assessment_validation.md` §2, §6 (G2)
-> window_end: `39313d92ce4b0dde150474419a357f121e5a327f` (must be an ancestor of HEAD — `--check` enforces this and recomputes every column at this SHA, never HEAD)
+> window_end: `a3418800f56d09ddd8003fe3e8ba8e94efe0b945` (must be an ancestor of HEAD — `--check` enforces this and recomputes every column at this SHA, never HEAD)
 > Population: 27 domain steps (`manifest.chains.sources` minus `reconcile`, chain-head infrastructure per Spec 122 §7.4 A3 — excluded from the population and the median split; still listed below for coverage).
-> Median split (ties → high side, `>=` on both axes): median churn (commits) = 21 · median complexity (branches) = 54
+> Median split (ties → high side, `>=` on both axes): median churn (commits) = 24 · median complexity (branches) = 0
 
-## Top-right quadrant (named) — 9
+## Top-right quadrant (named) — 14
 
 - assert_data_bounds
 - assert_engine_health
 - assert_global_coverage
+- assert_schema
 - enrich_parcels
+- link_massing
 - link_neighbourhoods
+- link_parcels
+- link_wsib
 - load_wsib
 - massing
 - neighbourhoods
 - parcels
+- refresh_snapshot
 
 ## All steps
 
 | slug | file | commits | lines_changed | LOC | branches | quadrant |
 |---|---|---:|---:|---:|---:|---|
 | reconcile | `scripts/reconcile-runs.js` | — | — | — | — | excluded: chain-head (A3) |
-| assert_schema | `scripts/quality/assert-schema.js` | 38 | 1533 | 9 | 0 | bottom-right |
-| address_points | `scripts/load-address-points.js` | 18 | 765 | 309 | 64 | top-left |
-| geocode_permits | `scripts/geocode-permits.js` | 19 | 472 | 94 | 9 | bottom-left |
-| parcels | `scripts/load-parcels.js` | 27 | 1077 | 381 | 115 | top-right |
-| load_ravines | `scripts/load-ravines.js` | 3 | 1281 | 9 | 0 | bottom-left |
-| load_heritage | `scripts/load-heritage.js` | 3 | 846 | 558 | 160 | top-left |
-| load_centreline | `scripts/load-centreline.js` | 4 | 801 | 537 | 108 | top-left |
-| link_parcel_addresses | `scripts/link-parcel-addresses.js` | 6 | 847 | 9 | 0 | bottom-left |
-| compute_centroids | `scripts/compute-centroids.js` | 17 | 736 | 9 | 0 | bottom-left |
-| link_parcels | `scripts/link-parcels.js` | 33 | 2060 | 9 | 0 | bottom-right |
-| enrich_ravines | `scripts/enrich-ravines.js` | 2 | 428 | 168 | 28 | bottom-left |
-| enrich_heritage | `scripts/enrich-heritage.js` | 4 | 593 | 200 | 37 | bottom-left |
-| enrich_centreline | `scripts/enrich-centreline.js` | 5 | 647 | 288 | 45 | bottom-left |
-| massing | `scripts/load-massing.js` | 26 | 762 | 330 | 86 | top-right |
-| link_massing | `scripts/link-massing.js` | 44 | 2302 | 9 | 0 | bottom-right |
-| neighbourhoods | `scripts/load-neighbourhoods.js` | 24 | 1113 | 533 | 159 | top-right |
-| link_neighbourhoods | `scripts/link-neighbourhoods.js` | 25 | 725 | 255 | 54 | top-right |
-| load_wsib | `scripts/load-wsib.js` | 21 | 879 | 308 | 59 | top-right |
-| link_wsib | `scripts/link-wsib.js` | 32 | 1853 | 9 | 0 | bottom-right |
-| load_zoning | `scripts/load-zoning.js` | 2 | 765 | 583 | 158 | top-left |
-| enrich_parcels | `scripts/enrich-parcels.js` | 35 | 2957 | 1014 | 176 | top-right |
-| compute_parcel_cost_estimates | `scripts/compute-parcel-cost-estimates.js` | 8 | 856 | 443 | 78 | top-left |
-| assert_global_coverage | `scripts/quality/assert-global-coverage.js` | 50 | 2328 | 559 | 137 | top-right |
-| assert_parcel_sanity | `scripts/quality/assert-parcel-sanity.js` | 1 | 89 | 60 | 5 | bottom-left |
-| refresh_snapshot | `scripts/refresh-snapshot.js` | 35 | 2851 | 9 | 0 | bottom-right |
-| assert_data_bounds | `scripts/quality/assert-data-bounds.js` | 59 | 2315 | 731 | 171 | top-right |
-| assert_engine_health | `scripts/quality/assert-engine-health.js` | 23 | 457 | 233 | 73 | top-right |
+| assert_schema | `scripts/quality/assert-schema.js` | 40 | 2185 | 9 | 0 | top-right |
+| address_points | `scripts/load-address-points.js` | 19 | 1276 | 9 | 0 | top-left |
+| geocode_permits | `scripts/geocode-permits.js` | 20 | 696 | 9 | 0 | top-left |
+| parcels | `scripts/load-parcels.js` | 28 | 1682 | 9 | 0 | top-right |
+| load_ravines | `scripts/load-ravines.js` | 5 | 1992 | 9 | 0 | top-left |
+| load_heritage | `scripts/load-heritage.js` | 6 | 1770 | 9 | 0 | top-left |
+| load_centreline | `scripts/load-centreline.js` | 6 | 1617 | 9 | 0 | top-left |
+| link_parcel_addresses | `scripts/link-parcel-addresses.js` | 9 | 959 | 9 | 0 | top-left |
+| compute_centroids | `scripts/compute-centroids.js` | 17 | 736 | 9 | 0 | top-left |
+| link_parcels | `scripts/link-parcels.js` | 33 | 2060 | 9 | 0 | top-right |
+| enrich_ravines | `scripts/enrich-ravines.js` | 3 | 762 | 9 | 0 | top-left |
+| enrich_heritage | `scripts/enrich-heritage.js` | 8 | 1316 | 9 | 0 | top-left |
+| enrich_centreline | `scripts/enrich-centreline.js` | 6 | 1297 | 9 | 0 | top-left |
+| massing | `scripts/load-massing.js` | 27 | 1272 | 9 | 0 | top-right |
+| link_massing | `scripts/link-massing.js` | 44 | 2302 | 9 | 0 | top-right |
+| neighbourhoods | `scripts/load-neighbourhoods.js` | 25 | 1855 | 9 | 0 | top-right |
+| link_neighbourhoods | `scripts/link-neighbourhoods.js` | 26 | 1125 | 9 | 0 | top-right |
+| load_wsib | `scripts/load-wsib.js` | 24 | 1429 | 9 | 0 | top-right |
+| link_wsib | `scripts/link-wsib.js` | 37 | 2089 | 9 | 0 | top-right |
+| load_zoning | `scripts/load-zoning.js` | 4 | 810 | 9 | 0 | top-left |
+| enrich_parcels | `scripts/enrich-parcels.js` | 38 | 5932 | 9 | 0 | top-right |
+| compute_parcel_cost_estimates | `scripts/compute-parcel-cost-estimates.js` | 12 | 1903 | 9 | 0 | top-left |
+| refresh_snapshot | `scripts/refresh-snapshot.js` | 36 | 3195 | 9 | 0 | top-right |
+| assert_global_coverage | `scripts/quality/assert-global-coverage.js` | 54 | 3934 | 9 | 0 | top-right |
+| assert_parcel_sanity | `scripts/quality/assert-parcel-sanity.js` | 3 | 213 | 9 | 0 | top-left |
+| assert_data_bounds | `scripts/quality/assert-data-bounds.js` | 62 | 3442 | 9 | 0 | top-right |
+| assert_engine_health | `scripts/quality/assert-engine-health.js` | 25 | 853 | 9 | 0 | top-right |

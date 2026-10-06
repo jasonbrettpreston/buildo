@@ -1216,7 +1216,7 @@ describe('row 3.4 — converted claims part B (flipped GREEN at ②)', () => {
   // D11 — the emit + counters freeze (§9; ① decision: records_total is the declared two-sub-block
   // SUM). The emit key + consumer are the §8d contract; the two skeleton key sets are the frozen
   // per-dataset blocks (register + districts differ by exactly two counters).
-  it('D11 — emit + counters: emits[0] key "heritage_load" consumers ["enrich_heritage"]; skeleton.heritage_register ⊇ the frozen register field set; skeleton.heritage_districts the same with filtered_out_appeal_study / unknown_hcd_type_count in place of the register counters; counters.records_total.source is the two-sub-block SUM, records_new/updated are written.inserted/updated (flipped GREEN at ②)',
+  it('D11 — emit + counters: emits[0] key "heritage_load" consumers ["enrich_heritage", the cohort-differential tool]; skeleton.heritage_register ⊇ the frozen register field set; skeleton.heritage_districts the same with filtered_out_appeal_study / unknown_hcd_type_count in place of the register counters; counters.records_total.source is the two-sub-block SUM, records_new/updated are written.inserted/updated (flipped GREEN at ②)',
     () => {
       const d = loadDescriptorExtras();
 
@@ -1224,7 +1224,7 @@ describe('row 3.4 — converted claims part B (flipped GREEN at ②)', () => {
       const emit = (d.emits as Array<{ key: string; consumers: string[]; skeleton?: unknown }>)[0];
       expect(emit, 'emits[0]').toBeDefined();
       expect(emit?.key).toBe('heritage_load');
-      expect(emit?.consumers).toEqual(['enrich_heritage']);
+      expect(emit?.consumers).toEqual(['enrich_heritage', 'scripts/analysis/load-heritage-cohort-differential.js']); // + the differential reader (gate D, P1-C8a 2026-10-03)
 
       // The two per-dataset skeleton key sets (the field set a gated skip / failure terminal
       // re-emits). Register carries the listed counter; districts the HCD-type one.

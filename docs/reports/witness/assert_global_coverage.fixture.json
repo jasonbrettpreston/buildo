@@ -322,34 +322,7 @@
         ]
       },
       "writes": {},
-      "violations": [
-        "a:coa_applications.existing_structure_confidence",
-        "a:coa_applications.garage_permission",
-        "a:coa_applications.last_seen_at",
-        "a:coa_applications.max_build_confidence",
-        "a:coa_applications.max_buildable_gfa_basis",
-        "a:coa_applications.rear_suite_permission",
-        "a:cost_estimates.lead_id",
-        "a:cost_estimates.permit_num",
-        "a:cost_estimates.revision_num",
-        "a:parcel_buildings.building_id",
-        "a:parcels.centroid_lat",
-        "a:parcels.centroid_lng",
-        "a:parcels.id",
-        "a:parcels.zoning_enriched_at",
-        "a:permit_parcels.revision_num",
-        "a:permit_trades.permit_num",
-        "a:permit_trades.revision_num",
-        "a:permits.existing_structure_confidence",
-        "a:permits.garage_permission",
-        "a:permits.lead_id",
-        "a:permits.max_build_confidence",
-        "a:permits.max_buildable_gfa_basis",
-        "a:permits.permit_num",
-        "a:permits.rear_suite_permission",
-        "a:permits.revision_num",
-        "a:trade_forecasts.revision_num"
-      ],
+      "violations": [],
       "errors": []
     }
   }

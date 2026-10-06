@@ -141,9 +141,9 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         `SELECT COUNT(*)::text AS count FROM entities
          WHERE primary_phone IS NOT NULL OR primary_email IS NOT NULL`
       ),
-      // Address points total
+      // Address points total (live points only — retired_at IS NULL, registry-truth fold 10 item 4)
       query<{ count: string }>(
-        `SELECT COUNT(*)::text AS count FROM address_points`
+        `SELECT COUNT(*)::text AS count FROM address_points WHERE retired_at IS NULL`
       ).catch(() => [{ count: '0' }]),
       // Parcels total
       query<{ count: string }>(

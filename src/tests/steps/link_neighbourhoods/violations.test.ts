@@ -180,14 +180,13 @@ describe('FENCE 7a147377 — IS DISTINCT FROM guard on neighbourhood_id', () => 
 // FENCE 3 — b1102cdb: forward progress independent of the eligible set shrinking
 // ---------------------------------------------------------------------------
 describe('FENCE b1102cdb — forward progress does not depend on the eligible set shrinking', () => {
-  it('the fence is declared, and the descriptor no longer claims a keyset cursor it does not have: the surviving write is ONE statement (txn_scope "statement", batch "none", chunked false, checkpoint "none")', () => {
+  it('the fence is declared, and the descriptor no longer claims a keyset cursor it does not have: the surviving write is ONE statement (txn_scope "statement", batch "none")', () => {
     const d = descriptor();
     expect(notes().fences.some((f) => f.commit === 'b1102cdb')).toBe(true);
     expect(d.execution.txn_scope).toBe('statement');
     expect(d.execution.batch).toBe('none');
-    expect(d.execution.chunked).toBe(false);
-    expect(d.execution.partial_fill).toBe('atomic');
-    expect(d.staleness.checkpoint).toBe('none');
+    // staleness.checkpoint deleted in the Phase 3 RE-FREEZE (#28, zero runtime readers)
+    // execution.chunked / partial_fill deleted in the FLEET-2 RE-FREEZE (#42, zero runtime readers); txn_scope "statement" carries the one-statement claim
     expect(d.outputs.write_inventory.statements).toBe(1);
   });
 
@@ -201,7 +200,6 @@ describe('FENCE b1102cdb — forward progress does not depend on the eligible se
     expect(r.interrupted_why.text).toMatch(/CORRECTED AT THE PLAN PANEL/);
     const asserted = r.interrupted_why.text.replace(/CORRECTED AT THE PLAN PANEL[\s\S]*?which this descriptor no longer declares\./, '');
     expect(asserted).not.toMatch(/kill mid-batch leaves the batches already committed/);
-    expect(descriptor().execution.partial_fill).toBe('atomic');
   });
 });
 
@@ -422,7 +420,11 @@ describe('LN-D6 — the retired parcel-centroid capability is COUNTED, not merel
   it('a plausibility row measures the FORWARD-going stranded population (neighbourhood_id IS NULL, no coordinates, but a parcel geometry) — the population permits_processed structurally cannot see', () => {
     const p = descriptor().plausibility.find((x) => x.id === 'neighbourhood_id_unreachable_no_coords');
     expect(p, 'neighbourhood_id_unreachable_no_coords plausibility row missing — LN-D6 goes dark without it').toBeTruthy();
-    expect(p?.last_measured.value).toBe(1493);
+    // RE-MEASURED 2026-10-06 (FLEET-2 recapture): 1,493 → 10,486. O4 row 1 full_rescan (operator ruling
+    // 2026-10-03, fold 14) cleared the ~9,017 parcel-centroid neighbourhood stamps on permits with no
+    // coordinates (stamped_permits_with_null_coordinates 9,017 → 0), moving them into this population.
+    // No coordinates were lost: the null-coordinate total is 22,152 throughout (since at least 2026-09-16).
+    expect(p?.last_measured.value).toBe(10486);
     expect(p?.last_measured.sample_n).toBeGreaterThanOrEqual(1);
   });
 
@@ -570,15 +572,20 @@ describe('output-panel locks — the three defects the golden differential and t
 
   it("the declared scope/corpus constants are exported AND consumed here — so the compute docblock's claim that they are 'exported so their locks read the real value' is true, not aspirational", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this suite's source-read idiom
-    const mod = require(abs(COMPUTE_REL)) as { ELIGIBLE_SCOPE: string; CORPUS_FILTER: string };
+    const mod = require(abs(COMPUTE_REL)) as { ELIGIBLE_SCOPE: string; UNMATCHED_SCOPE: string; CORPUS_FILTER: string };
     expect(mod.CORPUS_FILTER).toBe('geom IS NOT NULL');
-    expect(mod.ELIGIBLE_SCOPE).toContain('p.neighbourhood_id IS NULL');
+    expect(mod.UNMATCHED_SCOPE).toContain('p.neighbourhood_id IS NULL');
+    expect(mod.ELIGIBLE_SCOPE).not.toContain('neighbourhood_id IS NULL'); // O4 row 1 full_rescan
     expect(mod.ELIGIBLE_SCOPE).toContain('p.latitude IS NOT NULL');
     // LN-D5: the corpus is geom, never the GeoJSON column the retired branch parsed.
     expect(mod.CORPUS_FILTER).not.toContain('geometry');
-    // and the descriptor's declared staleness scope must describe the SAME set
+    // and the descriptor's declared write scope must describe the SAME set. staleness.scope was
+    // deleted by FLEET-2 Phase 3 (#28); O4 row 1 (fold 14) makes the write scope ELIGIBLE_SCOPE
+    // itself — no fill-once `neighbourhood_id IS NULL` conjunct (FLEET-2 assembly: seat B B-2 1.13).
     const d = descriptor();
-    expect(String(d.staleness.scope)).toContain('neighbourhood_id IS NULL');
+    const writeScope = String((d.outputs as { writes: Array<{ write_discipline: { scope?: string } }> }).writes[0]!.write_discipline.scope);
+    expect(writeScope).not.toContain('neighbourhood_id IS NULL');
+    expect(writeScope).toContain(mod.ELIGIBLE_SCOPE);
   });
 });
 

@@ -1,0 +1,17 @@
+{
+  "wf": "registry-truth Fold 20 (MQ-A7 schema half + row 9)",
+  "date": "2026-10-05",
+  "command": "VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest run <files> (DB env unset)",
+  "phase": "RED (attribution)",
+  "schema": "MQ-A7 if/then only (row 9 not yet added)",
+  "fixtures": "moved (none)",
+  "files": [
+    "src/tests/fold20-schema-drift-rules.logic.test.ts"
+  ],
+  "passed": 6,
+  "failed": 2,
+  "failing": [
+    "RED: the same ENRICHER with schema_drift \"pause\" is refused",
+    "RED: the same ENRICHER with schema_drift \"propagate\" is refused"
+  ]
+}

@@ -17,11 +17,14 @@
 // goldens are untouched). These four locks:
 //   T1 — the emitted value EQUALS the descriptor's declared logic_version.
 //   T2 — declared ⇔ emitted: every declared trigger emit_key is a key of buildLinkMeta.
-//   T3 — consumer side: a differing prior baseline + `--full` resolves mode full with
-//        reason `code_version_changed(v0-old->v1-knn-boundary-distance)`.
-//   T3b — permits chain argv never resolves full.   T3c — no prior run + sources chain argv ⇒ full.
-//   (WF3 2026-10-02: T3/T3c read the MANIFEST chain_args run-chain passes, not the descriptor argv.)
-//   T4 — Chesterton's fence: an ABSENT baseline is still NOT a change (unchanged).
+//   FLEET-2 §5 triage 2026-10-06 (O4 row 7): link_parcels now declares staleness.mode_select "none", so
+//   selectMode REFUSES it and the runner resolves the mode via index.js resolveLinkGate — FULL / full_rescan
+//   on every run, whatever the chain argv. The code_version baseline is still MEASURED and read back
+//   (signals[]), so T3–T4 now lock that the baseline is consumed, not that it gates the mode.
+//   T3 — consumer side: a differing prior baseline is read back (prior v0-old, current = logic_version).
+//   T3b — no chain argv gates: selectMode refuses the descriptor for every chain argv; resolveLinkGate ⇒ full.
+//   T3c — no prior run ⇒ full / full_rescan, every signal's prior null.
+//   T4 — Chesterton's fence: an ABSENT baseline is still NOT a change.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,9 +52,23 @@ const staleness = require('../../scripts/lib/step/staleness.js') as {
   }>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- the CJS runner (the real mode path under mode_select "none", O4 row 7)
+const runner = require('../../scripts/lib/step/index.js') as {
+  resolveLinkGate: (args: { descriptor: unknown; pool: unknown; prior: Record<string, string> | null; ownRunId: number | null; tag: string }) => Promise<{
+    mode: 'full' | 'incremental';
+    reason: string;
+    changed: boolean;
+    explicit_full: boolean;
+    forced: boolean;
+    signals: Array<{ key: string; signal: string; current: string | null; prior: string | null; changed: boolean }>;
+    interrupted_retraction: unknown;
+  }>;
+};
+
 interface LinkParcelsDescriptor {
   identity: { name: string };
   staleness: {
+    mode_select: string;
     logic_version: string;
     trigger: Array<{ signal: string; position: string; emit_key?: string }>;
   };
@@ -77,11 +94,9 @@ const CHAIN_SOURCES_ARGV: string[] = manifest.scripts.link_parcels?.chain_args?.
 const CHAIN_PERMITS_ARGV: string[] = manifest.scripts.link_parcels?.chain_args?.permits ?? [];
 
 /**
- * `selectMode` issues exactly one SQL query on this path: `detectInterruptedRetraction`
- * (`recovery.interrupted: "force_full_on_next_run"` on this descriptor) — a
- * `pipeline_runs` read. The `code_version` signal is PURE (no pool touched at all,
- * staleness.js#measureTrigger). One row-free answer ⇒ "not interrupted", so the
- * code-version signal is what decides the mode.
+ * FLEET-2 §5 triage 2026-10-06: `resolveLinkGate` issues NO SQL on this path — the only declared
+ * trigger, `code_version`, is PURE (staleness.js#measureTrigger), and `recovery.interrupted` is now
+ * "none" (FLEET-2 R2), so no `detectInterruptedRetraction` read happens. The row-free pool is a stub.
  */
 const pool = {
   query: async (_sql: string) => ({ rows: [] as unknown[] }),
@@ -132,69 +147,53 @@ describe('link_parcels — code_version staleness baseline (WF3)', () => {
     }
   });
 
-  it('T3 — consumer side (RED until manifest chain_args.sources carries --full): prior v0-old + sources `--full` ⇒ mode full, reason code_version_changed(v0-old->v1-knn-boundary-distance)', async () => {
-    // RED until the manifest carries the pin — pins the contract the fix feeds. `changed` ALONE never selects
-    // full (Fold GC-11: full ⇔ forced ∨ (permitted ∧ changed)); `--full` is the sources
-    // argv run-chain passes in the sources chain (manifest chain_args — RED today: [] ⇒ incremental:no_full_arg).
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: { code_version: 'v0-old' },
-      argv: CHAIN_SOURCES_ARGV,
-      env: {},
-    });
-    expect(result.changed, 'a PRESENT baseline that differs IS a change').toBe(true);
+  it('T3 — consumer side: prior v0-old ⇒ the differing baseline is READ BACK (prior v0-old, current = logic_version); mode full / full_rescan', async () => {
+    // FLEET-2 §5 triage 2026-10-06 (O4 row 7): mode_select "none" ⇒ resolveLinkGate re-derives every link on every run, so the
+    // baseline no longer selects the mode (was: --full + changed ⇒ code_version_changed); the emitted baseline is still consumed.
+    expect(descriptor.staleness.mode_select, 'the premise of this re-target: O4 row 7').toBe('none');
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: { code_version: 'v0-old' }, ownRunId: null, tag: '[link_parcels]' });
     expect(result.mode).toBe('full');
-    expect(result.reason).toContain(
-      `code_version_changed(v0-old->${descriptor.staleness.logic_version})`,
-    );
+    expect(result.reason).toBe('full_rescan');
+    expect(result.forced).toBe(false);
+    const signal = result.signals.find((s) => s.key === 'code_version');
+    expect(signal, 'the code_version signal must still be measured').toBeDefined();
+    expect(signal!.prior, 'a PRESENT baseline is read back').toBe('v0-old');
+    expect(signal!.current).toBe(descriptor.staleness.logic_version);
   });
 
-  it('T3b — permits chain (GREEN both sides): prior v0-old + permits chain argv ⇒ NEVER full (the permits chain carries no --full)', async () => {
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: { code_version: 'v0-old' },
-      argv: CHAIN_PERMITS_ARGV,
-      env: {},
-    });
-    expect(result.changed, 'the differing baseline is still measured as a change').toBe(true);
-    expect(result.mode).toBe('incremental');
-    expect(result.reason).toBe('incremental:no_full_arg');
-  });
-
-  it('T3c — fresh DB (RED until manifest chain_args.sources carries --full): NO prior run + sources chain argv ⇒ full (gate:no_prior_run)', async () => {
-    // Plan consequence (b): a new target DB has no prior run row at all ⇒ changed (fail-safe) ⇒ the first
-    // sources run is FULL — harmless on an empty permit_parcels. RED today: chain argv [] ⇒ incremental:no_full_arg.
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: null,
-      argv: CHAIN_SOURCES_ARGV,
-      env: {},
-    });
-    expect(result.changed).toBe(true);
+  it('T3b — no chain argv gates the mode: selectMode REFUSES the mode_select "none" descriptor for every chain argv; resolveLinkGate takes no argv ⇒ full', async () => {
+    // FLEET-2 §5 triage 2026-10-06 (O4 row 7): the permits chain used to resolve incremental:no_full_arg; under full_rescan both chains run FULL.
+    for (const argv of [SOURCES_ARGV, CHAIN_SOURCES_ARGV, CHAIN_PERMITS_ARGV]) {
+      await expect(staleness.selectMode({ descriptor, pool, prior: { code_version: 'v0-old' }, argv, env: {} })).rejects.toThrow(/mode_select "none"/);
+    }
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: { code_version: 'v0-old' }, ownRunId: null, tag: '[link_parcels]' });
     expect(result.mode).toBe('full');
-    expect(result.reason).toBe('gate:no_prior_run');
+    expect(result.reason).toBe('full_rescan');
+    expect(result.explicit_full).toBe(false);
   });
 
-  it('T4 — fence pin (GREEN both sides): prior {} ⇒ NOT changed on the code_version signal (an ABSENT baseline is not a change)', async () => {
+  it('T3c — fresh DB: NO prior run ⇒ full / full_rescan, every signal\'s prior null', async () => {
+    // FLEET-2 §5 triage 2026-10-06 (O4 row 7): was gate:no_prior_run via selectMode; resolveLinkGate is FULL unconditionally.
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: null, ownRunId: null, tag: '[link_parcels]' });
+    expect(result.mode).toBe('full');
+    expect(result.reason).toBe('full_rescan');
+    expect(result.signals.length, 'the code_version trigger is still measured').toBe(1);
+    for (const s of result.signals) expect(s.prior).toBeNull();
+  });
+
+  it('T4 — fence pin: prior {} ⇒ NOT changed on the code_version signal (an ABSENT baseline is not a change)', async () => {
     // Chesterton's fence, staleness.js: "An ABSENT baseline is not a change: a pre-contract
     // run recorded no such key, and the last completed run WAS a full rebuild under the
     // current logic". Must stay; the fix only makes the baseline EXIST.
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: {},
-      argv: SOURCES_ARGV,
-      env: {},
-    });
+    // FLEET-2 §5 triage 2026-10-06 (O4 row 7): proven through resolveLinkGate; the mode is now full / full_rescan (was incremental).
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: {}, ownRunId: null, tag: '[link_parcels]' });
     expect(result.changed, 'an absent baseline must never be read as a change').toBe(false);
     const signal = result.signals.find((s) => s.key === 'code_version');
     expect(signal, 'the code_version signal must still be measured').toBeDefined();
     expect(signal!.changed).toBe(false);
     expect(signal!.prior).toBeNull();
     expect(signal!.current).toBe(descriptor.staleness.logic_version);
-    expect(result.mode, '--full without a change stays incremental').toBe('incremental');
+    expect(result.mode, 'every run re-derives every link — the baseline never gates (O4 row 7)').toBe('full');
+    expect(result.reason).toBe('full_rescan');
   });
 });

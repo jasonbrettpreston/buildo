@@ -36,23 +36,27 @@ const TABLE = 'parcel_address_points';
 /**
  * The pre-run counts — verbatim port of the pre-conversion script's `pre` query
  * (`link-parcel-addresses.js:123-129`, before conversion).
+ *
+ * Fold 10 item 4: every address_points read also filters `retired_at IS NULL` (live points only).
  */
 function buildPreSql() {
   return `SELECT
     (SELECT COUNT(*) FROM parcels        WHERE geom IS NOT NULL) AS parcels_with_geom,
     (SELECT COUNT(*) FROM parcels        WHERE geom IS     NULL) AS parcels_with_null_geom,
-    (SELECT COUNT(*) FROM address_points WHERE geom IS NOT NULL) AS address_points_with_geom,
-    (SELECT COUNT(*) FROM address_points WHERE geom IS     NULL) AS address_points_with_null_geom,
+    (SELECT COUNT(*) FROM address_points WHERE geom IS NOT NULL AND retired_at IS NULL) AS address_points_with_geom,
+    (SELECT COUNT(*) FROM address_points WHERE geom IS     NULL AND retired_at IS NULL) AS address_points_with_null_geom,
     (SELECT COUNT(*) FROM parcel_address_points)                  AS existing_links`;
 }
 
 /**
- * ⚠️ G2's "verbatim" GUARANTEE — this text is byte-identical (modulo whitespace) to the
- * pre-conversion script's ONE write statement (`:161-182`). LG-18's
+ * ⚠️ G2's "verbatim" GUARANTEE — this text was byte-identical (modulo whitespace) to the
+ * pre-conversion script's ONE write statement (`:161-182`) until fold 10 item 4 (below). LG-18's
  * `executeInsertSelectNoRetract` refuses any UPDATE/DELETE token and requires the
  * `ON CONFLICT ... DO NOTHING` clause present, checked on THIS text at execution time —
  * so a future edit that silently turns this into a retraction (fixing LPA-D1 without a
  * ruling) throws instead of running.
+ *
+ * Fold 10 item 4 (registry-truth plan, 2026-10-03) adds ONE predicate, `ap.retired_at IS NULL`, so a soft-retired address point is never linked; it is a read filter, not a retraction (no UPDATE/DELETE token), so LG-18's checks are unchanged. What is ENFORCED is token shape (the forbidden-token regex + INSERT INTO / ON CONFLICT presence in write.js `executeInsertSelectNoRetract`), not a stored-text comparison.
  *
  * Params: `$1` = the keyset cursor (`lastId`, starts at -1 — idempotent-not-resumable,
  * LPA-D2), `$2` = the batch size (T1, `ctx.config`), `$3` = RUN_AT (library-captured,
@@ -73,6 +77,7 @@ function buildBatchSql() {
      FROM parcel_batch pb
      JOIN address_points ap
        ON ap.geom IS NOT NULL
+      AND ap.retired_at IS NULL
       AND ST_Within(ap.geom, pb.geom)
      ON CONFLICT (parcel_id, address_point_id) DO NOTHING
      RETURNING parcel_id
@@ -89,6 +94,8 @@ function buildBatchSql() {
  * (`final_link_count`, not `final_links`; `address_points_with_no_parcel`, not
  * `aps_with_no_parcel`) so the generic merge in `runMaterializePhase` lands them
  * directly onto `ctx.matched` under the names the compute's own checks read.
+ *
+ * Fold 10 item 4: every address_points read also filters `retired_at IS NULL` (live points only).
  */
 function buildPostSql() {
   return `SELECT
@@ -99,7 +106,7 @@ function buildPostSql() {
        WHERE p.geom IS NOT NULL
          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.parcel_id = p.id)) AS parcels_with_no_address,
     (SELECT COUNT(*) FROM address_points ap
-       WHERE ap.geom IS NOT NULL
+       WHERE ap.geom IS NOT NULL AND ap.retired_at IS NULL
          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id))
                                                                                   AS address_points_with_no_parcel,
     (SELECT json_agg(x ORDER BY x.address_class_desc) FROM (
@@ -109,13 +116,13 @@ function buildPostSql() {
            SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id
          )) AS linked
        FROM address_points ap
-       WHERE ap.geom IS NOT NULL
+       WHERE ap.geom IS NOT NULL AND ap.retired_at IS NULL
        GROUP BY ap.address_class_desc
      ) x)                                                                       AS link_rate_by_class,
     (SELECT COUNT(*) FROM address_points ap
-       WHERE ap.geom IS NOT NULL AND ap.address_class_desc = 'Structure')       AS structure_class_total,
+       WHERE ap.geom IS NOT NULL AND ap.retired_at IS NULL AND ap.address_class_desc = 'Structure')       AS structure_class_total,
     (SELECT COUNT(*) FROM address_points ap
-       WHERE ap.geom IS NOT NULL AND ap.address_class_desc = 'Structure'
+       WHERE ap.geom IS NOT NULL AND ap.retired_at IS NULL AND ap.address_class_desc = 'Structure'
          AND EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id))
                                                                                   AS structure_class_linked`;
 }
@@ -130,12 +137,12 @@ function buildInvariantsSql() {
   return `SELECT
     (SELECT COUNT(*) FROM parcel_address_points pap
        JOIN parcels p ON p.id = pap.parcel_id
-       JOIN address_points ap ON ap.address_point_id = pap.address_point_id
+       JOIN address_points ap ON ap.address_point_id = pap.address_point_id AND ap.retired_at IS NULL
        WHERE NOT ST_Within(ap.geom, p.geom))                                    AS stale_st_within_count,
     (SELECT COUNT(*) FROM address_points ap
        JOIN parcels p
          ON p.geom IS NOT NULL AND ap.geom IS NOT NULL AND ST_Within(ap.geom, p.geom)
-       WHERE NOT EXISTS (
+       WHERE ap.retired_at IS NULL AND NOT EXISTS (
          SELECT 1 FROM parcel_address_points pap
           WHERE pap.parcel_id = p.id AND pap.address_point_id = ap.address_point_id
        ))                                                                       AS missed_link_count,

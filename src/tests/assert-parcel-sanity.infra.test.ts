@@ -176,12 +176,20 @@ describe('manifest.json — assert_parcel_sanity wiring (unchanged by the conver
     expect(manifest.scripts.assert_parcel_sanity?.file).toBe('scripts/quality/assert-parcel-sanity.js');
   });
 
-  it('runs in the sources chain, immediately after assert_global_coverage, before refresh_snapshot', () => {
+  it('runs in the sources chain, immediately after assert_global_coverage, before assert_data_bounds; refresh_snapshot runs before assert_global_coverage (MQ-A8)', () => {
     const chain: string[] = manifest.chains.sources;
     expect(chain).toContain('assert_parcel_sanity');
     const i = chain.indexOf('assert_parcel_sanity');
     expect(chain[i - 1]).toBe('assert_global_coverage');
-    expect(chain[i + 1]).toBe('refresh_snapshot');
+    expect(chain[i + 1]).toBe('assert_data_bounds');
+    // MQ-A8 (a) fence statement (Regression Guardian 2026-10-04): assert_global_coverage never reads
+    // data_quality_snapshots in the sources branch (loadSourcesBranch, compute/assert-global-coverage.js
+    // :236-301); the derived edge came from the descriptor's union of its coa/permits branches, whose only
+    // read is snapshot_today ("did today's row land"). refresh_snapshot reads nothing the asserts write
+    // (0 pipeline_runs reads), so it runs before assert_global_coverage, as in permits/coa. The old
+    // adjacency (refresh_snapshot right after assert_parcel_sanity, c8b36470) was a splice, not a fence.
+    expect(chain[chain.indexOf('assert_global_coverage') - 1]).toBe('refresh_snapshot');
+    expect(chain.indexOf('compute_parcel_cost_estimates')).toBeLessThan(chain.indexOf('refresh_snapshot'));
     expect(chain).toHaveLength(28);
   });
 });

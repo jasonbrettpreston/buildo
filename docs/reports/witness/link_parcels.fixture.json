@@ -10,7 +10,8 @@
           "address_point_id",
           "address_status",
           "linear_name_normalized",
-          "maint_stage"
+          "maint_stage",
+          "retired_at"
         ],
         "parcel_address_points": [
           "address_point_id",

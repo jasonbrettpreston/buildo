@@ -1,0 +1,19 @@
+{
+  "wf": "registry-truth Fold 20 (MQ-A7 schema half + row 9)",
+  "date": "2026-10-05",
+  "command": "VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest run <files> (DB env unset)",
+  "phase": "RED",
+  "schema": "pre-edit p3 step.schema.json (neither MQ-A7 nor row 9)",
+  "fixtures": "moved (none)",
+  "files": [
+    "src/tests/fold20-schema-drift-rules.logic.test.ts"
+  ],
+  "passed": 4,
+  "failed": 4,
+  "failing": [
+    "RED: the same INGESTOR with force_run \"none\" is refused",
+    "RED: a per-layer schema_drift array with a pause arm and force_run \"none\" is refused",
+    "RED: the same ENRICHER with schema_drift \"pause\" is refused",
+    "RED: the same ENRICHER with schema_drift \"propagate\" is refused"
+  ]
+}

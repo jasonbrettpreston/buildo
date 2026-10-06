@@ -22,6 +22,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { phaseMapFor } = require('./generate-sharing-phase'); // #73: phase = manifest position, generated (MQ-B4 (a), fold 19)
 
 const OUT = path.join(__dirname, 'quality', 'assert-data-bounds.descriptor.json');
 
@@ -66,7 +67,7 @@ function boundFor(def, LOGIC_VAR_DEFS) {
 // curated from the pre-conversion source's own SQL bodies (§1.2 statement table).
 // -----------------------------------------------------------------------------
 const TABLE_COLUMNS = {
-  address_points: ['address_point_id'],
+  address_points: ['address_point_id', 'retired_at'],
   building_footprints: ['max_height_m'],
   coa_applications: ['linked_permit_num', 'linked_confidence', 'address', 'application_number', 'hearing_date', 'estimated_cost', 'coa_fsi', 'lot_size_sqm', 'max_buildable_gfa_sqm'],
   cost_estimates: ['estimated_cost', 'cost_tier', 'modeled_gfa_sqm', 'permit_num'],
@@ -74,7 +75,7 @@ const TABLE_COLUMNS = {
   heritage_districts: [],
   heritage_properties: [],
   neighbourhoods: ['neighbourhood_id'],
-  parcels: ['lot_size_sqm'],
+  parcels: ['lot_size_sqm', 'parcel_id'],
   permit_inspections: ['permit_num', 'stage_name', 'status', 'scraped_at', 'inspection_date'],
   permit_parcels: ['permit_num', 'revision_num'],
   permit_trades: ['permit_num', 'revision_num'],
@@ -83,6 +84,19 @@ const TABLE_COLUMNS = {
   toronto_centreline: [],
   wsib_registry: ['legal_name', 'predominant_class', 'subclass', 'naics_code', 'linked_entity_id'],
 };
+
+// inputs.reads.steps — the UNCONVERTED producers of the read columns above (gate #44 (e),
+// measured 2026-10-03 against the effective ledger). The 7 CONVERTED producers
+// (address_points, link_parcels, link_wsib, load_wsib, massing, neighbourhoods, parcels) are
+// NOT declared: the lineage snapshot gives this step no converted producer, so declaring
+// them would widen the LDG-4 KNOWN_GAPS ratchet — deferred to the FLEET-2 ordering-only home.
+// The RETIRED slug (no manifest.scripts entry: create_pre_permits) is not declared: the effective ledger drops it (MQ-C1 (a), FLEET-2), so declaring it is #44 (e) extra.
+const READ_STEPS = [
+  'backfill_realtor_permit_trades', 'classify_inspection_status', 'classify_lifecycle_phase',
+  'classify_permit_phase', 'classify_permits', 'close_stale_permits', 'coa',
+  'compute_coa_cost_estimates', 'compute_cost_estimates', 'enrich_coa_zoning',
+  'inspections', 'link_coa', 'permits',
+];
 
 function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
   const checks = CHECK_DEFS.map((def) => {
@@ -128,7 +142,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
     },
 
     inputs: {
-      reads: { steps: [], tables: READ_TABLES, externals: [] },
+      reads: { steps: READ_STEPS.map((step) => ({ step })), tables: READ_TABLES, externals: [] },
       expect_nonempty: false,
       on_missing: 'halt',
     },
@@ -136,29 +150,21 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
     outputs: 'none',
 
     staleness: {
-      scope: 'none',
       trigger: [{ signal: 'always', position: 'pre_compute' }],
       mode_select: 'none',
-      checkpoint: 'none',
-      interval: 'none',
       fingerprint: 'derived',
       fingerprint_inputs: ['scripts/lib/assert-data-bounds-fields.js'],
       logic_version: 'none',
       on_fingerprint_change: 'queue',
     },
 
-    guards: { requires: [], srid: 'none', empty_source: 'none', schema_drift: 'pause' },
+    guards: { requires: [], srid: 'none', empty_source: 'none', schema_drift: 'none' },
 
     execution: {
-      budget: '10m',
       txn_scope: 'none',
-      txn_budget: 'none',
-      chunked: false,
       statement_timeout: 'none',
       step_timeout: '15m',
       batch: 'none',
-      needs_disk_mb: 'none',
-      partial_fill: 'none',
       on_row_error: 'fail_fast',
       on_batch_error: 'fail_step',
       on_check_error: 'fail_step',
@@ -167,7 +173,6 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
         { kind: 'file', ref: 'scripts/lib/compute/assert-data-bounds.js' },
       ),
       on_degrade: 'none',
-      criticality: 'required',
       network: 'none',
       invocation: {
         permits: { argv: [], env: { PIPELINE_CHAIN: 'permits' } },
@@ -274,7 +279,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
       slug_forms: 'derived',
       varies_by_chain: {
         checks: 'per_chain',
-        phase: { permits: 22, coa: 11, sources: 27, deep_scrapes: 5 },
+        phase: phaseMapFor('assert_data_bounds'),
         audit_table: 'per_chain',
         scope: 'per_chain',
       },
@@ -297,6 +302,16 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
         kind: 'success',
         status: 'completed',
         records_meta: { checks_passed: 'string', checks_failed: 'int', checks_warned: 'int', errors: 'array', warnings: 'array', audit_table: 'object', config: 'object' },
+      },
+      {
+        id: 'checks_passed_with_warnings',
+        kind: 'success',
+        status: 'completed_with_warnings',
+        records_meta: { checks_failed: 'int', checks_warned: 'int', errors: 'array', warnings: 'array', audit_table: 'object', config: 'object' },
+        why: why(
+          'MQ-A4 (a), registry-truth fold 19 (#75): a WARN row stands and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS) instead of all_checks_passed. It declares no checks_passed: the runner keeps the legacy semantics, checks_passed is \'all\' only when errors AND warnings are both empty (scripts/lib/step/index.js), so a WARN run never carries it.',
+          { kind: 'file', ref: 'scripts/lib/step/index.js' },
+        ),
       },
       {
         id: 'data_bounds_check_failed',

@@ -1,0 +1,202 @@
+{
+  "measure": "ruling-1 E rule over every converted step fingerprint_inputs entry (relative require/import walk from scripts/<step>.js + scripts/lib/compute/<step>.js)",
+  "tree": "Buildo-wt-fleet2-p3",
+  "date": "2026-10-03",
+  "rows": [
+    {
+      "entry": "scripts/lib/compute/compute-centroids.js",
+      "step": "compute_centroids",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "parcels:count",
+      "step": "compute_centroids",
+      "verdict": "data_signal",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "parcels:centroid_lat_null_count",
+      "step": "compute_centroids",
+      "verdict": "data_signal",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/compute-parcel-cost-estimates.js",
+      "step": "compute_parcel_cost_estimates",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/parcel-cost.js",
+      "step": "compute_parcel_cost_estimates",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/enrich-heritage.js",
+      "step": "enrich_heritage",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/enrich-parcels.js",
+      "step": "enrich_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/max-build.js",
+      "step": "enrich_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/zoning-precedence.js",
+      "step": "enrich_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/optimal-config.js",
+      "step": "enrich_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/build-norms.js",
+      "step": "enrich_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/enrich-ravines.js",
+      "step": "enrich_ravines",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/geocode-permits.js",
+      "step": "geocode_permits",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/link-massing.js",
+      "step": "link_massing",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/link-neighbourhoods.js",
+      "step": "link_neighbourhoods",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/link-parcel-addresses.js",
+      "step": "link_parcel_addresses",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "parcels:count",
+      "step": "link_parcel_addresses",
+      "verdict": "data_signal",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "address_points:count",
+      "step": "link_parcel_addresses",
+      "verdict": "data_signal",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/link-parcels.js",
+      "step": "link_parcels",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/link-wsib.js",
+      "step": "link_wsib",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "wsib_registry:count",
+      "step": "link_wsib",
+      "verdict": "data_signal",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/source-version.js",
+      "step": "load_centreline",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/step/acquire.js",
+      "step": "load_centreline",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/source-version.js",
+      "step": "load_ravines",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/step/acquire.js",
+      "step": "load_ravines",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/refresh-snapshot.js",
+      "step": "refresh_snapshot",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/assert-data-bounds-fields.js",
+      "step": "assert_data_bounds",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/compute/assert-engine-health.js",
+      "step": "assert_engine_health",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/assert-global-coverage-fields.js",
+      "step": "assert_global_coverage",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/assert-parcel-sanity-fields.js",
+      "step": "assert_parcel_sanity",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    },
+    {
+      "entry": "scripts/lib/address-points-csv-drift.js",
+      "step": "assert_schema",
+      "verdict": "real_import",
+      "disposition_row": "descriptive"
+    }
+  ],
+  "summary": {
+    "entries": 31,
+    "distinct": 28,
+    "real_import": 26,
+    "data_signal": 5,
+    "not_ok": 0,
+    "registry_rows": 28
+  },
+  "note": "steps declaring fingerprint_inputs \"none\" (a string, not an array) are skipped: address_points, load_heritage, massing, neighbourhoods, parcels, load_wsib"
+}

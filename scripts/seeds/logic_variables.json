@@ -1399,16 +1399,6 @@
       "group": "WSIB Matching"
     }
   },
-  "link_wsib_tier3_full_max_iterations": {
-    "default": 20,
-    "type": "number",
-    "description": "Bounds the mode-full tier-3 repair's convergence loop (A-7/LG-16): TIER3_SELECT is capped LIMIT 1000/invocation, so a single pass cannot repair the full ~5,515-row clean population. CONSUMED by link_wsib (the runCascadePhase mode-full branch, scripts/lib/step/index.js). Exhaustion is WARN (tier3_full_not_converged), never FAIL, per R-H.",
-    "min": 1,
-    "max": 100,
-    "admin": {
-      "group": "WSIB Matching"
-    }
-  },
   "link_wsib_tier3_token_overlap_fail_pct": {
     "default": 50,
     "type": "number",
@@ -6535,6 +6525,26 @@
     "description": "Spec 124 Rule 3 (row 3.3, INGESTOR) — Spec 47 §8.4: number of zn_zone classes zoning_areas_distribution_top20 reports before truncating. 20 = the pre-externalization topNDistribution default (src/tests/steps/load_zoning/fixtures/legacy-load-zoning.js.txt:298). Never compared against a bound. on_invalid fail. CONSUMED by load_zoning (scripts/lib/compute/load-zoning.js zoning_areas_distribution_top20, via ctx.config).",
     "admin": {
       "group": "Source Ingestion"
+    }
+  },
+  "address_points_mass_retire_max_pct": {
+    "default": 0.02,
+    "type": "number",
+    "description": "Registry-truth fold 10 soft-retire (operator ruling 2026-10-03; default per fold 15). The mass-retire guard of load_address_points' departed_mark write: when the keys the acquired CSV no longer carries, over the currently-active (retired_at IS NULL) rows, exceed this FRACTION, the MARK UPDATE is suppressed and the run FAILs on the mass_retire_guard row. 325 departed keys of ~530K is about 0.06%, far under 0.02. Raising the variable is the acknowledgement for a genuine mass retirement. on_invalid fail. CONSUMED by load_address_points via outputs.writes[0].retire_max_pct_from_config.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "link_wsib_mass_relink_max_pct": {
+    "default": 0.1,
+    "type": "number",
+    "description": "O4 row 6 mass guard (R6 §11.4 D2(a) = registry-truth fold 16 #1 (b), operator 2026-10-03). The FAIL ceiling for link_wsib's link_wsib_mass_relink_pct check: (moves + vanishes) / wsib_registry rows linked at run start, a FRACTION (0.10 = 10%). Scored pre_write on the read-only derivation's own counts, before any write; LINK_WSIB_ACCEPT_MASS_RELINK=1 lets one run write and never suppresses the FAIL row. Steady state measured 0 moves / 0 vanishes (2026-10-03). on_invalid fail. CONSUMED by link_wsib via checks[].limit_from_config.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "WSIB Matching"
     }
   }
 }

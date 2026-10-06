@@ -1,0 +1,866 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-global-coverage.js",
+  "chain": "permits",
+  "source_fingerprint": "ad6782e33af8c77a7421a22e56c1f8d36a2f855096470ad7578b5cb3bd667566",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 48,
+    "distinct": 30,
+    "utility": 17,
+    "tracer_self_ms": 28.43,
+    "wall_ms": 132477
+  },
+  "statements": [
+    {
+      "fingerprint": "0145f501e1d97726",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "building_footprints": [
+          "footprint_area_sqm",
+          "id",
+          "max_height_m"
+        ],
+        "parcel_buildings": [
+          "building_id",
+          "confidence",
+          "is_primary",
+          "linked_at",
+          "match_type",
+          "structure_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2459262164c928d2",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_trades": [
+          "classified_at",
+          "confidence",
+          "is_active",
+          "lead_score",
+          "phase",
+          "tier"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "24c94584f019c6a0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "lead_trades": [
+          "lead_id",
+          "trade_id"
+        ],
+        "trades": [
+          "id",
+          "kind"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "31f34ef31136c4cb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "enriched_status",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "40c84b9c7ac2e68e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "abuts_laneway",
+          "applicable_bylaws",
+          "application_date",
+          "builder_name",
+          "building_type",
+          "bylaw_max_coverage_pct",
+          "bylaw_max_fsi",
+          "bylaw_max_height_m",
+          "category",
+          "city",
+          "coa_fsi",
+          "comp_count",
+          "completed_date",
+          "cost_addition_total",
+          "cost_basement_per_sqm",
+          "cost_basement_underpin_per_sqm",
+          "cost_bath_per_sqm",
+          "cost_coa_total",
+          "cost_fb_total",
+          "cost_garage_total",
+          "cost_garden_suite_total",
+          "cost_gut_total",
+          "cost_kitchen_per_sqm",
+          "cost_laneway_suite_total",
+          "cost_solar_total",
+          "council_district",
+          "cur_est_bath_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_floor_gfa_sqm",
+          "cur_gfa_range_basis",
+          "cur_pot_2story_gfa_sqm",
+          "cur_pot_3story_gfa_sqm",
+          "current_use",
+          "data_hash",
+          "description",
+          "dwelling_units_created",
+          "dwelling_units_lost",
+          "enriched_status",
+          "envelope_constrained",
+          "est_const_cost",
+          "exception_number",
+          "existing_greenspace_sqm",
+          "existing_structure_confidence",
+          "garage_permission",
+          "garden_suite_fits",
+          "geo_id",
+          "geocoded_at",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "housing_units",
+          "imagery_roof_footprint_sqm",
+          "imagery_roof_gfa_sqm",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_in_ravine_protection_area",
+          "is_through_lot",
+          "issued_date",
+          "last_seen_at",
+          "latitude",
+          "lifecycle_classified_at",
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "location",
+          "longitude",
+          "lot_size_confidence",
+          "max_build_confidence",
+          "max_build_fsi",
+          "max_buildable_footprint_sqm",
+          "max_buildable_gfa_basis",
+          "max_buildable_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "max_newbuild_coa_gfa_sqm",
+          "neighbourhood_id",
+          "opt_config_confidence",
+          "overlay_summary",
+          "owner",
+          "permit_num",
+          "permit_type",
+          "phase_started_at",
+          "postal",
+          "primary_frontage_street_name",
+          "project_type",
+          "proposed_use",
+          "ravine_distance_m",
+          "raw_json",
+          "realized_fsi_p90",
+          "rear_suite_permission",
+          "rear_suite_type",
+          "scope_classified_at",
+          "scope_source",
+          "scope_tags",
+          "status",
+          "storeys",
+          "street_direction",
+          "street_name",
+          "street_name_normalized",
+          "street_num",
+          "street_type",
+          "structure_type",
+          "ward",
+          "work",
+          "zoning_class",
+          "zoning_dominant_parcel_id",
+          "zoning_dominant_parcel_method",
+          "zoning_enriched_at",
+          "zoning_parcel_count"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "59ae51913c48f52b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "entity_type",
+          "is_wsib_registered",
+          "last_seen_at",
+          "legal_name",
+          "name_normalized",
+          "permit_count",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7ff2aa5a98e25ba4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "\n        SELECT records_meta FROM pipeline_runs\n         WHERE pipeline = 'assert_entity_tracing'\n         ORDER BY started_at DESC LIMIT 1\n      ",
+      "params": []
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "847a7e77de4321d7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "trade_forecasts": [
+          "calibration_method",
+          "computed_at",
+          "confidence",
+          "median_days",
+          "opportunity_score",
+          "p25_days",
+          "p75_days",
+          "permit_num",
+          "predicted_start",
+          "revision_num",
+          "sample_size",
+          "target_window",
+          "trade_slug",
+          "urgency"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 20,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8cc61d852c0f4243",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_products": [
+          "product_id"
+        ],
+        "product_groups": [
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8ec1c3e2d47e9723",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_type_classifications": [
+          "class",
+          "permit_type"
+        ],
+        "permits": [
+          "lead_id",
+          "permit_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9df152bf2e388fe5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "decision",
+          "lifecycle_phase",
+          "linked_permit_num"
+        ],
+        "cost_estimates": [
+          "permit_num",
+          "revision_num"
+        ],
+        "data_quality_snapshots": [
+          "snapshot_date"
+        ],
+        "engine_health_snapshots": [
+          "captured_at"
+        ],
+        "lead_analytics": [],
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "lot_size_sqm"
+        ],
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_trades": [
+          "is_active",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "permit_num",
+          "revision_num"
+        ],
+        "phase_calibration": [
+          "median_days"
+        ],
+        "tracked_projects": [
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a40b467b78be5fc7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_trades": [
+          "trade_id"
+        ],
+        "trades": [
+          "id",
+          "kind"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a46081a556fda027",
+      "kind": "utility",
+      "count": 4,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ad50bacfd166cef3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_trades": [
+          "is_active",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "application_date",
+          "issued_date",
+          "lifecycle_phase",
+          "permit_num",
+          "phase_started_at",
+          "revision_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "be3f13aad06b2e89",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "name_normalized"
+        ],
+        "permits": [
+          "builder_name",
+          "permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d7d483e99dc2415e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "dc2155bbf3d02d8f",
+      "kind": "read",
+      "count": 8,
+      "rowCount": 8,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e16e8cc67fd3f68c",
+      "kind": "utility",
+      "count": 4,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e69438b45f9fafb9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "cost_estimates": [
+          "complexity_score",
+          "computed_at",
+          "cost_range_high",
+          "cost_range_low",
+          "cost_source",
+          "cost_tier",
+          "effective_area_sqm",
+          "estimated_cost",
+          "is_geometric_override",
+          "model_version",
+          "modeled_gfa_sqm",
+          "premium_factor",
+          "trade_contract_values"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "eb932ae3868863a9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fd676cb92486a143",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "neighbourhoods": [
+          "id"
+        ],
+        "permits": [
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "building_footprints": [
+        "footprint_area_sqm",
+        "id",
+        "max_height_m"
+      ],
+      "coa_applications": [
+        "decision",
+        "lifecycle_phase",
+        "linked_permit_num"
+      ],
+      "cost_estimates": [
+        "complexity_score",
+        "computed_at",
+        "cost_range_high",
+        "cost_range_low",
+        "cost_source",
+        "cost_tier",
+        "effective_area_sqm",
+        "estimated_cost",
+        "is_geometric_override",
+        "model_version",
+        "modeled_gfa_sqm",
+        "permit_num",
+        "premium_factor",
+        "revision_num",
+        "trade_contract_values"
+      ],
+      "data_quality_snapshots": [
+        "snapshot_date"
+      ],
+      "engine_health_snapshots": [
+        "captured_at"
+      ],
+      "entities": [
+        "entity_type",
+        "is_wsib_registered",
+        "last_seen_at",
+        "legal_name",
+        "name_normalized",
+        "permit_count",
+        "primary_email",
+        "primary_phone",
+        "website"
+      ],
+      "lead_analytics": [],
+      "lead_trades": [
+        "lead_id",
+        "trade_id"
+      ],
+      "neighbourhoods": [
+        "id"
+      ],
+      "parcel_buildings": [
+        "building_id",
+        "confidence",
+        "is_primary",
+        "linked_at",
+        "match_type",
+        "parcel_id",
+        "structure_type"
+      ],
+      "parcels": [
+        "centroid_lat",
+        "centroid_lng",
+        "lot_size_sqm"
+      ],
+      "permit_parcels": [
+        "permit_num",
+        "revision_num"
+      ],
+      "permit_products": [
+        "product_id"
+      ],
+      "permit_trades": [
+        "classified_at",
+        "confidence",
+        "is_active",
+        "lead_score",
+        "permit_num",
+        "phase",
+        "revision_num",
+        "tier",
+        "trade_id"
+      ],
+      "permit_type_classifications": [
+        "class",
+        "permit_type"
+      ],
+      "permits": [
+        "abuts_laneway",
+        "applicable_bylaws",
+        "application_date",
+        "builder_name",
+        "building_type",
+        "bylaw_max_coverage_pct",
+        "bylaw_max_fsi",
+        "bylaw_max_height_m",
+        "category",
+        "city",
+        "coa_fsi",
+        "comp_count",
+        "completed_date",
+        "cost_addition_total",
+        "cost_basement_per_sqm",
+        "cost_basement_underpin_per_sqm",
+        "cost_bath_per_sqm",
+        "cost_coa_total",
+        "cost_fb_total",
+        "cost_garage_total",
+        "cost_garden_suite_total",
+        "cost_gut_total",
+        "cost_kitchen_per_sqm",
+        "cost_laneway_suite_total",
+        "cost_solar_total",
+        "council_district",
+        "cur_est_bath_gfa_sqm",
+        "cur_est_kitchen_gfa_sqm",
+        "cur_floor_gfa_sqm",
+        "cur_gfa_range_basis",
+        "cur_pot_2story_gfa_sqm",
+        "cur_pot_3story_gfa_sqm",
+        "current_use",
+        "data_hash",
+        "description",
+        "dwelling_units_created",
+        "dwelling_units_lost",
+        "enriched_status",
+        "envelope_constrained",
+        "est_const_cost",
+        "exception_number",
+        "existing_greenspace_sqm",
+        "existing_structure_confidence",
+        "garage_permission",
+        "garden_suite_fits",
+        "geo_id",
+        "geocoded_at",
+        "heritage_designation_date",
+        "heritage_designation_type",
+        "housing_units",
+        "imagery_roof_footprint_sqm",
+        "imagery_roof_gfa_sqm",
+        "is_corner_lot",
+        "is_heritage_designated",
+        "is_in_ravine_protection_area",
+        "is_through_lot",
+        "issued_date",
+        "last_seen_at",
+        "latitude",
+        "lead_id",
+        "lifecycle_classified_at",
+        "lifecycle_phase",
+        "lifecycle_stalled",
+        "location",
+        "longitude",
+        "lot_size_confidence",
+        "max_build_confidence",
+        "max_build_fsi",
+        "max_buildable_footprint_sqm",
+        "max_buildable_gfa_basis",
+        "max_buildable_gfa_sqm",
+        "max_garage_gfa_sqm",
+        "max_newbuild_coa_gfa_sqm",
+        "neighbourhood_id",
+        "opt_config_confidence",
+        "overlay_summary",
+        "owner",
+        "permit_num",
+        "permit_type",
+        "phase_started_at",
+        "postal",
+        "primary_frontage_street_name",
+        "project_type",
+        "proposed_use",
+        "ravine_distance_m",
+        "raw_json",
+        "realized_fsi_p90",
+        "rear_suite_permission",
+        "rear_suite_type",
+        "revision_num",
+        "scope_classified_at",
+        "scope_source",
+        "scope_tags",
+        "status",
+        "storeys",
+        "street_direction",
+        "street_name",
+        "street_name_normalized",
+        "street_num",
+        "street_type",
+        "structure_type",
+        "ward",
+        "work",
+        "zoning_class",
+        "zoning_dominant_parcel_id",
+        "zoning_dominant_parcel_method",
+        "zoning_enriched_at",
+        "zoning_parcel_count"
+      ],
+      "phase_calibration": [
+        "median_days"
+      ],
+      "product_groups": [
+        "id"
+      ],
+      "tracked_projects": [
+        "status"
+      ],
+      "trade_forecasts": [
+        "calibration_method",
+        "computed_at",
+        "confidence",
+        "median_days",
+        "opportunity_score",
+        "p25_days",
+        "p75_days",
+        "permit_num",
+        "predicted_start",
+        "revision_num",
+        "sample_size",
+        "target_window",
+        "trade_slug",
+        "urgency"
+      ],
+      "trades": [
+        "id",
+        "kind"
+      ],
+      "wsib_registry": [
+        "linked_entity_id",
+        "match_confidence"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}

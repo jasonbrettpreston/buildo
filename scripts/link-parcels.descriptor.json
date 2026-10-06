@@ -7,7 +7,10 @@
     "lock": 90,
     "why_lock": {
       "text": "Lock 90 is not the spec number (this step's primary governing spec is 41, chain_permits). It was assigned by the c1ef0b73 advisory-lock retrofit and is recorded in src/tests/pipeline-advisory-lock.infra.test.ts's registry ('scripts/link-parcels.js': 90) — kept textually per §5.4 so that registry stays green across the conversion.",
-      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
     },
     "spec": "41",
     "spec_version": "2.0",
@@ -15,77 +18,193 @@
     "contract_version": 1,
     "gate_exempt": false
   },
-
   "inputs": {
     "reads": {
       "steps": [
-        { "step": "link_parcel_addresses", "version_pin": "gte" }
+        {
+          "step": "link_parcel_addresses"
+        },
+        {
+          "step": "address_points"
+        },
+        {
+          "step": "geocode_permits"
+        },
+        {
+          "step": "parcels"
+        },
+        {
+          "step": "permits"
+        }
       ],
       "tables": [
-        { "table": "permits", "columns": ["permit_num", "revision_num", "street_num", "street_name", "street_type", "latitude", "longitude", "parcel_linked_at", "geocoded_at"] },
-        { "table": "parcels", "columns": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "geom"] },
-        { "table": "address_points", "columns": ["address_point_id", "addr_num_normalized", "linear_name_normalized", "address_class_desc", "maint_stage", "address_status"] },
-        { "table": "parcel_address_points", "columns": ["parcel_id", "address_point_id"] }
+        {
+          "table": "permits",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "street_num",
+            "street_name",
+            "street_type",
+            "latitude",
+            "longitude",
+            "parcel_linked_at"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "addr_num_normalized",
+            "street_name_normalized",
+            "street_type_normalized",
+            "geom"
+          ]
+        },
+        {
+          "table": "address_points",
+          "columns": [
+            "address_point_id",
+            "addr_num_normalized",
+            "linear_name_normalized",
+            "address_class_desc",
+            "maint_stage",
+            "address_status",
+            "retired_at"
+          ]
+        },
+        {
+          "table": "parcel_address_points",
+          "columns": [
+            "parcel_id",
+            "address_point_id"
+          ]
+        },
+        {
+          "table": "permit_parcels",
+          "columns": [
+            "permit_num",
+            "revision_num",
+            "parcel_id",
+            "match_type",
+            "confidence",
+            "linked_at"
+          ]
+        }
       ],
       "externals": []
     },
     "expect_nonempty": true,
     "on_missing": "halt"
   },
-
   "outputs": {
     "writes": [
       {
         "table": "permit_parcels",
-        "key": ["permit_num", "revision_num", "parcel_id"],
+        "key": [
+          "permit_num",
+          "revision_num",
+          "parcel_id"
+        ],
         "columns": [
-          { "name": "permit_num", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "revision_num", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           {
-            "name": "match_type",
-            "vocabulary": { "values": ["address_points_exact", "exact_address", "name_only", "spatial_polygon", "spatial"], "on_unknown": "fail", "source": "scripts/lib/compute/link-parcels.js buildMatchSql" },
+            "name": "permit_num",
+            "vocabulary": "none",
             "written": "step",
             "bind": "value",
             "source": "compute"
           },
-          { "name": "confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
-          { "name": "linked_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+          {
+            "name": "revision_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "match_type",
+            "vocabulary": {
+              "values": [
+                "address_points_exact",
+                "exact_address",
+                "name_only",
+                "spatial_polygon",
+                "spatial"
+              ],
+              "on_unknown": "fail",
+              "source": "scripts/lib/compute/link-parcels.js buildMatchSql"
+            },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "linked_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
         ],
         "write_discipline": {
           "class": "guarded_upsert",
           "guard": "is_distinct_from",
-          "guard_columns": ["match_type", "confidence"],
-          "scope": "match_type = 'spatial'",
+          "guard_columns": [
+            "match_type",
+            "confidence"
+          ],
+          "scope": "(street_num IS NOT NULL AND street_num != '' AND street_name IS NOT NULL AND street_name != '') OR (latitude IS NOT NULL AND longitude IS NOT NULL) — the permits buildMatchSql considers (its addressFilter); every match type (address point, exact address, spatial, name-only) is upserted keyed (permit_num, revision_num, parcel_id) (U2, O4 row 7)",
           "expected_change_ratio": "<= 1.0",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "batch",
           "why": {
-            "text": "Composite key (permit_num, revision_num, parcel_id), matching the live UNIQUE constraint (permit_parcels_permit_num_revision_num_parcel_id_key) — this is WHY a permit can legally carry 2+ rows (LP-D2's 989-row duplicate class is schema-legal, not constraint-violating). Guard names EXACTLY match_type + confidence, never linked_at (linked_at is the run clock, source:\"run_at\" — guarding on it would rewrite every row every run, the same D-5 class link_massing's own guard_columns comment names).",
-            "liveness": { "kind": "table", "ref": "permit_parcels" }
+            "text": "Composite key (permit_num, revision_num, parcel_id), matching the live UNIQUE constraint (permit_parcels_permit_num_revision_num_parcel_id_key) — this is WHY a permit can legally carry 2+ rows (LP-D2's 989-row duplicate class is schema-legal, not constraint-violating). Guard names EXACTLY match_type + confidence, never linked_at (linked_at is the run clock, source:\"run_at\" — guarding on it would rewrite every row every run, the same D-5 class link_massing's own guard_columns comment names). O4 row 7 (folds 14 + 15): retract is \"none\". The match_type='spatial' full-mode mass retraction is RETIRED (the runner refuses retract \"all\" under mode_select \"none\", R7-5): under full_rescan it would delete and re-insert every spatial link every run and re-stamp every spatial permit, while LG-24's keyed delete (writes[1]) already removes every stale link of every in-scope permit each run. Residual measured 2026-10-03 on the local dev DB (read-only): 0 spatial links belong to permits outside the address/coordinate eligibility, so eligibility is not widened. A same-parcel match_type or confidence change passes this guard and is written with linked_at = RUN_AT, so it counts as a link change (fold 16 row 2) and restamps permits.parcel_linked_at (writes[2]).",
+            "liveness": {
+              "kind": "table",
+              "ref": "permit_parcels"
+            }
           }
         },
-        "retract": "all",
-        "retract_when": "full_only",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "not_applicable",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       },
       {
         "table": "permit_parcels",
-        "key": ["permit_num", "revision_num"],
+        "key": [
+          "permit_num",
+          "revision_num"
+        ],
         "columns": [
-          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          }
         ],
         "write_discipline": {
           "class": "link_full_retraction",
           "guard": "none",
           "guard_why": {
             "text": "LG-24 (Fold A B-1, 2026-08-30) — the DELETE-by-key half of Spec 122 §1.4's own class F ('upsert + DELETE stale + DELETE zero-match'). No IS DISTINCT FROM guard applies to a DELETE — the guard concept is for a value-overwrite, not a row removal. The scope IS the guard: a batch's own keyed DELETE only ever touches rows for permits in THAT batch, keyed by composite (permit_num, revision_num), excluding whichever parcel_id this batch's own upsert just kept.",
-            "liveness": { "kind": "table", "ref": "permit_parcels" }
+            "liveness": {
+              "kind": "table",
+              "ref": "permit_parcels"
+            }
           },
           "guard_columns": "all_declared",
           "scope": "permit_num = ANY(batch keys) AND revision_num = ANY(batch keys) AND (keep_parcel_id IS NULL OR parcel_id != keep_parcel_id)",
@@ -93,23 +212,29 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "batch",
           "why": {
-            "text": "Genuinely unimplemented before this pilot (Fold A B-1): the schema enum names class F for both link_parcels (step 10) and link_massing (step 15), but link_massing never uses this mechanic — it uses set_based_scoped+guarded_upsert via an is_primary flag column permit_parcels does not have. writes[] declared ORDER (Fold B item 5): THIS entry fires AFTER the upsert above, inside the SAME executeUpsertBatch+executeGuardedDeleteByKey transaction — reversing the order would transiently leave the permit unlinked. The SQL text is compute-authored (buildMatchSql's delete_by_key_sql), mirroring set_based_join_update/insert_only_no_retraction/write_once_backfill's own descriptive-only split.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+            "text": "Genuinely unimplemented before this pilot (Fold A B-1): the schema enum names class F for both link_parcels (step 10) and link_massing (step 15), but link_massing never uses this mechanic — it uses set_based_scoped+guarded_upsert via an is_primary flag column permit_parcels does not have. writes[] declared ORDER (Fold B item 5): THIS entry fires AFTER the upsert above, inside the SAME executeUpsertBatch+executeGuardedDeleteByKey transaction — reversing the order would transiently leave the permit unlinked. The SQL text is compute-authored (buildMatchSql's delete_by_key_sql), mirroring set_based_join_update/insert_only_no_retraction/write_once_backfill's own descriptive-only split. O4 row 7: the before-image is now EXACT. delete_by_key_select_sql reads the same USING list and WHERE as the DELETE, once, inside the batch transaction, and persists only when non-empty; its rows are also the removed links whose permits writes[2] stamps. It was every link of every permit in the batch, a superset that under full_rescan would dump the whole junction to JSONL on every run.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/link-parcels.js"
+            }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": false,
-          "on_collision": "not_applicable",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       },
       {
         "table": "permits",
-        "key": ["permit_num", "revision_num"],
+        "key": [
+          "permit_num",
+          "revision_num"
+        ],
         "columns": [
-          { "name": "parcel_linked_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+          {
+            "name": "parcel_linked_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
         ],
         "write_discipline": {
           "class": "set_based_scoped",
@@ -117,64 +242,70 @@
           "guard": "none",
           "guard_why": {
             "text": "LG-9/D-5 (2026-08-29 rule, parcel_buildings.linked_at incident): a run-clock column (columns[].source \"run_at\") may never sit in write_discipline.guard_columns — RUN_AT is DISTINCT FROM its own stored value on every run, so an IS DISTINCT FROM guard naming it is vacuous (never excludes anything) while LOOKING like a real guard, exactly the LG-9 trap. parcel_linked_at is this target's ONLY declared column, so there is no other column left to guard on — the honest declaration is guard:\"none\", matching LG-24's own sibling target (e2) shape. The scope IS the guard (same reasoning as e2's own guard_why): a batch's own watermark UPDATE only ever touches permit keys in THAT batch. The underlying compute-authored SQL (watermark_update_sql) additionally carries its own AND parcel_linked_at IS DISTINCT FROM $3 clause — a genuine, narrow safety net against a same-transaction retry re-stamping an already-current row — but that clause lives in the SQL text, not in this descriptor's own guard_columns, so LG-9's mechanical check (which only inspects columns[].source cross-referenced against guard_columns) correctly does not see it and does not need to.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/step/validate.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/validate.js"
+            }
           },
           "guard_columns": "all_declared",
           "guard_columns_why": {
             "text": "LG-9/D-5's mechanical check (parcel_buildings.linked_at incident, 2026-08-29) flags ANY run-clock column (columns[].source \"run_at\") sitting inside the EXPANDED guard_columns set, regardless of whether write_discipline.guard itself is \"none\" or \"is_distinct_from\" — this target's guard is already \"none\" (see guard_why above: parcel_linked_at is its ONLY declared column, so \"all_declared\" expands to exactly that one run-clock column, with nothing else to name instead). No guard mechanism reads guard_columns when guard:\"none\" — this field only exists here because the schema requires SOME value at this path, and \"all_declared\" is the honest one: it IS every declared column, there being only the one.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/step/validate.js" }
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/validate.js"
+            }
           },
-          "scope": "(permit_num, revision_num) IN (this batch's own keys)",
+          "scope": "(permit_num, revision_num) IN (this batch's own keys) AND (a permit_parcels row of the permit was written this run, linked_at = RUN_AT, OR the keyed delete removed one of its rows) AND parcel_linked_at IS DISTINCT FROM RUN_AT",
           "expected_change_ratio": "<= 1.0",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "batch",
           "why": {
-            "text": "LP-D10 (WF6 output-panel finding, restored commit 10, 2026-08-30) — fence a21b7b01 (2026-04-01) RESTORED: 'Batch UPDATE parcel_linked_at = NOW() for ALL evaluated permits, regardless of match count' was dropped, nowhere-on-purpose, during commit 7's consolidation into LG-24's single transaction. This write is the WHOLE REASON the incremental filter (staleness.scope, below) can ever EXCLUDE a no-match permit — without it, an unmatchable permit is re-evaluated on every incremental run forever. Unconditional by design (every permit THIS BATCH processed, matched or not) — matching the old code's own literal unconditional overwrite exactly, not merely approximating it. writes[] declared ORDER (extends Fold B item 5): fires LAST, after the upsert (e1) and LG-24's keyed delete (e2), inside the SAME transaction — a permit's linked/unlinked state is already final before it is marked evaluated. The SQL text is compute-authored (buildMatchSql's watermark_update_sql), via the set_source:\"compute\" escape hatch (LG-22 precedent) — RUN_AT is a per-run bound value, not a declared constant, so the plain set_based_scoped codegen path (sqlLiteral) does not fit.",
-            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+            "text": "O4 row 7 (operator ruling 2026-10-03, folds 14 + 15; fold 16 row 2): link_parcels re-checks every eligible permit every run (staleness.mode_select \"none\") but stamps parcel_linked_at ONLY for a permit whose parcel link CHANGED this run: (a) the guarded upsert (writes[0]) inserted one of its rows or changed its match_type/confidence (the guard excludes linked_at, so linked_at = RUN_AT marks exactly the rows written this run; a same-parcel match_type/confidence change counts as a link change), or (b) the keyed delete (writes[1]) removed one of its rows. No ≈240K-row permits rewrite and no permits BEFORE UPDATE trigger storm per run. Fence a21b7b01 / LP-D10 (stamp every evaluated permit, matched or not) existed so the incremental filter could EXCLUDE a no-match permit; with no incremental mode that reason is retired, and a never-linked no-match permit keeps its parcel_linked_at unset. IS DISTINCT FROM RUN_AT stays as the same-transaction-retry net. writes[] declared ORDER: fires LAST, after the upsert (e1) and the keyed delete (e2), inside the SAME transaction. The SQL text is compute-authored (buildMatchSql watermark_update_sql) via the set_source:\"compute\" escape hatch (LG-22 precedent): RUN_AT is a per-run bound value, not a declared constant.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/link-parcels.js"
+            }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": false,
-          "on_collision": "not_applicable",
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [
       {
         "table": "permits",
-        "column": "zoning_enriched_at",
-        "when": "any permit_parcels row for this permit gains a linked_at newer than permits.zoning_enriched_at — enrich_permits.js (Spec 66, permits-chain step 10, immediately downstream) re-derives the dominant linked parcel's zoning by-law feed onto permits via permit_parcels. Spec 66 DEC-3 declares an always-full relational join (no incremental filter, re-derived fresh on EVERY run) — so this edge is declarative documentation of the real dependency (Finding 2's correction: enrich_parcels does NOT consume permit_parcels; the real downstream consumer is enrich_permits), not a mechanism that literally gates enrich_permits's own scope."
+        "column": "parcel_linked_at",
+        "when": "a permit's address or coordinates change, an address point or parcel changes, or a parcel's geometry changes. O4 row 7 (fold 14): link_parcels re-checks every eligible permit on every run (staleness.mode_select \"none\") and stamps parcel_linked_at whenever the permit's parcel link changes (writes[2]), so no separate invalidator is needed. The former permits.zoning_enriched_at row is RETIRED (O4 row 4, fold 14): its edge to enrich_permits (always-full, Spec 66 DEC-3) becomes a consumer-registry row with the LDG-10 class-2 widening.",
+        "by": "full_rescan"
       }
     ],
-    "publish": "direct",
     "write_inventory": {
       "statements": 3,
       "why": {
-        "text": "Three write statements per batch, ONE transaction: the guarded upsert to permit_parcels (e1), LG-24's keyed DELETE from permit_parcels (e2), and LP-D10's restored permits.parcel_linked_at watermark UPDATE (e3, commit 10) — corrected from the '2, exactly two' claim that stood here through commit 9, which undercounted by omitting the watermark this same commit restores after it was found dropped at the WF6 output panel. The declared FULL-mode-only scoped mass retraction (W1, retract:\"all\"/retract_when:\"full_only\" on e1) is a FOURTH statement but fires at most once per run (before the batch loop), never per-batch.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+        "text": "Three write statements per batch, ONE transaction: the guarded upsert to permit_parcels (e1), LG-24's keyed DELETE from permit_parcels (e2), and the permits.parcel_linked_at watermark UPDATE (e3), which stamps only permits whose link changed (O4 row 7). The FULL-mode-only spatial mass retraction that was a fourth, once-per-run statement is retired (retract \"none\", O4 row 7). The before-image SELECT (delete_by_key_select_sql) is a read and writes nothing.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
       }
     }
   },
-
   "staleness": {
-    "scope": "(street_num IS NOT NULL AND street_num != '' AND street_name IS NOT NULL AND street_name != '') OR (latitude IS NOT NULL AND longitude IS NOT NULL) — further narrowed incrementally by (parcel_linked_at IS NULL OR (geocoded_at IS NOT NULL AND parcel_linked_at < geocoded_at))",
     "trigger": [
-      { "signal": "code_version", "position": "pre_compute", "emit_key": "code_version" }
+      {
+        "signal": "code_version",
+        "position": "pre_compute",
+        "emit_key": "code_version"
+      }
     ],
-    "mode_select": "tri_state",
-    "checkpoint": { "cursor": "permit_num,revision_num", "ordered": true },
-    "interval": "none",
+    "mode_select": "none",
     "fingerprint": "derived",
-    "fingerprint_inputs": ["scripts/lib/compute/link-parcels.js"],
+    "fingerprint_inputs": [
+      "scripts/lib/compute/link-parcels.js"
+    ],
     "logic_version": "v1-knn-boundary-distance",
     "on_fingerprint_change": "run",
     "on_prior_run_error": "fail_step"
   },
-
   "guards": {
     "requires": [
       {
@@ -183,7 +314,10 @@
         "on_missing": "fail",
         "why": {
           "text": "A-1 RULED (Fold A, 2026-08-30) — the THIRD application of the link_massing A-8 / compute_centroids A-1(a) precedent in this programme (Spec 124 R-W). The pre-conversion JS (non-PostGIS) fallback (~46 lines: BBOX pre-filter, pointInGeoJSON ray-casting, haversineDistance) is a SECOND, independent implementation of the SAME centroid-nearest defect Finding 1 fixes — retired whole, not fixed, per Spec 124 R-W ('compute MUST NOT branch on PostGIS availability').",
-          "liveness": { "kind": "external", "ref": "postgis" }
+          "liveness": {
+            "kind": "external",
+            "ref": "postgis"
+          }
         }
       },
       {
@@ -192,7 +326,10 @@
         "on_missing": "fail",
         "why": {
           "text": "Both Strategy 3 Step 1 (ST_Contains) and Step 2 (THE FIX's KNN <-> operator) join on the live geometry directly — the exact column Strategy 3 Step 2's OLD predicate (parcels.centroid_lat/centroid_lng) never needed, and the exact reason this fix required a rung-(e) compute change rather than a rung (a)-(d) descriptor-only fix.",
-          "liveness": { "kind": "column", "ref": "parcels.geom" }
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.geom"
+          }
         }
       },
       {
@@ -201,7 +338,10 @@
         "on_missing": "fail",
         "why": {
           "text": "The KNN operator (pa.geom <-> point) and ST_Contains both seek this GiST index — without it Strategy 3 Step 2 degrades from the measured 400-500ms/batch to the struck co-resident-ST_DWithin form's 97.5s/batch or worse (Fold B item 1).",
-          "liveness": { "kind": "file", "ref": "migrations/039_add_postgis_geom_columns.sql" }
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/039_add_postgis_geom_columns.sql"
+          }
         }
       },
       {
@@ -210,7 +350,10 @@
         "on_missing": "fail",
         "why": {
           "text": "(permit_num, revision_num) → permits(permit_num, revision_num). The junction is only meaningful while both sides are referential.",
-          "liveness": { "kind": "table", "ref": "permit_parcels" }
+          "liveness": {
+            "kind": "table",
+            "ref": "permit_parcels"
+          }
         }
       },
       {
@@ -219,7 +362,10 @@
         "on_missing": "fail",
         "why": {
           "text": "parcel_id → parcels(id). Same class as the permit-side FK.",
-          "liveness": { "kind": "table", "ref": "permit_parcels" }
+          "liveness": {
+            "kind": "table",
+            "ref": "permit_parcels"
+          }
         }
       },
       {
@@ -228,168 +374,260 @@
         "on_missing": "fail",
         "why": {
           "text": "Measured live 2026-08-30: permit_parcels has relrowsecurity = true. Under any role that does not bypass RLS, the upsert and LG-24's DELETE both affect 0 rows WITH NO ERROR — same class as link_massing's own parcel_buildings finding, pilot 2's LR-D7.",
-          "liveness": { "kind": "table", "ref": "permit_parcels" }
+          "liveness": {
+            "kind": "table",
+            "ref": "permit_parcels"
+          }
         }
       }
     ],
     "srid": 4326,
     "empty_source": "permits",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
-
   "execution": {
     "shape": "link_keyed",
-    "budget": "45m",
     "txn_scope": "batch",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "60m",
     "batch": 1000,
-    "needs_disk_mb": "none",
-    "partial_fill": "batched",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_check_error_why": {
       "text": "Every check reads a value the library already measured — mirrors link_massing's own on_check_error_why reasoning verbatim.",
-      "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/link-parcels.js"
+      }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
-      "sources": { "argv": ["--full"], "env": { "PIPELINE_CHAIN": "sources" } },
-      "permits": { "argv": [], "env": { "PIPELINE_CHAIN": "permits" } }
+      "sources": {
+        "argv": [
+          "--full"
+        ],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      },
+      "permits": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "permits"
+        }
+      }
     },
     "maintenance": "none"
   },
-
   "checks": [
     {
       "id": "permits_processed",
       "kind": "field_coverage",
-      "expect": { "reports": "eligible permits this run walked" },
+      "expect": {
+        "reports": "eligible permits this run walked"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name from the pre-conversion audit_table row.", "liveness": { "kind": "table", "ref": "permits" } }
+      "why": {
+        "text": "Ported by name from the pre-conversion audit_table row.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
     },
     {
       "id": "tier_1_exact_address",
       "kind": "field_coverage",
-      "expect": { "reports": "F17 counter-naming preservation — rolls up BOTH bridge-path (1a) AND legacy parcels-table (1b) Tier-1 matches" },
+      "expect": {
+        "reports": "F17 counter-naming preservation — rolls up BOTH bridge-path (1a) AND legacy parcels-table (1b) Tier-1 matches"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Preserved verbatim from the pre-conversion script's own plan v4 fold F17 naming convention.", "liveness": { "kind": "column", "ref": "permit_parcels.match_type" } }
+      "why": {
+        "text": "Preserved verbatim from the pre-conversion script's own plan v4 fold F17 naming convention.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
     },
     {
       "id": "tier_1_via_bridge",
       "kind": "field_coverage",
-      "expect": { "reports": "the address_points-bridge-path subset of tier_1_exact_address" },
+      "expect": {
+        "reports": "the address_points-bridge-path subset of tier_1_exact_address"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "F17's informational sibling counter, ported by name.", "liveness": { "kind": "column", "ref": "permit_parcels.match_type" } }
+      "why": {
+        "text": "F17's informational sibling counter, ported by name.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
     },
     {
       "id": "tier_2_name_only",
       "kind": "field_coverage",
-      "expect": { "reports": "Strategy 2 matches" },
+      "expect": {
+        "reports": "Strategy 2 matches"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "permit_parcels.match_type" } }
+      "why": {
+        "text": "Ported by name.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
     },
     {
       "id": "tier_3_spatial",
       "kind": "field_coverage",
-      "expect": { "reports": "Strategy 3 total (Step 1 containment + Step 2 KNN fallback)" },
+      "expect": {
+        "reports": "Strategy 3 total (Step 1 containment + Step 2 KNN fallback)"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "permit_parcels.match_type" } }
+      "why": {
+        "text": "Ported by name.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
     },
     {
       "id": "tier_3_polygon",
       "kind": "field_coverage",
-      "expect": { "reports": "Strategy 3 Step 1 (ST_Contains) matches — UNCHANGED, already geometry-correct" },
+      "expect": {
+        "reports": "Strategy 3 Step 1 (ST_Contains) matches — UNCHANGED, already geometry-correct"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "permit_parcels.match_type" } }
+      "why": {
+        "text": "Ported by name.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
     },
     {
       "id": "run_matched",
       "kind": "field_coverage",
-      "expect": { "reports": "permits that gained at least one link this run" },
+      "expect": {
+        "reports": "permits that gained at least one link this run"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "The run-scoped numerator, distinct from link_rate's CUMULATIVE denominator.", "liveness": { "kind": "check", "ref": "link_rate" } }
+      "why": {
+        "text": "The run-scoped numerator, distinct from link_rate's CUMULATIVE denominator.",
+        "liveness": {
+          "kind": "check",
+          "ref": "link_rate"
+        }
+      }
     },
     {
       "id": "no_match",
       "kind": "field_coverage",
-      "expect": { "reports": "eligible permits that matched no parcel at all this run" },
+      "expect": {
+        "reports": "eligible permits that matched no parcel at all this run"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "permits" } }
+      "why": {
+        "text": "Ported by name.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
     },
     {
       "id": "permit_parcels_written",
       "kind": "field_coverage",
-      "expect": { "reports": "permit_parcels rows the guarded upsert (e1) actually changed" },
+      "expect": {
+        "reports": "permit_parcels rows the guarded upsert (e1) actually changed"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Ported by name — the row that separates ALGORITHMIC matches from DB MUTATIONS.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+      "why": {
+        "text": "Ported by name — the row that separates ALGORITHMIC matches from DB MUTATIONS.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
+      }
     },
     {
       "id": "permits_watermarked",
       "kind": "field_coverage",
-      "expect": { "reports": "permits.parcel_linked_at rows the batch watermark (e3, LP-D10, commit 10) actually stamped this run" },
+      "expect": {
+        "reports": "permits.parcel_linked_at rows the batch watermark (e3, LP-D10, commit 10) actually stamped this run"
+      },
       "limit": "viol == 0",
       "severity": "INFO",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "LP-D10 (WF6 output-panel finding, restored commit 10). Mirrors permit_parcels_written's own shape: separates PERMITS EVALUATED (this row) from PERMIT_PARCELS ROWS CHANGED (the row above) — a permit can be evaluated with zero match-count impact (the no-match case fence a21b7b01 exists for), and this row is what makes that fact observable rather than silent. Expected to be >= permits_processed's own count minus any same-RUN_AT re-stamp the IS DISTINCT FROM guard correctly excludes (structurally ~0 in practice, since RUN_AT is a fresh clock read every run).", "liveness": { "kind": "table", "ref": "permits" } }
+      "why": {
+        "text": "LP-D10 (WF6 output-panel finding, restored commit 10). Mirrors permit_parcels_written's own shape: separates PERMITS EVALUATED (this row) from PERMIT_PARCELS ROWS CHANGED (the row above) — a permit can be evaluated with zero match-count impact (the no-match case fence a21b7b01 exists for), and this row is what makes that fact observable rather than silent. Expected to be >= permits_processed's own count minus any same-RUN_AT re-stamp the IS DISTINCT FROM guard correctly excludes (structurally ~0 in practice, since RUN_AT is a fresh clock read every run).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permits"
+        }
+      }
     },
     {
       "id": "parcel_retraction_ratio",
       "kind": "bound",
-      "expect": { "of": "permit_parcels rows retracted by W1's FULL-mode mass retraction (writes[0], scope match_type='spatial') and NOT rebuilt by the same run's batch-loop upsert, over rows retracted" },
+      "expect": {
+        "of": "stale permit_parcels links deleted (writes[1] keyed delete) over stale + derived links (writes[0] scanned), a FRACTION"
+      },
       "limit": "pct <= 0.05",
       "limit_from_config": "link_parcels_retraction_ratio_fail_pct",
       "severity": "FAIL",
@@ -397,12 +635,20 @@
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — mirrors link_massing's own mass_retraction_ratio (compute/link-massing.js:520-529) verbatim: 'retracted and NOT rebuilt is the shape of a broken run.' Before this check, W1's own retraction count and rebuild count were both computed (written.e1.retracted / written.e1.inserted) but never reported anywhere a verdict could see — a FULL run that retracted spatial-tier links and then failed to relink them would read PASS on every other row. A genuine FULL run retracts N and rebuilds ~N (permits re-evaluate across all tiers, not only spatial), so this ratio is 0 in the normal case; a broken predicate, empty corpus, or half-completed run shows as non-zero.", "liveness": { "kind": "check", "ref": "permit_parcels_written" } }
+      "why": {
+        "text": "1.16 (seat A, O4 row 7): now e2.deleted / (e2.deleted + e1.scanned) — the full-mode mass retraction is retired; a broken predicate that derives nothing reads 1.0 and FAILs. HISTORY: LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — mirrors link_massing's own mass_retraction_ratio (compute/link-massing.js:520-529) verbatim: 'retracted and NOT rebuilt is the shape of a broken run.' Before this check, W1's own retraction count and rebuild count were both computed (written.e1.retracted / written.e1.inserted) but never reported anywhere a verdict could see — a FULL run that retracted spatial-tier links and then failed to relink them would read PASS on every other row. A genuine FULL run retracts N and rebuilds ~N (permits re-evaluate across all tiers, not only spatial), so this ratio is 0 in the normal case; a broken predicate, empty corpus, or half-completed run shows as non-zero.",
+        "liveness": {
+          "kind": "check",
+          "ref": "permit_parcels_written"
+        }
+      }
     },
     {
       "id": "spatial_null_coordinate_permits",
       "kind": "field_coverage",
-      "expect": { "reports": "permits excluded from Strategy 3 Step 2 by the WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL guard" },
+      "expect": {
+        "reports": "permits excluded from Strategy 3 Step 2 by the WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL guard"
+      },
       "limit": "viol == 0",
       "severity": "WARN",
       "blocking": false,
@@ -412,13 +658,18 @@
       "retighten_when": "zero rows",
       "why": {
         "text": "WF6 output-panel finding (observability seat, Finding C, commit 13, 2026-08-30) — TWO DISTINCT POPULATIONS were being conflated here. THIS row reports exactly what its own `expect.reports` text already says: every permit EXCLUDED from Strategy 3 Step 2's LATERAL join this run because it has no lat/lng (the `WHERE v.lng IS NOT NULL AND v.lat IS NOT NULL` guard, `matched.null_coordinate_permits`). This is a LARGE, STANDING, non-transient population, not an anomaly -- live-measured on a real FULL run (2026-08-30): 11,613 of 254,045 permits processed. WARN + retighten_when \"zero rows\" (Spec 48 §4.9) does NOT mean an operator should expect this to trend toward 0; a forced FULL relink cannot ever change it, because a permit that was never geocoded stays ungeocoded regardless of relink mode -- the row exists so a genuinely broken guard (this count silently dropping to near-0 because the WHERE clause stopped filtering) would show up as a state change, not so the count itself is a target. LP-D6's OWN historical defect signature (Fold B item 2: 4 spatial-tier permits that WRONGLY resolved to a parcel despite NULL coordinates -- an artifact of the pre-fix, unguarded code path, evidence corrected at Fold C blocking item 1: parcel_id 439990 for all 4, never id=1) is a SEPARATE, much narrower population, tracked by the standing `pp_spatial_null_coordinate_count` invariant below, not by this check -- that population SHOULD read 0 and stay there; this one should not.",
-        "liveness": { "kind": "column", "ref": "permits.latitude" }
+        "liveness": {
+          "kind": "column",
+          "ref": "permits.latitude"
+        }
       }
     },
     {
       "id": "street_type_conflict",
       "kind": "field_coverage",
-      "expect": { "reports": "written address_points_exact links whose permit street_type conflicts with the linked parcel's street_type_normalized" },
+      "expect": {
+        "reports": "written address_points_exact links whose permit street_type conflicts with the linked parcel's street_type_normalized"
+      },
       "limit": "viol == 0",
       "severity": "WARN",
       "blocking": false,
@@ -428,13 +679,18 @@
       "retighten_when": "zero rows",
       "why": {
         "text": "LP-D9 (commit 8a, 2026-08-30). address_points_exact's JOIN originally matched on house-number + street-name ONLY (address_points carries no street-type column of its own) — a same-name-different-type collision (measured live: 26 MEADOWVALE RD vs DR, ~31.6km apart) could resolve to whichever candidate won the class/area/id-ASC tiebreak, regardless of the permit's own declared type. Measured system-wide before the fix: 7,062/215,552 (3.3%) currently-linked address_points_exact rows conflicted. THE FIX adds p.street_type_normalized to the JOIN, mirroring Strategy 1b's own empty-type predicate shape exactly. Post-fix a NEW mismatch is structurally impossible; this check is a standing whole-table audit (not merely run-scoped) so a pre-fix residual row an incremental run never revisits, or a future regression of the predicate, is never invisible again. WARN + retighten_when (Spec 48 §4.9), mirroring spatial_null_coordinate_permits' own convention.",
-        "liveness": { "kind": "column", "ref": "permits.street_type" }
+        "liveness": {
+          "kind": "column",
+          "ref": "permits.street_type"
+        }
       }
     },
     {
       "id": "link_rate",
       "kind": "bound",
-      "expect": { "of": "permits with a link-eligible address/geocode that carry NO parcel link, over all such permits" },
+      "expect": {
+        "of": "permits with a link-eligible address/geocode that carry NO parcel link, over all such permits"
+      },
       "limit": "pct <= 25",
       "limit_from_config": "link_parcels_link_rate_warn_pct",
       "severity": "WARN",
@@ -444,23 +700,33 @@
       "accept_until": "none",
       "why": {
         "text": "T5 (LP-D4) — pre-conversion the floor was the bare literal 75 in parcelLinkRate>=75?'PASS':'WARN' with a duplicated '>= 75%' render string, zero registered logic_variables. Cumulative (a760e0e7's own reasoning), never run-scoped. Reported as the UNLINKED fraction (pct <= 25 on the complement is exactly link_rate >= 75), matching link_massing's own reporting convention. ⚠️ link_parcels_link_rate_warn_pct's own SEED VALUE is stored as the UNLINKED ceiling (default 25), NOT the link-rate floor (75) the old code's literal used — verdict.js's limit_from_config substitutes the config value directly into this check's pct<= form with no transform, and pct>= is documented there as unimplemented — so the config value itself must already be in complement terms for the substitution to be correct. Deviation from the plan's own 'default 75' text, for this hard architectural reason (verified live this commit: an un-transformed 75 substituted into pct<=75 would only WARN when unlinked exceeds 75%, i.e. linked below 25% — a materially looser, wrong bound, caught live when the real permits population measured 94.5% linked and incorrectly WARNed against the untransformed value).",
-        "liveness": { "kind": "table", "ref": "permit_parcels" }
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
       }
     },
     {
       "id": "write_privilege",
       "kind": "invariant",
-      "expect": { "writable": "the role bypasses RLS, or a policy grants the write" },
+      "expect": {
+        "writable": "the role bypasses RLS, or a policy grants the write"
+      },
       "limit": "viol == 0",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
-      "why": { "text": "Reports the MEASURED privilege on every run, mirroring link_massing's own write_privilege check verbatim.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+      "why": {
+        "text": "Reports the MEASURED privilege on every run, mirroring link_massing's own write_privilege check verbatim.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
+      }
     }
   ],
-
   "invariants": [
     {
       "id": "pp_unique_triple_violations",
@@ -471,8 +737,25 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-08-30T16:00:00.000Z", "commit": "pilot7-commit7", "cost_ms": 150, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "A duplicate (permit_num, revision_num, parcel_id) triple is structurally impossible under the UNIQUE constraint the write is keyed on — FAIL because a non-zero count would be a genuine bug.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-06T16:29:51.634Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 1857,
+        "sample_n": 12,
+        "source_run": {
+          "run_id": null,
+          "chain": "sources",
+          "event": "golden_capture"
+        }
+      },
+      "why": {
+        "text": "A duplicate (permit_num, revision_num, parcel_id) triple is structurally impossible under the UNIQUE constraint the write is keyed on — FAIL because a non-zero count would be a genuine bug.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
+      }
     },
     {
       "id": "pp_duplicate_permit_pairs",
@@ -483,8 +766,25 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 989, "at": "2026-08-30T16:00:00.000Z", "commit": "pilot7-commit7", "cost_ms": 90, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "LP-D2's own trend signal — pre-dating the 8a1c7d25 retraction-on-relink fence, expected to self-heal under the declared FULL run (commit 8, out of this pilot's own scope).", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-06T16:29:51.634Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 1869,
+        "sample_n": 12,
+        "source_run": {
+          "run_id": null,
+          "chain": "sources",
+          "event": "golden_capture"
+        }
+      },
+      "why": {
+        "text": "LP-D2's own trend signal — pre-dating the 8a1c7d25 retraction-on-relink fence, expected to self-heal under the declared FULL run (commit 8, out of this pilot's own scope).",
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
+      }
     },
     {
       "id": "pp_spatial_null_coordinate_count",
@@ -495,8 +795,25 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 4, "at": "2026-08-30T16:00:00.000Z", "commit": "pilot7-commit7", "cost_ms": 40, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
-      "why": { "text": "WF6 output-panel finding (observability seat, Finding C, commit 13, 2026-08-30) -- corrected: this is NOT the same measurement as spatial_null_coordinate_permits above at a different altitude. That check counts every permit EXCLUDED from Strategy 3 Step 2 this run (11,613 live-measured, a large standing population, expected non-zero). THIS invariant counts a much narrower, different query: NULL-coordinate permits that nonetheless carry a match_type='spatial' row in permit_parcels -- i.e. LP-D6's own defect signature, permits that WRONGLY resolved to a parcel despite having no coordinates, an artifact of the pre-fix unguarded code path. This population SHOULD read 0 and stay there; the check above should not.", "liveness": { "kind": "table", "ref": "permit_parcels" } }
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-06T16:29:51.634Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 350,
+        "sample_n": 12,
+        "source_run": {
+          "run_id": null,
+          "chain": "sources",
+          "event": "golden_capture"
+        }
+      },
+      "why": {
+        "text": "WF6 output-panel finding (observability seat, Finding C, commit 13, 2026-08-30) -- corrected: this is NOT the same measurement as spatial_null_coordinate_permits above at a different altitude. That check counts every permit EXCLUDED from Strategy 3 Step 2 this run (11,613 live-measured, a large standing population, expected non-zero). THIS invariant counts a much narrower, different query: NULL-coordinate permits that nonetheless carry a match_type='spatial' row in permit_parcels -- i.e. LP-D6's own defect signature, permits that WRONGLY resolved to a parcel despite having no coordinates, an artifact of the pre-fix unguarded code path. This population SHOULD read 0 and stay there; the check above should not.",
+        "liveness": {
+          "kind": "table",
+          "ref": "permit_parcels"
+        }
+      }
     }
   ],
   "plausibility": [
@@ -510,41 +827,120 @@
       "source": "plausibility",
       "frequency": "every_run",
       "retighten_when": "zero rows (this check is expected to already read 0 -- a non-zero count is a genuine finding, not a standing residual)",
-      "last_measured": { "value": 0, "at": "2026-08-30T21:00:00.000Z", "commit": "pilot7-commit14", "cost_ms": 637, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-06T16:29:51.634Z",
+        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "cost_ms": 452,
+        "sample_n": 12,
+        "source_run": {
+          "run_id": null,
+          "chain": "sources",
+          "event": "golden_capture"
+        }
+      },
       "why": {
         "text": "R2/R3 (WF6 output-panel, orchestrator validator run, commit 14, 2026-08-30) -- the standing form of the Fold-B 98.24m/p99 measurement, mirroring link_massing's own linked_parcel_null_centroid_count row exactly (same shape: `source:\"plausibility\"`, `retighten_when: \"zero rows\"`). A genuine cross-field PHYSICAL BOUND, not telemetry-only: it checks the relationship between this step's own write (`permit_parcels.match_type='spatial'`, the KNN LATERAL fallback tier) and the config-declared cap (`spatial_match_max_distance_m`, default 100) that the SAME write's own SQL (`buildMatchSql`'s `spatial_fallback_sql`, `:189-202`) already enforces at write time (`ST_Distance(...) <= $5`). Under normal operation this should ALWAYS read 0 -- a non-zero count means either the cap config changed AFTER a spatial-tier row was written (the row is now stale relative to a tightened cap) or the write-time predicate itself regressed, neither of which the write-time SQL can ever catch on its own once the row already exists. NOTE (bootstrap disposition, this session's own budget constraint, not yet the full R-T >=5-timings/>=2-session median): `sample_n:1` -- a single live measurement (2026-08-30, 637ms, 0 violations against the real dev DB), not yet a median across sessions. Filed for a future WF3 to accumulate the remaining timings/sessions and promote this to a proper median, the same way `link_massing`'s own `linked_parcel_null_centroid_count` row (cited above as the shape precedent) would need to accumulate beyond its own recorded `sample_n`.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/link-parcels.js"
+        }
       }
     }
   ],
-
   "override": {
-    "force_full": "LINK_PARCELS_FORCE_FULL",
+    "force_full": "none",
     "force_run": "none",
     "dry_run": "none"
   },
-
   "emits": [
-    { "key": "code_version", "type": "string", "consumers": ["link_parcels"] },
-    { "key": "duration_ms", "type": "int", "consumers": [] },
-    { "key": "permits_processed", "type": "int", "consumers": [] },
-    { "key": "matches_tier_1_exact", "type": "int", "consumers": [] },
-    { "key": "matches_tier_1_via_bridge", "type": "int", "consumers": [] },
-    { "key": "matches_tier_2_name", "type": "int", "consumers": [] },
-    { "key": "matches_tier_3_spatial", "type": "int", "consumers": [] },
-    { "key": "matches_tier_3_polygon", "type": "int", "consumers": [] },
-    { "key": "matches_tier_3_fallback", "type": "int", "consumers": [] },
-    { "key": "no_match_count", "type": "int", "consumers": [] },
-    { "key": "null_coordinate_permits", "type": "int", "consumers": [] },
-    { "key": "db_upserted", "type": "int", "consumers": [] }
+    {
+      "key": "code_version",
+      "type": "string",
+      "consumers": [
+        "link_parcels"
+      ]
+    },
+    {
+      "key": "duration_ms",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "permits_processed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_1_exact",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_1_via_bridge",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_2_name",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_3_spatial",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_3_polygon",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_3_fallback",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "no_match_count",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "null_coordinate_permits",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "db_upserted",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "street_type_mismatch_count",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "permits_watermarked_count",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "permit_parcels_deleted_count",
+      "type": "int",
+      "consumers": []
+    }
   ],
-
   "deviations": [
     {
       "from": "Spec 123 §3.1 / Known Failure Mode #3 — a DEFECT is PINNED at conversion and fixed after",
       "why": {
         "text": "THE FIX is a genuine, scoped compute-rung-(e) change (Spec 124 §7), not a wrap — Strategy 3 Step 2's centroid-nearest join is rewritten to the KNN-boundary-distance form INLINE with this conversion, not pinned-and-deferred. Grounds: CC-D2/CC-D3 (PIN against compute_centroids, HIGH followup filed against THIS file), Reality-Check's own live re-measurement (commit 4, this pilot's own report §4): 10,616/17,500 (60.6%) of the spatial-tier population flips, 0/120 sampled OLD picks ever achieve containment.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/link-parcels.js"
+        }
       },
       "adjudicated_by": "Fold A/B/C (2026-08-30) + operator ruling (pilot 7 commit 7 dispatch)",
       "date": "2026-08-30"
@@ -553,7 +949,10 @@
       "from": "the JS (non-PostGIS) fallback path — preserve-declared vs retire",
       "why": {
         "text": "A-1 RULED: retire whole, third application of the link_massing A-8 / compute_centroids A-1(a) precedent (Spec 124 R-W, now landed and enforced by scripts/ast-grep-rules/compute-shape.yml's compute-no-postgis-branch rule).",
-        "liveness": { "kind": "file", "ref": "scripts/ast-grep-rules/compute-shape.yml" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/ast-grep-rules/compute-shape.yml"
+        }
       },
       "adjudicated_by": "Fold A Integration, 2026-08-30",
       "date": "2026-08-30"
@@ -562,7 +961,10 @@
       "from": "the pre-conversion two disagreeing phase ternaries — :186 chainId==='sources'?6:9 vs :660 PIPELINE_CHAIN==='sources'?6:7",
       "why": {
         "text": "A-5 RULED: phase = {permits: 7, sources: 6}, against the link_wsib precedent ({permits:7, sources:19}, the only other x2-shared step with a declared phase map). G3 archaeology (this pilot's own report §2) establishes the origin order: 5baaed5a (2026-03-26) introduced ?6:7 first, as part of a deliberate 3-chain renumbering sweep; 2577e694 (2026-04-21) independently reinvented the same axis a month later with the unreconciled value 9. Both ternaries retire — replaced by this declared map.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/step/verdict.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
       },
       "adjudicated_by": "Fold A Integration / A-5, 2026-08-30",
       "date": "2026-08-30"
@@ -571,7 +973,10 @@
       "from": "inputs.reads.steps[] — whether to declare a compute_centroids seam",
       "why": {
         "text": "Fold C item 9 (Ground-truth grounder): the pre-conversion file genuinely read parcels.centroid_lat/centroid_lng (Strategy 3 Step 2's OLD predicate) — but THE FIX deletes that read entirely, replacing it with pa.geom (populated by the parcels SOURCE loader, Spec 55, never by compute_centroids). Verified this commit: NEITHER Strategy 1a/1b/2 (address-based, no centroid touch) NOR Strategy 3 Step 1 (ST_Contains on pa.geom) NOR Step 2 (THE FIX's KNN on pa.geom) reads centroid_lat/centroid_lng anywhere in scripts/lib/compute/link-parcels.js — confirmed by direct grep, 0 hits. inputs.reads.steps[] is therefore declared EMPTY — the plan's own G11 guarantee ('NEW seam becomes declarable: compute_centroids -> link_parcels') described the PRE-fix file, not the shipped compute, and is corrected here rather than repeated.",
-        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-parcels.js" }
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/link-parcels.js"
+        }
       },
       "adjudicated_by": "Fold C item 9, Ground-truth grounder, 2026-08-30",
       "date": "2026-08-30"
@@ -580,13 +985,27 @@
       "from": "the tiebreak tie-count cited by the tiebreak-determinism lock",
       "why": {
         "text": "A genuine, unresolved measurement discrepancy across three independent sessions: the plan/Fold B cites '19 exact + 72 near-ties (91 total)'; this pilot's own commit 4 independently re-measured '19 exact + 40 near-ties (59 total under 1mm)'. All three measurements AGREE on 19 EXACT ties (Δ=0) — the near-tie bucket does not agree and is not resolved here. The tiebreak-determinism lock (commit 6, src/tests/steps/link_parcels/violations.test.ts) is anchored on the 19 exact ties only, per this pilot's own commit-4 recommendation, never the disputed near-tie count. Filed for a future WF3 to reconcile the near-tie methodology difference — not blocking, since the qualitative conclusion (a declared tiebreak is required) holds under EITHER count.",
-        "liveness": { "kind": "file", "ref": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md" }
+        "liveness": {
+          "kind": "file",
+          "ref": "docs/reports/2026-08-30-pilot7-link-parcels-assessment.md"
+        }
       },
       "adjudicated_by": "orchestrator ruling (commit 7 dispatch), carrying this pilot's own commit 4 finding",
       "date": "2026-08-30"
+    },
+    {
+      "from": "override.force_full / recovery.force LINK_PARCELS_FORCE_FULL",
+      "why": {
+        "text": "RETIRED at FLEET-2 (operator ruling MQ-B2 (a) + compliance amendment, registry-truth plan fold 19, 2026-10-04). Since O4 row 7 (staleness.mode_select \"none\") resolveLinkGate always resolves full with forced:false and runLinkKeyedPhase has no ledger-gated skip, so the env changed nothing: a declared-and-inert override (Spec 124 Rule 1, R-AV). override.force_full and recovery.force are now \"none\", so the runner never reads LINK_PARCELS_FORCE_FULL: a caller that still sets it gets the same full re-check every run already performs, nothing is forced or skipped, and this entry is where that is declared. Negative lock: src/tests/step-library.logic.test.ts (gone here and on link_massing, still live on link_wsib).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/step-library.logic.test.ts"
+        }
+      },
+      "adjudicated_by": "Operator ruling MQ-B2 (a) + compliance amendment (registry-truth plan fold 19)",
+      "date": "2026-10-04"
     }
   ],
-
   "limitations": [
     {
       "what": "compute-cost-estimates.js (permits-chain step, downstream) independently selects a dominant parcel via its own LATERAL (ORDER BY parcel_id ASC LIMIT 1), a DIFFERENT tiebreak than enrich_permits's own dominant-parcel selection — LP-D7, opened commit 1, widened Fold C blocking item 2. THE FIX's ~10,616 relinks change this consumer's own lot_size_sqm/frontage_m INPUTS the same way they change enrich_permits's zoning-propagation input. No code change in this pilot (read-only exposure); carried into the commit-8 expectation list as a SECOND product surface, not merely enrich_permits.",
@@ -604,86 +1023,220 @@
       "check_id": "pp_duplicate_permit_pairs"
     }
   ],
-
-  "interpretation": { "file": "link-parcels.notes.json", "entries": 5 },
-
+  "interpretation": {
+    "file": "link-parcels.notes.json"
+  },
   "recovery": {
-    "reset": "TRUNCATE is never correct — the junction is rebuilt, not reloaded. Re-run with LINK_PARCELS_FORCE_FULL=1, which forces mode full: the scoped mass retraction (match_type='spatial' only) clears the tier THE FIX changes and the same batch loop rebuilds it.",
+    "reset": "TRUNCATE is never correct — the junction is rebuilt, not reloaded. Re-run the step: since O4 row 7 (staleness.mode_select none) every run re-checks every permit, rewrites only the links that changed, deletes the links no longer derived per batch and restamps parcel_linked_at only on a changed link, so a plain re-run IS the repair. LINK_PARCELS_FORCE_FULL is retired (MQ-B2 (a), see deviations[]).",
     "resume": "none",
-    "force": "LINK_PARCELS_FORCE_FULL",
+    "force": "none",
     "rollback": "none",
     "verify_clean": "generated",
     "cascades": "derived",
-    "interrupted": "force_full_on_next_run",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "FLEET-2 §5 triage 2026-10-06: since O4 row 7 (staleness.mode_select none) every run re-checks every permit, so there is no incremental mode for a crash to be followed by and nothing to force; runLinkKeyedPhase no longer reaches detectInterruptedRetraction (Rule 12 reachability). No write target is a destructive retraction (all retract:\"none\"); a run killed mid-loop leaves earlier batches committed and the next run's full re-check repairs the rest.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
     "before_image": "generated"
   },
-
   "database": {
     "class": "primary",
     "min_migration": 12,
     "assert_current_database": "postgres"
   },
-
   "counters": {
-    "records_total": { "source": "written.e1.scanned", "scoped_by": ["permit_num", "revision_num", "parcel_id"] },
-    "records_new": { "source": "written.e1.inserted", "scoped_by": ["permit_num", "revision_num", "parcel_id"] },
-    "records_updated": { "source": "written.e1.updated", "scoped_by": ["permit_num", "revision_num", "parcel_id"] }
+    "records_total": {
+      "source": "written.e1.scanned"
+    },
+    "records_new": {
+      "source": "written.e1.inserted"
+    },
+    "records_updated": {
+      "source": "written.e1.updated"
+    }
   },
-
   "config": {
     "logic_variables": [
-      { "name": "spatial_match_max_distance_m", "min": 1, "max": 500, "on_invalid": "clamp" },
-      { "name": "spatial_match_confidence", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_confidence_address_points_exact", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_confidence_exact_address", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_confidence_spatial_polygon", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_confidence_name_only", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "link_parcels_link_rate_warn_pct", "min": 0, "max": 100, "on_invalid": "fail" },
-      { "name": "link_parcels_retraction_ratio_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" }
+      {
+        "name": "spatial_match_max_distance_m",
+        "min": 1,
+        "max": 500,
+        "on_invalid": "clamp"
+      },
+      {
+        "name": "spatial_match_confidence",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_confidence_address_points_exact",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_confidence_exact_address",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_confidence_spatial_polygon",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_confidence_name_only",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_link_rate_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_parcels_retraction_ratio_fail_pct",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,
     "retired": []
   },
-
   "sharing": {
     "chains": "derived",
     "shared": "derived",
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "none",
-      "phase": { "permits": 7, "sources": 6 },
+      "phase": {
+        "permits": 9,
+        "sources": 11
+      },
       "audit_table": "one",
       "scope": "none"
     },
     "on_contention": "self_skip"
   },
-
   "terminals": [
     {
-      "id": "linked_incremental", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "permit_parcels_deleted_count": "int", "audit_table": "object", "terminal": "string" },
-      "why": { "text": "The normal outcome: mode resolved incremental, the batch loop ran, no FAIL/WARN row.", "liveness": { "kind": "check", "ref": "link_rate" } }
+      "id": "linked_incremental",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "duration_ms": "int",
+        "permits_processed": "int",
+        "matches_tier_1_exact": "int",
+        "matches_tier_1_via_bridge": "int",
+        "matches_tier_2_name": "int",
+        "matches_tier_3_spatial": "int",
+        "matches_tier_3_polygon": "int",
+        "matches_tier_3_fallback": "int",
+        "no_match_count": "int",
+        "null_coordinate_permits": "int",
+        "street_type_mismatch_count": "int",
+        "permits_watermarked_count": "int",
+        "db_upserted": "int",
+        "permit_parcels_deleted_count": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The normal outcome: mode resolved incremental, the batch loop ran, no FAIL/WARN row.",
+        "liveness": {
+          "kind": "check",
+          "ref": "link_rate"
+        }
+      }
     },
     {
-      "id": "linked_incremental_with_warnings", "kind": "success", "status": "completed_with_warnings",
-      "records_meta": { "audit_table": "object", "terminal": "string" },
-      "why": { "text": "A WARN row stands (link_rate or spatial_null_coordinate_permits) and nothing FAILED. The run completed and wrote; the warning is in the table.", "liveness": { "kind": "check", "ref": "spatial_null_coordinate_permits" } }
+      "id": "linked_incremental_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A WARN row stands (link_rate or spatial_null_coordinate_permits) and nothing FAILED. The run completed and wrote; the warning is in the table.",
+        "liveness": {
+          "kind": "check",
+          "ref": "spatial_null_coordinate_permits"
+        }
+      }
     },
     {
-      "id": "linked_full", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "permits_processed": "int", "matches_tier_1_exact": "int", "matches_tier_1_via_bridge": "int", "matches_tier_2_name": "int", "matches_tier_3_spatial": "int", "matches_tier_3_polygon": "int", "matches_tier_3_fallback": "int", "no_match_count": "int", "null_coordinate_permits": "int", "street_type_mismatch_count": "int", "permits_watermarked_count": "int", "db_upserted": "int", "permit_parcels_deleted_count": "int", "audit_table": "object", "terminal": "string" },
-      "why": { "text": "Mode resolved full (LINK_PARCELS_FORCE_FULL): W1's scoped mass retraction (match_type='spatial') ran before the batch loop. NOT reachable by any commit-7 invocation — commit 8's budgeted act.", "liveness": { "kind": "check", "ref": "link_rate" } }
+      "id": "linked_full",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "duration_ms": "int",
+        "permits_processed": "int",
+        "matches_tier_1_exact": "int",
+        "matches_tier_1_via_bridge": "int",
+        "matches_tier_2_name": "int",
+        "matches_tier_3_spatial": "int",
+        "matches_tier_3_polygon": "int",
+        "matches_tier_3_fallback": "int",
+        "no_match_count": "int",
+        "null_coordinate_permits": "int",
+        "street_type_mismatch_count": "int",
+        "permits_watermarked_count": "int",
+        "db_upserted": "int",
+        "permit_parcels_deleted_count": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Mode resolved full. Since O4 row 7 (staleness.mode_select none) and MQ-B2 (a) (LINK_PARCELS_FORCE_FULL retired, see deviations[]) no env or argv selects the mode; which of linked_full / linked_incremental a run selects is reconciled against the POST goldens by #75 at the FLEET-2 recapture.",
+        "liveness": {
+          "kind": "check",
+          "ref": "link_rate"
+        }
+      }
     },
     {
-      "id": "failed_write_privilege", "kind": "fail_check", "status": "failed",
-      "records_meta": { "audit_table": "object", "terminal": "string" },
-      "why": { "text": "WF6 output-panel finding (observability seat), corrected commit 11, 2026-08-30 — the terminal here used to be named \"pre_write_refused\", describing a when:\"pre_write\" check FAILing with no standing override. That mechanism is structurally unreachable for this step: all 14 declared checks[] are when:\"post\" (verified live, none pre_write), so makePreWriteGate returns null and the pre-write gate is a permanent no-op. Because this was the ONLY fail_check terminal, selectTerminal's own discriminator-miss fallback (narrowed=[] when no terminal id contains the failing check's own id, pool=byKind instead) silently selected it whenever ANY post-check FAILed — most plausibly write_privilege, stamping the false claim \"no write was issued, permit_parcels is untouched\" on a run whose writes DID execute (RLS-zeroed: every statement affects 0 rows with no error, the write happened, it just wrote nothing). Renamed and re-worded to match the correct, already-discriminator-matching shape link_massing.descriptor.json/link_wsib.descriptor.json both use for the SAME real failure mode: RLS is enabled on permit_parcels with zero policies and the role does not bypass it, so every statement affects 0 rows with no error. Without this the run is indistinguishable from one whose corpus had not changed.", "liveness": { "kind": "check", "ref": "write_privilege" } }
+      "id": "failed_write_privilege",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "WF6 output-panel finding (observability seat), corrected commit 11, 2026-08-30 — the terminal here used to be named \"pre_write_refused\", describing a when:\"pre_write\" check FAILing with no standing override. That mechanism is structurally unreachable for this step: all 14 declared checks[] are when:\"post\" (verified live, none pre_write), so makePreWriteGate returns null and the pre-write gate is a permanent no-op. Because this was the ONLY fail_check terminal, selectTerminal's own discriminator-miss fallback (narrowed=[] when no terminal id contains the failing check's own id, pool=byKind instead) silently selected it whenever ANY post-check FAILed — most plausibly write_privilege, stamping the false claim \"no write was issued, permit_parcels is untouched\" on a run whose writes DID execute (RLS-zeroed: every statement affects 0 rows with no error, the write happened, it just wrote nothing). Renamed and re-worded to match the correct, already-discriminator-matching shape link_massing.descriptor.json/link_wsib.descriptor.json both use for the SAME real failure mode: RLS is enabled on permit_parcels with zero policies and the role does not bypass it, so every statement affects 0 rows with no error. Without this the run is indistinguishable from one whose corpus had not changed.",
+        "liveness": {
+          "kind": "check",
+          "ref": "write_privilege"
+        }
+      }
     },
     {
-      "id": "failed_parcel_retraction_ratio", "kind": "fail_check", "status": "failed",
-      "records_meta": { "audit_table": "object", "terminal": "string" },
-      "why": { "text": "LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — a FULL-mode run whose W1 mass retraction (writes[0], scope match_type='spatial') removed rows the same run's batch loop then failed to rebuild. The write already happened (both the retraction and whatever partial upsert the run managed), so this is a fail_check, not a pre_write refusal — mirrors link_massing's own failed_mass_retraction_ratio terminal (same class, same reasoning: 'the write already happened, which is why this terminal is failed rather than a pre_write refusal'). selectTerminal's discriminator (the failing check's own id, \"parcel_retraction_ratio\") correctly narrows to this terminal alone — id.includes(\"parcel_retraction_ratio\") is true here and false for failed_write_privilege, so the two fail_check terminals never collide.", "liveness": { "kind": "check", "ref": "parcel_retraction_ratio" } }
+      "id": "failed_parcel_retraction_ratio",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "LP-D12 (WF6 output-panel finding, observability seat, commit 12, 2026-08-30) — a FULL-mode run whose W1 mass retraction (writes[0], scope match_type='spatial') removed rows the same run's batch loop then failed to rebuild. The write already happened (both the retraction and whatever partial upsert the run managed), so this is a fail_check, not a pre_write refusal — mirrors link_massing's own failed_mass_retraction_ratio terminal (same class, same reasoning: 'the write already happened, which is why this terminal is failed rather than a pre_write refusal'). selectTerminal's discriminator (the failing check's own id, \"parcel_retraction_ratio\") correctly narrows to this terminal alone — id.includes(\"parcel_retraction_ratio\") is true here and false for failed_write_privilege, so the two fail_check terminals never collide.",
+        "liveness": {
+          "kind": "check",
+          "ref": "parcel_retraction_ratio"
+        }
+      }
     }
   ]
 }

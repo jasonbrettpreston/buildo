@@ -4,8 +4,8 @@
     "",
     "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
     "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
-    "do_not_reflag · how_to_investigate · limitations. This file carries 10, and",
-    "descriptor.interpretation.entries must equal that number. When a 13th wants in",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
     "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
     "There is no overflow file and no overflow block.",
     "",
@@ -27,12 +27,6 @@
     }
   ],
   "suspicious_if": [
-    {
-      "signal": "A run reports `features_inserted: 0` alongside `centreline_delete_skipped_empty_guard: true` and the table still holds rows — this is the F-C1 preserve path (LC-D14), where a later run carried zero rows, the pre_write WARN gate refused the write (on_warn: skip_write) and toronto_centreline was left exactly as the prior run left it. If you see inserted 0 WITHOUT that guard flag, the write silently did nothing and the load is a lie."
-    },
-    {
-      "signal": "`centreline_dataset_age_days` reads WARN. The centreline is republished daily, so an age above `load_centreline_dataset_age_warn_days` (seed 7) is a STANDING WARN (LC-D13 / R-H): a publisher cadence that paused, not a conversion defect. It retires only if the source's cadence is proven static, and it must never be 'fixed' by moving the threshold."
-    }
   ],
   "blind_spots": [
     {
@@ -50,28 +44,11 @@
       "why": "They are code structure: which street classes exist is a fact about Toronto's data, not an operator knob, and an operator who could re-point the include set could silently redefine what a street is. The Rule 3 ledger externalizes only the six numeric thresholds it declares (LC-D3); promoting the sets to config would be declaring a phantom knob. Same disposition as the ravines classification sets."
     },
     {
-      "what": "`centrelineMinFeatureCount` (legacy literal 40000) is KNOWINGLY RETIRED rather than externalized.",
-      "why": "LC-D3. It was never read: the L7 count check is a RATIO against the prior run, and the F-C1 empty-guard's bound is the staged-row count (zero), not a floor. The floor that actually exists is `sources_centreline_floor`, owned by assert_data_bounds — declaring 40000 here would be a phantom consumer, which is Rule 3's purpose, not its letter."
-    },
-    {
       "what": "`spec_version` stays the pinned '1.1' even though the consumer and the header may read otherwise.",
       "why": "enrich-centreline.js pins the producer contract version EXACTLY, and the sources chain HALTs on anything else. The pin is the contract; the document's number is documentation. Bumping it to match a header would look like tidying and would stop the chain — never bump it without a coordinated enrich_centreline change."
-    },
-    {
-      "what": "Retries are declared as `retries: 2` with `retry_backoff_ms: 0`, never as the legacy `attempts = 3`.",
-      "why": "Fold IC-8 (superseding the plan's single-attempt wording): the legacy loop's `attempts = 3` SPLITS into retries 2 (attempts = retries + 1 = 3) plus a zero backoff, so the descriptor is byte-equal to the legacy behaviour. Verifying `attempts === 3` here is a misread of the split, not a finding."
     }
   ],
-  "known_normal": [
-    {
-      "check_id": "centreline_unknown_feature_code_count",
-      "what": "A non-zero count is the expected steady state, not a regression: measured 1 on run 1471 and 1 in the PRE capture. The publisher ships one street class outside both the include and the exclude set; the loader keeps it with the sentinel `feature_code_desc = 'unknown_operator_review'` and WARNs. Retires only once the publisher classifies the code and the count holds 0 across two consecutive loads (R-H)."
-    },
-    {
-      "check_id": "centreline_unknown_jurisdiction_count",
-      "what": "A non-zero count is the expected steady state, not a regression: measured 94 on run 1471 and 97 in the PRE capture. Included features whose JURISDICTION is the literal 'unknown' are LOADED and flagged for operator review (unlike 'federal', which the classifier DROPS and never counts here). Retires only once the publisher populates the field (R-H) — the retighten condition is publisher data, never a code change."
-    }
-  ],
+  "known_normal": [],
   "known_bad": [
     {
       "what": "LC-D14: the F-C1 preserve path emits `features_inserted: 0` while a prior load's ~47K rows remain in toronto_centreline, and enrich_centreline's assertCentrelineEnriched reads that field and will HALT. This is a known_bad until ④b flips the pin — the preserve is correct, the observable is not."
@@ -81,10 +58,6 @@
     {
       "what": "`centreline_count_drift_pct` and `centreline_geometry_skipped_pct` are declared `blocking: false`, so a FAIL verdict still exits 0.",
       "why": "Both are PINs, DO NOT FIX (plan D-8). The FAIL row is verdict-bearing and the write is genuinely skipped (both are scored at `when: \"pre_write\"`, so no transaction opens and toronto_centreline survives untouched) — but the run leaves `failed` with exit code 0, matching the legacy posture. Do not 'fix' this by making either check block: that is ④b's call, not a conversion defect."
-    },
-    {
-      "what": "`centreline_features_deleted` reads like churn and `features_updated` is pinned 0 forever.",
-      "why": "On a class-C staging_full_replace, `deleted` is the PRE-state table size (inter-run coupled to the prior run's `inserted`, assessment §7) and `written.updated` does not exist at all — the write is DELETE-then-INSERT…SELECT. Both are declared descriptively in the descriptor's `counters` block. Do not reflag the deleted/inserted asymmetry as an anomaly; it is the shape of the replace."
     }
   ],
   "how_to_investigate": [
@@ -95,18 +68,9 @@
     {
       "what": "A short table: walk the counters in order — `centreline_feature_count_raw` (every parsed record, measured 64385), then the L25 drops (`filtered_out_non_street` naming each `non_street` reason, `filtered_out_federal`), then `centreline_feature_count_filtered` (post-classify, post-dedupe: 47363). A gap between raw and filtered with `filtered_out_non_street: 0` is where a bad CENTREL2 or a null geometry landed — check `centreline_bad_centreline_id_count` and `centreline_null_geometry_count`.",
       "check_id": "centreline_feature_count_raw"
-    },
-    {
-      "what": "A changed geometry population: `centreline_geometry_skipped_pct`'s detail carries the flagged geometry_collection_extracted count beside itself — a non-zero `centreline_geometry_collection_extracted` is the LC-D8 residue (a line the validator could only recover as a single-member MultiLineString) and, because it is 0 in 8/8 measured runs, the FIRST non-zero is a real source-shape change that must be looked at rather than absorbed by an INFO row.",
-      "check_id": "centreline_geometry_collection_extracted"
     }
   ],
   "limitations": [
-    {
-      "what": "LC-D16 CORRECTED at c2e (VERIFY-INT-4, measured against the real `ledgerPipelineName`): there is NO divergence. `ledgerPipelineName(descriptor, chainId)` falls back to `Object.keys(descriptor.execution.invocation)[0]` (\"sources\") whenever `chainId` is falsy — which is exactly the standalone case (`chainId = process.env.PIPELINE_CHAIN || null`) — so a standalone run reads/writes under the SAME `sources:load_centreline` ledger name as an in-chain run, byte-identical to the legacy hard-coded `PIPELINE_NAME = 'sources:load_centreline'` (load-centreline.js:44). The original LC-D16 text (\"reads the un-prefixed ledger name `load_centreline`\") was never measured against the real function and is retracted; a standalone/in-chain prior read never diverges for this step.",
-      "measured": "`node -e \"console.log(require('./scripts/lib/step/index.js').ledgerPipelineName(require('./scripts/load-centreline.descriptor.json'), null))\"` → 'sources:load_centreline' (2026-09-24), matching `ledgerPipelineName(descriptor, 'sources')` exactly",
-      "check_id": "none"
-    },
     {
       "what": "LC-D17: null-geometry source records are counted by the LIBRARY before `shapeRecord` runs, whereas the legacy counted them AFTER the L25 classify — so `centreline_null_geometry_count` is measured at a different point in the pipeline than the pre-conversion counter. Same WARN posture, different ordering; 0 on run 1471 and 0 in the PRE capture, so the divergence is currently invisible in the numbers.",
       "measured": "LC-D17; a null-geometry record the L25 classify would have dropped is now visible to the count",

@@ -254,13 +254,15 @@ describe('step-registry — grouped src/ consumers + declared vs observed (P1-C6
 
   it('RED: loadObserved unions committed POST traces and the fixture record', () => {
     const linkWsib = reg.loadObserved(REPO_ROOT, 'link_wsib');
-    expect(linkWsib.traces).toBe(2);
+    // 2 → 4 at the FLEET-2 §5 recapture (A31/A32): sources + sources-full-forced-4 now carry witness traces too.
+    expect(linkWsib.traces).toBe(4);
     expect(linkWsib.fixtureSuites).toBeGreaterThanOrEqual(0);
     expect(linkWsib.reads.wsib_registry).toContain('linked_entity_id');
     expect(linkWsib.writes.wsib_registry).toContain('linked_entity_id');
 
     const enrichParcels = reg.loadObserved(REPO_ROOT, 'enrich_parcels');
-    expect(enrichParcels.traces).toBe(0);
+    // 0 → 2 at the FLEET-2 §5 recapture: enrich_parcels' POSTs (sources_run1, none_incremental) are now witnessed.
+    expect(enrichParcels.traces).toBe(2);
     expect(enrichParcels.fixtureSuites).toBeGreaterThanOrEqual(1);
     expect(Object.keys(enrichParcels.reads).length).toBeGreaterThan(0);
 
@@ -275,7 +277,7 @@ describe('step-registry — grouped src/ consumers + declared vs observed (P1-C6
 
   it('RED: renderDeclaredVsObserved renders the declared/observed table per slug', () => {
     const linkWsib = reg.renderDeclaredVsObserved('link_wsib', inputs, reg.loadObserved(REPO_ROOT, 'link_wsib'));
-    expect(linkWsib.startsWith('declared: descriptor (deriveMeta) · observed: 2 POST trace(s) + ')).toBe(true);
+    expect(linkWsib.startsWith('declared: descriptor (deriveMeta) · observed: 4 POST trace(s) + ')).toBe(true);
     expect(linkWsib).toContain('\nreads:\n');
     expect(linkWsib).toContain('\nwrites:\n');
     expect(linkWsib.split('\n').some((line) => line.startsWith('  wsib_registry: both '))).toBe(true);
@@ -316,7 +318,7 @@ describe('step:registry CLI — ADVISORY readers grep retired, DECLARED vs OBSER
     expect(advisory).toBeGreaterThan(declared);
     expect(dvo).toBeGreaterThan(advisory);
 
-    expect(out).toContain('declared: descriptor (deriveMeta) · observed: 2 POST trace(s)');
+    expect(out).toContain('declared: descriptor (deriveMeta) · observed: 4 POST trace(s)');
     expect(out).toContain('tests naming the script or its tables');
     expect(out).not.toContain('undeclared readers');
     expect(out).not.toContain('git grep of the step');

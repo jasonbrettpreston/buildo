@@ -24,12 +24,13 @@ const ledger = require('../../scripts/lib/ledger.js') as {
   stepUpstreams: (slug: string, opts: { chain: string; env?: Record<string, string | undefined>; ledger?: { inchain: Record<string, unknown> } }) => string[];
   // P1-C5 (Spec 122 §6; plan Fold 9 D-B): the effective ledger overlays every
   // converted descriptor's derived reads/writes and tags each row's provenance.
-  effectiveLedger: (opts?: { env?: Record<string, string | undefined>; srcLedger?: unknown }) => {
+  effectiveLedger: (opts?: { env?: Record<string, string | undefined>; srcLedger?: unknown; descriptors?: Record<string, unknown>; scripts?: Record<string, unknown> }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     inchain: Record<string, any>;
     static: Record<string, unknown>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     src: Record<string, any>;
+    retired: string[];
   };
   // P1-C5 (Fold 9 D-C): the column-level, chain-scoped derived reads.steps set.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -287,9 +288,17 @@ describe('P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec
     expect(Object.keys(conv).length).toBeGreaterThan(0);
 
     const converted = new Set(Object.keys(conv));
-    // (1) every raw key is present in eff.inchain — nothing is dropped.
+    // (1) MQ-C1 (a), fold 19: every raw key WITH a manifest.scripts entry is present (a live slug is
+    //     never dropped); a raw key WITHOUT one is a retired producer — absent, reported in `retired`.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const manifestScripts = (require(join(REPO_ROOT, 'scripts/manifest.json')) as { scripts: Record<string, unknown> }).scripts;
+    const isLive = (k: string) => Object.prototype.hasOwnProperty.call(manifestScripts, k);
     for (const key of Object.keys(raw.inchain)) {
-      expect(eff.inchain[key]).toBeDefined();
+      if (isLive(key)) expect(eff.inchain[key]).toBeDefined();
+      else {
+        expect(eff.inchain[key]).toBeUndefined();
+        expect(eff.retired).toContain(`ORDER-RETIRED:${key}`);
+      }
     }
     // (2) converted rows: reads/writes are the descriptor's deriveMeta and the
     //     row is tagged source:'descriptor'.
@@ -301,7 +310,7 @@ describe('P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec
     }
     // (3) every NON-converted raw key: reads unchanged and tagged source:'snapshot'.
     for (const key of Object.keys(raw.inchain)) {
-      if (converted.has(key)) continue;
+      if (converted.has(key) || !isLive(key)) continue;
       expect(eff.inchain[key].source).toBe('snapshot');
       expect(eff.inchain[key].reads).toEqual((raw.inchain[key] as { reads: unknown }).reads);
     }
@@ -365,5 +374,110 @@ describe('P1-C5 — injected ledger, effective ledger, derived reads.steps (Spec
       execution: { invocation: { x: {} } },
     };
     expect(ledger.derivedReadsSteps('p', selfDesc, { ledger: L })).toEqual([]);
+  });
+});
+
+// LDG-10 Step 2 riders (WF1 LDG-10 Panel fold 1 items 9/10): (a) deriveMeta emits the
+// set_null_on_change_of columns as WRITES (prerequisite of #44 check (h)(ii)); (b) a
+// staleness.pins[].step joins the derived reads.steps set, so L-A ordering sees every pin edge.
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.4 / §6.6 (LDG-10 classes 3/4)
+describe('LDG-10 riders — deriveMeta set_null_on_change_of writes + pins in derivedReadsSteps', () => {
+  const base = {
+    identity: { name: 'fx_reader' },
+    inputs: { reads: { tables: [{ table: 't', columns: ['k'] }], steps: [], externals: [] } },
+    execution: { invocation: { x: {} } },
+  };
+  const L = {
+    inchain: {
+      fx_reader: { chains: ['x'], reads: {}, writes: {} },
+      p: { chains: ['x'], reads: {}, writes: { t: ['k'] } },
+    },
+    static: {},
+  };
+
+  it('RED: deriveMeta lists a set_null_on_change_of column as a write of its table (it is NULLed by codegen)', () => {
+    const d = {
+      outputs: {
+        writes: [{ table: 'parcels', columns: [{ name: 'geom' }, { name: 'geometry' }] }],
+        invalidates: [
+          { table: 'parcels', column: 'ravine_stamp', when: 'w', by: 'set_null_on_change_of', set_null_on_change_of: 'geom' },
+          { table: 'parcels', column: 'centroid_lat', when: 'w', by: 'trigger', trigger: 'parcels.trg_x' },
+        ],
+      },
+      inputs: { reads: { tables: [], externals: [] } },
+    };
+    const meta = deriveMeta(d);
+    expect(meta.writes.parcels).toEqual(['geom', 'geometry', 'ravine_stamp']);
+  });
+
+  it('GREEN: an invalidates row WITHOUT set_null_on_change_of (a trigger/step/pin/full_rescan row) is NOT a write of this step', () => {
+    const d = {
+      outputs: {
+        writes: [{ table: 'parcels', columns: [{ name: 'centroid_lat' }] }],
+        invalidates: [{ table: 'parcels', column: 'zoning_enriched_at', when: 'w', by: 'trigger', trigger: 'parcels.trg_x' }],
+      },
+      inputs: { reads: { tables: [], externals: [] } },
+    };
+    expect(deriveMeta(d).writes).toEqual({ parcels: ['centroid_lat'] });
+  });
+
+  it('GREEN: the real load_parcels descriptor derives its three lineage stamps as parcels writes', () => {
+    const d = JSON.parse(readFileSync(join(__dirname, '../../scripts/load-parcels.descriptor.json'), 'utf8'));
+    const w = deriveMeta(d).writes.parcels;
+    for (const c of ['ravine_dataset_version_when_enriched', 'heritage_dataset_version_when_enriched', 'centreline_dataset_version_when_enriched']) {
+      expect(w).toContain(c);
+    }
+  });
+
+  it('RED: a staleness.pins[].step joins the derived reads.steps set even when no column edge exists', () => {
+    const desc = { ...base, staleness: { pins: [{ step: 'pin_producer', stamp: 'records_meta.k_load.spec_version', equals: '1.2' }] } };
+    expect(ledger.derivedReadsSteps('fx_reader', desc, { ledger: L })).toEqual(['p', 'pin_producer']);
+  });
+
+  it('GREEN: the producers filter still applies to a pin producer, and a self-pin is excluded', () => {
+    const desc = { ...base, staleness: { pins: [{ step: 'pin_producer', stamp: 'records_meta.a' }, { step: 'fx_reader', stamp: 'records_meta.b' }] } };
+    expect(ledger.derivedReadsSteps('fx_reader', desc, { ledger: L, producers: ['p'] })).toEqual(['p']);
+    expect(ledger.derivedReadsSteps('fx_reader', desc, { ledger: L })).toEqual(['p', 'pin_producer']);
+  });
+
+  it('GREEN: no pins → derived set unchanged (existing callers byte-identical)', () => {
+    expect(ledger.derivedReadsSteps('fx_reader', base, { ledger: L })).toEqual(['p']);
+  });
+});
+
+// FLEET-2 assembly (2026-10-05): a converted step's ledger chains are its DECLARED execution.invocation
+// chains (the same declaration R-AZ generates manifest chain_args from), never a stale lineage-snapshot
+// membership. Snapshot fallback only when the descriptor declares no invocation.
+describe('effectiveLedger — converted chains come from the declared execution.invocation', () => {
+  const live = ledger.effectiveLedger();
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const manifestChains = (require(join(REPO_ROOT, 'scripts/manifest.json')) as { chains: Record<string, string[]> }).chains;
+  const memberOf = (slug: string) => Object.keys(manifestChains).filter((c) => manifestChains[c]!.includes(slug)).sort();
+
+  it('RED: link_massing (invocation: sources only) is a sources-only producer, whatever the snapshot says', () => {
+    expect([...(live.inchain.link_massing.chains as string[])].sort()).toEqual(['sources']);
+  });
+
+  it('RED: every converted row with a declared invocation has exactly its invocation chains (= its manifest chains)', () => {
+    for (const [slug, row] of Object.entries(live.inchain as Record<string, { source?: string; chains?: string[] }>)) {
+      if (row.source !== 'descriptor') continue;
+      expect([...(row.chains || [])].sort(), slug).toEqual(memberOf(slug));
+    }
+  });
+
+  it('GREEN control: a descriptor that declares NO invocation keeps the snapshot chains (fallback)', () => {
+    const raw = ledger.loadLedger();
+    const name = Object.keys(raw.inchain).find((k) => ((raw.inchain[k] as { chains?: string[] }).chains || []).length > 0)!;
+    const e = ledger.effectiveLedger({ descriptors: { [name]: { identity: { name }, inputs: { reads: { tables: [], externals: [] } }, outputs: 'none', execution: {} } } } as never);
+    expect(e.inchain[name].chains).toEqual((raw.inchain[name] as { chains: string[] }).chains);
+  });
+
+  it('RED: a declared invocation overrides a disagreeing snapshot (two directions: fewer AND more chains)', () => {
+    const raw = ledger.loadLedger();
+    const name = Object.keys(raw.inchain).find((k) => ((raw.inchain[k] as { chains?: string[] }).chains || []).length > 0)!;
+    const mk = (inv: Record<string, unknown>) =>
+      ledger.effectiveLedger({ descriptors: { [name]: { identity: { name }, inputs: { reads: { tables: [], externals: [] } }, outputs: 'none', execution: { invocation: inv } } } } as never);
+    expect(mk({ zz_only: { argv: [] } }).inchain[name].chains).toEqual(['zz_only']);
+    expect([...mk({ zz_a: { argv: [] }, zz_b: { argv: [] } }).inchain[name].chains].sort()).toEqual(['zz_a', 'zz_b']);
   });
 });

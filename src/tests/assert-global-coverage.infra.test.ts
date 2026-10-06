@@ -170,11 +170,12 @@ describe('manifest.json — chain wiring', () => {
     );
   });
 
-  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (position 32 of 33, measured 2026-09-11 — AGC-D1)', () => {
+  it('assert_global_coverage is second-to-last in permits chain; backup_db is last (AGC-D1; positions derived, FLEET-2 2.1)', () => {
     const permitsChain: string[] = manifest.chains.permits;
+    // FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
     expect(permitsChain[permitsChain.length - 1]).toBe('backup_db');
     expect(permitsChain[permitsChain.length - 2]).toBe('assert_global_coverage');
-    expect(permitsChain).toHaveLength(33);
+    expect(permitsChain).not.toContain('link_massing');
   });
 
   it('assert_global_coverage is last step in coa chain (position 16 of 16, measured 2026-09-11 — AGC-D1)', () => {
@@ -187,7 +188,9 @@ describe('manifest.json — chain wiring', () => {
     const sourcesChain: string[] = manifest.chains.sources;
     expect(sourcesChain).toContain('assert_global_coverage');
     const covIdx = sourcesChain.indexOf('assert_global_coverage');
-    expect(sourcesChain[covIdx - 1]).toBe('compute_parcel_cost_estimates');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    expect(sourcesChain[covIdx - 1]).toBe('refresh_snapshot');
+    expect(sourcesChain[covIdx - 2]).toBe('compute_parcel_cost_estimates');
     expect(sourcesChain[covIdx + 1]).toBe('assert_parcel_sanity');
     expect(sourcesChain).toHaveLength(28);
   });
@@ -499,11 +502,11 @@ describe('assert-global-coverage.js — Pass-2 CoA chain coverage additions', ()
     'CoA Step 7 — compute_coa_cost_estimates',
     'CoA Step 14 — compute_phase_calibration',
     'CoA Step 8 — link_coa',
-    'CoA Step 9 — refresh_snapshot',
-    'CoA Step 10 — assert_data_bounds',
-    'CoA Step 11 — assert_engine_health',
-    'CoA Step 12 — classify_lifecycle_phase',
-    'CoA Step 13 — assert_lifecycle_phase_distribution',
+    'CoA Step 11 — refresh_snapshot',
+    'CoA Step 12 — assert_data_bounds',
+    'CoA Step 13 — assert_engine_health',
+    'CoA Step 9 — classify_lifecycle_phase',
+    'CoA Step 10 — assert_lifecycle_phase_distribution',
   ];
   for (const target of stepTargets) {
     it(`a check declares stepTarget "${target}" (manifest order resync)`, () => {

@@ -24,9 +24,7 @@
           "format": "shapefile_zip",
           "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip",
           "license": "https://open.toronto.ca/open-data-license/",
-          "key_property": "OBJECTID",
-          "cache": "revalidate",
-          "cache_ttl": "none"
+          "key_property": "OBJECTID"
         }
       ]
     },
@@ -61,24 +59,17 @@
             "liveness": { "kind": "table", "ref": "ravines" }
           }
         },
-        "retract": "departed",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "dedupe_upstream",
-          "key_space_migration": "none"
-        }
+        "retract": "departed"
       }
     ],
-    "cascades": "none",
     "invalidates": [
       {
         "table": "parcels",
         "column": "ravine_dataset_version_when_enriched",
-        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie"
+        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie",
+        "by": "pin"
       }
     ],
-    "publish": "direct",
     "write_inventory": {
       "statements": 2,
       "why": {
@@ -89,7 +80,6 @@
   },
 
   "staleness": {
-    "scope": "none",
     "trigger": [
       {
         "signal": "source_validator",
@@ -103,8 +93,6 @@
       }
     ],
     "mode_select": "skip",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/source-version.js", "scripts/lib/step/acquire.js"],
     "logic_version": "none",
@@ -152,15 +140,10 @@
   },
 
   "execution": {
-    "budget": "10m",
     "txn_scope": "step",
-    "txn_budget": "5m",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": 16383,
-    "needs_disk_mb": 64,
-    "partial_fill": "atomic",
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "RE-FREEZE #12 (R-AX, 2026-09-21). A dropped-geometry row is counted and the load continues; the tolerance is bounded by the declared, FAIL-severity, config-resolved check below — the literal 0.05 this field carried until this commit duplicated that same bound (Rule 3 violation, G0.4) and is deleted.",
@@ -173,13 +156,10 @@
       "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-ravines.js" }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": {
-      "egress": ["ckan0.cf.opendata.inter.prod-toronto.ca"],
       "timeout": "60000ms",
       "timeout_from_config": "load_ravines_download_timeout_ms",
-      "retries": 0,
-      "redact": "none"
+      "retries": 0
     },
     "invocation": {
       "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } }
@@ -494,13 +474,13 @@
     {
       "id": "ravines_distinct_source_dataset_version", "sql": "SELECT count(DISTINCT source_dataset_version)::int FROM ravines",
       "bound": "value_max 1", "severity": "WARN", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 1, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 7, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 1, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 6, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new). More than one distinct source_dataset_version live on the table at once means a load partially failed mid-batch (this step's own write is single-version per run, `ravine_override_feature_count_drift_present`'s own sibling concern). Currently 1 (healthy). WARN, not FAIL — a transient multi-version state during a load-in-progress read is possible, not necessarily a hard bug. 7ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "ravines" } }
     },
     {
       "id": "ravines_area_km2", "sql": "SELECT round((sum(ST_Area(geom::geography)) / 1e6)::numeric, 3) FROM ravines",
       "bound": "value_min 0", "severity": "INFO", "blocking": false, "when": "post", "source": "invariant", "frequency": "every_run",
-      "last_measured": { "value": 110.995, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 357, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 110.995, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 480, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new). Pure telemetry (total ravine-protected area trend) — a large jump/drop between runs is a coarse but real geometry-corruption signal, no existing check watches total area. value_min 0 sanity floor. 357ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "ravines" } }
     }
   ],
@@ -510,7 +490,7 @@
       "sql": "SELECT count(*)::int FROM parcels WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 323, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 12245, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility — spans `parcels`, a table load_ravines does not itself write, populated downstream by enrich-ravines.js). Checks the sign-law consistency between a parcel's boolean flag and its distance sign, cross-referencing this step's own ravine geometry. PHYSICAL-BOUND (Fold A-5): the flag/distance relationship is a logical consequence of the geometry, not a soft telemetry trend. Currently 0 (healthy). WARN + retighten_when, never FAIL — a downstream enrich step's own write timing, not this step's write, so this step cannot self-correct it. 323ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
     },
     {
@@ -518,7 +498,7 @@
       "sql": "SELECT count(*)::int FROM permits WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 123, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 2990, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — same sign-law check as parcels_sign_law_violations above, scoped to `permits` (a different table load_ravines does not write). Currently 0. WARN + retighten_when, never FAIL, same reasoning. 123ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "permits" } }
     },
     {
@@ -526,7 +506,7 @@
       "sql": "SELECT count(*)::int FROM coa_applications WHERE is_in_ravine_protection_area IS DISTINCT FROM COALESCE(ravine_distance_m <= 0, false)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows",
-      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 121, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 364, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — same sign-law check, scoped to `coa_applications`. Currently 0. WARN + retighten_when, never FAIL, same reasoning. 121ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "coa_applications" } }
     },
     {
@@ -534,7 +514,7 @@
       "sql": "SELECT count(*)::int FROM parcels p WHERE p.ravine_dataset_version_when_enriched IS DISTINCT FROM (SELECT max(source_dataset_version) FROM ravines)",
       "bound": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "source": "plausibility", "frequency": "every_run",
       "retighten_when": "zero rows (self-retires once enrich-ravines.js next runs against the current ravines version)",
-      "last_measured": { "value": 0, "at": "2026-08-30T13:17:49.000Z", "commit": "9019c3d", "cost_ms": 963, "sample_n": 3, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 1, "at": "2026-10-05T18:15:10.865Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 12246, "sample_n": 4, "source_run": { "run_id": "2274", "chain": null, "event": "golden_capture" } },
       "why": { "text": "R-T addendum, commit 4 (net-new plausibility) — the SEAM-shaped candidate: checks whether `parcels.ravine_dataset_version_when_enriched` (written by the DOWNSTREAM enrich-ravines.js) still matches THIS step's own latest source_dataset_version. A non-zero count means enrich-ravines has not yet caught up to this run's own load — expected to be transiently non-zero right after a load_ravines run, self-clearing once enrich-ravines next runs. PHYSICAL-BOUND. Currently 0 (both caught up). 963ms median, 3 timings, single session.", "liveness": { "kind": "table", "ref": "parcels" } }
     }
   ],
@@ -658,7 +638,7 @@
     }
   ],
 
-  "interpretation": { "file": "load-ravines.notes.json", "entries": 9 },
+  "interpretation": { "file": "load-ravines.notes.json" },
 
   "recovery": {
     "reset": "TRUNCATE is never correct here — re-run with RAVINE_FORCE_RELOAD=1, which bypasses both staleness triggers and rewrites the table through the same guarded upsert plus departure delete.",
@@ -686,9 +666,9 @@
   },
 
   "counters": {
-    "records_total": { "source": "acquired.feature_count", "scoped_by": "source_id" },
-    "records_new": { "source": "written.inserted", "scoped_by": "source_id" },
-    "records_updated": { "source": "written.updated", "scoped_by": "source_id" }
+    "records_total": { "source": "acquired.feature_count" },
+    "records_new": { "source": "written.inserted" },
+    "records_updated": { "source": "written.updated" }
   },
 
   "config": {
@@ -711,7 +691,7 @@
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "none",
-      "phase": { "sources": 59 },
+      "phase": { "sources": 6 },
       "audit_table": "one",
       "scope": "none"
     },

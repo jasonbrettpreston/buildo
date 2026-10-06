@@ -103,9 +103,11 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     const coa = manifest.chains.coa ?? [];
     const sources = manifest.chains.sources ?? [];
     const deepScrapes = manifest.chains.deep_scrapes ?? [];
-    expect(permits.indexOf('assert_engine_health'), 'permits chain position').toBe(22); // 23 of 33
-    expect(permits.length).toBe(33);
-    expect(coa.indexOf('assert_engine_health'), 'coa chain position').toBe(11); // 12 of 16
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    expect(permits.indexOf('assert_engine_health'), 'permits chain position').toBe(permits.indexOf('assert_data_bounds') + 1); // the quality block
+    // FLEET-2 §2 item 2.1 (plan fold 14 O4 row 5, operator "drop link_massing from the permits chain"): link_massing runs in sources only; permits has no link_massing step, invocation or golden. Counts/positions derived from the manifest, not hand-kept.
+    expect(permits).not.toContain('link_massing'); // FLEET-2 2.1: permits length is the manifest's own; the membership fence replaces the hand count
+    expect(coa.indexOf('assert_engine_health'), 'coa chain position').toBe(coa.indexOf('assert_data_bounds') + 1); // the quality block
     expect(coa.length).toBe(16);
     expect(sources.indexOf('assert_engine_health'), 'sources chain position — last step').toBe(27); // 28 of 28
     expect(sources.length).toBe(28);

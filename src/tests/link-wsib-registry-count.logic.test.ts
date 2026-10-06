@@ -26,9 +26,9 @@
 //        `upstream_ledger` reader measures — no new query).
 //   T2 — declared ⇔ emitted, BOTH halves: the trigger's emit_key is a key of
 //        buildLinkMeta(ctx), AND descriptor.emits[] declares it.
-//   T3 — consumer side: a differing prior baseline + `--full` resolves mode full with
-//        reason `wsib_registry_count_changed(111->222)`.
-//   T4 — Chesterton's fence: an ABSENT baseline is still NOT a change (unchanged).
+//   T3 — consumer side under O4 row 6: mode_select none ⇒ resolveLinkGate FULL/full_rescan, signal still measured.
+//   T4 — Chesterton's fence: an ABSENT baseline is still NOT a change.
+//   T5 — a tri_state clone still routes through staleness.selectMode (the wsib_registry_count_changed truth row).
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -55,11 +55,24 @@ const staleness = require('../../scripts/lib/step/staleness.js') as {
     signals: Array<{ key: string; signal: string; current: string | null; prior: string | null; changed: boolean }>;
   }>;
 };
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- the CJS runner (the real mode path under mode_select "none")
+const runner = require('../../scripts/lib/step/index.js') as {
+  resolveLinkGate: (args: { descriptor: unknown; pool: unknown; prior: Record<string, string> | null; ownRunId: number | null; tag: string }) => Promise<{
+    mode: 'full' | 'incremental';
+    reason: string;
+    changed: boolean;
+    explicit_full: boolean;
+    forced: boolean;
+    signals: Array<{ key: string; signal: string; current: string | null; prior: string | null; changed: boolean }>;
+    interrupted_retraction: unknown;
+  }>;
+};
 
 interface LinkWsibDescriptor {
   identity: { name: string };
   staleness: {
     logic_version: string;
+    mode_select: string;
     trigger: Array<{ signal: string; position: string; table?: string; emit_key?: string }>;
   };
   emits: Array<{ key: string; type: string; consumers: string[] }>;
@@ -147,39 +160,37 @@ describe('link_wsib — wsib_registry_count staleness baseline (WF3)', () => {
     ).toBe(true);
   });
 
-  it('T3 — consumer side (GREEN both sides): prior wsib_registry_count 111 + sources `--full` ⇒ mode full, reason wsib_registry_count_changed(111->222)', async () => {
-    // GREEN both sides — pins the contract the fix feeds. `changed` ALONE never selects
-    // full (fold GC-11: full ⇔ forced ∨ (permitted ∧ changed)); `--full` is the sources
-    // chain argv the descriptor itself declares (R-L).
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: { wsib_registry_count: '111' },
-      argv: SOURCES_ARGV,
-      env: {},
-    });
-    expect(result.changed, 'a PRESENT baseline that differs IS a change').toBe(true);
+  it('T3 — consumer side under O4 row 6 (fold 14 row 6, fold 16 row 1, fold 17 item 1): mode_select none ⇒ resolveLinkGate resolves FULL / full_rescan on every run, and still MEASURES the corpus signal against the prior baseline', async () => {
+    expect(descriptor.staleness.mode_select, 'O4 row 6: link_wsib is full_rescan').toBe('none');
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: { wsib_registry_count: '111' }, ownRunId: null, tag: '[link_wsib]' });
     expect(result.mode).toBe('full');
-    expect(result.reason).toContain(`wsib_registry_count_changed(111->${CURRENT_CORPUS_COUNT})`);
+    expect(result.reason).toBe('full_rescan');
+    expect(result.forced).toBe(false);
+    expect(result.interrupted_retraction, 'no mass retraction exists to be interrupted under full_rescan').toBeNull();
+    const signal = result.signals.find((s) => s.key === 'wsib_registry_count');
+    expect(signal, 'the wsib_registry_count signal is still measured (the producer half T1/T2 feeds stays live)').toBeDefined();
+    expect(signal!.prior).toBe('111');
+    expect(signal!.current).toBe(CURRENT_CORPUS_COUNT);
   });
 
-  it('T4 — fence pin (GREEN both sides): prior {} ⇒ NOT changed on this signal (an ABSENT baseline is not a change)', async () => {
-    // Chesterton's fence, staleness.js: "An ABSENT baseline is not a change: a pre-contract
-    // run recorded no such key, and the last completed run WAS a full rebuild under the
-    // current logic". Must stay; the fix only makes the baseline EXIST.
-    const result = await staleness.selectMode({
-      descriptor,
-      pool,
-      prior: {},
-      argv: SOURCES_ARGV,
-      env: {},
-    });
+  it('T4 — fence pin: an ABSENT baseline is never read as a change (staleness.js), and under full_rescan the mode does not depend on it', async () => {
+    const result = await runner.resolveLinkGate({ descriptor, pool, prior: {}, ownRunId: null, tag: '[link_wsib]' });
     const signal = result.signals.find((s) => s.key === 'wsib_registry_count');
     expect(signal, 'the wsib_registry_count signal must still be measured').toBeDefined();
     expect(signal!.changed).toBe(false);
     expect(signal!.prior).toBeNull();
     expect(signal!.current).toBe(CURRENT_CORPUS_COUNT);
     expect(result.changed, 'an absent baseline must never be read as a change').toBe(false);
-    expect(result.mode, '--full without a change stays incremental').toBe('incremental');
+    expect(result.mode, 'full_rescan: FULL on every run, baseline or not').toBe('full');
+  });
+  it('T5 — the tri_state path is unchanged: a tri_state clone of this descriptor still routes through staleness.selectMode (prior 111 + sources --full ⇒ full, wsib_registry_count_changed)', async () => {
+    const triState = JSON.parse(JSON.stringify(descriptor)) as LinkWsibDescriptor;
+    triState.staleness.mode_select = 'tri_state';
+    const viaGate = await runner.resolveLinkGate({ descriptor: triState, pool, prior: { wsib_registry_count: '111' }, ownRunId: null, tag: '[link_wsib]' });
+    expect(viaGate.reason).not.toBe('full_rescan');
+    const direct = await staleness.selectMode({ descriptor: triState, pool, prior: { wsib_registry_count: '111' }, argv: SOURCES_ARGV, env: {} });
+    expect(direct.changed, 'a PRESENT baseline that differs IS a change').toBe(true);
+    expect(direct.mode).toBe('full');
+    expect(direct.reason).toContain(`wsib_registry_count_changed(111->${CURRENT_CORPUS_COUNT})`);
   });
 });

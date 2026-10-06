@@ -15,12 +15,14 @@
  *    late can never shadow the newest baseline.
  *
  *    EXCLUDED from this standardization (deliberate, per the Phase B v4 State
- *    Verification ruling) — the two CONSUMER-side completed_at readers:
- *      - scripts/lib/massing-full-gate.js  (evaluateMassingFullGate)
+ *    Verification ruling) — the CONSUMER-side completed_at reader:
  *      - scripts/enrich-permits.js         (assertCentrelineEnriched)
- *    Those read CHAIN-CONSUMER semantics ("has a completed producer run landed,
+ *    It reads CHAIN-CONSUMER semantics ("has a completed producer run landed,
  *    and when did it FINISH relative to another producer"), not producer
- *    self-history; they keep `ORDER BY completed_at DESC` / max(completed_at).
+ *    self-history; it keeps `ORDER BY completed_at DESC` / max(completed_at).
+ *    (link_massing's pre-conversion full gate was a second such reader; it was
+ *    retired at FLEET-2 P2-C6 — the gate is now staleness.selectMode, a producer
+ *    self-history read through readPriorRunMeta above.)
  *
  * 2. skipCheckDecision(input, options) — the four previously copy-pasted
  *    divergent variants unified. Divergence is now VISIBLE OPTIONS at each call
@@ -65,16 +67,16 @@
  *    A CONSUMER-side gate (own script deciding whether to run at all, not a
  *    version-string comparison) for scripts with no dataset-version signal of
  *    their own: "has anything happened upstream since MY OWN last completed
- *    run that I haven't accounted for?" This is the THIRD completed_at-DESC
- *    reader in the codebase (joining massing-full-gate.js and enrich-permits.js
- *    assertCentrelineEnriched, named in item 1 above) — it lives inside this
+ *    run that I haven't accounted for?" This is the SECOND completed_at-DESC
+ *    reader in the codebase (joining enrich-permits.js assertCentrelineEnriched,
+ *    named in item 1 above) — it lives inside this
  *    file (not a fourth loader-style call site) because B3's three callers
  *    (link-wsib, link-parcel-addresses, compute-parcel-cost-estimates) share
  *    the identical any-status-since-own-last-completed-run shape.
  *
  *    Own-last anchor: the most recently COMPLETED run across ownSlugs (a
- *    slug SET, always caller-supplied — massing-full-gate.js IN-list
- *    precedent — never hardcoded here; callers own their own chain-scoped /
+ *    slug SET, always caller-supplied — never hardcoded here; callers own
+ *    their own chain-scoped /
  *    unscoped slug variants). No completed own run ever → fail-safe RUN
  *    (reason 'no_prior_completed_run' — a scoped run has never landed, so
  *    there is nothing to compare against).

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-heritage.js",
   "chain": "none",
-  "source_fingerprint": "e51645016bfa366391f043efd8b81ce55d888326e97a145122e86be32e2b61df",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "60ee555d8e6c288b7c9563bd8aae70028ce34be3b001e30c218a1816df0bd8d5",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
     "calls": 33,
     "distinct": 20,
-    "utility": 10,
-    "tracer_self_ms": 66.679,
-    "wall_ms": 16788
+    "utility": 9,
+    "tracer_self_ms": 63.746,
+    "wall_ms": 11102
   },
   "statements": [
     {
@@ -70,13 +70,13 @@
       "params": [
         [
           "completed_with_warnings",
-          15777,
+          10263,
           null,
-          2235,
+          2280,
           8877,
           6,
           7,
-          "{\"heritage_load\":{\"spec_version\":\"1.1\",\"heritage_register\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"37bd232d706be8409f845846474b7c3d\",\"last_modified\":\"Tue, 01 Sep 2026 22:16:33 GMT\",\"etag\":\"\\\"1788300993.96-1628240-832049643\\\"\",\"content_hash\":\"37bd232d706be8409f845846474b7c3d\",\"feature_count\":8848,\"features_inserted\":5,\"features_updated\":5,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.001,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_listed\":3484,\"unknown_status_count\":0},\"heritage_districts\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"last_modified\":\"Wed, 24 Jun 2026 14:02:36 GMT\",\"etag\":\"\\\"1782309756.859-90942-1038094832\\\"\",\"content_hash\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"feature_count\":29,\"features_inserted\":1,\"features_updated\":2,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.069,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_appeal_study\":3,\"unknown_hcd_type_count\":0},\"geometry_update_pct\":0.069,\"mass_delete_pct\":0.034},\"gate\":{\"reason\":\"multi_primary\",\"gated_skip\":false},\"config\":{\"load_heritage_dataset_age_warn_years\":2,\"load_heritage_count_drift_fail_pct\":0.5,\"load_heritage_invalid_geometry_fail_pct\":0.05,\"load_heritage_mass_delete_fail_pct\":0.5,\"load_heritage_geometry_update_warn_pct\":0.5,\"load_heritage_download_timeout_ms\":60000,\"load_heritage_round_scale\":1000},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"heritage_override_force_reload_present: true\"],\"audit_table\":{\"phase\":61,\"name\":\"Heritage Properties\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_override_force_reload_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"heritage_register_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_districts_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_dataset_age_years\",\"value\":0,\"threshold\":\"value_max 2\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_zero_features_first_run\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"zero_features_first_run\",\"guarantee\":\"A zero-feature first run must FAIL before any write — the dataset is refused, the other dataset still loads (DEC-K).\"}},{\"metric\":\"heritage_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"A feature-count drift beyond the bound must stop that dataset before its transaction opens; the override enables the write but never removes the FAIL row.\"}},{\"metric\":\"heritage_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE entering withTransaction\",\"guarantee\":\"More than the bound of features failing geometry validation must abort the dataset before its transaction opens.\"}},{\"metric\":\"heritage_register_feature_count\",\"value\":8848,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_districts_feature_count\",\"value\":29,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_filtered_listed_pct\",\"value\":0.283,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_unknown_status_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_unknown_hcd_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_address_coerced_empty_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_mass_delete_pct\",\"value\":0.034,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_geometry_update_pct\",\"value\":0.069,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_register_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"heritage_districts_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":562.65,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":15777,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"heritage_load\":{\"spec_version\":\"1.1\",\"heritage_register\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"37bd232d706be8409f845846474b7c3d\",\"last_modified\":\"Tue, 01 Sep 2026 22:16:33 GMT\",\"etag\":\"\\\"1788300993.96-1628240-832049643\\\"\",\"content_hash\":\"37bd232d706be8409f845846474b7c3d\",\"feature_count\":8848,\"features_inserted\":5,\"features_updated\":5,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.001,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_listed\":3484,\"unknown_status_count\":0},\"heritage_districts\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"last_modified\":\"Wed, 24 Jun 2026 14:02:36 GMT\",\"etag\":\"\\\"1782309756.859-90942-1038094832\\\"\",\"content_hash\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"feature_count\":29,\"features_inserted\":1,\"features_updated\":2,\"features_deleted\":1,\"invalid_geometry_repaired\":0,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0.069,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null,\"filtered_out_appeal_study\":3,\"unknown_hcd_type_count\":0},\"geometry_update_pct\":0.069,\"mass_delete_pct\":0.034},\"gate\":{\"reason\":\"multi_primary\",\"gated_skip\":false},\"config\":{\"load_heritage_dataset_age_warn_years\":2,\"load_heritage_count_drift_fail_pct\":0.5,\"load_heritage_invalid_geometry_fail_pct\":0.05,\"load_heritage_mass_delete_fail_pct\":0.5,\"load_heritage_geometry_update_warn_pct\":0.5,\"load_heritage_download_timeout_ms\":60000,\"load_heritage_round_scale\":1000},\"acquired\":{\"record_fields\":{\"heritage_register\":[\"OBJECTID\",\"Folder_Row\",\"CEN\",\"YR\",\"SEQUENCE\",\"SEC\",\"REV\",\"STATUS\",\"IN_DATE\",\"LISTED\",\"DESIGNATED\",\"EASEMENT_A\",\"BUILDING_T\",\"DESCRIPTIO\",\"BYLAW_NO\",\"HTG_CONSER\",\"OMB_DATE\",\"REASON\",\"List_\",\"CONSTRUCTI\",\"ARCHITECT_\",\"YEAR_DEMOL\",\"Property_R\",\"HOUSE\",\"PREFIX\",\"STREET\",\"STREET_TYP\",\"DIRECTION\",\"UNIT_TYPE\",\"UNIT\",\"POSTAL_COD\",\"ADDRESS_TY\",\"ROLL\",\"X_COORDINA\",\"Y_COORDINA\",\"PLANNING_D\",\"FORMER_MUN\",\"WARD\",\"PRE_DEC_1_\",\"HEA_DATE\",\"ADDRESS\"],\"heritage_districts\":[\"OBJECTID\",\"HCD_NO\",\"HCD_NAME\",\"HCD_TYPE\",\"HCD_DESDAT\",\"HCD_FORMUN\",\"HCD_BYLAWN\",\"HCD_WARDS\",\"SHAPE_LENG\",\"SHAPE_LE_1\",\"SHAPE_LE_2\",\"Shape_Le_3\",\"Shape_Le_4\",\"Shape_Area\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"heritage_override_force_reload_present: true\"],\"audit_table\":{\"phase\":7,\"name\":\"Heritage Properties\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_override_force_reload_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_register_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_districts_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_dataset_age_years\",\"value\":0,\"threshold\":\"value_max 2\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_zero_features_first_run\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"zero_features_first_run\",\"guarantee\":\"A zero-feature first run must FAIL before any write — the dataset is refused, the other dataset still loads (DEC-K).\"},\"observed\":\"before_write\"},{\"metric\":\"heritage_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"HERITAGE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"A feature-count drift beyond the bound must stop that dataset before its transaction opens; the override enables the write but never removes the FAIL row.\"},\"observed\":\"before_write\"},{\"metric\":\"heritage_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"abort BEFORE entering withTransaction\",\"guarantee\":\"More than the bound of features failing geometry validation must abort the dataset before its transaction opens.\"},\"observed\":\"before_write\"},{\"metric\":\"heritage_register_feature_count\",\"value\":8848,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_districts_feature_count\",\"value\":29,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_filtered_listed_pct\",\"value\":0.283,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_unknown_status_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_unknown_hcd_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_address_coerced_empty_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_register_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_districts_bad_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_register_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_districts_duplicate_source_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_mass_delete_pct\",\"value\":0.034,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_geometry_update_pct\",\"value\":0.069,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_register_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_districts_load_failed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:heritage_register\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:heritage_districts\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":865.04,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":10262,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -128,8 +128,8 @@
     {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 2,
-      "rowCount": 2,
+      "count": 3,
+      "rowCount": 3,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -221,7 +221,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -261,7 +261,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 3,
+      "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -314,14 +314,14 @@
   ],
   "transactions": [
     {
-      "client": "10376:3",
+      "client": "24248:2",
       "write_fingerprints": [
         "319ea3ece49da25b",
         "ede7ab7788a9e3e9"
       ]
     },
     {
-      "client": "10376:3",
+      "client": "24248:2",
       "write_fingerprints": [
         "37c2010a3787397a",
         "c13c44447ade545e"

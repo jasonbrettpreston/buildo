@@ -1,0 +1,49 @@
+{
+  "entries": {
+    "neighbourhood_id_orphans": {
+      "value": 0,
+      "cost_ms": 561,
+      "at": "2026-10-06T15:44:30.847Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2333",
+      "chain": null,
+      "sample_n": 9
+    },
+    "negative_neighbourhood_ids": {
+      "value": 0,
+      "cost_ms": 94,
+      "at": "2026-10-06T15:44:30.847Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2333",
+      "chain": null,
+      "sample_n": 9
+    },
+    "linked_permit_outside_its_own_neighbourhood": {
+      "value": 0,
+      "cost_ms": 3258,
+      "at": "2026-10-06T15:44:30.847Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2333",
+      "chain": null,
+      "sample_n": 9
+    },
+    "stamped_permits_with_null_coordinates": {
+      "value": 0,
+      "cost_ms": 2590,
+      "at": "2026-10-06T15:44:30.847Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2333",
+      "chain": null,
+      "sample_n": 9
+    },
+    "neighbourhood_id_unreachable_no_coords": {
+      "value": 10486,
+      "cost_ms": 2192,
+      "at": "2026-10-06T15:44:30.847Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2333",
+      "chain": null,
+      "sample_n": 9
+    }
+  }
+}

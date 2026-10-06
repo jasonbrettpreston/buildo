@@ -66,9 +66,9 @@ Universal status-change ledger (migration 127, extended by migration 160). Captu
 - **Logic Library:** `scripts/lib/lifecycle-phase.js` — two pure classifiers:
   - `classifyLifecyclePhase(input)` — permit-side (18-rule precedence, rules 0–15).
   - `classifyCoaPhase(input)` — CoA-side (9-rule status+decision precedence, Phase E.1). The script consumes the full substrate (not the deprecated `classifyCoaPhaseLegacy`) and writes 11 columns/row via `mapToUniversalStream`.
-- **Pipeline Wiring** (positions verified against `scripts/manifest.json` `chains` 2026-07-07):
-  - **Permits Chain:** step **24 of 32** (`classify_lifecycle_phase`). Runs after `assert_engine_health`, immediately before `assert_lifecycle_phase_distribution` → `compute_phase_calibration` → the forecast/score marketplace tail.
-  - **CoA Chain:** step **13 of 16**. Followed by `assert_lifecycle_phase_distribution` → `compute_phase_calibration` → `assert_global_coverage`.
+- **Pipeline Wiring** (positions verified against `scripts/manifest.json` `chains` 2026-10-05, FLEET-2 MQ-C8 a2):
+  - **Permits Chain:** step **21 of 33** (`classify_lifecycle_phase`). Runs immediately after `link_coa` and immediately before its gate `assert_lifecycle_phase_distribution` → `assert_data_bounds` → `assert_engine_health` → `compute_phase_calibration` → the forecast/score marketplace tail. FLEET-2 (2026-10-05) moved the classifier ahead of the quality block so `assert_data_bounds` reads this run's `lifecycle_phase`.
+  - **CoA Chain:** step **10 of 16**, immediately after `link_coa`. Followed by `assert_lifecycle_phase_distribution` → `refresh_snapshot` → `assert_data_bounds` → `assert_engine_health` → `compute_phase_calibration` → `assert_global_coverage`.
   - Holds a transaction-level advisory lock `ADVISORY_LOCK_ID = 84` (= spec number) via `pipeline.withAdvisoryLock` (`classify-lifecycle-phase.js:588`). **Historical note:** was briefly `85` (migration number) — corrected to `84` because `85` collided with `compute-trade-forecasts.js` (spec 85), mutually blocking the two scripts on concurrent runs.
   - **CoA Stall Detection:** Consumes `logic_variables.coa_stall_threshold` (seeded 30 days) to flag `lifecycle_stalled = TRUE`.
 

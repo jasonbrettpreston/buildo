@@ -202,7 +202,7 @@ describe('chain-spec Step Breakdown tables — membership + position vs manifest
       checked += live.length;
       problems.push(...membershipProblems(chain, specFile, live, parseStepBreakdown(specFile)));
     }
-    expect(checked).toBe(87); // 33+16+28+7+2+1, MEASURED 2026-09-15 — exact, so a chain losing steps cannot quietly shrink the corpus this arm grades
+    expect(checked).toBe(86); // 32+16+28+7+2+1 — MEASURED 2026-09-15 as 87, 86 after FLEET-2 2.1 (link_massing out of permits). Kept EXACT on purpose: deriving it from the manifest would let a chain lose steps quietly, the one thing this pin guards.
     expect(problems).toEqual([]);
   });
 

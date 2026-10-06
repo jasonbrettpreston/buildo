@@ -1,0 +1,90 @@
+{
+  "live": {
+    "pass": false,
+    "checked": 31,
+    "violations": [
+      {
+        "step": "link_wsib",
+        "item": "staleness.logic_version",
+        "detail": "link_wsib: logic_version \"v1-trigram-3tier-cascade\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "link_parcel_addresses",
+        "item": "staleness.logic_version",
+        "detail": "link_parcel_addresses: logic_version \"v1-st-within-parcel-batch\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "compute_centroids",
+        "item": "staleness.logic_version",
+        "detail": "compute_centroids: logic_version \"v1-postgis-st-centroid\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "refresh_snapshot",
+        "item": "staleness.logic_version",
+        "detail": "refresh_snapshot: logic_version \"v1-wf3f1-consolidated\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "enrich_parcels",
+        "item": "staleness.logic_version",
+        "detail": "enrich_parcels: logic_version \"v1-five-pass-enrich\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "assert_engine_health",
+        "item": "staleness.logic_version",
+        "detail": "assert_engine_health: logic_version \"v1-batch1-i3\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "geocode_permits",
+        "item": "staleness.logic_version",
+        "detail": "geocode_permits: logic_version \"v1-address-point-geo-id-join\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "enrich_ravines",
+        "item": "staleness.logic_version",
+        "detail": "enrich_ravines: logic_version \"v1-materialized-centroid-knn\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "enrich_heritage",
+        "item": "staleness.logic_version",
+        "detail": "enrich_heritage: logic_version \"v1-containment-lateral\" but no staleness.trigger[] entry signal \"code_version\""
+      },
+      {
+        "step": "compute_parcel_cost_estimates",
+        "item": "staleness.logic_version",
+        "detail": "compute_parcel_cost_estimates: logic_version \"v1-streamed-engine\" but no staleness.trigger[] entry signal \"code_version\""
+      }
+    ]
+  },
+  "overlay_changes": [
+    "link_wsib logic_version <- desc \"none\"",
+    "link_wsib trigger <- desc [{\"signal\":\"config_version\",\"position\":\"pre_compute\",\"emit_key\":\"threshold_updated_at\",\"variable\":\"wsib_fuzzy_match_threshold\"},{\"signal\":\"config_version\",\"position\":\"pre_compute\",\"emit_key\":\"tier1_confidence_updated_at\",\"variable\":\"link_wsib_tier1_confidence\"},{\"signal\":\"config_version\",\"position\":\"pre_compute\",\"emit_key\":\"tier2_confidence_updated_at\",\"variable\":\"link_wsib_tier2_confidence\"},{\"signal\":\"config_version\",\"position\":\"pre_compute\",\"emit_key\":\"tier3_confidence_updated_at\",\"variable\":\"link_wsib_tier3_confidence\"},{\"signal\":\"upstream_ledger\",\"position\":\"pre_compute\",\"table\":\"wsib_registry\",\"emit_key\":\"wsib_registry_count\"}]",
+    "link_parcel_addresses logic_version <- desc \"none\"",
+    "compute_centroids logic_version <- desc \"none\"",
+    "refresh_snapshot logic_version <- desc \"none\"",
+    "enrich_parcels logic_version <- desc \"none\"",
+    "assert_engine_health logic_version <- desc \"none\"",
+    "geocode_permits logic_version <- desc \"none\"",
+    "enrich_ravines logic_version <- desc \"none\"",
+    "enrich_heritage logic_version <- desc \"none\"",
+    "compute_parcel_cost_estimates logic_version <- desc \"none\""
+  ],
+  "simulated": {
+    "pass": true,
+    "checked": 31,
+    "violations": []
+  },
+  "tip_link_massing_live_instance": {
+    "note": "plan P2-C3 named live import red: tip link_massing fingerprint_inputs vs the tip require walk (massing-full-gate.js was runtime-dead: only its test imported it); retired by P2-C6 in this tree",
+    "fingerprint_inputs": [
+      "scripts/lib/massing-full-gate.js",
+      "scripts/lib/compute/link-massing.js"
+    ],
+    "violations": [
+      {
+        "step": "link_massing",
+        "item": "staleness.fingerprint_inputs",
+        "detail": "link_massing: fingerprint_inputs entry \"scripts/lib/massing-full-gate.js\" is not a real import of the step (not reached by the relative require/import walk from its step file)"
+      }
+    ]
+  }
+}

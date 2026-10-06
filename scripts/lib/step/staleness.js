@@ -18,7 +18,10 @@
  * for years — the Ravine archive has not changed since 2022-03-14, so 8 of 8
  * recorded runs took the tier-1 skip and the write path was UNREACHABLE, which
  * makes a write-class differential unprovable. `force_run` is not a cadence knob:
- * it proves the write path and serves a deliberate operator reload, nothing else.
+ * it proves the write path, serves a deliberate operator reload, and releases a paused
+ * guards.schema_drift (MQ-A7 (a): the drift row becomes a WARN naming the release, and
+ * that completed_with_warnings run is the next baseline) — nothing else. An interrupted
+ * retraction also forces a reload, but it never releases a drift.
  * A forced run still reports every check and still writes the same rows.
  *
  * FAIL-SAFE DIRECTION, inherited from scripts/lib/source-version.js: every
@@ -150,10 +153,13 @@ function overrideKey(envName) {
  * observed `ctx.overrides.force_full === undefined` and reported CLEAN on every run,
  * including runs that were forced. Measured: pilot 3's forced FULL relink of
  * 2026-08-27 ran with `full_mode_reason: "force_full_env"` and its
- * `override_force_full_present` row read PASS. That check exists precisely to catch a
- * `LINK_MASSING_FORCE_FULL` left standing in production — a 21.9-minute relink on
- * EVERY subsequent run, plus a `linked_at` bump that re-scopes `enrich_parcels` from
- * 1,395 parcels to 485,135 — so a version of it that cannot fire is the "green
+ * `override_force_full_present` row read PASS. That check existed to catch a
+ * `LINK_MASSING_FORCE_FULL` left standing in production (then a 21.9-minute relink on
+ * EVERY subsequent run, plus a `linked_at` bump that re-scoped `enrich_parcels` from
+ * 1,395 parcels to 485,135). MQ-B2 (fold 19) RETIRED link_massing's and link_parcels'
+ * override — O4 rows 5/7 made it a no-op — so the live user today is link_wsib
+ * (`LINK_WSIB_FORCE_FULL`, its own `override_force_full_present` check). A version of
+ * such a check that cannot fire is the "green
  * because it never looked" class this contract exists to retire. The mode decision was
  * always correct; only the OBSERVATION was blind, which is exactly why the audit row
  * and the decision must read the same source.

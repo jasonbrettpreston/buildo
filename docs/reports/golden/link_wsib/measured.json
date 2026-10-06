@@ -1,0 +1,85 @@
+{
+  "entries": {
+    "wsib_tier3_current_predicate_pass_rate_pct": {
+      "value": 100,
+      "cost_ms": 8,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_entity_fanin_p99": {
+      "value": 10,
+      "cost_ms": 20,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_magnet_entities_fanin_ge_10": {
+      "value": 7,
+      "cost_ms": 20,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_orphan_linked_entity_id": {
+      "value": 0,
+      "cost_ms": 21,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_registry_total_rows": {
+      "value": 121116,
+      "cost_ms": 28,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "entities_wsib_registered_count": {
+      "value": 301,
+      "cost_ms": 3,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_registered_entities_without_exact_tier_link": {
+      "value": 0,
+      "cost_ms": 4,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_tier_confidence_split": {
+      "value": "unevaluable: check reported no numeric value for value_min",
+      "cost_ms": 28,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    },
+    "wsib_cumulative_link_rate_pct": {
+      "value": 0.72,
+      "cost_ms": 31,
+      "at": "2026-10-06T16:43:52.997Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 5
+    }
+  }
+}

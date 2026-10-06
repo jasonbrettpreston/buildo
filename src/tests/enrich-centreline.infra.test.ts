@@ -42,7 +42,9 @@ describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
     expect(ec.PRODUCER_NAME).toBe('sources:load_centreline');
     expect(SCRIPT).toMatch(/ADVISORY_LOCK_ID\s*=\s*64/);
     expect(SCRIPT).toMatch(/ORDER BY completed_at DESC/);
-    expect(SCRIPT).toMatch(/SPEC_VERSION\s*=\s*'1\.1'/);
+    // L10 — the 1.1 literal is the descriptor's staleness.pins equals (LDG-10 class 3), read by the compute.
+    expect(compute.SPEC_VERSION).toBe('1.1');
+    expect(DESCRIPTOR.staleness.pins).toEqual([expect.objectContaining({ step: 'load_centreline', stamp: 'records_meta.centreline_load.spec_version', equals: '1.1' })]);
   });
 
   it('§11 precedent fences: parcel_segments AS MATERIALIZED + geom-validity filter + L30 cap', () => {

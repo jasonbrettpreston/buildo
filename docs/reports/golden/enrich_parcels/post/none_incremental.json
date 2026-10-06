@@ -3,24 +3,17 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-parcels.js",
   "chain": "none",
-  "git_head": "0af7ae5057510d96f180f3c03204b2b3d675de17",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 486530,
-    "records_new": 0,
-    "records_updated": 0,
+    "records_total": null,
+    "records_new": null,
+    "records_updated": null,
     "records_meta": {
-      "duration_ms": 157857,
-      "zone_class_pct": 96.6,
-      "total_parcels_scanned": 486530,
-      "records_updated_aggregate": 0,
-      "parcels_enriched_count": 0,
-      "max_build_enriched_count": 0,
-      "existing_structure_enriched_count": 0,
-      "comparable_builds_enriched_count": 0,
-      "optimal_config_enriched_count": 0,
-      "opt_config_engine_errors": 0,
+      "duration_ms": 21670,
+      "total_parcels_scanned": null,
+      "records_updated_aggregate": null,
       "config": {
         "road_overlay_distance_m": 5,
         "reno_coa_uplift_pct": 0.05,
@@ -70,343 +63,62 @@
         "step_post_check_concurrency": 4,
         "parcels_maintenance_timeout_minutes": 15
       },
-      "terminal": "enriched_full_with_warnings",
+      "terminal": "enriched_full",
       "ledger_row": "owned",
       "chain_run_id": null,
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
+      "checks_passed": "all",
       "checks_failed": 0,
-      "checks_warned": 1,
-      "warnings": [
-        "comp_fsi_p50_small_n_sample_count: 3344"
-      ],
+      "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
       "audit_table": {
         "phase": 22,
         "name": "Parcel Enrichment (Zoning / Max-Build / Existing-Structure / Comparables / Optimal-Config)",
-        "verdict": "WARN",
+        "verdict": "PASS",
         "rows": [
           {
-            "metric": "parcels_with_zone_class_pct_warn",
-            "value": 96.6,
-            "threshold": "pct >= 95",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "parcels_with_zone_class_pct_fail",
-            "value": 96.6,
-            "threshold": "pct >= 90",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "opt_config_engine_errors",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "opt_aor_without_max_gfa",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "pass5_post_commit_read_order",
-            "value": "post_commit — see checks[].order_guarantee",
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check",
-            "order_guarantee": {
-              "anchor": "78:read would be invisible",
-              "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible."
-            }
-          },
-          {
-            "metric": "parcels_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "parcels_ambiguous_zone_count",
+            "metric": "inputs_nonempty",
             "value": {
-              "ambiguous": 0,
-              "scoped": 1,
-              "pct": 0
+              "zoning_bylaw_areas": 11719,
+              "zoning_height_overlay": 2528,
+              "zoning_lot_coverage_overlay": 1242,
+              "parcel_buildings": 534989,
+              "building_footprints": 427077,
+              "neighbourhood_build_norms": 452,
+              "neighbourhood_storey_norms": 147,
+              "neighbourhoods": 158,
+              "permits": 254082,
+              "coa_applications": 33400
             },
-            "threshold": "pct <= 5",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "zoning_fsi_source_nulled_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "max_build_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "massing_zero_link_ghost",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "max_build_coverage_defaulted_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "max_build_box_excluded_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "heritage_mislink_footprint_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "ravine_constrained_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "existing_structure_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "existing_mislinked_footprint_count",
-            "value": 60173,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "scenario_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "comp_candidate_pool",
-            "value": 9262,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "comparable_builds_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "comp_zero_comps_count",
-            "value": 85501,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "optimal_config_enriched_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "opt_aor_envelope_capped_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "opt_config_citywide_fallback_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "enrich_parcels_duration_ms",
-            "value": 157857,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "scope_backlog_at_step_start",
-            "value": 0,
-            "threshold": "viol <= 50000",
-            "status": "PASS",
-            "source": "check"
-          },
-          {
-            "metric": "scope_retired_rows",
-            "value": "0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)",
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "scope_retired_cohorts",
-            "value": "0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)",
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "pending_scope_parcels",
-            "value": 0,
-            "threshold": "viol <= 50000",
-            "status": "PASS",
-            "source": "check",
-            "order_guarantee": {
-              "anchor": "78:a per-parcel loop is an",
-              "guarantee": "the backlog is reported BEFORE the recovery stamp/recompute decision (set-based under --full, batched under incremental) commits, so the reported count is the true pre-recovery population, not a post-hoc figure the recovery has already drained."
-            }
-          },
-          {
-            "metric": "scope_recovery_recovered_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "scope_recovery_batches",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "scope_stamped_without_recompute_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "check"
-          },
-          {
-            "metric": "opt_aor_gfa_gt_max_buildable_gfa_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "invariant"
-          },
-          {
-            "metric": "zoning_dominant_area_share_out_of_range_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "invariant"
-          },
-          {
-            "metric": "comp_fsi_p50_small_n_sample_count",
-            "value": 3344,
-            "threshold": "viol == 0",
-            "status": "WARN",
-            "source": "plausibility"
-          },
-          {
-            "metric": "heritage_basis_coverage_distribution",
-            "value": 1659,
-            "threshold": "viol == 0",
-            "status": "INFO",
-            "source": "plausibility"
-          },
-          {
-            "metric": "existing_mislink_footprint_ratio_out_of_bound_count",
-            "value": 0,
-            "threshold": "viol == 0",
-            "status": "PASS",
-            "source": "plausibility"
-          },
-          {
-            "metric": "parcels_dead_tuple_ratio",
-            "value": 0,
-            "threshold": "value_max 0.3",
-            "status": "PASS",
-            "source": "plausibility"
-          },
-          {
-            "metric": "sys_opt_aor_gfa_gt_max_buildable_gfa_count_duration_ms",
-            "value": 1504,
-            "threshold": null,
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
             "status": "INFO"
           },
           {
-            "metric": "sys_zoning_dominant_area_share_out_of_range_count_duration_ms",
-            "value": 1349,
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "sys_comp_fsi_p50_small_n_sample_count_duration_ms",
-            "value": 1730,
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "sys_heritage_basis_coverage_distribution_duration_ms",
-            "value": 844,
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "sys_existing_mislink_footprint_ratio_out_of_bound_count_duration_ms",
-            "value": 890,
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "sys_parcels_dead_tuple_ratio_duration_ms",
-            "value": 31,
-            "threshold": null,
+            "metric": "empty_source_guard",
+            "value": {
+              "parcels": 496536
+            },
+            "threshold": "guards.empty_source table(s) non-empty",
             "status": "INFO"
           },
           {
             "metric": "sys_maintenance_parcels_vacuum_analyze",
-            "value": 0,
+            "value": 0.0011,
             "threshold": 0.3,
             "status": "INFO",
-            "note": "skipped — dead_ratio 0 <= 0.3"
+            "note": "skipped — dead_ratio 0.0011 <= 0.3"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 3017.41,
+            "value": 0,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 161241,
+            "value": 26177,
             "threshold": null,
             "status": "INFO"
           }
@@ -427,7 +139,15 @@
           "max_buildable_footprint_sqm",
           "max_buildable_gfa_sqm",
           "zoning_enriched_at",
-          "massing_enriched_at"
+          "massing_enriched_at",
+          "abuts_laneway",
+          "depth_m",
+          "is_corner_lot",
+          "is_heritage_designated",
+          "is_in_ravine_protection_area",
+          "is_through_lot",
+          "parcel_id",
+          "imagery_roof_footprint_sqm"
         ],
         "zoning_bylaw_areas": [],
         "zoning_height_overlay": [],
@@ -436,19 +156,74 @@
           "parcel_id",
           "is_primary",
           "linked_at",
-          "footprint_sqm",
-          "gfa_sqm"
+          "building_id"
         ],
-        "neighbourhood_build_norms": [],
-        "neighbourhood_storey_norms": [],
-        "neighbourhoods": [],
-        "permits": [
+        "building_footprints": [
           "id",
-          "work_type",
-          "issued_date",
-          "permit_fsi",
-          "latitude",
-          "longitude"
+          "footprint_area_sqm",
+          "estimated_stories",
+          "max_height_m",
+          "geom"
+        ],
+        "neighbourhood_build_norms": [
+          "additions_5yr",
+          "build_ratio_p50",
+          "coa_approval_rate",
+          "coa_approved",
+          "coa_refused",
+          "coa_total",
+          "computed_at",
+          "data_provenance",
+          "demos_5yr",
+          "existing_build_ratio_p25",
+          "existing_build_ratio_p50",
+          "id",
+          "low_sample",
+          "neighbourhood_id",
+          "new_builds_5yr",
+          "realized_coverage_p50",
+          "realized_coverage_p90",
+          "realized_fsi_p50",
+          "realized_fsi_p90",
+          "reno_bath_pct",
+          "reno_kitchen_pct",
+          "reno_mix",
+          "renos_5yr",
+          "sample_n",
+          "storeys_p50",
+          "storeys_p90",
+          "structure_family",
+          "suites_5yr",
+          "window_end",
+          "window_start"
+        ],
+        "neighbourhood_storey_norms": [
+          "neighbourhood_id",
+          "storeys_p50",
+          "storeys_p90"
+        ],
+        "neighbourhoods": [
+          "avg_household_income",
+          "geom",
+          "id",
+          "name"
+        ],
+        "permits": [
+          "zoning_dominant_parcel_id",
+          "street_num",
+          "street_name",
+          "project_type",
+          "residential_sqm",
+          "storeys",
+          "structure_type",
+          "issued_date"
+        ],
+        "coa_applications": [
+          "zoning_dominant_parcel_id",
+          "decision",
+          "decision_date",
+          "hearing_date",
+          "parcel_linked_at"
         ]
       },
       "writes": {
@@ -566,23 +341,23 @@
     }
   ],
   "parse_errors": [],
-  "verdict": "WARN",
+  "verdict": "PASS",
   "ledger_status": [
-    "completed_with_warnings"
+    "deferred_to_full"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"[enrich_parcels] target: enrich_parcels (descriptor.database) → database=postgres user=postgres migrations=244 (floor 237)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase zoning starting (shared txn, timeout 75min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase zoning completed in 31193ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase max_build starting (shared txn, timeout 75min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase max_build completed in 6610ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase existing_structure starting (shared txn, timeout 75min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase existing_structure completed in 68533ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase comparable_builds starting (shared txn, timeout 75min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase comparable_builds completed in 5103ms\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase optimal_config starting (post_commit, timeout 60min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"phase optimal_config completed in 4685ms\"}\nPIPELINE_SUMMARY:{\"records_total\":486530,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":157857,\"zone_class_pct\":96.6,\"total_parcels_scanned\":486530,\"records_updated_aggregate\":0,\"parcels_enriched_count\":0,\"max_build_enriched_count\":0,\"existing_structure_enriched_count\":0,\"comparable_builds_enriched_count\":0,\"optimal_config_enriched_count\":0,\"opt_config_engine_errors\":0,\"config\":{\"road_overlay_distance_m\":5,\"reno_coa_uplift_pct\":0.05,\"reno_kitchen_gfa_pct\":0.15,\"reno_bath_gfa_pct\":0.07,\"mislink_footprint_lot_tol\":0.05,\"max_build_lot_min_sqm\":50,\"max_build_lot_max_sqm\":2000,\"max_build_min_dimension_m\":3,\"storey_height_m\":3,\"garage_min_lot_sqm\":230,\"garage_max_gfa_sqm\":60,\"garage_min_footprint_sqm\":18,\"accessory_max_coverage_pct\":0.3,\"car_footprint_sqm\":18.5,\"laneway_suite_max_gfa_sqm\":120,\"laneway_suite_min_lot_sqm\":230,\"laneway_suite_min_rear_yard_m\":5,\"min_soft_landscaping_pct\":0.3,\"laneway_suite_storeys\":2,\"garden_suite_storeys\":1,\"garden_suite_min_lot_sqm\":270,\"garden_suite_min_rear_yard_m\":5,\"garden_suite_max_gfa_sqm\":60,\"enrich_parcels_defer_threshold_rows\":50000,\"enrich_parcels_heartbeat_minutes\":5,\"enrich_parcels_pass_statement_timeout_minutes\":75,\"enrich_parcels_lock_timeout_ms\":1800000,\"enrich_parcels_comp_lot_tol\":0.2,\"enrich_parcels_comp_knn_overfetch\":50,\"enrich_parcels_comp_top_n\":10,\"enrich_parcels_comp_over_capture_clamp\":1.1,\"enrich_parcels_comp_fsi_min_plausible\":0.05,\"enrich_parcels_comp_fsi_max_plausible\":8,\"enrich_parcels_comps_window_years\":5,\"enrich_parcels_optcfg_batch_size\":500,\"enrich_parcels_pass5_stream_batch_size\":200,\"enrich_parcels_bbox_degree_divisor\":78000,\"enrich_parcels_zone_class_pct_pass_floor\":95,\"enrich_parcels_zone_class_pct_warn_floor\":90,\"enrich_parcels_pass5_timeout_minutes\":60,\"enrich_parcels_scope_recovery_batch_size\":1000,\"enrich_parcels_pending_scope_warn_max\":50000,\"enrich_parcels_scope_retire_after_hours\":24,\"step_post_check_statement_timeout_minutes\":10,\"parcels_dead_tuple_ratio_warn_max\":0.3,\"step_post_check_concurrency\":4,\"parcels_maintenance_timeout_minutes\":15},\"terminal\":\"enriched_full_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"warnings\":[\"comp_fsi_p50_small_n_sample_count: 3344\"],\"audit_table\":{\"phase\":22,\"name\":\"Parcel Enrichment (Zoning / Max-Build / Existing-Structure / Comparables / Optimal-Config)\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"parcels_with_zone_class_pct_warn\",\"value\":96.6,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"parcels_with_zone_class_pct_fail\",\"value\":96.6,\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_config_engine_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"opt_aor_without_max_gfa\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"pass5_post_commit_read_order\",\"value\":\"post_commit — see checks[].order_guarantee\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"78:read would be invisible\",\"guarantee\":\"pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible.\"}},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"parcels_ambiguous_zone_count\",\"value\":{\"ambiguous\":0,\"scoped\":1,\"pct\":0},\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"zoning_fsi_source_nulled_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"massing_zero_link_ghost\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"max_build_coverage_defaulted_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"max_build_box_excluded_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"heritage_mislink_footprint_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"ravine_constrained_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"existing_structure_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"existing_mislinked_footprint_count\",\"value\":60173,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"scenario_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"comp_candidate_pool\",\"value\":9262,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"comparable_builds_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"comp_zero_comps_count\",\"value\":85501,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"optimal_config_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"opt_aor_envelope_capped_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"opt_config_citywide_fallback_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"enrich_parcels_duration_ms\",\"value\":157857,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"scope_backlog_at_step_start\",\"value\":0,\"threshold\":\"viol <= 50000\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"scope_retired_rows\",\"value\":\"0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"scope_retired_cohorts\",\"value\":\"0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"pending_scope_parcels\",\"value\":0,\"threshold\":\"viol <= 50000\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"78:a per-parcel loop is an\",\"guarantee\":\"the backlog is reported BEFORE the recovery stamp/recompute decision (set-based under --full, batched under incremental) commits, so the reported count is the true pre-recovery population, not a post-hoc figure the recovery has already drained.\"}},{\"metric\":\"scope_recovery_recovered_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"scope_recovery_batches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"scope_stamped_without_recompute_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"opt_aor_gfa_gt_max_buildable_gfa_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"zoning_dominant_area_share_out_of_range_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\"},{\"metric\":\"comp_fsi_p50_small_n_sample_count\",\"value\":3344,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\"},{\"metric\":\"heritage_basis_coverage_distribution\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"plausibility\"},{\"metric\":\"existing_mislink_footprint_ratio_out_of_bound_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"parcels_dead_tuple_ratio\",\"value\":0,\"threshold\":\"value_max 0.3\",\"status\":\"PASS\",\"source\":\"plausibility\"},{\"metric\":\"sys_opt_aor_gfa_gt_max_buildable_gfa_count_duration_ms\",\"value\":1504,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_zoning_dominant_area_share_out_of_range_count_duration_ms\",\"value\":1349,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_comp_fsi_p50_small_n_sample_count_duration_ms\",\"value\":1730,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_basis_coverage_distribution_duration_ms\",\"value\":844,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_existing_mislink_footprint_ratio_out_of_bound_count_duration_ms\",\"value\":890,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_dead_tuple_ratio_duration_ms\",\"value\":31,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_maintenance_parcels_vacuum_analyze\",\"value\":0,\"threshold\":0.3,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0 <= 0.3\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":3017.41,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":161241,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"lot_size_sqm\",\"frontage_m\",\"zoning_class\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_sqm\",\"zoning_enriched_at\",\"massing_enriched_at\"],\"zoning_bylaw_areas\":[],\"zoning_height_overlay\":[],\"zoning_lot_coverage_overlay\":[],\"parcel_buildings\":[\"parcel_id\",\"is_primary\",\"linked_at\",\"footprint_sqm\",\"gfa_sqm\"],\"neighbourhood_build_norms\":[],\"neighbourhood_storey_norms\":[],\"neighbourhoods\":[],\"permits\":[\"id\",\"work_type\",\"issued_date\",\"permit_fsi\",\"latitude\",\"longitude\"]},\"writes\":{\"parcels\":[\"zoning_class\",\"zoning_zn_string\",\"zoning_gen_zone\",\"zoning_holding\",\"zone_status\",\"exception_number\",\"exception_text\",\"bylaw_chapter\",\"bylaw_section\",\"bylaw_exception_ref\",\"bylaw_max_fsi\",\"bylaw_max_units\",\"bylaw_max_density\",\"bylaw_pct_commercial_max\",\"bylaw_pct_residential_max\",\"bylaw_pct_employment_max\",\"bylaw_pct_office_max\",\"bylaw_min_frontage_m\",\"bylaw_min_area_sqm\",\"bylaw_standard_setback_m\",\"bylaw_max_coverage_pct\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"in_policy_area\",\"on_policy_road\",\"in_rooming_house_overlay\",\"in_parking_zone_overlay\",\"in_building_setback_overlay\",\"on_priority_retail\",\"in_queenstw_eat_overlay\",\"zoning_overlays\",\"zoning_base_source_id\",\"zoning_dominant_area_share\",\"zoning_is_ambiguous\",\"zoning_base_source_dataset_version\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_id\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"comparable_builds\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"optimal_config\",\"nearby_builds_summary\",\"zoning_enriched_at\",\"massing_enriched_at\"],\"enrich_parcels_pass3_scope\":[\"run_id\",\"parcel_id\",\"consumed_at\"]}}\n\n[enrich_parcels] completed in 161.3s\n",
-  "stderr": "",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_parcels]\",\"msg\":\"[enrich_parcels] target: enrich_parcels (descriptor.database) → database=postgres user=postgres migrations=247 (floor 237)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"duration_ms\":21670,\"total_parcels_scanned\":null,\"records_updated_aggregate\":null,\"config\":{\"road_overlay_distance_m\":5,\"reno_coa_uplift_pct\":0.05,\"reno_kitchen_gfa_pct\":0.15,\"reno_bath_gfa_pct\":0.07,\"mislink_footprint_lot_tol\":0.05,\"max_build_lot_min_sqm\":50,\"max_build_lot_max_sqm\":2000,\"max_build_min_dimension_m\":3,\"storey_height_m\":3,\"garage_min_lot_sqm\":230,\"garage_max_gfa_sqm\":60,\"garage_min_footprint_sqm\":18,\"accessory_max_coverage_pct\":0.3,\"car_footprint_sqm\":18.5,\"laneway_suite_max_gfa_sqm\":120,\"laneway_suite_min_lot_sqm\":230,\"laneway_suite_min_rear_yard_m\":5,\"min_soft_landscaping_pct\":0.3,\"laneway_suite_storeys\":2,\"garden_suite_storeys\":1,\"garden_suite_min_lot_sqm\":270,\"garden_suite_min_rear_yard_m\":5,\"garden_suite_max_gfa_sqm\":60,\"enrich_parcels_defer_threshold_rows\":50000,\"enrich_parcels_heartbeat_minutes\":5,\"enrich_parcels_pass_statement_timeout_minutes\":75,\"enrich_parcels_lock_timeout_ms\":1800000,\"enrich_parcels_comp_lot_tol\":0.2,\"enrich_parcels_comp_knn_overfetch\":50,\"enrich_parcels_comp_top_n\":10,\"enrich_parcels_comp_over_capture_clamp\":1.1,\"enrich_parcels_comp_fsi_min_plausible\":0.05,\"enrich_parcels_comp_fsi_max_plausible\":8,\"enrich_parcels_comps_window_years\":5,\"enrich_parcels_optcfg_batch_size\":500,\"enrich_parcels_pass5_stream_batch_size\":200,\"enrich_parcels_bbox_degree_divisor\":78000,\"enrich_parcels_zone_class_pct_pass_floor\":95,\"enrich_parcels_zone_class_pct_warn_floor\":90,\"enrich_parcels_pass5_timeout_minutes\":60,\"enrich_parcels_scope_recovery_batch_size\":1000,\"enrich_parcels_pending_scope_warn_max\":50000,\"enrich_parcels_scope_retire_after_hours\":24,\"step_post_check_statement_timeout_minutes\":10,\"parcels_dead_tuple_ratio_warn_max\":0.3,\"step_post_check_concurrency\":4,\"parcels_maintenance_timeout_minutes\":15},\"terminal\":\"enriched_full\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":22,\"name\":\"Parcel Enrichment (Zoning / Max-Build / Existing-Structure / Comparables / Optimal-Config)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"inputs_nonempty\",\"value\":{\"zoning_bylaw_areas\":11719,\"zoning_height_overlay\":2528,\"zoning_lot_coverage_overlay\":1242,\"parcel_buildings\":534989,\"building_footprints\":427077,\"neighbourhood_build_norms\":452,\"neighbourhood_storey_norms\":147,\"neighbourhoods\":158,\"permits\":254082,\"coa_applications\":33400},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_maintenance_parcels_vacuum_analyze\",\"value\":0.0011,\"threshold\":0.3,\"status\":\"INFO\",\"note\":\"skipped — dead_ratio 0.0011 <= 0.3\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":26177,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"lot_size_sqm\",\"frontage_m\",\"zoning_class\",\"max_buildable_footprint_sqm\",\"max_buildable_gfa_sqm\",\"zoning_enriched_at\",\"massing_enriched_at\",\"abuts_laneway\",\"depth_m\",\"is_corner_lot\",\"is_heritage_designated\",\"is_in_ravine_protection_area\",\"is_through_lot\",\"parcel_id\",\"imagery_roof_footprint_sqm\"],\"zoning_bylaw_areas\":[],\"zoning_height_overlay\":[],\"zoning_lot_coverage_overlay\":[],\"parcel_buildings\":[\"parcel_id\",\"is_primary\",\"linked_at\",\"building_id\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\",\"max_height_m\",\"geom\"],\"neighbourhood_build_norms\":[\"additions_5yr\",\"build_ratio_p50\",\"coa_approval_rate\",\"coa_approved\",\"coa_refused\",\"coa_total\",\"computed_at\",\"data_provenance\",\"demos_5yr\",\"existing_build_ratio_p25\",\"existing_build_ratio_p50\",\"id\",\"low_sample\",\"neighbourhood_id\",\"new_builds_5yr\",\"realized_coverage_p50\",\"realized_coverage_p90\",\"realized_fsi_p50\",\"realized_fsi_p90\",\"reno_bath_pct\",\"reno_kitchen_pct\",\"reno_mix\",\"renos_5yr\",\"sample_n\",\"storeys_p50\",\"storeys_p90\",\"structure_family\",\"suites_5yr\",\"window_end\",\"window_start\"],\"neighbourhood_storey_norms\":[\"neighbourhood_id\",\"storeys_p50\",\"storeys_p90\"],\"neighbourhoods\":[\"avg_household_income\",\"geom\",\"id\",\"name\"],\"permits\":[\"zoning_dominant_parcel_id\",\"street_num\",\"street_name\",\"project_type\",\"residential_sqm\",\"storeys\",\"structure_type\",\"issued_date\"],\"coa_applications\":[\"zoning_dominant_parcel_id\",\"decision\",\"decision_date\",\"hearing_date\",\"parcel_linked_at\"]},\"writes\":{\"parcels\":[\"zoning_class\",\"zoning_zn_string\",\"zoning_gen_zone\",\"zoning_holding\",\"zone_status\",\"exception_number\",\"exception_text\",\"bylaw_chapter\",\"bylaw_section\",\"bylaw_exception_ref\",\"bylaw_max_fsi\",\"bylaw_max_units\",\"bylaw_max_density\",\"bylaw_pct_commercial_max\",\"bylaw_pct_residential_max\",\"bylaw_pct_employment_max\",\"bylaw_pct_office_max\",\"bylaw_min_frontage_m\",\"bylaw_min_area_sqm\",\"bylaw_standard_setback_m\",\"bylaw_max_coverage_pct\",\"bylaw_max_height_m\",\"bylaw_max_stories\",\"in_policy_area\",\"on_policy_road\",\"in_rooming_house_overlay\",\"in_parking_zone_overlay\",\"in_building_setback_overlay\",\"on_priority_retail\",\"in_queenstw_eat_overlay\",\"zoning_overlays\",\"zoning_base_source_id\",\"zoning_dominant_area_share\",\"zoning_is_ambiguous\",\"zoning_base_source_dataset_version\",\"lot_size_confidence\",\"lot_size_basis\",\"max_build_setback_basis\",\"max_buildable_footprint_sqm\",\"max_build_width_m\",\"max_build_length_m\",\"max_build_height_m\",\"max_build_stories\",\"max_build_stories_basis\",\"max_build_basis\",\"max_buildable_gfa_sqm\",\"max_buildable_gfa_basis\",\"max_build_confidence\",\"max_garden_suite_gfa_sqm\",\"garden_suite_fits\",\"envelope_constrained\",\"envelope_constraint_reason\",\"max_garage_gfa_sqm\",\"garage_capacity_cars\",\"garage_constraint_reason\",\"garage_permission\",\"max_laneway_suite_gfa_sqm\",\"max_rear_suite_gfa_sqm\",\"rear_suite_type\",\"rear_suite_permission\",\"max_build_stories_aggressive\",\"market_exceeds_bylaw\",\"neighbourhood_id\",\"neighbourhood_cost_premium\",\"imagery_roof_footprint_sqm\",\"existing_stories\",\"existing_height_m\",\"imagery_roof_gfa_sqm\",\"existing_width_m\",\"existing_length_m\",\"existing_structure_confidence\",\"existing_other_structures_count\",\"existing_other_structures_sqm\",\"existing_greenspace_sqm\",\"existing_data_quality_flag\",\"max_newbuild_coa_gfa_sqm\",\"cur_basement_gfa_sqm\",\"cur_storey_gfa_sqm\",\"cur_interior_reno_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"cur_pot_3story_gfa_sqm\",\"cur_gfa_range_basis\",\"comparable_builds\",\"comp_count\",\"comp_dominant_build\",\"comp_build_ratio_p50\",\"comp_fsi_p50\",\"opt_aor_storeys\",\"opt_aor_gfa_sqm\",\"opt_aor_units\",\"opt_coa_storeys\",\"opt_coa_gfa_sqm\",\"opt_suite_type\",\"opt_suite_fits_full\",\"opt_binding_constraint\",\"opt_config_confidence\",\"optimal_config\",\"nearby_builds_summary\",\"zoning_enriched_at\",\"massing_enriched_at\"],\"enrich_parcels_pass3_scope\":[\"run_id\",\"parcel_id\",\"consumed_at\"]}}\n\n[enrich_parcels] completed in 26.2s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[enrich_parcels]\",\"msg\":\"enrich defer: combined scope 446723 >= threshold 50000 (ratio 8.93)\"}\n",
   "pipeline_runs": [
     {
-      "id": 1947,
+      "id": 2313,
       "pipeline": "enrich_parcels",
-      "status": "completed_with_warnings",
-      "started_at": "2026-09-22T05:32:11.754Z",
-      "completed_at": "2026-09-22T05:34:52.926Z",
-      "duration_ms": 161243,
-      "records_total": 486530,
-      "records_new": 0,
-      "records_updated": 0,
+      "status": "deferred_to_full",
+      "started_at": "2026-10-05T22:08:56.813Z",
+      "completed_at": "2026-10-05T22:09:22.961Z",
+      "duration_ms": 26178,
+      "records_total": null,
+      "records_new": null,
+      "records_updated": null,
       "records_meta": {
         "config": {
           "storey_height_m": 3,
@@ -633,363 +408,75 @@
           "step_post_check_statement_timeout_minutes": 10,
           "enrich_parcels_pass_statement_timeout_minutes": 75
         },
-        "terminal": "enriched_full_with_warnings",
-        "warnings": [
-          "comp_fsi_p50_small_n_sample_count: 3344"
-        ],
+        "errors": [],
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "terminal": "enriched_full",
+        "warnings": [],
         "ledger_row": "owned",
         "audit_table": {
           "name": "Parcel Enrichment (Zoning / Max-Build / Existing-Structure / Comparables / Optimal-Config)",
           "rows": [
             {
-              "value": 96.6,
-              "metric": "parcels_with_zone_class_pct_warn",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct >= 95"
-            },
-            {
-              "value": 96.6,
-              "metric": "parcels_with_zone_class_pct_fail",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct >= 90"
-            },
-            {
-              "value": 0,
-              "metric": "opt_config_engine_errors",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "opt_aor_without_max_gfa",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": "post_commit — see checks[].order_guarantee",
-              "metric": "pass5_post_commit_read_order",
-              "source": "check",
+              "value": {
+                "permits": 254082,
+                "neighbourhoods": 158,
+                "coa_applications": 33400,
+                "parcel_buildings": 534989,
+                "zoning_bylaw_areas": 11719,
+                "building_footprints": 427077,
+                "zoning_height_overlay": 2528,
+                "neighbourhood_build_norms": 452,
+                "neighbourhood_storey_norms": 147,
+                "zoning_lot_coverage_overlay": 1242
+              },
+              "metric": "inputs_nonempty",
               "status": "INFO",
-              "threshold": "viol == 0",
-              "order_guarantee": {
-                "anchor": "78:read would be invisible",
-                "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible."
-              }
-            },
-            {
-              "value": 0,
-              "metric": "parcels_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)"
             },
             {
               "value": {
-                "pct": 0,
-                "scoped": 1,
-                "ambiguous": 0
+                "parcels": 496536
               },
-              "metric": "parcels_ambiguous_zone_count",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct <= 5"
-            },
-            {
-              "value": 0,
-              "metric": "zoning_fsi_source_nulled_count",
-              "source": "check",
+              "metric": "empty_source_guard",
               "status": "INFO",
-              "threshold": "viol == 0"
+              "threshold": "guards.empty_source table(s) non-empty"
             },
             {
-              "value": 0,
-              "metric": "max_build_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "massing_zero_link_ghost",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "max_build_coverage_defaulted_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "max_build_box_excluded_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "heritage_mislink_footprint_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "ravine_constrained_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "existing_structure_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 60173,
-              "metric": "existing_mislinked_footprint_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "scenario_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 9262,
-              "metric": "comp_candidate_pool",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "comparable_builds_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 85501,
-              "metric": "comp_zero_comps_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "optimal_config_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "opt_aor_envelope_capped_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "opt_config_citywide_fallback_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 157857,
-              "metric": "enrich_parcels_duration_ms",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "scope_backlog_at_step_start",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol <= 50000"
-            },
-            {
-              "value": "0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)",
-              "metric": "scope_retired_rows",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": "0 (window 24h, cutoff 2026-09-21T05:32:11.819Z)",
-              "metric": "scope_retired_cohorts",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "pending_scope_parcels",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol <= 50000",
-              "order_guarantee": {
-                "anchor": "78:a per-parcel loop is an",
-                "guarantee": "the backlog is reported BEFORE the recovery stamp/recompute decision (set-based under --full, batched under incremental) commits, so the reported count is the true pre-recovery population, not a post-hoc figure the recovery has already drained."
-              }
-            },
-            {
-              "value": 0,
-              "metric": "scope_recovery_recovered_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "scope_recovery_batches",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "scope_stamped_without_recompute_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "opt_aor_gfa_gt_max_buildable_gfa_count",
-              "source": "invariant",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "zoning_dominant_area_share_out_of_range_count",
-              "source": "invariant",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 3344,
-              "metric": "comp_fsi_p50_small_n_sample_count",
-              "source": "plausibility",
-              "status": "WARN",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 1659,
-              "metric": "heritage_basis_coverage_distribution",
-              "source": "plausibility",
-              "status": "INFO",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "existing_mislink_footprint_ratio_out_of_bound_count",
-              "source": "plausibility",
-              "status": "PASS",
-              "threshold": "viol == 0"
-            },
-            {
-              "value": 0,
-              "metric": "parcels_dead_tuple_ratio",
-              "source": "plausibility",
-              "status": "PASS",
-              "threshold": "value_max 0.3"
-            },
-            {
-              "value": 1504,
-              "metric": "sys_opt_aor_gfa_gt_max_buildable_gfa_count_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "value": 1349,
-              "metric": "sys_zoning_dominant_area_share_out_of_range_count_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "value": 1730,
-              "metric": "sys_comp_fsi_p50_small_n_sample_count_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "value": 844,
-              "metric": "sys_heritage_basis_coverage_distribution_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "value": 890,
-              "metric": "sys_existing_mislink_footprint_ratio_out_of_bound_count_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "value": 31,
-              "metric": "sys_parcels_dead_tuple_ratio_duration_ms",
-              "status": "INFO",
-              "threshold": null
-            },
-            {
-              "note": "skipped — dead_ratio 0 <= 0.3",
-              "value": 0,
+              "note": "skipped — dead_ratio 0.0011 <= 0.3",
+              "value": 0.0011,
               "metric": "sys_maintenance_parcels_vacuum_analyze",
               "status": "INFO",
               "threshold": 0.3
             },
             {
-              "value": 3017.41,
+              "value": 0,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 161241,
+              "value": 26177,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
           "phase": 22,
-          "verdict": "WARN"
+          "verdict": "PASS"
         },
-        "duration_ms": 157857,
+        "duration_ms": 21670,
         "pool_errors": 0,
         "chain_run_id": null,
         "checks_failed": 0,
-        "checks_warned": 1,
-        "zone_class_pct": 96.6,
-        "total_parcels_scanned": 486530,
-        "parcels_enriched_count": 0,
-        "max_build_enriched_count": 0,
-        "opt_config_engine_errors": 0,
-        "records_updated_aggregate": 0,
-        "optimal_config_enriched_count": 0,
-        "comparable_builds_enriched_count": 0,
-        "existing_structure_enriched_count": 0
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "total_parcels_scanned": null,
+        "records_updated_aggregate": null
       },
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 1946,
+  "pipeline_runs_max_id_before": 2312,
   "table_state": [
     {
       "table": "enrich_parcels_pass3_scope",
@@ -1008,9 +495,9 @@
     },
     {
       "table": "parcels",
-      "row_count": 486530,
+      "row_count": 496536,
       "ceiling_bypassed": "projected",
-      "content_hash": "7c7d1a9ba170abdd1b39c1a93ed72c19",
+      "content_hash": "73e1feaf55276d8618d5814145335411",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -1127,8 +614,8 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "enrich_parcels_pass3_scope": 2,
-    "parcels": 38761
+    "enrich_parcels_pass3_scope": 4,
+    "parcels": 62405
   },
   "table_specs": {
     "enrich_parcels_pass3_scope": {
@@ -1269,11 +756,11 @@
     },
     {
       "name": "comp_fsi_p50_small_n_sample_count",
-      "value": "3344"
+      "value": "3628"
     },
     {
       "name": "heritage_basis_coverage_distribution",
-      "value": "1659"
+      "value": "1770"
     },
     {
       "name": "existing_mislink_footprint_ratio_out_of_bound_count",
@@ -1281,11 +768,11 @@
     },
     {
       "name": "parcels_dead_tuple_ratio",
-      "value": "0"
+      "value": "0.0011"
     }
   ],
   "invariants_file": null,
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -1293,21 +780,16 @@
     "key:pipeline_runs[0].duration_ms",
     "key:pipeline_runs[0].id",
     "key:pipeline_runs[0].records_meta.chain_run_id",
+    "key:pipeline_runs[0].records_meta.code_sha",
     "key:pipeline_runs[0].records_meta.duration_ms",
     "key:pipeline_runs[0].started_at",
     "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
     "key:summary.records_meta.duration_ms",
     "pattern:duration_literal",
-    "pattern:iso_timestamp",
-    "row:sys_comp_fsi_p50_small_n_sample_count_duration_ms",
     "row:sys_duration_ms",
-    "row:sys_existing_mislink_footprint_ratio_out_of_bound_count_duration_ms",
-    "row:sys_heritage_basis_coverage_distribution_duration_ms",
     "row:sys_maintenance_parcels_vacuum_analyze",
-    "row:sys_opt_aor_gfa_gt_max_buildable_gfa_count_duration_ms",
-    "row:sys_parcels_dead_tuple_ratio_duration_ms",
-    "row:sys_velocity_rows_sec",
-    "row:sys_zoning_dominant_area_share_out_of_range_count_duration_ms"
+    "row:sys_velocity_rows_sec"
   ],
   "normalised": {
     "step": "scripts/enrich-parcels.js",
@@ -1320,282 +802,36 @@
           "phase": 22,
           "rows": [
             {
-              "metric": "parcels_with_zone_class_pct_warn",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct >= 95",
-              "value": 96.6
-            },
-            {
-              "metric": "parcels_with_zone_class_pct_fail",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct >= 90",
-              "value": 96.6
-            },
-            {
-              "metric": "opt_config_engine_errors",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "opt_aor_without_max_gfa",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "pass5_post_commit_read_order",
-              "order_guarantee": {
-                "anchor": "78:read would be invisible",
-                "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible."
-              },
-              "source": "check",
+              "metric": "inputs_nonempty",
               "status": "INFO",
-              "threshold": "viol == 0",
-              "value": "post_commit — see checks[].order_guarantee"
-            },
-            {
-              "metric": "parcels_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "parcels_ambiguous_zone_count",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "pct <= 5",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
               "value": {
-                "ambiguous": 0,
-                "pct": 0,
-                "scoped": 1
+                "building_footprints": 427077,
+                "coa_applications": 33400,
+                "neighbourhood_build_norms": 452,
+                "neighbourhood_storey_norms": 147,
+                "neighbourhoods": 158,
+                "parcel_buildings": 534989,
+                "permits": 254082,
+                "zoning_bylaw_areas": 11719,
+                "zoning_height_overlay": 2528,
+                "zoning_lot_coverage_overlay": 1242
               }
             },
             {
-              "metric": "zoning_fsi_source_nulled_count",
-              "source": "check",
+              "metric": "empty_source_guard",
               "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "max_build_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "massing_zero_link_ghost",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "max_build_coverage_defaulted_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "max_build_box_excluded_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "heritage_mislink_footprint_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "ravine_constrained_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "existing_structure_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "existing_mislinked_footprint_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 60173
-            },
-            {
-              "metric": "scenario_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "comp_candidate_pool",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 9262
-            },
-            {
-              "metric": "comparable_builds_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "comp_zero_comps_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 85501
-            },
-            {
-              "metric": "optimal_config_enriched_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "opt_aor_envelope_capped_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "opt_config_citywide_fallback_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "enrich_parcels_duration_ms",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 157857
-            },
-            {
-              "metric": "scope_backlog_at_step_start",
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol <= 50000",
-              "value": 0
-            },
-            {
-              "metric": "scope_retired_rows",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": "0 (window 24h, cutoff <TS>)"
-            },
-            {
-              "metric": "scope_retired_cohorts",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": "0 (window 24h, cutoff <TS>)"
-            },
-            {
-              "metric": "pending_scope_parcels",
-              "order_guarantee": {
-                "anchor": "78:a per-parcel loop is an",
-                "guarantee": "the backlog is reported BEFORE the recovery stamp/recompute decision (set-based under --full, batched under incremental) commits, so the reported count is the true pre-recovery population, not a post-hoc figure the recovery has already drained."
-              },
-              "source": "check",
-              "status": "PASS",
-              "threshold": "viol <= 50000",
-              "value": 0
-            },
-            {
-              "metric": "scope_recovery_recovered_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "scope_recovery_batches",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "scope_stamped_without_recompute_count",
-              "source": "check",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "opt_aor_gfa_gt_max_buildable_gfa_count",
-              "source": "invariant",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "zoning_dominant_area_share_out_of_range_count",
-              "source": "invariant",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "comp_fsi_p50_small_n_sample_count",
-              "source": "plausibility",
-              "status": "WARN",
-              "threshold": "viol == 0",
-              "value": 3344
-            },
-            {
-              "metric": "heritage_basis_coverage_distribution",
-              "source": "plausibility",
-              "status": "INFO",
-              "threshold": "viol == 0",
-              "value": 1659
-            },
-            {
-              "metric": "existing_mislink_footprint_ratio_out_of_bound_count",
-              "source": "plausibility",
-              "status": "PASS",
-              "threshold": "viol == 0",
-              "value": 0
-            },
-            {
-              "metric": "parcels_dead_tuple_ratio",
-              "source": "plausibility",
-              "status": "PASS",
-              "threshold": "value_max 0.3",
-              "value": 0
+              "threshold": "guards.empty_source table(s) non-empty",
+              "value": {
+                "parcels": 496536
+              }
             }
           ],
-          "verdict": "WARN"
+          "verdict": "PASS"
         },
         "checks_failed": 0,
-        "checks_warned": 1,
-        "comparable_builds_enriched_count": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
         "config": {
           "accessory_max_coverage_pct": 0.3,
           "car_footprint_sqm": 18.5,
@@ -1645,38 +881,84 @@
           "step_post_check_statement_timeout_minutes": 10,
           "storey_height_m": 3
         },
-        "existing_structure_enriched_count": 0,
+        "errors": [],
         "ledger_row": "owned",
-        "max_build_enriched_count": 0,
-        "opt_config_engine_errors": 0,
-        "optimal_config_enriched_count": 0,
-        "parcels_enriched_count": 0,
         "pool_errors": 0,
-        "records_updated_aggregate": 0,
-        "terminal": "enriched_full_with_warnings",
-        "total_parcels_scanned": 486530,
-        "warnings": [
-          "comp_fsi_p50_small_n_sample_count: 3344"
-        ],
-        "zone_class_pct": 96.6
+        "records_updated_aggregate": null,
+        "terminal": "enriched_full",
+        "total_parcels_scanned": null,
+        "warnings": []
       },
-      "records_new": 0,
-      "records_total": 486530,
-      "records_updated": 0
+      "records_new": null,
+      "records_total": null,
+      "records_updated": null
     },
     "summary_count": 1,
     "meta": [
       {
         "reads": {
-          "neighbourhood_build_norms": [],
-          "neighbourhood_storey_norms": [],
-          "neighbourhoods": [],
+          "building_footprints": [
+            "id",
+            "footprint_area_sqm",
+            "estimated_stories",
+            "max_height_m",
+            "geom"
+          ],
+          "coa_applications": [
+            "zoning_dominant_parcel_id",
+            "decision",
+            "decision_date",
+            "hearing_date",
+            "parcel_linked_at"
+          ],
+          "neighbourhood_build_norms": [
+            "additions_5yr",
+            "build_ratio_p50",
+            "coa_approval_rate",
+            "coa_approved",
+            "coa_refused",
+            "coa_total",
+            "computed_at",
+            "data_provenance",
+            "demos_5yr",
+            "existing_build_ratio_p25",
+            "existing_build_ratio_p50",
+            "id",
+            "low_sample",
+            "neighbourhood_id",
+            "new_builds_5yr",
+            "realized_coverage_p50",
+            "realized_coverage_p90",
+            "realized_fsi_p50",
+            "realized_fsi_p90",
+            "reno_bath_pct",
+            "reno_kitchen_pct",
+            "reno_mix",
+            "renos_5yr",
+            "sample_n",
+            "storeys_p50",
+            "storeys_p90",
+            "structure_family",
+            "suites_5yr",
+            "window_end",
+            "window_start"
+          ],
+          "neighbourhood_storey_norms": [
+            "neighbourhood_id",
+            "storeys_p50",
+            "storeys_p90"
+          ],
+          "neighbourhoods": [
+            "avg_household_income",
+            "geom",
+            "id",
+            "name"
+          ],
           "parcel_buildings": [
             "parcel_id",
             "is_primary",
             "linked_at",
-            "footprint_sqm",
-            "gfa_sqm"
+            "building_id"
           ],
           "parcels": [
             "id",
@@ -1687,15 +969,25 @@
             "max_buildable_footprint_sqm",
             "max_buildable_gfa_sqm",
             "zoning_enriched_at",
-            "massing_enriched_at"
+            "massing_enriched_at",
+            "abuts_laneway",
+            "depth_m",
+            "is_corner_lot",
+            "is_heritage_designated",
+            "is_in_ravine_protection_area",
+            "is_through_lot",
+            "parcel_id",
+            "imagery_roof_footprint_sqm"
           ],
           "permits": [
-            "id",
-            "work_type",
-            "issued_date",
-            "permit_fsi",
-            "latitude",
-            "longitude"
+            "zoning_dominant_parcel_id",
+            "street_num",
+            "street_name",
+            "project_type",
+            "residential_sqm",
+            "storeys",
+            "structure_type",
+            "issued_date"
           ],
           "zoning_bylaw_areas": [],
           "zoning_height_overlay": [],
@@ -1826,282 +1118,36 @@
             "phase": 22,
             "rows": [
               {
-                "metric": "parcels_with_zone_class_pct_warn",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "pct >= 95",
-                "value": 96.6
-              },
-              {
-                "metric": "parcels_with_zone_class_pct_fail",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "pct >= 90",
-                "value": 96.6
-              },
-              {
-                "metric": "opt_config_engine_errors",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "opt_aor_without_max_gfa",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "pass5_post_commit_read_order",
-                "order_guarantee": {
-                  "anchor": "78:read would be invisible",
-                  "guarantee": "pass 5 reads parcels columns passes 1-4 just wrote inside their own shared transaction and MUST run only after that transaction commits — a same-txn read would be invisible."
-                },
-                "source": "check",
+                "metric": "inputs_nonempty",
                 "status": "INFO",
-                "threshold": "viol == 0",
-                "value": "post_commit — see checks[].order_guarantee"
-              },
-              {
-                "metric": "parcels_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "parcels_ambiguous_zone_count",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "pct <= 5",
+                "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
                 "value": {
-                  "ambiguous": 0,
-                  "pct": 0,
-                  "scoped": 1
+                  "building_footprints": 427077,
+                  "coa_applications": 33400,
+                  "neighbourhood_build_norms": 452,
+                  "neighbourhood_storey_norms": 147,
+                  "neighbourhoods": 158,
+                  "parcel_buildings": 534989,
+                  "permits": 254082,
+                  "zoning_bylaw_areas": 11719,
+                  "zoning_height_overlay": 2528,
+                  "zoning_lot_coverage_overlay": 1242
                 }
               },
               {
-                "metric": "zoning_fsi_source_nulled_count",
-                "source": "check",
+                "metric": "empty_source_guard",
                 "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "max_build_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "massing_zero_link_ghost",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "max_build_coverage_defaulted_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "max_build_box_excluded_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "heritage_mislink_footprint_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "ravine_constrained_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "existing_structure_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "existing_mislinked_footprint_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 60173
-              },
-              {
-                "metric": "scenario_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "comp_candidate_pool",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 9262
-              },
-              {
-                "metric": "comparable_builds_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "comp_zero_comps_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 85501
-              },
-              {
-                "metric": "optimal_config_enriched_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "opt_aor_envelope_capped_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "opt_config_citywide_fallback_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "enrich_parcels_duration_ms",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 157857
-              },
-              {
-                "metric": "scope_backlog_at_step_start",
-                "source": "check",
-                "status": "PASS",
-                "threshold": "viol <= 50000",
-                "value": 0
-              },
-              {
-                "metric": "scope_retired_rows",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": "0 (window 24h, cutoff <TS>)"
-              },
-              {
-                "metric": "scope_retired_cohorts",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": "0 (window 24h, cutoff <TS>)"
-              },
-              {
-                "metric": "pending_scope_parcels",
-                "order_guarantee": {
-                  "anchor": "78:a per-parcel loop is an",
-                  "guarantee": "the backlog is reported BEFORE the recovery stamp/recompute decision (set-based under --full, batched under incremental) commits, so the reported count is the true pre-recovery population, not a post-hoc figure the recovery has already drained."
-                },
-                "source": "check",
-                "status": "PASS",
-                "threshold": "viol <= 50000",
-                "value": 0
-              },
-              {
-                "metric": "scope_recovery_recovered_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "scope_recovery_batches",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "scope_stamped_without_recompute_count",
-                "source": "check",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "opt_aor_gfa_gt_max_buildable_gfa_count",
-                "source": "invariant",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "zoning_dominant_area_share_out_of_range_count",
-                "source": "invariant",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "comp_fsi_p50_small_n_sample_count",
-                "source": "plausibility",
-                "status": "WARN",
-                "threshold": "viol == 0",
-                "value": 3344
-              },
-              {
-                "metric": "heritage_basis_coverage_distribution",
-                "source": "plausibility",
-                "status": "INFO",
-                "threshold": "viol == 0",
-                "value": 1659
-              },
-              {
-                "metric": "existing_mislink_footprint_ratio_out_of_bound_count",
-                "source": "plausibility",
-                "status": "PASS",
-                "threshold": "viol == 0",
-                "value": 0
-              },
-              {
-                "metric": "parcels_dead_tuple_ratio",
-                "source": "plausibility",
-                "status": "PASS",
-                "threshold": "value_max 0.3",
-                "value": 0
+                "threshold": "guards.empty_source table(s) non-empty",
+                "value": {
+                  "parcels": 496536
+                }
               }
             ],
-            "verdict": "WARN"
+            "verdict": "PASS"
           },
           "checks_failed": 0,
-          "checks_warned": 1,
-          "comparable_builds_enriched_count": 0,
+          "checks_passed": "all",
+          "checks_warned": 0,
           "config": {
             "accessory_max_coverage_pct": 0.3,
             "car_footprint_sqm": 18.5,
@@ -2151,39 +1197,22 @@
             "step_post_check_statement_timeout_minutes": 10,
             "storey_height_m": 3
           },
-          "existing_structure_enriched_count": 0,
+          "errors": [],
           "ledger_row": "owned",
-          "max_build_enriched_count": 0,
-          "opt_config_engine_errors": 0,
-          "optimal_config_enriched_count": 0,
-          "parcels_enriched_count": 0,
           "pool_errors": 0,
-          "records_updated_aggregate": 0,
-          "terminal": "enriched_full_with_warnings",
-          "total_parcels_scanned": 486530,
-          "warnings": [
-            "comp_fsi_p50_small_n_sample_count: 3344"
-          ],
-          "zone_class_pct": 96.6
+          "records_updated_aggregate": null,
+          "terminal": "enriched_full",
+          "total_parcels_scanned": null,
+          "warnings": []
         },
-        "records_new": 0,
-        "records_total": 486530,
-        "records_updated": 0,
-        "status": "completed_with_warnings"
+        "records_new": null,
+        "records_total": null,
+        "records_updated": null,
+        "status": "deferred_to_full"
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_parcels] target: enrich_parcels (descriptor.database) → database=postgres user=postgres migrations=244 (floor 237)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase zoning starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase zoning completed in <DUR>\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase max_build starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase max_build completed in <DUR>\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase existing_structure starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase existing_structure completed in <DUR>\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase comparable_builds starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase comparable_builds completed in <DUR>\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase optimal_config starting (post_commit, timeout <DUR>)\",\"tag\":\"[enrich_parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"phase optimal_config completed in <DUR>\",\"tag\":\"[enrich_parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_parcels] target: enrich_parcels (descriptor.database) → database=postgres user=postgres migrations=247 (floor 237)\",\"tag\":\"[enrich_parcels]\"}",
       "[enrich_parcels] completed in <DUR>"
     ],
     "table_state": [
@@ -2310,13 +1339,13 @@
           "zoning_enriched_at",
           "massing_enriched_at"
         ],
-        "content_hash": "7c7d1a9ba170abdd1b39c1a93ed72c19",
+        "content_hash": "73e1feaf55276d8618d5814145335411",
         "hash_method": "row_hash_then_concat",
         "order_by": "explicit",
         "order_columns": [
           "id"
         ],
-        "row_count": 486530,
+        "row_count": 496536,
         "table": "parcels"
       }
     ],
@@ -2331,11 +1360,11 @@
       },
       {
         "name": "comp_fsi_p50_small_n_sample_count",
-        "value": "3344"
+        "value": "3628"
       },
       {
         "name": "heritage_basis_coverage_distribution",
-        "value": "1659"
+        "value": "1770"
       },
       {
         "name": "existing_mislink_footprint_ratio_out_of_bound_count",
@@ -2343,15 +1372,35 @@
       },
       {
         "name": "parcels_dead_tuple_ratio",
-        "value": "0"
+        "value": "0.0011"
       }
     ]
   },
-  "source_fingerprint": "5891b998cc02940b2aa195c6b86159bb17b658e8dc8d80ff1fba5de6ea670242",
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "parcels",
+        "mode": "drift_declared",
+        "answer": "drift_declared",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 0 table(s) []; drift_declared (not counted as proof) on [parcels]",
+    "txid_before_run2": 3203043,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "enriched_full"
+    }
+  },
+  "source_fingerprint": "cda0e4f14beaef50ab1466c65d1dfddced92259b1a541dda4fa798b7d6274d25",
   "fingerprint_files": [
     "scripts/enrich-parcels.descriptor.json",
     "scripts/enrich-parcels.js",
     "scripts/enrich-parcels.notes.json",
     "scripts/lib/compute/enrich-parcels.js"
-  ]
+  ],
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

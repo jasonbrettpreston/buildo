@@ -80,7 +80,6 @@ function toFs(base: unknown) {
     format: 'csv',
     csv_options: { bom: true, relax_quotes: false },
     key_property: original.key_property,
-    cache: 'none',
   };
   if (Array.isArray(d.staleness?.trigger)) {
     for (const t of d.staleness.trigger) t.external = id as string;
@@ -129,7 +128,7 @@ describe('INGESTOR prerequisite 0fs — externals[].path + no-geometry INGESTOR 
 
     // (e) G2 — kind filesystem ⇒ path declared (a pathless filesystem external names no file).
     const pathless = toFs(A);
-    pathless.inputs.reads.externals.push({ id: 'nf', kind: 'filesystem', cache: 'none' });
+    pathless.inputs.reads.externals.push({ id: 'nf', kind: 'filesystem' });
     expect(validate(pathless), 'a filesystem external must declare a `path`').toBe(false);
     expect(errText(validate.errors)).toContain('"missingProperty":"path"');
 

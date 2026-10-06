@@ -55,7 +55,6 @@ function ckanExternal(id: string, resourceId: string) {
       page_size_from_config: 'load_zoning_datastore_page_size',
     },
     key_property: '_id',
-    cache: 'none',
     target: `t${id}`,
   };
 }
@@ -507,7 +506,7 @@ describe('INGESTOR prerequisite 0y — the CKAN DataStore acquisition arm', () =
     const descriptor = clone(ckanDescriptor());
     const external = {
       id: 'shp', kind: 'http_file', format: 'shapefile_zip',
-      url: 'https://ex/ravines.zip', key_property: 'OBJECTID', cache: 'none',
+      url: 'https://ex/ravines.zip', key_property: 'OBJECTID',
     };
     // A shapefile HEAD succeeds; the tier-1 gate DECLARES a skip, so the arm returns the `base`
     // block with NO download and NO parser. Any CKAN fetch would be a regression.

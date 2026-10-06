@@ -1,0 +1,13 @@
+{
+  "entries": {
+    "duplicate_snapshot_key_count": {
+      "value": 0,
+      "cost_ms": 3,
+      "at": "2026-10-05T18:00:55.712Z",
+      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "run_id": "2265",
+      "chain": null,
+      "sample_n": 5
+    }
+  }
+}

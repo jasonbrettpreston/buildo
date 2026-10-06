@@ -1,0 +1,94 @@
+{
+  "probe": "P2-C6 rest closed rules (fold 8 items 1/8, fold 8b item 4) over the 25 p3-tree step descriptors",
+  "tree": "Buildo-wt-fleet2-p3",
+  "date": "2026-10-03",
+  "red_live_tree": [
+    {
+      "step": "compute_centroids",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-postgis-st-centroid",
+      "code_version_trigger": false
+    },
+    {
+      "step": "compute_parcel_cost_estimates",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-streamed-engine",
+      "code_version_trigger": false
+    },
+    {
+      "step": "enrich_heritage",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-containment-lateral",
+      "code_version_trigger": false
+    },
+    {
+      "step": "enrich_heritage",
+      "rule": "ENRICHER => mode_select none (runEnrichPhase never reads it)",
+      "mode_select": "tri_state"
+    },
+    {
+      "step": "enrich_parcels",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-five-pass-enrich",
+      "code_version_trigger": false
+    },
+    {
+      "step": "enrich_parcels",
+      "rule": "ENRICHER => mode_select none (runEnrichPhase never reads it)",
+      "mode_select": "tri_state"
+    },
+    {
+      "step": "enrich_ravines",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-materialized-centroid-knn",
+      "code_version_trigger": false
+    },
+    {
+      "step": "geocode_permits",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-address-point-geo-id-join",
+      "code_version_trigger": false
+    },
+    {
+      "step": "link_parcel_addresses",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-st-within-parcel-batch",
+      "code_version_trigger": false
+    },
+    {
+      "step": "link_wsib",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-trigram-3tier-cascade",
+      "code_version_trigger": false
+    },
+    {
+      "step": "assert_engine_health",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-batch1-i3",
+      "code_version_trigger": false
+    },
+    {
+      "step": "refresh_snapshot",
+      "rule": "logic_version != none <=> code_version trigger",
+      "logic_version": "v1-wf3f1-consolidated",
+      "code_version_trigger": false
+    }
+  ],
+  "green_with_seatB_handoff_edits_applied_in_memory": [],
+  "handoff_logic_version_none": [
+    "compute-centroids",
+    "compute-parcel-cost-estimates",
+    "enrich-heritage",
+    "enrich-parcels",
+    "enrich-ravines",
+    "geocode-permits",
+    "link-parcel-addresses",
+    "link-wsib",
+    "quality/assert-engine-health",
+    "refresh-snapshot"
+  ],
+  "handoff_mode_select_none": [
+    "enrich-heritage",
+    "enrich-parcels"
+  ]
+}

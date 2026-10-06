@@ -40,6 +40,9 @@ const zeroRow = (): Answer => ({
 });
 
 const stepAnswer = (text: string): Answer | null => {
+  // FLEET-2 A-1: the runner's input guards (#12 inputs.expect_nonempty / #32 guards.empty_source) COUNT each
+  // declared table before compute and halt on 0 — this fixture models a POPULATED corpus.
+  if (/^SELECT COUNT\(\*\)::bigint AS n FROM \w+$/.test(text.trim())) return { rows: [{ n: '1' }] };
   // readRavineContract: the producer's last completed run carries the versioned contract block.
   if (text.includes('SELECT records_meta FROM pipeline_runs') && text.includes("status = 'completed'")) {
     return { rows: [{ records_meta: { ravine_load: { spec_version: '1.2', delete_skipped_empty_guard: false, drift_check_passed: true, source_dataset_version: 'fixture-v1' } } }] };
@@ -64,6 +67,13 @@ function recordingPool(stepAnswer: (text: string, values: unknown[]) => Answer |
     if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };
     if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 4242 }] };
     if (/SELECT NOW\(\)/i.test(text)) return { rows: [{ now: new Date('2026-09-28T00:00:00Z') }] };
+    // MQ-D3 (a): the trigger guard also reads the live function body. Model a migrated body: one
+    // NEW.<col> := NULL arm for every outputs.invalidates[] by:"trigger" column this descriptor declares.
+    if (text.includes('SELECT p.prosrc')) {
+      const arms = (((DESCRIPTOR as { outputs: { invalidates?: Array<{ column: string; by?: string }> } }).outputs.invalidates) ?? [])
+        .filter((r) => r.by === 'trigger').map((r) => `NEW.${r.column} := NULL;`).join(' ');
+      return { rows: [{ prosrc: `BEGIN ${arms} RETURN NEW; END;` }] };
+    }
     // guards.requires probes (extension / function / index / column presence) all answer "present".
     if (/^SELECT 1 FROM (pg_|information_schema)/.test(text.trim())) return { rows: [{ '?column?': 1 }] };
     return fallback();

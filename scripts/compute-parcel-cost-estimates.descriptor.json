@@ -18,8 +18,8 @@
   "inputs": {
     "reads": {
       "steps": [
-        { "step": "enrich_parcels", "version_pin": "none" },
-        { "step": "parcels", "version_pin": "none" }
+        { "step": "enrich_parcels" },
+        { "step": "parcels" }
       ],
       "tables": [
         { "table": "archetype_cost_rates", "columns": ["archetype", "cost_per_sqm", "cost_adjustment_factor", "escalation_index_base", "as_of_date", "updated_at"] },
@@ -68,9 +68,7 @@
           "idempotent_rerun": "zero_writes",
           "txn_scope": "none"
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+        "retract": "none"
       },
       {
         "table": "parcels",
@@ -114,14 +112,10 @@
             "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
           }
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": { "unique": true, "on_collision": "not_applicable", "key_space_migration": "none" }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "none",
     "write_inventory": {
       "statements": 1,
       "why": {
@@ -131,14 +125,11 @@
     }
   },
   "staleness": {
-    "scope": "all",
     "trigger": [{ "signal": "always", "position": "pre_compute" }],
     "mode_select": "none",
-    "checkpoint": "none",
-    "interval": "none",
     "fingerprint": "derived",
     "fingerprint_inputs": ["scripts/lib/compute/compute-parcel-cost-estimates.js", "scripts/lib/parcel-cost.js"],
-    "logic_version": "v1-streamed-engine",
+    "logic_version": "none",
     "on_fingerprint_change": "run"
   },
   "guards": {
@@ -173,7 +164,7 @@
     ],
     "srid": "none",
     "empty_source": "archetype_cost_rates",
-    "schema_drift": "pause"
+    "schema_drift": "none"
   },
   "execution": {
     "shape": "enrich",
@@ -193,15 +184,10 @@
         "timeout_minutes_from_config": "compute_parcel_cost_phase_timeout_minutes"
       }
     ],
-    "budget": "60m",
     "txn_scope": "none",
-    "txn_budget": "none",
-    "chunked": true,
     "statement_timeout": "none",
     "step_timeout": "90m",
     "batch": 1000,
-    "needs_disk_mb": "none",
-    "partial_fill": "staged",
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "RE-FREEZE #12 (R-AX, 2026-09-21). A per-parcel engine exception is caught, counted (engineErrorCount) and sentinelled (error: 'engine_error'); the stream continues. The tolerance is bounded by the declared, FAIL-severity, config-resolved check below — the literal 0 this field carried until this commit duplicated that same bound (Rule 3 violation, G0.4) and is deleted.",
@@ -214,7 +200,6 @@
       "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
     },
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "maintenance": "none",
     "invocation": {
@@ -257,7 +242,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-21T00:00:00.000Z", "commit": "compute-parcel-cost-estimates-commit-1", "cost_ms": 400, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3101, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
       "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
     },
     {
@@ -269,7 +254,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-21T00:00:00.000Z", "commit": "compute-parcel-cost-estimates-commit-1", "cost_ms": 400, "sample_n": 1, "source_run": { "run_id": null, "chain": null, "event": "manual_timing" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3160, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
     },
     {
@@ -281,7 +266,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-09-22T03:00:00.000Z", "commit": "wf3-s0.2", "cost_ms": 2460, "sample_n": 1, "source_run": { "run_id": null, "chain": "sources", "event": "converging_run" } },
+      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3393, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
       "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. CPCE peel (DeepSeek/grounded O4, 2026-09-21) widened the COLUMN coverage to all 16 `write_discipline.guard_columns`. S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22) widens the POPULATION half in the SAME statement, matching `writes[1]`'s own widened `scope`: `max_buildable_gfa_sqm IS NULL` (S0.1's lot-band bound) or `cur_floor_gfa_sqm > 750` (`product_scope_max_existing_gfa_sqm`, FOLD-RC2) now ALSO count as 'outside the population', not only a non-R% zoning. The two widenings (columns, O4; population, S0.2) are orthogonal and composed here, never duplicated as separate invariants.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],
@@ -295,7 +280,19 @@
     { "key": "index_updated_at", "type": "string", "consumers": [] },
     { "key": "cost_rates_age_months", "type": "int", "consumers": [] },
     { "key": "cost_index_age_months", "type": "int", "consumers": [] },
-    { "key": "cost_by_zone", "type": "object", "consumers": [] }
+    { "key": "cost_by_zone", "type": "object", "consumers": [] },
+    { "key": "duration_ms", "type": "int", "consumers": [] },
+    { "key": "residential_parcels_examined", "type": "int", "consumers": [] },
+    { "key": "records_updated", "type": "int", "consumers": [] },
+    { "key": "records_skipped", "type": "int", "consumers": [] },
+    { "key": "null_geom_basis_count", "type": "int", "consumers": [] },
+    { "key": "engine_error_count", "type": "int", "consumers": [] },
+    { "key": "fit_gated_suite_count", "type": "int", "consumers": [] },
+    { "key": "fit_gated_garage_count", "type": "int", "consumers": [] },
+    { "key": "cost_escalation_index", "type": "number", "consumers": [] },
+    { "key": "rates_max_as_of_date", "type": "string", "consumers": [] },
+    { "key": "unmapped_residential_family_fallback_count", "type": "int", "consumers": [] },
+    { "key": "stranded_cost_rows_retracted", "type": "int", "consumers": ["compute_parcel_cost_estimates"] }
   ],
   "deviations": [
     {
@@ -372,7 +369,7 @@
     "cascades": "derived",
     "interrupted": "none",
     "interrupted_why": {
-      "text": "Unlike a shared-txn ENRICHER, this step has NO shared transaction (`execution.txn_scope:\"none\"`) — each ctx.flushBatch call is its OWN short transaction, so a run killed mid-stream leaves already-flushed batches COMMITTED (execution.partial_fill:\"staged\"). 'none' is the honest recovery value (no special action needed), NOT `force_full_on_next_run`: staleness.scope is unconditionally 'all' already, so the very next run re-streams and re-prices every row regardless of whether the prior run was interrupted, converging without any special-cased recovery branch. Proven by the new compute-parcel-cost-kill-mid-run.db.test.ts (pg_cancel_backend, not a process kill).",
+      "text": "Unlike a shared-txn ENRICHER, this step has NO shared transaction (`execution.txn_scope:\"none\"`) — each ctx.flushBatch call is its OWN short transaction, so a run killed mid-stream leaves already-flushed batches COMMITTED (a staged partial fill; the execution.partial_fill declaration itself was deleted in the FLEET-2 RE-FREEZE, #42). 'none' is the honest recovery value (no special action needed), NOT `force_full_on_next_run`: staleness.scope is unconditionally 'all' already, so the very next run re-streams and re-prices every row regardless of whether the prior run was interrupted, converging without any special-cased recovery branch. Proven by the new compute-parcel-cost-kill-mid-run.db.test.ts (pg_cancel_backend, not a process kill).",
       "liveness": { "kind": "file", "ref": "scripts/lib/compute/compute-parcel-cost-estimates.js" }
     },
     "before_image": "generated"
@@ -381,7 +378,6 @@
   "counters": {
     "records_total": {
       "source": "matched.compute.residential_parcels_examined",
-      "scoped_by": "step",
       "why": {
         "text": "A4 ruling — declares the scanned residential population (NOT 13× the per-line counts, §2.11 counter scoping). matched.compute.<name> resolves while a bare compute.* resolves NULL for every ENRICHER.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
@@ -389,7 +385,6 @@
     },
     "records_new": {
       "source": "matched.compute.records_new_aggregate",
-      "scoped_by": "step",
       "why": {
         "text": "CPCE-D5 CLOSED (cutover ③, 2026-09-21) — was the literal string \"null\", which COUNTER-ROOT (#26; only scans converted[] descriptors, so this was invisible before cutover) rejects as an unresolvable root for shape \"enrich\". Corrected to the fleet-standard form every sibling ENRICHER uses (enrich_heritage, enrich_ravines, geocode_permits, enrich_parcels — all `matched.compute.records_new_aggregate`): this step INSERTs nothing — the sole write target is an UPDATE, and class N's own executor structurally refuses any statement text containing INSERT INTO or ON CONFLICT (JOIN_UPDATE_FORBIDDEN_RE, scripts/lib/step/write.js) — `records_new_aggregate: 0` is a declared finite literal, already returned by computePostPhase's `compute:` block, because an omitted/null source resolves as \"not counted\" rather than the true zero it is (Spec 48 §3.6).",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
@@ -397,7 +392,6 @@
     },
     "records_updated": {
       "source": "written.e1.updated",
-      "scoped_by": "step",
       "why": {
         "text": "COUNTER-ROOT (FOLD-I8, restated): `ctx.flushBatch` is a bare BEGIN/query/COMMIT wrapper — it is NEVER seam-owned (only `ctx.retract`/`ctx.joinUpdate` populate `seamOwned`). So `index.js`'s `!seamOwned` branch always applies for this target, and `written.e1.updated` is filled from the pass's own returned `{updated, scanned}` (§5 test 6, both directions).",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
@@ -435,7 +429,7 @@
     "chains": "derived",
     "shared": "derived",
     "slug_forms": "derived",
-    "varies_by_chain": { "checks": "none", "phase": { "sources": 1 }, "audit_table": "one", "scope": "none" },
+    "varies_by_chain": { "checks": "none", "phase": { "sources": 23 }, "audit_table": "one", "scope": "none" },
     "on_contention": "self_skip"
   },
   "terminals": [

@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-centreline.js",
   "chain": "none",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -13,10 +13,10 @@
     "records_meta": {
       "centreline_load": {
         "spec_version": "1.1",
-        "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
-        "last_modified": "Fri, 02 Oct 2026 18:14:44 GMT",
-        "etag": "\"1790964884.644-117715801-1305219654\"",
-        "content_hash": "1da4549b223eb577a79c57ba1f0f97dc",
+        "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
+        "last_modified": "Mon, 05 Oct 2026 18:15:17 GMT",
+        "etag": "\"1791224117.757-117715801-1305219654\"",
+        "content_hash": "2ac6f3990d9925171db071303acb1a7d",
         "feature_count_raw": 64393,
         "feature_count_filtered": 47330,
         "filtered_out_non_street": 17063,
@@ -45,19 +45,66 @@
         "load_centreline_round_scale": 1000,
         "load_centreline_max_detail_keys": 50
       },
+      "acquired": {
+        "record_fields": {
+          "ckan:toronto-centreline-tcl-shp": [
+            "_id1",
+            "CENTREL2",
+            "LINEAR_3",
+            "LINEAR_4",
+            "LINEAR_5",
+            "ADDRESS6",
+            "ADDRESS7",
+            "PARITY_8",
+            "PARITY_9",
+            "LO_NUM_10",
+            "HI_NUM_11",
+            "LO_NUM_12",
+            "HI_NUM_13",
+            "BEGIN_A14",
+            "END_ADD15",
+            "BEGIN_A16",
+            "END_ADD17",
+            "BEGIN_A18",
+            "END_ADD19",
+            "BEGIN_A20",
+            "END_ADD21",
+            "LOW_NUM22",
+            "HIGH_NU23",
+            "LOW_NUM24",
+            "HIGH_NU25",
+            "LINEAR_26",
+            "LINEAR_27",
+            "LINEAR_28",
+            "LINEAR_29",
+            "LINEAR_30",
+            "FROM_IN31",
+            "TO_INTE32",
+            "ONEWAY_33",
+            "ONEWAY_34",
+            "FEATURE35",
+            "FEATURE36",
+            "JURISDI37",
+            "CENTREL38",
+            "OBJECTI39",
+            "MI_PRIN40"
+          ]
+        }
+      },
       "terminal": "loaded_preserved_empty_guard",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "f9063dcecd837216c7e009e4d86451d0593114c4",
+      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 2,
+      "errors": [],
       "warnings": [
         "centreline_unknown_feature_code_count: 1",
         "centreline_unknown_jurisdiction_count: 97"
       ],
       "audit_table": {
-        "phase": 63,
+        "phase": 8,
         "name": "Toronto Centreline",
         "verdict": "WARN",
         "rows": [
@@ -66,84 +113,96 @@
             "value": "https://open.toronto.ca/open-data-license/",
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_load_skipped",
             "value": null,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_override_feature_count_drift_present",
             "value": false,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_no_cache_validators",
             "value": "last-modified+etag",
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_dataset_age_days",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_feature_count_raw",
             "value": 64393,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_bad_centreline_id_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_null_geometry_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_unknown_feature_code_count",
             "value": 1,
             "threshold": "viol == 0",
             "status": "WARN",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_unknown_jurisdiction_count",
             "value": 97,
             "threshold": "viol == 0",
             "status": "WARN",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_duplicate_centreline_id_count",
             "value": 0,
             "threshold": "viol == 0",
             "status": "PASS",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_feature_count_filtered",
             "value": 47330,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_count_drift_pct",
@@ -154,7 +213,8 @@
             "order_guarantee": {
               "anchor": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT",
               "guarantee": "The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads."
-            }
+            },
+            "observed": "before_write"
           },
           {
             "metric": "centreline_geometry_skipped_pct",
@@ -165,7 +225,8 @@
             "order_guarantee": {
               "anchor": "L8 abort-before-DELETE if invalid >5%",
               "guarantee": "Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened)."
-            }
+            },
+            "observed": "before_write"
           },
           {
             "metric": "f_c1_empty_temp_guard_fired_first_run",
@@ -176,7 +237,8 @@
             "order_guarantee": {
               "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
               "guarantee": "The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched."
-            }
+            },
+            "observed": "before_write"
           },
           {
             "metric": "f_c1_empty_temp_guard_fired",
@@ -187,45 +249,62 @@
             "order_guarantee": {
               "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
               "guarantee": "The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage."
-            }
+            },
+            "observed": "before_write"
           },
           {
             "metric": "centreline_geometry_collection_extracted",
             "value": 0,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_delete_skipped_empty_guard",
             "value": false,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_features_inserted",
             "value": 47330,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
           },
           {
             "metric": "centreline_features_deleted",
             "value": 47330,
             "threshold": "viol == 0",
             "status": "INFO",
-            "source": "check"
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "schema_drift:ckan:toronto-centreline-tcl-shp",
+            "value": "no_baseline: the prior run recorded no record_fields",
+            "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+            "status": "INFO"
+          },
+          {
+            "metric": "retired_var_row_present:centrelineMinFeatureCount",
+            "value": "\"centrelineMinFeatureCount\" (retired 2026-09-24, LC-D3) has no logic_variables row",
+            "threshold": "no logic_variables row for a retired name",
+            "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 426.48,
+            "value": 963.28,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 110977,
+            "value": 49134,
             "threshold": null,
             "status": "INFO"
           }
@@ -271,16 +350,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_centreline]\",\"msg\":\"[load_centreline] target: load_centreline (descriptor.database) → database=postgres user=postgres migrations=245 (floor 175)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_centreline]\",\"msg\":\"acquired 64393 feature(s) (117715801 bytes, md5 1da4549b…)\"}\nPIPELINE_SUMMARY:{\"records_total\":47330,\"records_new\":47330,\"records_updated\":0,\"records_meta\":{\"centreline_load\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"last_modified\":\"Fri, 02 Oct 2026 18:14:44 GMT\",\"etag\":\"\\\"1790964884.644-117715801-1305219654\\\"\",\"content_hash\":\"1da4549b223eb577a79c57ba1f0f97dc\",\"feature_count_raw\":64393,\"feature_count_filtered\":47330,\"filtered_out_non_street\":17063,\"filtered_out_federal\":0,\"unknown_feature_code_count\":1,\"unknown_jurisdiction_count\":97,\"features_inserted\":47330,\"features_updated\":0,\"features_deleted\":47330,\"invalid_geometry_skipped\":0,\"delete_skipped_empty_guard\":false,\"f_c1_empty_temp_guard_fired\":false,\"drift_check_passed\":true},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_centreline_dataset_age_warn_days\":7,\"load_centreline_count_drift_fail_pct\":0.5,\"load_centreline_invalid_geometry_fail_pct\":0.05,\"load_centreline_download_timeout_ms\":600000,\"load_centreline_download_retries\":2,\"load_centreline_download_retry_backoff_ms\":0,\"load_centreline_round_scale\":1000,\"load_centreline_max_detail_keys\":50},\"terminal\":\"loaded_preserved_empty_guard\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"f9063dcecd837216c7e009e4d86451d0593114c4\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"warnings\":[\"centreline_unknown_feature_code_count: 1\",\"centreline_unknown_jurisdiction_count: 97\"],\"audit_table\":{\"phase\":63,\"name\":\"Toronto Centreline\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_dataset_age_days\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_feature_count_raw\",\"value\":64393,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_bad_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_unknown_feature_code_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"centreline_unknown_jurisdiction_count\",\"value\":97,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\"},{\"metric\":\"centreline_duplicate_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\"},{\"metric\":\"centreline_feature_count_filtered\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads.\"}},{\"metric\":\"centreline_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"L8 abort-before-DELETE if invalid >5%\",\"guarantee\":\"Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened).\"}},{\"metric\":\"f_c1_empty_temp_guard_fired_first_run\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched.\"}},{\"metric\":\"f_c1_empty_temp_guard_fired\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage.\"}},{\"metric\":\"centreline_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_features_inserted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"centreline_features_deleted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":426.48,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":110977,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"toronto_centreline\":[\"source_id\",\"geom\",\"linear_name_full\",\"linear_name\",\"linear_name_type\",\"linear_name_dir\",\"feature_code_desc\",\"jurisdiction\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"lo_num_r\",\"hi_num_r\",\"parity_l\",\"parity_r\",\"oneway_dir_code_desc\",\"source_dataset_version\",\"updated_at\",\"created_at\"]},\"external\":[\"ckan:toronto-centreline-tcl-shp\"]}\n\n[load_centreline] completed in 111.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_centreline]\",\"msg\":\"[load_centreline] target: load_centreline (descriptor.database) → database=postgres user=postgres migrations=247 (floor 175)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_centreline]\",\"msg\":\"acquired 64393 feature(s) (117715801 bytes, md5 2ac6f399…)\"}\nPIPELINE_SUMMARY:{\"records_total\":47330,\"records_new\":47330,\"records_updated\":0,\"records_meta\":{\"centreline_load\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"2ac6f3990d9925171db071303acb1a7d\",\"last_modified\":\"Mon, 05 Oct 2026 18:15:17 GMT\",\"etag\":\"\\\"1791224117.757-117715801-1305219654\\\"\",\"content_hash\":\"2ac6f3990d9925171db071303acb1a7d\",\"feature_count_raw\":64393,\"feature_count_filtered\":47330,\"filtered_out_non_street\":17063,\"filtered_out_federal\":0,\"unknown_feature_code_count\":1,\"unknown_jurisdiction_count\":97,\"features_inserted\":47330,\"features_updated\":0,\"features_deleted\":47330,\"invalid_geometry_skipped\":0,\"delete_skipped_empty_guard\":false,\"f_c1_empty_temp_guard_fired\":false,\"drift_check_passed\":true},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_centreline_dataset_age_warn_days\":7,\"load_centreline_count_drift_fail_pct\":0.5,\"load_centreline_invalid_geometry_fail_pct\":0.05,\"load_centreline_download_timeout_ms\":600000,\"load_centreline_download_retries\":2,\"load_centreline_download_retry_backoff_ms\":0,\"load_centreline_round_scale\":1000,\"load_centreline_max_detail_keys\":50},\"acquired\":{\"record_fields\":{\"ckan:toronto-centreline-tcl-shp\":[\"_id1\",\"CENTREL2\",\"LINEAR_3\",\"LINEAR_4\",\"LINEAR_5\",\"ADDRESS6\",\"ADDRESS7\",\"PARITY_8\",\"PARITY_9\",\"LO_NUM_10\",\"HI_NUM_11\",\"LO_NUM_12\",\"HI_NUM_13\",\"BEGIN_A14\",\"END_ADD15\",\"BEGIN_A16\",\"END_ADD17\",\"BEGIN_A18\",\"END_ADD19\",\"BEGIN_A20\",\"END_ADD21\",\"LOW_NUM22\",\"HIGH_NU23\",\"LOW_NUM24\",\"HIGH_NU25\",\"LINEAR_26\",\"LINEAR_27\",\"LINEAR_28\",\"LINEAR_29\",\"LINEAR_30\",\"FROM_IN31\",\"TO_INTE32\",\"ONEWAY_33\",\"ONEWAY_34\",\"FEATURE35\",\"FEATURE36\",\"JURISDI37\",\"CENTREL38\",\"OBJECTI39\",\"MI_PRIN40\"]}},\"terminal\":\"loaded_preserved_empty_guard\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"centreline_unknown_feature_code_count: 1\",\"centreline_unknown_jurisdiction_count: 97\"],\"audit_table\":{\"phase\":8,\"name\":\"Toronto Centreline\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_dataset_age_days\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_feature_count_raw\",\"value\":64393,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_bad_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_unknown_feature_code_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_unknown_jurisdiction_count\",\"value\":97,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_duplicate_centreline_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_feature_count_filtered\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads.\"},\"observed\":\"before_write\"},{\"metric\":\"centreline_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"L8 abort-before-DELETE if invalid >5%\",\"guarantee\":\"Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened).\"},\"observed\":\"before_write\"},{\"metric\":\"f_c1_empty_temp_guard_fired_first_run\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"f_c1_empty_temp_guard_fired\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run\",\"guarantee\":\"The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage.\"},\"observed\":\"before_write\"},{\"metric\":\"centreline_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_features_inserted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_features_deleted\",\"value\":47330,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:ckan:toronto-centreline-tcl-shp\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:centrelineMinFeatureCount\",\"value\":\"\\\"centrelineMinFeatureCount\\\" (retired 2026-09-24, LC-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":963.28,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":49134,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"toronto_centreline\":[\"source_id\",\"geom\",\"linear_name_full\",\"linear_name\",\"linear_name_type\",\"linear_name_dir\",\"feature_code_desc\",\"jurisdiction\",\"from_intersection_id\",\"to_intersection_id\",\"lo_num_l\",\"hi_num_l\",\"lo_num_r\",\"hi_num_r\",\"parity_l\",\"parity_r\",\"oneway_dir_code_desc\",\"source_dataset_version\",\"updated_at\",\"created_at\"]},\"external\":[\"ckan:toronto-centreline-tcl-shp\"]}\n\n[load_centreline] completed in 49.1s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2241,
+      "id": 2324,
       "pipeline": "load_centreline",
       "status": "completed_with_warnings",
-      "started_at": "2026-10-02T23:11:32.165Z",
-      "completed_at": "2026-10-02T23:13:23.094Z",
-      "duration_ms": 110980,
+      "started_at": "2026-10-06T12:14:45.199Z",
+      "completed_at": "2026-10-06T12:15:34.164Z",
+      "duration_ms": 49130,
       "records_total": 47330,
       "records_new": 47330,
       "records_updated": 0,
@@ -299,7 +378,54 @@
           "load_centreline_download_retry_backoff_ms": 0,
           "load_centreline_invalid_geometry_fail_pct": 0.05
         },
-        "code_sha": "f9063dcecd837216c7e009e4d86451d0593114c4",
+        "errors": [],
+        "acquired": {
+          "record_fields": {
+            "ckan:toronto-centreline-tcl-shp": [
+              "_id1",
+              "CENTREL2",
+              "LINEAR_3",
+              "LINEAR_4",
+              "LINEAR_5",
+              "ADDRESS6",
+              "ADDRESS7",
+              "PARITY_8",
+              "PARITY_9",
+              "LO_NUM_10",
+              "HI_NUM_11",
+              "LO_NUM_12",
+              "HI_NUM_13",
+              "BEGIN_A14",
+              "END_ADD15",
+              "BEGIN_A16",
+              "END_ADD17",
+              "BEGIN_A18",
+              "END_ADD19",
+              "BEGIN_A20",
+              "END_ADD21",
+              "LOW_NUM22",
+              "HIGH_NU23",
+              "LOW_NUM24",
+              "HIGH_NU25",
+              "LINEAR_26",
+              "LINEAR_27",
+              "LINEAR_28",
+              "LINEAR_29",
+              "LINEAR_30",
+              "FROM_IN31",
+              "TO_INTE32",
+              "ONEWAY_33",
+              "ONEWAY_34",
+              "FEATURE35",
+              "FEATURE36",
+              "JURISDI37",
+              "CENTREL38",
+              "OBJECTI39",
+              "MI_PRIN40"
+            ]
+          }
+        },
+        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
         "terminal": "loaded_preserved_empty_guard",
         "warnings": [
           "centreline_unknown_feature_code_count: 1",
@@ -314,6 +440,7 @@
               "metric": "dataset_source_license",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -321,6 +448,7 @@
               "metric": "centreline_load_skipped",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -328,6 +456,7 @@
               "metric": "centreline_override_feature_count_drift_present",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -335,6 +464,7 @@
               "metric": "centreline_no_cache_validators",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -342,6 +472,7 @@
               "metric": "centreline_dataset_age_days",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -349,6 +480,7 @@
               "metric": "centreline_feature_count_raw",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -356,6 +488,7 @@
               "metric": "centreline_bad_centreline_id_count",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -363,6 +496,7 @@
               "metric": "centreline_null_geometry_count",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -370,6 +504,7 @@
               "metric": "centreline_unknown_feature_code_count",
               "source": "check",
               "status": "WARN",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -377,6 +512,7 @@
               "metric": "centreline_unknown_jurisdiction_count",
               "source": "check",
               "status": "WARN",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -384,6 +520,7 @@
               "metric": "centreline_duplicate_centreline_id_count",
               "source": "check",
               "status": "PASS",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -391,6 +528,7 @@
               "metric": "centreline_feature_count_filtered",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -398,6 +536,7 @@
               "metric": "centreline_count_drift_pct",
               "source": "check",
               "status": "PASS",
+              "observed": "before_write",
               "threshold": "pct <= 0.5",
               "order_guarantee": {
                 "anchor": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT",
@@ -409,6 +548,7 @@
               "metric": "centreline_geometry_skipped_pct",
               "source": "check",
               "status": "PASS",
+              "observed": "before_write",
               "threshold": "pct <= 0.05",
               "order_guarantee": {
                 "anchor": "L8 abort-before-DELETE if invalid >5%",
@@ -420,6 +560,7 @@
               "metric": "f_c1_empty_temp_guard_fired_first_run",
               "source": "check",
               "status": "PASS",
+              "observed": "before_write",
               "threshold": "viol == 0",
               "order_guarantee": {
                 "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
@@ -431,6 +572,7 @@
               "metric": "f_c1_empty_temp_guard_fired",
               "source": "check",
               "status": "PASS",
+              "observed": "before_write",
               "threshold": "viol == 0",
               "order_guarantee": {
                 "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
@@ -442,6 +584,7 @@
               "metric": "centreline_geometry_collection_extracted",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -449,6 +592,7 @@
               "metric": "centreline_delete_skipped_empty_guard",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -456,6 +600,7 @@
               "metric": "centreline_features_inserted",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
@@ -463,22 +608,35 @@
               "metric": "centreline_features_deleted",
               "source": "check",
               "status": "INFO",
+              "observed": "after_write",
               "threshold": "viol == 0"
             },
             {
-              "value": 426.48,
+              "value": "no_baseline: the prior run recorded no record_fields",
+              "metric": "schema_drift:ckan:toronto-centreline-tcl-shp",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header"
+            },
+            {
+              "value": "\"centrelineMinFeatureCount\" (retired 2026-09-24, LC-D3) has no logic_variables row",
+              "metric": "retired_var_row_present:centrelineMinFeatureCount",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name"
+            },
+            {
+              "value": 963.28,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 110977,
+              "value": 49134,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
             }
           ],
-          "phase": 63,
+          "phase": 8,
           "verdict": "WARN"
         },
         "pool_errors": 0,
@@ -486,10 +644,10 @@
         "checks_failed": 0,
         "checks_warned": 2,
         "centreline_load": {
-          "etag": "\"1790964884.644-117715801-1305219654\"",
-          "content_hash": "1da4549b223eb577a79c57ba1f0f97dc",
+          "etag": "\"1791224117.757-117715801-1305219654\"",
+          "content_hash": "2ac6f3990d9925171db071303acb1a7d",
           "spec_version": "1.1",
-          "last_modified": "Fri, 02 Oct 2026 18:14:44 GMT",
+          "last_modified": "Mon, 05 Oct 2026 18:15:17 GMT",
           "features_deleted": 47330,
           "features_updated": 0,
           "feature_count_raw": 64393,
@@ -497,7 +655,7 @@
           "drift_check_passed": true,
           "filtered_out_federal": 0,
           "feature_count_filtered": 47330,
-          "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+          "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
           "filtered_out_non_street": 17063,
           "invalid_geometry_skipped": 0,
           "delete_skipped_empty_guard": false,
@@ -509,12 +667,12 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2240,
+  "pipeline_runs_max_id_before": 2323,
   "table_state": [
     {
       "table": "toronto_centreline",
       "row_count": 47330,
-      "content_hash": "10b144c365ccd9d32874abf0ee09c7b4",
+      "content_hash": "dc6db75b5ee265bd996b8a192d31729c",
       "order_by": "explicit",
       "order_columns": [
         "source_id"
@@ -544,7 +702,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "toronto_centreline": 582
+    "toronto_centreline": 332
   },
   "table_specs": {
     "toronto_centreline": {
@@ -598,7 +756,7 @@
     }
   ],
   "invariants_file": "docs/reports/golden/load_centreline/invariants.json",
-  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "db_target": "127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -620,12 +778,59 @@
     "exit_code": 0,
     "summary": {
       "records_meta": {
+        "acquired": {
+          "record_fields": {
+            "ckan:toronto-centreline-tcl-shp": [
+              "_id1",
+              "CENTREL2",
+              "LINEAR_3",
+              "LINEAR_4",
+              "LINEAR_5",
+              "ADDRESS6",
+              "ADDRESS7",
+              "PARITY_8",
+              "PARITY_9",
+              "LO_NUM_10",
+              "HI_NUM_11",
+              "LO_NUM_12",
+              "HI_NUM_13",
+              "BEGIN_A14",
+              "END_ADD15",
+              "BEGIN_A16",
+              "END_ADD17",
+              "BEGIN_A18",
+              "END_ADD19",
+              "BEGIN_A20",
+              "END_ADD21",
+              "LOW_NUM22",
+              "HIGH_NU23",
+              "LOW_NUM24",
+              "HIGH_NU25",
+              "LINEAR_26",
+              "LINEAR_27",
+              "LINEAR_28",
+              "LINEAR_29",
+              "LINEAR_30",
+              "FROM_IN31",
+              "TO_INTE32",
+              "ONEWAY_33",
+              "ONEWAY_34",
+              "FEATURE35",
+              "FEATURE36",
+              "JURISDI37",
+              "CENTREL38",
+              "OBJECTI39",
+              "MI_PRIN40"
+            ]
+          }
+        },
         "audit_table": {
           "name": "Toronto Centreline",
-          "phase": 63,
+          "phase": 8,
           "rows": [
             {
               "metric": "dataset_source_license",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -633,6 +838,7 @@
             },
             {
               "metric": "centreline_load_skipped",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -640,6 +846,7 @@
             },
             {
               "metric": "centreline_override_feature_count_drift_present",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -647,6 +854,7 @@
             },
             {
               "metric": "centreline_no_cache_validators",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -654,6 +862,7 @@
             },
             {
               "metric": "centreline_dataset_age_days",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -661,6 +870,7 @@
             },
             {
               "metric": "centreline_feature_count_raw",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -668,6 +878,7 @@
             },
             {
               "metric": "centreline_bad_centreline_id_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -675,6 +886,7 @@
             },
             {
               "metric": "centreline_null_geometry_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -682,6 +894,7 @@
             },
             {
               "metric": "centreline_unknown_feature_code_count",
+              "observed": "after_write",
               "source": "check",
               "status": "WARN",
               "threshold": "viol == 0",
@@ -689,6 +902,7 @@
             },
             {
               "metric": "centreline_unknown_jurisdiction_count",
+              "observed": "after_write",
               "source": "check",
               "status": "WARN",
               "threshold": "viol == 0",
@@ -696,6 +910,7 @@
             },
             {
               "metric": "centreline_duplicate_centreline_id_count",
+              "observed": "after_write",
               "source": "check",
               "status": "PASS",
               "threshold": "viol == 0",
@@ -703,6 +918,7 @@
             },
             {
               "metric": "centreline_feature_count_filtered",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -710,6 +926,7 @@
             },
             {
               "metric": "centreline_count_drift_pct",
+              "observed": "before_write",
               "order_guarantee": {
                 "anchor": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT",
                 "guarantee": "The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads."
@@ -721,6 +938,7 @@
             },
             {
               "metric": "centreline_geometry_skipped_pct",
+              "observed": "before_write",
               "order_guarantee": {
                 "anchor": "L8 abort-before-DELETE if invalid >5%",
                 "guarantee": "Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened)."
@@ -732,6 +950,7 @@
             },
             {
               "metric": "f_c1_empty_temp_guard_fired_first_run",
+              "observed": "before_write",
               "order_guarantee": {
                 "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
                 "guarantee": "The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched."
@@ -743,6 +962,7 @@
             },
             {
               "metric": "f_c1_empty_temp_guard_fired",
+              "observed": "before_write",
               "order_guarantee": {
                 "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
                 "guarantee": "The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage."
@@ -754,6 +974,7 @@
             },
             {
               "metric": "centreline_geometry_collection_extracted",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -761,6 +982,7 @@
             },
             {
               "metric": "centreline_delete_skipped_empty_guard",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -768,6 +990,7 @@
             },
             {
               "metric": "centreline_features_inserted",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
@@ -775,19 +998,32 @@
             },
             {
               "metric": "centreline_features_deleted",
+              "observed": "after_write",
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
               "value": 47330
+            },
+            {
+              "metric": "schema_drift:ckan:toronto-centreline-tcl-shp",
+              "status": "INFO",
+              "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+              "value": "no_baseline: the prior run recorded no record_fields"
+            },
+            {
+              "metric": "retired_var_row_present:centrelineMinFeatureCount",
+              "status": "INFO",
+              "threshold": "no logic_variables row for a retired name",
+              "value": "\"centrelineMinFeatureCount\" (retired 2026-09-24, LC-D3) has no logic_variables row"
             }
           ],
           "verdict": "WARN"
         },
         "centreline_load": {
-          "content_hash": "1da4549b223eb577a79c57ba1f0f97dc",
+          "content_hash": "2ac6f3990d9925171db071303acb1a7d",
           "delete_skipped_empty_guard": false,
           "drift_check_passed": true,
-          "etag": "\"1790964884.644-117715801-1305219654\"",
+          "etag": "\"1791224117.757-117715801-1305219654\"",
           "f_c1_empty_temp_guard_fired": false,
           "feature_count_filtered": 47330,
           "feature_count_raw": 64393,
@@ -797,8 +1033,8 @@
           "filtered_out_federal": 0,
           "filtered_out_non_street": 17063,
           "invalid_geometry_skipped": 0,
-          "last_modified": "Fri, 02 Oct 2026 18:14:44 GMT",
-          "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+          "last_modified": "Mon, 05 Oct 2026 18:15:17 GMT",
+          "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
           "spec_version": "1.1",
           "unknown_feature_code_count": 1,
           "unknown_jurisdiction_count": 97
@@ -815,6 +1051,7 @@
           "load_centreline_max_detail_keys": 50,
           "load_centreline_round_scale": 1000
         },
+        "errors": [],
         "gate": {
           "gated_skip": false,
           "reason": "loaded"
@@ -870,12 +1107,59 @@
         "error_message": null,
         "pipeline": "load_centreline",
         "records_meta": {
+          "acquired": {
+            "record_fields": {
+              "ckan:toronto-centreline-tcl-shp": [
+                "_id1",
+                "CENTREL2",
+                "LINEAR_3",
+                "LINEAR_4",
+                "LINEAR_5",
+                "ADDRESS6",
+                "ADDRESS7",
+                "PARITY_8",
+                "PARITY_9",
+                "LO_NUM_10",
+                "HI_NUM_11",
+                "LO_NUM_12",
+                "HI_NUM_13",
+                "BEGIN_A14",
+                "END_ADD15",
+                "BEGIN_A16",
+                "END_ADD17",
+                "BEGIN_A18",
+                "END_ADD19",
+                "BEGIN_A20",
+                "END_ADD21",
+                "LOW_NUM22",
+                "HIGH_NU23",
+                "LOW_NUM24",
+                "HIGH_NU25",
+                "LINEAR_26",
+                "LINEAR_27",
+                "LINEAR_28",
+                "LINEAR_29",
+                "LINEAR_30",
+                "FROM_IN31",
+                "TO_INTE32",
+                "ONEWAY_33",
+                "ONEWAY_34",
+                "FEATURE35",
+                "FEATURE36",
+                "JURISDI37",
+                "CENTREL38",
+                "OBJECTI39",
+                "MI_PRIN40"
+              ]
+            }
+          },
           "audit_table": {
             "name": "Toronto Centreline",
-            "phase": 63,
+            "phase": 8,
             "rows": [
               {
                 "metric": "dataset_source_license",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -883,6 +1167,7 @@
               },
               {
                 "metric": "centreline_load_skipped",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -890,6 +1175,7 @@
               },
               {
                 "metric": "centreline_override_feature_count_drift_present",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -897,6 +1183,7 @@
               },
               {
                 "metric": "centreline_no_cache_validators",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -904,6 +1191,7 @@
               },
               {
                 "metric": "centreline_dataset_age_days",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -911,6 +1199,7 @@
               },
               {
                 "metric": "centreline_feature_count_raw",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -918,6 +1207,7 @@
               },
               {
                 "metric": "centreline_bad_centreline_id_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -925,6 +1215,7 @@
               },
               {
                 "metric": "centreline_null_geometry_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -932,6 +1223,7 @@
               },
               {
                 "metric": "centreline_unknown_feature_code_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "WARN",
                 "threshold": "viol == 0",
@@ -939,6 +1231,7 @@
               },
               {
                 "metric": "centreline_unknown_jurisdiction_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "WARN",
                 "threshold": "viol == 0",
@@ -946,6 +1239,7 @@
               },
               {
                 "metric": "centreline_duplicate_centreline_id_count",
+                "observed": "after_write",
                 "source": "check",
                 "status": "PASS",
                 "threshold": "viol == 0",
@@ -953,6 +1247,7 @@
               },
               {
                 "metric": "centreline_feature_count_filtered",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -960,6 +1255,7 @@
               },
               {
                 "metric": "centreline_count_drift_pct",
+                "observed": "before_write",
                 "order_guarantee": {
                   "anchor": "CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT",
                   "guarantee": "The L7 count-delta check must FAIL BEFORE any write: a source that suddenly carries half as many streets is a publisher error, not a legal road-network change, and the operator override CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT=1 ENABLES execution but NEVER suppresses the FAIL row — so the abort must land at the pre_write gate, before the DELETE opens a transaction that would empty the network enrich-centreline reads."
@@ -971,6 +1267,7 @@
               },
               {
                 "metric": "centreline_geometry_skipped_pct",
+                "observed": "before_write",
                 "order_guarantee": {
                   "anchor": "L8 abort-before-DELETE if invalid >5%",
                   "guarantee": "Spec 62 §3.5 makes > 5% unrepairable geometry an ABORT: FAIL the run and return BEFORE entering pipeline.withTransaction, so no transaction state can dangle and the pre-existing toronto_centreline is preserved untouched. This check is scored at when:pre_write for exactly that reason — a FAIL row here with no active override skips the write entirely (no transaction is opened)."
@@ -982,6 +1279,7 @@
               },
               {
                 "metric": "f_c1_empty_temp_guard_fired_first_run",
+                "observed": "before_write",
                 "order_guarantee": {
                   "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
                   "guarantee": "The F-C1 guard runs in JS BEFORE pipeline.withTransaction begins (Spec 62 §3.7: 'Check happens in JS BEFORE this transaction begins'): on a FIRST run (no prior) with zero carried rows there is nothing to insert, and letting the DELETE open would empty the network for a publisher-side empty archive — so the abort must land before the transaction, with the target untouched."
@@ -993,6 +1291,7 @@
               },
               {
                 "metric": "f_c1_empty_temp_guard_fired",
+                "observed": "before_write",
                 "order_guarantee": {
                   "anchor": "F-C1 dual-mode (L15 / H-v1.3.2): zero-temp on subsequent run",
                   "guarantee": "The F-C1 subsequent-run arm (Spec 62 §3.7 / L15) fires BEFORE any write and PRESERVES the target: the table is left exactly as the prior run left it and the run completes WARN — so the gate must refuse the write (on_warn: skip_write) rather than open the DELETE/INSERT transaction on a zero-row temp stage."
@@ -1004,6 +1303,7 @@
               },
               {
                 "metric": "centreline_geometry_collection_extracted",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -1011,6 +1311,7 @@
               },
               {
                 "metric": "centreline_delete_skipped_empty_guard",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -1018,6 +1319,7 @@
               },
               {
                 "metric": "centreline_features_inserted",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
@@ -1025,19 +1327,32 @@
               },
               {
                 "metric": "centreline_features_deleted",
+                "observed": "after_write",
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
                 "value": 47330
+              },
+              {
+                "metric": "schema_drift:ckan:toronto-centreline-tcl-shp",
+                "status": "INFO",
+                "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header",
+                "value": "no_baseline: the prior run recorded no record_fields"
+              },
+              {
+                "metric": "retired_var_row_present:centrelineMinFeatureCount",
+                "status": "INFO",
+                "threshold": "no logic_variables row for a retired name",
+                "value": "\"centrelineMinFeatureCount\" (retired 2026-09-24, LC-D3) has no logic_variables row"
               }
             ],
             "verdict": "WARN"
           },
           "centreline_load": {
-            "content_hash": "1da4549b223eb577a79c57ba1f0f97dc",
+            "content_hash": "2ac6f3990d9925171db071303acb1a7d",
             "delete_skipped_empty_guard": false,
             "drift_check_passed": true,
-            "etag": "\"1790964884.644-117715801-1305219654\"",
+            "etag": "\"1791224117.757-117715801-1305219654\"",
             "f_c1_empty_temp_guard_fired": false,
             "feature_count_filtered": 47330,
             "feature_count_raw": 64393,
@@ -1047,8 +1362,8 @@
             "filtered_out_federal": 0,
             "filtered_out_non_street": 17063,
             "invalid_geometry_skipped": 0,
-            "last_modified": "Fri, 02 Oct 2026 18:14:44 GMT",
-            "source_dataset_version": "1da4549b223eb577a79c57ba1f0f97dc",
+            "last_modified": "Mon, 05 Oct 2026 18:15:17 GMT",
+            "source_dataset_version": "2ac6f3990d9925171db071303acb1a7d",
             "spec_version": "1.1",
             "unknown_feature_code_count": 1,
             "unknown_jurisdiction_count": 97
@@ -1065,6 +1380,7 @@
             "load_centreline_max_detail_keys": 50,
             "load_centreline_round_scale": 1000
           },
+          "errors": [],
           "gate": {
             "gated_skip": false,
             "reason": "loaded"
@@ -1084,8 +1400,8 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_centreline] target: load_centreline (descriptor.database) → database=postgres user=postgres migrations=245 (floor 175)\",\"tag\":\"[load_centreline]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"acquired 64393 feature(s) (117715801 bytes, md5 1da4549b…)\",\"tag\":\"[load_centreline]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_centreline] target: load_centreline (descriptor.database) → database=postgres user=postgres migrations=247 (floor 175)\",\"tag\":\"[load_centreline]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired 64393 feature(s) (117715801 bytes, md5 2ac6f399…)\",\"tag\":\"[load_centreline]\"}",
       "[load_centreline] completed in <DUR>"
     ],
     "table_state": [
@@ -1110,7 +1426,7 @@
           "oneway_dir_code_desc",
           "source_dataset_version"
         ],
-        "content_hash": "10b144c365ccd9d32874abf0ee09c7b4",
+        "content_hash": "dc6db75b5ee265bd996b8a192d31729c",
         "order_by": "explicit",
         "order_columns": [
           "source_id"
@@ -1147,12 +1463,12 @@
     "rows": [],
     "reason": "no zero_writes target"
   },
-  "source_fingerprint": "2a241208d39e8a10ce3e1f9640614b693401cbeefb9f711462b11385ba2b5c04",
+  "source_fingerprint": "3edbe516b076c85f4f1c0bdf95155cac089b2f2e7e0cc73d16a7727a5c0ea995",
   "fingerprint_files": [
     "scripts/lib/compute/load-centreline.js",
     "scripts/load-centreline.descriptor.json",
     "scripts/load-centreline.js",
     "scripts/load-centreline.notes.json"
   ],
-  "lib_fingerprint": "1962e41bd0c68174440cfbbbd01bd3d33b1866b391e26bcafa9bef1bbbfa6910"
+  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
 }

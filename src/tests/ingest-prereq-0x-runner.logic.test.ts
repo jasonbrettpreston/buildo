@@ -41,7 +41,7 @@ const noopLog = { info: () => {}, warn: () => {}, error: () => {} };
 
 /** The 0w lookup: an xlsx side-source, declared with a role and no key_property. */
 const LOOKUP = {
-  id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup', cache: 'none',
+  id: 'l', kind: 'http_file', url: 'http://ex/p.xlsx', format: 'xlsx', role: 'lookup',
 };
 
 /**
@@ -245,7 +245,7 @@ describe('INGESTOR prerequisite 0x — runner multi-primary (part 1: binding + l
         mutate: (d) => {
           d.inputs.reads.externals[1] = {
             id: 'b', kind: 'filesystem', path: 'data/x.csv', format: 'csv',
-            csv_options: { bom: false, relax_quotes: false }, cache: 'none', target: 'tb',
+            csv_options: { bom: false, relax_quotes: false }, target: 'tb',
           };
         },
       },
@@ -811,15 +811,45 @@ describe('INGESTOR prerequisite 0x — runner multi-primary (part 2: skip + post
     });
   });
 
-  it('T9 — warn_row_continue status: no pre_write_gate row, one WARN primary_failed row', async () => {
+  // Re-pointed 2026-10-04 (#52, fold 19 MQ-A1 (a); orchestrator ruling): the posture's promise is
+  // proven on a primary that FAILS (its acquisition throws), not on a gate abort — a gate abort's
+  // own FAIL row is now scored from the gate pass (Rule 10), see the next test.
+  it('T9 — warn_row_continue status: a primary that THROWS is one WARN primary_failed row, no pre_write_gate row, completed_with_warnings', async () => {
     restored = stubs();
-    const { out, rows } = await fullRun(posture(H2(), 'warn_row_continue'), true);
+    const acquire = acquireLib.acquireExternal as unknown as {
+      getMockImplementation: () => ((...args: unknown[]) => unknown) | undefined;
+      mockImplementation: (fn: (...args: unknown[]) => unknown) => void;
+    };
+    const loaded = acquire.getMockImplementation();
+    let nth = 0;
+    acquire.mockImplementation(async (...args: unknown[]) => {
+      nth += 1;
+      if (nth === 1) throw new Error('forced a');
+      return loaded ? loaded(...args) : undefined;
+    });
+    const { out, rows } = await fullRun(posture(H2(), 'warn_row_continue'), false);
 
     expect(rows.filter((r) => r.metric === 'pre_write_gate').length).toBe(0);
     const failed = rows.filter((r) => r.metric === 'primary_failed:a');
     expect(failed.length).toBe(1);
     expect(failed[0]!.status).toBe('WARN');
+    expect(String(failed[0]!.value)).toContain('forced a');
     expect(out.status).toBe('completed_with_warnings');
+  });
+
+  it('T9b — warn_row_continue + an ABORTING gate: the gate pass\'s own errored FAIL row is scored (#52, Rule 10) ⇒ failed; the WARN primary_failed row still names the abort', async () => {
+    restored = stubs();
+    const { out, rows } = await fullRun(posture(H2(), 'warn_row_continue'), true);
+
+    const check = rows.filter((r) => r.metric === 'ravine_count_drift_pct');
+    expect(check.length).toBe(1);
+    expect(check[0]!.status).toBe('FAIL');
+    expect(check[0]!.errored).toBe(true);
+    expect(check[0]!.observed).toBe('before_write');
+    const failed = rows.filter((r) => r.metric === 'primary_failed:a');
+    expect(failed.length).toBe(1);
+    expect(failed[0]!.status).toBe('WARN');
+    expect(out.status).toBe('failed');
   });
 
   it('T9 — fail_row_continue status: no pre_write_gate row, one FAIL errored row', async () => {

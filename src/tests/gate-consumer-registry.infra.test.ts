@@ -313,8 +313,8 @@ describe('gate D — one resolver (the runtime resolveCounterSource, never a mir
 // (`scripts/steps/_schema/src-sql-ledger.json`) supplies one `src_sql` row per
 // (src file read, effective-ledger column writer); a src read whose table has a
 // step writer but whose COLUMN has none is an `unproduced` read, printed and
-// counted on every run. Its posture is REPORT-ONLY until ONE named commit (the
-// FLEET-2 landing commit) flips it hard (UNPRODUCED_POSTURE).
+// counted on every run. ONE named commit (the FLEET-2 landing commit) flipped it
+// hard (UNPRODUCED_POSTURE).
 // ---------------------------------------------------------------------------
 describe('gate D — consumer source #5: src/ SQL readers (kind table) + unproduced posture (P1-C6, Fold 14)', () => {
   const eff = {
@@ -340,8 +340,8 @@ describe('gate D — consumer source #5: src/ SQL readers (kind table) + unprodu
     ).toEqual({ ok: true });
   });
 
-  it('T11c: UNPRODUCED_POSTURE — report-only, flips hard at ONE named commit, frozen', () => {
-    expect(reg.UNPRODUCED_POSTURE.mode).toBe('report-only');
+  it('T11c: UNPRODUCED_POSTURE — HARD since the FLEET-2 landing commit (the ONE named flip, fold 14 P1-C6), frozen', () => {
+    expect(reg.UNPRODUCED_POSTURE.mode).toBe('hard');
     expect(reg.UNPRODUCED_POSTURE.flips_hard_at).toMatch(/FLEET-2 landing commit/);
     expect(Object.isFrozen(reg.UNPRODUCED_POSTURE)).toBe(true);
   });
@@ -351,18 +351,22 @@ describe('gate D — consumer source #5: src/ SQL readers (kind table) + unprodu
     const hard = reg.allConsumerViolations(registry, REPO_ROOT, {
       effective: eff,
       posture: { mode: 'hard', flips_hard_at: 'x' },
+      inserterTables: ['t'],
     });
     expect(hard.map((v: { item: string }) => v.item)).toContain('unproduced.src/x.ts.t.c');
     const report = reg.allConsumerViolations(registry, REPO_ROOT, {
       effective: eff,
-      posture: reg.UNPRODUCED_POSTURE,
+      posture: { mode: 'report-only', flips_hard_at: 'x' },
     });
     expect(report.map((v: { item: string }) => v.item)).not.toContain('unproduced.src/x.ts.t.c');
 
-    const contracts = reg.checkConsumerContracts(registry, [], REPO_ROOT, { effective: eff });
-    expect(contracts.detail).toContain('1 unproduced src read(s) (report-only until the FLEET-2 landing commit');
+    const contracts = reg.checkConsumerContracts(registry, [], REPO_ROOT, { effective: eff, inserterTables: ['t'] });
+    expect(contracts.detail).toContain('1 unproduced src read(s) (hard until the FLEET-2 landing commit');
     expect(contracts.detail).toContain('unproduced:src/x.ts:t.c');
     expect(contracts.unproduced).toEqual(['unproduced:src/x.ts:t.c']);
+    // `unallowed[]` entries are bare violations (`{step, item}`) — `matchLedger`
+    // only wraps them in `{violation, row}` on the ALLOWED side.
+    expect(contracts.unallowed.map((v: { item: string }) => v.item)).toContain('unproduced.src/x.ts.t.c'); // hard: the default posture now REDs it
   });
 
   it('T11e: live — the fresh registry carries src_sql rows from the committed src-sql-ledger × the effective ledger', () => {
@@ -374,5 +378,162 @@ describe('gate D — consumer source #5: src/ SQL readers (kind table) + unprodu
       expect(String(row.consumer).startsWith('src/')).toBe(true);
     }
     expect(fresh.generated_from).toContain('scripts/steps/_schema/src-sql-ledger.json × effectiveLedger() column writers');
+  });
+});
+
+// MQ-A5 (plan fold 19 row 5; ASSEMBLY compliance row A5): an unproduced read is report-only ONLY when
+// no converted descriptor declares an INSERTING write target on its table — a predicate over declared
+// write classes, never a column list. Printed under its own prefix (UNPRODUCED-UNWITNESSED), counted
+// every run, ceiling-locked; it goes hard by itself when the table's inserter converts.
+describe('gate D — MQ-A5 unproduced-read predicate (converted inserter on the table)', () => {
+  const eff = {
+    inchain: { p: { writes: { t: ['a'] } }, q: { writes: { w: ['a'] } } },
+    src: { 'src/x.ts': { reads: { t: ['c'], w: ['d'] } } },
+  };
+  const registry = { rows: [] };
+  const hardPosture = { mode: 'hard', flips_hard_at: 'x' };
+
+  it('A5-1: the inserting / non-inserting class sets partition the frozen write-class enum', () => {
+    const schema = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step.schema.json'), 'utf8'));
+    const enumVals: string[] = schema.definitions.writeDiscipline.properties.class.enum;
+    const ins: string[] = [...reg.ROW_INSERTING_CLASSES];
+    const non: string[] = [...reg.NON_INSERTING_CLASSES];
+    expect([...ins, ...non].sort()).toEqual([...enumVals].sort());
+    expect(ins.filter((c) => non.includes(c))).toEqual([]);
+    expect(Object.isFrozen(reg.ROW_INSERTING_CLASSES)).toBe(true);
+    expect(ins).toContain('guarded_upsert');
+    expect(non).toContain('set_based_join_update');
+  });
+
+  it('A5-2: convertedInserterTables keeps only tables with an inserting write class', () => {
+    const descs = [
+      { outputs: { writes: [{ table: 't', write_discipline: { class: 'guarded_upsert' } }, { table: 'w', write_discipline: { class: 'set_based_join_update' } }] } },
+      { outputs: 'none' },
+      { outputs: { writes: [{ table: 'z', write_discipline: { class: 'staging_full_replace' } }] } },
+    ];
+    expect(reg.convertedInserterTables(descs)).toEqual(['t', 'z']);
+  });
+
+  it('A5-3: splitUnproduced — a table with a converted inserter is hard; otherwise UNPRODUCED-UNWITNESSED', () => {
+    expect(reg.splitUnproduced(['unproduced:src/x.ts:t.c', 'unproduced:src/x.ts:w.d'], ['t'])).toEqual({
+      hard: ['unproduced:src/x.ts:t.c'],
+      unwitnessed: ['UNPRODUCED-UNWITNESSED:src/x.ts:w.d'],
+    });
+  });
+
+  it('A5-4: hard posture REDs only the read whose table has a converted inserter; the other is printed + counted, not a violation', () => {
+    const v = reg.allConsumerViolations(registry, REPO_ROOT, { effective: eff, posture: hardPosture, inserterTables: ['t'] });
+    const items = v.map((x: { item: string }) => x.item);
+    expect(items).toContain('unproduced.src/x.ts.t.c');
+    expect(items).not.toContain('unproduced.src/x.ts.w.d');
+    const c = reg.checkConsumerContracts(registry, [], REPO_ROOT, { effective: eff, inserterTables: ['t'] });
+    expect(c.unproducedHard).toEqual(['unproduced:src/x.ts:t.c']);
+    expect(c.unproducedUnwitnessed).toEqual(['UNPRODUCED-UNWITNESSED:src/x.ts:w.d']);
+    expect(c.detail).toContain('UNPRODUCED-UNWITNESSED: 1');
+    expect(c.detail).toContain('UNPRODUCED-UNWITNESSED:src/x.ts:w.d');
+  });
+
+  it('A5-5 auto-close: when the table gains a converted inserter the read goes hard by itself', () => {
+    const v = reg.allConsumerViolations(registry, REPO_ROOT, { effective: eff, posture: hardPosture, inserterTables: ['t', 'w'] });
+    expect(v.map((x: { item: string }) => x.item)).toContain('unproduced.src/x.ts.w.d');
+  });
+
+  // Ceiling lock: the committed count the live UNPRODUCED-UNWITNESSED count may only equal or go
+  // below. Raising it needs a new Spec 124 §5 row + Operator-Ruling (never a silent bump).
+  const UNPRODUCED_UNWITNESSED_CEILING = 41;
+  it('A5-6 live: UNPRODUCED-UNWITNESSED count <= the committed ceiling; printed every run; every entry is on a table with no converted inserter', () => {
+    const c = reg.checkConsumerContracts(reg.readRegistry(REPO_ROOT), [], REPO_ROOT);
+    console.info(`[gate D MQ-A5] unproduced HARD: ${c.unproducedHard.length}; UNPRODUCED-UNWITNESSED: ${c.unproducedUnwitnessed.length}`);
+    for (const u of c.unproducedUnwitnessed) console.info(`  ${u}`);
+    expect(c.unproducedUnwitnessed.length).toBeLessThanOrEqual(UNPRODUCED_UNWITNESSED_CEILING);
+    expect(c.unproducedHard.length + c.unproducedUnwitnessed.length).toBe(c.unproduced.length);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T10 — LDG-10 class-2 residual (WF1 LDG-10 Step 2/3, operator O3 2026-10-03): the completeness
+// scan covers ALL of scripts/ (+ .cjs), a slug consumer row covers that step's §4.1 files
+// (stepFiles: step file, descriptor, notes, compute), and a key no CONVERTED producer emits is
+// LISTED `unconverted_producer:<file>:<key>` only when FOUND (outside a read line) in an unconverted
+// producer's source — else RED; it goes RED the moment that producer converts and emits it.
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6 (LDG-10, strict zero)
+// ---------------------------------------------------------------------------
+describe('gate D — LDG-10 corpus widening + slug→files + unconverted-producer posture (T10)', () => {
+  const RM = 'records' + '_meta';
+
+  it('T10a: the corpus walks every scripts/ source file incl. .cjs, and excludes the schema fixtures', () => {
+    const rel = reg.collectCorpusFiles(REPO_ROOT).map((a: string) => path.relative(REPO_ROOT, a).split(path.sep).join('/'));
+    expect(rel).toContain('scripts/lib/compute/enrich-heritage.js');
+    expect(rel).toContain('scripts/lib/sql-witness/resolve.cjs');
+    expect(rel).toContain('scripts/run-chain.js');
+    expect(rel).toContain('src/components/FreshnessTimeline.tsx');
+    expect(rel.some((f: string) => f.startsWith('scripts/steps/_schema/fixtures/'))).toBe(false);
+    expect(new Set(rel).size).toBe(rel.length);
+  });
+
+  it('T10b: stepFileOwners — a slug consumer row covers its compute file (enrich_heritage → scripts/lib/compute/enrich-heritage.js)', () => {
+    const owners = reg.stepFileOwners(REPO_ROOT);
+    expect([...(owners.get('scripts/lib/compute/enrich-heritage.js') ?? [])]).toContain('enrich_heritage');
+    expect([...(owners.get('scripts/enrich-centreline.js') ?? [])]).toContain('enrich_centreline');
+    const live = reg.scanConsumers(reg.readRegistry(REPO_ROOT), REPO_ROOT);
+    expect(live.filter((v: { item: string }) => v.item.startsWith('scan.scripts/lib/compute/enrich-heritage.js.'))).toEqual([]);
+    expect(live.filter((v: { item: string }) => v.item.startsWith('scan.scripts/lib/compute/enrich-ravines.js.'))).toEqual([]);
+  });
+
+  it('T10c: RED — a scripts/ reader of a CONVERTED producer\'s emitted key with no consumer row is undeclared-consumer', () => {
+    const hits = reg.scanText('scripts/fixture-reader.js', `const v = row.${RM}.heritage_load;\n`, new Set());
+    const out = reg.classifyUndeclared(hits, { convertedEmitKeys: new Set(['heritage_load']), producerSources: [] });
+    expect(out.red.map((v: { item: string }) => v.item)).toEqual(['scan.scripts/fixture-reader.js.heritage_load']);
+    expect(out.listed).toEqual([]);
+  });
+
+  it('T10d: GREEN — an unconverted producer\'s key FOUND (outside a read) in its source is LISTED, not red', () => {
+    const hits = reg.scanText('scripts/lib/compute/enrich-parcels.js', `const l = res.rows[0].${RM}.zoning_layers_loaded;\n`, new Set());
+    const out = reg.classifyUndeclared(hits, {
+      convertedEmitKeys: new Set(),
+      producerSources: [{ file: 'scripts/load-zoning.js', text: `meta.zoning_layers_loaded = { base: true };\n` }],
+    });
+    expect(out.red).toEqual([]);
+    expect(out.listed.map((v: { item: string }) => v.item)).toEqual(['unconverted_producer:scripts/lib/compute/enrich-parcels.js:zoning_layers_loaded']);
+  });
+
+  it('T10e: RED — a key found in an unconverted source ONLY on a read line (or nowhere) is red, never listed', () => {
+    const hits = reg.scanText('scripts/r.js', `x.${RM}.ghost_key;\n`, new Set());
+    const readOnly = reg.classifyUndeclared(hits, { convertedEmitKeys: new Set(), producerSources: [{ file: 'scripts/p.js', text: `y.${RM}.ghost_key;\n` }] });
+    expect(readOnly.red).toHaveLength(1);
+    expect(readOnly.listed).toEqual([]);
+    const nowhere = reg.classifyUndeclared(hits, { convertedEmitKeys: new Set(), producerSources: [] });
+    expect(nowhere.red).toHaveLength(1);
+  });
+
+  it('T10f: the listed key goes RED the moment its producer converts and emits it (closing condition, not an allowlist)', () => {
+    const hits = reg.scanText('scripts/lib/compute/enrich-parcels.js', `const l = res.rows[0].${RM}.zoning_layers_loaded;\n`, new Set());
+    const src = [{ file: 'scripts/load-zoning.js', text: `meta.zoning_layers_loaded = { base: true };\n` }];
+    expect(reg.classifyUndeclared(hits, { convertedEmitKeys: new Set(), producerSources: src }).listed).toHaveLength(1);
+    const converted = reg.classifyUndeclared(hits, { convertedEmitKeys: new Set(['zoning_layers_loaded']), producerSources: [] });
+    expect(converted.red).toHaveLength(1);
+    expect(converted.listed).toEqual([]);
+  });
+
+  it('T10g: the gate\'s own self-test strings are no longer scanned as reads, and a function PARAMETER ends a records_meta alias', () => {
+    const own = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/gates/consumer-registry.mjs'), 'utf8');
+    expect(reg.scanText('scripts/analysis/gates/consumer-registry.mjs', own, new Set())).toEqual([]);
+    const text = `const meta = r.${RM};\nmeta.real_key;\nfunction f(a, meta) {\n  meta.log.error(meta.tag);\n}\n`;
+    expect(reg.scanText('x.js', text, new Set()).map((v: { item: string }) => v.item)).toEqual(['scan.x.js.real_key']);
+  });
+
+  it('T10h: skipped/reason are CHAIN keys citing their pipeline.js writer (capture-step-golden.js reads them)', () => {
+    expect(Object.keys(reg.CHAIN_META_KEYS)).toEqual(expect.arrayContaining(['skipped', 'reason']));
+    expect(reg.scanText('scripts/analysis/capture-step-golden.js', `if (doc.summary?.${RM}?.skipped === true) {}\n`, new Set())).toEqual([]);
+  });
+
+  it('T10i: unconvertedProducerReads — the listed rows are printed and counted in the gate detail line', () => {
+    const registry = reg.readRegistry(REPO_ROOT);
+    const listed = reg.unconvertedProducerReads(registry, REPO_ROOT);
+    expect(Array.isArray(listed)).toBe(true);
+    for (const item of listed) expect(item).toMatch(/^unconverted_producer:[^:]+:[a-z_]+$/);
+    const { rows } = ledger.loadLedger(REPO_ROOT);
+    const out = reg.checkConsumerContracts(registry, rows, REPO_ROOT);
+    expect(out.detail).toMatch(/unconverted-producer read\(s\) listed/);
   });
 });

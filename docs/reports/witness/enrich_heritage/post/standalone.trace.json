@@ -1,0 +1,671 @@
+{
+  "trace_version": 1,
+  "step": "scripts/enrich-heritage.js",
+  "chain": "none",
+  "source_fingerprint": "91187f63df513d6ae265c46b46efd754d50e89be8f48c0fa5d77dbfef4743cc6",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "header": {
+    "processes": 1,
+    "calls": 57,
+    "distinct": 42,
+    "utility": 13,
+    "tracer_self_ms": 22.376,
+    "wall_ms": 22093
+  },
+  "statements": [
+    {
+      "fingerprint": "131ff297ad0ea39c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "geom",
+          "status"
+        ],
+        "parcels": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "19592461e878698f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_proc",
+        "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "1d35a51e69764176",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1f41153575d0d0a9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3a1a1397726498b4",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {
+        "heritage_properties": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "420b1397f66ecbbc",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "heritage_designation_date",
+          "heritage_designation_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "440fac74a4a4270e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "status"
+        ],
+        "parcels": [
+          "geom",
+          "heritage_designation_type",
+          "is_heritage_designated"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "528151b0515ba432",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n       SET completed_at = NOW(), status = $1, duration_ms = $2, error_message = $3,\n           records_total = $5,\n           records_new = $6,\n           records_updated = $7,\n           records_meta = COALESCE($8::jsonb, records_meta)\n       WHERE id = $4",
+      "params": [
+        [
+          "completed",
+          19866,
+          null,
+          2288,
+          496509,
+          0,
+          0,
+          "{\"duration_ms\":14520,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236067,\"designated\":2490},\"R\":{\"parcels\":104544,\"designated\":4593},\"RM\":{\"parcels\":54869,\"designated\":25},\"RS\":{\"parcels\":29683,\"designated\":3},\"CR\":{\"parcels\":19305,\"designated\":2056},\"RT\":{\"parcels\":14926,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17820,\"designated\":515},\"other\":{\"parcels\":15980,\"designated\":259}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10615,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1361,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":14520,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13792270044913,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10615,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":3669,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":3450,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":3448,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":3678,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":1630,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":1631,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":1334,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":24987.87,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":19870,\"threshold\":null,\"status\":\"INFO\"}]}}"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5668172b49fa1b9a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status = 'completed'\n      ORDER BY completed_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:load_heritage"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "58b5b1e7c754cb2b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "60cbf0ce7d126d7a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 27,
+      "reads": {
+        "parcels": [
+          "is_heritage_designated",
+          "zoning_class"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "640266e6ea89ba67",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "heritage_designation_type",
+          "is_heritage_designated"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "6447cd32076ed957",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "INSERT INTO pipeline_runs (pipeline, started_at, status)\n       VALUES ($1, NOW(), $2) RETURNING id",
+      "params": [
+        [
+          "enrich_heritage",
+          "running"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b18467966eba81f",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_indexes"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6b37ed5620518ade",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "739588860a01c8f1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "heritage_designation_type",
+          "is_heritage_designated"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "sources:enrich_heritage"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "84d874d8e5acc9ff",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "is_heritage_designated"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 10,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "90e2f780aa5a8a1f",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "98df2d71dc306fc7",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "heritage_districts": [
+          "designated_date",
+          "geom",
+          "id"
+        ],
+        "heritage_properties": [
+          "designated_date",
+          "geom",
+          "id",
+          "status"
+        ],
+        "parcels": [
+          "addr_num_normalized",
+          "geom",
+          "heritage_dataset_version_when_enriched",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "id",
+          "is_heritage_designated",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "heritage_dataset_version_when_enriched",
+          "heritage_designation_date",
+          "heritage_designation_type",
+          "is_heritage_designated"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9b97ae14cd1eaa94",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9bfd7f400254e558",
+      "kind": "write",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "UPDATE pipeline_runs\n          SET records_meta = COALESCE(records_meta, '{}'::jsonb) || jsonb_build_object(\n                'last_heartbeat_at', now(),\n                'current_pass', $1::text,\n                'rows_processed', $2::int\n              )\n        WHERE id = $3",
+      "params": [
+        [
+          "heritage_join",
+          0,
+          2288
+        ]
+      ]
+    },
+    {
+      "fingerprint": "a47b9456480b80ba",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_heritage",
+            "enrich_heritage",
+            "enrich-heritage"
+          ],
+          2288
+        ]
+      ]
+    },
+    {
+      "fingerprint": "ab40a264ed56f56f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_districts": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b9b85a9489f83a32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "heritage_properties": [
+          "status"
+        ],
+        "parcels": [
+          "heritage_designation_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 680,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c7f851bd2262f131",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_proc"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 5,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cd86dee7964846fc",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "is_heritage_designated"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ce97bb2bc8d71035",
+      "kind": "read",
+      "count": 4,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e16e8cc67fd3f68c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ed10ec11bbfbc432",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fc1eafe598008452",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "heritage_designation_date",
+          "heritage_designation_type"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "26636:3",
+      "write_fingerprints": [
+        "98df2d71dc306fc7"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "528151b0515ba432",
+    "6447cd32076ed957",
+    "9bfd7f400254e558"
+  ],
+  "touched": {
+    "reads": {
+      "heritage_districts": [
+        "designated_date",
+        "geom",
+        "id"
+      ],
+      "heritage_properties": [
+        "designated_date",
+        "geom",
+        "id",
+        "status"
+      ],
+      "parcels": [
+        "addr_num_normalized",
+        "geom",
+        "heritage_dataset_version_when_enriched",
+        "heritage_designation_date",
+        "heritage_designation_type",
+        "id",
+        "is_heritage_designated",
+        "street_name_normalized",
+        "street_type_normalized",
+        "zoning_class"
+      ]
+    },
+    "writes": {
+      "parcels": [
+        "heritage_dataset_version_when_enriched",
+        "heritage_designation_date",
+        "heritage_designation_type",
+        "is_heritage_designated"
+      ]
+    }
+  },
+  "errors": []
+}

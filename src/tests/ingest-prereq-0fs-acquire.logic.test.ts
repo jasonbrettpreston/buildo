@@ -67,7 +67,6 @@ const FS_EXTERNAL = {
   format: 'csv',
   csv_options: { bom: true, relax_quotes: false },
   key_property: 'Legal name',
-  cache: 'none',
 };
 
 /** md5 of arbitrary bytes — the digest the acquisition seam hashes as the bytes land. */
@@ -322,7 +321,7 @@ describe('INGESTOR prerequisite 0fs — filesystem acquisition', () => {
   it('T5 — a url http_file csv still HEADs then GETs and carries no source_path key', async () => {
     const external = {
       id: 'p', kind: 'http_file', url: 'http://ex/a.csv', format: 'csv',
-      csv_options: { bom: true, relax_quotes: false }, key_property: 'Legal name', cache: 'none',
+      csv_options: { bom: true, relax_quotes: false }, key_property: 'Legal name',
     };
     const fetchImpl = fetchOf([
       { status: 200 }, // HEAD

@@ -173,7 +173,6 @@ function Z3(): Record<string, any> {
       page_size_from_config: PAGE_SIZE_VAR,
     },
     key_property: '_id',
-    cache: 'none',
     target: `t${id}`,
     ...(onFailure ? { on_failure: onFailure } : {}),
   });
@@ -216,12 +215,8 @@ function Z3(): Record<string, any> {
         why: { text: 'One guarded upsert per declared target.', liveness: { kind: 'table', ref: table } },
       },
       retract: 'departed',
-      replay: 'idempotent_upsert',
-      source_key_policy: { unique: true, on_collision: 'dedupe_upstream', key_space_migration: 'none' },
     })),
-    cascades: 'none',
     invalidates: [],
-    publish: 'direct',
     write_inventory: {
       statements: 3,
       why: { text: 'One guarded upsert per declared target.', liveness: { kind: 'file', ref: 'scripts/lib/step/write.js' } },
@@ -229,7 +224,6 @@ function Z3(): Record<string, any> {
   };
   d.staleness = {
     ...d.staleness,
-    scope: 'none',
     trigger: [{
       signal: 'source_validator',
       position: 'pre_acquisition',
@@ -239,8 +233,6 @@ function Z3(): Record<string, any> {
     }],
     skip_scope: 'all_primaries',
     mode_select: 'skip',
-    checkpoint: 'none',
-    interval: 'none',
     logic_version: 'none',
     on_prior_run_error: 'fail_step',
   };
@@ -254,7 +246,9 @@ function Z3(): Record<string, any> {
   d.recovery = { ...d.recovery, interrupted: 'force_full_on_next_run' };
   d.invariants = 'none';
   d.plausibility = 'none';
-  d.override = 'none';
+  // FLEET-2 MQ-A7 (step.schema.json allOf[11]): a schema_drift "pause" INGESTOR must declare override.force_run as an
+  // env var (the only release of a paused drift). Same shape as the real load-zoning descriptor.
+  d.override = { force_full: 'none', force_run: 'ZONING_FORCE_RELOAD', dry_run: 'none' };
   d.config = {
     ...d.config,
     logic_variables: [

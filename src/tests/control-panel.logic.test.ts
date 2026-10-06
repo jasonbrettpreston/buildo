@@ -296,8 +296,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // C1 pilot 4 (link_wsib, MATCHER, 2026-08-28) — T2-T8. Same P4-externalization class
   // as link_massing's trio above: T2 is the verdict-bound link-rate floor (LW-D1, reached
   // through checks[].limit_from_config, pct >= form); T3-T5 are the three written
-  // confidences (one per tier); T6 is the entity fan-in WARN; T7 bounds A-7's tier-3-full
-  // convergence loop; T8 (WF3-F, LW-D14) is the tier3_token_overlap FAIL floor. Seeded via
+  // confidences (one per tier); T6 is the entity fan-in WARN; T7 (the tier-3-full
+  // convergence-loop bound) was retired by O4 row 6; T8 (WF3-F, LW-D14) is the tier3_token_overlap FAIL floor. Seeded via
   // scripts/seeds/logic_variables.json, rendered under GROUPS "WSIB Matching".
   'link_wsib_link_rate_warn_pct',
   'link_wsib_tier1_confidence',
@@ -306,7 +306,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_wsib_tier2_confidence',
   'link_wsib_tier3_confidence',
   'link_wsib_entity_fanin_warn',
-  'link_wsib_tier3_full_max_iterations',
+  'link_wsib_mass_relink_max_pct', // O4 row 6 (2026-10-03) — the mass-relink guard ceiling; replaced the retired T7
   'link_wsib_tier3_token_overlap_fail_pct',
   // C1 pilot 5 (link_parcel_addresses, MATERIALIZER, 2026-08-29) — T1-T5. T1 is the
   // batch-size pacing knob (not verdict-affecting); T2/T3 are the coverage-gap WARN
@@ -523,6 +523,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // declaration (step-validate's §1.2a P4 conformance check) — never seeded,
   // so it never reached this list.
   'address_points_skip_rate_max_pct', 'address_points_null_address_number_max_pct', 'address_points_download_timeout_ms',
+  'address_points_mass_retire_max_pct', // registry-truth fold 10 soft-retire mass guard (FLEET-2, default 0.02)
   // batch-2 row 3.7 (2026-09-24) — parcels' own three (the shared
   // sources_parcels_floor is already listed above, under the "Sources
   // Catastrophic-Load Floors" group). SQM_TO_SQFT/M_TO_FT are unit-conversion

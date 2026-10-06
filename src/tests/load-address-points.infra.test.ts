@@ -49,7 +49,7 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     expect(computeSrc).toMatch(/require\(['"]\.\.\/address-normalizers['"]\)/);
   });
 
-  it('INSERT column list covers the 16 columns (3 base + 10 source + 2 normalized + geom)', () => {
+  it('INSERT column list covers the 17 columns (3 base + 10 source + 2 normalized + geom + retired_at)', () => {
     const write = descriptor.outputs.writes[0];
     expect(write.table).toBe('address_points');
     const cols = write.columns.map((c: { name: string }) => c.name);
@@ -68,10 +68,13 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
       'addr_num_normalized',
       'linear_name_normalized',
       'geom',
+      'retired_at',
     ]) {
       expect(cols, `outputs.writes[0].columns declares ${c}`).toContain(c);
     }
-    expect(write.columns).toHaveLength(16);
+    // 16 → 17 at FLEET-2 fold 10 (soft-retire): `retired_at` (written "insert_only", the departed_mark rule's required
+    // column; seeded NULL on INSERT, changed only by MARK/UNMARK).
+    expect(write.columns).toHaveLength(17);
   });
 
   it('computes geom from the coordinate OR-contract (geometry GeoJSON, else lat/lng)', () => {

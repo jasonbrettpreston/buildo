@@ -30,13 +30,37 @@
       "lo_num",
       "longitude",
       "maint_stage",
-      "place_name"
+      "place_name",
+      "retired_at"
+    ],
+    "address_points_active": [
+      "addr_num_normalized",
+      "address_class_desc",
+      "address_full",
+      "address_number",
+      "address_point_id",
+      "address_status",
+      "class_family_desc",
+      "geom",
+      "hi_num",
+      "latitude",
+      "linear_name_full",
+      "linear_name_normalized",
+      "lo_num",
+      "longitude",
+      "maint_stage",
+      "place_name",
+      "retired_at"
     ],
     "address_points_cohort_bak_20261002t2313z": [
       "address_point_id",
       "latitude"
     ],
     "address_points_cohort_bak_20261003t0138z": [
+      "address_point_id",
+      "latitude"
+    ],
+    "address_points_cohort_bak_20261005t2025z": [
       "address_point_id",
       "latitude"
     ],
@@ -892,6 +916,10 @@
       "id",
       "lot_size_sqm"
     ],
+    "parcels_cohort_bak_20261005t2032z": [
+      "id",
+      "lot_size_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1482,6 +1510,18 @@
       "is_gta"
     ],
     "wsib_registry_cohort_bak_20261002t2316z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261005t1817z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261005t1818z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261005t1819z": [
       "id",
       "is_gta"
     ],

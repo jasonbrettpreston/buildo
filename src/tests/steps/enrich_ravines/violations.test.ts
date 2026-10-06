@@ -98,10 +98,64 @@ describe('enrich_ravines — G-shape + descriptor structure (true from commit 1:
     expect(descriptor.deviations[0].from).toMatch(/Layer-1/);
   });
 
-  it('claim #54 — staleness.scope is a lineage predicate, so outputs.invalidates[] and phases[0].invalidator_ref are BOTH present', () => {
-    expect(descriptor.staleness.scope).toMatch(/ravine_dataset_version_when_enriched/);
+  it('claim #54 — phases[0] is incremental (the lineage scope), so outputs.invalidates[] and phases[0].invalidator_ref are BOTH present', () => {
+    expect(descriptor.execution.phases[0].scope).toBe('incremental'); // staleness.scope retired by FLEET-2 Phase 3 (#28) — the phases discriminator carries the lineage scope
     expect(descriptor.outputs.invalidates).toHaveLength(1);
     expect(descriptor.execution.phases[0].invalidator_ref).toBe(0);
+  });
+
+  it('claim #54 (phases discriminator, fold 13) — the live descriptor has an incremental/deferred phase AND >=1 invalidator; dropping the invalidators REDs the schema', () => {
+    // FOLD 13 / WF1 fold 1d supersedes fold 12 F4's wording: the lock is keyed on
+    // `execution.phases[].scope` (ANY incremental/deferred phase => outputs.invalidates
+    // minItems 1). staleness.scope was DELETED by FLEET-2 Phase 3 (#28)
+    // (staleness.additionalProperties:false now rejects it), so the old step-level #54
+    // arm can no longer fire: the RED clone below empties invalidates and deletes every
+    // invalidator_ref, and the minItems-at-/outputs/invalidates assertion pins the
+    // phases arm.
+    const SCOPES = ['incremental', 'deferred'];
+    const scoped = descriptor.execution.phases.filter(
+      (p: { scope: string }) => SCOPES.includes(p.scope),
+    ) as Array<{ scope: string; invalidator_ref?: number }>;
+    expect(
+      scoped.map((p: { scope: string }) => p.scope),
+      'the live descriptor must declare at least one incremental/deferred phase, or this lock is vacuous',
+    ).not.toEqual([]);
+    expect(descriptor.outputs.invalidates.length).toBeGreaterThanOrEqual(1);
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+    const { compileStepSchema }: any = require(path.join(REPO_ROOT, 'scripts/lib/step/validate.js'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: any = JSON.parse(read('scripts/steps/_schema/step.schema.json'));
+    const validate = compileStepSchema(schema) as ((d: unknown) => boolean) & {
+      errors?: Array<{ instancePath?: string; dataPath?: string; keyword: string }>;
+    };
+    const errPath = (e: { instancePath?: string; dataPath?: string }): string =>
+      e.instancePath && e.instancePath !== ''
+        ? e.instancePath
+        : String(e.dataPath ?? '').replace(/\[(\d+)\]/g, '/$1').replace(/\./g, '/');
+
+    // Control — the LIVE descriptor validates today.
+    expect(validate(descriptor), JSON.stringify(validate.errors, null, 1)).toBe(true);
+
+    // RED direction — invalidates emptied and every phase's invalidator_ref deleted:
+    // claim #54's only surviving arm is the phases discriminator, so a failure here
+    // can only be that arm.
+    const clone = JSON.parse(JSON.stringify(descriptor)) as {
+      outputs: { invalidates: unknown[] };
+      execution: { phases: Array<{ invalidator_ref?: number }> };
+    };
+    clone.outputs.invalidates = [];
+    for (const p of clone.execution.phases) delete p.invalidator_ref;
+    expect(
+      validate(clone),
+      'the phases discriminator must fire — if this validates, claim #54 has no phases arm at all',
+    ).toBe(false);
+    const errors = (validate.errors ?? []) as Array<{ instancePath?: string; dataPath?: string; keyword: string }>;
+    const hit = errors.find((e) => errPath(e) === '/outputs/invalidates' && e.keyword === 'minItems');
+    expect(
+      hit,
+      `expected minItems at "/outputs/invalidates"; got ${errors.map((e) => `${errPath(e)}:${e.keyword}`).join(', ')}`,
+    ).toBeDefined();
   });
 
   it('COUNTER-ROOT lock — records_updated resolves from written.e1.updated, records_total from matched.compute.* (A4 ruling), never a bare compute.*', () => {
@@ -215,5 +269,16 @@ describe('enrich_ravines — cutover-only claim (structurally cannot land before
     expect(reg.converted).toContain(STEP_REL);
     const stillPending = (reg.pending || []).some((p: { file: string }) => p.file === STEP_REL);
     expect(stillPending).toBe(false);
+  });
+
+  it('C1 (LDG-10 O2-A, plan fold 18) — the dataset-version stamp is invalidated by the parcels geom trigger, and the step requires that trigger', () => {
+    const TRIGGER = 'parcels.trg_parcels_geom_invalidation';
+    const row = descriptor.outputs.invalidates[0];
+    expect(row.column).toBe('ravine_dataset_version_when_enriched');
+    expect(row.by).toBe('trigger');
+    expect(row.trigger).toBe(TRIGGER);
+    expect(row.step).toBeUndefined();
+    const guards = (descriptor.guards.requires as Array<{ kind: string; name: string; on_missing: string }>).filter((g) => g.kind === 'trigger');
+    expect(guards).toEqual([{ kind: 'trigger', name: TRIGGER, on_missing: 'fail' }]);
   });
 });

@@ -564,8 +564,13 @@ describe('scripts/manifest.json — chain integration', () => {
     const steps = coaChain as string[];
     expect(steps[steps.length - 1]).toBe('assert_global_coverage');
     expect(steps[steps.length - 2]).toBe('compute_phase_calibration');
-    expect(steps[steps.length - 3]).toBe('assert_lifecycle_phase_distribution');
-    expect(steps[steps.length - 4]).toBe('classify_lifecycle_phase');
+    // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
+    const at = (s: string) => steps.indexOf(s);
+    expect(at('classify_lifecycle_phase')).toBe(at('link_coa') + 1); // picks up link_coa's last_seen_at bump (Spec 42)
+    expect(at('assert_lifecycle_phase_distribution')).toBe(at('classify_lifecycle_phase') + 1); // its gate stays ADJACENT (03fcb569)
+    expect(at('assert_lifecycle_phase_distribution')).toBeLessThan(at('refresh_snapshot'));
+    expect(at('refresh_snapshot')).toBeLessThan(at('assert_data_bounds'));
+    expect(at('assert_engine_health')).toBeLessThan(at('compute_phase_calibration'));
     expect(steps).not.toContain('trigger_lifecycle_sync');
   });
 });

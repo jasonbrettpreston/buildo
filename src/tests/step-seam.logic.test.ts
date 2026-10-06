@@ -222,9 +222,12 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // batch-2 row 3.8 cutover (neighbourhoods, 2026-09-28) — 17 -> 18 PAIRS, ONE NEW: neighbourhoods declares inputs.reads.steps [] (a leaf INGESTOR) but link_neighbourhoods already declares it ({step: 'neighbourhoods', version_pin: 'gte'}), so its registration resolves that edge to a live producer.
     // batch-2 row 3.4 ③ (load_heritage, 2026-10-03) — 19 -> 20 PAIRS, ONE NEW: load_heritage declares inputs.reads.steps [] (a leaf INGESTOR) but enrich_heritage already declares it ({step: 'load_heritage', version_pin: 'exact'}), so its registration resolves that edge to a live producer.
     // batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04) — 20 -> 22 PAIRS, TWO NEW: enrich_centreline declares inputs.reads.steps [{step: 'load_centreline', version_pin: 'exact'}, {step: 'parcels', version_pin: 'gte'}] (measured, scripts/enrich-centreline.descriptor.json) and both producers are already converted, so its registration adds both edges as the DOWNSTREAM half.
+    // P1-C8a (registry-truth, 2026-10-03) — 20 -> 31 PAIRS, ELEVEN NEW: the #44(e) derived producers are now declared (link_massing/enrich_ravines/enrich_heritage += parcels; enrich_parcels += parcels, massing, neighbourhoods, enrich_ravines, enrich_heritage; link_parcels += address_points, geocode_permits, parcels). All sources-chain members.
     expect(seam.deriveSeamPairs(byName)).toEqual([
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
+      // P1-C8a (2026-10-03) — assert_parcel_sanity declares its #44(e) producer `parcels`: 31 -> 32 PAIRS (sources chain).
+      { upstream: 'parcels', downstream: 'assert_parcel_sanity' },
       // batch-2 row 3.7 (2026-09-24) — sorts here: 'compute_centroids:parcels' falls
       // between 'assert_parcel_sanity:enrich_parcels' and
       // 'compute_parcel_cost_estimates:enrich_parcels' ('compute_centroids' < 'compute_parcel_cost_estimates').
@@ -242,8 +245,19 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // falls between 'compute_parcel_cost_estimates:parcels' and 'enrich_parcels:link_massing'
       // ('compute_parcel_cost_estimates' < 'enrich_heritage' < 'enrich_parcels').
       { upstream: 'load_heritage', downstream: 'enrich_heritage' },
+      { upstream: 'parcels', downstream: 'enrich_heritage' },
+      // FLEET-2 assembly (r4, 2026-10-05): enrich_parcels declares enrich_centreline (P1-C8a) and the tip's ③ converted it — 34 -> 35 PAIRS.
+      { upstream: 'enrich_centreline', downstream: 'enrich_parcels' },
+      { upstream: 'enrich_heritage', downstream: 'enrich_parcels' },
+      { upstream: 'enrich_ravines', downstream: 'enrich_parcels' },
       { upstream: 'link_massing', downstream: 'enrich_parcels' },
+      // FLEET-2 assembly (2026-10-05): enrich_parcels declares load_zoning (converted at ③; P1-C8a rule) — 35 -> 36 PAIRS.
+      { upstream: 'load_zoning', downstream: 'enrich_parcels' },
+      { upstream: 'massing', downstream: 'enrich_parcels' },
+      { upstream: 'neighbourhoods', downstream: 'enrich_parcels' },
+      { upstream: 'parcels', downstream: 'enrich_parcels' },
       { upstream: 'load_ravines', downstream: 'enrich_ravines' },
+      { upstream: 'parcels', downstream: 'enrich_ravines' },
       // batch-2 row 3.1 (2026-09-24) — sorts here: 'geocode_permits:address_points'
       // falls between 'enrich_ravines:load_ravines' and 'link_massing:compute_centroids'.
       { upstream: 'address_points', downstream: 'geocode_permits' },
@@ -251,6 +265,7 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // batch-2 row 3.6 (2026-09-28) — sorts here: 'link_massing:massing' falls after
       // 'link_massing:compute_centroids' ('compute_centroids' < 'massing').
       { upstream: 'massing', downstream: 'link_massing' },
+      { upstream: 'parcels', downstream: 'link_massing' },
       // batch-2 I5 (2026-09-16) — sorts here by deriveSeamPairs's own deterministic
       // `downstream:upstream` localeCompare: 'link_neighbourhoods:geocode_permits' falls
       // between 'link_massing:compute_centroids' and 'link_parcel_addresses:link_parcels'.
@@ -267,7 +282,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // ('parcels' > 'address_points' on the upstream half, and 'link_parcel_addresses' <
       // 'link_parcels' on the downstream half).
       { upstream: 'parcels', downstream: 'link_parcel_addresses' },
+      { upstream: 'address_points', downstream: 'link_parcels' },
+      { upstream: 'geocode_permits', downstream: 'link_parcels' },
       { upstream: 'link_parcel_addresses', downstream: 'link_parcels' },
+      { upstream: 'parcels', downstream: 'link_parcels' },
       // batch-2 row 3.5 (2026-09-30) — sorts here: 'link_wsib:load_wsib' falls after
       // 'link_parcels:link_parcel_addresses' and before 'refresh_snapshot:link_massing'.
       { upstream: 'load_wsib', downstream: 'link_wsib' },
@@ -422,9 +440,11 @@ describe('runSeamChecks — one row per derived pair', () => {
   // enrich_centreline (batch-2 row 3.10 ③, 2026-10-04) ADDS TWO: it declares inputs.reads.steps on
   // load_centreline (exact) and parcels (gte), both already converted and both, like enrich_centreline
   // itself, members of the 'sources' chain (Spec 43 rows 8/5/14). Live pairs/metrics 20 -> 22.
+  // P1-C8a (2026-10-03): the eleven reads.steps declarations add eleven sources-chain pairs/metrics, 20 -> 31.
   const EXPECTED_SEAM_METRICS = [
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
+    'seam_parcels_before_assert_parcel_sanity', // P1-C8a (2026-10-03): 31 -> 32
     'seam_parcels_before_compute_centroids',
     'seam_enrich_parcels_before_compute_parcel_cost_estimates',
     'seam_parcels_before_compute_parcel_cost_estimates',
@@ -433,12 +453,22 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_parcels_before_enrich_centreline',
     // batch-2 row 3.4 ③ (load_heritage, 2026-10-03) — load_heritage registering resolves enrich_heritage's declared read.
     'seam_load_heritage_before_enrich_heritage',
+    'seam_parcels_before_enrich_heritage',
+    'seam_enrich_centreline_before_enrich_parcels', // FLEET-2 assembly (r4): P1-C8a x ③ enrich_centreline, 34 -> 35
+    'seam_enrich_heritage_before_enrich_parcels',
+    'seam_enrich_ravines_before_enrich_parcels',
     'seam_link_massing_before_enrich_parcels',
+    'seam_load_zoning_before_enrich_parcels', // FLEET-2 assembly: load_zoning declared by enrich_parcels, 35 -> 36
+    'seam_massing_before_enrich_parcels',
+    'seam_neighbourhoods_before_enrich_parcels',
+    'seam_parcels_before_enrich_parcels',
     'seam_load_ravines_before_enrich_ravines',
+    'seam_parcels_before_enrich_ravines',
     'seam_address_points_before_geocode_permits',
     'seam_compute_centroids_before_link_massing',
     // batch-2 row 3.6 cutover (2026-09-28) — massing registering resolves link_massing's declared read.
     'seam_massing_before_link_massing',
+    'seam_parcels_before_link_massing',
     // batch-2 I5 cutover (2026-09-16) — in deriveSeamPairs's own `downstream:upstream` sort
     // position. link_neighbourhoods declared this read at ITS cutover the same day;
     // geocode_permits' registration is what resolves it to a live producer, which is why a
@@ -448,7 +478,10 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_neighbourhoods_before_link_neighbourhoods',
     'seam_address_points_before_link_parcel_addresses',
     'seam_parcels_before_link_parcel_addresses',
+    'seam_address_points_before_link_parcels',
+    'seam_geocode_permits_before_link_parcels',
     'seam_link_parcel_addresses_before_link_parcels',
+    'seam_parcels_before_link_parcels',
     // batch-2 row 3.5 cutover (2026-09-30) — load_wsib registering resolves link_wsib's declared read.
     'seam_load_wsib_before_link_wsib',
     'seam_link_massing_before_refresh_snapshot',
@@ -471,22 +504,23 @@ describe('seam pairs are scoped to the chain they run in (SEAM-CHAIN-1, Spec 122
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const manifest = require('../../scripts/manifest.json') as { chains: Record<string, string[]> };
 
-  // compute_centroids -> link_massing: a real pair (see the first describe block
-  // above), both slugs are members of `sources`, but compute_centroids is NOT a
-  // member of `permits` (link_massing is) — SEAM-CHAIN-1's motivating case: a
-  // permits chain-end evaluating a sources-only pair.
+  // address_points -> geocode_permits: a real pair (geocode_permits declares inputs.reads.steps address_points),
+  // both slugs are members of `sources`, but address_points is NOT a member of `permits` (geocode_permits
+  // is) — SEAM-CHAIN-1's motivating case: a permits chain-end evaluating a sources-only pair. (Re-pointed
+  // from compute_centroids -> link_massing at FLEET-2 §2 item 2.1, which removed link_massing from permits.)
   const byName = {
-    link_massing: {
-      descriptor: { inputs: { reads: { steps: [{ step: 'compute_centroids' }] } } },
+    geocode_permits: {
+      descriptor: { inputs: { reads: { steps: [{ step: 'address_points' }] } } },
     },
-    compute_centroids: { descriptor: { inputs: { reads: { steps: [] } } } },
+    address_points: { descriptor: { inputs: { reads: { steps: [] } } } },
   };
-  const PAIR = { upstream: 'compute_centroids', downstream: 'link_massing' };
+  const PAIR = { upstream: 'address_points', downstream: 'geocode_permits' };
 
   it('the chosen pair is sources-only in the REAL manifest (upstream absent from permits, downstream present)', () => {
-    expect(manifest.chains.sources).toEqual(expect.arrayContaining(['compute_centroids', 'link_massing']));
-    expect(manifest.chains.permits).not.toContain('compute_centroids');
-    expect(manifest.chains.permits).toContain('link_massing');
+    expect(manifest.chains.sources).toEqual(expect.arrayContaining(['address_points', 'geocode_permits']));
+    expect(manifest.chains.permits).not.toContain('address_points');
+    expect(manifest.chains.permits).toContain('geocode_permits');
+    expect(manifest.chains.permits).not.toContain('link_massing'); // FLEET-2 2.1
   });
 
   it('T1 — an unscoped pair whose upstream is missing from the chain is excluded, not evaluated (RED before the fix: one row)', async () => {

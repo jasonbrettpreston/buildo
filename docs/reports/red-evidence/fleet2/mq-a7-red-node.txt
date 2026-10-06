@@ -1,0 +1,1 @@
+RED-node {"external":"x","response":"pause","refused":true,"row":{"metric":"schema_drift:x","value":"added: c; removed: b","threshold":"guards.schema_drift: the acquired header equals the prior completed run's recorded header","status":"FAIL","source":"gate","errored":true}}

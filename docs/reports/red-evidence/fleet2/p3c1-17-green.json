@@ -1,0 +1,48 @@
+{
+ "chunk": "FLEET-2 seat A",
+ "phase": "green",
+ "run": "vitest single fork, DB env unset, 2026-10-04",
+ "impl": "current lib tree",
+ "tests": [
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V1 — on_unknown:\"fail\" turns a stored value outside the declared set into a FAIL gate row",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V2 — on_unknown:\"warn\" reports the same unknowns as a WARN gate row, never a FAIL",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V3 — on_unknown:\"quarantine\" takes the strictest arm (FAIL) until an executor exists",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V4 — a column whose every stored value is declared reads INFO with its distinct count",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V5 — SQL shape: exactly one DISTINCT read, for the vocabulary column only",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V6 — outputs:\"none\" yields no rows and runs no statement",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V7 — the four real descriptors declare their vocabularies as OBJECTS with on_unknown:\"fail\"",
+   "status": "passed"
+  },
+  {
+   "file": "p3c1-17.logic.test.ts",
+   "test": "V8 — runWithPool calls write.vocabularyRows AFTER compute and folds it into extraRows",
+   "status": "passed"
+  }
+ ]
+}

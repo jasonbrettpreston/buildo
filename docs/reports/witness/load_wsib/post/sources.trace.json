@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-wsib.js",
   "chain": "sources",
-  "source_fingerprint": "afbdfe84c68dc5d12be734cd280d30c67107f75a4c747e25a00c9b6bde5ee8db",
-  "git_head": "f9063dcecd837216c7e009e4d86451d0593114c4",
+  "source_fingerprint": "f1517695b7741dd3a14ba2a637c17dfb3ad8f76ffbb693842826b6a4825a3ef4",
+  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "header": {
     "processes": 1,
-    "calls": 40,
+    "calls": 41,
     "distinct": 13,
     "utility": 7,
-    "tracer_self_ms": 885.521,
-    "wall_ms": 16907
+    "tracer_self_ms": 607.699,
+    "wall_ms": 12720
   },
   "statements": [
     {
@@ -42,8 +42,8 @@
     {
       "fingerprint": "74217f283e595bf5",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -163,7 +163,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 663,
+      "rowCount": 680,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -194,7 +194,7 @@
   ],
   "transactions": [
     {
-      "client": "12420:2",
+      "client": "16252:2",
       "write_fingerprints": [
         "8e0e557d4c86c776"
       ]

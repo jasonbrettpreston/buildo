@@ -13,9 +13,9 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "3028d4bad26135e7add7b15011bae73807e9ddd2",
+  "frozen_at": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
   "frozen_after_pilot": 9,
-  "schema_sha256": "94782cc745ea733d42f29ea7656d6dbe8cb60925c2639215e6b63695ccb3b12f",
+  "schema_sha256": "815baca4cbbfe8a3936c7e5bdcb0b05c2c3cfd0f60fae3834436f3f0275aee11",
   "categories": [
     "identity",
     "inputs",
@@ -154,7 +154,6 @@
       "phase_order": [
         "staleness.readPriorEmit",
         "staleness.resolveOverrides",
-        "staleness.selectMode",
         "write.assertWritePrivileges",
         "write.buildWritePlan",
         "write.targetKey",
@@ -185,7 +184,6 @@
       "phase_order": [
         "staleness.readPriorEmit",
         "staleness.resolveOverrides",
-        "staleness.selectMode",
         "write.assertWritePrivileges",
         "write.buildWritePlan",
         "write.targetKey",
@@ -195,6 +193,7 @@
         "write.writeBeforeImage",
         "write.executeRetraction",
         "write.executeUpsertBatch",
+        "write.persistBeforeImageRows",
         "write.executeGuardedDeleteByKey",
         "write.executeGuardedUpdate"
       ]
@@ -207,17 +206,16 @@
         "staleness.detectInterruptedRetraction",
         "staleness.ledgerGatedSkip",
         "staleness.readPriorEmit",
-        "staleness.selectMode",
         "staleness.triggersAt",
         "staleness.measureTrigger",
         "write.assertWritePrivileges",
         "write.buildWritePlan",
         "write.targetKey",
-        "preWriteGate",
         "pipeline.withTransaction",
-        "write.writeBeforeImage",
-        "write.executeSetBasedClear",
-        "write.executeSetBasedJoinUpdate"
+        "preWriteGate",
+        "write.persistBeforeImageRows",
+        "write.executeSetBasedJoinUpdate",
+        "write.executeSetBasedClear"
       ]
     },
     {

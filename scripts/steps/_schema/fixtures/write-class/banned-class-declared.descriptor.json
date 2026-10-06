@@ -80,31 +80,15 @@
           },
           "txn_scope": "statement"
         },
-        "retract": "none",
-        "replay": "idempotent_upsert",
-        "source_key_policy": {
-          "unique": true,
-          "on_collision": "last_write_wins",
-          "on_collision_why": {
-            "text": "Fixture only — mirrors grandfathered-unguarded.descriptor.json.",
-            "liveness": {
-              "kind": "table",
-              "ref": "pipeline_snapshots"
-            }
-          },
-          "key_space_migration": "none"
-        }
+        "retract": "none"
       }
     ],
-    "cascades": "none",
     "invalidates": [],
-    "publish": "direct",
     "write_inventory": {
       "statements": 1
     }
   },
   "staleness": {
-    "scope": "snapshot_date = CURRENT_DATE",
     "trigger": [
       {
         "signal": "interval",
@@ -112,11 +96,6 @@
       }
     ],
     "mode_select": "full",
-    "checkpoint": "none",
-    "interval": {
-      "column": "snapshot_date",
-      "grain": "day"
-    },
     "fingerprint": "derived",
     "fingerprint_inputs": "none",
     "logic_version": "none",
@@ -129,20 +108,14 @@
     "schema_drift": "none"
   },
   "execution": {
-    "budget": "5m",
     "txn_scope": "statement",
-    "txn_budget": "none",
-    "chunked": false,
     "statement_timeout": "none",
     "step_timeout": "15m",
     "batch": "none",
-    "needs_disk_mb": "none",
-    "partial_fill": "none",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
     "on_degrade": "none",
-    "criticality": "required",
     "network": "none",
     "invocation": {
       "sources": {
@@ -210,13 +183,11 @@
   },
   "counters": {
     "records_total": {
-      "source": "snapshotRows",
-      "scoped_by": "snapshot_date"
+      "source": "snapshotRows"
     },
     "records_new": "none",
     "records_updated": {
-      "source": "rewrittenRows",
-      "scoped_by": "snapshot_date"
+      "source": "rewrittenRows"
     }
   },
   "config": "none",
