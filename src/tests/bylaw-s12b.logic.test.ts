@@ -2,7 +2,7 @@
 //            the separate `unverified` branch), §9 G-READ (external arm: "external rows complete, `verified_*` rows
 //            carry citation + url + `source_sha256`, `unverified` rows make no substantive claim ... each kind
 //            counted separately"), §6 `feeds` aspects (Spec 69 M-52), §7.5 rule 4 (provincial by-law-prevails); docs/specs/01-pipeline/69_mcbylaw_policy.md
-//            M-27, M-28, M-29, M-54; docs/reports/mcbylaw-phase1-plan.md S12b, R-9, R-12
+//            M-27, M-28, M-29, M-55; docs/reports/mcbylaw-phase1-plan.md S12b, R-9, R-12
 //
 // S12b: the committed scripts/seeds/bylaw/external.json passes the G-READ external arm, and every reason code
 // of that arm has one known-bad fixture plus its good twin. Offline: the only source re-checked from disk is a
@@ -61,7 +61,7 @@ describe('S12b — committed external.json', () => {
     for (const id of SEVEN.slice(0, 5)) expect(row(doc, id).evaluated_by_us).toBe('no');
   });
 
-  it('EXT-prov-1 precedence is active (Spec 69 M-54) and every other row is none', () => {
+  it('EXT-prov-1 precedence is active (Spec 69 M-55) and every other row is none', () => {
     const doc = readDoc();
     expect(row(doc, 'EXT-prov-1').precedence).toBe('active');
     for (const id of SEVEN.filter((x) => x !== 'EXT-prov-1')) {

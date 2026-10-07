@@ -22,7 +22,7 @@
 //   external_not_evaluated_undisclosed a verified row's explanation does not say what MaxBLD does not evaluate
 //   external_evaluated_by_invalid      evaluated_by_us is not "no" or "yes:<spec number>"
 //   external_precedence_invalid        precedence not in none · active, or `active` on a row that is not a verified_primary
-//                                      provincial row carrying provincial_units[] (Spec 69 M-54), or units on a `none` row
+//                                      provincial row carrying provincial_units[] (Spec 69 M-55), or units on a `none` row
 //   external_provincial_unit_invalid   a provincial unit outside the Spec 68 §6.1 shape (target, bound, value, scope, prevails)
 //   external_feeds_invalid             risk_feeds empty, duplicated, or outside the M-52 vocabulary
 //   external_pinned_page_mismatch      a row on a pinned page whose source_sha256 is not the manifest raw_sha256,
@@ -90,9 +90,13 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isText = (v) => typeof v === 'string' && v.trim().length > 0;
 const isSha = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
 function isDate(v) {
-  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
-  const d = new Date(`${v}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  const m = typeof v === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(v) : null;
+  if (!m) return false;
+  // Pure calendar arithmetic (the determinism lock bans Date in this directory; clock.mjs is the one exemption).
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return y >= 1 && mo >= 1 && mo <= 12 && d >= 1 && d <= days[mo - 1];
 }
 function parseUrl(v) {
   if (typeof v !== 'string') return null;
@@ -176,7 +180,7 @@ function checkRow(r, v, pages) {
   if (!Array.isArray(r.provincial_units)) v.push(`external_shape: ${id} provincial_units must be an array`);
   if (r.precedence === 'active') {
     if (r.kind !== 'provincial_precedence' || r.verification_status !== 'verified_primary' || units.length === 0) {
-      v.push(`external_precedence_invalid: ${id} active needs a verified_primary provincial_precedence row with provincial_units[] (Spec 69 M-54)`);
+      v.push(`external_precedence_invalid: ${id} active needs a verified_primary provincial_precedence row with provincial_units[] (Spec 69 M-55)`);
     }
   } else if (r.precedence !== 'none') v.push(`external_precedence_invalid: ${id} precedence ${JSON.stringify(r.precedence)} not in none · active`);
   else if (units.length) v.push(`external_precedence_invalid: ${id} carries provincial_units but precedence is none`);
