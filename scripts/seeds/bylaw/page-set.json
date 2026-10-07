@@ -1,5 +1,5 @@
 {
-  "$comment": "McBylaw pinned page set (Spec 68 §6.4 rule 1, §10 stage 1). One page per TOC section; changing it is a Spec 69 ruling. --refresh fetches exactly these pages and never follows links. basis: phase0 = pinned by the Phase 0 audit (re-pinned at its section URL); M-37 / M-47 = added by that ruling; G-UNIVERSE = the TOC root page that gate requires. status retired = pinned and fetched, rows scoped out with a closed reason (Spec 68 §6.4 rule 1). Not pinned: phase0_not_carried and excluded_by_ruling (listed with a ruling, never fetched) below; every other TOC entry is mapped by a page rule at S5.",
+  "$comment": "McBylaw pinned page set (Spec 68 §6.4 rule 1, §10 stage 1). One page per TOC section; changing it is a Spec 69 ruling. --refresh fetches exactly these pages and never follows links. basis: phase0 = pinned by the Phase 0 audit (re-pinned at its section URL); M-37 / M-47 = added by that ruling; G-UNIVERSE = the TOC root page that gate requires. status retired = pinned and fetched, rows scoped out with a closed reason (Spec 68 §6.4 rule 1). excluded_by_ruling also records an empty chapter (Ch.500). zone_scope records the MaxBLD zone scope (operator 2026-10-07). Not pinned: phase0_not_carried and excluded_by_ruling (listed with a ruling, never fetched) below; every other TOC entry is mapped by a page rule at S5.",
   "version": 1,
   "base_url": "https://www.toronto.ca/zoning/bylaw_amendments/",
   "normalizer_charset": "iso-8859-1",
@@ -366,6 +366,24 @@
       "basis": "phase0"
     },
     {
+      "key": "ch600_10",
+      "role": "section",
+      "section": "600.10",
+      "file": "ZBL_NewProvision_Chapter600_10.htm",
+      "basis": "M-37",
+      "status": "retired",
+      "ruling": "operator 2026-10-07 (M-37 note): retired — out of scope, apartment_building_only (600.10 Building Setback Overlay applies to buildings taller than 36 m downtown)"
+    },
+    {
+      "key": "ch600_50",
+      "role": "section",
+      "section": "600.50",
+      "file": "ZBL_NewProvision_Chapter600_50.htm",
+      "basis": "M-37",
+      "status": "retired",
+      "ruling": "operator 2026-10-07 (M-37 note): retired — out of scope, non_residential_use_condition (600.50 Queen Street West eating-establishment overlay)"
+    },
+    {
       "key": "ch600_60",
       "role": "section",
       "section": "600.60",
@@ -475,5 +493,22 @@
       "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
     }
   ],
-  "excluded_by_ruling": []
+  "excluded_by_ruling": [
+    {
+      "chapter": "500",
+      "ruling": "M-47 note 2026-10-07",
+      "reason": "Chapter 500 Special Districts - Heritage contains no sections in the consolidation (empty); closes the M-47 deferral"
+    }
+  ],
+  "zone_scope": {
+    "zones": [
+      "R",
+      "RD",
+      "RS",
+      "RT",
+      "RM"
+    ],
+    "ruling": "M-47 note 2026-10-07",
+    "note": "Non-residential-zone chapters are outside MaxBLD scope (operator: R/RD/RS/RT/RM only); the five clause-level carve-ins stay pinned."
+  }
 }

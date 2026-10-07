@@ -68,15 +68,16 @@ describe('pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37
     expect(carve).toEqual(['15.10.40.50', '40.10.20.10', '40.10.40.10', '80.10.40.40', '80.5.40.40']);
     for (const s of ['150.13', '970.10']) expect(sections.has(s)).toBe(true); // pinned in Phase 0, never sliced (M-47 defect)
     for (const s of ['900.2', '900.3', '900.4', '900.5', '900.6']) expect(sections.has(s)).toBe(false);
-    // Operator S3 ruling 2026-10-07 (M-47 note): Ch.230 = residential sections only; M-37 note: 600.10 / 600.50 are Phase 2.
-    // Ch.230: 230.5/.10/.90 live; the six zone-category sections are RETIRED (pinned, sha-checked, rows scoped out at S5); none excluded.
+    // Operator S3 ruling 2026-10-07 (M-47 note): Ch.230 = residential sections only.
+    // Ch.230: 230.5/.10/.90 live; the six zone-category sections are RETIRED (pinned, sha-checked, rows scoped out at S5).
+    // Operator ruling 2026-10-07 (M-37 note, S4 rework): 600.10 and 600.50 are pinned RETIRED (adoption-2);
+    // Ch.500 is recorded empty (closes the M-47 deferral).
     const retired = ['230.20', '230.30', '230.40', '230.50', '230.60', '230.80'];
     expect([...sections].filter((s) => String(s).startsWith('230.')).sort(SNAP.cmpSection)).toEqual(['230.5', '230.10', ...retired, '230.90']);
-    expect(ps.pages.filter((p: Json) => p.status).map((p: Json) => [p.section, p.status])).toEqual(retired.map((s) => [s, 'retired']));
+    expect(ps.pages.filter((p: Json) => p.status).map((p: Json) => [p.section, p.status]).sort()).toEqual([...retired, '600.10', '600.50'].map((s) => [s, 'retired']).sort());
     const m = readJson('manifest.json');
-    for (const s of retired) expect(m.pages.find((p: Json) => p.section === s).status).toBe('retired');
-    expect(ps.excluded_by_ruling).toEqual([]);
-    for (const s of ['600.10', '600.50']) expect(sections.has(s)).toBe(false);
+    for (const s of [...retired, '600.10', '600.50']) expect(m.pages.find((p: Json) => p.section === s).status).toBe('retired');
+    expect(ps.excluded_by_ruling.map((x: Json) => x.chapter)).toEqual(['500']);
   });
 });
 
