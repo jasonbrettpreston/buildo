@@ -530,6 +530,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // physical constants, declared in notes.json, deliberately NOT logic
   // variables (no admin knob for physics) — never reach this list.
   'parcels_irregularity_threshold', 'parcels_skip_rate_max_pct', 'parcels_download_timeout_ms',
+  // WF3 parcels geom drift (migration 251, 2026-10-06) — the geometry material-change tolerance,
+  // read by public.parcels_geom_materially_changed() (trigger now; load_parcels upsert in Commit 2).
+  'parcels_geom_change_tolerance_deg',
   // WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes parcels' own
   // null-address WARN (enrich_parcels' ambiguous-zone WARN deferred pending a heavy DB run).
   'parcels_null_address_pct_max',

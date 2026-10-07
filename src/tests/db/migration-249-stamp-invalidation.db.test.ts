@@ -18,8 +18,8 @@
 // ⛔ TRAP ③: an UPDATE whose SET list omits geom and geometry never fires the trigger.
 // ⛔ TRAP ④ (plan-altitude Integration seat): the stamp arm watches `geom` ONLY. A change to the raw
 // `geometry` jsonb alone must KEEP the stamps (the enrichers read geom; load_parcels' DEC-FENCE2,
-// f54dcf97, locked by load-parcels-geom-guard.db.test.ts T-g) while the 242/245 arms still NULL
-// massing/zoning/centroid. Case ④ is that lock.
+// f54dcf97, locked by load-parcels-geom-guard.db.test.ts T-g). Since migration 251 (operator ruling
+// Q2) it keeps massing/zoning/centroid too while geom is non-NULL; case ④ is that lock.
 //
 // Run: BUILDO_TEST_DB=1 npx vitest run src/tests/db/migration-249-stamp-invalidation.db.test.ts --no-file-parallelism
 
@@ -195,15 +195,18 @@ describe.skipIf(!dbAvailable())('migration 249 — geometry change invalidates t
     });
   });
 
-  describe('④ a geometry-jsonb-only change keeps the stamps (DEC-FENCE2 twin of load-parcels-geom-guard T-g, ⛔ TRAP ④)', () => {
-    it('changing ONLY the geometry jsonb NULLs massing/zoning/centroid but KEEPS ravine, heritage and centreline stamps', async () => {
+  describe('④ a geometry-jsonb-only change invalidates nothing while geom is unchanged (migration 251, operator ruling Q2)', () => {
+    it('changing ONLY the geometry jsonb KEEPS massing/zoning/centroid AND the ravine, heritage and centreline stamps', async () => {
       const id = await insParcel(FX_PARCEL_ID(5), farBox(5));
       await stampAll(id);
       await pool!.query(`UPDATE parcels SET geometry = $2::jsonb WHERE id = $1`, [id, farBox(6)]);
       const row = await readRow(id);
-      expect(row.massing_enriched_at, 'outer guard (242): geometry moved').toBeNull();
-      expect(row.zoning_enriched_at, 'outer guard (242): geometry moved').toBeNull();
-      expect(row.centroid_lat, 'outer guard (245): geometry moved').toBeNull();
+      // RETIRED KNOWINGLY (WF3 parcels geom drift, Commit 1). Before 251: massing/zoning/centroid
+      // NULLed by the outer guard, stamps kept. After: all KEPT — geom (what every consumer reads)
+      // did not change. The NULL expectation survives in migration-251-geom-tolerance L14.
+      expect(row.massing_enriched_at, 'geom unchanged ⇒ massing watermark kept').not.toBeNull();
+      expect(row.zoning_enriched_at, 'geom unchanged ⇒ zoning watermark kept').not.toBeNull();
+      expect(row.centroid_lat, 'geom unchanged ⇒ centroid kept').not.toBeNull();
       expect(row.ravine_dataset_version_when_enriched, 'geom unchanged ⇒ stamp kept').toBe('rav-v1');
       expect(row.heritage_dataset_version_when_enriched, 'geom unchanged ⇒ stamp kept').toBe('her-v1|her-v1');
       expect(row.centreline_dataset_version_when_enriched, 'geom unchanged ⇒ stamp kept').toBe('cl-v1');
