@@ -1,0 +1,44 @@
+{
+  "adjudications": [
+    {
+      "adjudicated_on": "2026-10-07",
+      "adjudicator": "operator",
+      "cited_clause": "enacting_source",
+      "consolidation_slice": {
+        "adoption_id": "adoption-1",
+        "page": "ch600_60",
+        "sha256": "c6871ff84109410c2623174bb9133aea9b0fbcac12a0be9803d5131567471c01",
+        "source_normalized_sha256": "a768b5c758fca531b1293dc04eaf4f6b497f31f540f365104f9f93b32f453fd0",
+        "text": "(C) Despite regulation 10.5.20.40(5), the words lawful, lawfully and lawfully existing, highlighted in bold type, in addition to the definitions provided in Zoning By-law 569-2013, Chapter 800 Definitions, include:"
+      },
+      "decision": "enacting_text_governs",
+      "disclosure_reason": "consolidation_mismatch",
+      "enacting_source": {
+        "bylaw": "654-2025",
+        "excerpt": {
+          "end_marker": "lawfully issued before June 26, 2025.",
+          "sha256": "60d3a9e311789e2c0491efb8db9333a8154708890d682425b9973dd07ddafd20",
+          "source_normalized_sha256": "f1ad9ba6ce1a746724afa78605ecc1688301ed722b7d40dbbae18189e8334af1",
+          "start_marker": "(C) Despite regulation 10.5.20.40(5)",
+          "text": "(C) Despite regulation 10.5.20.40(5), the words lawful, lawfully and lawfully existing, highlighted in bold type, in addition to the definitions provided in Zoning By-law 569-2013, Chapter 800 Definitions, include: (i) buildings, structures or uses authorized or permitted on or before June 26, 2025; and (ii) for which a building permit was lawfully issued before June 26, 2025."
+        },
+        "extraction_sha256": "2a3af6773ff6d22f9e25fd0c65dc35c62137a7110b18f1944e3c6ed0397b2141",
+        "extractor": "pdftotext",
+        "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+        "fetch_id": "E-bcfdfef304fa9e29",
+        "normalizer_version": "enacting-norm-v1",
+        "pdf_sha256": "bcfdfef304fa9e290d6cc242f66b98577d16228eca097fe0a0734a08a0040237",
+        "url": "https://www.toronto.ca/legdocs/bylaws/2025/law0654.pdf"
+      },
+      "field_status": "verified",
+      "finding": "scripts/seeds/bylaw/enacting/findings.json",
+      "flagged": true,
+      "id": "ADJ-consolidation_mismatch-600.60.40(3)(C)",
+      "kind": "consolidation_mismatch",
+      "reason": "Spec 69 M-39: \"Consolidation ≠ enacting text: the enacting text governs, the unit is flagged and adjudicated.\" The consolidation omits items (i)-(ii) of 600.60.40(3)(C), which By-law 654-2025 enacts.",
+      "ruling": "M-39",
+      "unit": "600.60.40(3)(C)",
+      "verbatim": "consolidation_slice"
+    }
+  ]
+}

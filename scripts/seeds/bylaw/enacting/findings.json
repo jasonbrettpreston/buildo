@@ -1,8 +1,8 @@
 {
   "findings": [
     {
-      "adjudicated_on": null,
-      "adjudicator": null,
+      "adjudicated_on": "2026-10-07",
+      "adjudicator": "operator",
       "consolidated": {
         "adoption_id": "adoption-1",
         "end": 8359,
@@ -14,6 +14,7 @@
         "start_marker": "(C) Despite regulation 10.5.20.40(5)",
         "text": "(C) Despite regulation 10.5.20.40(5), the words lawful, lawfully and lawfully existing, highlighted in bold type, in addition to the definitions provided in Zoning By-law 569-2013, Chapter 800 Definitions, include:"
       },
+      "decision": "enacting_text_governs",
       "enacting": {
         "bylaw": "654-2025",
         "end": 7580,
@@ -35,8 +36,9 @@
       "kind": "consolidation_mismatch",
       "observation": "The consolidation ends 600.60.40(3)(C) at \"include:\" and omits items (i) and (ii), which By-law 654-2025 enacts: the June 26, 2025 cut-off for \"lawful\", \"lawfully\" and \"lawfully existing\" in Section 600.60.",
       "proposed_resolution_per_M_39": "The unit's cited clause becomes the enacting excerpt below (enacting_source: extraction sha + extractor version committed); the field is then verified; the disclosure stays; the verbatim stays the consolidation slice. Not applied: the operator adjudicates (Spec 69 M-17/M-39).",
+      "reason": "Spec 69 M-39: \"Consolidation ≠ enacting text: the enacting text governs, the unit is flagged and adjudicated.\" The consolidation omits items (i)-(ii) of 600.60.40(3)(C), which By-law 654-2025 enacts.",
       "ruling": "M-39",
-      "status": "awaiting_operator",
+      "status": "adjudicated",
       "unit": "600.60.40(3)(C)"
     }
   ],

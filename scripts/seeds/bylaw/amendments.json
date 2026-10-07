@@ -564,15 +564,15 @@
   },
   "statuses": {
     "101-2022": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "101-2022",
-      "enacted_on": null,
-      "in_force_on": null,
+      "enacted_on": "2022-02-03",
+      "in_force_on": "2022-07-04",
       "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "source_sha256": "52025bada176745ab80e077bfad3a5cf4974831b1dccecb46bb09eddc01c36cd",
+      "source_url": "https://www.toronto.ca/news/garden-suites-permitted-in-toronto-after-ontario-land-tribunal-dismisses-appeal/",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "1031-2014": {
       "basis": null,
@@ -608,15 +608,15 @@
       "verified_on": null
     },
     "1062-2025": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "1062-2025",
-      "enacted_on": null,
-      "in_force_on": null,
+      "enacted_on": "2025-09-11",
+      "in_force_on": "2025-09-11",
       "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "source_sha256": "8fbcef5894b0f6061162d5afc51b0a7c3f4fb136ae174877d219924b048e5087",
+      "source_url": "https://www.toronto.ca/legdocs/bylaws/2025/law1062.pdf",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "1092-2021": {
       "basis": null,
@@ -806,26 +806,26 @@
       "verified_on": null
     },
     "1508-2025": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "1508-2025",
-      "enacted_on": null,
+      "enacted_on": "2025-12-17",
       "in_force_on": null,
-      "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "in_force_trigger": "in force per City page, date not stated",
+      "source_sha256": "fdbf3cae69677cbe9885577ac3bb2f5095c9a24ff019f1d97a3c925ab3e68b1f",
+      "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/local-neighbourhood-retail-and-services/",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "1509-2025": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "1509-2025",
-      "enacted_on": null,
+      "enacted_on": "2025-12-17",
       "in_force_on": null,
-      "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "in_force_trigger": "in force per City page, date not stated",
+      "source_sha256": "fdbf3cae69677cbe9885577ac3bb2f5095c9a24ff019f1d97a3c925ab3e68b1f",
+      "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/local-neighbourhood-retail-and-services/",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "156-2023": {
       "basis": null,
@@ -971,15 +971,15 @@
       "verified_on": null
     },
     "474-2023": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "474-2023",
-      "enacted_on": null,
-      "in_force_on": null,
+      "enacted_on": "2023-05-15",
+      "in_force_on": "2023-05-12",
       "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "source_sha256": "e2b5c50ade640505090c1197d0aaede183944eb7c0f28b6c6707bc58fcc86b72",
+      "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/multiplex-housing/multiplex-study-2-4-units/",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "541-2022": {
       "basis": null,
@@ -1092,15 +1092,15 @@
       "verified_on": null
     },
     "608-2024": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "608-2024",
-      "enacted_on": null,
-      "in_force_on": null,
+      "enacted_on": "2024-06-27",
+      "in_force_on": "2024-06-27",
       "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "source_sha256": "8fbcef5894b0f6061162d5afc51b0a7c3f4fb136ae174877d219924b048e5087",
+      "source_url": "https://www.toronto.ca/legdocs/bylaws/2025/law1062.pdf",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "647-2025": {
       "basis": null,
@@ -1118,7 +1118,7 @@
       "bylaw": "648-2025",
       "enacted_on": "2025-06-26",
       "in_force_on": null,
-      "in_force_trigger": null,
+      "in_force_trigger": "in force per City page, date not stated",
       "source_sha256": "319a74adc7bcbf4c599a6a97aadc0a96b87d0b447536da90d9ec0244efd16c34",
       "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/multiplex-housing/",
       "status": "in_force",
@@ -1213,26 +1213,26 @@
       "verified_on": null
     },
     "849-2025": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "849-2025",
-      "enacted_on": null,
+      "enacted_on": "2025-07-24",
       "in_force_on": null,
-      "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "in_force_trigger": "in force except one property-specific appeal maintained (City page)",
+      "source_sha256": "ab3ab9737ffdbfe92d78f6b54523cdef8f2124fd6cf29162c6f1f67238c937e3",
+      "source_url": "https://www.toronto.ca/city-government/planning-development/planning-studies-initiatives/garden-suites/",
+      "status": "partially_in_force",
+      "verified_on": "2026-10-07"
     },
     "89-2022": {
-      "basis": null,
+      "basis": "S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)",
       "bylaw": "89-2022",
-      "enacted_on": null,
+      "enacted_on": "2022-02-03",
       "in_force_on": null,
-      "in_force_trigger": null,
-      "source_sha256": null,
-      "source_url": null,
-      "status": "not_verified",
-      "verified_on": null
+      "in_force_trigger": "in force in 2022 after the OLT appeal; date not reconciled (City report: July 2022; OLT ruling 2022-10-12)",
+      "source_sha256": "d0cad13958666045ffc045fe37fa2eeb8c557281cde80ccf7ddb70ebd2074e44",
+      "source_url": "https://www.toronto.ca/legdocs/mmis/2025/ph/bgrd/backgroundfile-252037.pdf",
+      "status": "in_force",
+      "verified_on": "2026-10-07"
     },
     "LPAT PL130592 March 16, 2020": {
       "basis": null,

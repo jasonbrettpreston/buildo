@@ -4,9 +4,9 @@
 //            docs/reports/mcbylaw-phase1-plan.md S10
 //
 // S10 locks over the COMMITTED seeds (offline): amendments.json equals a rebuild from the adopted pages, the
-// per-page tag counts reconcile with manifest.json, statuses default to not_verified except the two the Spec 69
-// rulings verified, the 654-2025 enacting capture matches its pinned shas, and the 600.60.40(3)(C)
-// consolidation_mismatch finding is reproducible from the committed texts and still awaits the operator.
+// per-page tag counts reconcile with manifest.json, statuses default to not_verified except those the Spec 69
+// rulings and the S0.5 spike's primary-source research verified (operator 2026-10-07), the 654-2025 enacting capture matches its pinned shas, and the 600.60.40(3)(C)
+// consolidation_mismatch finding is reproducible from the committed texts and carries the operator's adjudication.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,6 +25,7 @@ const exists = (f: string) => fs.existsSync(path.join(SEEDS, f));
 
 const SHA_654 = 'bcfdfef304fa9e290d6cc242f66b98577d16228eca097fe0a0734a08a0040237'; // Spec 69 §3
 const URL_654 = 'https://www.toronto.ca/legdocs/bylaws/2025/law0654.pdf'; // Spec 69 §3
+const SPIKE = 'S0.5 spike §2.6 (docs/reports/mcbylaw-s05-spike.md; item6/status.json, verified_primary)';
 
 describe('amendments.json over the committed adoption (G-PROV amendment arm)', () => {
   it('the arm passes: every tag recorded with a clause path, counts pinned both ways, statuses closed', () => {
@@ -50,13 +51,24 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
     expect(a.tags.filter((t: Json) => t.clause_path === null)).toEqual([]);
   });
 
-  it('statuses default to not_verified; only 648-2025 and 654-2025 are in_force, each citing its Spec 69 basis', () => {
+  it('statuses default to not_verified; the verified ones cite M-36 or the S0.5 spike evidence, each with its source sha', () => {
     const a = readJson('amendments.json');
     const verified = (Object.values(a.statuses) as Json[]).filter((s) => s.status !== 'not_verified');
-    expect(verified.map((s) => [s.bylaw, s.status, s.basis]).sort()).toEqual([
+    const byId = (x: unknown[][]) => [...x].sort((p, q) => String(p[0]).localeCompare(String(q[0])));
+    expect(byId(verified.map((s) => [s.bylaw, s.status, s.basis]))).toEqual(byId([
+      ['1062-2025', 'in_force', SPIKE],
+      ['1508-2025', 'in_force', SPIKE],
+      ['1509-2025', 'in_force', SPIKE],
+      ['101-2022', 'in_force', SPIKE],
+      ['474-2023', 'in_force', SPIKE],
+      ['608-2024', 'in_force', SPIKE],
       ['648-2025', 'in_force', 'M-36'],
       ['654-2025', 'in_force', 'M-36'],
-    ]);
+      ['849-2025', 'partially_in_force', SPIKE],
+      ['89-2022', 'in_force', SPIKE],
+    ]));
+    for (const s of verified) expect(s.source_sha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(a.statuses['648-2025'].in_force_trigger).toBe('in force per City page, date not stated');
     expect(a.statuses['654-2025']).toMatchObject({ source_url: URL_654, source_sha256: SHA_654, enacted_on: '2025-06-26' });
     expect(a.statuses['654-2025'].in_force_trigger).toMatch(/648-2025/);
   });
@@ -84,7 +96,7 @@ describe('654-2025 enacting capture (Spec 69 M-36, §3; G-PROV enacting arm)', (
   });
 });
 
-describe('600.60.40(3)(C) consolidation_mismatch finding (Spec 69 M-39) — awaiting the operator', () => {
+describe('600.60.40(3)(C) consolidation_mismatch finding (Spec 69 M-39) — adjudicated by the operator', () => {
   const f = () => readJson('enacting/findings.json').findings.find((x: Json) => x.unit === '600.60.40(3)(C)');
 
   it('the consolidated slice ends at "include:" with no items; the enacting excerpt carries items (i)-(ii)', () => {
@@ -109,13 +121,27 @@ describe('600.60.40(3)(C) consolidation_mismatch finding (Spec 69 M-39) — awai
     }
   });
 
-  it('it is NOT adjudicated here: no adjudicator, status awaiting_operator, cites M-39', () => {
-    expect(f()).toMatchObject({ status: 'awaiting_operator', adjudicator: null, ruling: 'M-39' });
+  it('the operator adjudicated it 2026-10-07: the enacting text governs (M-39)', () => {
+    expect(f()).toMatchObject({ status: 'adjudicated', adjudicator: 'operator', adjudicated_on: '2026-10-07', decision: 'enacting_text_governs', ruling: 'M-39' });
+    expect(f().reason).toContain('M-39');
+  });
+
+  it('adjudications.json carries the consolidation_mismatch entry: enacting_source (extraction sha + extractor version + excerpt), flagged, cites M-39 and its adjudicator', () => {
+    const x = f();
+    const a = readJson('adjudications.json').adjudications.filter((e: Json) => e.kind === 'consolidation_mismatch');
+    expect(a).toHaveLength(1);
+    const cap = readJson('enacting/manifest.json').captures['654-2025'];
+    expect(a[0]).toMatchObject({
+      unit: '600.60.40(3)(C)', ruling: 'M-39', adjudicator: 'operator', adjudicated_on: '2026-10-07', decision: 'enacting_text_governs',
+      flagged: true, field_status: 'verified', cited_clause: 'enacting_source', verbatim: 'consolidation_slice',
+      enacting_source: { bylaw: '654-2025', url: URL_654, pdf_sha256: SHA_654, extraction_sha256: cap.extraction_sha256, extractor_version: cap.extractor_version, fetch_id: cap.fetch_id, excerpt: { text: x.enacting.text, sha256: x.enacting.sha256 } },
+      consolidation_slice: { page: 'ch600_60', text: x.consolidated.text, sha256: x.consolidated.sha256 },
+    });
   });
 });
 
 describe('S10 seeds are LF and sorted-key stable', () => {
-  it.each(['amendments.json', 'enacting/manifest.json', 'enacting/findings.json'])('%s', (file) => {
+  it.each(['amendments.json', 'adjudications.json', 'enacting/manifest.json', 'enacting/findings.json'])('%s', (file) => {
     const text = fs.readFileSync(path.join(SEEDS, file), 'utf8');
     expect(text.includes('\r')).toBe(false);
     expect(SNAP.stableStringify(JSON.parse(text))).toBe(text);
