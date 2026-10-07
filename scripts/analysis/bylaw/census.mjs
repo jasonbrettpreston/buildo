@@ -25,6 +25,8 @@
 //   census_input_unreadable        the witness catalog or adoptions.json is missing, unparseable or empty
 //   census_unknown_row             (build only) a row kind census.mjs does not know
 //   census_session_not_read_only   (refresh only) the session did not report transaction_read_only = on
+//   census_zone_set_mismatch       census.json's residential_zones != vocab.json `zone` (the census ran under another
+//                                  zone set; re-run --refresh-census)
 //   census_stale                   census.json ran against an older adoption -> arm status not_run
 
 import crypto from 'node:crypto';
@@ -39,6 +41,7 @@ export const CENSUS_SQL_REL = 'scripts/seeds/bylaw/census.sql';
 export const CENSUS_JSON_REL = 'scripts/seeds/bylaw/census.json';
 export const ADOPTIONS_REL = 'scripts/seeds/bylaw/adoptions.json';
 export const CATALOG_REL = 'docs/reports/witness/_catalog.json';
+export const VOCAB_REL = 'scripts/seeds/bylaw/vocab.json';
 /** Spec 69 M-15: an exception binding ≥ 100 residential lots is in scope (direct lots in Phase 1). */
 export const MIN_DIRECT_LOTS = 100;
 export const CENSUS_VERSION = 1;
@@ -171,9 +174,10 @@ function zoneKey(zone, seen, what) {
 
 /**
  * Build census.json from the census.sql rows. PURE. Throws CensusError on a malformed answer.
- * @param {{rows: object[], sqlBlobSha: string, adoptionId: string, reads: object, minDirectLots?: number}} input
+ * `residentialZones` (vocab.json `zone`, bound to census.sql $1) is recorded as `residential_zones` when given.
+ * @param {{rows: object[], sqlBlobSha: string, adoptionId: string, reads: object, minDirectLots?: number, residentialZones?: string[]|null}} input
  */
-export function buildCensus({ rows, sqlBlobSha, adoptionId, reads, minDirectLots = MIN_DIRECT_LOTS }) {
+export function buildCensus({ rows, sqlBlobSha, adoptionId, reads, minDirectLots = MIN_DIRECT_LOTS, residentialZones = null }) {
   const by = new Map([...ROW_KINDS].map((k) => [k, []]));
   for (const row of rows) {
     if (!ROW_KINDS.has(row.kind)) throw new CensusError('census_unknown_row', `kind ${JSON.stringify(row.kind)}`);
@@ -244,6 +248,7 @@ export function buildCensus({ rows, sqlBlobSha, adoptionId, reads, minDirectLots
     no_exception: zoneMap(by.get('no_exception'), 'no_exception'),
     reads,
     residential,
+    ...(residentialZones ? { residential_zones: [...residentialZones] } : {}),
     sentinel: entries(by.get('sentinel'), 'sentinel'),
     source_tables: sourceTables,
     sql: { blob_sha: sqlBlobSha, path: CENSUS_SQL_REL },
@@ -295,7 +300,7 @@ export function censusViolations(c, { minDirectLots = MIN_DIRECT_LOTS } = {}) {
 
   let rebuilt;
   try {
-    rebuilt = buildCensus({ rows: rowsFromCensus(c), sqlBlobSha: c.sql.blob_sha, adoptionId: c.adoption_id, reads: c.reads, minDirectLots });
+    rebuilt = buildCensus({ rows: rowsFromCensus(c), sqlBlobSha: c.sql.blob_sha, adoptionId: c.adoption_id, reads: c.reads, minDirectLots, residentialZones: Array.isArray(c.residential_zones) ? c.residential_zones : null });
   } catch (err) {
     if (!(err instanceof CensusError)) throw err;
     return [...v, err.message];
@@ -336,7 +341,11 @@ function readInputs(root, violations) {
   const list = ad && Array.isArray(ad.adoptions) ? ad.adoptions : [];
   const latest = list.length && typeof list[list.length - 1].adoption_id === 'string' ? list[list.length - 1].adoption_id : null;
   if (ad && !latest) violations.push(`census_input_unreadable: ${ADOPTIONS_REL} has no adoption`);
-  return { catalog: tables, latest };
+  // vocab.json is optional here (fixture roots carry none); when present its `zone` is the residential set.
+  const vocab = fs.existsSync(path.join(root, VOCAB_REL)) ? readJsonInput(root, VOCAB_REL, violations, 'census_input_unreadable') : null;
+  const zones = vocab ? vocab.zone : null;
+  if (vocab && (!Array.isArray(zones) || zones.length === 0 || zones.some((z) => typeof z !== 'string' || !/^[A-Z]+$/.test(z)))) violations.push(`census_input_unreadable: ${VOCAB_REL} has no valid zone list`);
+  return { catalog: tables, latest, zones: Array.isArray(zones) ? zones : null };
 }
 
 /**
@@ -346,7 +355,7 @@ function readInputs(root, violations) {
  */
 export async function checkCensus({ root, minDirectLots = MIN_DIRECT_LOTS }) {
   const violations = [];
-  const { catalog, latest } = readInputs(root, violations);
+  const { catalog, latest, zones } = readInputs(root, violations);
   const sqlPath = path.join(root, CENSUS_SQL_REL);
   const sqlBuf = fs.existsSync(sqlPath) ? fs.readFileSync(sqlPath) : null;
   let w = null;
@@ -362,6 +371,7 @@ export async function checkCensus({ root, minDirectLots = MIN_DIRECT_LOTS }) {
     if (actual && recorded !== actual) violations.push(`census_sql_sha_mismatch: census.json records ${recorded}, working tree census.sql is ${actual}`);
     violations.push(...censusViolations(census, { minDirectLots }));
     if (w && w.pass && stableStringify(census.reads) !== stableStringify(w.reads)) violations.push('census_reads_mismatch: census.json reads differ from the witness reads of census.sql');
+    if (zones && stableStringify(census.residential_zones ?? null) !== stableStringify(zones)) violations.push(`census_zone_set_mismatch: census.json residential_zones ${JSON.stringify(census.residential_zones ?? null)} != vocab.json zone ${JSON.stringify(zones)}`);
   }
   const checked = (sqlBuf ? 1 : 0) + (census ? 1 : 0);
   if (violations.length) return { status: 'fail', pass: false, violations, checked };
@@ -408,7 +418,7 @@ async function teardown(step, log, what) {
  */
 export async function refreshCensus({ root, connect = defaultConnect, minDirectLots = MIN_DIRECT_LOTS, log = () => {} }) {
   const pre = [];
-  const { catalog, latest } = readInputs(root, pre);
+  const { catalog, latest, zones } = readInputs(root, pre);
   const sqlPath = path.join(root, CENSUS_SQL_REL);
   if (!fs.existsSync(sqlPath)) pre.push(`census_sql_missing: ${CENSUS_SQL_REL}`);
   if (pre.length) throw CensusError.fromViolations(pre);
@@ -425,14 +435,14 @@ export async function refreshCensus({ root, connect = defaultConnect, minDirectL
       const ro = await client.query('SHOW transaction_read_only');
       const flag = ro.rows && ro.rows[0] ? ro.rows[0].transaction_read_only : undefined;
       if (flag !== 'on') throw new CensusError('census_session_not_read_only', `transaction_read_only = ${flag}`);
-      rows = (await client.query(sqlText)).rows;
+      rows = (zones ? await client.query(sqlText, [zones]) : await client.query(sqlText)).rows;
     } finally {
       await teardown(() => client.query('ROLLBACK'), log, 'ROLLBACK');
     }
   } finally {
     await teardown(close, log, 'close');
   }
-  const census = buildCensus({ rows, sqlBlobSha: gitBlobSha(sqlBuf), adoptionId: latest, reads: w.reads, minDirectLots });
+  const census = buildCensus({ rows, sqlBlobSha: gitBlobSha(sqlBuf), adoptionId: latest, reads: w.reads, minDirectLots, residentialZones: zones });
   const v = censusViolations(census, { minDirectLots });
   if (v.length) throw CensusError.fromViolations(v);
   writeAtomic(path.join(root, CENSUS_JSON_REL), stableStringify(census));
