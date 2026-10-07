@@ -1,5 +1,145 @@
 {
   "captures": {
+    "1018-2026": {
+      "bylaw": "1018-2026",
+      "extraction_sha256": "dc1e7a2eb55a0a28e2a25dffba451cef57fddb07662198e4c5c47e4d17a8fdc1",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-f28d8802c93fa52f",
+      "fetched_at": "2026-10-07T17:17:13.705Z",
+      "header_lines_stripped": 5,
+      "normalized_sha256": "47b4724bb474b6af7cb7a9a7c5725e0d75ab10503cee339b75d4556d8ed28564",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 469402,
+      "pdf_sha256": "f28d8802c93fa52fdf203cf5149ea163404e76d46a5d109a5cc352ec94ce1574",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law1018.pdf"
+    },
+    "1075-2026": {
+      "bylaw": "1075-2026",
+      "extraction_sha256": "71c9b487ecc6e57d22542e2d836f5123c77673aff5b90d109fafbe0986b41f3b",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-c7f2c35cd474ddba",
+      "fetched_at": "2026-10-07T16:25:40.073Z",
+      "header_lines_stripped": 16,
+      "normalized_sha256": "9c932d12ebe4a433afc535996395af64f4ca2ad9deec787d797eca964cd36dad",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 330034,
+      "pdf_sha256": "c7f2c35cd474ddba1ecdde74f3d52fe57e43e420acf16b56b8acfe0037607d00",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law1075.pdf"
+    },
+    "1207-2026": {
+      "bylaw": "1207-2026",
+      "extraction_sha256": "1ee59dc3ed48ceb6c7819a45ccea51a8606c82bccc4643eaf264514655d29441",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-6c9c090b10a0d5e9",
+      "fetched_at": "2026-10-07T17:17:16.216Z",
+      "header_lines_stripped": 42,
+      "normalized_sha256": "de6ddac9fbb620ee94d52241c952411fcdd9c278d38dad820589e87e54431666",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 9772706,
+      "pdf_sha256": "6c9c090b10a0d5e93ab9c6232e85bbfc6187b1796b0e8bc7a5b2b457ea3dbfd6",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law1207.pdf"
+    },
+    "206-2026": {
+      "bylaw": "206-2026",
+      "extraction_sha256": "8663a626694c4b9308a8436c548295e25e2fbed58752414b2e76431d2319c978",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-3a082172512d92f9",
+      "fetched_at": "2026-10-07T16:25:40.742Z",
+      "header_lines_stripped": 88,
+      "normalized_sha256": "712104b5a4a7044dd06f03e3a7f2231d0a3f763598b484a7c49983d2c5220e97",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 2423901,
+      "pdf_sha256": "3a082172512d92f9ad0ae8bb4ff03e595f5a31e9c3384a7fa9d2783d38470809",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law0206.pdf"
+    },
+    "262-2026": {
+      "bylaw": "262-2026",
+      "extraction_sha256": "6f450edbfc4d12ebc09b37b200b8306d0fe6b8543dc6bad21f249c01da6b8a8d",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-c5d2c08ca0d746fb",
+      "fetched_at": "2026-10-07T17:17:18.783Z",
+      "header_lines_stripped": 10,
+      "normalized_sha256": "b129e875dedbc0ca1f5d35c59b4b9c4d1e66281f5de6c766b2aab91bf90c1951",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 1804352,
+      "pdf_sha256": "c5d2c08ca0d746fb4bd82f83868a9cce35ced77d7998ed048022213992059b70",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law0262.pdf"
+    },
+    "63-2024": {
+      "bylaw": "63-2024",
+      "extraction_sha256": "a28bed6d8aa57f733daf2b6c76f578e971bd39a32bbdd335a0705a1731f48954",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-1b803f2401285327",
+      "fetched_at": "2026-10-07T17:17:21.182Z",
+      "header_lines_stripped": 51,
+      "normalized_sha256": "6b8c04aaaca98d8fcb58651da796e593a893b4d0d30c62b672bab9070bb676de",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 11309187,
+      "pdf_sha256": "1b803f2401285327bd3c5d0f2aa8ddaf7f6ccf6f8cff1799eb747bd515ca355a",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2024/law0063.pdf"
+    },
+    "650-2026": {
+      "bylaw": "650-2026",
+      "extraction_sha256": "983d5bf3f628e5f8abca1be84853d225a32b13a7f6388f929617ba19f6fca2e9",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-6b71d71984bd0856",
+      "fetched_at": "2026-10-07T16:25:41.939Z",
+      "header_lines_stripped": 55,
+      "normalized_sha256": "1774a9f983a303183a0fc772495ce06bcd14e08d53630aa5f83c72bbc228c248",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 6585720,
+      "pdf_sha256": "6b71d71984bd0856070c30df663cb5260ccefa08bf3978b8da8e7a08275bdac7",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2026/law0650.pdf"
+    },
     "654-2025": {
       "bylaw": "654-2025",
       "extraction_sha256": "2a3af6773ff6d22f9e25fd0c65dc35c62137a7110b18f1944e3c6ed0397b2141",
@@ -19,6 +159,26 @@
       "pdf_bytes": 2549869,
       "pdf_sha256": "bcfdfef304fa9e290d6cc242f66b98577d16228eca097fe0a0734a08a0040237",
       "url": "https://www.toronto.ca/legdocs/bylaws/2025/law0654.pdf"
+    },
+    "842-2025": {
+      "bylaw": "842-2025",
+      "extraction_sha256": "1ed85c069116f9c95e20f41d041a1ee36f4aec61d6b519d817a37ffcb61b5ac4",
+      "extractor": "pdftotext",
+      "extractor_args": [
+        "-enc",
+        "UTF-8",
+        "-eol",
+        "unix"
+      ],
+      "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+      "fetch_id": "E-82696d711c3574f5",
+      "fetched_at": "2026-10-07T17:17:25.058Z",
+      "header_lines_stripped": 44,
+      "normalized_sha256": "20f8621659b1f03f25a16b764a08de67fdb282c48cc1c4b98347f24748e07bbc",
+      "normalizer_version": "enacting-norm-v1",
+      "pdf_bytes": 8138417,
+      "pdf_sha256": "82696d711c3574f58f4c35725b975925ed80bead324e05a1346c5474a97ab5d0",
+      "url": "https://www.toronto.ca/legdocs/bylaws/2025/law0842.pdf"
     }
   }
 }

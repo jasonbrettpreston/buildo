@@ -1,6 +1,6 @@
 {
   "$comment": "McBylaw closed vocabularies (Spec 68 §6.5; S5). Every value a row, unit, rule or gate may carry comes from here; 'none' is written, never omitted. Versioned: a change bumps `version` and is reviewed. Evaluator-shaped views (building_type_residential, building_type_parent, lot_condition_threshold) are DERIVED from this file by scripts/analysis/bylaw/vocab.mjs evaluatorVocab(), never kept twice.",
-  "version": "vocab-v1",
+  "version": "vocab-v2",
   "max_snapshot_age_days": 90,
   "archetype": ["LIMIT", "PERMIT", "PROHIBIT", "REQUIRE", "DEFINE", "DISAPPLY", "INCLUDE", "PREVAILING", "PROCEDURAL", "UNUSUAL"],
   "bound": ["min", "max", "exact"],
@@ -311,7 +311,6 @@
   "slicer": {
     "$comment": "Moved from scripts/analysis/bylaw/slice.mjs (S4 proposed patch, folded at S5). slice.mjs reads these; slice.lock.json is unchanged by the move.",
     "definition_sections": ["800.50"],
-    "definition_head_matcher": { "verbs": ["means", "includes", "has the same meaning", "is defined"], "case_insensitive": true },
     "allowed_extra_chars": "çé²§°½×≤≥",
     "encoding_dash": "\u0096",
     "unit_table": [["square metres","m2"], ["square metre","m2"], ["sq. m","m2"], ["m²","m2"], ["m2","m2"], ["metres","m"], ["metre","m"], ["m","m"], ["per cent","pct"], ["percent","pct"], ["%","pct"], ["storeys","storeys"], ["storey","storeys"], ["dwelling units","units"], ["dwelling unit","units"]],
@@ -339,6 +338,7 @@
       },
       { "kind": "date", "pattern": "\\b\\d{4}-\\d{2}-\\d{2}\\b", "flags": "g" },
       { "kind": "label_code", "pattern": "\\b[A-Za-z]{1,3}-?\\d+(?:\\.\\d+)?\\b", "flags": "g" },
+      { "kind": "label_code", "pattern": "\\b\\d+[A-Za-z]+\\b|\\b[A-Z]\\d+\\/\\d+[A-Z]*\\b", "flags": "g" },
       { "kind": "map_number", "pattern": "\\b(?:Diagrams?|Schedules?|Maps?|Figures?|Tables?|Appendix|Appendices|Sheets?)\\s+\\d+(?:\\s*(?:,|and|to|or)\\s*\\d+)*", "flags": "g" }
     ]
   },

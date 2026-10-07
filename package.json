@@ -132,6 +132,7 @@
     "knip": "^5.85.0",
     "libpg-query": "^18.1.5",
     "lint-staged": "^16.4.0",
+    "parse5": "^7.3.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.0.0",
     "testcontainers": "^11.14.0",

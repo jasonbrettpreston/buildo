@@ -80,9 +80,9 @@ describe('vocab.json (Spec 68 §6.5)', () => {
 });
 
 describe('the slicer reads its declared config from vocab.json (S4 proposed patch, folded at S5)', () => {
-  it('definition sections, definition-head verbs and the unit table come from vocab.slicer', () => {
+  it('definition sections and the unit table come from vocab.slicer', () => {
     expect([...SL.DEFINITION_SECTIONS]).toEqual(VOCAB.slicer.definition_sections);
-    expect([...SL.DEFINITION_MATCHER.verbs]).toEqual(VOCAB.slicer.definition_head_matcher.verbs);
+    // R1 (Spec 69 M-57): defined terms are the HTML title cells; the slicer has no definition-head matcher any more.
     expect(SL.UNIT_TABLE.map((x: string[]) => [...x])).toEqual(VOCAB.slicer.unit_table);
   });
   it('the anti-vacuity exclusions are the vocab patterns (statute citations included)', () => {

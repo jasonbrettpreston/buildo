@@ -1,52 +1,55 @@
-// SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §9 G-TEXT (ids and clause paths unique;
-//            slices round-trip; per-page counts equal the lock; slices + declared non-regulation spans
-//            cover each page; numbering sequence incl. the case-insensitive definition matcher;
-//            verbatim equals the slice; clauses concatenate to the verbatim; source defects are
-//            counted disclosures, never failures), §8 rule 8 (module shape), §6.4 rules 1, 9, 11;
-//            docs/specs/01-pipeline/69_mcbylaw_policy.md M-2, M-47; docs/reports/mcbylaw-phase1-plan.md S4.
+// SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §9 G-TEXT (ids and clause paths unique; slices
+//            round-trip; per-page counts equal the lock; slices + declared non-regulation spans cover each page;
+//            the unit set equals the HTML clause-cell set + declared inline splits, both directions; a numbering
+//            gap at any level fails unless the page proves the number absent; repeats are status-tagged variants,
+//            an unstatused variant with different numbers fails; source defects are counted disclosures), §8 rule 8
+//            (module shape); docs/specs/01-pipeline/69_mcbylaw_policy.md M-2, M-36, M-57 (operator rulings R1–R5,
+//            2026-10-07); docs/reports/mcbylaw-phase1-plan.md S4 (rework).
 //
-// STANDARDIZED word module. S4 lands G-TEXT; G-SHAPE (S6) is added here by its step. The unit-pin
-// arm of G-TEXT (`pending:stale`) needs authored units and lands with them (S6); this module
-// generates the per-unit shas that arm compares against (slice.lock.json).
+// STANDARDIZED word module: G-TEXT (S4). G-SHAPE (S6) is added here by its step. The unit-pin arm
+// (`pending:stale`) compares authored pins against the unit shas this module locks.
 //
 // Reason codes (closed set, G-TEXT):
 //   duplicate_id                 two rows (or two units) share an id
-//   slice_mismatch               a row's verbatim is not the page slice at its offsets, or its sha differs
-//   clauses_not_concatenating    a row's clauses do not partition and concatenate to its verbatim
+//   slice_mismatch               a row's verbatim is not its page (or enacting text) slice, or its sha differs
+//   clauses_not_concatenating    a row's clause ranges do not partition its verbatim, or a clause text differs
 //   page_not_covered             non-whitespace page text outside every row and declared span
 //   span_overlap                 two rows / spans overlap on a page
-//   unsliced_head                a numbered regulation or (n) Term head that fits the sequence is not a row
-//   heading_not_found            a TOC heading of the page is not found in its body
-//   body_not_found               the page has no section heading after its TOC
-//   toc_missing_section          the page TOC lacks its chapter or section row
-//   carve_in_not_found           a declared carve-in article is not on its page
-//   empty_article                an article heading with no text
-//   text_before_first_regulation article text before its (1) that no row holds
+//   numbering_gap_unproven       a gap (or a swallowed division) at any level the page does not prove absent (R3)
+//   unstatused_variant           a repeated division with no status whose numbers differ from the first (R4)
+//   cell_set_mismatch            the page's clause cells != the sliced cell nodes (R1, both directions)
+//   inline_split_undeclared      an inline-list unit not in the lock's declared splits, or a declared one gone (R1)
+//   normalizer_map_mismatch      the raw→normalized map does not reproduce the pinned normalized page
+//   row_not_contiguous           a row's characters interleave with another row's
+//   footer_not_found             the page footer that ends the content is missing
 //   lock_missing                 no slice.lock.json
 //   lock_stale                   the lock was generated for another adoption, normalizer or slicer version
 //   count_mismatch               a per-page count differs from the lock (either direction)
 // Disclosures (counted, never failures): source_defect (garbled_character, lead_in_without_items,
-// heading_not_in_toc, division_repeat, numbering_repeat, marker_typo) and numbering gaps.
+// heading_not_in_toc, anchor_mismatch, variant_duplicate, division_repeat, marker_typo) and proven numbering gaps.
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { sha256, stableStringify, writeAtomic } from './snapshot.mjs';
-import { DEFINITION_MATCHER, PHASE0_DEFINITION_MATCHER, SLICER_VERSION, loadSnapshotPages, sliceSnapshot } from './slice.mjs';
+import { normalize, sha256, stableStringify, writeAtomic } from './snapshot.mjs';
+import { loadSnapshotPages, sliceSnapshot } from './slice.mjs';
 
 export const LOCK_FILE = 'slice.lock.json';
 /** Per-page counts the lock pins (Spec 68 §9 G-TEXT "per-page counts equal the lock"). */
-export const LOCKED_COUNTS = Object.freeze(['definitions', 'retired_rows', 'rows', 'units']);
+export const LOCKED_COUNTS = Object.freeze(['cells_sliced', 'definitions', 'inline_units', 'retired_rows', 'rows', 'table_units', 'units']);
+/** Problem prefixes of the slicer that are G-TEXT reason codes. */
+const SLICER_CODES = Object.freeze(['cell_set_mismatch', 'footer_not_found', 'normalizer_map_mismatch', 'row_not_contiguous', 'unstatused_variant']);
 
 const isWs = (s) => /^\s*$/.test(s);
 
-/** The generated lock: per-page counts + every row and unit sha, bound to the adoption. PURE. */
+/** The generated lock: per-page counts, the declared inline splits, every row and unit sha, bound to the adoption. PURE. */
 export function buildSliceLock(slice, { adoption_id, normalizer_version }) {
   const pages = {};
   for (const [k, c] of Object.entries(slice.pages)) pages[k] = Object.fromEntries(LOCKED_COUNTS.map((f) => [f, c[f]]));
   const totals = Object.fromEntries(LOCKED_COUNTS.map((f) => [f, Object.values(pages).reduce((s, c) => s + c[f], 0)]));
   return {
-    $comment: 'GENERATED by scripts/analysis/bylaw/standardized.mjs writeSliceLock() from the adopted pages (Spec 68 §9 G-TEXT). Do not edit. A change re-pins only under a new adoption.',
+    $comment: 'GENERATED by scripts/analysis/bylaw/standardized.mjs writeSliceLock() from the adopted pages and the sliced enacting texts (Spec 68 §9 G-TEXT). Do not edit. A change re-pins only under a new adoption.',
     adoption_id,
+    inline_splits: slice.units.filter((u) => u.origin === 'inline').map((u) => u.unit_id).sort(),
     normalizer_version,
     pages,
     rows: Object.fromEntries(slice.rows.map((r) => [r.regulation_id, r.sha256])),
@@ -57,9 +60,8 @@ export function buildSliceLock(slice, { adoption_id, normalizer_version }) {
 }
 
 /**
- * G-TEXT over an in-memory slice. `pages` = {key: normalized text}; `lock` may be null; `expect` =
- * {adoption_id, normalizer_version} the lock must be bound to. Returns {pass, violations, checked,
- * disclosures}. PURE.
+ * G-TEXT over an in-memory slice. `pages` = {key: text} (section pages and `enacting:<bylaw>` texts); `lock`
+ * may be null; `expect` = {adoption_id, normalizer_version}. Returns {pass, violations, checked, disclosures}. PURE.
  */
 export function checkTextSlice({ slice, pages, lock, expect }) {
   const violations = [];
@@ -73,25 +75,23 @@ export function checkTextSlice({ slice, pages, lock, expect }) {
     if (text === undefined || text.slice(r.start, r.end) !== r.verbatim || sha256(Buffer.from(r.verbatim, 'utf8')) !== r.sha256) {
       violations.push(`slice_mismatch: ${r.regulation_id} verbatim is not ${r.page}[${r.start}, ${r.end})`);
     }
+    const ranges = r.clauses.flatMap((c) => c.ranges).sort((a, b) => a[0] - b[0]);
     let pos = 0;
-    let ok = true;
-    for (const c of r.clauses) {
-      if (c.start !== pos || r.verbatim.slice(c.start, c.end) !== c.text) ok = false;
-      pos = c.end;
+    let ok = r.clauses.every((c) => c.ranges.map(([s, e]) => r.verbatim.slice(s, e)).join('') === c.text);
+    for (const [s, e] of ranges) {
+      if (s !== pos || e <= s) ok = false;
+      pos = e;
     }
-    if (!ok || pos !== r.verbatim.length || r.clauses.map((c) => c.text).join('') !== r.verbatim) {
-      violations.push(`clauses_not_concatenating: ${r.regulation_id}`);
-    }
+    if (!ok || pos !== r.verbatim.length) violations.push(`clauses_not_concatenating: ${r.regulation_id}`);
   }
   const seenUnits = new Set();
   for (const u of slice.units) {
     if (seenUnits.has(u.unit_id)) violations.push(`duplicate_id: unit ${u.unit_id}`);
     seenUnits.add(u.unit_id);
   }
-  // Coverage: rows + declared spans cover each sliced page; nothing overlaps.
   for (const [key, spans] of Object.entries(slice.spans)) {
     const text = pages[key] ?? '';
-    const iv = [...spans.map((s) => ({ start: s.start, end: s.end, what: s.kind })), ...slice.rows.filter((r) => r.page === key).map((r) => ({ start: r.start, end: r.end, what: r.regulation_id }))].sort((a, b) => a.start - b.start || a.end - b.end);
+    const iv = [...spans.map((s) => ({ end: s.end, start: s.start, what: s.kind })), ...slice.rows.filter((r) => r.page === key).map((r) => ({ end: r.end, start: r.start, what: r.regulation_id }))].sort((a, b) => a.start - b.start || a.end - b.end);
     let pos = 0;
     let prev = null;
     for (const x of iv) {
@@ -104,9 +104,8 @@ export function checkTextSlice({ slice, pages, lock, expect }) {
     }
     if (!isWs(text.slice(pos))) violations.push(`page_not_covered: ${key} [${pos}, ${text.length}) "${text.slice(pos, pos + 60)}"`);
   }
-  for (const u of slice.numbering.unsliced) violations.push(`unsliced_head: ${u.key} ${u.article} (${u.n}) "${u.context}"`);
-  for (const p of slice.problems) violations.push(p);
-  // The lock.
+  for (const g of slice.numbering.unproven) violations.push(`numbering_gap_unproven: ${g.key} ${g.article} ${g.parent || '(article)'} (${g.missing}) after (${g.after ?? '-'}) before (${g.next ?? '-'})${g.context ? ` "${g.context}"` : ''}`);
+  for (const p of slice.problems) violations.push(SLICER_CODES.some((c) => p.startsWith(`${c}:`)) ? p : `structural: ${p}`);
   if (!lock) violations.push(`lock_missing: ${LOCK_FILE}`);
   else {
     if (lock.adoption_id !== expect.adoption_id || lock.normalizer_version !== expect.normalizer_version || lock.slicer_version !== slice.slicer_version) {
@@ -120,6 +119,10 @@ export function checkTextSlice({ slice, pages, lock, expect }) {
         if (want !== got) violations.push(`count_mismatch: ${k}.${f} lock ${want ?? 'absent'} != slice ${got ?? 'absent'}`);
       }
     }
+    const declared = new Set(lock.inline_splits || []);
+    const now = new Set(slice.units.filter((u) => u.origin === 'inline').map((u) => u.unit_id));
+    for (const id of now) if (!declared.has(id)) violations.push(`inline_split_undeclared: ${id} is an inline split the lock does not declare`);
+    for (const id of declared) if (!now.has(id)) violations.push(`inline_split_undeclared: declared ${id} is no longer split`);
   }
   const disclosures = { numbering_gaps: slice.numbering.gaps.length, source_defect: slice.defects.length, source_defect_by_kind: {} };
   for (const d of slice.defects) disclosures.source_defect_by_kind[d.kind] = (disclosures.source_defect_by_kind[d.kind] || 0) + 1;
@@ -131,11 +134,13 @@ function readLock(seeds) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
 }
 
-/** Slice the committed snapshot. Returns {snap, slice, pages{key: text}}. */
+/** Slice the committed snapshot (pages + sliced enacting texts). Returns {snap, slice, pages{key: text}}. */
 export function sliceSeeds(seeds) {
   const snap = loadSnapshotPages(seeds);
-  const slice = sliceSnapshot({ pages: snap.pages });
-  return { pages: Object.fromEntries(snap.pages.map((p) => [p.key, p.normalized])), slice, snap };
+  const slice = sliceSnapshot(snap);
+  const pages = Object.fromEntries(snap.pages.map((p) => [p.key, p.normalized]));
+  for (const e of snap.enacting) pages[`enacting:${e.bylaw}`] = e.text;
+  return { pages, slice, snap };
 }
 
 /** G-TEXT over the committed snapshot and lock. Returns {pass, violations, checked, disclosures}. */
@@ -155,72 +160,81 @@ export function writeSliceLock({ seeds }) {
 // ---------------------------------------------------------------- fixtures (known-bad + good twin)
 
 const FILE = (section) => `ZBL_NewProvision_Chapter${section.replace('.', '_')}.htm`;
+const MARK = (sym, anchor) => `<TD ALIGN=RIGHT VALIGN=TOP width="5%">${anchor ? `<A Name="${anchor}">(${sym})</A>` : `(${sym})`}</TD>`;
+const CONT = '<TD ALIGN=RIGHT VALIGN=TOP width="5%"></TD>';
+
+/** A clause table: [{sym, text, clauses?, html?}] → nested City markup (depth = table nesting). */
+export function clauseTable(items) {
+  return `<TABLE WIDTH="100%">${items
+    .map((c) => `<TR>${MARK(c.sym)}<TD VALIGN=TOP colspan="2">${c.text}</TD></TR>${c.clauses ? `<TR>${CONT}<TD VALIGN=TOP>${clauseTable(c.clauses)}</TD></TR>` : ''}${c.html || ''}`)
+    .join('')}</TABLE>`;
+}
+
+/** A regulation: {n, title, text?, clauses?, html?} under `article`. */
+export function regulationHtml(article, reg) {
+  return `<TABLE WIDTH="100%"><TR>${MARK(reg.n, reg.anchor === false ? null : `${article}(${reg.n})`)}<TD VALIGN=TOP colspan="2"><u>${reg.title}</u></TD></TR>${reg.text ? `<TR>${CONT}<TD VALIGN=TOP colspan="2">${reg.text}<br></TD></TR>` : ''}${reg.clauses ? `<TR>${CONT}<TD VALIGN=TOP>${clauseTable(reg.clauses)}</TD></TR>` : ''}${reg.html || ''}</TABLE>`;
+}
 
 /**
- * A City-shaped page: header, TOC table (chapter, section, own `#` article rows), body, footer.
- * `articles` = [{id, title, text}] (text after the heading; `heading: false` omits it from the body);
- * `sectionText` = body text directly under the section heading (a page with no articles, e.g. 800.50).
- * Returns a sliceSnapshot() page input. PURE.
+ * A City-shaped page: header, TOC table, the content cell (H1 chapter, H2 section, H4 articles with their
+ * regulation tables) and the footer. `articles` = [{id, title, regs: [...], toc?: false}]. Returns a
+ * sliceSnapshot() page input whose `normalized` is normalize(html) (the pinned-page contract). PURE.
  */
-export function fixturePage({ key = 'ch10_20', chapter = '10', chapterTitle = 'Residential', section = '10.20', sectionTitle = 'Residential Detached Zone (RD)', articles = [], sectionText = '', status, ruling, carve_in }) {
+export function fixturePage({ key = 'ch10_20', chapter = '10', chapterTitle = 'Residential', section = '10.20', sectionTitle = 'Residential Detached Zone (RD)', articles = [], status, ruling, carve_in }) {
   const toc = [
     `<TR><TD>Chapter ${chapter}</TD><TD><A HREF="ZBL_NewProvision_Chapter${chapter}.htm">${chapterTitle}</A></TD></TR>`,
     `<TR><TD>${section}</TD><TD><A HREF="${FILE(section)}">${sectionTitle}</A></TD></TR>`,
-    ...articles.map((a) => `<TR><TD>${a.id}</TD><TD><A HREF="#${a.id}">${a.title}</A></TD></TR>`),
+    ...articles.filter((a) => a.toc !== false).map((a) => `<TR><TD>${a.id}</TD><TD><A HREF="#${a.id}">${a.title}</A></TD></TR>`),
   ];
-  const body = [sectionText, ...articles.filter((a) => a.heading !== false).map((a) => `${a.id} ${a.title} ${a.text}`)].filter(Boolean).join(' ');
+  const body = articles.map((a) => `<H4><A Name="${a.id}">${a.id}   ${a.title}</A></H4>${(a.regs || []).map((r) => regulationHtml(a.id, r)).join('')}`).join('\n');
   const html = [
     '<html><head><META http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></head><body>',
     '<p>City of Toronto Zoning By-law 569-2013 Version Date: July 31, 2024, including City-wide Amendments up to April 30, 2026 Table of Contents</p>',
     `<TABLE>${toc.join('')}</TABLE>`,
-    `<p>Chapter ${chapter} ${chapterTitle} ${section} ${sectionTitle} ${body}</p>`,
-    '<p>&copy;City of Toronto 1998-2026</p></body></html>',
+    `<TABLE><TR><TD VALIGN="TOP"><H1>Chapter ${chapter}      ${chapterTitle}</H1><H2>${section}  ${sectionTitle}</H2>${body}</TD></TR></TABLE>`,
+    '<table><tr><td align="right"><font>&copy;<A href="http://www.toronto.ca/copyright.htm">City of Toronto 1998-2026</A></font></td></tr></table></body></html>',
   ].join('\n');
-  const normalized = html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return { carve_in, file: FILE(section), html, key, normalized, role: 'section', ruling, section, status };
+  return { carve_in, file: FILE(section), html, key, normalized: normalize(html), role: 'section', ruling, section, status };
 }
 
-const GOOD_ARTICLES = [
-  { id: '10.20.40.10', title: 'Height', text: '(1) Maximum Height The permitted maximum height of a building is 10.0 metres. [ By-law: 1-2020 ] (2) Storeys The permitted maximum number of storeys is 2.' },
-  { id: '10.20.40.70', title: 'Setbacks', text: '(1) Side Yard The required minimum side yard setback is: (A) 0.9 metres, if the lot frontage is less than 12.0 metres; and (B) 1.2 metres, in all other cases. [ By-law: 2-2021 ]' },
+const GOOD = () => [
+  fixturePage({
+    articles: [
+      { id: '10.20.40.10', regs: [{ n: 1, text: 'The permitted maximum height of a building is 10.0 metres. [ By-law: 1-2020 ]', title: 'Maximum Height' }, { n: 2, text: 'The permitted maximum number of storeys is 2.', title: 'Storeys' }], title: 'Height' },
+      { id: '10.20.40.70', regs: [{ clauses: [{ sym: 'A', text: '0.9 metres, if the lot frontage is less than 12.0 metres; and' }, { sym: 'B', text: '1.2 metres, in all other cases. [ By-law: 2-2021 ]' }], n: 1, text: 'The required minimum side yard setback is:', title: 'Side Yard' }], title: 'Setbacks' },
+    ],
+  }),
 ];
-function defsFixture(matcher) {
-  const sectionText = '(405) Landscaping means trees and plants. (410) Lawfully Existing Means: in compliance with a by-law. (415) Lot means a parcel of land.';
-  return { pages: [fixturePage({ key: 'ch800_50', chapter: '800', chapterTitle: 'Definitions', section: '800.50', sectionTitle: 'Defined Terms', sectionText })], matcher };
-}
+const EXPECT = { adoption_id: 'adoption-1', normalizer_version: 'norm-v1' };
 
-function run({ pages, matcher, mutate, lockFrom, lockMutate }) {
-  const slice = sliceSnapshot({ pages, definitionMatcher: matcher });
-  const expect = { adoption_id: 'adoption-1', normalizer_version: 'norm-v1' };
-  let lock = buildSliceLock(lockFrom ? sliceSnapshot({ pages: lockFrom }) : slice, expect);
+function run({ pages, mutate, lockFrom, lockMutate }) {
+  const slice = sliceSnapshot({ pages });
+  let lock = buildSliceLock(lockFrom ? sliceSnapshot({ pages: lockFrom }) : slice, EXPECT);
   if (mutate) mutate(slice);
   if (lockMutate) lock = lockMutate(lock);
-  return checkTextSlice({ expect, lock, pages: Object.fromEntries(pages.map((p) => [p.key, p.normalized])), slice });
+  return checkTextSlice({ expect: EXPECT, lock, pages: Object.fromEntries(pages.map((p) => [p.key, p.normalized])), slice });
 }
 
-const good = () => [fixturePage({ articles: GOOD_ARTICLES })];
+const one = (regs, extra = {}) => [fixturePage({ articles: [{ id: '10.20.40.70', regs, title: 'Setbacks' }], ...extra })];
 
 /** One known-bad fixture per reason code, each with the good twin it differs from. */
 export const FIXTURES = Object.freeze([
-  { reason: null, name: 'good twin: clean page', input: () => ({ pages: good() }) },
-  { reason: null, name: 'good twin: case-insensitive matcher slices (410) Lawfully Existing Means', input: () => defsFixture(DEFINITION_MATCHER) },
-  { reason: 'duplicate_id', name: 'a row duplicated', input: () => ({ pages: good(), mutate: (s) => s.rows.push({ ...s.rows[0], start: s.rows[0].start }) }) },
-  { reason: 'slice_mismatch', name: 'verbatim edited', input: () => ({ pages: good(), mutate: (s) => (s.rows[0].verbatim = s.rows[0].verbatim.replace('10.0', '11.0')) }) },
-  { reason: 'clauses_not_concatenating', name: 'a clause dropped', input: () => ({ pages: good(), mutate: (s) => s.rows.find((r) => r.clauses.length > 1).clauses.pop() }) },
-  { reason: 'page_not_covered', name: 'a row missing from the slice', input: () => ({ pages: good(), mutate: (s) => s.rows.splice(1, 1) }) },
-  { reason: 'span_overlap', name: 'a declared span overlaps a row', input: () => ({ pages: good(), mutate: (s) => s.spans.ch10_20.push({ start: s.rows[0].start, end: s.rows[0].start + 5, kind: 'article_heading' }) }) },
-  { reason: 'unsliced_head', name: 'the Phase 0 matcher misses (410) Lawfully Existing Means', input: () => defsFixture(PHASE0_DEFINITION_MATCHER) },
-  { reason: 'unsliced_head', name: 'a regulation head the slicer skipped', input: () => ({ pages: good(), mutate: (s) => s.numbering.unsliced.push({ key: 'ch10_20', article: '10.20.40.10', n: 2, context: 'x' }) }) },
-  { reason: 'heading_not_found', name: 'a TOC article absent from the body', input: () => ({ pages: [fixturePage({ articles: [...GOOD_ARTICLES, { id: '10.20.40.80', title: 'Separation', text: '', heading: false }] })] }) },
-  { reason: 'carve_in_not_found', name: 'a carve-in article that is not on the page', input: () => ({ pages: [fixturePage({ articles: GOOD_ARTICLES, carve_in: ['10.20.40.99'] })] }) },
-  { reason: 'empty_article', name: 'an article heading with no text', input: () => ({ pages: [fixturePage({ articles: [...GOOD_ARTICLES, { id: '10.20.40.80', title: 'Separation', text: '' }] })] }) },
-  { reason: 'text_before_first_regulation', name: 'article text before (1)', input: () => ({ pages: [fixturePage({ articles: [{ id: '10.20.40.10', title: 'Height', text: 'Preamble text. (1) Maximum Height The height is 10.0 metres.' }] })] }) },
-  { reason: 'lock_missing', name: 'no lock', input: () => ({ pages: good(), lockMutate: () => null }) },
-  { reason: 'lock_stale', name: 'lock bound to another adoption', input: () => ({ pages: good(), lockMutate: (l) => ({ ...l, adoption_id: 'adoption-0' }) }) },
-  { reason: 'count_mismatch', name: 'lock pins a different row count', input: () => ({ pages: good(), lockFrom: [fixturePage({ articles: GOOD_ARTICLES.slice(0, 1) })] }) },
+  { input: () => ({ pages: GOOD() }), name: 'good twin: clean page', reason: null },
+  { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'a;' }, { sym: 'B', text: 'b.' }], n: 1, text: 'Lead:', title: 'T' }, { n: 2, text: 'x', title: 'U' }, { n: 4, text: 'y', title: 'V' }]) }), name: 'good twin: a gap the page proves absent ((3) appears nowhere) is a counted disclosure', reason: null },
+  { input: () => ({ pages: one([{ n: 1, text: 'x', title: 'T' }, { html: '', n: 1, text: 'x [ By-law: 9-2020 Under Appeal ]', title: 'T' }]) }), name: 'good twin: an Under Appeal variant is a status-tagged row', reason: null },
+  { input: () => ({ mutate: (s) => s.rows.push({ ...s.rows[0] }), pages: GOOD() }), name: 'a row duplicated', reason: 'duplicate_id' },
+  { input: () => ({ mutate: (s) => (s.rows[0].verbatim = s.rows[0].verbatim.replace('10.0', '11.0')), pages: GOOD() }), name: 'verbatim edited', reason: 'slice_mismatch' },
+  { input: () => ({ mutate: (s) => s.rows.find((r) => r.clauses.length > 1).clauses.pop(), pages: GOOD() }), name: 'a clause dropped', reason: 'clauses_not_concatenating' },
+  { input: () => ({ mutate: (s) => s.rows.splice(1, 1), pages: GOOD() }), name: 'a row missing from the slice', reason: 'page_not_covered' },
+  { input: () => ({ mutate: (s) => s.spans.ch10_20.push({ end: s.rows[0].start + 5, kind: 'heading', start: s.rows[0].start }), pages: GOOD() }), name: 'a declared span overlaps a row', reason: 'span_overlap' },
+  { input: () => ({ pages: one([{ n: 1, text: 'x. (2) Swallowed Rear yard is 7.5 metres. y', title: 'T' }, { n: 3, text: 'z', title: 'V' }]) }), name: 'a regulation whose cell the page lost: (2) is in the text, not a cell', reason: 'numbering_gap_unproven' },
+  { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'length of 6.0 metres (B) width of 3.2 metres' }], n: 3, text: 'Minimum:', title: 'T' }]) }), name: 'class A: (B) swallowed inside the (A) cell', reason: 'numbering_gap_unproven' },
+  { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'x;' }, { sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }], n: 1, text: 'Dims:', title: 'T' }]) }), name: 'an unstatused repeat with different numbers (200.15.1(1)(B))', reason: 'unstatused_variant' },
+  { input: () => ({ mutate: (s) => s.problems.push('cell_set_mismatch: ch10_20 html clause cells 5 != sliced 4'), pages: GOOD() }), name: 'the cell set and the slice disagree', reason: 'cell_set_mismatch' },
+  { input: () => ({ lockMutate: (l) => ({ ...l, inline_splits: [] }), pages: one([{ n: 1, text: 'Rates: (A) in Zone A 1.0; and (B) in Zone B 2.0.', title: 'T' }]) }), name: 'an inline split the lock does not declare', reason: 'inline_split_undeclared' },
+  { input: () => ({ lockMutate: () => null, pages: GOOD() }), name: 'no lock', reason: 'lock_missing' },
+  { input: () => ({ lockMutate: (l) => ({ ...l, adoption_id: 'adoption-0' }), pages: GOOD() }), name: 'lock bound to another adoption', reason: 'lock_stale' },
+  { input: () => ({ lockFrom: one([{ n: 1, text: 'x', title: 'T' }]), pages: GOOD() }), name: 'lock pins different counts', reason: 'count_mismatch' },
 ]);
 
 /** Run every fixture: a known-bad one must fail with its reason; a good twin must pass. */

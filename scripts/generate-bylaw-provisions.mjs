@@ -7,9 +7,11 @@
 //
 //   node scripts/generate-bylaw-provisions.mjs --refresh [--baseline=<Phase 0 pages dir>] [--delay-ms=1000]
 //       fetch the pinned pages (scripts/seeds/bylaw/page-set.json) into the git-ignored .staging/,
-//       all or nothing, and print the change report. --baseline is required for adoption 1 only.
+//       all or nothing, and print the change report. --baseline is required for adoption 1 only. Then record the
+//       City's enacted, not-yet-consolidated list (unconsolidated.json; Spec 69 M-57 R5, G-UNIVERSE).
 //   node scripts/generate-bylaw-provisions.mjs --adopt
-//       re-validate the staging and write pages/, manifest.json, adoptions.json.
+//       re-validate the staging and write pages/, manifest.json, adoptions.json; then re-pin slice.lock.json under
+//       the new adoption (Spec 68 §8 rule 7: an adoption re-pins its per-page counts).
 //   node scripts/generate-bylaw-provisions.mjs --accept --ruling=<Spec 69 id>
 //       pin the universe (universe.lock.json + a ratchet-exceptions.json universe_pin row); refused unless the id is
 //       RATIFIED, G-UNIVERSE has no violation and nothing awaits a ruling (Spec 68 §8 rule 7).
@@ -24,6 +26,8 @@ import { adopt, refresh, SnapshotError } from './analysis/bylaw/snapshot.mjs';
 import { acceptUniverse, universeInputs, UniverseError } from './analysis/bylaw/universe.mjs';
 import { loadSnapshotPages, sliceSnapshot } from './analysis/bylaw/slice.mjs';
 import { CensusError, refreshCensus } from './analysis/bylaw/census.mjs';
+import { writeSliceLock } from './analysis/bylaw/standardized.mjs';
+import { refreshUnconsolidated } from './analysis/bylaw/unconsolidated.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -71,6 +75,8 @@ async function main() {
       });
       console.log(`staged ${fetchId}`);
       printReport(report);
+      const uc = await refreshUnconsolidated({ seeds: path.join(ROOT, 'scripts', 'seeds', 'bylaw'), fetchImpl: fetch, nowIso, sleep, delayMs: args.delayMs });
+      console.log(`unconsolidated list: ${uc.bylaws.length} by-laws (${uc.bylaws.filter((b) => b.captured).length} captured)`);
       return 0;
     }
     if (mode === 'accept') {
@@ -86,6 +92,8 @@ async function main() {
     }
     const { adoptionId, manifest } = adopt({ root: ROOT });
     console.log(`adopted ${adoptionId}: ${manifest.pages.length} pages`);
+    const lock = writeSliceLock({ seeds: path.join(ROOT, 'scripts', 'seeds', 'bylaw') });
+    console.log(`slice.lock.json re-pinned: ${lock.totals.rows} rows, ${lock.totals.units} units`);
     return 0;
   } catch (err) {
     if (err instanceof SnapshotError || err instanceof UniverseError || err instanceof CensusError) {

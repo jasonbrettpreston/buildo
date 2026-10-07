@@ -1,592 +1,568 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §6 (regulation_id, clauses[], unit id
 //            `regulation_id#clause_path`, verified_against_sha256 = sha of the unit's normalized text),
-//            §6.4 rules 1, 6, 11, §6.5 (unit table, number words, anti-vacuity exclusions), §9 G-TEXT,
-//            §10 stage 2 (Slice); docs/specs/01-pipeline/69_mcbylaw_policy.md M-2, M-47 (+ S3 notes);
-//            docs/reports/mcbylaw-phase1-plan.md S4.
+//            §6.4 rules 1, 6, §9 G-TEXT (structure from the HTML; every-level numbering; variants never merged),
+//            §10 stage 2 (Slice); docs/specs/01-pipeline/69_mcbylaw_policy.md M-2, M-36, M-47, M-57;
+//            docs/reports/mcbylaw-phase1-plan.md S4 (rework 2026-10-07: operator rulings R1–R4).
 //
-// Stage 2 of the McBylaw generator: cut the adopted normalized pages into regulations and clauses,
-// and extract literals, amendment tags (with the clause they follow) and cross-references.
-// Every function here is PURE except loadSnapshotPages() (reads the committed seeds; no clock,
-// no network, no locale API). The page TOC (parsed from the raw page) is the authority for which
-// headings a page holds; the body text is the normalized page (the verbatim source).
+// Stage 2 of the McBylaw generator, sliced from the City page's own STRUCTURE (operator ruling R1, Spec 69
+// M-57): the clause cells (`<TD ALIGN=RIGHT …>(x)</TD>`, with their `<A Name>` anchors), their depth from
+// table nesting, and the headings. Text patterns are used only for an inline list inside ONE cell (R1) and
+// for enacting-text regulations, which have no HTML. Data tables are units of their own, keyed (table, row,
+// column), with their row and column headers (R2). Every character of the pinned normalized page is owned by
+// exactly one clause node or one declared non-regulation span; offsets map back through normalizeWithMap,
+// whose text must equal the pinned normalized page. A numbering gap at any level fails unless the page
+// proves the number absent (R3); a repeated division is a status-tagged variant, never merged (R4).
 //
 // Ids (Spec 68 §6):
-//   regulation_id   `<article>(<n>)`; a definition `800.50(<n>)`; an article with no numbered regulation
-//                   `<article>#article`; a section page with no article (995.50) uses the section as article.
-//   clause_path     the full bracket path, e.g. `(3)(A)(i)`; `` for an `#article` row's root.
-//   unit_id         `regulation_id#clause_path` of every LEAF clause.
-// The by-law's own numbering (1.20.1(2)): (25) regulation · (A) upper-case letter · (i) lower-case
-// Roman numeral · (a) lower-case letter.
-// Unit text (the sha input) = the ancestors' lead-in segments + the leaf's own segment, joined by one
-// space, so a change to a lead-in ("may be converted if:") marks its leaves stale.
+//   regulation_id   `<article>(<n>)`; a definition `800.50(<n>)`; the article's own text outside any numbered
+//                   regulation `<article>#article`; a variant `<id>~<status>` (e.g. `200.15.1(1)~under_appeal`).
+//   clause_path     the full path: `(3)(A)(i)`; a table cell adds `[T<k>.R<i>.C<j>]` (k = table under its
+//                   owner, i/j from 1); an inline list inside a cell continues the path (`[T1.R2.C2](A)(i)`).
+//   unit_id         `regulation_id#clause_path` of every LEAF node with text.
+// Unit text (the sha input) = the ancestors' own text (+ a cell's row and column headers) + the leaf's own text,
+// joined by one space, so a lead-in or header edit marks its leaves stale.
+// Every function is PURE except loadSnapshotPages() (reads the committed seeds; no clock, no network).
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { normalizeWithMap, pageStructure, rawToNorm } from './html.mjs';
 import { decodePage, parseToc, sha256 } from './snapshot.mjs';
+import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers } from './text.mjs';
 
-export const SLICER_VERSION = 'slice-v1';
+export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, UNIT_TABLE } from './text.mjs';
 
-/**
- * The slicer's declared configuration lives in `scripts/seeds/bylaw/vocab.json` `slicer` (Spec 68 §6.5: the
- * anti-vacuity exclusions, the unit table and the definition matcher are vocabulary; moved here from code at S5).
- * Read once, at import, from the committed seed; nothing else in this module does I/O at import.
- */
-const SLICER = createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer;
+export const SLICER_VERSION = 'slice-v2';
 
-/** Sections sliced as numbered defined terms `(n) Term means ...` instead of articles + regulations. */
-export const DEFINITION_SECTIONS = Object.freeze([...SLICER.definition_sections]);
+/** Sections whose numbered divisions are defined terms (term = the title cell): vocab `slicer.definition_sections`. */
+export const DEFINITION_SECTIONS = Object.freeze([...createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer.definition_sections]);
 
 /**
- * The declared definition-head matcher (Spec 68 §6.4 rule 11, §9 G-TEXT): case-insensitive verb.
- * The Phase 0 matcher (case-sensitive, no `includes`) missed 800.50 (410) "Lawfully Existing Means:"
- * and (695) "Residential Building includes".
+ * Captured enacting by-laws (Spec 69 M-36) whose amendments are sliced into rows now (operator ruling R5,
+ * 2026-10-07; the five site-specific by-laws added by the coordinator's R5 follow-up the same day). 206-2026 and
+ * 650-2026 are captured and pinned, but their map and Ch.900 exception rows are Phase 2; 654-2025 is consolidated
+ * (600.60) and kept as enacting_source only.
  */
-export const DEFINITION_MATCHER = Object.freeze({ verbs: Object.freeze([...SLICER.definition_head_matcher.verbs]), caseInsensitive: SLICER.definition_head_matcher.case_insensitive === true });
-export const PHASE0_DEFINITION_MATCHER = Object.freeze({ verbs: ['means', 'has the same meaning', 'is defined'], caseInsensitive: false });
+export const SLICED_ENACTING = Object.freeze(['1018-2026', '1075-2026', '1207-2026', '262-2026', '63-2024', '842-2025']);
 
-/**
- * Characters that may appear in body text: printable ASCII plus vocab `slicer.allowed_extra_chars`. Anything else
- * in a row is a counted `source_defect` disclosure (Spec 68 §9 G-TEXT), never a failure. The encoding dash
- * (U+0096) is the City's cp1252 en-dash served under a declared iso-8859-1 charset (normalizer v1 keeps it); it
- * is allowed, not a defect (a normalizer v2 mapping it to '-' is a proposed S3 follow-up).
- */
-const reClass = (s) => s.replace(/[\\\]^-]/g, '\\$&');
-const ALLOWED_CHAR = new RegExp(`[\\x20-\\x7e${reClass(SLICER.allowed_extra_chars)}]`);
-const ENCODING_DASH = SLICER.encoding_dash;
+/** Variant status read from the variant's own text (R4). Closed set; null = unstatused. */
+export const VARIANT_STATUSES = Object.freeze([
+  ['under_appeal', /\bUnder Appeal\b/i],
+  ['tribunal_order', /\((?:OLT|LPAT|OMB)\)/],
+]);
 
-const ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx', 'xxi', 'xxii', 'xxiii', 'xxiv', 'xxv', 'xxvi', 'xxvii', 'xxviii', 'xxix', 'xxx', 'xxxi', 'xxxii', 'xxxiii', 'xxxiv', 'xxxv', 'xxxvi', 'xxxvii', 'xxxviii', 'xxxix', 'xl'];
-const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const LOWER = 'abcdefghijklmnopqrstuvwxyz'.split('');
-/** Clause levels below the regulation, in order (1.20.1(2)). */
-const LEVELS = [UPPER, ROMAN, LOWER];
-
-const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const MARKER_CELL_RE = /<TD\b[^>]*\bALIGN\s*=\s*"?RIGHT"?[^>]*>\s*(?:<A\b[^>]*>)?\s*\(([^)\s<]{1,6})\)\s*(?:<\/A>)?\s*<\/TD>/gi;
 const isWs = (s) => /^\s*$/.test(s);
+const symClass = (s) => (/^\d+$/.test(s) ? 'N' : /^[A-Z]$/.test(s) ? 'U' : ROMAN.includes(s) ? 'r' : /^[a-z]$/.test(s) ? 'l' : 'X');
+const SEQ = { U: LEVELS[0], r: LEVELS[1], l: LEVELS[2] };
 
-/** Defect characters in a string: [{index, char, code}] (index relative to the string). PURE. */
-export function defectChars(text) {
-  const out = [];
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (c === ENCODING_DASH || ALLOWED_CHAR.test(c)) continue;
-    out.push({ index: i, char: c, code: `U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}` });
+/** The successor symbol list between two siblings (exclusive), or null when the level is unknown. */
+function missingBetween(a, b) {
+  const ca = symClass(a ?? b); // a = null: the first division of a list (must be (A) / (i) / (a))
+  if (ca === 'N') {
+    const out = [];
+    for (let k = Number(a) + 1; k < Number(b) && out.length < 60; k++) out.push(String(k));
+    return out;
   }
-  return out;
+  const seq = SEQ[ca];
+  if (!seq) return [];
+  const i = a === null ? -1 : seq.indexOf(a);
+  const j = seq.indexOf(b);
+  return j > i + 1 ? seq.slice(i + 1, j) : [];
 }
 
-const BREAK_BEFORE = /(?:[.:;,\])]|[;,] (?:and|or)|^)\s$/;
+/** Does the raw page text between two offsets hold `(sym)` as a division (not glued to an id)? */
+const rawHolds = (html, from, to, sym) => new RegExp(`(?<![\\w.)\\]])\\(${sym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)(?![\\w(])`).test(html.slice(from, to).replace(/<[^>]+>/g, ' '));
 
 /**
- * Is the text before a marker a list break? `; and `, `: `, `. `, `] `, `, ` … or a defect character
- * (the City garble in 600.60.40(3)(A) eats the punctuation before (B)).
- */
-function breakBefore(prefix) {
-  const tail = prefix.slice(-8);
-  if (BREAK_BEFORE.test(tail)) return true;
-  const ch = prefix.slice(-2, -1);
-  return ch !== '' && /\s$/.test(prefix) && defectChars(ch).length > 0;
-}
-
-/** Text after a marker that makes it a reference, not a division: `(a) to (d) above`, `(B) and (C)`. */
-const REF_AFTER = /^(?:(?:to|and|or|through)\s+\(|(?:inclusive|above|below)\b)|^[,)]/;
-
-/**
- * Parse the clause tree of one regulation's verbatim. Returns {nodes, repeats, typos}: nodes in text
- * order, each {path, start, end, depth, leaf}, whose own segments partition [0, text.length);
- * `repeats` = list-break markers re-using a symbol of an open level (tables, duplicated City text:
- * kept inside the preceding leaf, disclosed); `typos` = "(I)" read as (i). `rootPath` is the
- * regulation's own path (`(3)`, or `` for an `#article` row). PURE.
- */
-export function parseClauses(text, rootPath) {
-  const re = /(?<=\s)\(([A-Z]|[ivxl]{1,7}|[a-z])\)(?= )/g;
-  const accepted = []; // {at, depth, symbol}
-  const stack = []; // per depth: index into LEVELS[d] of the open division
-  const repeats = []; // a list break + a division symbol already used at an open level (tables, duplicated City text)
-  const typos = []; // "(I)" where the lower-case Roman (i) is due (230.5.1.10(4), 2.1.1(4))
-  let m;
-  while ((m = re.exec(text))) {
-    let sym = m[1];
-    const after = text.slice(m.index + m[0].length + 1, m.index + m[0].length + 40);
-    if (after.startsWith('[') && !after.startsWith('[Deleted')) continue; // "(A) [bracketed upper-case letter]" (1.20.1(2))
-    if (REF_AFTER.test(after)) continue;
-    const prefix = text.slice(Math.max(0, m.index - 12), m.index);
-    // Candidate interpretations, deepest first: a first child, then a next sibling at each open depth.
-    let pick = null;
-    const childDepth = stack.length;
-    if (childDepth < LEVELS.length && LEVELS[childDepth][0] === sym) pick = { depth: childDepth, idx: 0, first: true };
-    for (let d = stack.length - 1; d >= 0 && !pick; d--) {
-      const idx = LEVELS[d].indexOf(sym);
-      if (idx === stack[d] + 1) pick = { depth: d, idx, first: false };
-    }
-    if (!pick && sym === 'I' && childDepth === 1 && breakBefore(prefix)) {
-      pick = { depth: 1, idx: 0, first: true };
-      typos.push({ at: m.index, symbol: 'I', as: 'i' });
-      sym = 'i';
-    }
-    if (!pick) {
-      if (breakBefore(prefix) && stack.some((open, d) => LEVELS[d].indexOf(sym) >= 0 && LEVELS[d].indexOf(sym) <= open)) repeats.push({ at: m.index, symbol: sym });
-      continue;
-    }
-    // A sibling needs a list break before it; a first child may follow a title ("(1) Height (A) ...").
-    if (!pick.first && !breakBefore(prefix)) continue;
-    if (pick.first && !breakBefore(prefix) && /(?:regulations?|clauses?|with|of|in|under|and|or|to|see)\s$/i.test(prefix)) continue;
-    stack.length = pick.depth;
-    stack.push(pick.idx);
-    accepted.push({ at: m.index, depth: pick.depth, symbol: sym });
-  }
-  // Build paths and own segments.
-  const nodes = [{ path: rootPath, start: 0, end: accepted.length ? accepted[0].at : text.length, depth: -1, leaf: accepted.length === 0 }];
-  const pathStack = [];
-  for (let i = 0; i < accepted.length; i++) {
-    const a = accepted[i];
-    pathStack.length = a.depth;
-    pathStack.push(`(${a.symbol})`);
-    const next = accepted[i + 1];
-    nodes.push({ path: rootPath + pathStack.join(''), start: a.at, end: next ? next.at : text.length, depth: a.depth, leaf: !next || next.depth <= a.depth });
-  }
-  return { nodes, repeats, typos };
-}
-
-// ---------------------------------------------------------------- extractors
-
-const WORD_NUM = {
-  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100,
-};
-const WORD_RE = `(?:(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)-(?:one|two|three|four|five|six|seven|eight|nine)|${Object.keys(WORD_NUM).join('|')})`;
-const NUM_RE = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)';
-
-/** The unit table (Spec 68 §6.5), longest form first; declared in vocab.json `slicer.unit_table`. */
-export const UNIT_TABLE = Object.freeze(SLICER.unit_table.map(([w, u]) => Object.freeze([w, u])));
-const UNIT_RE = UNIT_TABLE.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-
-function wordValue(w) {
-  const k = w.toLowerCase();
-  if (k in WORD_NUM) return WORD_NUM[k];
-  const [t, o] = k.split('-');
-  return WORD_NUM[t] + WORD_NUM[o];
-}
-const numValue = (raw) => (/^\d/.test(raw) ? Number(raw.replace(/,/g, '')) : wordValue(raw));
-const unitOf = (u) => (u ? UNIT_TABLE.find(([w]) => w === u.toLowerCase() || w === u)[1] : null);
-
-/**
- * Spans excluded from the anti-vacuity scan (Spec 68 §6.5 "declared patterns"): clause and regulation
- * ids, by-law numbers, dates, zone labels / map codes, diagram / schedule / map numbers, tags. PURE.
- * Declared in vocab.json `slicer.anti_vacuity_exclusions` (moved at S5). Returns [{start, end, kind}].
- */
-export function exclusionSpans(text) {
-  const pats = SLICER.anti_vacuity_exclusions.map((x) => [x.kind, new RegExp(x.pattern, x.flags)]);
-  const out = [];
-  for (const [kind, re] of pats) for (const m of text.matchAll(re)) out.push({ start: m.index, end: m.index + m[0].length, kind });
-  return out.sort((a, b) => a.start - b.start || b.end - a.end);
-}
-
-const inSpans = (spans, s, e) => spans.some((x) => x.start <= s && e <= x.end);
-
-/**
- * Numeric literals: value + unit on token boundaries (6 m ≡ 6.0 m), number words → numerals; a number
- * followed by `to|or|and` + a number WITH a unit inherits that unit ("1.0 to 1.5 metres", "five or six
- * dwelling units"). Numbers inside exclusion spans are not literals. Offsets are relative to `text`. PURE.
- */
-export function extractLiterals(text) {
-  const excl = exclusionSpans(text);
-  const re = new RegExp(`(?<![\\w.,-])(${NUM_RE}|${WORD_RE})(?:\\s?(${UNIT_RE})(?![\\w²]))?(?![\\w]|\\.\\d|-(?:half|halves|thirds?|quarters?)\\b)`, 'gi'); // "one-half" is not 1 (left uncovered); "one-way" counts
-  const raw = [];
-  for (const m of text.matchAll(re)) {
-    const s = m.index;
-    const numEnd = s + m[1].length;
-    if (inSpans(excl, s, numEnd)) continue;
-    raw.push({ start: s, end: s + m[0].length, numEnd, raw: m[0], numRaw: m[1], unitRaw: m[2] || null });
-  }
-  // Unit inheritance across `to | or | and` (right to left so chains inherit).
-  for (let i = raw.length - 2; i >= 0; i--) {
-    const a = raw[i];
-    const b = raw[i + 1];
-    const bUnit = b.unitRaw || b.inherited;
-    if (a.unitRaw || !bUnit) continue;
-    const gap = text.slice(a.end, b.start);
-    if (/^(?:\s*,)?\s+(?:to|or|and)\s+$/.test(gap) || /^\s*,\s*$/.test(gap) || /^\s*-\s*$/.test(gap)) a.inherited = bUnit;
-  }
-  return raw.map((r) => ({
-    end: r.end,
-    inherited_unit: Boolean(r.inherited),
-    raw: r.raw,
-    start: r.start,
-    unit: unitOf(r.unitRaw || r.inherited || null),
-    value: numValue(r.numRaw),
-  }));
-}
-
-/**
- * The anti-vacuity scan (Spec 68 §6.4 rule 6): every digit run and number word in `text` lies inside
- * an extracted literal or a declared exclusion span. Returns {tokens, uncovered[]}. PURE.
- */
-export function scanNumbers(text, literals = extractLiterals(text)) {
-  const excl = exclusionSpans(text);
-  const tokRe = new RegExp(`\\d+|\\b${WORD_RE}\\b`, 'gi');
-  let tokens = 0;
-  const uncovered = [];
-  for (const m of text.matchAll(tokRe)) {
-    tokens++;
-    const s = m.index;
-    const e = s + m[0].length;
-    if (literals.some((l) => l.start <= s && e <= l.end) || inSpans(excl, s, e)) continue;
-    uncovered.push({ start: s, end: e, token: m[0], context: text.slice(Math.max(0, s - 30), e + 30) });
-  }
-  return { tokens, uncovered };
-}
-
-/**
- * Amendment tags `[ By-law: … ]` / `[ By-laws: … ]` / `[By-law: …]` and bare `[103-2016]` / `[OMB PL… ]`.
- * Each tag → {start, end, raw, entries:[{raw, bylaw|null, qualifier|null}]}. PURE.
- */
-export function extractTags(text) {
-  const out = [];
-  for (const m of text.matchAll(/\[\s*(By-laws?:\s*)?([^\]]*?)\s*\]/g)) {
-    const body = m[2];
-    const isTag = Boolean(m[1]) || /^\d{1,5}-\d{2,4}$/.test(body) || /^(?:OMB|LPAT|OLT)\b/.test(body);
-    if (!isTag) continue;
-    const entries = body.split(/\s*;\s*/).filter(Boolean).map((e) => {
-      const b = /^(\d{1,5}-\d{2,4})\s*(.*)$/.exec(e);
-      return { bylaw: b ? b[1] : null, qualifier: b ? b[2].trim() || null : e, raw: e };
-    });
-    out.push({ end: m.index + m[0].length, entries, raw: m[0], start: m.index });
-  }
-  return out;
-}
-
-const levelOf = (sym) => (/^\d+$/.test(sym) ? 'N' : /^[A-Z]$/.test(sym) ? 'U' : /^[ivxl]+$/.test(sym) && ROMAN.includes(sym) ? 'r' : 'l');
-const groupsOf = (p) => [...p.matchAll(/\(([0-9A-Za-z]{1,7})\)/g)].map((x) => x[1]);
-
-/** Replace the tail of a base path with continuation groups, aligned on the first group's level. */
-function continuePath(baseGroups, cont) {
-  const lv = levelOf(cont[0]);
-  let at = -1;
-  for (let i = baseGroups.length - 1; i >= 0; i--) {
-    if (levelOf(baseGroups[i]) === lv) {
-      at = i;
-      break;
-    }
-  }
-  return at < 0 ? [...baseGroups, ...cont] : [...baseGroups.slice(0, at), ...cont];
-}
-
-/**
- * Cross-references to by-law divisions: dotted ids with attached bracket groups, plus the continuation
- * forms `… (1) and (2)`, `… (3)(B) and (C)`, `… (1) to (4)` (a range: from/to). `skip` = spans that
- * are not references (tags, accepted clause markers). Returns [{start, end, raw, citation, id, path,
- * via: direct|and|range_to}]. PURE.
- */
-export function extractRefs(text, skip = []) {
-  const out = [];
-  const re = /(?<![\d.])(\d{1,3}(?:\.\d{1,3}){1,3})((?:\([0-9A-Za-z]{1,7}\))*)/g;
-  for (const m of text.matchAll(re)) {
-    const s = m.index;
-    if (inSpans(skip, s, s + m[0].length)) continue;
-    const id = m[1];
-    const dots = id.split('.').length - 1;
-    const before = text.slice(Math.max(0, s - 40), s);
-    // A one-dot number is a section id only after a division word ("Section 600.60", "Sections 900.2 to 900.50").
-    if (dots === 1 && !m[2] && !/(?:Sections?|Chapters?)\s+(?:[\d.]+(?:\s*,\s*|\s+(?:and|or|to)\s+))*$/i.test(before)) continue;
-    let base = groupsOf(m[2]);
-    out.push({ citation: id + m[2], end: s + m[0].length, id, path: m[2], raw: m[0], start: s, via: 'direct' });
-    // Continuations.
-    let pos = s + m[0].length;
-    for (;;) {
-      const c = /^(\s*,\s*(?:and\s+|or\s+)?|\s+and\s+|\s+or\s+|\s+to\s+)((?:\([0-9A-Za-z]{1,7}\))+)(?![\w(])/.exec(text.slice(pos));
-      if (!c || !base.length) break;
-      const cs = pos + c[1].length;
-      if (inSpans(skip, cs, cs + c[2].length)) break;
-      const groups = continuePath(base, groupsOf(c[2]));
-      const p = groups.map((g) => `(${g})`).join('');
-      const via = /to/.test(c[1]) ? 'range_to' : 'and';
-      out.push({ citation: id + p, end: cs + c[2].length, id, path: p, raw: c[2], start: cs, via });
-      base = groups;
-      pos = cs + c[2].length;
-    }
-  }
-  // Chapter references ("Chapter 800").
-  for (const m of text.matchAll(/\bChapter\s+(\d{1,3})\b(?!\.)/g)) {
-    if (inSpans(skip, m.index, m.index + m[0].length)) continue;
-    out.push({ citation: `Chapter ${m[1]}`, end: m.index + m[0].length, id: m[1], path: '', raw: m[0], start: m.index, via: 'direct' });
-  }
-  return out.sort((a, b) => a.start - b.start || cmpStr(a.citation, b.citation));
-}
-
-// ---------------------------------------------------------------- page slicing
-
-/** Numbered regulation heads in an article body (Phase 0 rule + the sequence check). PURE. */
-function regulationHeads(body) {
-  const heads = [];
-  const repeats = []; // a head-shaped `(k)` with k <= the last number (200.15.1 prints (1) twice): disclosed
-  let last = 0;
-  for (const m of body.matchAll(/(?<=^|\s)\((\d{1,3})\) (?=[A-Z(\[])/g)) {
-    const k = Number(m[1]);
-    if (heads.length === 0) {
-      // The first head is (1), at the start of the article body or after a sentence (a preamble before
-      // it is then reported as text_before_first_regulation, never silently absorbed).
-      if (k === 1 && (isWs(body.slice(0, m.index)) || breakBefore(body.slice(Math.max(0, m.index - 12), m.index)))) {
-        heads.push({ n: k, at: m.index });
-        last = k;
-      }
-      continue;
-    }
-    const brk = breakBefore(body.slice(Math.max(0, m.index - 12), m.index));
-    if (k > last && k <= last + 12 && brk) {
-      heads.push({ n: k, at: m.index });
-      last = k;
-    } else if (k <= last && brk && /^\(\d+\) [A-Z]/.test(body.slice(m.index, m.index + 8))) repeats.push(m.index);
-  }
-  heads.repeats = repeats;
-  return heads;
-}
-
-/** Defined-term heads `(n) Term <verb>` under a matcher (Spec 68 §6.4 rule 11). PURE. */
-export function definitionHeads(body, matcher = DEFINITION_MATCHER) {
-  const verbs = matcher.verbs.map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+')).join('|');
-  // The term never crosses a sentence end or the next numbered head (a short definition must not lend
-  // its verb to the head before it).
-  const re = new RegExp(`(?<=^|\\s)\\((\\d{1,4})\\) ([A-Z](?:(?!\\(\\d)[^.;:]){0,90}?)\\s+(?:${verbs})\\b`, matcher.caseInsensitive ? 'gi' : 'g');
-  const heads = [];
-  let last = 0;
-  for (const m of body.matchAll(re)) {
-    // [A-Z] under the `i` flag also matches lower case: the term itself must start upper-case.
-    if (!/^[A-Z]/.test(m[2])) continue;
-    const k = Number(m[1]);
-    if (k <= last) continue;
-    if (heads.length && !breakBefore(body.slice(Math.max(0, m.index - 12), m.index))) continue;
-    heads.push({ n: k, at: m.index, term: m[2].trim() });
-    last = k;
-  }
-  return heads;
-}
-
-/**
- * The numbering-sequence check (Spec 68 §9 G-TEXT): every `(n) Head` in a body whose number fits
- * between its accepted neighbours (prev < n < next; after the last head, n ≤ prev + 12) must itself be
- * an accepted head. Returns {unsliced[], gaps[]} (gaps are counted, never failures: the by-law reserves
- * numbers, 1.20.1(3)). PURE.
- */
-export function numberingCheck(body, heads, { definitions = false } = {}) {
-  const unsliced = [];
-  const gaps = [];
-  const at = new Set(heads.map((h) => h.at));
-  // Definitions are numbered sparsely by design (5, 10, 15, ...): only regulation gaps are counted.
-  if (!definitions) for (let i = 1; i < heads.length; i++) if (heads[i].n !== heads[i - 1].n + 1) gaps.push({ after: heads[i - 1].n, next: heads[i].n });
-  for (const m of body.matchAll(/(?<=^|\s)\((\d{1,4})\) (?=[A-Z(\[])/g)) {
-    if (at.has(m.index)) continue;
-    // A head candidate follows a list break (a use-table footnote "Day Nursery (4) Eating" does not).
-    if (heads.length > 0 && m.index > 0 && !breakBefore(body.slice(Math.max(0, m.index - 12), m.index))) continue;
-    const k = Number(m[1]);
-    let prev = null;
-    let next = null;
-    for (const h of heads) {
-      if (h.at < m.index) prev = h;
-      else if (next === null) next = h;
-    }
-    // No accepted head yet: a head-shaped (1) the slicer refused is unsliced (the article would
-    // otherwise collapse silently into one `#article` row). After the last head there is no window.
-    const fits = prev ? k > prev.n && (next ? k < next.n : true) : k === 1;
-    if (fits) unsliced.push({ n: k, at: m.index, context: body.slice(Math.max(0, m.index - 40), m.index + 50) });
-  }
-  return { unsliced, gaps };
-}
-
-/** Normalize a TOC title the way the page body reads (collapse whitespace). */
-const tocTitle = (t) => t.replace(/\s+/g, ' ').trim();
-
-/**
- * Slice one section page. Input {key, section, file, html, normalized, status?, ruling?, carve_in?}.
- * Returns {key, rows[], spans[], problems[], numbering:{unsliced[], gaps[]}}; offsets are page offsets
- * into `normalized`. PURE.
+ * Slice one section page from its structure. Input {key, section, file, html, normalized, status?, ruling?,
+ * carve_in?}. Returns {key, rows[], spans[], problems[], numbering:{gaps[], unproven[]}, cells:{html, sliced},
+ * inline[]}. Offsets on rows/spans are offsets into `normalized`. PURE.
  */
 export function slicePage(input) {
-  const { key, section, file, html, normalized: t } = input;
+  const { key, section, html, normalized } = input;
   const problems = [];
-  const spans = [];
-  const rows = [];
-  const numbering = { unsliced: [], gaps: [] };
-  const toc = parseToc(html);
-  const chapter = section.split('.')[0];
-  const chRow = toc.find((r) => r.level === 'chapter' && r.id === chapter);
-  const secRow = toc.find((r) => r.id === section);
-  if (!chRow || !secRow) {
-    problems.push(`toc_missing_section: ${key} TOC lacks Chapter ${chapter} or ${section}`);
-    return { key, numbering, problems, rows, spans };
+  const numbering = { gaps: [], unproven: [] };
+  const { text, map } = normalizeWithMap(html);
+  if (text !== normalized) {
+    problems.push(`normalizer_map_mismatch: ${key} normalizeWithMap(raw) differs from the pinned normalized page`);
+    return { cells: { html: 0, sliced: 0 }, inline: [], key, numbering, problems, rows: [], spans: [] };
   }
-  const sectionHead = `Chapter ${chapter} ${tocTitle(chRow.title)} ${section} ${tocTitle(secRow.title)}`;
-  const bodyStart = t.lastIndexOf(`${sectionHead} `);
-  const footer = t.lastIndexOf(' &copy;City of Toronto');
-  if (footer < 0) problems.push(`footer_not_found: ${key}`);
-  if (!file) problems.push(`page_file_missing: ${key}`);
-  const end = footer >= 0 ? footer : t.length;
-  if (bodyStart < 0) {
-    problems.push(`body_not_found: ${key} has no "${sectionHead}" heading`);
-    return { key, numbering, problems, rows, spans };
-  }
-  spans.push({ end: bodyStart, kind: 'header_toc', start: 0 });
-  spans.push({ end: bodyStart + sectionHead.length, kind: 'section_heading', start: bodyStart });
-  if (footer >= 0) spans.push({ end: t.length, kind: 'footer', start: footer + 1 });
-
-  const seen = new Set();
-  const own = toc.filter((r) => r.level !== 'chapter' && r.id.startsWith(`${section}.`) && (r.href.startsWith('#') || r.href.startsWith(`${file}#`)) && !seen.has(r.id) && seen.add(r.id));
-  const ids = own.map((r) => r.id);
-  // Locate every own heading in TOC order: `id title `.
-  let cur = bodyStart + sectionHead.length;
-  const heads = [];
-  for (const r of own) {
-    const needle = `${r.id} ${tocTitle(r.title)}`;
-    const at = t.indexOf(`${needle} `, cur);
-    if (at < 0 || at >= end) {
-      problems.push(`heading_not_found: ${key} ${r.id} "${tocTitle(r.title)}"`);
-      continue;
-    }
-    heads.push({ id: r.id, title: tocTitle(r.title), at, headEnd: at + needle.length, leaf: !ids.some((x) => x.startsWith(`${r.id}.`)) });
-    cur = at + needle.length;
-  }
-  // A body heading the page TOC omits (200.5.200.50 on the 200.5 page) is still an article; it is
-  // sliced and disclosed as a `heading_not_in_toc` source defect on its first row.
-  const known = new Set(toc.map((r) => r.id));
-  const bodyFrom = bodyStart + sectionHead.length;
-  for (const m of t.slice(bodyFrom, end).matchAll(/(?<=[.\]:;)] )(\d{1,3}(?:\.\d{1,3}){1,3}) (?=[A-Z])/g)) {
-    const id = m[1];
-    if (!id.startsWith(`${section}.`) || known.has(id)) continue;
-    const at = bodyFrom + m.index;
-    const one = t.indexOf(' (1) ', at);
-    if (one < 0 || one - at > 160) continue;
-    heads.push({ id, title: t.slice(at + id.length + 1, one), at, headEnd: one, leaf: true, untracked: true });
-  }
-  heads.sort((a, b) => a.at - b.at);
+  const st = pageStructure(html);
+  const tocIds = new Set(parseToc(html).map((r) => r.id));
   const carve = input.carve_in?.length ? new Set(input.carve_in) : null;
-  if (carve) for (const c of carve) if (!heads.some((h) => h.id === c && h.leaf)) problems.push(`carve_in_not_found: ${key} ${c}`);
+  const n = text.length;
 
-  // Articles: TOC leaves; a page with no article sections slices the section itself as one article.
-  const articles = [];
-  if (heads.length === 0) {
-    if (!carve || carve.has(section)) articles.push({ id: section, title: tocTitle(secRow.title), bodyFrom: bodyStart + sectionHead.length, bodyTo: end });
-    else spans.push({ end, kind: 'outside_carve_in', start: bodyStart + sectionHead.length });
-  }
-  for (let i = 0; i < heads.length; i++) {
-    const h = heads[i];
-    const to = i + 1 < heads.length ? heads[i + 1].at : end;
-    // A heading with child headings is a part heading, unless text follows it: then it is also an
-    // article (200.5.1 "General" holds regulations (1)..(4) before its child 200.5.1.10).
-    if (!h.leaf && isWs(t.slice(h.headEnd, to))) {
-      spans.push({ end: h.headEnd, kind: 'part_heading', start: h.at });
-      continue;
-    }
-    if (carve && !carve.has(h.id)) {
-      spans.push({ end: to, kind: 'outside_carve_in', start: h.at });
-      continue;
-    }
-    spans.push({ end: h.headEnd, kind: 'article_heading', start: h.at });
-    articles.push({ id: h.id, title: h.title, bodyFrom: h.headEnd, bodyTo: to, headAt: h.at, untracked: Boolean(h.untracked) });
-  }
+  // ---- owner events over raw offsets
+  const events = []; // {raw, owner}
+  const own = (raw, owner) => events.push({ owner, raw });
+  const span = (kind) => ({ span: kind });
+  own(0, span('header_toc'));
+  const nodes = [];
+  const roots = new Map(); // article -> root node
+  const mkNode = (o) => {
+    const node = { anchors: [], children: [], ...o, idx: nodes.length };
+    nodes.push(node);
+    if (node.parent) node.parent.children.push(node);
+    return node;
+  };
+  const rootOf = (article, title) => {
+    if (!roots.has(article)) roots.set(article, mkNode({ article, articleTitle: title, depth: 0, origin: 'root', parent: null, path: '', rawStart: null, symbol: null }));
+    return roots.get(article);
+  };
+  const cellText = (c) => text.slice(rawToNorm(map, c.contentStart), rawToNorm(map, c.contentEnd ?? c.contentStart)).trim();
+  const markerOf = (c) => (c && c.align === 'right' ? /^\(([^)\s]{1,6})\)$/.exec(cellText(c)) : null);
+  // A table holding a clause cell is a clause table: its other rows continue a clause. Any other table is data.
+  const clauseTable = new Set(st.rows.filter((r) => markerOf(r.cells[0])).map((r) => r.table));
+  const items = [
+    ...st.headings.map((h) => ({ at: h.start, h, kind: 'heading', order: 1 })),
+    ...st.tables.map((t) => ({ at: t.start, kind: 'table_open', order: 0, t })),
+    ...st.tables.map((t) => ({ at: t.end ?? html.length, kind: 'table_close', order: 2, t })),
+    ...st.rows.map((r) => ({ at: r.start, kind: 'row', order: 1, r })),
+  ].sort((a, b) => a.at - b.at || a.order - b.order);
 
-  const definitions = DEFINITION_SECTIONS.includes(section);
-  for (const a of articles) {
-    const body = t.slice(a.bodyFrom, a.bodyTo);
-    const lead = body.length - body.trimStart().length;
-    const hs = definitions ? definitionHeads(body, input.definitionMatcher || DEFINITION_MATCHER) : regulationHeads(body);
-    const nc = numberingCheck(body, hs, { definitions });
-    for (const u of nc.unsliced) numbering.unsliced.push({ article: a.id, key, n: u.n, context: u.context });
-    for (const g of nc.gaps) numbering.gaps.push({ article: a.id, key, ...g });
-    if (hs.length === 0) {
-      if (isWs(body)) {
-        problems.push(`empty_article: ${key} ${a.id}`);
-        continue;
+  let article = null;
+  let articleTitle = null;
+  let included = false;
+  let owner = span('header_toc');
+  let stack = []; // open clause nodes {node, depth}
+  const ownerAtTable = new Map(); // table id -> owner at open
+  const dataTables = new Map(); // table id -> {k, owner, header: [], rowIdx}
+  const tableCount = new Map(); // owner node idx -> data tables under it
+  const articleRaw = []; // {article, start, end} raw ranges of included articles
+  const setOwner = (raw, o) => {
+    owner = o;
+    own(raw, o);
+  };
+  // The page footer ("&copy;City of Toronto") ends the content; its own layout row is never a data row.
+  const footerRaw = html.lastIndexOf('&copy;');
+  const footerRow = footerRaw < 0 ? null : st.rows.filter((r) => r.start < footerRaw).at(-1);
+  const stopAt = footerRaw < 0 ? html.length : Math.min(footerRaw, footerRow ? footerRow.start : footerRaw);
+  for (const it of items) {
+    if (it.at >= stopAt) break;
+    if (it.at < st.contentStart) continue;
+    if (it.kind === 'heading') {
+      const h = it.h;
+      const htext = text.slice(rawToNorm(map, h.start), rawToNorm(map, h.end)).trim();
+      const anchor = h.anchor && /^\d+(\.\d+)+$/.test(h.anchor) ? h.anchor : null;
+      const first = /^(\d+(?:\.\d+)+)\s/.exec(`${htext} `);
+      const id = anchor || (first ? first[1] : null);
+      if (articleRaw.length && articleRaw[articleRaw.length - 1].end === null) articleRaw[articleRaw.length - 1].end = h.start;
+      setOwner(h.start, span('heading'));
+      if (id && (id === section || id.startsWith(`${section}.`))) {
+        article = id;
+        articleTitle = htext.slice(id.length).trim();
+        included = !carve || carve.has(id);
+        stack = [];
+        if (!tocIds.has(id)) problems.push(`__disclose heading_not_in_toc ${id}`);
+        if (included) articleRaw.push({ article: id, end: null, start: h.start });
       }
-      rows.push(makeRow({ input, article: a, id: `${a.id}#article`, n: null, rootPath: '', from: a.bodyFrom + lead, to: a.bodyFrom + body.trimEnd().length, t, definition: definitions }));
+      setOwner(h.end, article && included ? rootOf(article, articleTitle) : article ? span('outside_carve_in') : span('heading'));
       continue;
     }
-    if (!isWs(body.slice(0, hs[0].at))) problems.push(`text_before_first_regulation: ${key} ${a.id}`);
-    for (let i = 0; i < hs.length; i++) {
-      const from = a.bodyFrom + hs[i].at;
-      const rawTo = i + 1 < hs.length ? a.bodyFrom + hs[i + 1].at : a.bodyTo;
-      const to = from + t.slice(from, rawTo).trimEnd().length;
-      const repeatsAt = (hs.repeats || []).map((x) => a.bodyFrom + x).filter((x) => x >= from && x < to);
-      rows.push(makeRow({ input, article: a, id: `${a.id}(${hs[i].n})`, n: hs[i].n, term: hs[i].term, rootPath: `(${hs[i].n})`, from, to, t, definition: definitions, repeatsAt }));
+    if (!article) continue;
+    if (!included) {
+      if (it.kind === 'heading') setOwner(it.at, span('outside_carve_in'));
+      continue;
+    }
+    if (it.kind === 'table_open') {
+      ownerAtTable.set(it.t.id, owner);
+      continue;
+    }
+    if (it.kind === 'table_close') {
+      const o = ownerAtTable.get(it.t.id);
+      if (o) setOwner(it.at, o);
+      continue;
+    }
+    const r = it.r;
+    const c0 = r.cells[0];
+    if (!c0) continue;
+    if (clauseTable.has(r.table)) {
+      const mt = markerOf(c0);
+      if (mt) {
+        stack = stack.filter((s) => s.depth < r.depth);
+        const parent = stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle);
+        // "(I)" where the lower-case Roman (i) is due (230.5.1.10(4)(E), 2.1.1(4)(D)): read as (i), disclosed.
+        const due = parent.origin === 'root' ? 'N' : { N: 'U', U: 'r', r: 'l' }[symClass(parent.symbol)];
+        const typo = mt[1] === 'I' && due === 'r';
+        const sym = typo ? 'i' : mt[1];
+        const sibling = parent.children.find((x) => x.origin === 'cell' && x.symbol === sym && !x.variantOf);
+        const node = mkNode({ anchors: c0.anchors, article, depth: r.depth, origin: 'cell', parent, rawStart: r.start, symbol: sym, title: r.cells[1] ? cellText(r.cells[1]) : '', typo, variantOf: sibling || null });
+        stack.push({ depth: r.depth, node });
+        setOwner(r.start, node);
+      } else {
+        stack = stack.filter((s) => s.depth <= r.depth);
+        setOwner(r.start, stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle));
+      }
+      continue;
+    }
+    // A data row: every cell is a unit keyed (table, row, column) under the table's owner (R2).
+    let dt = dataTables.get(r.table);
+    if (!dt) {
+      const tOwner = ownerAtTable.get(r.table);
+      const parentNode = tOwner && tOwner.span === undefined ? tOwner : rootOf(article, articleTitle);
+      const k = (tableCount.get(parentNode.idx) || 0) + 1;
+      tableCount.set(parentNode.idx, k);
+      dt = { cells: [], grid: [], k, owner: parentNode, rowIdx: 0 };
+      dataTables.set(r.table, dt);
+    }
+    dt.rowIdx++;
+    const texts = r.cells.map(cellText);
+    // A row-spanning data cell would shift every column below it: refused, never guessed (0 on the pinned pages).
+    if (r.cells.some((c) => c.rowspan > 1)) problems.push(`structural: ${key} ${article} data table row spans rows (rowspan unsupported)`);
+    let col = 0;
+    const gridRow = [];
+    r.cells.forEach((c, j) => {
+      const cell = mkNode({
+        article,
+        column_header: '',
+        depth: r.depth,
+        gridCol: col,
+        gridSpan: c.colspan,
+        origin: 'table_cell',
+        parent: dt.owner,
+        path: null,
+        rawStart: c.start,
+        row_header: texts[0] ?? '',
+        symbol: null,
+        tableKey: `[T${dt.k}.R${dt.rowIdx}.C${j + 1}]`,
+      });
+      gridRow.push({ col, span: c.colspan, text: texts[j] });
+      col += c.colspan;
+      dt.cells.push({ node: cell, row: dt.rowIdx });
+      setOwner(c.start, cell);
+    });
+    dt.grid.push(gridRow);
+    setOwner(r.end ?? r.start, dt.owner);
+  }
+  // Column headers (R2): the header row, plus a second one when the first spans columns (a grouped header).
+  for (const dt of dataTables.values()) {
+    // A grouped header: the first row spans columns, or leaves cells empty that the group to its left covers
+    // (970.10.15.5: "" | "" | "Parking Occupancy Rate" | "" | "" over "Land Use" | "Parking Rate" | AM | PM | Eve).
+    const grouped = dt.grid.length > 2 && dt.grid[0].some((g) => g.span > 1 || !g.text);
+    const headerRows = grouped ? 2 : 1;
+    if (grouped) {
+      let carry = '';
+      for (const g of dt.grid[0]) {
+        if (g.text) carry = g.text;
+        else g.text = carry;
+      }
+    }
+    const headerAt = (c) => dt.grid.slice(0, headerRows).map((row) => row.find((g) => g.col <= c && c < g.col + g.span)).filter((g) => g && g.text).map((g) => g.text);
+    for (const { node, row } of dt.cells) node.column_header = row <= headerRows ? '' : [...new Set(headerAt(node.gridCol))].join(' / ');
+  }
+  if (articleRaw.length && articleRaw[articleRaw.length - 1].end === null) articleRaw[articleRaw.length - 1].end = html.length;
+  if (footerRaw < 0) problems.push(`footer_not_found: ${key}`);
+  else own(stopAt, span('footer'));
+  events.sort((a, b) => a.raw - b.raw); // stable: later events at the same offset win
+
+  // ---- character ownership
+  const ownerOf = new Array(n);
+  let ei = 0;
+  let cur = events[0].owner;
+  for (let k = 0; k < n; k++) {
+    while (ei < events.length && events[ei].raw <= map[k]) cur = events[ei++].owner;
+    ownerOf[k] = cur;
+  }
+
+  // ---- paths (variants named after their text is known)
+  const ownText = new Map(); // node idx -> [[s,e]] ranges
+  for (let k = 0; k < n; k++) {
+    const o = ownerOf[k];
+    if (!o || o.span !== undefined) continue;
+    const rs = ownText.get(o.idx) || [];
+    const last = rs[rs.length - 1];
+    if (last && last[1] === k) last[1] = k + 1;
+    else rs.push([k, k + 1]);
+    ownText.set(o.idx, rs);
+  }
+  const textOfNode = (node) => (ownText.get(node.idx) || []).map(([s, e]) => text.slice(s, e)).join(' ').replace(/\s+/g, ' ').trim();
+  const subtreeText = (node) => [textOfNode(node), ...node.children.map(subtreeText)].join(' ');
+  const pathOf = (node) => {
+    if (node.path !== null && node.origin !== 'cell' && node.origin !== 'table_cell') return node.path;
+    if (node.origin === 'root') return '';
+    const base = pathOf(node.parent);
+    if (node.origin === 'table_cell') return `${base}${node.tableKey}`;
+    return `${base}(${node.symbol})${node.variantTag || ''}`;
+  };
+  const numbersOf = (s) => (s.replace(/\[[^\]]*\]/g, '').match(/\d+(?:\.\d+)?/g) || []).join(',');
+  const defects = []; // {node, kind, context, code?}
+  for (const node of nodes) if (node.typo) defects.push({ context: '(I) read as (i)', kind: 'marker_typo', node });
+  for (const node of nodes) {
+    if (!node.variantOf) continue;
+    const t = subtreeText(node);
+    const base = subtreeText(node.variantOf);
+    let status = null;
+    for (const [s, re] of VARIANT_STATUSES) if (re.test(t) && !re.test(base)) status = status || s;
+    const same = node.parent.children.filter((x) => x.variantOf === node.variantOf && x.idx < node.idx && x.variantStatus === status).length;
+    node.variantStatus = status;
+    node.variantTag = `~${status || 'unstatused'}${same ? same + 1 : ''}`;
+    if (!status) {
+      if (numbersOf(t) !== numbersOf(base)) problems.push(`unstatused_variant: ${key} ${node.article} (${node.symbol}) repeats with different numbers and no status`);
+      else defects.push({ context: t.slice(0, 80), kind: 'variant_duplicate', node });
     }
   }
-  for (const a of articles) {
-    if (!a.untracked) continue;
-    const first = rows.find((r) => r.article === a.id);
-    if (first) first.defects.push({ clause_path: first.clauses[0].path, code: null, context: t.slice(a.headAt, a.headAt + 80), index: 0, kind: 'heading_not_in_toc' });
+  for (const node of nodes) node.path = pathOf(node);
+
+  // ---- inline lists inside ONE cell (R1): leaf cells / table cells with one contiguous own range
+  const inline = [];
+  for (const node of [...nodes]) {
+    if (node.children.length || (node.origin !== 'cell' && node.origin !== 'table_cell')) continue;
+    const rs = ownText.get(node.idx) || [];
+    if (rs.length !== 1) continue;
+    const [s0, e0] = rs[0];
+    const t = text.slice(s0, e0);
+    const letters = node.origin === 'table_cell' ? 0 : (node.path.replace(/~[a-z_0-9]+/g, '').match(/\(([^)]+)\)/g) || []).length - (node.parent.origin === 'root' && symClass(node.symbol) === 'N' ? 1 : 0);
+    if (letters >= LEVELS.length) continue;
+    const lead = t.length - t.trimStart().length;
+    const parsed = parseClauses(t.slice(lead), node.path, { atStart: node.origin === 'table_cell', cell: true, startLevel: Math.max(0, letters) });
+    for (const ty of parsed.typos) defects.push({ context: t.slice(lead + ty.at, lead + ty.at + 40), kind: 'marker_typo', node });
+    if (parsed.repeats.length) defects.push({ context: t.slice(lead + parsed.repeats[0].at, lead + parsed.repeats[0].at + 60), count: parsed.repeats.length, kind: 'division_repeat', node });
+    if (parsed.nodes.length < 2) continue;
+    const made = new Map([[parsed.nodes[0].path, node]]);
+    for (const pn of parsed.nodes.slice(1)) {
+      const parentPath = pn.path.slice(0, pn.path.lastIndexOf('('));
+      const child = mkNode({ article: node.article, depth: node.depth, origin: 'inline', parent: made.get(parentPath) || node, path: pn.path, rawStart: map[s0 + lead + pn.start], symbol: /\(([^)]+)\)$/.exec(pn.path)[1] });
+      made.set(pn.path, child);
+      inline.push(child);
+      for (let k = s0 + lead + pn.start; k < s0 + lead + pn.end; k++) ownerOf[k] = child;
+      const rest = (ownText.get(node.idx) || []).flatMap(([a, b]) => (b <= s0 + lead + pn.start || a >= s0 + lead + pn.end ? [[a, b]] : [[a, Math.min(b, s0 + lead + pn.start)], [Math.max(a, s0 + lead + pn.end), b]].filter(([x, y]) => y > x)));
+      ownText.set(node.idx, rest);
+      ownText.set(child.idx, [[s0 + lead + pn.start, s0 + lead + pn.end]]);
+    }
   }
-  return { key, numbering, problems, rows, spans };
+
+  // ---- numbering at every level (R3): a gap fails unless the page proves the number absent
+  for (const parent of nodes) {
+    for (const origin of ['cell', 'inline']) {
+      const kids = parent.children.filter((x) => x.origin === origin && !x.variantOf);
+      if (!kids.length) continue;
+      const rawStartOf = (x) => x.rawStart ?? null; // the window runs from the previous division (its text may hold a swallowed one) to the next
+      for (let i = 0; i < kids.length; i++) {
+        const prev = i ? kids[i - 1] : null;
+        const missing = prev ? missingBetween(prev.symbol, kids[i].symbol) : symClass(kids[i].symbol) === 'N' ? (DEFINITION_SECTIONS.includes(section) ? [] : missingBetween('0', kids[i].symbol)) : missingBetween(null, kids[i].symbol);
+        if (!missing.length) continue;
+        const from = prev && rawStartOf(prev) !== null ? rawStartOf(prev) : parent.rawStart ?? st.contentStart;
+        const to = rawStartOf(kids[i]) ?? html.length;
+        for (const s of missing) {
+          const gap = { article: parent.article, key, missing: s, parent: parent.path, after: prev ? prev.symbol : null, next: kids[i].symbol };
+          if (rawHolds(html, from, to, s)) numbering.unproven.push(gap);
+          else numbering.gaps.push(gap);
+        }
+      }
+    }
+  }
+
+  // A leaf whose own text still holds the next division of its list, or the first division of the level below
+  // ("... 0.02 for each dwelling unit (B) In Parking Zone B"), swallowed a division: unproven, never a pass (R3).
+  for (const node of nodes) {
+    if (node.children.length || node.origin === 'root') continue;
+    const t = textOfNode(node);
+    const own = node.origin === 'table_cell' ? -1 : (node.path.replace(/~[a-z_0-9]+/g, '').replace(/\[[^\]]*\]/g, '').match(/\([^)]+\)/g) || []).length - 1;
+    const suspects = new Set();
+    const below = LEVELS[Math.max(0, own)];
+    if (below) suspects.add(below[0]);
+    const cls = node.symbol ? symClass(node.symbol) : null;
+    if (cls && SEQ[cls]) suspects.add(SEQ[cls][SEQ[cls].indexOf(node.symbol) + 1]);
+    for (const m of t.matchAll(/(?<=\s)\(([A-Z]|[ivx]{1,5}|[a-z])\) /g)) {
+      if (!suspects.has(m[1]) || m.index < 4) continue;
+      if (REF_BEFORE.test(t.slice(0, m.index)) || REF_AFTER.test(t.slice(m.index + m[0].length))) continue;
+      numbering.unproven.push({ after: node.symbol, article: node.article, context: t.slice(Math.max(0, m.index - 50), m.index + 40), key, missing: m[1], next: null, parent: node.path });
+    }
+  }
+
+  // ---- rows: the subtree of every top-level numbered division, and each article's own text
+  const topOf = (node) => {
+    let x = node;
+    while (x.parent && x.parent.origin !== 'root') x = x.parent;
+    return x.origin === 'root' ? x : x.parent && x.parent.origin === 'root' && symClass(x.symbol) === 'N' ? x : x.parent;
+  };
+  const rowsBy = new Map(); // top node idx -> {top, ks: []}
+  const spanRuns = [];
+  for (let k = 0; k < n; k++) {
+    const o = ownerOf[k];
+    if (o.span !== undefined) {
+      const last = spanRuns[spanRuns.length - 1];
+      if (last && last.kind === o.span && last.end === k) last.end = k + 1;
+      else spanRuns.push({ end: k + 1, kind: o.span, start: k });
+      continue;
+    }
+    if (/\s/.test(text[k])) continue;
+    const top = topOf(o);
+    const g = rowsBy.get(top.idx) || { first: k, last: k, top };
+    g.last = k;
+    rowsBy.set(top.idx, g);
+  }
+  const rows = [];
+  for (const g of [...rowsBy.values()].sort((a, b) => a.first - b.first)) {
+    const from = g.first;
+    const to = g.last + 1;
+    for (let k = from; k < to; k++) {
+      const o = ownerOf[k];
+      if (o.span !== undefined ? !/\s/.test(text[k]) : topOf(o) !== g.top) {
+        problems.push(`row_not_contiguous: ${key} ${g.top.article} char ${k}`);
+        break;
+      }
+    }
+    rows.push(makeRow({ defects, from, input, map, ownerOf, text, to, top: g.top }));
+  }
+  for (const p of problems.filter((x) => x.startsWith('__disclose heading_not_in_toc'))) {
+    const id = p.split(' ').pop();
+    const r = rows.find((x) => x.article === id);
+    if (r) r.defects.push({ clause_path: r.clauses[0].path, code: null, context: id, index: 0, kind: 'heading_not_in_toc' });
+  }
+  // Cell-set lock (R1, both directions): the raw page's clause cells in included articles == the cell nodes.
+  let htmlCells = 0;
+  for (const a of articleRaw) htmlCells += [...html.slice(a.start, a.end).matchAll(MARKER_CELL_RE)].length;
+  const slicedCells = nodes.filter((x) => x.origin === 'cell').length;
+  if (htmlCells !== slicedCells) problems.push(`cell_set_mismatch: ${key} html clause cells ${htmlCells} != sliced ${slicedCells}`);
+  for (const nd of nodes) {
+    if (nd.origin !== 'cell' || !nd.anchors.length) continue;
+    const want = `${nd.article}(${nd.symbol})`;
+    if (nd.parent.origin === 'root' && !nd.anchors.includes(want)) {
+      const r = rows.find((x) => x.regulation_id.startsWith(want));
+      if (r) r.defects.push({ clause_path: nd.path, code: null, context: `anchor ${nd.anchors.join(',')} != ${want}`, index: 0, kind: 'anchor_mismatch' });
+    }
+  }
+  return {
+    cells: { html: htmlCells, sliced: slicedCells },
+    inline: inline.map((x) => `${x.article}`),
+    key,
+    numbering,
+    problems: problems.filter((x) => !x.startsWith('__disclose')),
+    rows,
+    spans: spanRuns.filter((s) => !isWs(text.slice(s.start, s.end))),
+  };
 }
 
-function makeRow({ input, article, id, n, term, rootPath, from, to, t, definition = false, repeatsAt = [] }) {
-  const verbatim = t.slice(from, to);
-  const { nodes, repeats, typos } = parseClauses(verbatim, rootPath);
+function makeRow({ input, top, from, to, text, ownerOf, defects }) {
+  const verbatim = text.slice(from, to);
+  const isRoot = top.origin === 'root';
+  const regulation_id = isRoot ? `${top.article}#article` : `${top.article}(${top.symbol})${top.variantTag || ''}`;
+  // Clauses: maximal runs of one owner, grouped per node, in first-appearance order.
+  const byNode = new Map();
+  for (let k = from; k < to; k++) {
+    const o = ownerOf[k];
+    const nd = o.span !== undefined ? null : o;
+    const keyIdx = nd ? nd.idx : -1;
+    const g = byNode.get(keyIdx) || { node: nd, ranges: [] };
+    const last = g.ranges[g.ranges.length - 1];
+    if (last && last[1] === k - from) last[1] = k - from + 1;
+    else g.ranges.push([k - from, k - from + 1]);
+    byNode.set(keyIdx, g);
+  }
+  // Whitespace owned by a span inside a row (a tag between cells) joins the run before it.
+  const clauses = [];
+  for (const g of byNode.values()) {
+    if (!g.node) {
+      for (const [s, e] of g.ranges) {
+        const prev = clauses.find((c) => c.ranges.some((r) => r[1] === s));
+        if (prev) prev.ranges.find((r) => r[1] === s)[1] = e;
+        else if (clauses.length) clauses[0].ranges.push([s, e]);
+      }
+      continue;
+    }
+    clauses.push({
+      node: g.node,
+      origin: g.node.origin,
+      path: g.node.path,
+      ranges: g.ranges,
+    });
+  }
+  for (const c of clauses) {
+    c.ranges.sort((a, b) => a[0] - b[0]);
+    c.text = c.ranges.map(([s, e]) => verbatim.slice(s, e)).join('');
+    // A table cell, and an inline list inside one, carries the cell's row and column headers (R2).
+    let cellNode = c.node;
+    while (cellNode && cellNode.origin === 'inline') cellNode = cellNode.parent;
+    if (cellNode && cellNode.origin === 'table_cell') {
+      c.row_header = cellNode.row_header;
+      c.column_header = cellNode.column_header;
+    }
+    if (c.node.title !== undefined && c.node.origin === 'cell') c.title = c.node.title;
+    c.ancestors = [];
+    for (let x = c.node.parent; x && x.origin !== 'root'; x = x.parent) c.ancestors.unshift(x.path);
+  }
+  const pathAt = (pos) => {
+    const o = ownerOf[from + pos];
+    return o && o.span === undefined ? o.path : clauses.length ? clauses[0].path : '';
+  };
   const tags = extractTags(verbatim);
-  const markers = nodes.filter((x) => x.depth >= 0).map((x) => ({ start: x.start, end: verbatim.indexOf(')', x.start) + 1 }));
-  const refs = extractRefs(verbatim, [...tags, ...markers]);
+  const refs = extractRefs(verbatim, tags);
   const literals = extractLiterals(verbatim);
   const scan = scanNumbers(verbatim, literals);
-  const nodeAt = (pos) => {
-    let hit = nodes[0];
-    for (const x of nodes) if (x.start <= pos) hit = x;
-    return hit;
-  };
-  const clauses = nodes.map((x) => ({ end: x.end, leaf: x.leaf, path: x.path, start: x.start, text: verbatim.slice(x.start, x.end) }));
-  const defects = defectChars(verbatim).map((d) => ({ clause_path: nodeAt(d.index).path, code: d.code, context: verbatim.slice(Math.max(0, d.index - 40), d.index + 10), index: d.index, kind: 'garbled_character' }));
+  const rowDefects = defectChars(verbatim).map((d) => ({ clause_path: pathAt(d.index), code: d.code, context: verbatim.slice(Math.max(0, d.index - 40), d.index + 10), index: d.index, kind: 'garbled_character' }));
   for (const c of clauses) {
-    if (!c.leaf) continue;
+    if (c.node.children.length) continue;
     const own = c.text.replace(/\[[^\]]*\]/g, '').trim();
-    if (own.endsWith(':')) defects.push({ clause_path: c.path, code: null, context: own.slice(-60), index: c.end, kind: 'lead_in_without_items' });
+    if (own.endsWith(':')) rowDefects.push({ clause_path: c.path, code: null, context: own.slice(-60), index: c.ranges[c.ranges.length - 1][1], kind: 'lead_in_without_items' });
   }
-  // Repeated divisions are disclosed once per row (with their count), never split into duplicate ids.
-  if (repeats.length) defects.push({ clause_path: nodeAt(repeats[0].at).path, code: null, context: verbatim.slice(repeats[0].at, repeats[0].at + 60), count: repeats.length, index: repeats[0].at, kind: 'division_repeat' });
-  for (const ty of typos) defects.push({ clause_path: nodeAt(ty.at).path, code: null, context: verbatim.slice(ty.at, ty.at + 40), index: ty.at, kind: 'marker_typo' });
-  for (const at of repeatsAt) defects.push({ clause_path: nodeAt(at - from).path, code: null, context: t.slice(at, at + 60), index: at - from, kind: 'numbering_repeat' });
-  const withPath = (x) => ({ ...x, clause_path: nodeAt(x.start).path });
+  const inRow = new Set(clauses.map((c) => c.node.idx));
+  for (const d of defects) if (inRow.has(d.node.idx)) rowDefects.push({ clause_path: d.node.path, code: null, context: d.context, ...(d.count ? { count: d.count } : {}), index: 0, kind: d.kind });
+  const withPath = (x) => ({ ...x, clause_path: pathAt(x.start) });
+  const definition = DEFINITION_SECTIONS.includes(input.section) && !isRoot;
+  const status = top.variantStatus;
   return {
-    article: article.id,
-    article_title: article.title,
+    article: top.article,
+    article_title: isRoot ? top.articleTitle : roots_title(top),
     carve_in: Boolean(input.carve_in?.length),
-    clauses,
-    defects,
+    clauses: clauses.map((c) => ({
+      ...(c.ancestors.length ? { ancestors: c.ancestors } : {}),
+      ...(c.column_header !== undefined ? { column_header: c.column_header, row_header: c.row_header } : {}),
+      leaf: c.node.children.length === 0,
+      origin: c.origin,
+      path: c.path,
+      ranges: c.ranges,
+      text: c.text,
+      ...(c.title !== undefined ? { title: c.title } : {}),
+    })),
+    defects: rowDefects,
     end: to,
-    kind: definition ? 'definition' : n === null ? 'article' : 'regulation',
+    kind: definition ? 'definition' : isRoot ? 'article' : 'regulation',
     literals: literals.map(withPath),
-    number: n,
+    number: isRoot ? null : Number(top.symbol),
     page: input.key,
     refs: refs.map(withPath),
-    regulation_id: id,
+    regulation_id,
     retired: input.status === 'retired',
     ...(input.status === 'retired' ? { retired_ruling: input.ruling } : {}),
     section: input.section,
     sha256: sha256(Buffer.from(verbatim, 'utf8')),
     start: from,
     tags: tags.map(withPath),
-    ...(term !== undefined ? { term } : {}),
+    ...(definition ? { term: top.title } : {}),
     uncovered_numbers: scan.uncovered.map(withPath),
+    ...(top.variantOf ? { variant_of: `${top.article}(${top.symbol})`, variant_status: status || 'unstatused' } : {}),
     verbatim,
   };
 }
 
-/** Leaf units of a row: {unit_id, regulation_id, clause_path, citation, text, context, sha256}. PURE. */
+/** The title of the article a node belongs to (stored on its root). */
+function roots_title(node) {
+  let x = node;
+  while (x.parent) x = x.parent;
+  return x.articleTitle;
+}
+
+/** Leaf units of a row: {unit_id, regulation_id, clause_path, citation, text, context, sha256, origin}. PURE. */
 export function unitsOf(row) {
   const units = [];
   const byPath = new Map(row.clauses.map((c) => [c.path, c]));
   for (const c of row.clauses) {
     if (!c.leaf) continue;
-    const ancestors = [];
-    for (const [p, x] of byPath) if (p !== c.path && c.path.startsWith(p) && x.start < c.start) ancestors.push(x);
-    const context = ancestors.map((x) => x.text.trim());
-    const text = c.text.trim();
-    const full = [...context, text].join(' ');
+    const text = c.text.replace(/\s+/g, ' ').trim();
+    if (!text) continue;
+    const context = (c.ancestors || []).map((p) => (byPath.get(p)?.text || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    if (c.column_header !== undefined) context.push(`[row] ${c.row_header}`, `[column] ${c.column_header}`);
     units.push({
-      citation: `${row.article}${c.path}`,
+      citation: `${row.article}${c.path.replace(/~[a-z_0-9]+/g, '')}`,
       clause_path: c.path,
       context,
+      origin: c.origin,
       page: row.page,
       regulation_id: row.regulation_id,
       retired: row.retired,
-      sha256: sha256(Buffer.from(full, 'utf8')),
+      sha256: sha256(Buffer.from([...context, text].join(' '), 'utf8')),
       text,
       unit_id: `${row.regulation_id}#${c.path}`,
     });
@@ -594,31 +570,172 @@ export function unitsOf(row) {
   return units;
 }
 
+const ACTION_RE = /\b(replacing|adding|deleting|amending)\b/i;
+
 /**
- * Slice the whole snapshot. `pages` = [{key, role, section, file, html, normalized, status?, ruling?,
- * carve_in?}] (the toc_root page is not sliced). Returns {slicer_version, rows[], units[], spans{},
- * problems[], numbering, defects[], pages{key: counts}, totals}. Deterministic. PURE.
+ * Slice an enacting by-law's amendments to pinned, in-scope regulations (Spec 69 M-36; operator ruling R5).
+ * Each numbered section "N. Zoning By-law 569-2013, as amended, is further amended by <action> … [so that it]
+ * reads: <text>" whose target lies on a pinned in-scope article becomes one row on page `enacting:<bylaw>`:
+ *   regulation_id  `<target citation>@<bylaw>` (e.g. `10.5.40.60(4)@1075-2026`), verbatim = the whole section
+ *   action         replacing · adding · deleting · amending (the first verb); target = the last citation named
+ *                  before "reads:" (the division the new text is), targets_named = every citation named
+ *   clauses        `[instruction]` (the amending sentence) + the new text's own divisions (inline parse)
+ * `scope` = pinnedScope(page-set) {sections, carve}. Returns {rows, skipped: [{section, target, reason}]}. PURE.
  */
-export function sliceSnapshot({ pages, definitionMatcher }) {
+export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
+  const rows = [];
+  const skipped = [];
+  const page = `enacting:${bylaw}`;
+  const heads = [...text.matchAll(/(?<=^|\s)(\d{1,3})\. Zoning By-law 569-2013, as amended/g)];
+  const endAll = (() => {
+    const e = text.search(/\sEnacted and passed/);
+    return e < 0 ? text.length : e;
+  })();
+  const seen = new Map();
+  for (let i = 0; i < heads.length; i++) {
+    const from = heads[i].index;
+    const to = from + text.slice(from, i + 1 < heads.length ? heads[i + 1].index : endAll).trimEnd().length;
+    const verbatim = text.slice(from, to);
+    const r = /\breads:\s*/.exec(verbatim);
+    const instruction = r ? verbatim.slice(0, r.index + r[0].length) : verbatim;
+    const named = [...instruction.matchAll(/(?<![\d.])(\d{1,3}(?:\.\d{1,3}){1,3})((?:\([0-9A-Za-z]{1,5}\))*)/g)].map((m) => ({ article: m[1], citation: m[1] + m[2], path: m[2] }));
+    const sectionNo = heads[i][1];
+    if (!named.length) {
+      skipped.push({ reason: 'no_target', section: sectionNo, target: null });
+      continue;
+    }
+    const target = named[named.length - 1];
+    const sec = target.article.split('.').slice(0, 2).join('.');
+    const carve = scope.carve.get(sec);
+    const inScope = scope.sections.has(sec) && (!carve || [...carve].some((a) => target.article === a || target.article.startsWith(`${a}.`)));
+    if (!inScope) {
+      skipped.push({ reason: 'target_not_pinned_in_scope', section: sectionNo, target: target.citation });
+      continue;
+    }
+    // The action is the last verb before the target's last mention ("deleting the word "and" … and adding a
+    // new regulation 10.5.40.40(3)(E)" adds (E); "deleting the number "0.15" … replacing it …, so that
+    // regulation 10.5.40.60(4) reads" replaces (4)).
+    const lastAt = instruction.lastIndexOf(target.citation);
+    const verbs = [...instruction.slice(0, lastAt).matchAll(new RegExp(ACTION_RE.source, 'gi'))];
+    const action = (verbs.length ? verbs[verbs.length - 1][1] : 'amending').toLowerCase();
+    let id = `${target.citation}@${bylaw}`;
+    const k = (seen.get(id) || 0) + 1;
+    seen.set(id, k);
+    if (k > 1) id = `${id}.${k}`;
+    // Clauses: the instruction, then the new text's divisions (rooted at the target's own path).
+    const clauses = [{ leaf: true, origin: 'instruction', path: '[instruction]', ranges: [[0, instruction.length]], text: instruction }];
+    if (r) {
+      const body = verbatim.slice(instruction.length);
+      const groups = (target.path.match(/\(([^)]+)\)/g) || []).length;
+      const parsed = parseClauses(body, target.path, { startLevel: Math.max(0, groups - 1), atStart: false });
+      parsed.nodes.forEach((nd, j) => {
+        const leaf = !(parsed.nodes[j + 1] && parsed.nodes[j + 1].depth > nd.depth);
+        clauses.push({ leaf, origin: 'enacting', path: nd.path || target.path || '[text]', ranges: [[instruction.length + nd.start, instruction.length + nd.end]], text: body.slice(nd.start, nd.end) });
+      });
+    }
+    for (const c of clauses) {
+      const anc = [];
+      for (const o of clauses) if (o !== c && o.path !== '[instruction]' && c.path !== '[instruction]' && c.path.startsWith(o.path) && c.path !== o.path) anc.push(o.path);
+      if (anc.length) c.ancestors = anc;
+    }
+    const pathAt = (pos) => {
+      let hit = clauses[0];
+      for (const c of clauses) if (c.ranges[0][0] <= pos) hit = c;
+      return hit.path;
+    };
+    const tags = extractTags(verbatim);
+    const literals = extractLiterals(verbatim);
+    const withPath = (x) => ({ ...x, clause_path: pathAt(x.start) });
+    rows.push({
+      action,
+      amendment: { bylaw, section: sectionNo, status },
+      article: target.article,
+      article_title: null,
+      carve_in: Boolean(carve),
+      clauses,
+      defects: defectChars(verbatim).map((d) => ({ clause_path: pathAt(d.index), code: d.code, context: verbatim.slice(Math.max(0, d.index - 40), d.index + 10), index: d.index, kind: 'garbled_character' })),
+      end: to,
+      kind: 'enacting_amendment',
+      literals: literals.map(withPath),
+      number: null,
+      page,
+      refs: extractRefs(verbatim, tags).map(withPath),
+      regulation_id: id,
+      retired: false,
+      section: sec,
+      sha256: sha256(Buffer.from(verbatim, 'utf8')),
+      start: from,
+      tags: tags.map(withPath),
+      target: target.citation,
+      targets_named: [...new Set(named.map((x) => x.citation))],
+      uncovered_numbers: scanNumbers(verbatim, literals).uncovered.map(withPath),
+      verbatim,
+    });
+  }
+  return { rows, skipped };
+}
+
+/**
+ * Mark consolidation rows that a captured enacting amendment changes (R5: "the affected rows are current"):
+ * a row whose regulation the amendment targets gets amended_by[]; a whole-regulation replacement or deletion
+ * also sets current_source to the enacting row. Mutates and returns `rows`. PURE over its input.
+ */
+export function applyAmendments(rows, enactingRows) {
+  const byReg = new Map(rows.filter((r) => !r.page.startsWith('enacting:')).map((r) => [r.regulation_id, r]));
+  for (const e of enactingRows) {
+    const m = /^(\d{1,3}(?:\.\d{1,3}){1,3})(\([0-9A-Za-z]{1,5}\))?((?:\([0-9A-Za-z]{1,5}\))*)$/.exec(e.target);
+    if (!m || !m[2]) continue;
+    const row = byReg.get(m[1] + m[2]);
+    if (!row) continue;
+    (row.amended_by ||= []).push({ action: e.action, bylaw: e.amendment.bylaw, row: e.regulation_id, target: e.target });
+    if (!m[3] && (e.action === 'replacing' || e.action === 'deleting')) row.current_source = e.regulation_id;
+  }
+  return rows;
+}
+
+const ZERO = () => ({ cells_html: 0, cells_sliced: 0, defects: 0, definitions: 0, inline_units: 0, literals: 0, refs: 0, retired_rows: 0, rows: 0, table_units: 0, tag_entries: 0, tags: 0, uncovered_numbers: 0, units: 0 });
+
+/**
+ * Slice the whole snapshot. `pages` = [{key, role, section, file, html, normalized, status?, ruling?, carve_in?}]
+ * (the toc_root page is not sliced); `enacting` = enacting-text rows from sliceEnacting(). Returns {slicer_version,
+ * rows[], units[], spans{}, problems[], numbering, defects[], pages{key: counts}, totals}. Deterministic. PURE.
+ */
+export function sliceSnapshot({ pages, enacting = [], scope = null }) {
   const rows = [];
   const spans = {};
   const problems = [];
-  const numbering = { unsliced: [], gaps: [] };
+  const numbering = { gaps: [], unproven: [] };
   const pageCounts = {};
+  const enactingSkipped = [];
   for (const p of [...pages].sort((a, b) => cmpStr(a.key, b.key))) {
     if (p.role !== 'section') continue;
-    pageCounts[p.key] = { defects: 0, definitions: 0, literals: 0, refs: 0, retired_rows: 0, rows: 0, tag_entries: 0, tags: 0, uncovered_numbers: 0, units: 0 };
-    const r = slicePage({ ...p, definitionMatcher });
+    pageCounts[p.key] = ZERO();
+    const r = slicePage(p);
     rows.push(...r.rows);
     spans[p.key] = r.spans.sort((a, b) => a.start - b.start);
     problems.push(...r.problems);
-    numbering.unsliced.push(...r.numbering.unsliced);
     numbering.gaps.push(...r.numbering.gaps);
+    numbering.unproven.push(...r.numbering.unproven);
+    pageCounts[p.key].cells_html = r.cells.html;
+    pageCounts[p.key].cells_sliced = r.cells.sliced;
   }
+  const enactingRows = [];
+  for (const e of [...enacting].sort((a, b) => cmpStr(a.bylaw, b.bylaw))) {
+    if (!scope) {
+      problems.push(`structural: enacting ${e.bylaw} given without the pinned scope; not sliced`);
+      continue;
+    }
+    const r = sliceEnacting({ bylaw: e.bylaw, scope, status: e.status, text: e.text });
+    pageCounts[`enacting:${e.bylaw}`] = ZERO();
+    enactingRows.push(...r.rows);
+    enactingSkipped.push(...r.skipped.map((s) => ({ ...s, bylaw: e.bylaw })));
+  }
+  applyAmendments(rows, enactingRows);
+  rows.push(...enactingRows);
   const units = rows.flatMap(unitsOf);
   const defects = rows.flatMap((r) => r.defects.map((d) => ({ ...d, page: r.page, regulation_id: r.regulation_id })));
   for (const r of rows) {
-    const c = (pageCounts[r.page] ||= { defects: 0, definitions: 0, literals: 0, refs: 0, retired_rows: 0, rows: 0, tag_entries: 0, tags: 0, uncovered_numbers: 0, units: 0 });
+    const c = pageCounts[r.page];
     c.rows++;
     if (r.kind === 'definition') c.definitions++;
     if (r.retired) c.retired_rows++;
@@ -629,10 +746,15 @@ export function sliceSnapshot({ pages, definitionMatcher }) {
     c.defects += r.defects.length;
     c.uncovered_numbers += r.uncovered_numbers.length;
   }
-  for (const u of units) pageCounts[u.page].units++;
+  for (const u of units) {
+    pageCounts[u.page].units++;
+    if (u.origin === 'inline') pageCounts[u.page].inline_units++;
+    if (u.origin === 'table_cell') pageCounts[u.page].table_units++;
+  }
   const totals = { pages: Object.keys(pageCounts).length, rows: rows.length, units: units.length };
-  for (const k of ['definitions', 'literals', 'refs', 'tags', 'tag_entries', 'defects', 'retired_rows', 'uncovered_numbers']) totals[k] = Object.values(pageCounts).reduce((s, c) => s + c[k], 0);
-  return { defects, numbering, pages: pageCounts, problems, rows, slicer_version: SLICER_VERSION, spans, totals, units };
+  for (const k of ['definitions', 'inline_units', 'table_units', 'literals', 'refs', 'tags', 'tag_entries', 'defects', 'retired_rows', 'uncovered_numbers', 'cells_html', 'cells_sliced']) totals[k] = Object.values(pageCounts).reduce((s, c) => s + c[k], 0);
+  totals.enacting_rows = enactingRows.length;
+  return { defects, enacting_skipped: enactingSkipped, numbering, pages: pageCounts, problems, rows, slicer_version: SLICER_VERSION, spans, totals, units };
 }
 
 /** Read the committed snapshot into sliceSnapshot() input (the one I/O function here). */
@@ -654,5 +776,20 @@ export function loadSnapshotPages(seeds) {
       status: p.status || m.status,
     };
   });
-  return { adoption_id: manifest.adoption_id, normalizer_version: manifest.normalizer_version, pages };
+  const capFile = path.join(seeds, 'enacting', 'manifest.json');
+  const captures = fs.existsSync(capFile) ? JSON.parse(fs.readFileSync(capFile, 'utf8')).captures : {};
+  const enacting = SLICED_ENACTING.filter((b) => captures[b]).map((b) => ({ bylaw: b, text: fs.readFileSync(path.join(seeds, 'enacting', `${b}.txt`), 'utf8') }));
+  return { adoption_id: manifest.adoption_id, enacting, normalizer_version: manifest.normalizer_version, pages, scope: pinnedScopeOf(pageSet) };
+}
+
+/** Pinned in-scope sections (not retired) and the carve-in articles of carve-in pages. PURE. */
+export function pinnedScopeOf(pageSet) {
+  const sections = new Set();
+  const carve = new Map();
+  for (const p of pageSet.pages) {
+    if (p.role !== 'section' || p.status === 'retired') continue;
+    sections.add(p.section);
+    if (p.carve_in?.length) carve.set(p.section, new Set(p.carve_in));
+  }
+  return { carve, sections };
 }

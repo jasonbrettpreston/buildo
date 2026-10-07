@@ -366,6 +366,24 @@
       "basis": "phase0"
     },
     {
+      "key": "ch600_10",
+      "role": "section",
+      "section": "600.10",
+      "file": "ZBL_NewProvision_Chapter600_10.htm",
+      "basis": "M-37",
+      "status": "retired",
+      "ruling": "operator 2026-10-07 (Spec 69 M-57): retired — out of scope, other_zone_category (600.10 Building Setback Overlay: downtown setbacks for buildings taller than 36 m)"
+    },
+    {
+      "key": "ch600_50",
+      "role": "section",
+      "section": "600.50",
+      "file": "ZBL_NewProvision_Chapter600_50.htm",
+      "basis": "M-37",
+      "status": "retired",
+      "ruling": "operator 2026-10-07 (Spec 69 M-57): retired — out of scope, non_residential_use_condition (600.50 Queen Street West eating-establishment overlay)"
+    },
+    {
       "key": "ch600_60",
       "role": "section",
       "section": "600.60",

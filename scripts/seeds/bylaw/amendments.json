@@ -1,5 +1,5 @@
 {
-  "adoption_id": "adoption-1",
+  "adoption_id": "adoption-3",
   "bylaw_tag_counts": {
     "101-2022": {
       "clauses": 42,
@@ -14,8 +14,8 @@
       "tags": 1
     },
     "1050-2013": {
-      "clauses": 1,
-      "tags": 1
+      "clauses": 2,
+      "tags": 2
     },
     "1062-2025": {
       "clauses": 92,
@@ -24,6 +24,10 @@
     "1092-2021": {
       "clauses": 3,
       "tags": 3
+    },
+    "1107-2016": {
+      "clauses": 7,
+      "tags": 7
     },
     "1107-2021": {
       "clauses": 15,
@@ -42,8 +46,8 @@
       "tags": 5
     },
     "1198-2019": {
-      "clauses": 3,
-      "tags": 3
+      "clauses": 4,
+      "tags": 4
     },
     "1210-2019": {
       "clauses": 13,
@@ -70,8 +74,8 @@
       "tags": 12
     },
     "1329-2023": {
-      "clauses": 10,
-      "tags": 11
+      "clauses": 11,
+      "tags": 12
     },
     "1353-2015": {
       "clauses": 4,
@@ -491,10 +495,20 @@
       "normalized_sha256": "d86f3c4f13028830f4fa6a3dd634a23f2f1484cabeb30a47efa1b7ae3a291ef7",
       "tag_count": 2
     },
+    "ch600_10": {
+      "list_tag_count": 0,
+      "normalized_sha256": "f026da0de1b8399de8bf64f5d2f7e11ee127ef90fe25889fb30ff9a6f271ad96",
+      "tag_count": 7
+    },
     "ch600_5": {
       "list_tag_count": 0,
       "normalized_sha256": "0427dafdf80ca25ac8c4eed57d3772cf1a72b405881897e760361b4fb8a4aa43",
       "tag_count": 1
+    },
+    "ch600_50": {
+      "list_tag_count": 0,
+      "normalized_sha256": "a903a6aae4d21e26634b5c0db54d6850add082941821cdde1a89bccdbee3bfb9",
+      "tag_count": 2
     },
     "ch600_60": {
       "list_tag_count": 0,
@@ -621,6 +635,17 @@
     "1092-2021": {
       "basis": null,
       "bylaw": "1092-2021",
+      "enacted_on": null,
+      "in_force_on": null,
+      "in_force_trigger": null,
+      "source_sha256": null,
+      "source_url": null,
+      "status": "not_verified",
+      "verified_on": null
+    },
+    "1107-2016": {
+      "basis": null,
+      "bylaw": "1107-2016",
       "enacted_on": null,
       "in_force_on": null,
       "in_force_trigger": null,
@@ -12931,6 +12956,137 @@
       ]
     },
     {
+      "clause_path": "600.10.10(1)(F)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(1)(F)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(2)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(2)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(3)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(3)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(4)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(4)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(5)(C)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(5)(C)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(6)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(6)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.10.10(7)",
+      "form": "single",
+      "id": "ch600_10:600.10.10(7)#1",
+      "page": "ch600_10",
+      "raw": "[ By-law: 1107-2016 ]",
+      "refs": [
+        {
+          "bylaw": "1107-2016",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.50.10(1)(A)",
+      "form": "single",
+      "id": "ch600_50:600.50.10(1)(A)#1",
+      "page": "ch600_50",
+      "raw": "[ By-law: 1329-2023 ]",
+      "refs": [
+        {
+          "bylaw": "1329-2023",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
+      "clause_path": "600.50.10(1)(I)",
+      "form": "single",
+      "id": "ch600_50:600.50.10(1)(I)#1",
+      "page": "ch600_50",
+      "raw": "[ By-law: 1050-2013(LPAT); 1198-2019 ]",
+      "refs": [
+        {
+          "bylaw": "1050-2013",
+          "kind": "bylaw",
+          "note": "LPAT"
+        },
+        {
+          "bylaw": "1198-2019",
+          "kind": "bylaw",
+          "note": null
+        }
+      ]
+    },
+    {
       "clause_path": "600.60.30(1)(A)(ii)",
       "form": "single",
       "id": "ch600_60:600.60.30(1)(A)(ii)#1",
@@ -14488,9 +14644,9 @@
   ],
   "totals": {
     "article_level_tags": 0,
-    "bylaws": 68,
+    "bylaws": 69,
     "list_tags": 8,
-    "pages": 57,
-    "tags": 875
+    "pages": 59,
+    "tags": 884
   }
 }

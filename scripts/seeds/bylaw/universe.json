@@ -35,6 +35,26 @@
       "why": "Spec 69 M-47 dated note (operator S3 2026-10-07): 230.30/.40/.50/.60/.80 (non-residential zone categories) retired"
     },
     {
+      "id": "SR-RETIRED-600-10",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-57",
+      "match": { "pages": ["ch600_10"] },
+      "why": "Building Setback Overlay District Map (downtown setbacks above 36 m, CR): pinned RETIRED at adoption-2 (Spec 69 M-57; the M-56 page rule became this page_status rule)"
+    },
+    {
+      "id": "SR-RETIRED-600-50",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-57",
+      "match": { "pages": ["ch600_50"] },
+      "why": "Community Overlay District Maps (Queen St W eating-establishment overlay): pinned RETIRED at adoption-2 (Spec 69 M-57; the M-56 page rule became this page_status rule)"
+    },
+    {
       "id": "SR-ADMIN-1-5",
       "tier": 3,
       "kind": "judgment",
@@ -63,7 +83,7 @@
       "scope": "out",
       "reason": "administrative_no_application_effect",
       "ruling": "M-56",
-      "match": { "articles": ["995.10.1"] },
+      "match": { "articles": ["995.10.1"], "kinds": ["regulation", "article"] },
       "evidence": ["separately bound", "overlay map booklets"],
       "why": "says where the Policy Area Overlay Map booklets are kept; no lot effect"
     },
@@ -206,6 +226,15 @@
         "pages": ["ch1_20", "ch1_40", "ch15_10", "ch40_10", "ch80_5", "ch80_10", "ch150_15", "ch150_20", "ch150_22", "ch150_25", "ch150_30", "ch150_45", "ch150_48", "ch150_50", "ch200_10", "ch200_15", "ch200_20", "ch200_25", "ch220_5", "ch220_20", "ch230_5", "ch230_10", "ch230_90", "ch970_30", "ch995_20", "ch995_30", "ch995_41", "ch995_50", "ch995_60"]
       },
       "why": "Spec 69 M-47: the 23 residential TOC entries and the clause-level carve-ins are in"
+    },
+    {
+      "id": "SR-IN-ENACTING",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "M-36",
+      "match": { "kinds": ["enacting_amendment"] },
+      "why": "Spec 69 M-36 / M-57 R5: an amendment sliced from a captured enacting by-law targets a pinned in-scope article (the slicer skips any other target), so it is in"
     }
   ],
   "page_rules": [
@@ -224,22 +253,6 @@
       "reason": "zone_labels_from_dataset",
       "ruling": "M-47",
       "why": "Spec 69 M-47: Ch.990 by a map rule; labels come from the zoning dataset (M-42)"
-    },
-    {
-      "entry": "600.10",
-      "level": "section",
-      "disposition": "out",
-      "reason": "other_zone_category",
-      "ruling": "M-56",
-      "why": "Building Setback Overlay District Map: downtown setbacks above 36 m (CR); out, Spec 69 M-56 (supersedes the M-37 S3 Phase 2 pin)"
-    },
-    {
-      "entry": "600.50",
-      "level": "section",
-      "disposition": "out",
-      "reason": "non_residential_use_condition",
-      "ruling": "M-56",
-      "why": "Community Overlay District Maps: Queen St W eating-establishment overlay; out, Spec 69 M-56 (supersedes the M-37 S3 Phase 2 pin)"
     },
     {
       "entry": "600.20",
