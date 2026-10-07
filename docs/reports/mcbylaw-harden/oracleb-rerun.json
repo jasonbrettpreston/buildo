@@ -1,0 +1,62 @@
+{
+ "after": {
+  "by_set": {
+   "fixture": {
+    "agree": 13009,
+    "n": 13101,
+    "rate": 99.3,
+    "value_agree": 13014,
+    "winner_agree": 12827
+   },
+   "provincial": {
+    "agree": 12477,
+    "n": 12978,
+    "rate": 96.14,
+    "value_agree": 12668,
+    "winner_agree": 12453
+   },
+   "rd_band": {
+    "agree": 2551,
+    "n": 2562,
+    "rate": 99.57,
+    "value_agree": 2554,
+    "winner_agree": 2482
+   }
+  },
+  "classes": {
+   "R1_rule7a_exception_not_authored (A per M-60 (a); B predates)": 134,
+   "R2_provincial_land_input_undecided (spec_ambiguous: B assumes a residential zone is urban residential land)": 76,
+   "R3_provincial_never_additional (B_wrong per M-55 note)": 311,
+   "R3b_absence_kept_with_provincial_loaded (B_wrong per M-55 note)": 22,
+   "R4_reason_only (declared priority vs first-seen)": 13,
+   "R5_C1_argument_displacement_and_M60_enumeration (B_wrong per Spec 68 §7.4 12.0)": 48
+  },
+  "overall": {
+   "agree": 28037,
+   "n": 28641,
+   "rate": 97.89,
+   "value_agree": 28236,
+   "winner_agree": 27762
+  },
+  "vectors": {
+   "A_matches_expected": 77,
+   "B_matches_expected": 77,
+   "n": 102,
+   "with_expected": 99
+  }
+ },
+ "before": {
+  "classes": {
+   "A_wrong C4": 1304,
+   "B_wrong C1": 10,
+   "spec_ambiguous C2": 326,
+   "spec_ambiguous C3": 18
+  },
+  "overall": {
+   "agree": 26983,
+   "n": 28641,
+   "rate": 94.21
+  }
+ },
+ "how": "oracle-b compare.mjs (Buildo-wt-mcbylaw-oracleb, oracle-b-1) run with A = this worktree evaluate.mjs + seeds; A reads external.json through provincialUnits(); B code unchanged; same seed mcbylaw-oracleb-2026-10-07"
+}

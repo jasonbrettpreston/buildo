@@ -255,9 +255,15 @@ export function clauseScope(row, clausePath) {
   const clauses = row.clauses || [];
   const sub = clauses.filter((c) => c.path.startsWith(clausePath));
   const anc = clauses.filter((c) => c.path !== clausePath && clausePath.startsWith(c.path));
-  const text = [...anc, ...sub].sort((a, b) => a.start - b.start).map((c) => c.text.trim()).join(' ');
+  const text = [...anc, ...sub].sort((a, b) => startOf(a) - startOf(b)).map((c) => ws(c.text)).filter(Boolean).join(' ');
   return { subtree: new Set(sub.map((c) => c.path)), ancestors: new Set(anc.map((c) => c.path)), text };
 }
+
+/** A clause's text spans in the verbatim: slice-v2 `ranges[[s, e], …]` (a clause may be split by a table), slice-v1 start/end. */
+export function rangesOf(c) {
+  return Array.isArray(c.ranges) && c.ranges.length ? c.ranges : [[c.start ?? 0, c.end ?? 0]];
+}
+export const startOf = (c) => rangesOf(c)[0][0];
 
 /**
  * A cross-reference citation (slice ref `citation`, a displaces target, an include target) → what it names.

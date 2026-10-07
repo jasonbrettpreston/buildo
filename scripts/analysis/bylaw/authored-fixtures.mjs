@@ -2,11 +2,12 @@
 //            that occurs in real text (the set is enumerated and pinned at S6)"), §9 ("every named reason code has a
 //            known-bad fixture that fails for that reason, plus a good twin"); docs/reports/mcbylaw-phase1-plan.md S6
 //
-// Fixtures for the S6 authored-field gates, built from REAL clause text: fixtures/real-rows.json holds verbatims copied
-// from the pinned pages (adoption-1) and the infra test proves each is still a substring of its pinned page. Rows are
-// re-cut here through the slice.mjs text API (parseClauses / extractLiterals / extractRefs / extractTags / scanNumbers /
-// unitsOf), so the fixtures follow the live slicer, never a frozen copy of its output. PURE (the two JSON reads happen
-// once at import, like slice.mjs reading vocab.json).
+// Fixtures for the S6 authored-field gates, cut from the LIVE slice: the rows named in FIXTURE_ROW_IDS are taken from
+// slice.mjs sliceSnapshot() over the committed snapshot (whatever adoption / slicer version is current), never from a
+// hand-pinned copy of their text, so a slicer or vocab change reds the gates' own self-tests (bylaw-s6g.infra) instead
+// of only the push suite. Mutation fixtures edit the live row OBJECTS structurally (drop a row, retarget a ref, inject
+// an uncovered number), never the text. The committed snapshot is read once, on first use (I/O, like slice.mjs reading
+// vocab.json); every fixture builder is otherwise pure.
 //
 // The archetype × value_form pairs that occur in the Phase 1 pinned text (keyed at S0.5, re-keyed here) — PINNED:
 //   LIMIT×literal · LIMIT×band · LIMIT×formula · LIMIT×by_building_type · LIMIT×map_lookup · DEFINE×literal ·
@@ -15,65 +16,67 @@
 // LIMIT×existing_as_of; UNUSUAL occurred 0 times at S0.5 (Spec 69 M-44 note). Their shape rules are still exercised by
 // the G-SHAPE fixtures below on Phase 1 text.
 
+import path from 'node:path';
 import { createRequire } from 'node:module';
-import { extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, unitsOf } from './slice.mjs';
-import { DOUBLE_KEYED, AUTHORED_SCHEMA, getField, sha256 } from './authored.mjs';
+import { fileURLToPath } from 'node:url';
+import { loadSnapshotPages, sliceSnapshot } from './slice.mjs';
+import { DOUBLE_KEYED, AUTHORED_SCHEMA, buildIndex, getField, sha256, unitView } from './authored.mjs';
 
 const require = createRequire(import.meta.url);
-const REAL = require('./fixtures/real-rows.json');
 export const REAL_VOCAB = Object.freeze(require('../../seeds/bylaw/vocab.json'));
 const REAL_ADJ = require('../../seeds/bylaw/adjudications.json');
+const SEEDS = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'seeds', 'bylaw');
 
 export const PINNED_PAIRS = Object.freeze([
   'LIMIT×literal', 'LIMIT×band', 'LIMIT×formula', 'LIMIT×by_building_type', 'LIMIT×map_lookup', 'DEFINE×literal',
   'DEFINE×map_lookup', 'DEFINE×none', 'DISAPPLY×none', 'PERMIT×none', 'PROHIBIT×none', 'REQUIRE×none', 'PROCEDURAL×none',
 ]);
+/** The live rows the fixtures key or reference (displacement / include / cross-ref targets). */
+export const FIXTURE_ROW_IDS = Object.freeze([
+  '10.20.40.70(3)', '10.20.40.70(4)', '10.20.40.70(6)', '10.20.40.10(1)', '10.80.40.10(1)', '10.20.40.40(1)', '10.20.40.20(1)',
+  '10.20.40.20(4)', '10.20.30.20(1)', '600.60.40(1)', '600.60.40(3)', '900.1.10(2)', '900.1.10(3)', '900.1.10(4)', '1.5.7(1)',
+  '10.5.20.40(1)', '10.5.20.40(2)', '10.5.20.40(3)', '10.5.20.40(4)', '10.5.20.40(5)', '10.10.40.1(3)', '10.60.40.1(2)',
+  '10.80.40.1(2)', '800.50(445)',
+]);
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
-
-/** A slice row from a real verbatim, through the slice.mjs text API (the makeRow essentials). */
-export function rowFromVerbatim({ regulation_id, article, page, section, verbatim }) {
-  const root = /\((\d{1,4})\)$/.exec(regulation_id);
-  const rootPath = root ? `(${root[1]})` : '';
-  const { nodes } = parseClauses(verbatim, rootPath);
-  const tags = extractTags(verbatim);
-  const markers = nodes.filter((x) => x.depth >= 0).map((x) => ({ start: x.start, end: verbatim.indexOf(')', x.start) + 1 }));
-  const refs = extractRefs(verbatim, [...tags, ...markers]);
-  const literals = extractLiterals(verbatim);
-  const scan = scanNumbers(verbatim, literals);
-  const nodeAt = (pos) => {
-    let hit = nodes[0];
-    for (const x of nodes) if (x.start <= pos) hit = x;
-    return hit;
-  };
-  const withPath = (x) => ({ ...x, clause_path: nodeAt(x.start).path });
-  return {
-    article,
-    clauses: nodes.map((x) => ({ end: x.end, leaf: x.leaf, path: x.path, start: x.start, text: verbatim.slice(x.start, x.end) })),
-    defects: [],
-    kind: 'regulation',
-    literals: literals.map(withPath),
-    page,
-    refs: refs.map(withPath),
-    regulation_id,
-    retired: false,
-    section,
-    sha256: sha256(Buffer.from(verbatim, 'utf8')),
-    tags: tags.map(withPath),
-    uncovered_numbers: scan.uncovered.map(withPath),
-    verbatim,
-  };
+let LIVE = null;
+/** The live slice of the committed snapshot (read and cut once). */
+export function liveSlice() {
+  if (!LIVE) {
+    const p = loadSnapshotPages(SEEDS);
+    LIVE = sliceSnapshot({ pages: p.pages, enacting: p.enacting, scope: p.scope });
+  }
+  return LIVE;
 }
 
-/** The fixture slice: every real row, optionally edited (`edit(rowsById)` may drop or replace rows). */
+/** The fixture slice: the FIXTURE_ROW_IDS rows and their units, cloned from the live slice; `edit(rowsById)` may drop
+ * or structurally edit rows (units follow the rows that remain). A fixture id missing from the live slice throws. */
 export function fixtureSlice(edit = null) {
-  const byId = new Map(REAL.rows.map((r) => [r.regulation_id, { ...r }]));
+  const live = liveSlice();
+  const byId = new Map();
+  for (const id of FIXTURE_ROW_IDS) {
+    const r = live.rows.find((x) => x.regulation_id === id);
+    if (!r) throw new Error(`fixture row ${id} is not in the live slice (${live.slicer_version})`);
+    byId.set(id, clone(r));
+  }
   if (edit) edit(byId);
-  const rows = [...byId.values()].map(rowFromVerbatim);
-  return { rows, units: rows.flatMap(unitsOf) };
+  const rows = [...byId.values()];
+  const ids = new Set(rows.map((r) => r.regulation_id));
+  return { rows, units: clone(live.units.filter((u) => ids.has(u.regulation_id))) };
 }
-export const REAL_ROWS = REAL;
-export const realVerbatim = (id) => REAL.rows.find((r) => r.regulation_id === id).verbatim;
+/** Retarget the first ref of a row whose citation is `from` (a structural edit of live output, offsets kept). */
+export const retargetRef = (id, from, to) => (m) => {
+  const r = m.get(id);
+  const ref = r.refs.find((x) => x.citation === from);
+  if (!ref) throw new Error(`fixture: ${id} has no ref ${from}`);
+  ref.citation = to;
+};
+/** Add a ref at the start of a row's root clause (no trigger precedes it, so it is a plain cross-reference). */
+export const injectRef = (id, citation) => (m) => {
+  const r = m.get(id);
+  r.refs = [{ citation, clause_path: r.clauses[0].path, end: 0, start: 0, raw: citation, via: 'direct' }, ...r.refs];
+};
 
 // ---------------------------------------------------------------- the good units (keyer A drafts; ⧉ + A fields)
 
@@ -155,15 +158,8 @@ export function shardOf(units, { key = null, a = null, b = undefined, prov = und
   return { key: k, page: 'fx', article, paths: { a: `scripts/seeds/bylaw/authored/${k}.a.json`, b: `scripts/seeds/bylaw/authored/${k}.b.json`, prov: `scripts/seeds/bylaw/authored/${k}.prov.json` }, a: aDoc, b: bDoc, prov: pv, a_sha256: sha256(aBytes), parse_errors: [] };
 }
 function unitSha(sl, unitId) {
-  const [reg, p] = unitId.split('#');
-  const row = sl.rows.find((r) => r.regulation_id === reg);
-  if (!row) return 'missing';
-  if (p === 'whole') return row.sha256;
-  const u = sl.units.find((x) => x.unit_id === unitId);
-  if (u) return u.sha256;
-  const anc = row.clauses.filter((c) => c.path !== p && p.startsWith(c.path));
-  const sub = row.clauses.filter((c) => c.path.startsWith(p));
-  return sha256(Buffer.from([...anc, ...sub].sort((x, y) => x.start - y.start).map((c) => c.text.trim()).join(' '), 'utf8'));
+  const v = unitView(buildIndex(sl), unitId); // exactly what G-SHAPE compares the pin with
+  return v ? v.sha256 : 'missing';
 }
 
 export const realAdjudications = () => clone(REAL_ADJ);
@@ -246,15 +242,14 @@ export function xrefFixtures() {
   const include = (id) => base(id, { archetype: 'INCLUDE', calculation_handling: { status: 'informational' } });
   out.push({ name: 'good twin: INCLUDE resolves to a row', reason: null, input: { slice, units: unitsMap(include('10.20.40.20(4)#whole')), vocab, external } });
   out.push({ name: 'good twin: INCLUDE to a phase2_exception ref (counted)', reason: null, input: { slice: fixtureSlice((m) => m.delete('10.20.40.20(1)')), units: unitsMap(include('10.20.40.20(4)#whole')), vocab, external: { entries: [{ id: 'REF-1', kind: 'ref', citation: '10.20.40.20(1)', url: 'https://www.toronto.ca/x', reason: 'phase2_exception' }] } }, expect: (r) => r.counts.include_to_phase2_ref === 1 });
-  const edit = (id, from, to) => (m) => m.set(id, { ...m.get(id), verbatim: m.get(id).verbatim.replace(from, to) });
   out.push({ name: 'ref_unresolved', reason: 'ref_unresolved', input: { slice: fixtureSlice((m) => m.delete('800.50(445)')), units: unitsMap(GOOD['DEFINE×none (M-39)']), vocab, external } });
   out.push({ name: 'displaces_unresolved', reason: 'displaces_unresolved', input: { slice: fixtureSlice((m) => m.delete('10.5.20.40(4)')), units: unitsMap(GOOD['REQUIRE×none']), vocab, external } });
-  out.push({ name: 'displaces_self', reason: 'displaces_self', input: { slice: fixtureSlice(edit('10.20.40.70(6)', 'Despite regulation 10.20.40.70(3) and (4)', 'Despite regulation 10.20.40.70(6)')), units: unitsMap(GOOD['LIMIT×literal (whole, displaces)']), vocab, external } });
-  out.push({ name: 'displaces_cycle', reason: 'displaces_cycle', input: { slice: fixtureSlice(edit('10.20.40.10(1)', '(A) the numerical value, in metres,', '(A) despite (C) below, the numerical value, in metres,')), units: unitsMap(GOOD['LIMIT×formula'], mutU('LIMIT×map_lookup', () => {})), vocab, external } });
+  out.push({ name: 'displaces_self', reason: 'displaces_self', input: { slice: fixtureSlice(retargetRef('10.20.40.70(6)', '10.20.40.70(3)', '10.20.40.70(6)')), units: unitsMap(GOOD['LIMIT×literal (whole, displaces)']), vocab, external } });
+  out.push({ name: 'displaces_cycle', reason: 'displaces_cycle', input: { slice: fixtureSlice(retargetRef('10.20.40.70(4)', '10.20.40.70(3)', '10.20.40.70(6)')), units: unitsMap(GOOD['LIMIT×literal (whole, displaces)'], base('10.20.40.70(4)#whole', { target: 'side_setback_m', bound: 'min' })), vocab, external } });
   out.push({ name: 'include_unresolved', reason: 'include_unresolved', input: { slice, units: unitsMap(include('900.1.10(3)#whole')), vocab, external } });
   out.push({ name: 'include_to_ref', reason: 'include_to_ref', input: { slice: fixtureSlice((m) => m.delete('10.20.40.20(1)')), units: unitsMap(include('10.20.40.20(4)#whole')), vocab, external: { entries: [{ id: 'REF-2', kind: 'ref', citation: '10.20.40.20(1)', url: 'https://www.toronto.ca/x', reason: 'outside_page_set' }] } } });
-  out.push({ name: 'include_cycle', reason: 'include_cycle', input: { slice: fixtureSlice(edit('10.20.40.20(1)', 'In the RD zone', 'Subject to regulation 10.20.40.20(4), in the RD zone')), units: unitsMap(include('10.20.40.20(4)#whole'), include('10.20.40.20(1)#whole')), vocab, external } });
-  out.push({ name: 'include_cycle: an INCLUDE of its own regulation', reason: 'include_cycle', input: { slice: fixtureSlice(edit('10.20.40.20(1)', 'In the RD zone', 'Subject to regulation 10.20.40.20(1), in the RD zone')), units: unitsMap(include('10.20.40.20(1)#whole')), vocab, external } });
+  out.push({ name: 'include_cycle', reason: 'include_cycle', input: { slice: fixtureSlice(injectRef('10.20.40.20(1)', '10.20.40.20(4)')), units: unitsMap(include('10.20.40.20(4)#whole'), include('10.20.40.20(1)#whole')), vocab, external } });
+  out.push({ name: 'include_cycle: an INCLUDE of its own regulation', reason: 'include_cycle', input: { slice: fixtureSlice(injectRef('10.20.40.20(1)', '10.20.40.20(1)')), units: unitsMap(include('10.20.40.20(1)#whole')), vocab, external } });
   out.push({ name: 'trigger_unaccounted', reason: 'trigger_unaccounted', input: { slice, units: unitsMap(mutU('PROCEDURAL×none (not_an_override)', (u) => (u.not_an_override = []))), vocab, external } });
   out.push({ name: 'not_an_override_invalid', reason: 'not_an_override_invalid', input: { slice, units: unitsMap(mutU('PROCEDURAL×none (not_an_override)', (u) => (u.not_an_override = [{ phrase: 'despite', reason: 'seemed_harmless' }]))), vocab, external } });
   return out;
@@ -275,7 +270,12 @@ export function shapeFixtures() {
   bad('shape_must_be_none', 'REQUIRE×none', (u) => (u.numeric_expression = ['side_setback_m = 0.6 m @(B)']));
   bad('value_form_not_allowed', 'PERMIT×none', (u) => (u.numeric_expression = ['dwelling_units_max = 6 units @(B)']));
   bad('statement_target_mismatch', 'LIMIT×literal', (u) => (u.target = 'side_setback_street_m'));
-  bad('modelled_without_inputs', 'LIMIT×map_lookup', (u) => (u.calculation_handling.status = 'modelled'));
+  { // vocab.json declares HT / ST / LC held (Spec 58; folded by the hardening lane): the not-held arm runs on a
+    // vocab clone whose overlays are not declared held, so the gate keeps a red fixture
+    const notHeld = JSON.parse(JSON.stringify(REAL_VOCAB));
+    for (const c of Object.keys(notHeld.overlay_code || {})) delete notHeld.overlay_code[c].held;
+    bad('modelled_without_inputs', 'LIMIT×map_lookup', (u) => (u.calculation_handling.status = 'modelled'), { vocab: notHeld });
+  }
   bad('feeds_unresolved', 'LIMIT×literal', (u) => (u.application.building_types = []));
   bad('authored_orphan', 'LIMIT×literal', (u) => (u.unit_id = '10.20.40.70(3)#(3)(Z)'));
   bad('generated_field_authored', 'LIMIT×literal', (u) => (u.displaces = ['10.20.40.70(2)']));

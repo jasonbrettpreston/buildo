@@ -160,7 +160,9 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     expect({ pass: r.pass, violations: r.violations }).toEqual({ pass: true, violations: [] });
   });
   it('vector verdict counts (pinned; a change is a reviewed edit)', () => {
-    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 61, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 37, pending: 0, excluded: 7, inexpressible: 2, no_expected: 2 });
+    // hardening 2026-10-07 (Spec 69 M-60): Derwyn / Eastbourne carry the detached-house type their Spec 67 source states
+    // (+9 match); 7 untyped vectors whose types disagree are no_expected:building_type_unstated (M-50)
+    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 70, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 21, pending: 0, excluded: 7, inexpressible: 2, no_expected: 9 });
   });
   it('every not_evaluated vector carries a reason from the closed set', () => {
     const bad = r.rows.filter((x: Json) => x.verdict === 'not_evaluated' && !E.NOT_EVALUATED_CODES.includes(E.reasonCode(String(x.got).replace(/^not_evaluated:/, '')))).map((x: Json) => `${x.id} ${x.got}`);
@@ -249,16 +251,20 @@ describe('operator ruling 2026-10-07 (Spec 69 M-54 note): R-zone coverage unregu
   it('absence does not apply when an exception candidate for lot_coverage_pct exists, even when it does not apply to the lot', () => {
     const lot = { ...rLot, exception: '900.2.10(9)' };
     expect(show(effA(lot, [...UNITS, covEx]))).toBe(35);
-    expect(show(effA(lot, [...UNITS, { ...covEx, application: { zones: ['R'], building_types: ['townhouse'] } }]))).toBe('not_evaluated:no_candidate');
+    const notThisType = [...UNITS, { ...covEx, application: { zones: ['R'], building_types: ['townhouse'] } }];
+    // hardening 2026-10-07 (Spec 69 M-60): an exception with no authored record never yields absence
+    expect(show(effA(lot, notThisType))).toBe('not_evaluated:exception_not_authored:900.2.10(9)');
+    const CAuth = E.makeContext(VOCAB, { enactments: ENACT, absences: ABS.rulings, authored: { '900.2.10(9)': 'authored' } });
+    expect(show(E.effective(lot, 'lot_coverage_pct', E.loadCandidates(lot, notThisType).candidates, CAuth))).toBe('not_evaluated:no_candidate');
   });
-  it('absence does not apply to an overlay or provincial candidate either', () => {
-    for (const layer of ['overlay', 'provincial']) {
-      const u = { ...covEx, unit_id: `${layer}#c`, layer, exception: undefined, application: { zones: ['R'], building_types: ['townhouse'] } };
-      expect(show(effA(rLot, [...UNITS, u]))).toBe('not_evaluated:no_candidate');
-    }
+  it('absence does not apply to an overlay candidate; a provincial unit never switches it off (Spec 69 M-55 note, M-60)', () => {
+    const ov = { ...covEx, unit_id: 'overlay#c', layer: 'overlay', exception: undefined, application: { zones: ['R'], building_types: ['townhouse'] } };
+    expect(show(effA(rLot, [...UNITS, ov]))).toBe('not_evaluated:no_candidate');
+    const pr = { ...covEx, unit_id: 'provincial#c', layer: 'provincial', exception: undefined, application: { zones: ['R'], building_types: ['townhouse'] } };
+    expect(show(effA(rLot, [...UNITS, pr]))).toBe('unregulated');
   });
   it('absence does not apply on a lot whose exception is not captured (no unit loaded for it): not_evaluated, never inferred', () => {
-    expect(show(effA({ ...rLot, exception: '900.2.10(777)' }))).toBe('not_evaluated:no_candidate');
+    expect(show(effA({ ...rLot, exception: '900.2.10(777)' }))).toBe('not_evaluated:exception_not_authored:900.2.10(777)');
   });
   it('absence is zone- and target-scoped: RD coverage and R height are untouched', () => {
     expect(effA({ ...DERWYN, overlays: { HT: 8.5 }, building_type: 'detached_house' }).evidence.kind).toBe('clause');
@@ -305,7 +311,7 @@ describe('G-EVAL known-bad fixtures (each fails for its reason; the good twin pa
   });
   it('the zero-agreed state (no units at all) passes with every vector pending', () => {
     const res = ok(VECTORS, []);
-    expect([res.pass, res.counts.pending, res.counts.match]).toEqual([true, 100, 0]);
+    expect([res.pass, res.counts.pending, res.counts.match]).toEqual([true, 93, 0]); // 109 − 7 composite − 9 no_expected
   });
   it('parse_error: an agreed expression that does not parse fails G-EVAL (a)', () => {
     const res = ok(base, [...UNITS, { unit_id: '10.20.40.70(9)#(A)', regulation_id: '10.20.40.70(9)', layer: 'base', archetype: 'LIMIT', target: 'rear_setback_m', bound: 'min', numeric_expression: ['rear_setback_m = 7.5 @(9)(A)'], condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'] }, displaces: [] }]);

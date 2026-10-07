@@ -69,6 +69,7 @@
     "ST": { "unit": "storeys" }
   },
   "user_input": [
+    "ancillary_units",
     "bedroom_count",
     "building_type",
     "current_stories",
@@ -78,6 +79,7 @@
     "has_garden_suite",
     "has_laneway_suite",
     "has_secondary_suite",
+    "house_units",
     "lawfully_existing_status",
     "pool",
     "roof_type",

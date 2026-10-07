@@ -34,7 +34,7 @@
 //   not_an_override_invalid  a `not_an_override` entry's reason is outside vocab.displacement_triggers.not_an_override,
 //                            or its phrase is not an unaccounted trigger of the unit
 
-import { buildIndex, gateResult, resolveCitation, splitUnitId, unitView, violation } from './authored.mjs';
+import { buildIndex, gateResult, rangesOf, resolveCitation, splitUnitId, startOf, unitView, violation } from './authored.mjs';
 import { xrefFixtures } from './authored-fixtures.mjs';
 
 export const REASON_CODES = Object.freeze([
@@ -158,17 +158,19 @@ export function displacesOf(index, unitId, vocab, external = null) {
     if (/^\d+$/.test(g[0])) return resolveCitation(index, `${row2.article}${g.map((s) => `(${s})`).join('')}`, external);
     return { ok: false };
   };
-  for (const c of scopeClauses(row, view.clause_path).sort((a, b) => a.start - b.start)) {
-    const segFrom = c.start + (/^\s*\(([0-9A-Za-z]{1,7})\)/.exec(t.slice(c.start, c.end)) || [''])[0].length;
-    // text order, never vocab-array order
-    const hits = phrases.flatMap((ph) => occurrences(t, ph, c.start, c.end).map((x) => [x, ph])).sort((x, y) => x[0] - y[0] || cmpStr(x[1], y[1]));
-    {
+  for (const c of scopeClauses(row, view.clause_path).sort((a, b) => startOf(a) - startOf(b))) {
+    const r0 = rangesOf(c)[0];
+    const segFrom = r0[0] + (/^\s*\(([0-9A-Za-z]{1,7})\)/.exec(t.slice(r0[0], r0[1])) || [''])[0].length;
+    for (const [cStart, cEnd] of rangesOf(c)) {
+      const cc = { start: cStart, end: cEnd };
+      // text order, never vocab-array order
+      const hits = phrases.flatMap((ph) => occurrences(t, ph, cc.start, cc.end).map((x) => [x, ph])).sort((x, y) => x[0] - y[0] || cmpStr(x[1], y[1]));
       for (const [at, phrase] of hits) {
         const backward = BACKWARD_TRIGGERS.includes(phrase);
         named = 0;
         if (!backward) {
           // the chain of dotted refs starting right after the phrase
-          const refs = (row.refs || []).filter((r) => r.start >= at + phrase.length && r.start < c.end).sort((a, b) => a.start - b.start);
+          const refs = (row.refs || []).filter((r) => r.start >= at + phrase.length && r.start < cc.end).sort((a, b) => a.start - b.start);
           let last = at + phrase.length;
           const chain = [];
           for (const r of refs) {
@@ -182,7 +184,7 @@ export function displacesOf(index, unitId, vocab, external = null) {
           }
           for (const r of chain) add(r.citation, resolveCitation(index, r.citation, external), phrase);
           if (!chain.length) {
-            const rel = relativeRefs(t.slice(at + phrase.length, c.end)).filter((x) => x.at <= 1);
+            const rel = relativeRefs(t.slice(at + phrase.length, cc.end)).filter((x) => x.at <= 1);
             for (const x of rel.slice(0, 1)) for (const g of x.groups) add(`${row.regulation_id}#${g.map((s2) => `(${s2})`).join('')}`, relTarget(row, c.path, g), phrase);
           }
         } else {

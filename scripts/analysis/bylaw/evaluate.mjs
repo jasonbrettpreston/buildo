@@ -50,7 +50,15 @@ export const NOT_EVALUATED_CODES = Object.freeze([
   'unregulated_in_arithmetic', // M-54: `unregulated` is terminal
   'referenced_target_conflict', // :<target> a variable whose own effective() is an eval_conflict
   'expression_error', // :<DslError code>
+  'exception_not_authored', // :<exception> rule 7a: the lot's exception (or one it INCLUDEs) is not authored for the target
 ]);
+/** Undecided applicability is resolved by enumeration over at most this many units (2^n worlds), else not_evaluated. */
+export const MAX_UNDECIDED = 8;
+const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const stableJson = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort(cmpStr).map((y) => [y, x[y]])) : x));
+/** How a provincial unit restrains a by-law (Spec 68 §6.1, Spec 69 M-55 note): the bound it restrains. */
+const LIMITS = Object.freeze({ min_permission: 'max', max_requirement: 'min' });
+const PENDING_ROW = Object.freeze(['pending', 'pending:stale', 'failed']);
 const EPS = 1e-9;
 const r9 = (x) => Math.round(x * 1e9) / 1e9;
 const ne = (code, detail) => ({ ne: detail === undefined ? code : `${code}:${detail}` });
@@ -69,12 +77,15 @@ export function makeContext(vocab, extra = {}) {
   return {
     units: unitTable(vocab),
     zones: new Set(vocab.zone || []),
-    residentialTypes: vocab.building_type_residential || [],
+    residentialTypes: [...(vocab.building_type_residential || [])].sort(cmpStr), // order-free (red-team E8)
     typeParent: vocab.building_type_parent || {},
     userInputs: new Set(vocab.user_input || []),
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     enactments: extra.enactments || {},
-    absences: extra.absences || [], // scripts/seeds/bylaw/absence-rulings.json (Spec 69 M-54 note 2026-10-07)
+    absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
+    // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
+    // rule 7a reads it. Nothing listed = not authored (Phase 1 has no authored exception yet).
+    authored: extra.authored || {},
   };
 }
 const ctxOf = (c) => (c && c.units ? c : makeContext(c || {}));
@@ -110,12 +121,15 @@ export function evaluate(expr, lot, ctx) {
     throw err;
   }
   const trace = [];
-  const env = { C, lot, trace, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {} };
+  const reads = new Set();
+  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {} };
   const r = ev(ast, env);
-  if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace };
-  if (r.value === 'unregulated') return { value: 'unregulated', unit: r.unit, clause: clausePath, trace }; // M-54: carries the clause that says so
-  return { value: r.value === 'unlimited' ? 'unlimited' : r9(r.value), unit: r.unit, trace };
+  const inputs = [...reads].sort(cmpStr);
+  if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace, inputs };
+  if (r.value === 'unregulated') return { value: 'unregulated', unit: r.unit, clause: clausePath, trace, inputs }; // M-54: carries the clause that says so
+  return { value: r.value === 'unlimited' ? 'unlimited' : r9(r.value), unit: r.unit, trace, inputs };
 }
+const addAll = (set, xs) => { for (const x of xs || []) set.add(x); };
 
 function ev(e, env) {
   const { C, lot, trace } = env;
@@ -125,6 +139,7 @@ function ev(e, env) {
     case 'unregulated': return { value: 'unregulated', unit: null };
     case 'var': return variable(e.name, env);
     case 'label': {
+      env.reads.add(`label.${e.letter}`);
       if (!lot.label) return ne('missing_input', 'zone_label');
       const v = lot.label[e.letter];
       if (v === undefined || v === null) return { ...ne('label_value_absent', e.letter), absent: true };
@@ -132,6 +147,7 @@ function ev(e, env) {
       return { value: v, unit: C.units.label[e.letter] ?? null };
     }
     case 'overlay': {
+      env.reads.add(`overlays.${e.code}`);
       if (!lot.overlays) return ne('map_area_not_held', e.code);
       const v = lot.overlays[e.code];
       if (v === undefined || v === null) return { ...ne('map_value_absent', e.code), absent: true };
@@ -144,6 +160,7 @@ function ev(e, env) {
         date = C.enactments[e.enacted];
         if (!date) return ne('enactment_date_unknown', e.enacted);
       }
+      env.reads.add(`existing.${e.var}@${date}`);
       const v = lot.existing ? lot.existing[`${e.var}@${date}`] : undefined;
       if (v === undefined || v === null) return ne('existing_building_facts', e.var);
       trace.push(`existing(${e.var};${date})=${v}`);
@@ -166,6 +183,7 @@ function ev(e, env) {
       return ev(c ? e.a : e.b, env);
     }
     case 'by_type': {
+      env.reads.add('building_type');
       const bt = lot.building_type;
       if (!bt) return ne('needs_user_input', 'building_type');
       const hit = e.entries.find((x) => x.key === bt) || e.entries.find((x) => x.key === C.typeParent[bt]) || e.entries.find((x) => x.key === 'other');
@@ -198,10 +216,13 @@ function variable(name, env) {
   const { C, lot, trace } = env;
   const v = lot.vars ? lot.vars[name] : undefined;
   const unit = C.units.input[name] ?? C.units.target[name] ?? null;
+  env.reads.add(`vars.${name}`); // a lot value, when present, is read first (so it is a dependency either way)
   if (v !== undefined && v !== null) { trace.push(`${name}=${v}`); return { value: v, unit }; }
   if (env.resolveVariable) {
     const r = env.resolveVariable(name);
     if (r) {
+      env.reads.add(`target.${name}`);
+      addAll(env.reads, r.inputs);
       if (r.status === 'value') { trace.push(`${name}=${r.value} (effective ${r.winner})`); return { value: r.value, unit }; }
       if (r.status === 'not_evaluated' && reasonCode(r.reason) !== 'no_candidate') return { ne: r.reason };
       if (r.status === 'conflict') return ne('referenced_target_conflict', name);
@@ -257,8 +278,18 @@ function evCond(c, env) {
       return unknown || false;
     }
     case 'not': { const r = evCond(c.x, env); return r === true ? false : r === false ? true : r; }
-    case 'mapped': return lot.overlays ? lot.overlays[c.code] !== undefined && lot.overlays[c.code] !== null : ne('map_area_not_held', c.code);
-    case 'labelled': return lot.label ? lot.label[c.letter] !== undefined && lot.label[c.letter] !== null : ne('missing_input', 'zone_label');
+    case 'mapped': {
+      env.reads.add(`overlays.${c.code}`);
+      const r = lot.overlays ? lot.overlays[c.code] !== undefined && lot.overlays[c.code] !== null : ne('map_area_not_held', c.code);
+      env.trace.push(`mapped(${c.code})=${r === true || r === false ? r : 'unknown'}`);
+      return r;
+    }
+    case 'labelled': {
+      env.reads.add(`label.${c.letter}`);
+      const r = lot.label ? lot.label[c.letter] !== undefined && lot.label[c.letter] !== null : ne('missing_input', 'zone_label');
+      env.trace.push(`labelled(${c.letter})=${r === true || r === false ? r : 'unknown'}`);
+      return r;
+    }
     case 'cmp': {
       const l = ev(c.lhs, env);
       if (l.ne) return { ne: l.ne };
@@ -321,14 +352,16 @@ function rankedLayers(rl) {
 
 // ---------------------------------------------------------------- applicability
 // {ok:true} | {ok:false, why} | {ok:null, reason}
-export function applies(lot, u, ctx, resolveVariable) {
+export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = []) {
   const C = ctxOf(ctx);
   const app = u.application || {};
   const zones = app.zones || [];
+  reads.add('zone');
   if (zones.length && !zones.includes('any') && !zones.includes(lot.zone)) return { ok: false, why: 'zone' };
   let unknown = null;
   const types = app.building_types || [];
   if (types.length && !types.includes('any')) {
+    reads.add('building_type');
     const bt = lot.building_type;
     if (!bt) unknown = 'needs_user_input:building_type';
     else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
@@ -336,34 +369,77 @@ export function applies(lot, u, ctx, resolveVariable) {
   const part = (u.applies_to && u.applies_to.part) || 'whole';
   const refs = (u.applies_to && u.applies_to.refs) || [];
   if (part === 'map_area') {
+    reads.add('map_areas');
     if (!lot.map_areas) unknown = unknown || `map_area_not_held:${refs.join('+') || u.unit_id}`;
     else if (!refs.some((r) => lot.map_areas.includes(r))) return { ok: false, why: 'map_area' };
   } else if (part === 'named_addresses' || part === 'lot_list') {
+    reads.add('address');
     if (!lot.address) unknown = unknown || 'named_lots_only';
     else if (!refs.some((r) => r.toLowerCase() === String(lot.address).toLowerCase())) return { ok: false, why: part };
   }
   const cond = u.condition;
+  const hasIf = Boolean(cond && cond !== 'none' && cond.if && cond.if !== 'none');
   for (const t of tokensOf(cond)) {
+    // a threshold token's truth comes from condition.if; without one it is undecided, never unconditional (DeepSeek
+    // error-paths lens, adjudicated by execution 2026-10-07)
+    if (C.thresholdTokens.has(t) && !hasIf) { trace.push(`${t}=unknown (threshold token without condition.if)`); unknown = unknown || `condition_unknown:${t}`; continue; }
     if (C.thresholdTokens.has(t) || t === 'exception_area') continue; // truth from condition.if / the loader
+    reads.add(`flags.${t}`);
     const v = lot.flags ? lot.flags[t] : undefined;
+    trace.push(`${t}=${v === true || v === false ? v : 'unknown'}`);
     if (v === false) return { ok: false, why: `condition ${t}` };
     if (v !== true) unknown = unknown || (C.userInputs.has(t) ? `needs_user_input:${t}` : `condition_unknown:${t}`);
   }
   if (cond && cond !== 'none' && cond.if && cond.if !== 'none') {
     let c;
     try { c = parseCond(cond.if); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
-    const r = evCond(c, { C, lot, trace: [], resolveVariable, argEdits: {} });
+    const r = evCond(c, { C, lot, trace, reads, resolveVariable, argEdits: {} });
     if (r === false) return { ok: false, why: `condition ${cond.if}` };
     if (r !== true) unknown = unknown || r.ne;
   }
+  if (u.layer === 'provincial' && u.provincial) {
+    const s = provincialScope(lot, u.provincial, C, reads, trace);
+    if (s === false) return { ok: false, why: 'provincial scope' };
+    if (s !== true) unknown = unknown || s;
+  }
   return unknown ? { ok: null, reason: unknown } : { ok: true };
+}
+
+/**
+ * Spec 68 §6.1: a provincial unit is a candidate only when the lot meets its `scope` (land, principal building
+ * type, unit configuration), resolved to lot inputs by provincialUnits() through vocab.provincial_scope.
+ * Three-valued: true | false | '<reason>' (undecided). A false part decides false whatever else is unknown.
+ */
+function provincialScope(lot, p, C, reads, trace) {
+  const unknowns = [];
+  let out = true;
+  reads.add('building_type');
+  const bt = lot.building_type;
+  if (!bt) unknowns.push('needs_user_input:building_type');
+  else if (!p.building_types.includes(bt) && !p.building_types.includes(C.typeParent[bt])) out = false;
+  reads.add(`flags.${p.land_flag}`);
+  const land = lot.flags ? lot.flags[p.land_flag] : undefined;
+  if (land === false) out = false;
+  else if (land !== true) unknowns.push(`condition_unknown:${p.land_flag}`);
+  reads.add(`vars.${p.house_var}`); reads.add(`vars.${p.ancillary_var}`);
+  const h = lot.vars ? lot.vars[p.house_var] : undefined;
+  const a = lot.vars ? lot.vars[p.ancillary_var] : undefined;
+  const known = (x) => x !== undefined && x !== null;
+  const fits = p.unit_configurations.filter((c) => (!known(h) || c.house_units.includes(h)) && (!known(a) || c.ancillary_units.includes(a)));
+  if (!fits.length) out = false;
+  else if (!known(h)) unknowns.push(`needs_user_input:${p.house_var}`);
+  else if (!known(a)) unknowns.push(`needs_user_input:${p.ancillary_var}`);
+  trace.push(`provincial scope: building_type=${bt ?? 'unknown'}, ${p.land_flag}=${land ?? 'unknown'}, ${p.house_var}=${known(h) ? h : 'unknown'}, ${p.ancillary_var}=${known(a) ? a : 'unknown'}`);
+  if (out === false) return false;
+  return unknowns.length ? unknowns[0] : true;
 }
 
 // ---------------------------------------------------------------- loader (rule 1)
 /** Rule 1: base units of the lot's zone (by chapter), overlay and provincial units, the lot's exception units INCLUDE-expanded. */
 export function loadCandidates(lot, units) {
   const out = []; const seen = new Set(); const log = []; let depthMax = 0;
-  const add = (u) => { if (!seen.has(u.unit_id)) { seen.add(u.unit_id); out.push(u); } };
+  units = sortCandidates(units); // declared total order first, so a duplicate unit_id never resolves by input order
+  const add = (u) => { if (!seen.has(u.unit_id)) { seen.add(u.unit_id); out.push(u); } else if (!out.includes(u)) log.push(`duplicate unit_id ${u.unit_id} ignored (first in the declared order kept)`); };
   for (const u of units) {
     if (u.layer === 'base') { const z = chapterZone(u.regulation_id || splitRef(u.unit_id).reg); if (!z || z === lot.zone) add(u); }
     else if (u.layer === 'overlay' || u.layer === 'provincial') add(u);
@@ -382,63 +458,130 @@ export function loadCandidates(lot, units) {
 }
 
 // ---------------------------------------------------------------- effective()
-const NE_RESULT = (reason, extra = {}) => ({ status: 'not_evaluated', value: null, reason, applied: [], trace: [], disclosures: [], ...extra });
+const NE_RESULT = (reason, extra = {}) => ({ status: 'not_evaluated', value: null, reason, applied: [], trace: [], disclosures: [], inputs: [], ...extra });
+const UNIT_SORT = new WeakMap();
+const unitSortKey = (u) => { if (!UNIT_SORT.has(u)) UNIT_SORT.set(u, stableJson(u)); return UNIT_SORT.get(u); };
+/** The declared total order on candidates (layer rank, unit_id, then content): every result is independent of input order. */
+export function sortCandidates(cands) {
+  return [...(cands || [])].sort((a, b) => ((LAYER_RANK[a.layer] ?? 0) - (LAYER_RANK[b.layer] ?? 0)) || cmpStr(String(a.unit_id), String(b.unit_id)) || cmpStr(unitSortKey(a), unitSortKey(b)));
+}
+/**
+ * The reported reason when several are possible: a declared priority, never first-seen — building type first (M-50
+ * enumerates it), then the order of NOT_EVALUATED_CODES, then the reason text.
+ */
+export function pickReason(reasons) {
+  const rank = (r) => (r === 'needs_user_input:building_type' ? -1 : (NOT_EVALUATED_CODES.indexOf(reasonCode(r)) + 1) || 999);
+  return [...new Set(reasons)].sort((a, b) => (rank(a) - rank(b)) || cmpStr(a, b))[0];
+}
+const resultKey = (r) => stableJson({ s: r.status, v: r.value, r: r.reason ?? null, b: r.bounds ?? null, e: r.evidence ?? null });
 
-/** §7.5 rules 0, 2–7 (+ M-50 building type unknown). */
+/** §7.5 rules 0, 2–7 (+ M-50 building type unknown). Candidates are put in the declared total order first. */
 export function effective(lot, target, candidates, ctx, _env = {}) {
   const C = ctxOf(ctx);
-  if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return NE_RESULT('no_569_2013_zone', { trace: ['rule 0: the lot has no 569-2013 residential zone'] });
+  if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return NE_RESULT('no_569_2013_zone', { trace: ['rule 0: the lot has no 569-2013 residential zone'], inputs: ['zone'] });
   const depth = (_env.depth || 0) + 1;
   if (depth > 8) return NE_RESULT('target_cycle');
-  const core = effCore(lot, target, candidates, C, { ...(_env), depth });
+  const cands = _env.sorted ? candidates : sortCandidates(candidates);
+  const core = effCore(lot, target, cands, C, { ...(_env), depth, sorted: true });
   if (lot.building_type || _env.inScenario || core.reason !== 'needs_user_input:building_type') return core;
-  // M-50: evaluate every residential type; a value only if all agree
-  const per = {}; const results = {};
+  // M-50: evaluate every residential type (sorted, order-free); a value only if all agree
+  const per = {}; const results = {}; const inputs = new Set(['building_type', ...core.inputs]);
   for (const t of C.residentialTypes) {
-    const r = effCore({ ...lot, building_type: t }, target, candidates, C, { ...(_env), depth, inScenario: true });
-    results[t] = r;
+    const r = effCore({ ...lot, building_type: t }, target, cands, C, { ...(_env), depth, inScenario: true, sorted: true });
+    results[t] = r; addAll(inputs, r.inputs);
     per[t] = r.status === 'value' ? r.value : r.status === 'conflict' ? 'conflict' : `not_evaluated:${r.reason}`;
   }
-  const distinct = [...new Set(Object.values(per).map(String))];
+  const distinct = [...new Set(C.residentialTypes.map((t) => resultKey(results[t])))]; // value, bounds, reason, evidence
   const trace = [...core.trace, `M-50 per-type: ${C.residentialTypes.map((t) => `${t}=${per[t]}`).join(', ')}`];
+  const ins = [...inputs].sort(cmpStr);
   if (distinct.length === 1 && C.residentialTypes.length) {
     const any = results[C.residentialTypes[0]];
-    return { ...any, winner: any.winner, trace: [...trace, 'all residential types agree'], per_type: per };
+    const winners = [...new Set(C.residentialTypes.map((t) => results[t].winner ?? null))];
+    return { ...any, winner: winners.length === 1 ? any.winner : null, ...(winners.length > 1 ? { winners_per_type: Object.fromEntries(C.residentialTypes.map((t) => [t, results[t].winner ?? null])) } : {}), trace: [...trace, 'all residential types agree'], per_type: per, inputs: ins };
   }
-  return NE_RESULT('needs_user_input:building_type', { trace, per_type: per });
+  return NE_RESULT('needs_user_input:building_type', { trace, per_type: per, inputs: ins });
 }
 
 function effCore(lot, target, candidates, C, env) {
-  const trace = []; const disclosures = [];
-  const resolveVariable = (name) => (name === target ? null : effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario }));
-  const valueUnits = candidates.filter((u) => (u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && parsedFor(u, target).length);
+  const trace = []; const disclosures = []; const reads = new Set(['zone']);
+  const resolveVariable = (name) => (name === target ? null : effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true }));
+  let valueUnits = candidates.filter((u) => (u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && parsedFor(u, target).length);
+  // a provincial-layer unit comes only from external.json through provincialUnits(): it must carry limits_bylaw + scope
+  for (const u of valueUnits) if (u.layer === 'provincial' && !(u.provincial && LIMITS[u.provincial.limits_bylaw])) trace.push(`rule 1: ${u.unit_id} is a provincial-layer unit without limits_bylaw / scope (not from external.json) — never a candidate`);
+  valueUnits = valueUnits.filter((u) => u.layer !== 'provincial' || (u.provincial && LIMITS[u.provincial.limits_bylaw]));
   const refsValue = (u) => (u.displaces || []).some((ref) => valueUnits.some((v) => v !== u && refMatch(ref, v.unit_id)));
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
   const displacers = candidates.filter((u) => u.archetype !== 'PROCEDURAL' && refsValue(u) && (!hasTarget(u) || u.target === target));
   const prevailing = candidates.filter((u) => u.archetype === 'PREVAILING');
 
-  // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type)
+  // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
+  // every condition input read is recorded (reads → result.inputs; the values → the trace)
+  const considered = new Set([...valueUnits, ...displacers, ...procs]);
   const A = new Set(); const unknown = [];
-  for (const u of new Set([...valueUnits, ...displacers, ...procs])) {
-    const a = applies(lot, u, C, resolveVariable);
+  for (const u of candidates) {
+    if (!considered.has(u)) continue;
+    const t = [];
+    const a = applies(lot, u, C, resolveVariable, reads, t);
+    if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
   }
   for (const u of prevailing) {
-    const a = applies(lot, u, C, resolveVariable);
+    const a = applies(lot, u, C, resolveVariable, reads, []);
     if (a.ok === true) disclosures.push(`alternate compliance path under ${u.unit_id} — not evaluated (rule 5)`);
     else if (a.ok === null) disclosures.push(`alternate compliance path under ${u.unit_id} may apply (${a.reason}) — not evaluated (rule 5)`);
   }
-  if (unknown.length) {
-    const typeUnknown = unknown.find((x) => x.reason === 'needs_user_input:building_type');
-    const first = typeUnknown || unknown[0];
-    for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
-    return NE_RESULT(first.reason, { trace, disclosures });
+  const base = { lot, target, candidates, C, resolveVariable, valueUnits, procs, reads };
+  if (!unknown.length) return resolveSet(base, A, trace, disclosures);
+  for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
+  const reason = pickReason(unknown.map((x) => x.reason));
+  const ins = () => [...reads].sort(cmpStr);
+  if (reason === 'needs_user_input:building_type' && !lot.building_type) return NE_RESULT(reason, { trace, disclosures, inputs: ins() }); // M-50 enumerates
+  if (unknown.length > MAX_UNDECIDED) return NE_RESULT(reason, { trace: [...trace, `${unknown.length} undecided units > ${MAX_UNDECIDED}: not enumerated`], disclosures, inputs: ins() });
+  // Spec 68 §7.5 (Spec 69 M-60, generalising M-50): resolve every combination of the undecided units; the result
+  // stands only when every resolution agrees (status, value, bounds, reason, evidence); else not_evaluated
+  const worlds = [];
+  for (let mask = 0; mask < (1 << unknown.length); mask++) {
+    const Aw = new Set(A);
+    unknown.forEach((x, i) => { if (mask & (1 << i)) Aw.add(x.u); });
+    worlds.push(resolveSet(base, Aw, [...trace], [...disclosures]));
   }
+  const keys = new Set(worlds.map(resultKey));
+  if (keys.size === 1) {
+    const w0 = worlds[0];
+    const winners = [...new Set(worlds.map((w) => w.winner ?? null))];
+    return { ...w0, winner: winners.length === 1 ? w0.winner : null, undecided: unknown.map((x) => ({ unit_id: x.u.unit_id, reason: x.reason })),
+      trace: [...w0.trace, `undecided: ${unknown.map((x) => x.u.unit_id).join(', ')} — all ${worlds.length} resolutions agree (M-60)`], inputs: ins() };
+  }
+  return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
+}
 
+/** The lot's exception and its INCLUDE closure are authored for `target` (rule 7a); returns the first that is not, or null. */
+function exceptionNotAuthored(lot, target, candidates, C) {
+  if (!lot.exception) return null;
+  const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
+  const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
+  const pending = (u) => PENDING_ROW.includes(u.row_status) || statementsOf(u).some((s) => s.error)
+    || ((u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && hasTarget(u) && !statementsOf(u).length);
+  const seen = new Set(); const queue = [lot.exception];
+  while (queue.length) {
+    const e = queue.shift();
+    if (seen.has(e)) continue;
+    seen.add(e);
+    const us = candidates.filter((u) => u.layer === 'exception' && excOf(u) === e);
+    if (!us.length || !ok(C.authored[e]) || us.some(pending)) return e;
+    for (const u of us) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
+  }
+  return null;
+}
+
+/** Rules 3, 2, 1 (unit check), 7 / 7a, 4, 4a, the provincial restraint (rule 4, M-55) over one applicable set A. */
+function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, procs, reads }, A, trace, disclosures) {
+  const ins = () => [...reads].sort(cmpStr);
+  const sortedA = candidates.filter((u) => A.has(u));
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
   const immune = new Map();
-  for (const u of A) for (const ref of u.displaces || []) for (const p of procs) {
+  for (const u of sortedA) for (const ref of u.displaces || []) for (const p of procs) {
     if (A.has(p) && refMatch(ref, p.unit_id) === 'full') {
       const top = Math.max(...rankedLayers(p.ranks_layers).map((l) => LAYER_RANK[l] ?? 0));
       immune.set(u.unit_id, Math.max(immune.get(u.unit_id) ?? -1, top + 0.5));
@@ -447,18 +590,20 @@ function effCore(lot, target, candidates, C, env) {
   }
   const rankOf = (u) => Math.max(LAYER_RANK[u.layer] ?? 0, immune.get(u.unit_id) ?? -1);
 
-  // rule 2 (M-48): displacement, own target only; argument-level entries remove or replace one argument
+  // rule 2 (M-48): displacement, own target only; argument-level entries remove or replace one argument. A same-target
+  // displacer naming an argument takes that argument's place, and the rewritten unit carries the higher of the two
+  // layers (Spec 68 §7.5 rule 2, stated with the §7.4 worked example: HT 12.0 → 12.0 m; Spec 69 M-60)
   const dropped = new Set(); const consumed = new Set(); const edits = new Map(); // unit_id → {path: null|AST}
-  for (const d of A) {
+  for (const d of sortedA) {
     if (!(d.displaces || []).length) continue;
-    for (const ref of d.displaces) for (const v of A) {
+    for (const ref of d.displaces) for (const v of sortedA) {
       if (v === d || v.archetype === 'PROCEDURAL' || !valueUnits.includes(v)) continue;
       const m = refMatch(ref, v.unit_id);
       if (!m) continue;
       if (hasTarget(d) && d.target !== v.target) continue;
       if (m === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
-      if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures });
+      if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
       const own = parsedFor(d, target);
       const e = edits.get(v.unit_id) || { args: {}, layer: v.layer, immune: -1, by: [] };
       if (own.length && !staticUnitOk(own[0], C)) { trace.push(`rule 1: ${d.unit_id} unit of measure ≠ ${target} — G-CLAUSE failure, not substituted`); consumed.add(d.unit_id); continue; }
@@ -469,26 +614,35 @@ function effCore(lot, target, candidates, C, env) {
     }
   }
 
-  // candidates: applicable value units, not dropped, not consumed by a substitution; unit-of-measure check (rule 1)
+  // candidates: applicable value units, not dropped, not consumed by a substitution; unit-of-measure check (rule 1).
+  // Provincial units are restrainers (rule 4, M-55), kept apart: never replaced-by-layer, never additional.
   const tUnit = C.units.target[target] ?? C.units.input[target] ?? null;
-  let T = [...A].filter((u) => valueUnits.includes(u) && !dropped.has(u.unit_id) && !consumed.has(u.unit_id));
-  T = T.filter((u) => {
+  const unitOk = (u) => {
     const bad = parsedFor(u, target).some((s) => staticUnitOk(s, C) === false);
     if (bad) trace.push(`rule 1: ${u.unit_id} unit of measure ≠ ${target} (${tUnit}) — G-CLAUSE failure, never a candidate`);
     return !bad;
-  });
+  };
+  const T = sortedA.filter((u) => valueUnits.includes(u) && u.layer !== 'provincial' && !dropped.has(u.unit_id) && !consumed.has(u.unit_id)).filter(unitOk);
+  const prov = sortedA.filter((u) => valueUnits.includes(u) && u.layer === 'provincial').filter(unitOk);
   if (!T.length) {
-    // M-54 note (2026-10-07): unregulated BY ABSENCE, only when no candidate of any layer exists for the target and the
-    // lot's exception (if any) is captured; the evidence kind is `absence` (never a clause) and the row is flagged for M-29
+    for (const p of prov) trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law unit for ${target} (a provincial unit is never additional)`);
+    // rule 7a (M-54 note 2026-10-07; Spec 69 M-60): unregulated BY ABSENCE only when (i) a verified ruling covers
+    // (zone, target), (ii) the lot's exception and its INCLUDE closure are authored for the target (else
+    // exception_not_authored), (iii) no by-law unit of any layer carries the target, keyed or pending.
     const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
-    const excCaptured = !lot.exception || candidates.some((u) => u.layer === 'exception');
-    if (abs && !valueUnits.length && excCaptured) {
-      return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
-        evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
-        bounds: {}, applied: [], trace: [...trace, `rule 7 + ${abs.id}: no candidate of any layer for ${target}; unregulated by absence (${abs.statement})`], disclosures };
+    if (abs) {
+      reads.add('exception');
+      const exc = exceptionNotAuthored(lot, target, candidates, C);
+      if (exc) return NE_RESULT(`exception_not_authored:${exc}`, { trace: [...trace, `${abs.id} not applied: exception ${exc} (the lot's exception or one it INCLUDEs) is not authored for ${target}`], disclosures, inputs: ins() });
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (u.target === target || parsedFor(u, target).length));
+      if (!any.length) {
+        return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
+          evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
+          bounds: {}, applied: [], trace: [...trace, `rule 7 + ${abs.id}: no unit of any by-law layer for ${target}; unregulated by absence (${abs.statement})`], disclosures, inputs: ins() };
+      }
+      trace.push(`${abs.id} not applied: a unit for ${target} exists (${any.map((u) => u.unit_id).join(', ')})`);
     }
-    if (abs) trace.push(`${abs.id} not applied: ${valueUnits.length ? 'a candidate exists for the target' : "the lot's exception is not captured"}`);
-    return NE_RESULT('no_candidate', { trace: [...trace, `rule 7: no candidate for ${target}`], disclosures });
+    return NE_RESULT('no_candidate', { trace: [...trace, `rule 7: no candidate for ${target}`], disclosures, inputs: ins() });
   }
 
   // rule 4: per bound direction, the highest layer (with rule 3 immunity) replaces lower layers; rule 6 falls out
@@ -498,7 +652,7 @@ function effCore(lot, target, candidates, C, env) {
   const byBound = {};
   for (const u of T) (byBound[boundOfUnit(u)] = byBound[boundOfUnit(u)] || []).push(u);
   const kept = {};
-  for (const [b, us] of Object.entries(byBound).sort(([a], [c]) => (a < c ? -1 : a > c ? 1 : 0))) {
+  for (const [b, us] of Object.entries(byBound).sort(([a], [c]) => cmpStr(a, c))) {
     const top = Math.max(...us.map(rank));
     kept[b] = us.filter((u) => rank(u) === top);
     const lost = us.filter((u) => rank(u) !== top).map((u) => u.unit_id);
@@ -506,14 +660,19 @@ function effCore(lot, target, candidates, C, env) {
   }
 
   // evaluate + rule 4a
+  const ev1 = (s, args) => {
+    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args });
+    addAll(reads, r.inputs);
+    return r;
+  };
   const vals = {};
   for (const [b, us] of Object.entries(kept)) {
     vals[b] = [];
     for (const u of us) for (const s of parsedFor(u, target)) {
       const ed = edits.get(u.unit_id);
-      const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: ed ? ed.args : {} });
+      const r = ev1(s, ed ? ed.args : {});
       const id = ed ? `${u.unit_id}<${ed.by.join('+')}` : u.unit_id;
-      if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures });
+      if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures, inputs: ins() });
       vals[b].push({ id, unitId: u.unit_id, v: r.value });
       trace.push(`${id} → ${r.value} ${tUnit ?? ''}${r.trace.length ? ` [${r.trace.join(', ')}]` : ''}`.trim());
     }
@@ -522,19 +681,39 @@ function effCore(lot, target, candidates, C, env) {
   const res = {};
   for (const [b, xs] of Object.entries(vals)) {
     if (b === 'exact') {
-      const d = [...new Set(xs.map((x) => String(x.v)))];
-      if (d.length > 1) return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `two exact values ${d.join(' vs ')}`, applied: xs.map((x) => x.id), trace: [...trace, 'rule 4a: CONFLICT (two exact values)'], disclosures };
+      const d = [...new Set(xs.map((x) => String(x.v)))].sort(cmpStr);
+      if (d.length > 1) return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `two exact values ${d.join(' vs ')}`, applied: xs.map((x) => x.id), trace: [...trace, 'rule 4a: CONFLICT (two exact values)'], disclosures, inputs: ins() };
       res.exact = xs[0];
     } else {
       const f = finite(xs);
-      // only non-finite values (`unlimited` / `unregulated`, M-48 / M-54): no bound; a mix reports `unlimited` (traced)
+      // only non-finite values (`unlimited` / `unregulated`, M-48 / M-54): no bound; a mix reports `unlimited` (traced;
+      // Spec 68 §7.5 rule 4a, M-60: unlimited and unregulated at the same layer → unlimited)
       if (!f.length) { res[b] = xs.find((x) => x.v === 'unlimited') || xs[0]; if (new Set(xs.map((x) => x.v)).size > 1) trace.push('rule 4a: unlimited and unregulated both apply; reported unlimited'); }
-      else res[b] = f.reduce((a, c) => ((b === 'min' ? c.v > a.v : c.v < a.v) ? c : a));
+      else res[b] = f.reduce((a, c) => ((b === 'min' ? c.v > a.v : c.v < a.v) ? c : a)); // ties: the first in the declared order
       if (f.length && f.length < xs.length) trace.push(`rule 4a: unlimited / unregulated loses to a finite ${b}`);
     }
   }
+  // rule 4 provincial restraint (Spec 69 M-55 + note): a provincial unit only restrains a MORE RESTRICTIVE by-law value
+  // of its own bound direction, per limits_bylaw; a silent (unregulated / unlimited) by-law stands; never additional
+  const applied = Object.values(vals).flat().map((x) => x.id);
+  for (const p of prov) {
+    const b = LIMITS[p.provincial.limits_bylaw];
+    const x = res[b];
+    if (p.bound !== b) { trace.push(`rule 4 (M-55): ${p.unit_id} bound ${p.bound} ≠ ${p.provincial.limits_bylaw} (${b}) — not applied`); continue; }
+    if (!x) { trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law ${b} for ${target} (never additional)`); continue; }
+    let pv = null;
+    for (const s of parsedFor(p, target)) {
+      const r = ev1(s, {});
+      if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [p.unit_id], trace: [...trace, `${p.unit_id}: ${r.not_evaluated}`], disclosures, inputs: ins() });
+      pv = r.value;
+    }
+    applied.push(p.unit_id);
+    const restrains = typeof x.v === 'number' && (b === 'max' ? (pv === 'unlimited' || (typeof pv === 'number' && x.v < pv - EPS)) : (typeof pv === 'number' && x.v > pv + EPS));
+    if (restrains) { trace.push(`rule 4 (M-55): ${p.unit_id} (${p.provincial.limits_bylaw} ${pv}) restrains ${x.id} (${x.v}) → ${pv}`); res[b] = { id: p.unit_id, unitId: p.unit_id, v: pv, restrained: x.id }; }
+    else trace.push(`rule 4 (M-55): ${x.id} (${x.v}) is not more restrictive than ${p.unit_id} (${pv}) — the by-law stands`);
+  }
   if (res.min && res.max && typeof res.min.v === 'number' && typeof res.max.v === 'number' && res.min.v > res.max.v + EPS) {
-    return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `min ${res.min.v} (${res.min.id}) above max ${res.max.v} (${res.max.id})`, applied: [res.min.id, res.max.id], trace: [...trace, 'rule 4a: CONFLICT (min above max)'], disclosures };
+    return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `min ${res.min.v} (${res.min.id}) above max ${res.max.v} (${res.max.id})`, applied: [res.min.id, res.max.id], trace: [...trace, 'rule 4a: CONFLICT (min above max)'], disclosures, inputs: ins() };
   }
   const win = res.exact || res.min || res.max;
   const boundOf = res.exact ? 'exact' : res.min ? 'min' : 'max';
@@ -542,7 +721,7 @@ function effCore(lot, target, candidates, C, env) {
     status: 'value', value: win.v, unit: tUnit, bound: boundOf, winner: win.id,
     ...(win.v === 'unregulated' ? { clause: win.unitId, evidence: { kind: 'clause', clause: win.unitId } } : {}),
     bounds: Object.fromEntries(Object.entries(res).map(([k, x]) => [k, x.v])),
-    applied: Object.values(vals).flat().map((x) => x.id), trace, disclosures,
+    applied, trace, disclosures, inputs: ins(),
   };
 }
 
@@ -589,16 +768,21 @@ export function permitted(lot, buildingType, candidates, ctx) {
   if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return { status: 'not_evaluated', reason: 'no_569_2013_zone', winners: [], trace: ['rule 0'] };
   if (!buildingType) return { status: 'not_evaluated', reason: 'needs_user_input:building_type', winners: [], trace: [] };
   const L = { ...lot, building_type: buildingType };
-  const trace = [];
+  const trace = []; const reads = new Set(['zone', 'building_type']);
+  candidates = sortCandidates(candidates); // declared total order (order-free result)
   const subjects = candidates.filter((u) => u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT');
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
   const disapply = candidates.filter((u) => u.archetype === 'DISAPPLY' && (u.displaces || []).some((r) => subjects.some((s) => refMatch(r, s.unit_id))));
-  const A = [];
-  for (const u of [...subjects, ...procs, ...disapply]) {
-    const a = applies(L, u, C, (name) => effective(L, name, candidates, C));
-    if (a.ok === null) return { status: 'not_evaluated', reason: a.reason, winners: [], trace: [...trace, `applicability unknown: ${u.unit_id} (${a.reason})`] };
+  const A = []; const unknown = [];
+  const considered = new Set([...subjects, ...procs, ...disapply]);
+  for (const u of candidates) {
+    if (!considered.has(u)) continue;
+    const a = applies(L, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads);
+    if (a.ok === null) unknown.push({ u, reason: a.reason });
     if (a.ok) A.push(u);
   }
+  const inputs = () => [...reads].sort(cmpStr);
+  if (unknown.length) { const reason = pickReason(unknown.map((x) => x.reason)); return { status: 'not_evaluated', reason, winners: [], inputs: inputs(), trace: [...trace, ...unknown.map((x) => `applicability unknown: ${x.u.unit_id} (${x.reason})`)] }; }
   const immune = new Map(); const dropped = new Set();
   for (const u of A) for (const ref of u.displaces || []) {
     for (const p of procs) if (A.includes(p) && refMatch(ref, p.unit_id) === 'full') {
@@ -608,14 +792,176 @@ export function permitted(lot, buildingType, candidates, ctx) {
     for (const v of A) if (v !== u && v.archetype !== 'PROCEDURAL' && refMatch(ref, v.unit_id) === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${u.unit_id} drops ${v.unit_id}`); }
   }
   const T = A.filter((u) => (u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT') && !dropped.has(u.unit_id));
-  if (!T.length) return { status: 'not_evaluated', reason: 'no_candidate', winners: [], trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
+  if (!T.length) return { status: 'not_evaluated', reason: 'no_candidate', winners: [], inputs: inputs(), trace: [...trace, `rule 7: no PERMIT/PROHIBIT unit for ${buildingType}`] };
   const rank = (u) => Math.max(LAYER_RANK[u.layer] ?? 0, immune.get(u.unit_id) ?? -1);
   const top = Math.max(...T.map(rank));
   const win = T.filter((u) => rank(u) === top);
   trace.push(`rule 4: rank ${top}: ${win.map((u) => `${u.unit_id} ${u.archetype}`).join(', ')}`);
   const kinds = new Set(win.map((u) => u.archetype));
-  if (kinds.size > 1) return { status: 'conflict', reason: 'eval_conflict', winners: win.map((u) => u.unit_id), trace };
-  return { status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), trace };
+  // PERMIT vs PROHIBIT at the same rank: HELD for an operator ruling (Spec 69 M-60 open item), never decided here
+  if (kinds.size > 1) return { status: 'conflict', reason: 'eval_conflict', held: 'permit_prohibit_same_rank', winners: win.map((u) => u.unit_id), inputs: inputs(), trace: [...trace, 'PERMIT and PROHIBIT at the same rank — held for an operator ruling, not decided'] };
+  return { status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
+}
+
+// ---------------------------------------------------------------- provincial units (external.json → candidates)
+const PROV_SCOPE_KEYS = Object.freeze(['ancillary_units', 'building_type', 'house_units', 'land']);
+/**
+ * Spec 68 §6.1 / Spec 69 M-55: every provincial unit of an `active` external.json row as a layer-`provincial`
+ * candidate. Its scope is resolved to lot inputs ONLY through vocab.provincial_scope (land → a lot flag; each
+ * provincial building type → the by-law types it names, e.g. rowhouse → townhouse; house / ancillary unit counts →
+ * lot vars). Anything the vocab does not map is a violation, never assumed. PURE.
+ * Returns {units, violations}.
+ */
+export function provincialUnits(external, vocab) {
+  const units = []; const violations = [];
+  const map = vocab && vocab.provincial_scope;
+  if (!map || typeof map !== 'object') return { units, violations: ['provincial_scope_missing: vocab.provincial_scope is not declared'] };
+  for (const k of PROV_SCOPE_KEYS) if (map[k] === undefined) violations.push(`provincial_scope_missing: vocab.provincial_scope.${k}`);
+  const types = (vocab.building_type && typeof vocab.building_type === 'object') ? vocab.building_type : {};
+  const lotConditions = vocab.lot_condition || {}; const inputs = vocab.dsl_input || {};
+  const entries = [...((external && external.entries) || [])].sort((a, b) => cmpStr(String(a.id), String(b.id)));
+  for (const e of entries) {
+    if (e.precedence !== 'active') continue;
+    for (const pu of e.provincial_units || []) {
+      const id = `${e.id} ${pu.unit_id}`;
+      const sc = pu.scope || {};
+      const bad = [];
+      if (LIMITS[pu.limits_bylaw] !== pu.bound) bad.push(`limits_bylaw ${pu.limits_bylaw} needs bound ${LIMITS[pu.limits_bylaw]}`);
+      const land = map.land && map.land[sc.land];
+      if (!land || !land.flag) bad.push(`land ${sc.land} unmapped`);
+      else if (!Object.hasOwn(lotConditions, land.flag)) bad.push(`land flag ${land.flag} is not a vocab.lot_condition`);
+      const bts = [];
+      for (const t of sc.principal_building_types || []) {
+        const m = map.building_type && map.building_type[t];
+        if (!Array.isArray(m) || !m.length) { bad.push(`provincial building type ${t} unmapped`); continue; }
+        for (const x of m) { if (!Object.hasOwn(types, x)) bad.push(`provincial building type ${t} maps to ${x}, not a vocab.building_type`); else bts.push(x); }
+      }
+      for (const k of ['house_units', 'ancillary_units']) if (!map[k] || !Object.hasOwn(inputs, map[k])) bad.push(`${k} input ${map[k]} is not a vocab.dsl_input`);
+      if (!['parcel', 'building_pair'].includes(sc.applies_to)) bad.push(`applies_to ${sc.applies_to}`);
+      const tgt = vocab.dsl_target && vocab.dsl_target[pu.target];
+      if (!tgt) bad.push(`target ${pu.target} is not a vocab.dsl_target`);
+      else if (typeof pu.value === 'number' && pu.unit !== tgt.unit) bad.push(`unit ${pu.unit} ≠ target unit ${tgt.unit}`);
+      if (!Array.isArray(sc.principal_building_types) || !sc.principal_building_types.length) bad.push('principal_building_types empty');
+      if (!Array.isArray(sc.unit_configurations) || !sc.unit_configurations.length) bad.push('unit_configurations empty');
+      const lit = typeof pu.value === 'number' ? `${pu.value} ${pu.unit}` : pu.value === 'unlimited' ? 'unlimited' : null;
+      if (lit === null) bad.push(`value ${JSON.stringify(pu.value)}`);
+      if (bad.length) { violations.push(`provincial_unit_unmapped: ${id}: ${bad.join('; ')}`); continue; }
+      units.push({
+        unit_id: pu.unit_id, regulation_id: pu.unit_id, layer: 'provincial', archetype: 'LIMIT', target: pu.target, bound: pu.bound,
+        numeric_expression: [`${pu.target} = ${lit} @prov`], application: { zones: ['any'], building_types: ['any'] },
+        applies_to: { part: 'whole', refs: [] }, condition: 'none', displaces: [], ranks_layers: 'none',
+        provincial: {
+          row: e.id, citation: pu.citation, limits_bylaw: pu.limits_bylaw, direction_basis: pu.direction_basis, bylaw_prevails_citation: pu.bylaw_prevails_citation,
+          applies_to: sc.applies_to, land_flag: land.flag, building_types: [...new Set(bts)].sort(cmpStr),
+          house_var: map.house_units, ancillary_var: map.ancillary_units,
+          unit_configurations: sc.unit_configurations.map((c) => ({ house_units: [...c.house_units], ancillary_units: [...c.ancillary_units] })),
+        },
+      });
+    }
+  }
+  return { units, violations };
+}
+
+// ---------------------------------------------------------------- absence rulings (rule 7a) — verified against the page
+const foldText = (s) => String(s).toLowerCase().replace(/\s+/g, ' ');
+const ABS_KEYS = Object.freeze(['absent_phrases', 'accounted_occurrences', 'checked_page', 'evidence_kind', 'expert_sample', 'id', 'occurrence_patterns', 'present_phrases', 'ruling', 'statement', 'target', 'zone']);
+/**
+ * One absence ruling against its pinned page text (case-insensitive, whitespace-folded). Structural: EVERY occurrence
+ * of every occurrence pattern (which must cover the target's vocab licensing patterns) lies inside a declared
+ * accounted occurrence; so a new clause naming the target, in any case or wording that uses the pattern, fails.
+ * Absent phrases never occur; present phrases occur. PURE. → {pass, violations}
+ */
+export function verifyAbsence(ruling, pageText, vocab) {
+  const v = []; const id = ruling && ruling.id;
+  if (!ruling || typeof ruling !== 'object') return { pass: false, violations: ['absence_malformed: not an object'] };
+  for (const k of ABS_KEYS) if (ruling[k] === undefined) v.push(`absence_malformed: ${id} missing ${k}`);
+  for (const k of Object.keys(ruling)) if (!ABS_KEYS.includes(k)) v.push(`absence_malformed: ${id} unknown key ${k}`);
+  if (v.length) return { pass: false, violations: v };
+  if (!/^ABS-\d+$/.test(id)) v.push(`absence_malformed: ${id} id must be ABS-<n>`);
+  if (ruling.evidence_kind !== 'absence' || ruling.expert_sample !== true) v.push(`absence_malformed: ${id} evidence_kind absence + expert_sample true`);
+  if (vocab && !(vocab.zone || []).includes(ruling.zone)) v.push(`absence_malformed: ${id} zone ${ruling.zone}`);
+  const tgt = vocab && vocab.dsl_target && vocab.dsl_target[ruling.target];
+  if (!tgt) v.push(`absence_malformed: ${id} target ${ruling.target} is not a vocab.dsl_target`);
+  if (typeof pageText !== 'string' || !pageText.length) return { pass: false, violations: [...v, `absence_page_missing: ${id} ${ruling.checked_page}`] };
+  const page = foldText(pageText);
+  const pats = (ruling.occurrence_patterns || []).map(foldText).filter(Boolean);
+  if (!pats.length) v.push(`absence_malformed: ${id} occurrence_patterns empty`);
+  for (const lp of (tgt && tgt.patterns) || []) if (!pats.some((p) => foldText(lp).includes(p))) v.push(`absence_pattern_uncovered: ${id} target pattern "${lp}" contains no occurrence pattern`);
+  for (const a of ruling.absent_phrases || []) if (page.includes(foldText(a))) v.push(`absence_contradicted: ${id} absent phrase "${a}" occurs on ${ruling.checked_page}`);
+  for (const p of ruling.present_phrases || []) if (!page.includes(foldText(p))) v.push(`absence_present_missing: ${id} "${p}" not on ${ruling.checked_page}`);
+  // spans covered by declared accounted occurrences
+  const spans = [];
+  for (const acc of ruling.accounted_occurrences || []) {
+    const f = foldText(acc);
+    let i = page.indexOf(f); let n = 0;
+    while (f && i >= 0) { spans.push([i, i + f.length]); n++; i = page.indexOf(f, i + 1); }
+    if (!n) v.push(`absence_accounted_missing: ${id} accounted occurrence not on the page: "${acc.slice(0, 80)}"`);
+  }
+  for (const p of pats) {
+    let i = page.indexOf(p);
+    while (i >= 0) {
+      if (!spans.some(([a, b]) => i >= a && i + p.length <= b)) v.push(`absence_contradicted: ${id} unaccounted "${p}" on ${ruling.checked_page}: "…${page.slice(Math.max(0, i - 60), i + p.length + 60)}…"`);
+      i = page.indexOf(p, i + 1);
+    }
+  }
+  return { pass: v.length === 0, violations: v };
+}
+/** Every ruling executed (no id filter); duplicates fail. pages: {checked_page: text|null}. → {pass, violations, executed} */
+export function checkAbsenceRulings({ rulings, pages, vocab }) {
+  const v = []; let executed = 0; const seen = new Set();
+  for (const r of rulings || []) {
+    executed++;
+    if (seen.has(r && r.id)) v.push(`absence_malformed: duplicate id ${r.id}`);
+    seen.add(r && r.id);
+    v.push(...verifyAbsence(r, pages ? pages[r && r.checked_page] : null, vocab).violations);
+  }
+  const pairs = new Set();
+  for (const r of rulings || []) { const k = `${r.zone}|${r.target}`; if (pairs.has(k)) v.push(`absence_malformed: two rulings for ${k}`); pairs.add(k); }
+  return { pass: v.length === 0, violations: v, executed };
+}
+
+// ---------------------------------------------------------------- threshold tokens (vocab.lot_condition)
+function condReads(node, out = new Set()) {
+  if (!node || typeof node !== 'object') return out;
+  if (node.type === 'var') out.add(node.name);
+  if (node.type === 'label' || node.type === 'labelled') out.add('label');
+  if (node.type === 'overlay' || node.type === 'mapped') out.add('overlay');
+  for (const k of Object.keys(node)) { const x = node[k]; if (Array.isArray(x)) for (const y of x) condReads(y, out); else if (x && typeof x === 'object') condReads(x, out); }
+  return out;
+}
+/**
+ * A threshold token's truth comes from the unit's condition.if, so the evaluator never reads it as a lot flag. A token
+ * wrongly flagged threshold would silently stop being checked (red-team A18). Rule: a threshold token declares the
+ * quantities it summarises (`reads`: dsl_input / dsl_target names, or `label` / `overlay`); a flag token declares
+ * none; every unit carrying a threshold token has a condition.if that reads at least one of them. PURE.
+ */
+export function checkThresholdTokens(vocab, units = []) {
+  const v = []; let checked = 0;
+  const lc = (vocab && vocab.lot_condition) || {};
+  const known = new Set([...Object.keys((vocab && vocab.dsl_input) || {}), ...Object.keys((vocab && vocab.dsl_target) || {}), 'label', 'overlay']);
+  for (const t of Object.keys(lc).sort(cmpStr)) {
+    checked++;
+    const e = lc[t] || {};
+    if (e.threshold === true) {
+      if (!Array.isArray(e.reads) || !e.reads.length) v.push(`threshold_reads_missing: ${t}`);
+      else for (const r of e.reads) if (!known.has(r)) v.push(`threshold_read_unknown: ${t} ${r}`);
+    } else if (e.reads !== undefined) v.push(`flag_declares_reads: ${t}`);
+  }
+  for (const u of units) {
+    const toks = tokensOf(u.condition);
+    for (const t of toks) {
+      const e = lc[t];
+      if (!e || e.threshold !== true) continue;
+      checked++;
+      const cif = u.condition && u.condition !== 'none' ? u.condition.if : null;
+      if (!cif || cif === 'none') { v.push(`threshold_without_condition: ${u.unit_id} ${t}`); continue; }
+      let c;
+      try { c = parseCond(cif); } catch (err) { if (err instanceof DslError) { v.push(`threshold_condition_unparsed: ${u.unit_id} ${t}`); continue; } throw err; }
+      const rd = condReads(c);
+      if (!(e.reads || []).some((r) => rd.has(r))) v.push(`threshold_not_read: ${u.unit_id} ${t} (condition reads ${[...rd].sort(cmpStr).join(', ') || 'nothing'}; token declares ${(e.reads || []).join(', ')})`);
+    }
+  }
+  return { pass: v.length === 0, violations: v, checked };
 }
 
 // ---------------------------------------------------------------- G-EVAL (a) + (b)
@@ -725,7 +1071,7 @@ export function precedenceFixtures(vocab) {
   const val = (r) => (r.status === 'value' ? r.value : `${r.status}:${r.reason ?? ''}`);
   return [
     E('0', 'no 569-2013 zone → not evaluated (Spec 69 M-27)', () => val(effective({ ...lot, zone: null }, 'side_setback_m', [...band, ...reqF], C)), 'not_evaluated:no_569_2013_zone'),
-    E('1', 'loader: INCLUDE expands transitively, a cycle is logged, never looped', () => { const inc = ex({ unit_id: 'X1#SSP(C)', regulation_id: 'X1', exception: 'X1', archetype: 'INCLUDE', include_ref: 'X2', target: 'none', bound: 'none', numeric_expression: 'none' }); const back = ex({ unit_id: 'X2#SSP(B)', regulation_id: 'X2', exception: 'X2', archetype: 'INCLUDE', include_ref: 'X1', target: 'none', bound: 'none', numeric_expression: 'none' }); const lim = ex({ unit_id: 'X2#SSP(A)', regulation_id: 'X2', exception: 'X2', target: 'rear_setback_m', numeric_expression: ['rear_setback_m = 9.0 m @SSP(A)'] }); const L = loadCandidates({ ...lot, exception: 'X1' }, [inc, back, lim]); return `${L.candidates.map((u) => u.unit_id).join(',')}|cycle=${L.log.some((l) => l.includes('cycle'))}|depth=${L.include_depth}`; }, 'X1#SSP(C),X2#SSP(B),X2#SSP(A)|cycle=true|depth=1'),
+    E('1', 'loader: INCLUDE expands transitively, a cycle is logged, never looped', () => { const inc = ex({ unit_id: 'X1#SSP(C)', regulation_id: 'X1', exception: 'X1', archetype: 'INCLUDE', include_ref: 'X2', target: 'none', bound: 'none', numeric_expression: 'none' }); const back = ex({ unit_id: 'X2#SSP(B)', regulation_id: 'X2', exception: 'X2', archetype: 'INCLUDE', include_ref: 'X1', target: 'none', bound: 'none', numeric_expression: 'none' }); const lim = ex({ unit_id: 'X2#SSP(A)', regulation_id: 'X2', exception: 'X2', target: 'rear_setback_m', numeric_expression: ['rear_setback_m = 9.0 m @SSP(A)'] }); const L = loadCandidates({ ...lot, exception: 'X1' }, [inc, back, lim]); return `${L.candidates.map((u) => u.unit_id).join(',')}|cycle=${L.log.some((l) => l.includes('cycle'))}|depth=${L.include_depth}`; }, 'X1#SSP(C),X2#SSP(A),X2#SSP(B)|cycle=true|depth=1'),
     E('1', 'a unit whose unit of measure differs from the target is never a candidate (G-CLAUSE)', () => val(effective(lot, 'fsi', [U({ unit_id: 'BAD#(A)', target: 'fsi', bound: 'max', numeric_expression: ['fsi = min(0.6 ratio × lot_area_m2; 204 m2) @(A)'] })], C)), 'not_evaluated:no_candidate'),
     E('2', 'same-layer "Despite" drops the displaced unit (RT detached 0.9, not 4a 7.5)', () => val(effective(rt, 'side_setback_m', [rtA, rtB], C)), 0.9),
     E('2', 'ablation: without displaces[] rule 4a takes the most restrictive 7.5', () => val(effective(rt, 'side_setback_m', [rtA, { ...rtB, displaces: [] }], C)), 7.5),

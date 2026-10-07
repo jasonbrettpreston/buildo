@@ -1,6 +1,6 @@
 {
   "$comment": "McBylaw closed vocabularies (Spec 68 §6.5; S5). Every value a row, unit, rule or gate may carry comes from here; 'none' is written, never omitted. Versioned: a change bumps `version` and is reviewed. Evaluator-shaped views (building_type_residential, building_type_parent, lot_condition_threshold) are DERIVED from this file by scripts/analysis/bylaw/vocab.mjs evaluatorVocab(), never kept twice.",
-  "version": "vocab-v2",
+  "version": "vocab-v3",
   "max_snapshot_age_days": 90,
   "archetype": ["LIMIT", "PERMIT", "PROHIBIT", "REQUIRE", "DEFINE", "DISAPPLY", "INCLUDE", "PREVAILING", "PROCEDURAL", "UNUSUAL"],
   "bound": ["min", "max", "exact"],
@@ -47,10 +47,10 @@
   },
   "topic": {
     "definition": { "pages": ["ch800_50"] },
-    "garden_suite": { "pages": ["ch150_7"] },
-    "laneway_suite": { "pages": ["ch150_8"] },
-    "secondary_suite": { "pages": ["ch150_10"] },
-    "ancillary_building": { "article_patterns": ["^10\\.\\d+\\.60\\."] },
+    "garden_suite": { "pages": ["ch150_7"], "patterns": ["garden suite"] },
+    "laneway_suite": { "pages": ["ch150_8"], "patterns": ["laneway suite"] },
+    "secondary_suite": { "pages": ["ch150_10"], "patterns": ["secondary suite"] },
+    "ancillary_building": { "article_patterns": ["^10\\.\\d+\\.60\\."], "patterns": ["ancillary building"] },
     "parking": { "article_patterns": ["^10\\.\\d+\\.80\\.", "^200\\.", "^220\\.", "^230\\.", "^970\\."] },
     "driveway": { "article_patterns": ["^10\\.\\d+\\.100\\."] },
     "landscaping": { "article_patterns": ["\\.50\\.10$", "\\.50\\.11$"] },
@@ -116,7 +116,7 @@
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum separation distance between buildings (or main walls) on the same lot",
-      "patterns": ["separation distance", "from the residential building"]
+      "patterns": ["separation distance", "from the residential building", "separation"]
     },
     "encroachment_m": { "unit": "m", "aspect": "envelope", "concept": "maximum distance a building element may encroach into a required setback", "patterns": ["may encroach"] },
     "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "concept": "minimum distance an encroaching element must keep from a lot line", "patterns": ["no closer than", "from the lot line"] },
@@ -192,7 +192,9 @@
       "note": "distance from an ancillary building or suite to the residential building on the lot (a scenario value)"
     },
     "townhouse_unit_width_m": { "unit": "m", "null_reason": "no_ch800_definition", "licensed_by": ["townhouse dwelling unit", "width"] },
-    "dwelling_units": { "unit": "units", "null_reason": "not_a_measurement", "licensed_by": ["dwelling units"], "note": "a count (user input unit_count), not a measured quantity" }
+    "dwelling_units": { "unit": "units", "null_reason": "not_a_measurement", "licensed_by": ["dwelling units"], "note": "a count (user input unit_count), not a measured quantity" },
+    "house_units": { "unit": "units", "null_reason": "not_a_measurement", "licensed_by": ["residential units"], "note": "residential units in the detached / semi-detached house or rowhouse (O. Reg. 299/19 scope, Spec 69 M-55; a scenario value, user input house_units)" },
+    "ancillary_units": { "unit": "units", "null_reason": "not_a_measurement", "licensed_by": ["residential unit"], "note": "residential units in buildings ancillary to the house (O. Reg. 299/19 scope, Spec 69 M-55; a scenario value, user input ancillary_units)" }
   },
   "dsl_input_null_reason": ["not_a_measurement", "no_ch800_definition"],
   "input_fidelity_status": ["matches", "approximates", "differs", "unknown"],
@@ -204,23 +206,23 @@
     "au": { "unit": "m2", "meaning": "required minimum lot area per dwelling unit (10.5.1.10(3)(C); RM apartment buildings)" }
   },
   "overlay_code": {
-    "HT": { "unit": "m", "meaning": "Height Overlay Map value (995.20)" },
-    "ST": { "unit": "storeys", "meaning": "Height Overlay Map storeys value (995.20)" },
-    "LC": { "unit": "pct", "meaning": "Lot Coverage Overlay Map value (995.30)" }
+    "HT": { "unit": "m", "meaning": "Height Overlay Map value (995.20)", "held": true },
+    "ST": { "unit": "storeys", "meaning": "Height Overlay Map storeys value (995.20)", "held": true },
+    "LC": { "unit": "pct", "meaning": "Lot Coverage Overlay Map value (995.30)", "held": true }
   },
   "building_type": {
-    "detached_house": { "structure": "principal", "residential": true },
-    "semi_detached_house": { "structure": "principal", "residential": true },
-    "townhouse": { "structure": "principal", "residential": true },
-    "duplex": { "structure": "principal", "parent": "detached_houseplex" },
-    "triplex": { "structure": "principal", "parent": "detached_houseplex" },
-    "fourplex": { "structure": "principal", "parent": "detached_houseplex" },
-    "fiveplex": { "structure": "principal", "parent": "detached_houseplex" },
-    "sixplex": { "structure": "principal", "parent": "detached_houseplex" },
-    "detached_houseplex": { "structure": "principal", "residential": true },
-    "semi_detached_houseplex": { "structure": "principal", "residential": true },
+    "detached_house": { "structure": "principal", "residential": true, "patterns": ["detached house"] },
+    "semi_detached_house": { "structure": "principal", "residential": true, "patterns": ["semi-detached house"] },
+    "townhouse": { "structure": "principal", "residential": true, "patterns": ["townhouse"] },
+    "duplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["duplex"] },
+    "triplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["triplex"] },
+    "fourplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["fourplex"] },
+    "fiveplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["fiveplex"] },
+    "sixplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["sixplex"] },
+    "detached_houseplex": { "structure": "principal", "residential": true, "patterns": ["detached houseplex"] },
+    "semi_detached_houseplex": { "structure": "principal", "residential": true, "patterns": ["semi-detached houseplex"] },
     "houseplex": { "structure": "principal" },
-    "apartment_building": { "structure": "principal", "residential": true },
+    "apartment_building": { "structure": "principal", "residential": true, "patterns": ["apartment building"] },
     "non_residential_building": { "structure": "principal" },
     "ancillary_building": { "structure": "ancillary" },
     "garden_suite": { "structure": "suite" },
@@ -235,24 +237,24 @@
     "aspect_without_target": { "PERMIT": "use_permission", "PROHIBIT": "use_permission" }
   },
   "lot_condition": {
-    "corner_lot": {},
-    "through_lot": {},
-    "flanking_lot": {},
-    "frontage_band": { "threshold": true },
-    "required_frontage_band": { "threshold": true },
-    "depth_band": { "threshold": true },
-    "lot_area_band": { "threshold": true },
-    "unit_count_band": { "threshold": true },
-    "building_height_band": { "threshold": true },
-    "separation_band": { "threshold": true },
-    "label_value": { "threshold": true },
-    "overlay_mapped": { "threshold": true },
-    "abuts_lane": {},
+    "corner_lot": { "patterns": ["corner lot"] },
+    "through_lot": { "patterns": ["through lot"] },
+    "flanking_lot": { "patterns": ["flanking"] },
+    "frontage_band": { "threshold": true, "reads": ["lot_frontage_m", "townhouse_unit_width_m"] },
+    "required_frontage_band": { "threshold": true, "reads": ["required_lot_frontage_m"] },
+    "depth_band": { "threshold": true, "reads": ["lot_depth_m"] },
+    "lot_area_band": { "threshold": true, "reads": ["lot_area_m2"] },
+    "unit_count_band": { "threshold": true, "reads": ["dwelling_units"] },
+    "building_height_band": { "threshold": true, "reads": ["proposed_height_m", "height_m"] },
+    "separation_band": { "threshold": true, "reads": ["distance_to_residential_m", "separation_m"] },
+    "label_value": { "threshold": true, "reads": ["label"] },
+    "overlay_mapped": { "threshold": true, "reads": ["overlay"] },
+    "abuts_lane": { "patterns": ["lane"] },
     "abuts_named_street": {},
-    "major_street": {},
+    "major_street": { "patterns": ["major street"] },
     "shoreline_or_top_of_bank": {},
     "lawfully_existing": {},
-    "heritage_property": {},
+    "heritage_property": { "patterns": ["heritage"] },
     "exception_area": { "generated": true },
     "adjacent_lot_fronts_flanking_street": {},
     "all_units_front_street": {},
@@ -264,8 +266,17 @@
     "garage_entrance_faces_street": {},
     "lowest_level_joists_1_0_to_1_5_m_for_80_pct": {},
     "lowest_level_ceiling_2_4_m_for_80_pct": {},
-    "lowest_level_contains_dwelling_unit": {}
+    "lowest_level_contains_dwelling_unit": {},
+    "parcel_of_urban_residential_land": { "meaning": "O. Reg. 299/19 / Planning Act s.35.1: a parcel of urban residential land (provincial scope, Spec 69 M-55); a lot input, never assumed" }
   },
+  "provincial_scope": {
+    "$comment": "How a provincial unit's external.json scope (Spec 68 §6.1) maps to lot inputs (Spec 69 M-55; M-60). Every provincial term is mapped explicitly; an unmapped term is a provincialUnits() violation. building_type: the 569-2013 types a provincial principal building type names (rowhouse = 569-2013 townhouse, 800.50(865); houseplexes are NOT mapped: 800.50(181)(F)/(746)(F) keep a house with suites a house, and whether a duplex/triplex is a provincial 'detached house' is an open question, so it stays out of scope = the by-law stands).",
+    "land": { "parcel_of_urban_residential_land": { "flag": "parcel_of_urban_residential_land" } },
+    "building_type": { "detached_house": ["detached_house"], "semi_detached_house": ["semi_detached_house"], "rowhouse": ["townhouse"] },
+    "house_units": "house_units",
+    "ancillary_units": "ancillary_units"
+  },
+  "instrument_kind": ["former_bylaw", "former_section", "schedule_map"],
   "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device"],
   "requirement": ["parking_in_building", "comply_or_minor_variance", "units_within_existing_building", "landscaping_type", "access_from_lane"],
   "calculation_handling_status": ["modelled", "partially_modelled", "not_modelled", "informational"],
@@ -273,7 +284,7 @@
   "literal_not_expressed_reason": ["threshold_used_in_application", "cross_reference_value", "count_or_ordinal_not_a_limit", "illustrative_or_historic", "map_label_value"],
   "field_failure_reason": ["verbatim_changed", "consolidation_mismatch", "eval_conflict"],
   "disclosure_reason": { "source_defect": ["garbled_character", "lead_in_without_items", "division_repeat", "marker_typo", "numbering_repeat", "heading_not_in_toc"] },
-  "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error"],
+  "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
@@ -281,7 +292,7 @@
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {

@@ -344,6 +344,14 @@ building type unknown (lot.building_type NULL) and a candidate's applicability d
   types agree, else not_evaluated "needs_user_input:building_type" with the per-type values in the
   trace (Spec 69 M-50; V12 is its fixture)
 ```
+**Hardening notes 2026-10-07 (Spec 69 M-60, provisional):**
+- *Rule 2, argument level:* a same-target displacer naming an argument takes that argument's place in the host expression, and the rewritten unit carries the higher of the two layers; this is the reading under which the §7.4 example gives 12.0 m (HT 12.0), and the code implements it.
+- *Rule 4, provincial:* a provincial unit (only from `external.json`, scope resolved through `vocab.provincial_scope`) restrains a more restrictive by-law value of its own bound direction per `limits_bylaw`; it is never additional and never switches rule 7a off.
+- *Rule 4a:* `unlimited` and `unregulated` at one layer report `unlimited`; ties go to the first unit in the declared total order (layer, `unit_id`, content).
+- *Rule 7a:* absence needs the lot's exception and its INCLUDE closure authored for the target and no by-law unit (keyed or pending) for the target; else `not_evaluated:exception_not_authored:<exception>` or `no_candidate`. Every ruling is executed against its page, case-insensitive and structural.
+- *Undecided applicability:* every combination of undecided units (at most 8) is resolved; a value only if all agree (M-50 generalised), else `not_evaluated` with the declared-priority reason. Every result lists `inputs[]`, the lot inputs read (conditions included).
+- *Held:* PERMIT vs PROHIBIT at the same rank stays `conflict` for an operator ruling.
+
 Rules 2 and 3 differ: 600.60.40(1)(A) displaces base Ch.10 unit-count rows (rule 2); 600.60.40(1)(B) displaces the 900.1.10 precedence rules themselves (rule 3). Rule 2's own-target limit is from S0.5: "Despite regulation 10.20.40.70(3)" in 10.20.40.70(6) (street side yard) dropped every (3) unit, so the corner lot lost its interior side yard (1.5 m, 10.20.40.70(3)(D)) *[measured, spike]*. Rule 3's tie-break: with a plain tie, rule 4a would let an exception max of 9.0 m beat an overlay "Despite 900.1.10(3)" max of 10.5 m; the spike fixture expects 10.5 *[measured, spike]*. Replace-vs-additional is computed from whether a lower-layer unit exists for the same `target` (Phase 0b pitfall 5): only **3.6 %** of exception clauses say "Despite" *[measured]*; the rest override implicitly under 900.1.10(3) *[read]*. Precedence is therefore keyed on `target`, never on a cited regulation id. Because this implicit-override reading decides most exception outcomes, the 900.1.10 rows are always in the expert sample (Spec 69 M-29).
 
 ### 7.6 The evaluator — executed in Phase 1 (Spec 69 M-43)

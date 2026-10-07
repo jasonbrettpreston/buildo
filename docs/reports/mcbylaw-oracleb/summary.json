@@ -1,0 +1,1725 @@
+{
+ "by_set": {
+  "fixture": {
+   "agree": 13009,
+   "n": 13101,
+   "rate": 99.3,
+   "value_agree": 13014,
+   "winner_agree": 12827
+  },
+  "provincial": {
+   "agree": 12490,
+   "n": 12978,
+   "rate": 96.24,
+   "value_agree": 12670,
+   "winner_agree": 12455
+  },
+  "rd_band": {
+   "agree": 2551,
+   "n": 2562,
+   "rate": 99.57,
+   "value_agree": 2554,
+   "winner_agree": 2482
+  }
+ },
+ "by_source": {
+  "pairwise": {
+   "agree": 27927,
+   "n": 28518,
+   "rate": 97.93,
+   "value_agree": 28115,
+   "winner_agree": 27645
+  },
+  "rule0": {
+   "agree": 21,
+   "n": 21,
+   "rate": 100,
+   "value_agree": 21,
+   "winner_agree": 21
+  },
+  "vector": {
+   "agree": 102,
+   "n": 102,
+   "rate": 100,
+   "value_agree": 102,
+   "winner_agree": 98
+  }
+ },
+ "by_target": {
+  "building_depth_m": {
+   "fixture": {
+    "agree": 626,
+    "n": 626,
+    "rate": 100,
+    "value_agree": 626,
+    "winner_agree": 626
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "building_length_m": {
+   "fixture": {
+    "agree": 628,
+    "n": 628,
+    "rate": 100,
+    "value_agree": 628,
+    "winner_agree": 628
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "driveway_width_m": {
+   "fixture": {
+    "agree": 625,
+    "n": 625,
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 583
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 580
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 113
+   }
+  },
+  "dwelling_units_max": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "front_landscaping_pct": {
+   "fixture": {
+    "agree": 625,
+    "n": 625,
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 625
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "front_setback_m": {
+   "fixture": {
+    "agree": 625,
+    "n": 625,
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 496
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 489
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 95
+   }
+  },
+  "fsi": {
+   "fixture": {
+    "agree": 625,
+    "n": 625,
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 625
+   },
+   "provincial": {
+    "agree": 471,
+    "n": 618,
+    "rate": 76.21,
+    "value_agree": 509,
+    "winner_agree": 499
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "garage_entrance_setback_m": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "gfa_m2": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 615
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 614
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 118
+   }
+  },
+  "height_m": {
+   "fixture": {
+    "agree": 614,
+    "n": 630,
+    "rate": 97.46,
+    "value_agree": 614,
+    "winner_agree": 615
+   },
+   "provincial": {
+    "agree": 602,
+    "n": 618,
+    "rate": 97.41,
+    "value_agree": 602,
+    "winner_agree": 603
+   },
+   "rd_band": {
+    "agree": 118,
+    "n": 122,
+    "rate": 96.72,
+    "value_agree": 118,
+    "winner_agree": 117
+   }
+  },
+  "height_storeys": {
+   "fixture": {
+    "agree": 624,
+    "n": 624,
+    "rate": 100,
+    "value_agree": 624,
+    "winner_agree": 624
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "lot_area_per_unit_min_m2": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "lot_coverage_pct": {
+   "fixture": {
+    "agree": 553,
+    "n": 625,
+    "rate": 88.48,
+    "value_agree": 558,
+    "winner_agree": 603
+   },
+   "provincial": {
+    "agree": 512,
+    "n": 618,
+    "rate": 82.85,
+    "value_agree": 531,
+    "winner_agree": 554
+   },
+   "rd_band": {
+    "agree": 119,
+    "n": 122,
+    "rate": 97.54,
+    "value_agree": 122,
+    "winner_agree": 117
+   }
+  },
+  "main_wall_height_m": {
+   "fixture": {
+    "agree": 616,
+    "n": 620,
+    "rate": 99.35,
+    "value_agree": 616,
+    "winner_agree": 604
+   },
+   "provincial": {
+    "agree": 614,
+    "n": 618,
+    "rate": 99.35,
+    "value_agree": 614,
+    "winner_agree": 602
+   },
+   "rd_band": {
+    "agree": 118,
+    "n": 122,
+    "rate": 96.72,
+    "value_agree": 118,
+    "winner_agree": 106
+   }
+  },
+  "rear_setback_m": {
+   "fixture": {
+    "agree": 629,
+    "n": 629,
+    "rate": 100,
+    "value_agree": 629,
+    "winner_agree": 583
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 572
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 108
+   }
+  },
+  "rear_soft_landscaping_pct": {
+   "fixture": {
+    "agree": 625,
+    "n": 625,
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 625
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "required_lot_frontage_m": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "separation_m": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 403,
+    "n": 618,
+    "rate": 65.21,
+    "value_agree": 526,
+    "winner_agree": 526
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "side_setback_m": {
+   "fixture": {
+    "agree": 640,
+    "n": 640,
+    "rate": 100,
+    "value_agree": 640,
+    "winner_agree": 640
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "side_setback_street_m": {
+   "fixture": {
+    "agree": 619,
+    "n": 619,
+    "rate": 100,
+    "value_agree": 619,
+    "winner_agree": 619
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  },
+  "side_street_landscaping_pct": {
+   "fixture": {
+    "agree": 621,
+    "n": 621,
+    "rate": 100,
+    "value_agree": 621,
+    "winner_agree": 621
+   },
+   "provincial": {
+    "agree": 618,
+    "n": 618,
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
+   },
+   "rd_band": {
+    "agree": 122,
+    "n": 122,
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
+   }
+  }
+ },
+ "classification_rules": [
+  {
+   "cites": [
+    "Spec 68 §7.4 S1 additions, argument-level displacement",
+    "Spec 68 §7.5 rule 2 and rule 4",
+    "Spec 69 M-48"
+   ],
+   "class": "B_wrong",
+   "id": "C1-argument-displacement-substitution",
+   "why": "A substitutes the displacing unit 600.60.40(2)(A) (10.5 m) into the (C)(ii) argument slot, max(HT; 10.5); B removes the argument and then lets the overlay unit replace the base unit under rule 4 (overlay > base, same bound), giving 10.5 m. Spec 68 §7.4 (M-48) states the outcome explicitly: 'max(overlay(HT) @(C)(i); 10.0 m @(C)(ii)) keeps HT. The spike's whole-unit drop returned 10.5 m where the by-law gives 12.0 m (HT 12.0)'. B follows rule 2 + rule 4 literally and contradicts that worked example, so B is wrong against the spec's stated result; the rules themselves never say the argument-displacer is consumed into its host (ambiguity A1). Cascades to main_wall_height_m (reads height_m) and to M-50 per-type results on detached_houseplex."
+  },
+  {
+   "cites": [
+    "Spec 68 §7.5 rule 1, rule 7, the building-type-unknown paragraph",
+    "Spec 69 M-50"
+   ],
+   "class": "spec_ambiguous",
+   "id": "C2-immaterial-undecided-applicability",
+   "why": "A unit's applicability cannot be decided (a token, input or user input has no lot value) but every completion gives the same result. B returns that result (the M-50 'return the value only if all agree' rule applied to every undecided fact); A returns not_evaluated with the undecided reason. Spec 68 §7.5 states the all-worlds rule only for building type (M-50); for other undecided conditions it says only 'keep only units whose condition holds' and rule 7 'never a silent default'. Neither reading is a silent default; the spec does not choose (ambiguity A2)."
+  },
+  {
+   "cites": [
+    "Spec 68 §7.5 building-type-unknown paragraph",
+    "Spec 69 M-50"
+   ],
+   "class": "spec_ambiguous",
+   "id": "C3-immaterial-undecided-under-m50",
+   "why": "Same root as C2 inside the M-50 enumeration: for some building types A reports not_evaluated (an undecided token such as major_street) where B finds the token immaterial, so B's types all agree and A's do not."
+  },
+  {
+   "cites": [
+    "Spec 68 §6.1 provincial units",
+    "Spec 68 §7.5 rule 4 (M-55)",
+    "Spec 69 M-55"
+   ],
+   "class": "A_wrong",
+   "id": "C4-provincial-scope-and-yield",
+   "why": "A applies every O. Reg. 299/19 unit unconditionally as a plain highest-layer LIMIT: on lots outside the unit's scope (apartment buildings, lots without an additional residential unit) and without the bylaw_prevails yield (a by-law coverage of 50 % is replaced by 45 %). Spec 68 §6.1: 'the evaluator treats it as a layer-provincial candidate (§7.5) only when the lot meets scope'; §7.5 rule 4 (M-55): 'A provincial unit whose regulation says a by-law prevails ... yields to a lower-layer unit that is more permissive'. Caveat: A exposes no input for scope / bylaw_prevails through loadCandidates / effective / makeContext, so the harness passes the provincial units to A converted to unit shape (the only path); the defect is the missing scope + yield, not the conversion."
+  }
+ ],
+ "disagreements_by_class": {
+  "A_wrong": {
+   "n": 468,
+   "rules": {
+    "C4-provincial-scope-and-yield": 468
+   }
+  },
+  "B_wrong": {
+   "n": 39,
+   "rules": {
+    "C1-argument-displacement-substitution": 39
+   }
+  },
+  "unclassified": {
+   "n": 84,
+   "rules": {
+    "null": 84
+   }
+  }
+ },
+ "label": "agreement≠correctness",
+ "lots_pairwise": 618,
+ "oracle_b_version": "oracle-b-1",
+ "overall": {
+  "agree": 28050,
+  "n": 28641,
+  "rate": 97.94,
+  "value_agree": 28238,
+  "winner_agree": 27764
+ },
+ "pairwise": {
+  "R": {
+   "dimensions": [
+    "building_type(9)",
+    "exception(2)",
+    "has_secondary_suite(3)",
+    "ancillary_suite(4)",
+    "corner_lot(3)",
+    "through_lot(2)",
+    "major_street(3)",
+    "all_units_front_street(3)",
+    "adjacent_lot_fronts_flanking_street(3)",
+    "front_averaging_tokens(5)",
+    "lot_frontage_m(12)",
+    "lot_depth_m(5)",
+    "lot_area_m2(6)",
+    "label_f(9)",
+    "label_d(3)",
+    "label_u(3)",
+    "label_au(2)",
+    "HT(3)",
+    "ST(3)",
+    "LC(3)",
+    "dwelling_units(4)",
+    "townhouse_unit_width_m(3)",
+    "sixplex_overlay(3)",
+    "lowest_level_tokens(3)",
+    "misc_tokens(3)",
+    "abutting_front_setback_m(2)",
+    "parking_width_m(2)"
+   ],
+   "pairs_covered": 5333,
+   "pairs_total": 5333,
+   "rows": 128
+  },
+  "RD": {
+   "dimensions": [
+    "building_type(9)",
+    "exception(7)",
+    "has_secondary_suite(3)",
+    "ancillary_suite(4)",
+    "corner_lot(3)",
+    "through_lot(2)",
+    "major_street(3)",
+    "all_units_front_street(3)",
+    "adjacent_lot_fronts_flanking_street(3)",
+    "front_averaging_tokens(5)",
+    "lot_frontage_m(12)",
+    "lot_depth_m(5)",
+    "lot_area_m2(6)",
+    "label_f(9)",
+    "label_d(3)",
+    "label_u(3)",
+    "label_au(2)",
+    "HT(3)",
+    "ST(3)",
+    "LC(3)",
+    "dwelling_units(4)",
+    "townhouse_unit_width_m(3)",
+    "sixplex_overlay(3)",
+    "lowest_level_tokens(3)",
+    "misc_tokens(3)",
+    "abutting_front_setback_m(2)",
+    "parking_width_m(2)"
+   ],
+   "pairs_covered": 5853,
+   "pairs_total": 5853,
+   "rows": 122
+  },
+  "RM": {
+   "dimensions": [
+    "building_type(9)",
+    "exception(2)",
+    "has_secondary_suite(3)",
+    "ancillary_suite(4)",
+    "corner_lot(3)",
+    "through_lot(2)",
+    "major_street(3)",
+    "all_units_front_street(3)",
+    "adjacent_lot_fronts_flanking_street(3)",
+    "front_averaging_tokens(5)",
+    "lot_frontage_m(12)",
+    "lot_depth_m(5)",
+    "lot_area_m2(6)",
+    "label_f(9)",
+    "label_d(3)",
+    "label_u(3)",
+    "label_au(2)",
+    "HT(3)",
+    "ST(3)",
+    "LC(3)",
+    "dwelling_units(4)",
+    "townhouse_unit_width_m(3)",
+    "sixplex_overlay(3)",
+    "lowest_level_tokens(3)",
+    "misc_tokens(3)",
+    "abutting_front_setback_m(2)",
+    "parking_width_m(2)"
+   ],
+   "pairs_covered": 5333,
+   "pairs_total": 5333,
+   "rows": 123
+  },
+  "RS": {
+   "dimensions": [
+    "building_type(9)",
+    "exception(1)",
+    "has_secondary_suite(3)",
+    "ancillary_suite(4)",
+    "corner_lot(3)",
+    "through_lot(2)",
+    "major_street(3)",
+    "all_units_front_street(3)",
+    "adjacent_lot_fronts_flanking_street(3)",
+    "front_averaging_tokens(5)",
+    "lot_frontage_m(12)",
+    "lot_depth_m(5)",
+    "lot_area_m2(6)",
+    "label_f(9)",
+    "label_d(3)",
+    "label_u(3)",
+    "label_au(2)",
+    "HT(3)",
+    "ST(3)",
+    "LC(3)",
+    "dwelling_units(4)",
+    "townhouse_unit_width_m(3)",
+    "sixplex_overlay(3)",
+    "lowest_level_tokens(3)",
+    "misc_tokens(3)",
+    "abutting_front_setback_m(2)",
+    "parking_width_m(2)"
+   ],
+   "pairs_covered": 5229,
+   "pairs_total": 5229,
+   "rows": 124
+  },
+  "RT": {
+   "dimensions": [
+    "building_type(9)",
+    "exception(1)",
+    "has_secondary_suite(3)",
+    "ancillary_suite(4)",
+    "corner_lot(3)",
+    "through_lot(2)",
+    "major_street(3)",
+    "all_units_front_street(3)",
+    "adjacent_lot_fronts_flanking_street(3)",
+    "front_averaging_tokens(5)",
+    "lot_frontage_m(12)",
+    "lot_depth_m(5)",
+    "lot_area_m2(6)",
+    "label_f(9)",
+    "label_d(3)",
+    "label_u(3)",
+    "label_au(2)",
+    "HT(3)",
+    "ST(3)",
+    "LC(3)",
+    "dwelling_units(4)",
+    "townhouse_unit_width_m(3)",
+    "sixplex_overlay(3)",
+    "lowest_level_tokens(3)",
+    "misc_tokens(3)",
+    "abutting_front_setback_m(2)",
+    "parking_width_m(2)"
+   ],
+   "pairs_covered": 5229,
+   "pairs_total": 5229,
+   "rows": 121
+  }
+ },
+ "seed": "mcbylaw-oracleb-2026-10-07",
+ "targets": [
+  "building_depth_m",
+  "building_length_m",
+  "driveway_width_m",
+  "dwelling_units_max",
+  "front_landscaping_pct",
+  "front_setback_m",
+  "fsi",
+  "garage_entrance_setback_m",
+  "gfa_m2",
+  "height_m",
+  "height_storeys",
+  "lot_area_per_unit_min_m2",
+  "lot_coverage_pct",
+  "main_wall_height_m",
+  "rear_setback_m",
+  "rear_soft_landscaping_pct",
+  "required_lot_frontage_m",
+  "separation_m",
+  "side_setback_m",
+  "side_setback_street_m",
+  "side_street_landscaping_pct"
+ ],
+ "vector_results": [
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "derwyn:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.39",
+   "A_matches": true,
+   "B": "value|8.39",
+   "B_matches": true,
+   "expected": "value|8.39",
+   "id": "derwyn:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "derwyn:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.5",
+   "A_matches": true,
+   "B": "value|8.5",
+   "B_matches": true,
+   "expected": "value|8.5",
+   "id": "derwyn:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7",
+   "A_matches": true,
+   "B": "value|7",
+   "B_matches": true,
+   "expected": "value|7",
+   "id": "derwyn:main_wall_height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "unlimited|null",
+   "A_matches": true,
+   "B": "unlimited|null",
+   "B_matches": true,
+   "expected": "unlimited|null",
+   "id": "derwyn:height_storeys",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|0.45",
+   "id": "derwyn:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|17",
+   "A_matches": true,
+   "B": "value|17",
+   "B_matches": true,
+   "expected": "value|17",
+   "id": "derwyn:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
+   "expected": "value|19",
+   "id": "derwyn:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|35",
+   "id": "derwyn:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "derwyn:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "derwyn:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": false,
+   "B": "ne:missing_input",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "derwyn:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "eastbourne:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.97",
+   "A_matches": true,
+   "B": "value|8.97",
+   "B_matches": true,
+   "expected": "value|8.97",
+   "id": "eastbourne:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "eastbourne:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|9.5",
+   "A_matches": true,
+   "B": "value|9.5",
+   "B_matches": true,
+   "expected": "value|9.5",
+   "id": "eastbourne:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|0.4",
+   "id": "eastbourne:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|17",
+   "A_matches": true,
+   "B": "value|17",
+   "B_matches": true,
+   "expected": "value|17",
+   "id": "eastbourne:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
+   "expected": "value|19",
+   "id": "eastbourne:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "unregulated|null",
+   "A_matches": true,
+   "B": "unregulated|null",
+   "B_matches": true,
+   "expected": "unregulated|null",
+   "id": "eastbourne:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "eastbourne:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "eastbourne:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": false,
+   "B": "ne:missing_input",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "eastbourne:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "futura:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.39",
+   "A_matches": true,
+   "B": "value|8.39",
+   "B_matches": true,
+   "expected": "value|8.39",
+   "id": "futura:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.5",
+   "A_matches": true,
+   "B": "value|1.5",
+   "B_matches": true,
+   "expected": "value|1.5",
+   "id": "futura:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|10",
+   "A_matches": true,
+   "B": "value|10",
+   "B_matches": true,
+   "expected": "value|10",
+   "id": "futura:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|2",
+   "A_matches": true,
+   "B": "value|2",
+   "B_matches": true,
+   "expected": "value|2",
+   "id": "futura:height_storeys",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "unlimited|null",
+   "id": "futura:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|17",
+   "A_matches": true,
+   "B": "value|17",
+   "B_matches": true,
+   "expected": "value|17",
+   "id": "futura:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
+   "expected": "value|19",
+   "id": "futura:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|30",
+   "id": "futura:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "futura:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "futura:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": false,
+   "B": "ne:missing_input",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "futura:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "cordella:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.3775",
+   "A_matches": false,
+   "B": "value|8.3775",
+   "B_matches": false,
+   "expected": "value|8.38",
+   "id": "cordella:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.5",
+   "A_matches": true,
+   "B": "value|1.5",
+   "B_matches": true,
+   "expected": "value|1.5",
+   "id": "cordella:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|11",
+   "A_matches": true,
+   "B": "value|11",
+   "B_matches": true,
+   "expected": "value|11",
+   "id": "cordella:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|3",
+   "A_matches": true,
+   "B": "value|3",
+   "B_matches": true,
+   "expected": "value|3",
+   "id": "cordella:height_storeys",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|0.6",
+   "id": "cordella:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|17",
+   "A_matches": true,
+   "B": "value|17",
+   "B_matches": true,
+   "expected": "value|17",
+   "id": "cordella:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
+   "expected": "value|19",
+   "id": "cordella:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "unregulated|null",
+   "A_matches": true,
+   "B": "unregulated|null",
+   "B_matches": true,
+   "expected": "unregulated|null",
+   "id": "cordella:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "cordella:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
+   "expected": "value|50",
+   "id": "cordella:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": false,
+   "B": "ne:missing_input",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "cordella:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "p5071306:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7.5",
+   "A_matches": true,
+   "B": "value|7.5",
+   "B_matches": true,
+   "expected": "value|7.5",
+   "id": "p5071306:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "p5071306:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|10.5",
+   "A_matches": true,
+   "B": "value|10.5",
+   "B_matches": true,
+   "expected": "value|10.5",
+   "id": "p5071306:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|3",
+   "A_matches": true,
+   "B": "value|3",
+   "B_matches": true,
+   "expected": "value|3",
+   "id": "p5071306:height_storeys",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "unlimited|null",
+   "id": "p5071306:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "p5071306:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "p5071306:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "value|25",
+   "id": "p5071306:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": null,
+   "B": "ne:missing_input",
+   "B_matches": null,
+   "expected": null,
+   "id": "p5071306:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|25",
+   "A_matches": true,
+   "B": "value|25",
+   "B_matches": true,
+   "expected": "value|25",
+   "id": "p5071306:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|2.6",
+   "id": "p5071306:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|6",
+   "id": "bijou:front_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7.5",
+   "A_matches": true,
+   "B": "value|7.5",
+   "B_matches": true,
+   "expected": "value|7.5",
+   "id": "bijou:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "bijou:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|11",
+   "A_matches": true,
+   "B": "value|11",
+   "B_matches": true,
+   "expected": "value|11",
+   "id": "bijou:height_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|3",
+   "A_matches": true,
+   "B": "value|3",
+   "B_matches": true,
+   "expected": "value|3",
+   "id": "bijou:height_storeys",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": false,
+   "B": "ne:needs_user_input",
+   "B_matches": false,
+   "expected": "unlimited|null",
+   "id": "bijou:fsi",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "bijou:building_length_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "bijou:building_depth_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "unregulated|null",
+   "A_matches": true,
+   "B": "unregulated|null",
+   "B_matches": true,
+   "expected": "unregulated|null",
+   "id": "bijou:lot_coverage_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:missing_input",
+   "A_matches": null,
+   "B": "ne:missing_input",
+   "B_matches": null,
+   "expected": null,
+   "id": "bijou:front_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|25",
+   "A_matches": true,
+   "B": "value|25",
+   "B_matches": true,
+   "expected": "value|25",
+   "id": "bijou:rear_soft_landscaping_pct",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:condition_unknown",
+   "A_matches": false,
+   "B": "ne:condition_unknown",
+   "B_matches": false,
+   "expected": "value|2.6",
+   "id": "bijou:driveway_width_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V1",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V2",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V3",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V4",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.5",
+   "A_matches": true,
+   "B": "value|1.5",
+   "B_matches": true,
+   "expected": "value|1.5",
+   "id": "V5",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.8",
+   "A_matches": true,
+   "B": "value|1.8",
+   "B_matches": true,
+   "expected": "value|1.8",
+   "id": "V6",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7.5",
+   "A_matches": true,
+   "B": "value|7.5",
+   "B_matches": true,
+   "expected": "value|7.5",
+   "id": "V7",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|8.75",
+   "A_matches": true,
+   "B": "value|8.75",
+   "B_matches": true,
+   "expected": "value|8.75",
+   "id": "V8",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7.5",
+   "A_matches": true,
+   "B": "value|7.5",
+   "B_matches": true,
+   "expected": "value|7.5",
+   "id": "V9",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "V10",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|7.5",
+   "A_matches": true,
+   "B": "value|7.5",
+   "B_matches": true,
+   "expected": "value|7.5",
+   "id": "V11",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V12",
+   "vector_status": "no_expected:policy_null"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V13",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|1.5",
+   "A_matches": true,
+   "B": "value|1.5",
+   "B_matches": true,
+   "expected": "value|1.5",
+   "id": "V14",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|0.9",
+   "A_matches": true,
+   "B": "value|0.9",
+   "B_matches": true,
+   "expected": "value|0.9",
+   "id": "V15",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": null,
+   "B": "ne:no_candidate",
+   "B_matches": null,
+   "expected": null,
+   "id": "V16",
+   "vector_status": "no_expected:unconfirmed_no_citation"
+  },
+  {
+   "A": "value|2.4",
+   "A_matches": true,
+   "B": "value|2.4",
+   "B_matches": true,
+   "expected": "value|2.4",
+   "id": "V17",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V18-RD",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V18-RS",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V18-RT",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "value|10",
+   "A_matches": true,
+   "B": "value|10",
+   "B_matches": true,
+   "expected": "value|10",
+   "id": "V19",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|12",
+   "A_matches": true,
+   "B": "value|12",
+   "B_matches": true,
+   "expected": "value|12",
+   "id": "V20",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V21",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "V22",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:no_candidate",
+   "A_matches": true,
+   "B": "ne:no_candidate",
+   "B_matches": true,
+   "expected": "ne:no_candidate",
+   "id": "V23",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V24",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "value|1.2",
+   "A_matches": true,
+   "B": "value|1.2",
+   "B_matches": true,
+   "expected": "value|1.2",
+   "id": "V25:side_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "value|11.25",
+   "A_matches": true,
+   "B": "value|11.25",
+   "B_matches": true,
+   "expected": "value|11.25",
+   "id": "V25:rear_setback_m",
+   "vector_status": "by_law_expected"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V25:building_length_m",
+   "vector_status": "no_expected:building_type_unstated"
+  },
+  {
+   "A": "ne:needs_user_input",
+   "A_matches": true,
+   "B": "ne:needs_user_input",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
+   "id": "V25:building_depth_m",
+   "vector_status": "no_expected:building_type_unstated"
+  }
+ ],
+ "vectors": {
+  "A_matches_expected": 77,
+  "B_matches_expected": 77,
+  "n": 102,
+  "with_expected": 99
+ }
+}
