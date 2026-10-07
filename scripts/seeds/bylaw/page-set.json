@@ -1,0 +1,479 @@
+{
+  "$comment": "McBylaw pinned page set (Spec 68 §6.4 rule 1, §10 stage 1). One page per TOC section; changing it is a Spec 69 ruling. --refresh fetches exactly these pages and never follows links. basis: phase0 = pinned by the Phase 0 audit (re-pinned at its section URL); M-37 / M-47 = added by that ruling; G-UNIVERSE = the TOC root page that gate requires. status retired = pinned and fetched, rows scoped out with a closed reason (Spec 68 §6.4 rule 1). Not pinned: phase0_not_carried and excluded_by_ruling (listed with a ruling, never fetched) below; every other TOC entry is mapped by a page rule at S5.",
+  "version": 1,
+  "base_url": "https://www.toronto.ca/zoning/bylaw_amendments/",
+  "normalizer_charset": "iso-8859-1",
+  "pages": [
+    {
+      "key": "ch1",
+      "role": "toc_root",
+      "section": null,
+      "file": "ZBL_NewProvision_Chapter1.htm",
+      "basis": "G-UNIVERSE"
+    },
+    {
+      "key": "ch1_5",
+      "role": "section",
+      "section": "1.5",
+      "file": "ZBL_NewProvision_Chapter1_5.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch1_20",
+      "role": "section",
+      "section": "1.20",
+      "file": "ZBL_NewProvision_Chapter1_20.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch1_40",
+      "role": "section",
+      "section": "1.40",
+      "file": "ZBL_NewProvision_Chapter1_40.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch2_1",
+      "role": "section",
+      "section": "2.1",
+      "file": "ZBL_NewProvision_Chapter2_1.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch5_10",
+      "role": "section",
+      "section": "5.10",
+      "file": "ZBL_NewProvision_Chapter5_10.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_5",
+      "role": "section",
+      "section": "10.5",
+      "file": "ZBL_NewProvision_Chapter10_5.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_10",
+      "role": "section",
+      "section": "10.10",
+      "file": "ZBL_NewProvision_Chapter10_10.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_20",
+      "role": "section",
+      "section": "10.20",
+      "file": "ZBL_NewProvision_Chapter10_20.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_40",
+      "role": "section",
+      "section": "10.40",
+      "file": "ZBL_NewProvision_Chapter10_40.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_60",
+      "role": "section",
+      "section": "10.60",
+      "file": "ZBL_NewProvision_Chapter10_60.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch10_80",
+      "role": "section",
+      "section": "10.80",
+      "file": "ZBL_NewProvision_Chapter10_80.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch15_10",
+      "role": "section",
+      "section": "15.10",
+      "file": "ZBL_NewProvision_Chapter15_10.htm",
+      "basis": "M-47",
+      "carve_in": [
+        "15.10.40.50"
+      ]
+    },
+    {
+      "key": "ch40_10",
+      "role": "section",
+      "section": "40.10",
+      "file": "ZBL_NewProvision_Chapter40_10.htm",
+      "basis": "M-47",
+      "carve_in": [
+        "40.10.20.10",
+        "40.10.40.10"
+      ]
+    },
+    {
+      "key": "ch80_5",
+      "role": "section",
+      "section": "80.5",
+      "file": "ZBL_NewProvision_Chapter80_5.htm",
+      "basis": "M-47",
+      "carve_in": [
+        "80.5.40.40"
+      ]
+    },
+    {
+      "key": "ch80_10",
+      "role": "section",
+      "section": "80.10",
+      "file": "ZBL_NewProvision_Chapter80_10.htm",
+      "basis": "M-47",
+      "carve_in": [
+        "80.10.40.40"
+      ]
+    },
+    {
+      "key": "ch150_5",
+      "role": "section",
+      "section": "150.5",
+      "file": "ZBL_NewProvision_Chapter150_5.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch150_7",
+      "role": "section",
+      "section": "150.7",
+      "file": "ZBL_NewProvision_Chapter150_7.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch150_8",
+      "role": "section",
+      "section": "150.8",
+      "file": "ZBL_NewProvision_Chapter150_8.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch150_10",
+      "role": "section",
+      "section": "150.10",
+      "file": "ZBL_NewProvision_Chapter150_10.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch150_13",
+      "role": "section",
+      "section": "150.13",
+      "file": "ZBL_NewProvision_Chapter150_13.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch150_15",
+      "role": "section",
+      "section": "150.15",
+      "file": "ZBL_NewProvision_Chapter150_15.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_20",
+      "role": "section",
+      "section": "150.20",
+      "file": "ZBL_NewProvision_Chapter150_20.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_22",
+      "role": "section",
+      "section": "150.22",
+      "file": "ZBL_NewProvision_Chapter150_22.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_25",
+      "role": "section",
+      "section": "150.25",
+      "file": "ZBL_NewProvision_Chapter150_25.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_30",
+      "role": "section",
+      "section": "150.30",
+      "file": "ZBL_NewProvision_Chapter150_30.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_45",
+      "role": "section",
+      "section": "150.45",
+      "file": "ZBL_NewProvision_Chapter150_45.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_48",
+      "role": "section",
+      "section": "150.48",
+      "file": "ZBL_NewProvision_Chapter150_48.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch150_50",
+      "role": "section",
+      "section": "150.50",
+      "file": "ZBL_NewProvision_Chapter150_50.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch200_5",
+      "role": "section",
+      "section": "200.5",
+      "file": "ZBL_NewProvision_Chapter200_5.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch200_10",
+      "role": "section",
+      "section": "200.10",
+      "file": "ZBL_NewProvision_Chapter200_10.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch200_15",
+      "role": "section",
+      "section": "200.15",
+      "file": "ZBL_NewProvision_Chapter200_15.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch200_20",
+      "role": "section",
+      "section": "200.20",
+      "file": "ZBL_NewProvision_Chapter200_20.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch200_25",
+      "role": "section",
+      "section": "200.25",
+      "file": "ZBL_NewProvision_Chapter200_25.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch220_5",
+      "role": "section",
+      "section": "220.5",
+      "file": "ZBL_NewProvision_Chapter220_5.htm",
+      "basis": "M-47",
+      "chapter_entry": "220"
+    },
+    {
+      "key": "ch220_20",
+      "role": "section",
+      "section": "220.20",
+      "file": "ZBL_NewProvision_Chapter220_20.htm",
+      "basis": "M-47",
+      "chapter_entry": "220"
+    },
+    {
+      "key": "ch230_5",
+      "role": "section",
+      "section": "230.5",
+      "file": "ZBL_NewProvision_Chapter230_5.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "ruling": "operator S3 2026-10-07: Ch.230 = residential sections only"
+    },
+    {
+      "key": "ch230_10",
+      "role": "section",
+      "section": "230.10",
+      "file": "ZBL_NewProvision_Chapter230_10.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "ruling": "operator S3 2026-10-07: Ch.230 = residential sections only"
+    },
+    {
+      "key": "ch230_20",
+      "role": "section",
+      "section": "230.20",
+      "file": "ZBL_NewProvision_Chapter230_20.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, apartment_building_only"
+    },
+    {
+      "key": "ch230_30",
+      "role": "section",
+      "section": "230.30",
+      "file": "ZBL_NewProvision_Chapter230_30.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, non_residential_zone_parking"
+    },
+    {
+      "key": "ch230_40",
+      "role": "section",
+      "section": "230.40",
+      "file": "ZBL_NewProvision_Chapter230_40.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, non_residential_zone_parking"
+    },
+    {
+      "key": "ch230_50",
+      "role": "section",
+      "section": "230.50",
+      "file": "ZBL_NewProvision_Chapter230_50.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, non_residential_zone_parking"
+    },
+    {
+      "key": "ch230_60",
+      "role": "section",
+      "section": "230.60",
+      "file": "ZBL_NewProvision_Chapter230_60.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, non_residential_zone_parking"
+    },
+    {
+      "key": "ch230_80",
+      "role": "section",
+      "section": "230.80",
+      "file": "ZBL_NewProvision_Chapter230_80.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "status": "retired",
+      "ruling": "operator S3 2026-10-07: retired — out of scope, non_residential_zone_parking"
+    },
+    {
+      "key": "ch230_90",
+      "role": "section",
+      "section": "230.90",
+      "file": "ZBL_NewProvision_Chapter230_90.htm",
+      "basis": "M-47",
+      "chapter_entry": "230",
+      "ruling": "operator S3 2026-10-07: Ch.230 = residential sections only"
+    },
+    {
+      "key": "ch600_5",
+      "role": "section",
+      "section": "600.5",
+      "file": "ZBL_NewProvision_Chapter600_5.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch600_60",
+      "role": "section",
+      "section": "600.60",
+      "file": "ZBL_NewProvision_Chapter600_60.htm",
+      "basis": "M-37"
+    },
+    {
+      "key": "ch800_50",
+      "role": "section",
+      "section": "800.50",
+      "file": "ZBL_NewProvision_Chapter800_50.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch900_1",
+      "role": "section",
+      "section": "900.1",
+      "file": "ZBL_NewProvision_Chapter900_1.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch970_10",
+      "role": "section",
+      "section": "970.10",
+      "file": "ZBL_NewProvision_Chapter970_10.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch970_30",
+      "role": "section",
+      "section": "970.30",
+      "file": "ZBL_NewProvision_Chapter970_30.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch995_10",
+      "role": "section",
+      "section": "995.10",
+      "file": "ZBL_NewProvision_Chapter995_10.htm",
+      "basis": "phase0"
+    },
+    {
+      "key": "ch995_20",
+      "role": "section",
+      "section": "995.20",
+      "file": "ZBL_NewProvision_Chapter995_20.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch995_30",
+      "role": "section",
+      "section": "995.30",
+      "file": "ZBL_NewProvision_Chapter995_30.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch995_41",
+      "role": "section",
+      "section": "995.41",
+      "file": "ZBL_NewProvision_Chapter995_41.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch995_50",
+      "role": "section",
+      "section": "995.50",
+      "file": "ZBL_NewProvision_Chapter995_50.htm",
+      "basis": "M-47"
+    },
+    {
+      "key": "ch995_60",
+      "role": "section",
+      "section": "995.60",
+      "file": "ZBL_NewProvision_Chapter995_60.htm",
+      "basis": "M-47"
+    }
+  ],
+  "phase0_not_carried": [
+    {
+      "phase0_key": "ch900_2",
+      "section": "900.2",
+      "ruling": "M-15",
+      "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
+    },
+    {
+      "phase0_key": "ch900_3",
+      "section": "900.3",
+      "ruling": "M-15",
+      "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
+    },
+    {
+      "phase0_key": "ch900_4",
+      "section": "900.4",
+      "ruling": "M-15",
+      "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
+    },
+    {
+      "phase0_key": "ch900_5",
+      "section": "900.5",
+      "ruling": "M-15",
+      "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
+    },
+    {
+      "phase0_key": "ch900_6",
+      "section": "900.6",
+      "ruling": "M-15",
+      "reason": "Ch.900 exception pages are pinned at Phase 2 entry (M-15 v0.5 note)"
+    }
+  ],
+  "excluded_by_ruling": []
+}
