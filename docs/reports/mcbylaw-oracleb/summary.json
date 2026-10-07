@@ -1,34 +1,34 @@
 {
  "by_set": {
   "fixture": {
-   "agree": 12960,
+   "agree": 13009,
    "n": 13101,
-   "rate": 98.92,
-   "value_agree": 13008,
-   "winner_agree": 12773
+   "rate": 99.3,
+   "value_agree": 13014,
+   "winner_agree": 12827
   },
   "provincial": {
-   "agree": 11488,
+   "agree": 12490,
    "n": 12978,
-   "rate": 88.52,
-   "value_agree": 11536,
-   "winner_agree": 11251
+   "rate": 96.24,
+   "value_agree": 12670,
+   "winner_agree": 12455
   },
   "rd_band": {
-   "agree": 2535,
+   "agree": 2551,
    "n": 2562,
-   "rate": 98.95,
-   "value_agree": 2541,
-   "winner_agree": 2470
+   "rate": 99.57,
+   "value_agree": 2554,
+   "winner_agree": 2482
   }
  },
  "by_source": {
   "pairwise": {
-   "agree": 26860,
+   "agree": 27927,
    "n": 28518,
-   "rate": 94.19,
-   "value_agree": 26962,
-   "winner_agree": 26373
+   "rate": 97.93,
+   "value_agree": 28115,
+   "winner_agree": 27645
   },
   "rule0": {
    "agree": 21,
@@ -42,7 +42,7 @@
    "n": 102,
    "rate": 100,
    "value_agree": 102,
-   "winner_agree": 100
+   "winner_agree": 98
   }
  },
  "by_target": {
@@ -98,7 +98,7 @@
     "n": 625,
     "rate": 100,
     "value_agree": 625,
-    "winner_agree": 585
+    "winner_agree": 583
    },
    "provincial": {
     "agree": 618,
@@ -140,25 +140,25 @@
   },
   "front_landscaping_pct": {
    "fixture": {
-    "agree": 571,
+    "agree": 625,
     "n": 625,
-    "rate": 91.36,
-    "value_agree": 571,
-    "winner_agree": 571
+    "rate": 100,
+    "value_agree": 625,
+    "winner_agree": 625
    },
    "provincial": {
-    "agree": 564,
+    "agree": 618,
     "n": 618,
-    "rate": 91.26,
-    "value_agree": 564,
-    "winner_agree": 564
+    "rate": 100,
+    "value_agree": 618,
+    "winner_agree": 618
    },
    "rd_band": {
-    "agree": 110,
+    "agree": 122,
     "n": 122,
-    "rate": 90.16,
-    "value_agree": 110,
-    "winner_agree": 110
+    "rate": 100,
+    "value_agree": 122,
+    "winner_agree": 122
    }
   },
   "front_setback_m": {
@@ -186,23 +186,23 @@
   },
   "fsi": {
    "fixture": {
-    "agree": 577,
+    "agree": 625,
     "n": 625,
-    "rate": 92.32,
+    "rate": 100,
     "value_agree": 625,
     "winner_agree": 625
    },
    "provincial": {
-    "agree": 215,
+    "agree": 471,
     "n": 618,
-    "rate": 34.79,
-    "value_agree": 263,
-    "winner_agree": 231
+    "rate": 76.21,
+    "value_agree": 509,
+    "winner_agree": 499
    },
    "rd_band": {
-    "agree": 116,
+    "agree": 122,
     "n": 122,
-    "rate": 95.08,
+    "rate": 100,
     "value_agree": 122,
     "winner_agree": 122
    }
@@ -255,25 +255,25 @@
   },
   "height_m": {
    "fixture": {
-    "agree": 627,
+    "agree": 614,
     "n": 630,
-    "rate": 99.52,
-    "value_agree": 627,
-    "winner_agree": 626
+    "rate": 97.46,
+    "value_agree": 614,
+    "winner_agree": 615
    },
    "provincial": {
-    "agree": 615,
+    "agree": 602,
     "n": 618,
-    "rate": 99.51,
-    "value_agree": 615,
-    "winner_agree": 614
+    "rate": 97.41,
+    "value_agree": 602,
+    "winner_agree": 603
    },
    "rd_band": {
-    "agree": 121,
+    "agree": 118,
     "n": 122,
-    "rate": 99.18,
-    "value_agree": 121,
-    "winner_agree": 120
+    "rate": 96.72,
+    "value_agree": 118,
+    "winner_agree": 117
    }
   },
   "height_storeys": {
@@ -324,48 +324,48 @@
   },
   "lot_coverage_pct": {
    "fixture": {
-    "agree": 590,
+    "agree": 553,
     "n": 625,
-    "rate": 94.4,
-    "value_agree": 590,
-    "winner_agree": 593
+    "rate": 88.48,
+    "value_agree": 558,
+    "winner_agree": 603
    },
    "provincial": {
-    "agree": 115,
+    "agree": 512,
     "n": 618,
-    "rate": 18.61,
-    "value_agree": 115,
-    "winner_agree": 98
+    "rate": 82.85,
+    "value_agree": 531,
+    "winner_agree": 554
    },
    "rd_band": {
-    "agree": 115,
+    "agree": 119,
     "n": 122,
-    "rate": 94.26,
-    "value_agree": 115,
+    "rate": 97.54,
+    "value_agree": 122,
     "winner_agree": 117
    }
   },
   "main_wall_height_m": {
    "fixture": {
-    "agree": 619,
+    "agree": 616,
     "n": 620,
-    "rate": 99.84,
-    "value_agree": 619,
-    "winner_agree": 601
+    "rate": 99.35,
+    "value_agree": 616,
+    "winner_agree": 604
    },
    "provincial": {
-    "agree": 617,
+    "agree": 614,
     "n": 618,
-    "rate": 99.84,
-    "value_agree": 617,
-    "winner_agree": 599
+    "rate": 99.35,
+    "value_agree": 614,
+    "winner_agree": 602
    },
    "rd_band": {
-    "agree": 121,
+    "agree": 118,
     "n": 122,
-    "rate": 99.18,
-    "value_agree": 121,
-    "winner_agree": 103
+    "rate": 96.72,
+    "value_agree": 118,
+    "winner_agree": 106
    }
   },
   "rear_setback_m": {
@@ -446,11 +446,11 @@
     "winner_agree": 619
    },
    "provincial": {
-    "agree": 92,
+    "agree": 403,
     "n": 618,
-    "rate": 14.89,
-    "value_agree": 92,
-    "winner_agree": 92
+    "rate": 65.21,
+    "value_agree": 526,
+    "winner_agree": 526
    },
    "rd_band": {
     "agree": 122,
@@ -572,22 +572,21 @@
  ],
  "disagreements_by_class": {
   "A_wrong": {
-   "n": 1304,
+   "n": 468,
    "rules": {
-    "C4-provincial-scope-and-yield": 1304
+    "C4-provincial-scope-and-yield": 468
    }
   },
   "B_wrong": {
-   "n": 10,
+   "n": 39,
    "rules": {
-    "C1-argument-displacement-substitution": 10
+    "C1-argument-displacement-substitution": 39
    }
   },
-  "spec_ambiguous": {
-   "n": 344,
+  "unclassified": {
+   "n": 84,
    "rules": {
-    "C2-immaterial-undecided-applicability": 326,
-    "C3-immaterial-undecided-under-m50": 18
+    "null": 84
    }
   }
  },
@@ -595,11 +594,11 @@
  "lots_pairwise": 618,
  "oracle_b_version": "oracle-b-1",
  "overall": {
-  "agree": 26983,
+  "agree": 28050,
   "n": 28641,
-  "rate": 94.21,
-  "value_agree": 27085,
-  "winner_agree": 26494
+  "rate": 97.94,
+  "value_agree": 28238,
+  "winner_agree": 27764
  },
  "pairwise": {
   "R": {
@@ -826,19 +825,19 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|8.5",
+   "A_matches": true,
+   "B": "value|8.5",
+   "B_matches": true,
    "expected": "value|8.5",
    "id": "derwyn:height_m",
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|7",
+   "A_matches": true,
+   "B": "value|7",
+   "B_matches": true,
    "expected": "value|7",
    "id": "derwyn:main_wall_height_m",
    "vector_status": "by_law_expected"
@@ -871,10 +870,10 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
    "expected": "value|19",
    "id": "derwyn:building_depth_m",
    "vector_status": "by_law_expected"
@@ -889,27 +888,27 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
    "expected": "value|50",
    "id": "derwyn:front_landscaping_pct",
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
    "expected": "value|50",
    "id": "derwyn:rear_soft_landscaping_pct",
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
+   "A": "ne:missing_input",
    "A_matches": false,
-   "B": "ne:needs_user_input",
+   "B": "ne:missing_input",
    "B_matches": false,
    "expected": "value|6",
    "id": "derwyn:driveway_width_m",
@@ -943,10 +942,10 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|9.5",
+   "A_matches": true,
+   "B": "value|9.5",
+   "B_matches": true,
    "expected": "value|9.5",
    "id": "eastbourne:height_m",
    "vector_status": "by_law_expected"
@@ -970,10 +969,10 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|19",
+   "A_matches": true,
+   "B": "value|19",
+   "B_matches": true,
    "expected": "value|19",
    "id": "eastbourne:building_depth_m",
    "vector_status": "by_law_expected"
@@ -988,27 +987,27 @@
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
    "expected": "value|50",
    "id": "eastbourne:front_landscaping_pct",
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
-   "A_matches": false,
-   "B": "ne:needs_user_input",
-   "B_matches": false,
+   "A": "value|50",
+   "A_matches": true,
+   "B": "value|50",
+   "B_matches": true,
    "expected": "value|50",
    "id": "eastbourne:rear_soft_landscaping_pct",
    "vector_status": "by_law_expected"
   },
   {
-   "A": "ne:needs_user_input",
+   "A": "ne:missing_input",
    "A_matches": false,
-   "B": "ne:needs_user_input",
+   "B": "ne:missing_input",
    "B_matches": false,
    "expected": "value|6",
    "id": "eastbourne:driveway_width_m",
@@ -1601,30 +1600,30 @@
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|10",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V18-RD",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|10",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V18-RS",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|10",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V18-RT",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "value|10",
@@ -1646,12 +1645,12 @@
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|17",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V21",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "ne:no_candidate",
@@ -1673,12 +1672,12 @@
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|60",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V24",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "value|1.2",
@@ -1700,26 +1699,26 @@
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|17",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V25:building_length_m",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   },
   {
    "A": "ne:needs_user_input",
-   "A_matches": false,
+   "A_matches": true,
    "B": "ne:needs_user_input",
-   "B_matches": false,
-   "expected": "value|19",
+   "B_matches": true,
+   "expected": "ne:needs_user_input",
    "id": "V25:building_depth_m",
-   "vector_status": "by_law_expected"
+   "vector_status": "no_expected:building_type_unstated"
   }
  ],
  "vectors": {
-  "A_matches_expected": 61,
-  "B_matches_expected": 61,
+  "A_matches_expected": 77,
+  "B_matches_expected": 77,
   "n": 102,
   "with_expected": 99
  }
