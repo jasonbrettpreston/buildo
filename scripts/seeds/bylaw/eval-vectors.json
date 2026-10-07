@@ -9,6 +9,11 @@
   ],
   "vectors": [
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(1)#whole",
       "clause_check": {
         "clause": "10.20.40.70(1)#whole",
@@ -22,7 +27,7 @@
       "id": "derwyn:front_setback_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -55,6 +60,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(2)#whole",
       "clause_check": {
         "clause": "10.20.40.70(2)#whole",
@@ -69,7 +79,7 @@
       "id": "derwyn:rear_setback_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -102,6 +112,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(3)#(B)",
       "clause_check": {
         "clause": "10.20.40.70(3)#(B)",
@@ -115,7 +130,7 @@
       "id": "derwyn:side_setback_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -148,6 +163,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.10(1)#(A)",
       "clause_check": {
         "clause": "10.20.40.10(1)#(A)",
@@ -161,7 +181,7 @@
       "id": "derwyn:height_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -194,6 +214,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.10(2)#whole",
       "clause_check": {
         "clause": "10.20.40.10(2)#whole",
@@ -207,7 +232,7 @@
       "id": "derwyn:main_wall_height_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -240,6 +265,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.10(3)#(B)",
       "clause_check": {
         "clause": "10.20.40.10(3)#(B)",
@@ -253,7 +283,7 @@
       "id": "derwyn:height_storeys",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -286,6 +316,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.40(1)#(A)",
       "clause_check": {
         "clause": "10.20.40.40(1)#(A)",
@@ -299,7 +334,7 @@
       "id": "derwyn:fsi",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -332,6 +367,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.20(1)#whole",
       "clause_check": {
         "clause": "10.20.40.20(1)#whole",
@@ -346,7 +386,7 @@
       "id": "derwyn:building_length_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -379,6 +419,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.30(1)#whole",
       "clause_check": {
         "clause": "10.20.40.30(1)#whole",
@@ -394,7 +439,7 @@
       "id": "derwyn:building_depth_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -427,6 +472,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.30.40(1)#(A)",
       "clause_check": {
         "clause": "10.20.30.40(1)#(A)",
@@ -440,7 +490,7 @@
       "id": "derwyn:lot_coverage_pct",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -473,6 +523,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.50.10(1)#(B)",
       "clause_check": {
         "clause": "10.5.50.10(1)#(B)",
@@ -487,7 +542,7 @@
       "id": "derwyn:front_landscaping_pct",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -520,6 +575,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.50.10(3)#(A)",
       "clause_check": {
         "clause": "10.5.50.10(3)#(A)",
@@ -533,7 +593,7 @@
       "id": "derwyn:rear_soft_landscaping_pct",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -566,6 +626,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.100.1(1)#(C)",
       "clause_check": {
         "clause": "10.5.100.1(1)#(C)",
@@ -580,7 +645,7 @@
       "id": "derwyn:driveway_width_m",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -613,13 +678,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1257,
+        "text": "| Term | Detached house — base fields |",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "expected": {
         "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
       },
       "id": "derwyn:fsi_gfa_cap_m2",
       "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -652,6 +722,11 @@
       "vector_status": "model_composite"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(1)#whole",
       "clause_check": {
         "clause": "10.20.40.70(1)#whole",
@@ -665,7 +740,7 @@
       "id": "eastbourne:front_setback_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -697,6 +772,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(2)#whole",
       "clause_check": {
         "clause": "10.20.40.70(2)#whole",
@@ -711,7 +791,7 @@
       "id": "eastbourne:rear_setback_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -743,6 +823,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.70(3)#(B)",
       "clause_check": {
         "clause": "10.20.40.70(3)#(B)",
@@ -756,7 +841,7 @@
       "id": "eastbourne:side_setback_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -789,6 +874,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.10(1)#(A)",
       "clause_check": {
         "clause": "10.20.40.10(1)#(A)",
@@ -802,7 +892,7 @@
       "id": "eastbourne:height_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -834,6 +924,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.40(1)#(A)",
       "clause_check": {
         "clause": "10.20.40.40(1)#(A)",
@@ -847,7 +942,7 @@
       "id": "eastbourne:fsi",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -879,6 +974,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.20(1)#whole",
       "clause_check": {
         "clause": "10.20.40.20(1)#whole",
@@ -893,7 +993,7 @@
       "id": "eastbourne:building_length_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -925,6 +1025,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.40.30(1)#whole",
       "clause_check": {
         "clause": "10.20.40.30(1)#whole",
@@ -938,7 +1043,7 @@
       "id": "eastbourne:building_depth_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -970,6 +1075,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.20.30.40(1)#(B)",
       "clause_check": {
         "clause": "10.20.30.40(1)#(B)",
@@ -984,7 +1094,7 @@
       "id": "eastbourne:lot_coverage_pct",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -1016,6 +1126,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.50.10(1)#(B)",
       "clause_check": {
         "clause": "10.5.50.10(1)#(B)",
@@ -1029,7 +1144,7 @@
       "id": "eastbourne:front_landscaping_pct",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -1061,6 +1176,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.50.10(3)#(A)",
       "clause_check": {
         "clause": "10.5.50.10(3)#(A)",
@@ -1074,7 +1194,7 @@
       "id": "eastbourne:rear_soft_landscaping_pct",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -1106,6 +1226,11 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "bylaw_clause": "10.5.100.1(1)#(C)",
       "clause_check": {
         "clause": "10.5.100.1(1)#(C)",
@@ -1119,7 +1244,7 @@
       "id": "eastbourne:driveway_width_m",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -1151,13 +1276,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "building_type_from": {
+        "line": 1529,
+        "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
+        "why": "Spec 67 states the worked example's base fields are the detached-house answer (houseplex / suite answers are separate columns)"
+      },
       "expected": {
         "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
       },
       "id": "eastbourne:fsi_gfa_cap_m2",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
       "lot": {
-        "building_type": null,
+        "building_type": "detached_house",
         "exception": null,
         "flags": {
           "corner_lot": false,
@@ -4214,7 +4344,8 @@
         ]
       },
       "expected": {
-        "value": 10
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V18-RD",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4236,8 +4367,9 @@
         "line": 373,
         "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
       },
+      "spec67_value": 10,
       "target": "height_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "bylaw_clause": "10.40.40.10(1)#(B)",
@@ -4248,7 +4380,8 @@
         ]
       },
       "expected": {
-        "value": 10
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V18-RS",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4270,8 +4403,9 @@
         "line": 373,
         "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
       },
+      "spec67_value": 10,
       "target": "height_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "bylaw_clause": "10.60.40.10(1)#(B)",
@@ -4282,7 +4416,8 @@
         ]
       },
       "expected": {
-        "value": 10
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V18-RT",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4304,8 +4439,9 @@
         "line": 373,
         "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
       },
+      "spec67_value": 10,
       "target": "height_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "bylaw_clause": "10.80.40.10(1)#(B)",
@@ -4384,7 +4520,8 @@
         ]
       },
       "expected": {
-        "value": 17
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V21",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4408,8 +4545,9 @@
         "line": 714,
         "text": "| V21 | RD | not on major street | NF-10 length | base case | `17.0` |"
       },
+      "spec67_value": 17,
       "target": "building_length_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "bylaw_clause": "10.60.40.20(1)#whole",
@@ -4492,7 +4630,8 @@
         ]
       },
       "expected": {
-        "value": 60
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V24",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
@@ -4516,8 +4655,9 @@
         "line": 669,
         "text": "| V24 | any | `is_corner_lot=true` | NF-14 corner landscaping | flat | `60` |"
       },
+      "spec67_value": 60,
       "target": "side_street_landscaping_pct",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "expected": {
@@ -4651,7 +4791,8 @@
         ]
       },
       "expected": {
-        "value": 17
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V25:building_length_m",
       "lot": {
@@ -4678,8 +4819,9 @@
         "line": 622,
         "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
       },
+      "spec67_value": 17,
       "target": "building_length_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     },
     {
       "bylaw_clause": "10.20.40.30(1)#whole",
@@ -4690,7 +4832,8 @@
         ]
       },
       "expected": {
-        "value": 19
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "Spec 67 states no building type for this vector and the residential types disagree, so under Spec 69 M-50 it has no by-law expected value; the Spec 67 value is kept in spec67_value"
       },
       "id": "V25:building_depth_m",
       "lot": {
@@ -4717,8 +4860,9 @@
         "line": 622,
         "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
       },
+      "spec67_value": 19,
       "target": "building_depth_m",
-      "vector_status": "by_law_expected"
+      "vector_status": "no_expected:building_type_unstated"
     }
   ]
 }

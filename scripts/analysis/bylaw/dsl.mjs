@@ -395,7 +395,9 @@ export function checkStatement(statement, vocab) {
   const units = unitTable(vocab);
   const errs = [];
   const tu = units.target[s.target] ?? null;
-  const types = vocab.building_type ? new Set([...vocab.building_type, 'other']) : null;
+  // vocab.json keeps building_type as {name: {structure, …}}; fixture vocabs may pass a list of names (S6g patch)
+  const bt = vocab.building_type;
+  const types = bt ? new Set([...(Array.isArray(bt) ? bt : Object.keys(bt)), 'other']) : null;
   if (types) for (const k of byTypeKeys(s.expr)) if (!types.has(k)) errs.push(`unknown_building_type: ${k}`);
   if (!tu) errs.push(`unknown_target: ${s.target}`);
   const u = staticUnit(s.expr, units, errs);
