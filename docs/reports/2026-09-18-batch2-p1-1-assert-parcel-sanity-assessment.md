@@ -179,7 +179,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=247 |
+| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=248 |
 | 2 | assert_parcel_sanity | PASS | 38 declared, missing from seeds: none |
 | 3 | assert_parcel_sanity | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_parcel_sanity | PASS | SPEC LINK header present=true |
@@ -223,12 +223,11 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 - compare ran: true · diffs found: 665 · unexplained: 0
 
 ### Test suite (item iii)
-- 2056/2057 passed (suite success=false)
+- 2057/2057 passed (suite success=true)
 - harvested: 58 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (1):
-  - src/tests/steps/link_neighbourhoods/violations.test.ts > LN-D6 — the retired parcel-centroid capability is COUNTED, not merely described > a plausibility row measures the FORWARD-going stranded population (neighbourhood_id IS NULL, no coordinates, but a parcel geometry) — the population permits_processed structurally cannot see
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -247,7 +246,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted=null — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=79431B notes=0B checks=46 rows records_meta=11545B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=79469B notes=0B checks=46 rows records_meta=11545B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

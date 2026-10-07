@@ -73,6 +73,12 @@
     "$comment": "Spec 65 §4 MB-3 (WF3 Phase 1 D-C) — the max-build viability floor. SEED-MIGRATION LITERAL LOCK (CF-2): the value crosses seed JSON ↔ migration 239 ↔ the max-build.js code default (the missing-variable-window fallback), so a divergence gives dev and cloud two different floors → two different envelopes → two different cost menus with no CI catch. Runtime-tunable via logic_variables (the lock governs the seed/default literals, not runtime values). Consumers: migrations/239_seed_max_build_min_dimension.sql, scripts/seeds/logic_variables.json, scripts/lib/max-build.js (all pinned by contracts.infra.test.ts; the audit literal is pinned by logic-var-parity.logic.test.ts).",
     "min_dimension_m": 3
   },
+  "parcels_geom_change_tolerance_deg": {
+    "$comment": "WF3 parcels geom drift (migration 251; Spec 55; Spec 124 Rule 3) — the parcel geometry material-change tolerance, degrees. SEED-MIGRATION LITERAL LOCK (CF-2, the max_build precedent): default / min / max cross migrations/251_parcels_geom_material_change.sql (the seed INSERT and the function's own bound check — a trigger has no ctx.config) ↔ scripts/seeds/logic_variables.json (and, after Commit 2, the load_parcels descriptor config.logic_variables). Written in the 1e-7 literal form everywhere (JS serialises 0.0000001 as 1e-7). Runtime-tunable via logic_variables (the lock governs the shipped literals, not runtime values). Pinned by contracts.infra.test.ts.",
+    "default": 1e-7,
+    "min": 1e-8,
+    "max": 5e-7
+  },
   "parcel_cost_model": {
     "$comment": "Spec 88 — parcel renovation cost model. SEED-MIGRATION LITERAL LOCK: every rate here is the canonical external-industry $/m² ($/ft² × 10.764) documented in Spec 88 §3 and SEEDED by migrations/205_archetype_cost_rates.sql. The lock pins the migration seed literal against this JSON so a re-seed can't silently diverge from the §3 design table. These are admin-TUNABLE at runtime (archetype_cost_rates table, Spec 86) — the lock governs the seed, not runtime values. solar_adj_factor = SOLAR cost_adjustment_factor (usable-roof fraction, §2). Consumer for all rows: migrations/205_archetype_cost_rates.sql (pinned by contracts.infra.test.ts).",
     "rate_fb_sqm": 4844,

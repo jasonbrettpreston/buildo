@@ -5587,6 +5587,16 @@
       "group": "Source Ingestion"
     }
   },
+  "parcels_geom_change_tolerance_deg": {
+    "default": 1e-7,
+    "type": "number",
+    "min": 1e-8,
+    "max": 5e-7,
+    "description": "WF3 parcels geom drift (Spec 55 Known Failure Modes; Spec 124 Rule 3) — degrees. A parcel shape change is MATERIAL only when some vertex moves farther than this from the other shape (discrete Hausdorff), or its structure, vertex count or validity changes; sub-tolerance publisher jitter and ring rotation are not. 1e-7 ≈ 1.1 cm lat / 0.8 cm lon (the centroid numeric(10,7) quantum, 10x the largest measured CKAN jitter). Bounds [1e-8, 5e-7] are enforced in the SQL function too: 0 would recreate the 2026-09-24 citywide invalidation. Fail-closed: a missing or out-of-bounds row RAISEs on the first inexact geometry write. CONSUMED by public.parcels_geom_materially_changed() (migration 251) — read by the trg_parcels_geom_invalidation trigger function and (after Commit 2) the load_parcels upsert. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "sources_parcels_floor": {
     "default": 460000,
     "type": "number",

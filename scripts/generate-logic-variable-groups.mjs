@@ -520,6 +520,7 @@ const GROUP_ORDER = [
       "parcels_irregularity_threshold",
       "parcels_skip_rate_max_pct",
       "parcels_download_timeout_ms",
+      "parcels_geom_change_tolerance_deg",
       "load_centreline_dataset_age_warn_days",
       "load_centreline_count_drift_fail_pct",
       "load_centreline_invalid_geometry_fail_pct",

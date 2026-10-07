@@ -226,13 +226,17 @@ describe.skipIf(!dbAvailable())('migration 245 — geometry change invalidates p
       expect(after.centroid_lng).toBeNull();
     });
 
-    it('the same invalidation fires when ONLY the geometry jsonb is in the SET list', async () => {
+    it('a geometry-jsonb-only change with an unchanged non-NULL geom KEEPS the centroid (migration 251, operator ruling Q2 — was: NULLed)', async () => {
       const id = await insParcel(FX_PARCEL_ID(3), farBox(5));
       await stampAll(id);
       await pool!.query(`UPDATE parcels SET geometry = $2::jsonb WHERE id = $1`, [id, farBox(6)]);
       const after = await readRow(id);
-      expect(after.centroid_lat).toBeNull();
-      expect(after.centroid_lng).toBeNull();
+      // RETIRED KNOWINGLY (WF3 parcels geom drift, Commit 1). Before 251: NULLed (the 242/245 outer
+      // `geom OR geometry` arm). After: KEPT — every consumer of the centroid reads geom
+      // (compute_centroids writes ST_Centroid(geom)) and geom did not change. The NULL expectation
+      // survives for a geom-less row and for a material move in migration-251-geom-tolerance L14.
+      expect(after.centroid_lat).not.toBeNull();
+      expect(after.centroid_lng).not.toBeNull();
     });
   });
 
