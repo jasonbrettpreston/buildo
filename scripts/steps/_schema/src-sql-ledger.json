@@ -35,13 +35,22 @@
       ],
       "reads": {
         "admin_watchlist": [
+          "address_snapshot",
           "admin_uid",
+          "coa_application_number",
           "id",
           "lead_key",
+          "lead_type",
           "permit_num",
-          "revision_num"
+          "revision_num",
+          "saved_at"
         ],
-        "coa_applications": [],
+        "coa_applications": [
+          "address",
+          "application_number",
+          "lifecycle_phase",
+          "lifecycle_stalled"
+        ],
         "lead_trades": [
           "is_active",
           "lead_id",
@@ -53,7 +62,14 @@
           "revision_num",
           "trade_id"
         ],
-        "permits": [],
+        "permits": [
+          "lifecycle_phase",
+          "lifecycle_stalled",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num"
+        ],
         "trade_forecasts": [
           "lead_id",
           "opportunity_score",
@@ -82,8 +98,18 @@
         "9efe3bed32e4d78f"
       ],
       "reads": {
-        "coa_applications": [],
-        "permits": []
+        "coa_applications": [
+          "address",
+          "application_number",
+          "lifecycle_phase"
+        ],
+        "permits": [
+          "lifecycle_phase",
+          "permit_num",
+          "revision_num",
+          "street_name",
+          "street_num"
+        ]
       },
       "writes": {}
     },
@@ -2024,7 +2050,9 @@
         ],
         "lifecycle_status_history": [
           "decision",
+          "event_date",
           "from_status",
+          "id",
           "lead_id",
           "to_status",
           "transitioned_at"

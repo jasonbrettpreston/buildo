@@ -4285,3 +4285,17 @@ Source: `.cursor/wf3_postgis_pin_active_task.md` (authorized 2026-10-03; A1 = th
 | LOW | **D3: unqualified trigger function name.** `CREATE OR REPLACE FUNCTION trg_parcels_invalidate_on_geom_change()` is not schema-qualified (inherited from 242/245/249). Harmless today: dev search_path is `"$user", public, extensions` and there is no `postgres` schema. | **OPEN.** Schema-qualify it at the next touch. |
 | LOW | **D4: stale `invalidates[].when` prose until Commit 2 (Rule 1).** compute-centroids [0][1] still say "on any geom UPDATE (IS DISTINCT FROM)", as do enrich-parcels [1][2] and enrich-ravines / heritage / centreline [0]. | **OPEN, rides Commit 2** (loader materiality axis + the 7 downstream when-texts). |
 | LOW | **D5: test and doc nits.** L0 "seeded at 1e-7" passed red (the harness seeds from JSON), so no lock proves the migration's own INSERT; the re-apply test can't catch a missing INSERT; `red.json` holds an earlier L7 title (the fixture was regenerated after the red run); `expectKept` asserts only not-NULL; the header's "≈4 m²" example is ≈7.5 m²; the fixture generator lives outside the repo; there are 802 non-jitter fixture pairs vs the plan's ≈839. | **OPEN.** Fold at Commit 2. |
+
+### WF3 sql-witness set-op (`.cursor/wf3_sql_witness_setop_active_task.md`), output-roster deferrals (2026-10-07)
+
+Pre-existing resolver gaps (`scripts/lib/sql-witness/resolve.cjs`), not in this diff. Raised by the DeepSeek error-paths / idempotency lenses; each was confirmed by an executed probe on the patched resolver. None of them is a set-op case (non-set-op corpus drift from this diff: 0).
+
+| Severity | Item (probe → observed) | Disposition |
+|----------|------|--------------|
+| HIGH | **A data-modifying CTE's write is lost.** `WITH del AS (DELETE FROM b WHERE x = 1 RETURNING *) SELECT * FROM del` → reads `{b:[x]}`, writes `{}`, kind `read`. The CTE body is always resolved as a read scope. | **OPEN.** Next resolver WF3: route a CTE body whose node kind is Insert/Update/Delete through `resolveWrite`. |
+| MEDIUM | **`UPDATE … FROM t` records no bare read of `t`.** `UPDATE b SET x = 1 FROM parcels` → reads `{}`. `resolveWrite` never bare-touches `scope.relations` the way `resolveScope` does. The same applies to `DELETE … USING`. | **OPEN.** Next resolver WF3. |
+| MEDIUM | **An unknown unqualified column in UPDATE/DELETE is silent.** `DELETE FROM parcels WHERE typo = 1` → error `null`. A write scope has no `relations`, so the lone-relation credit / refuse never fires. | **OPEN.** Next resolver WF3. |
+| MEDIUM | **A qualified star on an unknown qualifier is silent.** `SELECT bogus.* FROM parcels` → error `null` (the two-name path calls `markError`; the star path returns). | **OPEN.** Next resolver WF3. |
+| MEDIUM | **Advisory-lock detection swallows subquery reads.** `SELECT pg_advisory_xact_lock(1), (SELECT x FROM b)` → kind `utility`, reads `{}`. `isAdvisoryLockSelect` walks the target list deeply. | **OPEN.** Next resolver WF3: scan top-level ResTargets only. |
+| LOW | **A table named after an `Object.prototype` key crashes resolution.** `SELECT x FROM "constructor"` → `FAIL:INPUT:parse:map[table].push is not a function`. It fails loudly, not silently, and no real table is named like this. | **OPEN.** Use `Object.create(null)` maps or a `hasOwnProperty` check in `touch`. |
+| LOW | **An alias named `excluded` drops the read outside ON CONFLICT.** `SELECT excluded.x FROM b excluded` → `{b:[]}`. | **OPEN.** Gate `isExcludedQualifier` on a conflict scope. |
