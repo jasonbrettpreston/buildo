@@ -1,0 +1,3 @@
+# Raw City pages are pinned by byte sha256 (Spec 68 §9 G-PROV); never convert their line endings.
+pages/*.htm -text
+pages/*.txt -text

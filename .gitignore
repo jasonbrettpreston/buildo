@@ -112,3 +112,6 @@ backups/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# McBylaw (Spec 68 §10 stage 1): --refresh stages here; only --adopt writes tracked files
+scripts/seeds/bylaw/.staging/
