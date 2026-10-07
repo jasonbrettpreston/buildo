@@ -1,0 +1,56 @@
+{
+  "$comment": "Input fidelity (Spec 68 §6 `input_fidelity`, §6.2, §9 G-READ; Spec 69 M-26): for each Ch.800 measurement definition a vocab.dsl_input maps to, how faithfully OUR field measures what the by-law defines. status is a double-keyed (⧉) field: these are the S5 keyer-A drafts, re-keyed blind at A4 (used definitions + input fidelity). `differs` / `unknown` forbids `calculation_handling = modelled` on any unit that reads the input (G-READ). `unknown` where nobody knows.",
+  "version": 1,
+  "drafted": "S5 keyer-A draft (2026-10-07); status double-keyed at A4",
+  "records": {
+    "800.50(100)": {
+      "input": "proposed_building_depth_m",
+      "our_field": "max-build footprint depth (scripts/lib/max-build.js envelope)",
+      "status": "approximates",
+      "why": "The by-law measures building depth from the REQUIRED front yard setback line to the rear main wall, perpendicular to that line; our envelope depth is a rectangle on the lot's minimum-bounding-rectangle axes, so it matches only on rectangular, street-aligned lots (Spec 68 §6.2, inferred, Integration).",
+      "evidence_ref": "docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2; scripts/lib/max-build.js"
+    },
+    "800.50(105)": {
+      "input": "proposed_building_length_m",
+      "our_field": "max-build footprint length (scripts/lib/max-build.js envelope)",
+      "status": "approximates",
+      "why": "The by-law measures building length between front and rear main walls ALONG THE LOT CENTRELINE; we hold no lot centreline, and the envelope length follows the minimum-bounding-rectangle axis (Spec 68 §6.2, inferred).",
+      "evidence_ref": "docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2; scripts/lib/max-build.js"
+    },
+    "800.50(240)": {
+      "input": "proposed_height_m",
+      "our_field": "none (heights are storeys x STOREY_HEIGHT_M; no ground elevations held)",
+      "status": "unknown",
+      "why": "Height is measured from established grade: the average ground elevation where the required front yard setback line meets each side lot line. We hold no ground elevations, so how our heights relate to established grade is not known (Spec 68 §6.2: height from established grade unknown, no grade data).",
+      "evidence_ref": "docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2; scripts/lib/max-build.js#STOREY_HEIGHT_M"
+    },
+    "800.50(290)": {
+      "input": "abutting_front_setback_m",
+      "our_field": "none (no setback of the abutting buildings is held)",
+      "status": "unknown",
+      "why": "Front-yard averaging reads the front yard setback of the buildings on the abutting lots, measured at a right angle from their front lot line to their nearest main wall. We hold no measured setback for neighbouring buildings; nobody has measured how a footprint-derived value would compare.",
+      "evidence_ref": "docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2"
+    },
+    "800.50(425)": {
+      "input": "lot_area_m2",
+      "our_field": "parcels.lot_size_sqm",
+      "status": "approximates",
+      "why": "The by-law's lot area is the horizontal area within all the lot lines. lot_size_sqm is the parcel fabric's STATED area (geometry backfill when absent); 98.5 % of 10,121 bare stated values agree with ST_Area(geom::geography) within 5 % (Spec 55).",
+      "evidence_ref": "docs/specs/01-pipeline/55_source_parcels.md (lot_size_sqm row); scripts/lib/compute/load-parcels.js#parseStatedArea"
+    },
+    "800.50(440)": {
+      "input": "lot_depth_m",
+      "our_field": "parcels.depth_m",
+      "status": "approximates",
+      "why": "The by-law measures lot depth between the front and rear lot lines along the lot centreline. depth_m is the long side of the parcel's minimum bounding rectangle scaled by sqrt(true area / MBR area); it is not street-oriented and ignores the centreline (Spec 68 §6.2; R-13).",
+      "evidence_ref": "scripts/lib/compute/load-parcels.js#estimateLotDimensions; docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2"
+    },
+    "800.50(445)": {
+      "input": "lot_frontage_m",
+      "our_field": "parcels.frontage_m",
+      "status": "approximates",
+      "why": "The by-law measures lot frontage between the side lot lines, perpendicular to the lot centreline, AT THE REQUIRED MINIMUM FRONT YARD SETBACK. frontage_m is the short side of the parcel's minimum bounding rectangle scaled by sqrt(true area / MBR area); it is not street-oriented (Spec 68 §6.2; R-13).",
+      "evidence_ref": "scripts/lib/compute/load-parcels.js#estimateLotDimensions; docs/specs/01-pipeline/68_mcbylaw_standard.md §6.2"
+    }
+  }
+}

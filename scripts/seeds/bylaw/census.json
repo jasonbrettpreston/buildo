@@ -14545,6 +14545,13 @@
     },
     "lots": 440094
   },
+  "residential_zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+  ],
   "sentinel": [
     {
       "exception_number": -1,
@@ -14556,7 +14563,7 @@
     "parcels": 496536
   },
   "sql": {
-    "blob_sha": "292fc4aa16b7367c6677af08bb56beade3096050",
+    "blob_sha": "7d75b60d0c5f44fa2c0f2ebb3e510288b808811c",
     "path": "scripts/seeds/bylaw/census.sql"
   },
   "unzoned_parcels": 17829
