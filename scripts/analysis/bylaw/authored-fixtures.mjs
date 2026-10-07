@@ -270,7 +270,12 @@ export function shapeFixtures() {
   bad('shape_must_be_none', 'REQUIRE×none', (u) => (u.numeric_expression = ['side_setback_m = 0.6 m @(B)']));
   bad('value_form_not_allowed', 'PERMIT×none', (u) => (u.numeric_expression = ['dwelling_units_max = 6 units @(B)']));
   bad('statement_target_mismatch', 'LIMIT×literal', (u) => (u.target = 'side_setback_street_m'));
-  bad('modelled_without_inputs', 'LIMIT×map_lookup', (u) => (u.calculation_handling.status = 'modelled'));
+  { // vocab.json declares HT / ST / LC held (Spec 58; folded by the hardening lane): the not-held arm runs on a
+    // vocab clone whose overlays are not declared held, so the gate keeps a red fixture
+    const notHeld = JSON.parse(JSON.stringify(REAL_VOCAB));
+    for (const c of Object.keys(notHeld.overlay_code || {})) delete notHeld.overlay_code[c].held;
+    bad('modelled_without_inputs', 'LIMIT×map_lookup', (u) => (u.calculation_handling.status = 'modelled'), { vocab: notHeld });
+  }
   bad('feeds_unresolved', 'LIMIT×literal', (u) => (u.application.building_types = []));
   bad('authored_orphan', 'LIMIT×literal', (u) => (u.unit_id = '10.20.40.70(3)#(3)(Z)'));
   bad('generated_field_authored', 'LIMIT×literal', (u) => (u.displaces = ['10.20.40.70(2)']));
