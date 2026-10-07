@@ -1,0 +1,364 @@
+{
+  "entries": [
+    {
+      "additional_sources": [],
+      "authority": "City of Toronto Zoning By-law 569-2013",
+      "citation": "Zoning By-law 569-2013, 1.5.7(1) Lands Subject to this By-law",
+      "evaluated_by_us": "no",
+      "excerpt": "This By-law applies to all the lands in the City of Toronto, except for those lands depicted on the Zoning By-law Map in Section 990.10 with diagonal hatching and the name and number of one of the Former General Zoning By-laws.",
+      "explanation": "Zoning By-law 569-2013 does not apply to lands that its map shows with diagonal hatching and the name of a former by-law; those lands are still zoned under the former by-law. Where we find no 569-2013 zone for a lot, MaxBLD does not evaluate that lot against 569-2013 and shows \"no 569-2013 zone found; not evaluated\". MaxBLD does not evaluate the former by-laws.",
+      "id": "EXT-gov-1",
+      "kind": "governance_former_bylaw",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        },
+        {
+          "aspect": "use_permission",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "5c4d5bfa041d86d449c59f701ba28b42935a9585d5666aec2fb244a8f8fa7b63",
+      "title": "Lands governed by a former zoning by-law",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter1_5.htm",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [
+        {
+          "citation": "O. Reg. 299/19 Additional Residential Units, ss. 1-5 (consolidated to O. Reg. 462/24)",
+          "source_sha256": "4c25618ace1b5d0f28e4e2712f231e03949b926c26f427a17dade9118d9558cc",
+          "url": "https://www.ontario.ca/laws/docs/190299_e.doc"
+        }
+      ],
+      "authority": "Province of Ontario, Planning Act",
+      "citation": "Planning Act, R.S.O. 1990, c. P.13, s. 35.1(1) (and s. 16(3) for official plans; both as enacted by S.O. 2022, c. 21, Sched. 9, the More Homes Built Faster Act, 2022 (Bill 23)); O. Reg. 299/19 Additional Residential Units, ss. 2-5, as amended by O. Reg. 593/22 and O. Reg. 462/24",
+      "evaluated_by_us": "no",
+      "excerpt": "The authority to pass a by-law under section 34 does not include the authority to pass a by-law that prohibits the use of, (a) two residential units in a detached house, semi-detached house or rowhouse on a parcel of urban residential land, if all buildings and structures ancillary to the detached house, semi-detached house or rowhouse cumulatively contain no more than one residential unit; (b) three residential units in a detached house, semi-detached house or rowhouse on a parcel of urban residential land, if no building or structure ancillary to the detached house, semi-detached house or rowhouse contains any residential units; or (c) one residential unit in a building or structure ancillary to a detached house, semi-detached house or rowhouse on a parcel of urban residential land, if the detached house, semi-detached house or rowhouse contains no more than two residential units and no other building or structure ancillary to the detached house, semi-detached house or rowhouse contains any residential units.",
+      "explanation": "Ontario law stops a city from prohibiting up to three residential units on a serviced urban residential lot with a detached house, semi-detached house or rowhouse: three in the house, or two in the house and one in an ancillary building such as a garden suite. A provincial regulation for lots with such units also sets parking, a 4 metre separation between buildings that contain units, lot coverage up to 45 per cent, and no floor space index limit, with some city rules allowed to prevail. Our rule table records these provincial standards as taking priority over the by-law on the lots they apply to; MaxBLD does not evaluate them in its current results yet.",
+      "id": "EXT-prov-1",
+      "kind": "provincial_precedence",
+      "precedence": "active",
+      "provincial_units": [
+        {
+          "bound": "min",
+          "bylaw_prevails": "more_permissive",
+          "bylaw_prevails_citation": "O. Reg. 299/19, s. 4(2): A by-law passed under section 34 of the Act that permits buildings or structures to be less than 4 metres from one another prevails over the requirement set out in paragraph 2 of subsection (1) of this section.",
+          "citation": "O. Reg. 299/19, s. 4(1), para. 2 (O. Reg. 462/24, s. 2)",
+          "scope": {
+            "applies_to": "building_pair",
+            "land": "parcel_of_urban_residential_land",
+            "other_building_contains_unit": true,
+            "principal_building_types": [
+              "detached_house",
+              "rowhouse",
+              "semi_detached_house"
+            ],
+            "unit_configurations": [
+              {
+                "ancillary_units": [
+                  0,
+                  1
+                ],
+                "house_units": [
+                  2
+                ]
+              },
+              {
+                "ancillary_units": [
+                  0
+                ],
+                "house_units": [
+                  3
+                ]
+              },
+              {
+                "ancillary_units": [
+                  1
+                ],
+                "house_units": [
+                  1,
+                  2
+                ]
+              }
+            ]
+          },
+          "target": "separation_m",
+          "unit": "m",
+          "unit_id": "O.Reg.299/19 s.4(1)2",
+          "value": 4,
+          "verbatim": "The building or structure shall be at least 4 metres from another building or structure on the parcel if the other building or structure contains a residential unit."
+        },
+        {
+          "bound": "max",
+          "bylaw_prevails": "more_permissive",
+          "bylaw_prevails_citation": "O. Reg. 299/19, s. 5(2): A by-law passed under section 34 of the Act that permits more than 45 per cent of the surface of the parcel to be covered by buildings and structures prevails over the requirement set out in paragraph 1 of subsection (1) of this section.",
+          "citation": "O. Reg. 299/19, s. 5(1), para. 1 (O. Reg. 462/24, s. 2)",
+          "scope": {
+            "applies_to": "parcel",
+            "land": "parcel_of_urban_residential_land",
+            "other_building_contains_unit": null,
+            "principal_building_types": [
+              "detached_house",
+              "rowhouse",
+              "semi_detached_house"
+            ],
+            "unit_configurations": [
+              {
+                "ancillary_units": [
+                  0,
+                  1
+                ],
+                "house_units": [
+                  2
+                ]
+              },
+              {
+                "ancillary_units": [
+                  0
+                ],
+                "house_units": [
+                  3
+                ]
+              },
+              {
+                "ancillary_units": [
+                  1
+                ],
+                "house_units": [
+                  1,
+                  2
+                ]
+              }
+            ]
+          },
+          "target": "lot_coverage_pct",
+          "unit": "pct",
+          "unit_id": "O.Reg.299/19 s.5(1)1",
+          "value": 45,
+          "verbatim": "Up to 45 per cent of the surface of the parcel is permitted to be covered by buildings and structures."
+        },
+        {
+          "bound": "max",
+          "bylaw_prevails": "never",
+          "bylaw_prevails_citation": null,
+          "citation": "O. Reg. 299/19, s. 5(1), para. 2 (O. Reg. 462/24, s. 2)",
+          "scope": {
+            "applies_to": "parcel",
+            "land": "parcel_of_urban_residential_land",
+            "other_building_contains_unit": null,
+            "principal_building_types": [
+              "detached_house",
+              "rowhouse",
+              "semi_detached_house"
+            ],
+            "unit_configurations": [
+              {
+                "ancillary_units": [
+                  0,
+                  1
+                ],
+                "house_units": [
+                  2
+                ]
+              },
+              {
+                "ancillary_units": [
+                  0
+                ],
+                "house_units": [
+                  3
+                ]
+              },
+              {
+                "ancillary_units": [
+                  1
+                ],
+                "house_units": [
+                  1,
+                  2
+                ]
+              }
+            ]
+          },
+          "target": "fsi",
+          "unit": "ratio",
+          "unit_id": "O.Reg.299/19 s.5(1)2",
+          "value": "unlimited",
+          "verbatim": "Subject to any maximum height and minimum setback requirements in a by-law passed under section 34 of the Act applicable to buildings and structures on the parcel, there is no limit to the floor space index of the parcel."
+        }
+      ],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "principal"
+        },
+        {
+          "aspect": "envelope",
+          "structure": "suite"
+        },
+        {
+          "aspect": "parking_access",
+          "structure": "suite"
+        },
+        {
+          "aspect": "use_permission",
+          "structure": "suite"
+        }
+      ],
+      "source_sha256": "fce27768a57b3dc859312f75b757dfd755bb1d2181cd5bfdf307b1fda506362e",
+      "title": "Provincial additional residential units (up to three units)",
+      "url": "https://www.ontario.ca/laws/docs/90p13_e.doc",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [],
+      "authority": "City of Toronto, Toronto Municipal Code",
+      "citation": "Toronto Municipal Code Chapter 813, Trees, Article III Private Tree Protection, § 813-12 Permit required",
+      "evaluated_by_us": "no",
+      "excerpt": "No person shall injure, destroy or remove or permit the injury, destruction or removal of any tree, including a multi-stem tree having at least one stem that has a diameter measurement of … 30 centimetres or more measured at 1.4 metres above ground level in accordance with this article, unless authorized by permit to do so.",
+      "explanation": "Toronto requires a permit to injure, destroy or remove a private tree with a trunk 30 centimetres or more across, measured 1.4 metres above the ground. A protected tree near the proposed building can reduce what can be built or add cost. MaxBLD does not evaluate trees on or near the lot.",
+      "id": "EXT-risk-1",
+      "kind": "risk_reference",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        },
+        {
+          "aspect": "landscaping",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "aec136615088569aed4ddd3d254f65be9b2103aa1232b4105117d91015367880",
+      "title": "Private tree protection",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_813.pdf",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [
+        {
+          "citation": "National Building Code of Canada 2020, Volume 2, Division B, Subsections 9.10.14 and 9.10.15 (NRC, second printing 2025; not quoted: NRC prohibits commercial reproduction)",
+          "source_sha256": "deb402c0594948f43d5a71a2a55b33bc0abee0101378534064aae32e2ba2047a",
+          "url": "https://nrc-publications.canada.ca/eng/view/ft/?id=515340b5-f4e0-4798-be69-692e4ec423e8&dp=2&dsl=en"
+        }
+      ],
+      "authority": "Province of Ontario, Building Code Act, 1992",
+      "citation": "O. Reg. 163/24 (Building Code), s. 1, adopting the National Building Code of Canada 2020 as amended by the Ontario Amendments; NBC 2020 Division B, Subsection 9.10.14 Spatial Separation Between Buildings and Subsection 9.10.15 Spatial Separation Between Houses (Part 3 buildings: Subsection 3.2.3)",
+      "evaluated_by_us": "no",
+      "excerpt": "The code issued by the Canadian Commission on Building and Fire Codes, part of National Research Council Canada, known as CCBFC NRCC-CONST-56435E, “National Building Code of Canada 2020”, (First Printing), as amended by the document entitled “Ontario Amendments to the National Building Code of Canada 2020”, dated October 1, 2026 and issued by the Ministry of Municipal Affairs and Housing, are together adopted as the building code.",
+      "explanation": "The building code limits windows and other openings, and sets fire-resistance requirements, for walls close to a property line or to another building on the same lot (spatial separation and limiting distance). A wall placed where zoning allows can still need fewer windows or fire-rated construction. MaxBLD does not evaluate the building code.",
+      "id": "EXT-risk-2",
+      "kind": "risk_reference",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "6b8501a4edc95f89c06345390fc54023f0590efa1462374d6b337456a5e599e5",
+      "title": "Ontario Building Code: spatial separation and limiting distance",
+      "url": "https://www.ontario.ca/laws/docs/240163_e.doc",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [
+        {
+          "citation": "O. Reg. 41/24 Prohibited Activities, Exemptions and Permits, s. 2 (valley limits: stable top of bank plus 15 metres; within 30 metres of a wetland) and s. 4 (maps of regulated areas)",
+          "source_sha256": "4cc37910ccc09776f6b5c066a6b821dc84df91f405dcdbbdf460adcd5b0633c2",
+          "url": "https://www.ontario.ca/laws/docs/240041_e.doc"
+        }
+      ],
+      "authority": "Province of Ontario, Conservation Authorities Act; Toronto and Region Conservation Authority (TRCA)",
+      "citation": "Conservation Authorities Act, R.S.O. 1990, c. C.27, s. 28(1) (prohibited activities) and s. 28.1(1) (permits); O. Reg. 41/24 Prohibited Activities, Exemptions and Permits, ss. 2 and 4",
+      "evaluated_by_us": "no",
+      "excerpt": "No person shall carry on the following activities, or permit another person to carry on the following activities, in the area of jurisdiction of an authority: … 2. Development activities in areas that are within the authority’s area of jurisdiction and are, i. hazardous lands, ii. wetlands, iii. river or stream valleys the limits of which shall be determined in accordance with the regulations,",
+      "explanation": "The Toronto and Region Conservation Authority (TRCA), whose area includes the City of Toronto, requires a permit before development in or near river and stream valleys, wetlands, the Lake Ontario shoreline and other land at risk of flooding or erosion. A regulated area can limit or prevent building on part of a lot. MaxBLD does not evaluate TRCA regulated areas; its ravine setback is a model assumption, not this regulation.",
+      "id": "EXT-risk-3",
+      "kind": "risk_reference",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        },
+        {
+          "aspect": "lot",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "ce9b1a43025bb81075f23090b0dbc245fe5dc08a77642f935656f23c42c21ebd",
+      "title": "TRCA regulated areas",
+      "url": "https://www.ontario.ca/laws/docs/90c27_e.doc",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [],
+      "authority": "Province of Ontario, Ontario Heritage Act; City of Toronto",
+      "citation": "Ontario Heritage Act, R.S.O. 1990, c. O.18, s. 33(1) (property designated under Part IV) and s. 42(1) (property in a heritage conservation district under Part V)",
+      "evaluated_by_us": "yes:61",
+      "excerpt": "No owner of property situated in a heritage conservation district that has been designated by a municipality under this Part shall do any of the following, unless the owner obtains a permit from the municipality to do so: … 2. Erect any building or structure on the property or permit the erection of such a building or structure. … 4. Demolish or remove a building or structure on the property or permit the demolition or removal of a building or structure on the property.",
+      "explanation": "A property designated individually, or located in a heritage conservation district, needs City consent or a heritage permit to alter, demolish or build. MaxBLD flags whether a lot is designated, but does not evaluate whether a heritage permit would be granted or what it would allow.",
+      "id": "EXT-risk-4",
+      "kind": "risk_reference",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        },
+        {
+          "aspect": "use_permission",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "9a8c668a9aa69aebbfec2801803732bad3280a7f907bd78b641241c3abfb0c3e",
+      "title": "Heritage designation",
+      "url": "https://www.ontario.ca/laws/docs/90o18_e.doc",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    },
+    {
+      "additional_sources": [],
+      "authority": "City of Toronto, Toronto Municipal Code",
+      "citation": "Toronto Municipal Code Chapter 658, Ravine and Natural Feature Protection, § 658-2 Permit required for prohibited activities",
+      "evaluated_by_us": "yes:59",
+      "excerpt": "A. No person shall injure, destroy, remove or permit the injury, destruction or removal of any tree on any land in a protected area, unless authorized by permit to do so. … B. No person shall place or dump fill or refuse or alter the grade of land or permit the placing or dumping of fill or refuse or alteration of grade on any land in a protected area unless authorized by permit to do so.",
+      "explanation": "In a ravine and natural feature protection area, Toronto requires a permit to remove or injure trees, place fill or change the grade of the land. MaxBLD flags whether a lot is in a protection area and applies a ravine setback as a model assumption, but does not evaluate whether a permit would be granted.",
+      "id": "EXT-risk-5",
+      "kind": "risk_reference",
+      "precedence": "none",
+      "provincial_units": [],
+      "risk_feeds": [
+        {
+          "aspect": "envelope",
+          "structure": "any"
+        },
+        {
+          "aspect": "landscaping",
+          "structure": "any"
+        }
+      ],
+      "source_sha256": "4f9e6567633b7b5c3860028d5699a88f82b247b297ee91ae056798d5cbe468b4",
+      "title": "Ravine and natural feature protection",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_658.pdf",
+      "verification_status": "verified_primary",
+      "verified_on": "2026-10-07"
+    }
+  ],
+  "schema_version": "external-v1"
+}
