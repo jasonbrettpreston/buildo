@@ -139,7 +139,7 @@ No WF3 is opened for these (E1 is the approved carve-out, M-42; F-1 is an open o
 - **R-6:** carried table questions: KFM-4, -5, -6, -12, -13; R1; the "NULL, don't guess" fallback; the RS/RT/RM corner rule (5.10.30.20); 10.5.80.10(4)–(7); 10.5.40.71. (KFM-14 is settled: STAND_SET is a selector, not metres.)
 - **R-7:** false-negative rate of the definitions matcher (S4's numbering-sequence check now bounds it).
 - ~~R-8~~ RESOLVED (Explore map): Appendix E ids run H1–H28; its heading says H1–H18 and is fixed at S13.
-- **R-9:** primary text of Planning Act s.16(3) / s.35.1 and O. Reg. 299/19 as amended (e-Laws JS-rendered; CanLII 403).
+- ~~**R-9:** primary text of Planning Act s.16(3) / s.35.1 and O. Reg. 299/19 as amended (e-Laws JS-rendered; CanLII 403).~~ ANSWERED 2026-10-07 (S12b): primary text read from the e-Laws Word downloads; O. Reg. 462/24 recorded as prevailing now (Spec 69 M-55).
 - **R-10:** 648-2025 in force or under OLT appeal; Diagrams 1/2 parcels; 600.60.20 vs 800.50(181).
 - **R-11:** which former by-law governs each unzoned parcel (candidate: City GIS "Not Part of This By-law" layer).
 - **R-12:** risk-row citations (OBC regulation number, TRCA regulation, Ch.813).
