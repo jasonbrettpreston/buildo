@@ -1,0 +1,118 @@
+{
+  "$comment": "The ONLY hand-authored input of scripts/analysis/report-fields.mjs (generator-design.md §2 G5). Every entry is validated both ways by the generator: each surface/producer/file/function/const it names must exist in code, and each key of `layer2` must match at least one chain input and each target must be a vocab.json dsl_target. SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md (home — PROVISIONAL), docs/specs/01-pipeline/69_mcbylaw_policy.md M-69.",
+  "version": 1,
+  "outputs": {
+    "markdown": "docs/reference/maxbld-report-field-inventory.md",
+    "json": "docs/reference/maxbld-report-field-inventory.json"
+  },
+  "max_call_depth": 4,
+  "scope_params": ["scopeWhere", "full"],
+  "surfaces": [
+    {
+      "ref": "S-001",
+      "id": "mobile_parcel_detail",
+      "descriptor": "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json",
+      "screen": "mobile/app/(app)/parcel-tool/[parcelId].tsx",
+      "hook_result": "data",
+      "skip_components": ["CostCard", "Headline"],
+      "raw_paths": ["match.", "parcel.neighbourhood.coaProjects"],
+      "import_alias": { "@/": "mobile/src/" },
+      "cost_menu": {
+        "producer": "cost",
+        "file": "mobile/src/lib/parcelCostFormat.ts",
+        "order": "COST_LINE_ORDER",
+        "labels": "COST_LINE_LABELS",
+        "per_sqm_var": "isPerSqm",
+        "card": "CostCard",
+        "basis_helper": "maxBuildBasisLabel",
+        "basis_line": "max_build"
+      },
+      "consumer": {
+        "file": "src/lib/parcels/consumer-lookup.ts",
+        "fn": "assembleConsumerPayload",
+        "headline": "CONSUMER_HEADLINE_COLS",
+        "scalars_file": "src/lib/admin/parcel-lookup.ts",
+        "scalars": "T1_COST_SCALAR_COLS",
+        "comparable": "CONSUMER_COMPARABLE_FIELDS"
+      }
+    },
+    {
+      "ref": "S-072",
+      "id": "mobile_tracked_lots",
+      "descriptor": "scripts/surfaces/parcel_product/F17/surfaces/mobile_tracked_lots.descriptor.json",
+      "contract_descriptor": "scripts/surfaces/parcel_product/F17/contracts/contract_parcels_tracked.descriptor.json",
+      "screen": "mobile/src/components/parcel/TrackedLotRow.tsx",
+      "element_root": { "name": "lot", "path": "lots[]" },
+      "projection": { "file": "mobile/src/lib/trackedLots.ts", "type": "TrackedLot" }
+    }
+  ],
+  "step_modules": {
+    "enrich_parcels": "scripts/lib/compute/enrich-parcels.js",
+    "compute_parcel_cost_estimates": "scripts/lib/compute/compute-parcel-cost-estimates.js"
+  },
+  "producers": [
+    { "id": "maxbuild", "step": "enrich_parcels", "kind": "sql", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildMaxBuildSql",
+      "witness_args": { "scopeWhere": "TRUE", "full": true, "storeyHeight": 3, "acc": {}, "mislinkTol": 0.05, "minDim": 3 } },
+    { "id": "existing", "step": "enrich_parcels", "kind": "sql", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildExistingStructureSql",
+      "witness_args": { "scopeWhere": "TRUE", "full": true } },
+    { "id": "comps", "step": "enrich_parcels", "kind": "sql", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildComparableBuildsUpdateSql", "kind_default": "empirical",
+      "temp_inputs": [{ "builder": "buildCompCandidatesSql", "witness_args": { "asOfDateParamIndex": 1, "windowYears": 5 } }],
+      "witness_args": { "comp": { "lotTol": 0.2, "knnOverfetch": 50, "topN": 10, "overCaptureClamp": 1.1, "fsiMinPlausible": 0.05, "fsiMaxPlausible": 8 } } },
+    { "id": "optconfig", "step": "enrich_parcels", "kind": "js_array", "file": "scripts/lib/compute/enrich-parcels.js", "fn": "computeOptConfigRow",
+      "columns_const": "OPTCFG_WRITE_COLS",
+      "row": { "param": "r", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildOptConfigSelectSql", "witness_args": { "full": true } } },
+    { "id": "cost", "step": "compute_parcel_cost_estimates", "kind": "js_object", "file": "scripts/lib/parcel-cost.js", "fn": "buildParcelCostMenu",
+      "object": "scalars", "menu_object": "menu", "entry_local": "entry",
+      "catalogue": { "var": "line", "const": "PARCEL_COST_LINES", "key": "id", "db_join": { "table": "parcel_cost_lines", "key": "id" } },
+      "db_params": { "rates": { "table": "archetype_cost_rates", "key_field": "archetype" } },
+      "row": { "param": "parcel", "file": "scripts/lib/compute/compute-parcel-cost-estimates.js", "builder": "buildSourceSql", "witness_args": [100] } }
+  ],
+  "witness_traces": {
+    "enrich_parcels": ["docs/reports/witness/enrich_parcels/post/none_incremental.trace.json", "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json"],
+    "compute_parcel_cost_estimates": ["docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json", "docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json"]
+  },
+  "db_constants": [
+    { "table": "archetype_cost_rates", "migration": "migrations/205_archetype_cost_rates.sql", "key": "archetype", "values": ["cost_per_sqm", "cost_adjustment_factor", "escalation_index_base"] },
+    { "table": "parcel_cost_lines", "migration": "migrations/248_parcel_cost_lines.sql", "key": "id", "values": ["archetype", "base_confidence", "fit_permitted_values"] }
+  ],
+  "transparent_helpers": ["round2", "round3", "num", "numOrNull", "N", "Number"],
+  "empirical_tables": ["building_footprints", "coa_applications", "comp_cand", "neighbourhood_build_norms", "neighbourhood_storey_norms", "neighbourhoods", "parcel_buildings", "permits"],
+  "layer2": {
+    "parcels.bylaw_max_fsi": ["principal:fsi"],
+    "parcels.bylaw_max_coverage_pct": ["principal:lot_coverage_pct"],
+    "parcels.bylaw_max_height_m": ["principal:height_m"],
+    "parcels.bylaw_max_stories": ["principal:height_storeys"],
+    "node:front_setback": ["principal:front_setback_m"],
+    "node:rear_setback": ["principal:rear_setback_m"],
+    "node:side_setback": ["principal:side_setback_m"],
+    "node:flankage_setback": ["principal:side_setback_street_m"],
+    "node:length_m": ["principal:building_depth_m", "principal:building_length_m"],
+    "node:coverage_cap": ["principal:lot_coverage_pct"],
+    "lv:max_build_lot_min_sqm": ["principal:required_lot_area_m2"],
+    "lv:max_build_min_dimension_m": ["principal:required_lot_frontage_m"],
+    "lv:storey_height_m": ["principal:height_m", "principal:height_storeys"],
+    "lv:garden_suite_max_gfa_sqm": ["suite:gfa_m2"],
+    "lv:garden_suite_min_lot_sqm": ["suite:required_lot_area_m2"],
+    "lv:garden_suite_min_rear_yard_m": ["suite:separation_m"],
+    "lv:garden_suite_storeys": ["suite:height_storeys"],
+    "lv:laneway_suite_max_gfa_sqm": ["suite:gfa_m2"],
+    "lv:laneway_suite_min_lot_sqm": ["suite:required_lot_area_m2"],
+    "lv:laneway_suite_min_rear_yard_m": ["suite:lane_setback_m"],
+    "lv:laneway_suite_storeys": ["suite:height_storeys"],
+    "lv:min_soft_landscaping_pct": ["suite:rear_soft_landscaping_pct"],
+    "lv:garage_max_gfa_sqm": ["ancillary:gfa_m2"],
+    "lv:garage_min_lot_sqm": ["ancillary:required_lot_area_m2"],
+    "lv:accessory_max_coverage_pct": ["ancillary:lot_coverage_pct"],
+    "lv:car_footprint_sqm": ["ancillary:parking_space_length_m", "ancillary:parking_space_width_m"],
+    "lv:garage_min_footprint_sqm": ["ancillary:parking_space_length_m", "ancillary:parking_space_width_m"]
+  },
+  "twins": [
+    { "aor": "max_buildable_gfa_sqm", "coa": "max_newbuild_coa_gfa_sqm", "note": "operator rows 1 ↔ 1a" },
+    { "aor": "opt_aor_gfa_sqm", "coa": "opt_coa_gfa_sqm", "note": "operator rows 2 ↔ 2a" },
+    { "aor": "max_build_stories", "coa": "max_build_stories_aggressive", "note": "operator rows 3 ↔ 3a" },
+    { "aor": "opt_aor_storeys", "coa": "opt_coa_storeys", "note": "operator rows 3 ↔ 3b" },
+    { "aor": "max_build_fsi", "coa": "coa_fsi", "note": "operator rows 4 ↔ 4a" },
+    { "aor": "menu:max_build", "coa": "menu:coa_build", "note": "operator rows C1 ↔ C2" },
+    { "aor": "menu:solar_max", "coa": "menu:solar_coa", "note": "operator rows C3 ↔ C4" }
+  ]
+}
