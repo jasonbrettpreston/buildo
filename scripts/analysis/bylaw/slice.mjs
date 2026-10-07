@@ -28,14 +28,23 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { normalizeWithMap, pageStructure, rawToNorm } from './html.mjs';
 import { decodePage, parseToc, sha256 } from './snapshot.mjs';
-import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers } from './text.mjs';
+import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, wordValue } from './text.mjs';
 
 export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, UNIT_TABLE } from './text.mjs';
 
-export const SLICER_VERSION = 'slice-v2';
+export const SLICER_VERSION = 'slice-v3';
 
 /** Sections whose numbered divisions are defined terms (term = the title cell): vocab `slicer.definition_sections`. */
 export const DEFINITION_SECTIONS = Object.freeze([...createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer.definition_sections]);
+
+/**
+ * Clause-list group headings (vocab `slicer.clause_groups`): a clause-table row with an empty marker cell whose text
+ * starts with `<label>:` opens a group; its items nest under it and its path segment is `[<key>]`. A Ch.900 exception
+ * holds two lists under one number, "Site Specific Provisions:" and "Prevailing By-laws and Prevailing Sections:",
+ * each restarting at (A) — `900.3.10(28)#(28)[SSP](A)` vs `#(28)[PBS](A)` (Spec 69 M-15 dated note 2026-10-07).
+ */
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const CLAUSE_GROUPS = Object.freeze(createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer.clause_groups.map((g) => Object.freeze({ ...g, re: new RegExp(`^${escapeRe(g.label)}\\s*:`), tail: new RegExp(`(?:^|[.;:]\\s+)${escapeRe(g.label).replace(/s$/, 's?')}\\s*:?\\s*$`) })));
 
 /**
  * Captured enacting by-laws (Spec 69 M-36) whose amendments are sliced into rows now (operator ruling R5,
@@ -72,7 +81,16 @@ function missingBetween(a, b) {
 }
 
 /** Does the raw page text between two offsets hold `(sym)` as a division (not glued to an id)? */
-const rawHolds = (html, from, to, sym) => new RegExp(`(?<![\\w.)\\]])\\(${sym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)(?![\\w(])`).test(html.slice(from, to).replace(/<[^>]+>/g, ' '));
+// A numeral restating the number word before it ("fifteen (15) of which", 900.2.10(14)) is not a division.
+const rawHolds = (html, from, to, sym) => {
+  const t = html.slice(from, to).replace(/<[^>]+>/g, ' ');
+  const re = new RegExp(`(?<![\\w.)\\]])\\(${sym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)(?![\\w(])`, 'g');
+  for (const m of t.matchAll(re)) {
+    const word = /([A-Za-z]+(?:-[A-Za-z]+)?)\s*$/.exec(t.slice(Math.max(0, m.index - 30), m.index));
+    if (!(word && /^\d+$/.test(sym) && wordValue(word[1]) === Number(sym))) return true;
+  }
+  return false;
+};
 
 /**
  * Slice one section page from its structure. Input {key, section, file, html, normalized, status?, ruling?,
@@ -126,6 +144,7 @@ export function slicePage(input) {
   let included = false;
   let owner = span('header_toc');
   let stack = []; // open clause nodes {node, depth}
+  let tailGroup = null; // a group heading left at the end of the previous item's cell: {depth, group, cell}
   const ownerAtTable = new Map(); // table id -> owner at open
   const dataTables = new Map(); // table id -> {k, owner, header: [], rowIdx}
   const tableCount = new Map(); // owner node idx -> data tables under it
@@ -181,7 +200,18 @@ export function slicePage(input) {
       const mt = markerOf(c0);
       if (mt) {
         stack = stack.filter((s) => s.depth < r.depth);
-        const parent = stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle);
+        let parent = stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle);
+        // A group heading the City left at the END of the previous item's cell ("… for a detached house. Prevailing
+        // By-laws and Prevailing Section:") opens that group for the list restarting at (A) on the next row at the
+        // same depth. The heading text stays in its cell (disclosed group_heading_in_cell); the group owns no text.
+        const tg = tailGroup;
+        tailGroup = null;
+        if (tg && tg.depth === r.depth && mt[1] === 'A' && parent === tg.cell.parent && parent.origin === 'group' && parent.groupKey !== tg.group.key) {
+          const g = mkNode({ anchors: [], article, depth: parent.depth, groupKey: tg.group.key, origin: 'group', parent: parent.parent, path: null, rawStart: r.start, symbol: null, tailOf: tg.cell });
+          const at = stack.find((s) => s.node === parent).depth;
+          stack = [...stack.filter((s) => s.node !== parent), { depth: at, node: g }];
+          parent = g;
+        }
         // "(I)" where the lower-case Roman (i) is due (230.5.1.10(4)(E), 2.1.1(4)(D)): read as (i), disclosed.
         const due = parent.origin === 'root' ? 'N' : { N: 'U', U: 'r', r: 'l' }[symClass(parent.symbol)];
         const typo = mt[1] === 'I' && due === 'r';
@@ -190,9 +220,22 @@ export function slicePage(input) {
         const node = mkNode({ anchors: c0.anchors, article, depth: r.depth, origin: 'cell', parent, rawStart: r.start, symbol: sym, title: r.cells[1] ? cellText(r.cells[1]) : '', typo, variantOf: sibling || null });
         stack.push({ depth: r.depth, node });
         setOwner(r.start, node);
+        const tail = node.title ? CLAUSE_GROUPS.find((g) => g.tail.test(node.title)) : null;
+        if (tail) tailGroup = { cell: node, depth: r.depth, group: tail };
       } else {
-        stack = stack.filter((s) => s.depth <= r.depth);
-        setOwner(r.start, stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle));
+        tailGroup = null;
+        const c1 = !cellText(c0) && r.cells[1] ? cellText(r.cells[1]) : '';
+        const grp = CLAUSE_GROUPS.find((g) => g.re.test(c1)) || null;
+        // A continuation row keeps an open group at its depth (the row holding the group's nested list); a group row
+        // closes the previous group.
+        stack = stack.filter((s) => s.depth <= r.depth + (grp ? 0 : 0.5));
+        const owner0 = stack.length ? stack[stack.length - 1].node : rootOf(article, articleTitle);
+        if (grp && owner0.origin === 'cell') {
+          // The group sits between its row (depth d) and its items (depth d+1); the next group or division at d closes it.
+          const node = mkNode({ anchors: [], article, depth: r.depth, groupKey: grp.key, origin: 'group', parent: owner0, path: null, rawStart: r.start, symbol: null });
+          stack.push({ depth: r.depth + 0.5, node });
+          setOwner(r.start, node);
+        } else setOwner(r.start, owner0);
       }
       continue;
     }
@@ -283,11 +326,13 @@ export function slicePage(input) {
     if (node.origin === 'root') return '';
     const base = pathOf(node.parent);
     if (node.origin === 'table_cell') return `${base}${node.tableKey}`;
+    if (node.origin === 'group') return `${base}[${node.groupKey}]`;
     return `${base}(${node.symbol})${node.variantTag || ''}`;
   };
   const numbersOf = (s) => (s.replace(/\[[^\]]*\]/g, '').match(/\d+(?:\.\d+)?/g) || []).join(',');
   const defects = []; // {node, kind, context, code?}
   for (const node of nodes) if (node.typo) defects.push({ context: '(I) read as (i)', kind: 'marker_typo', node });
+  for (const node of nodes) if (node.tailOf) defects.push({ context: `[${node.groupKey}] heading inside the previous item's cell`, kind: 'group_heading_in_cell', node: node.tailOf });
   for (const node of nodes) {
     if (!node.variantOf) continue;
     const t = subtreeText(node);
@@ -298,7 +343,7 @@ export function slicePage(input) {
     node.variantStatus = status;
     node.variantTag = `~${status || 'unstatused'}${same ? same + 1 : ''}`;
     if (!status) {
-      if (numbersOf(t) !== numbersOf(base)) problems.push(`unstatused_variant: ${key} ${node.article} (${node.symbol}) repeats with different numbers and no status`);
+      if (numbersOf(t) !== numbersOf(base)) problems.push(`unstatused_variant: ${key} ${node.article}${pathOf(node.variantOf)} repeats with different numbers and no status`);
       else defects.push({ context: t.slice(0, 80), kind: 'variant_duplicate', node });
     }
   }
@@ -342,7 +387,10 @@ export function slicePage(input) {
         const prev = i ? kids[i - 1] : null;
         const missing = prev ? missingBetween(prev.symbol, kids[i].symbol) : symClass(kids[i].symbol) === 'N' ? (DEFINITION_SECTIONS.includes(section) ? [] : missingBetween('0', kids[i].symbol)) : missingBetween(null, kids[i].symbol);
         if (!missing.length) continue;
-        const from = prev && rawStartOf(prev) !== null ? rawStartOf(prev) : parent.rawStart ?? st.contentStart;
+        // An article's first division: the window opens at the article's own heading (not the page's content start,
+        // which would let an earlier article's "(1)" pass for this article's missing (1): 900.2.10 starts at (2)).
+        const articleAt = parent.origin === 'root' ? articleRaw.find((a) => a.article === parent.article)?.start : undefined;
+        const from = prev && rawStartOf(prev) !== null ? rawStartOf(prev) : parent.rawStart ?? articleAt ?? st.contentStart;
         const to = rawStartOf(kids[i]) ?? html.length;
         for (const s of missing) {
           const gap = { article: parent.article, key, missing: s, parent: parent.path, after: prev ? prev.symbol : null, next: kids[i].symbol };

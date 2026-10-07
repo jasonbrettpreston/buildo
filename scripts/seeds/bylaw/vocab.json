@@ -322,6 +322,10 @@
   "slicer": {
     "$comment": "Moved from scripts/analysis/bylaw/slice.mjs (S4 proposed patch, folded at S5). slice.mjs reads these; slice.lock.json is unchanged by the move.",
     "definition_sections": ["800.50"],
+    "clause_groups": [
+      { "key": "SSP", "label": "Site Specific Provisions" },
+      { "key": "PBS", "label": "Prevailing By-laws and Prevailing Sections" }
+    ],
     "allowed_extra_chars": "çé²§°½×≤≥",
     "encoding_dash": "\u0096",
     "unit_table": [["square metres","m2"], ["square metre","m2"], ["sq. m","m2"], ["m²","m2"], ["m2","m2"], ["metres","m"], ["metre","m"], ["m","m"], ["per cent","pct"], ["percent","pct"], ["%","pct"], ["storeys","storeys"], ["storey","storeys"], ["dwelling units","units"], ["dwelling unit","units"]],
@@ -350,7 +354,9 @@
       { "kind": "date", "pattern": "\\b\\d{4}-\\d{2}-\\d{2}\\b", "flags": "g" },
       { "kind": "label_code", "pattern": "\\b[A-Za-z]{1,3}-?\\d+(?:\\.\\d+)?\\b", "flags": "g" },
       { "kind": "label_code", "pattern": "\\b\\d+[A-Za-z]+\\b|\\b[A-Z]\\d+\\/\\d+[A-Z]*\\b", "flags": "g" },
-      { "kind": "map_number", "pattern": "\\b(?:Diagrams?|Schedules?|Maps?|Figures?|Tables?|Appendix|Appendices|Sheets?)\\s+\\d+(?:\\s*(?:,|and|to|or)\\s*\\d+)*", "flags": "g" }
+      { "kind": "map_number", "pattern": "\\b(?:Diagrams?|Schedules?|Maps?|Figures?|Tables?|Appendix|Appendices|Sheets?)\\s+\\d+(?:\\s*(?:,|and|to|or)\\s*\\d+)*", "flags": "g" },
+      { "kind": "lot_number", "pattern": "\\bLots\\s+\\d{1,4}[A-Z]?(?:\\s*(?:,|and|to|&)\\s*\\d{1,4}[A-Z]?)+", "flags": "g" },
+      { "kind": "bylaw_number", "pattern": "\\bby-laws\\s+\\d{3,5}(?:\\s*,\\s*(?:and\\s+)?\\d{3,5})+", "flags": "gi" }
     ]
   },
   "value_keyword": ["none", "unlimited", "unregulated"]

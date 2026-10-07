@@ -3,7 +3,7 @@
 //            shas), §10 (determinism: LF, sorted keys); docs/specs/01-pipeline/69_mcbylaw_policy.md M-36, M-37, M-47,
 //            M-57 (operator rulings R1–R5 + page set, 2026-10-07); docs/reports/mcbylaw-phase1-plan.md S4 (rework)
 //
-// S4 locks over the COMMITTED snapshot (adoption-2) and enacting captures, offline: G-TEXT passes, the
+// S4 locks over the COMMITTED snapshot (adoption-4) and enacting captures, offline: G-TEXT (Ch.900 repeats pinned), the
 // generated slice.lock.json regenerates byte-identically, and each audit class the rework closes (A–F,
 // .cursor/mcbylaw/completeness-audit/REPORT.md) is pinned on the real text.
 import { describe, expect, it } from 'vitest';
@@ -24,17 +24,33 @@ const slice: Json = sliced.slice;
 const unit = (id: string): Json => slice.units.find((u: Json) => u.unit_id === id) || {};
 const row = (id: string): Json => slice.rows.find((r: Json) => r.regulation_id === id) || {};
 
-describe('G-TEXT on the committed snapshot (adoption-3)', () => {
-  it('passes with no violations', () => {
+// The 26 City source repeats on the Ch.900 exception pages pinned by Q-K7a (adoption-4): a clause letter repeated
+// under one exception with different numbers and no status (e.g. 900.4.10(26) SSP "(B) A semi-detached house …" then
+// "(B) A detached house …"; 900.3.10(664) (A)(xiv)(a) 10.3 m then 10.0 m [By-law 78-2017]). R4 (Spec 68 §9 G-TEXT)
+// FAILS them and no ruling covers them yet (open question Q-K7b): G-TEXT stays FAIL on exactly this list; anything
+// else, or one of these disappearing, fails the test. The Phase 1 pages carry no violation.
+const CH900_SOURCE_REPEATS = [
+  'ch900_2 900.2.10(22)[SSP](A)', 'ch900_2 900.2.10(660)[SSP](B)(ii)',
+  'ch900_3 900.3.10(284)[SSP](D)', 'ch900_3 900.3.10(284)[SSP](E)', 'ch900_3 900.3.10(327)[SSP](F)', 'ch900_3 900.3.10(342)[SSP](B)',
+  'ch900_3 900.3.10(454)[SSP](E)', 'ch900_3 900.3.10(466)[SSP](D)', 'ch900_3 900.3.10(664)[SSP](A)(xiv)(a)', 'ch900_3 900.3.10(664)[SSP](A)(xiv)(b)',
+  'ch900_3 900.3.10(682)[SSP](D)', 'ch900_3 900.3.10(682)[SSP](E)', 'ch900_3 900.3.10(832)[SSP](E)', 'ch900_3 900.3.10(837)[SSP](E)',
+  'ch900_3 900.3.10(960)[SSP](C)', 'ch900_3 900.3.10(1033)[SSP](D)', 'ch900_3 900.3.10(1227)[SSP](D)', 'ch900_3 900.3.10(1245)[SSP](B)(ii)',
+  'ch900_4 900.4.10(26)[SSP](B)', 'ch900_4 900.4.10(133)[SSP](D)', 'ch900_4 900.4.10(141)[SSP](D)', 'ch900_4 900.4.10(187)[SSP](C)',
+  'ch900_4 900.4.10(187)[SSP](D)', 'ch900_4 900.4.10(209)[SSP](G)(ii)', 'ch900_5 900.5.10(345)[SSP](A)(ii)', 'ch900_6 900.6.10(268)[SSP](F)(ii)',
+];
+const EXC_PAGES = /^ch900_[2-6]$/;
+
+describe('G-TEXT on the committed snapshot (adoption-4)', () => {
+  it('fails on exactly the 26 Ch.900 source repeats awaiting a ruling (Q-K7b) and nothing else', () => {
     const r = ST.checkText({ seeds: SEEDS });
-    expect(r.violations).toEqual([]);
-    expect(r.pass).toBe(true);
+    expect(r.violations).toEqual(CH900_SOURCE_REPEATS.map((x) => `unstatused_variant: ${x} repeats with different numbers and no status`));
+    expect(r.pass).toBe(false); // never a silent pass: the gate reports the repeats
     expect(r.checked).toBeGreaterThan(1200);
   });
   it('slice.lock.json is generated: it equals an in-memory regeneration, LF, sorted keys', () => {
     const text = fs.readFileSync(path.join(SEEDS, 'slice.lock.json'), 'utf8');
     const m = readJson('manifest.json');
-    expect(m.adoption_id).toBe('adoption-3'); // adoption-3 re-pins the page-set metadata edit of the S4 integration (same page bytes)
+    expect(m.adoption_id).toBe('adoption-4'); // adoption-4 adds the five Ch.900 exception pages (Q-K7a); the 59 earlier pages are byte-identical
     expect(text.includes('\r')).toBe(false);
     expect(text).toBe(SNAP.stableStringify(ST.buildSliceLock(slice, { adoption_id: m.adoption_id, normalizer_version: m.normalizer_version })));
   });
@@ -42,9 +58,9 @@ describe('G-TEXT on the committed snapshot (adoption-3)', () => {
     for (const [k, c] of Object.entries(slice.pages) as [string, Json][]) if (!k.startsWith('enacting:')) expect([k, c.cells_sliced]).toEqual([k, c.cells_html]);
     expect((Object.values(slice.pages) as Json[]).reduce((s: number, c: Json) => s + c.cells_html, 0)).toBeGreaterThan(3000);
   });
-  it('R3: no unproven gap; the proven gaps outside the sparse 800.50 numbering are the 7 true source gaps', () => {
+  it('R3: no unproven gap; the proven gaps outside the sparse 800.50 and Ch.900 exception numbering are the 7 true source gaps', () => {
     expect(slice.numbering.unproven).toEqual([]);
-    const g = slice.numbering.gaps.filter((x: Json) => x.key !== 'ch800_50').map((x: Json) => `${x.article}(${x.missing})`).sort();
+    const g = slice.numbering.gaps.filter((x: Json) => x.key !== 'ch800_50' && !EXC_PAGES.test(x.key)).map((x: Json) => `${x.article}(${x.missing})`).sort();
     expect(g).toEqual(['10.10.20.100(7)', '10.20.20.100(7)', '10.40.20.100(7)', '10.60.20.100(7)', '150.10.20.1(3)', '230.5.10.1(2)', '5.10.40.1(5)']);
   });
 });
@@ -101,8 +117,10 @@ describe('the completeness-audit classes, closed on the real text', () => {
     for (const b of five) expect(caps[b].pdf_sha256).toMatch(/^[0-9a-f]{64}$/);
     const rows = slice.rows.filter((r: Json) => five.some((b) => r.page === `enacting:${b}`));
     expect(rows.length).toBeGreaterThan(0);
-    for (const r of rows) expect(r.section.startsWith('995.')).toBe(true); // overlay maps; no pinned regulation's text
-    expect(slice.rows.filter((r: Json) => (r.amended_by || []).some((a: Json) => five.includes(a.bylaw)))).toEqual([]);
+    // overlay maps, plus (since Q-K7a pinned Ch.900, adoption-4) the R exception amendments of 1018-2026 / 63-2024
+    for (const r of rows) expect([r.regulation_id, r.section.startsWith('995.') || r.section === '900.2']).toEqual([r.regulation_id, true]);
+    const amended = slice.rows.filter((r: Json) => (r.amended_by || []).some((a: Json) => five.includes(a.bylaw)));
+    expect(amended.map((r: Json) => [r.regulation_id, r.amended_by.map((a: Json) => a.bylaw)])).toEqual([['900.2.10(912)', ['63-2024']]]);
   });
   it('F — 600.10 and 600.50 are pinned RETIRED with closed reasons; Ch.500 is recorded empty once (universe page rule)', () => {
     const ps = readJson('page-set.json');
@@ -137,9 +155,9 @@ describe('one source for the slicer configuration: vocab.json `slicer` (Spec 69 
 });
 
 describe('extractors on the real text', () => {
-  it('anti-vacuity: every digit run and number word in every row is a literal or a declared exclusion', () => {
+  it('anti-vacuity: every digit run and number word in every row is a literal or a declared exclusion (Ch.900 exception rows: bylaw-ch900.infra pins their keying-time residue)', () => {
     expect(slice.rows.length).toBeGreaterThan(1200); // never vacuous
-    expect(slice.rows.flatMap((r: Json) => r.uncovered_numbers.map((u: Json) => `${r.regulation_id}: ${u.token} | ${u.context}`))).toEqual([]);
+    expect(slice.rows.filter((r: Json) => !EXC_PAGES.test(r.page)).flatMap((r: Json) => r.uncovered_numbers.map((u: Json) => `${r.regulation_id}: ${u.token} | ${u.context}`))).toEqual([]);
   });
   it('800.50: 203 defined terms, incl. (410) Lawfully Existing and (695) Residential Building', () => {
     expect(slice.pages.ch800_50.definitions).toBe(203);

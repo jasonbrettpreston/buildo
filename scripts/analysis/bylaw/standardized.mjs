@@ -26,7 +26,8 @@
 //   lock_stale                   the lock was generated for another adoption, normalizer or slicer version
 //   count_mismatch               a per-page count differs from the lock (either direction)
 // Disclosures (counted, never failures): source_defect (garbled_character, lead_in_without_items,
-// heading_not_in_toc, anchor_mismatch, variant_duplicate, division_repeat, marker_typo) and proven numbering gaps.
+// heading_not_in_toc, anchor_mismatch, variant_duplicate, division_repeat, marker_typo, group_heading_in_cell) and
+// proven numbering gaps.
 
 import fs from 'node:fs';
 import path from 'node:path';
