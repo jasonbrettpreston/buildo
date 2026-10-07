@@ -14,10 +14,21 @@
 //           AND ∃ `golden/<slug>/post/*.json` whose
 //           `summary.records_new + summary.records_updated > 0` (null ⇒ 0).
 //         · `cohort_declared` — `docs/reports/golden/<slug>/cohort.json`
-//           (`{contract_version:1, targets:[{table, capture, why}]}`) names the
-//           table, the named capture exists, and ITS counters are nonzero.
-//           REQUIRED for a multi-target step: step-level counters cannot
+//           (`{contract_version:1, targets:[{table, capture, why, count_path?}]}`)
+//           names the table, the named capture exists, and ITS counters are
+//           nonzero. REQUIRED for a multi-target step: step-level counters cannot
 //           attribute a write to one table among several.
+//           `count_path` (OPTIONAL; Spec 124 §5 row amending R-BA gate G(1), WF2
+//           link_massing nonzero-close): a TOP-LEVEL key of the named capture's
+//           `summary.records_meta` that counts writes to THAT table. When present
+//           the table closes iff the value is a JS number, finite and > 0 (no
+//           coercion), the key is declared in the descriptor's `emits[]` with
+//           `type:"int"`, it is not a step-level counter name
+//           (`records_total`/`records_new`/`records_updated`), and it has no `.`.
+//           Absent ⇒ the legacy step-level counters. The detail names the channel
+//           (`via count_path <key>=<n>` | `via summary counters`). Residual
+//           (declared): which emit belongs to which TABLE is not machine-bound —
+//           that binding is the reviewed `cohort.json` diff.
 //         · else RED. `outputs:"none"` is VACUOUS (not listed).
 //
 //   (2) FRESHNESS (`fresh` | `missing` | `mismatch`). `capture-step-golden.js#computeLibFingerprint`
@@ -83,6 +94,48 @@ export function summaryWriteCount(doc) {
   const n = Number(s.records_new);
   const u = Number(s.records_updated);
   return (Number.isFinite(n) ? n : 0) + (Number.isFinite(u) ? u : 0);
+}
+
+/** Step-level counter names: never a per-table `count_path` (fold F-6 — the false attribution must not return through it). */
+export const STEP_COUNTER_NAMES = ['records_total', 'records_new', 'records_updated'];
+
+/**
+ * The per-target `count_path` decision for ONE cohort target against ONE named capture. PURE.
+ * Returns `{ok: true, n}` or `{ok: false, reason}`. RED reasons distinguish `not emitted`
+ * (absent or null — unmeasured) from `emitted <n>` (measured, not > 0) — fold F-8.
+ *
+ * @param {object} descriptor  the step descriptor (`emits[]` is read)
+ * @param {{file: string, doc: object}} capture  the named post capture
+ * @param {unknown} countPath  the cohort target's `count_path`
+ */
+export function countPathDecision(descriptor, capture, countPath) {
+  if (typeof countPath !== 'string' || countPath === '') {
+    return { ok: false, reason: 'count_path must be a non-empty string' };
+  }
+  if (countPath.includes('.')) {
+    return { ok: false, reason: `count_path must be a top-level emits key (got "${countPath}")` };
+  }
+  if (STEP_COUNTER_NAMES.includes(countPath)) {
+    return { ok: false, reason: `count_path "${countPath}" is a step-level counter name, which cannot attribute a write to one table` };
+  }
+  const emits = descriptor && Array.isArray(descriptor.emits) ? descriptor.emits : [];
+  const emit = emits.find((e) => e && e.key === countPath) || null;
+  if (!emit || emit.type !== 'int') {
+    return { ok: false, reason: `count_path "${countPath}" is not declared in the descriptor's emits[] with type "int"` };
+  }
+  const file = capture && capture.file;
+  const meta = capture && capture.doc && capture.doc.summary && capture.doc.summary.records_meta;
+  const v = meta && typeof meta === 'object' && Object.prototype.hasOwnProperty.call(meta, countPath) ? meta[countPath] : undefined;
+  if (v === undefined || v === null) {
+    return { ok: false, reason: `count_path ${countPath} not emitted in ${file} (absent or null)` };
+  }
+  if (typeof v !== 'number' || !Number.isFinite(v)) {
+    return { ok: false, reason: `count_path ${countPath} in ${file} is not a finite JSON number (got ${typeof v})` };
+  }
+  if (v <= 0) {
+    return { ok: false, reason: `count_path ${countPath} emitted ${v} in ${file}` };
+  }
+  return { ok: true, n: v };
 }
 
 /** Distinct write tables in the descriptor's `outputs.writes[]` (order preserved). PURE. */
@@ -156,9 +209,16 @@ export function nonzeroDecision(descriptor, posts, cohort) {
       });
       continue;
     }
+    if (target.count_path !== undefined) {
+      const c = countPathDecision(descriptor, named, target.count_path);
+      states.push(c.ok
+        ? { table, decision: 'cohort_declared', detail: `cohort target "${table}" proved ${c.n} rows written in ${named.file} via count_path ${target.count_path}=${c.n}` }
+        : { table, decision: 'RED', detail: `cohort target "${table}" names capture "${target.capture}": ${c.reason}` });
+      continue;
+    }
     const n = summaryWriteCount(named.doc);
     if (n > 0) {
-      states.push({ table, decision: 'cohort_declared', detail: `cohort target "${table}" proved ${n} rows written in ${named.file}` });
+      states.push({ table, decision: 'cohort_declared', detail: `cohort target "${table}" proved ${n} rows written in ${named.file} via summary counters` });
     } else {
       states.push({ table, decision: 'RED', detail: `cohort target "${table}" names capture "${target.capture}" whose counters are 0` });
     }
@@ -460,6 +520,36 @@ export function selfTestCases() {
         { contract_version: 1, targets: [{ table: 'parcel_buildings', capture: 'b.json', why: 'w' }] },
       ).states.map((s) => s.decision),
       expect: { list: ['RED', 'cohort_declared'] },
+    },
+    // (5b) count_path > 0 and declared int -> cohort_declared; the step-level 50 is not what proves "parcels".
+    {
+      name: 'cohort count_path > 0 -> cohort_declared',
+      run: () => nonzeroDecision(
+        { ...desc(['parcels', 'parcel_buildings']), emits: [{ key: 'flagged', type: 'int', consumers: [] }] },
+        [{ file: 'h.json', doc: { summary: { records_new: 0, records_updated: 50, records_meta: { flagged: 25 } } } }],
+        { contract_version: 1, targets: [{ table: 'parcels', capture: 'h.json', count_path: 'flagged', why: 'w' }] },
+      ).states.map((s) => s.decision),
+      expect: { list: ['cohort_declared', 'RED'] },
+    },
+    // (5c) count_path emitted 0 while the step-level summary is 50 -> RED (the false attribution).
+    {
+      name: 'cohort count_path 0 with step counters 50 -> RED',
+      run: () => nonzeroDecision(
+        { ...desc(['parcels', 'parcel_buildings']), emits: [{ key: 'flagged', type: 'int', consumers: [] }] },
+        [{ file: 'h.json', doc: { summary: { records_new: 0, records_updated: 50, records_meta: { flagged: 0 } } } }],
+        { contract_version: 1, targets: [{ table: 'parcels', capture: 'h.json', count_path: 'flagged', why: 'w' }] },
+      ).states.map((s) => s.decision),
+      expect: { list: ['RED', 'RED'] },
+    },
+    // (5d) count_path not declared in emits[] -> RED.
+    {
+      name: 'cohort count_path undeclared -> RED',
+      run: () => nonzeroDecision(
+        desc(['parcels', 'parcel_buildings']),
+        [{ file: 'h.json', doc: { summary: { records_new: 0, records_updated: 50, records_meta: { flagged: 25 } } } }],
+        { contract_version: 1, targets: [{ table: 'parcels', capture: 'h.json', count_path: 'flagged', why: 'w' }] },
+      ).states.map((s) => s.decision),
+      expect: { list: ['RED', 'RED'] },
     },
     // (6) outputs:"none" -> vacuous, not listed.
     {

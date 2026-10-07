@@ -494,6 +494,14 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 - 3 differences, one per capture (`sources-full`, `sources-full-forced-1`, `standalone`), are a new `table_state[1]` entry (absent → table `parcels`, columns `id`, `massing_enriched_at`, 496,536 rows, hash c49e67df…). Cause: FLEET-2 O4 row 5, operator ruling fold 15 (ASSEMBLY 1.16 and 5.5 "link_massing"), gave this step a 4th write target. A parcel that lost a link is flagged with `UPDATE parcels SET massing_enriched_at = NULL` (`lost_link_flag_sql`, `scripts/lib/compute/link-massing.js:298-305`; descriptor writes[3], `scripts/link-massing.descriptor.json:263-293`) so enrich_parcels re-enriches just that parcel. The capture snapshots every declared write table, so `parcels` now appears; the PRE descriptor wrote only `parcel_buildings`.
 
+## WF2 link_massing nonzero-close (2026-10-06/07) — healing cohort, per-target counts, gate K
+
+Plan `.cursor/wf2_link_massing_nonzero_close_active_task.md` (operator-approved 2026-10-06). It closes the two gate-G `nonzero:*` rows through `docs/reports/golden/link_massing/cohort.json`, whose targets name the healing-cohort POST `post/cohort-heal.json` and a per-table `count_path`.
+
+- RED-first evidence (gate K, R-X): `docs/reports/red-evidence/link_massing/nonzero-close-red.json` — the vitest JSON of the red run before any implementation: `T1: buildLinkMeta maps e1..e4 onto the five keys` · `T2: the five keys are declared in emits[] (int, consumer = the healing cohort script) and in the two enumerating terminals` · `R5-4 (RED) — (b) the moved building's old link (2,20) is deleted and parcel 2 is flagged, in ONE transaction, flag before delete` · `T7a: RED — count_path emitted 0 while the step-level summary is 50 (the false attribution the gate exists to stop)` · `T7c: GREEN — both targets close via count_path, and the detail names the channel`.
+- Explained PRE→POST differences (G8): 15 differences, 5 per capture (sources-full, sources-full-forced-1, standalone). Each is a new records_meta key that is absent in the legacy PRE: primary_cleared, links_inserted, links_updated, links_deleted, parcels_flagged_lost_link. Cause: buildLinkMeta (scripts/lib/compute/link-massing.js) now emits the runner's per-target write counters. They are written.e1.rows_changed (primary clear), written.e2.inserted and written.e2.updated (guarded upsert), written.e3.deleted (keyed stale-link delete) and written.e4.updated (the parcels.massing_enriched_at lost-link flag). An absent counter reads null. Measured on all three recaptures (2026-10-07): every one of the five is 0, which is the steady state (terminal linked_with_warnings, records_new 0, records_updated 0).
+- The healing cohort POST (2026-10-07, scripts/analysis/link-massing-healing-cohort.js) measured these exact values: records_updated 50, links_updated 50, links_inserted 0, primary_cleared 0, links_deleted 25, parcels_flagged_lost_link 25, run 2 zero. The pre-restore diff matched exactly the 50 U keys and the 25 X parcels. After the restore, the strict whole-table hashes equalled the baseline (restored true).
+
 ---
 
 ## Validation scorecard (generated)
@@ -511,7 +519,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | OBSERVABLE | PASS | PASS |
 | SCALABLE | PASS | PASS (5 deferred) |
 | UNDERSTANDABLE | PASS | PASS |
-| ACCURATE | PASS | PASS (4 deferred) |
+| ACCURATE | PASS | PASS (1 deferred) |
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
@@ -522,7 +530,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=7 it-count=75 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
+| G7 | 3 | 3 | file=true fences=7 it-count=75 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
 | G4d (fence<=lock) | PASS | — | fences=7 lock-it-count=75 |
@@ -557,60 +565,31 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
 | 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 363 definition row(s) checked, 44 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (15 ledger-allowed, 4 outputs:"none" vacuous) |
-| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 82 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (13 ledger-allowed, 4 outputs:"none" vacuous) |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 29 finding(s), all ledger-allowed (29) |
-| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
+| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 19 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 27 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 20 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 443 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 475 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 296 declared-key check(s), 0 violations; 149 terminal(s) unwitnessed (no capture) |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 298 declared-key check(s), 0 violations; 149 terminal(s) unwitnessed (no capture) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 409 · unexplained: 0
+- compare ran: true · diffs found: 424 · unexplained: 0
 
 ### Test suite (item iii)
-- 2027/2057 passed (suite success=false)
-- harvested: 58 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 2061/2062 passed (suite success=false)
+- harvested: 59 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (30):
+- failing (1):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-wsib.js (slug "load_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-heritage.js (slug "load_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-centreline.js (slug "enrich_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-zoning.js (slug "load_zoning") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited) > link_massing: 1 real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green
-  - src/tests/step-conformance.infra.test.ts > Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful) > link_massing: shape=link declares force_full_on_next_run and its runner (runLinkPhase) is measured REACHABLE against the live scripts/lib/step/index.js
-  - src/tests/step-conformance.infra.test.ts > Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful) > link_parcels: shape=link_keyed declares force_full_on_next_run and its runner (runLinkKeyedPhase) is measured REACHABLE against the live scripts/lib/step/index.js
-  - src/tests/step-conformance.infra.test.ts > PH-2 churn×complexity BATCH artifact (G2) — coverage + drift > RED — a hand-edited row fires --check (known-bad fixture, real CLI, not just the exported function)
-  - src/tests/steps/link_parcel_addresses/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no corpus change since 2026-07-08) hash-identical; the POST pair hash-identical too, and matches PRE (no forced-FULL/reset scenario belongs in the diffed set, A-1 declare-only ruling — a clean cutover with an unchanged corpus is a genuine zero-diff, not a repair) (flips at: commit 9)
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -629,7 +608,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=80376B notes=17985B checks=17 rows records_meta=6837B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=81778B notes=17985B checks=17 rows records_meta=6942B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

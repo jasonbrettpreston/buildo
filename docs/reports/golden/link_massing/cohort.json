@@ -1,0 +1,17 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "parcel_buildings",
+      "capture": "cohort-heal.json",
+      "count_path": "links_updated",
+      "why": "POST docs/reports/golden/link_massing/post/cohort-heal.json (2026-10-07): healing cohort scripts/analysis/link-massing-healing-cohort.js, recipe docs/reports/golden/link_massing/healing/recipe.json. Arm U lowered confidence by 0.01 on 50 non-primary centroid_in_parcel links; the guarded upsert (writes[1], e2) rewrote exactly 50 (links_updated 50, links_inserted 0, primary_cleared 0). The keyed delete (writes[2], e3) removed exactly the 25 arm-X phantoms (links_deleted 25; 25-row before-image 2026-10-07T02-25-24.032Z). Run 2 rewrote 0. Pre-restore diff against the full-table backup (the negative control, fold X-1): 0 extra, 0 missing, exactly the 50 U keys changed, all guard-equal to the backup, only linked_at moved. The restore re-set those 50 rows; the strict whole-table hash (every column incl. linked_at) equals the baseline, so restored is true."
+    },
+    {
+      "table": "parcels",
+      "capture": "cohort-heal.json",
+      "count_path": "parcels_flagged_lost_link",
+      "why": "POST docs/reports/golden/link_massing/post/cohort-heal.json (2026-10-07): arm X inserted 25 non-derived phantom links (B's centroid not in P; proofs (a)/(b)/(c) in the recipe) on 25 parcels with massing_enriched_at NOT NULL. The lost-link flag (writes[3], e4) NULLed exactly 25 (parcels_flagged_lost_link 25). Run 2: parcels zero. Pre-restore diff against the parcels backup: 0 extra, 0 missing, exactly the 25 P ids changed, each NOT NULL to NULL, and no other parcel. The restore re-set massing_enriched_at on those 25 from the backup; the strict whole-table parcels hash equals the baseline, so restored is true."
+    }
+  ]
+}

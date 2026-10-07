@@ -313,6 +313,46 @@
       "source": "emits"
     },
     {
+      "consumer": "scripts/analysis/link-massing-healing-cohort.js",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "links_deleted",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/link-massing-healing-cohort.js",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "links_inserted",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/link-massing-healing-cohort.js",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "links_updated",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/link-massing-healing-cohort.js",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "parcels_flagged_lost_link",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/analysis/link-massing-healing-cohort.js",
+      "producer": "link_massing",
+      "kind": "records_meta",
+      "key": "primary_cleared",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "scripts/analysis/load-heritage-cohort-differential.js",
       "producer": "load_heritage",
       "kind": "records_meta",

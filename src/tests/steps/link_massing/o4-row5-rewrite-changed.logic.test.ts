@@ -195,6 +195,11 @@ describe('O4 row 5 — link_massing full_rescan rewrites only changed links', ()
     // counted on the DECLARED targets: e3 = keyed delete, e4 = the parcels flag
     expect(result.written.e3.deleted).toBe(1);
     expect(result.written.e4.rows_changed).toBe(1);
+    // WF2 link_massing nonzero-close (D1): the compute's records_meta exposes those two per-target
+    // counts, so a capture can attribute the parcels write (gate G cohort count_path).
+    const out = await compute({ ...result, descriptor: row5Descriptor(), config: CONFIG, elapsed_ms: 0, checks: [], log: NOOP_LOG, report: () => {} });
+    expect(out.records_meta.parcels_flagged_lost_link).toBe(1);
+    expect(out.records_meta.links_deleted).toBe(1);
   });
 
   it('R5-5 (RED) — steady state: nothing stale ⇒ no before-image, the flag binds an empty set, 0 deletes', async () => {

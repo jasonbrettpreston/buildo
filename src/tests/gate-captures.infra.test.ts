@@ -289,6 +289,118 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
   });
 
   // -------------------------------------------------------------------------
+  // T7 — cohort target `count_path` (WF2 link_massing nonzero-close, plan D2;
+  // the new Spec 124 §5 row amending R-BA gate G(1)). A multi-target cohort
+  // target MAY name a TOP-LEVEL `summary.records_meta` key that counts writes to
+  // THAT table, so the step-level counters can no longer falsely attribute a
+  // write. Optional: a target without it keeps the legacy summary-counter rule.
+  // -------------------------------------------------------------------------
+  describe('T7: cohort count_path — per-target attribution', () => {
+    const TWO = ['parcel_buildings', 'parcels'];
+    const descE = (emits: Array<{ key: string; type: string }>): Record<string, unknown> => ({
+      identity: { name: 'fixture_step' },
+      outputs: { writes: TWO.map((table) => ({ table })) },
+      emits: emits.map((e) => ({ ...e, consumers: [] })),
+    });
+    const INT_EMITS = [{ key: 'links_updated', type: 'int' }, { key: 'parcels_flagged_lost_link', type: 'int' }];
+    const capM = (file: string, updN: number, meta: Record<string, unknown>): Capture => ({
+      file,
+      doc: { summary: { records_new: 0, records_updated: updN, records_meta: meta } },
+    });
+    const cohortOf = (pbPath: unknown, pPath: unknown): Record<string, unknown> => ({
+      contract_version: 1,
+      targets: [
+        { table: 'parcel_buildings', capture: 'heal.json', count_path: pbPath, why: 'w' },
+        { table: 'parcels', capture: 'heal.json', count_path: pPath, why: 'w' },
+      ],
+    });
+    const run = (desc: Record<string, unknown>, meta: Record<string, unknown>, cohort: Record<string, unknown>, updN = 50) =>
+      captures.nonzeroDecision(desc, [capM('heal.json', updN, meta)], cohort).states;
+
+    it('T7a: RED — count_path emitted 0 while the step-level summary is 50 (the false attribution the gate exists to stop)', () => {
+      const s = run(descE(INT_EMITS), { links_updated: 50, parcels_flagged_lost_link: 0 }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+      expect(s[1]!.detail).toContain('emitted 0');
+    });
+
+    it('T7b: RED — a count_path whose key is not declared in emits[]', () => {
+      const s = run(descE([{ key: 'links_updated', type: 'int' }]), { links_updated: 50, parcels_flagged_lost_link: 25 }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+      expect(s[1]!.detail).toContain('emits');
+    });
+
+    it('T7c: GREEN — both targets close via count_path, and the detail names the channel', () => {
+      const s = run(descE(INT_EMITS), { links_updated: 50, parcels_flagged_lost_link: 25 }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(s)).toEqual(['cohort_declared', 'cohort_declared']);
+      expect(s[0]!.detail).toContain('via count_path links_updated=50');
+      expect(s[1]!.detail).toContain('via count_path parcels_flagged_lost_link=25');
+    });
+
+    it('T7d: GREEN (legacy, both directions) — a target with no count_path keeps the summary-counter rule; the live load_heritage/load_zoning cohorts still close', () => {
+      const legacy = captures.nonzeroDecision(
+        desc(['parcels', 'parcel_buildings']),
+        [cap('a.json', 10, 0), cap('b.json', 0, 7)],
+        { contract_version: 1, targets: [{ table: 'parcel_buildings', capture: 'b.json', why: 'w' }] },
+      ).states;
+      expect(decisions(legacy)).toEqual(['RED', 'cohort_declared']);
+      expect(legacy[1]!.detail).toContain('via summary counters');
+      const fleet = captures.loadCapturesFleet(REPO_ROOT);
+      for (const slug of ['load_heritage', 'load_zoning']) {
+        const f = fleet.find((x) => x.slug === slug);
+        expect(f, slug).toBeDefined();
+        const states = captures.nonzeroDecision(f!.descriptor, f!.posts, f!.cohort).states;
+        expect(states.length).toBeGreaterThan(1);
+        for (const st of states) {
+          expect(st.decision, `${slug} ${st.table}`).toBe('cohort_declared');
+          expect(st.detail).toContain('via summary counters');
+        }
+      }
+    });
+
+    it('T7e: RED — a string-typed value ("25") is not coerced', () => {
+      const s = run(descE(INT_EMITS), { links_updated: 50, parcels_flagged_lost_link: '25' }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+    });
+
+    it('T7f: RED — count_path naming a step-level counter (records_updated) cannot attribute a table, even if declared', () => {
+      const s = run(
+        descE([...INT_EMITS, { key: 'records_updated', type: 'int' }]),
+        { links_updated: 50, parcels_flagged_lost_link: 25, records_updated: 50 },
+        cohortOf('links_updated', 'records_updated'),
+      );
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+    });
+
+    it('T7g: RED — count_path naming an emit declared with type "string"', () => {
+      const s = run(
+        descE([{ key: 'links_updated', type: 'int' }, { key: 'parcels_flagged_lost_link', type: 'string' }]),
+        { links_updated: 50, parcels_flagged_lost_link: 25 },
+        cohortOf('links_updated', 'parcels_flagged_lost_link'),
+      );
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+    });
+
+    it('T7h: RED — a dotted count_path ("a.b") is not a top-level emits key', () => {
+      const s = run(
+        descE([...INT_EMITS, { key: 'a', type: 'int' }]),
+        { links_updated: 50, parcels_flagged_lost_link: 25, a: { b: 25 } },
+        cohortOf('links_updated', 'a.b'),
+      );
+      expect(decisions(s)).toEqual(['cohort_declared', 'RED']);
+      expect(s[1]!.detail).toContain('top-level');
+    });
+
+    it('T7i: RED — an absent or null count_path value reads "not emitted", distinct from "emitted 0"', () => {
+      const absent = run(descE(INT_EMITS), { links_updated: 50 }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(absent)).toEqual(['cohort_declared', 'RED']);
+      expect(absent[1]!.detail).toContain('not emitted');
+      const nul = run(descE(INT_EMITS), { links_updated: 50, parcels_flagged_lost_link: null }, cohortOf('links_updated', 'parcels_flagged_lost_link'));
+      expect(decisions(nul)).toEqual(['cohort_declared', 'RED']);
+      expect(nul[1]!.detail).toContain('not emitted');
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // T3 — computeLibFingerprint is SENSITIVE: a tmp copy of one lib file, both
   // directions (unchanged -> identical; one byte changed -> differs).
   // -------------------------------------------------------------------------
@@ -357,11 +469,11 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     'enrich_parcels:parcels',
     'enrich_ravines:parcels',
     'geocode_permits:permits',
-    // FLEET-2 §5 (2026-10-06): link_massing's two targets ledgered pending_recapture (A31: the steady-state re-derive
-    // wrote 0; closing brief = a healing cohort capture). link_parcel_addresses:parcel_address_points CLOSED: its
+    // FLEET-2 §5 (2026-10-06): link_massing's two targets were ledgered pending_recapture (A31). CLOSED by WF2
+    // link_massing nonzero-close: the healing cohort POST `post/cohort-heal.json` proves each table through its own
+    // records_meta key (cohort.json count_path: parcel_buildings <- links_updated, parcels <- parcels_flagged_lost_link),
+    // and the same commit deleted both ledger rows. link_parcel_addresses:parcel_address_points CLOSED: its
     // sources POST now writes 36 new links (measured), and its ledger row was deleted (A29).
-    'link_massing:parcel_buildings',
-    'link_massing:parcels',
     'link_neighbourhoods:permits',
     'link_parcels:permit_parcels',
     'link_parcels:permits',
