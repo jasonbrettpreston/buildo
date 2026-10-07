@@ -5,7 +5,7 @@
 // Parser + canonicalizer for the numeric_expression grammar. Pure: no fs, no clock, no network.
 //
 //   statement := target "=" expr "@" clause_path
-//   expr      := literal | variable | unlimited | "(" expr ")" | max(arg; …) | min(arg; …)
+//   expr      := literal | variable | unlimited | unregulated | "(" expr ")" | max(arg; …) | min(arg; …)
 //              | band(variable; armcond:literal; …) | if(cond; expr; expr) | by_type(type:expr; …[; other:expr])
 //              | existing(variable; date | enacted(bylaw)) | label(letter) | overlay(code) | expr op expr
 //   arg       := expr ["@" clause_path]
@@ -32,7 +32,7 @@ export const DSL_ERROR_CODES = Object.freeze([
   'band_arm_not_literal', 'min_max_arity', 'duplicate_by_type_key', 'value_form_mixed',
 ]);
 
-const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'mapped', 'labelled', 'not', 'and', 'or']);
+const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'unregulated', 'mapped', 'labelled', 'not', 'and', 'or']);
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
@@ -128,6 +128,7 @@ class Parser {
     if (t.t !== 'id') throw new DslError('syntax', `unexpected ${t.v ?? t.t} in: ${this.src}`);
     const name = this.next().v;
     if (name === 'unlimited') return { type: 'unlimited' };
+    if (name === 'unregulated') return { type: 'unregulated' }; // Spec 69 M-54: the by-law sets no limit here
     if (!this.isTok('(')) {
       if (KEYWORDS.has(name) || LITERAL_UNITS.includes(name)) throw new DslError('syntax', `keyword ${name} used as a variable in: ${this.src}`);
       return { type: 'var', name };
@@ -197,6 +198,7 @@ class Parser {
   }
   bandValue() {
     if (this.isId('unlimited')) { this.next(); return { type: 'unlimited' }; }
+    if (this.isId('unregulated')) { this.next(); return { type: 'unregulated' }; }
     if (!this.isTok('num')) throw new DslError('band_arm_not_literal', `a band arm value is a literal (§7.4 band(variable; cond:literal; …)) in: ${this.src}`);
     const lit = this.literal();
     if (this.isTok('op')) throw new DslError('band_arm_not_literal', `a band arm value is a literal, not an expression, in: ${this.src}`);
@@ -268,6 +270,7 @@ function canonCore(e) {
   switch (e.type) {
     case 'lit': return num(e.raw) + e.unit;
     case 'unlimited': return 'unlimited';
+    case 'unregulated': return 'unregulated';
     case 'var': return e.name;
     case 'label': return `label(${e.letter})`;
     case 'overlay': return `overlay(${e.code})`;
@@ -341,7 +344,7 @@ export function valueFormOf(e) {
     case 'if': return 'if';
     case 'label': case 'overlay': return 'map_lookup';
     case 'existing': return 'existing_as_of';
-    case 'lit': case 'unlimited': return 'literal';
+    case 'lit': case 'unlimited': case 'unregulated': return 'literal';
     default: throw new DslError('syntax', `value_form: unknown node ${e.type}`);
   }
 }
@@ -404,11 +407,14 @@ function staticUnit(e, U, errs) {
   switch (e.type) {
     case 'lit': return e.unit;
     case 'unlimited': return null; // takes the unit of its context
+    case 'unregulated': return null;
     case 'var': { const u = unitOfVariable(e.name, U); if (!u) errs.push(`unknown_variable: ${e.name}`); return u; }
     case 'label': return U.label[e.letter] ?? (errs.push(`unknown_label_letter: ${e.letter}`), null);
     case 'overlay': return U.overlay[e.code] ?? (errs.push(`unknown_overlay_code: ${e.code}`), null);
     case 'existing': { const u = unitOfVariable(e.var, U); if (!u) errs.push(`unknown_variable: ${e.var}`); return u; }
-    case 'call': return same(e.args.map((a) => staticUnit(a, U, errs)), `${e.fn} mixes units`, errs);
+    case 'call':
+      if (e.args.some(mayBeUnregulated)) errs.push('unregulated_not_terminal');
+      return same(e.args.map((a) => staticUnit(a, U, errs)), `${e.fn} mixes units`, errs);
     case 'band': {
       const vu = staticUnit(e.v, U, errs);
       for (const a of e.arms) for (const c of a.conds) if (vu && c.lit.unit !== vu) errs.push(`unit_mismatch: band threshold ${c.lit.raw} ${c.lit.unit} vs ${e.v.name} ${vu}`);
@@ -418,6 +424,7 @@ function staticUnit(e, U, errs) {
     case 'by_type': return same(e.entries.map((x) => staticUnit(x.expr, U, errs)), 'by_type arms mix units', errs);
     case 'bin': {
       const a = staticUnit(e.l, U, errs); const b = staticUnit(e.r, U, errs);
+      if (mayBeUnregulated(e.l) || mayBeUnregulated(e.r)) { errs.push('unregulated_not_terminal'); return null; }
       if (mayBeUnlimited(e.l) || mayBeUnlimited(e.r)) { errs.push('unlimited_in_arithmetic'); return null; }
       if (!a || !b) return null;
       const r = combineUnits(e.op, a, b);
@@ -451,6 +458,15 @@ function mayBeUnlimited(e) {
   if (e.type === 'band') return e.arms.some((a) => mayBeUnlimited(a.value));
   if (e.type === 'if') return mayBeUnlimited(e.a) || mayBeUnlimited(e.b);
   if (e.type === 'by_type') return e.entries.some((x) => mayBeUnlimited(x.expr));
+  return false;
+}
+/** True when an operand can evaluate to `unregulated` (M-54): it is terminal, never an operand of max / min / arithmetic. */
+function mayBeUnregulated(e) {
+  if (!e || typeof e !== 'object') return false;
+  if (e.type === 'unregulated') return true;
+  if (e.type === 'band') return e.arms.some((a) => mayBeUnregulated(a.value));
+  if (e.type === 'if') return mayBeUnregulated(e.a) || mayBeUnregulated(e.b);
+  if (e.type === 'by_type') return e.entries.some((x) => mayBeUnregulated(x.expr));
   return false;
 }
 function byTypeKeys(node, out = []) {

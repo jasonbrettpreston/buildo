@@ -978,7 +978,8 @@
         ]
       },
       "expected": {
-        "value": "unlimited"
+        "clause": "10.20.30.40(1)#(B)",
+        "value": "unregulated"
       },
       "id": "eastbourne:lot_coverage_pct",
       "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
@@ -2160,7 +2161,8 @@
         ]
       },
       "expected": {
-        "value": "unlimited"
+        "clause": "10.40.30.40(1)#(B)",
+        "value": "unregulated"
       },
       "id": "cordella:lot_coverage_pct",
       "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
@@ -3320,7 +3322,8 @@
         ]
       },
       "expected": {
-        "value": "unlimited"
+        "clause": "10.60.30.40(1)#(B)",
+        "value": "unregulated"
       },
       "id": "bijou:lot_coverage_pct",
       "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",

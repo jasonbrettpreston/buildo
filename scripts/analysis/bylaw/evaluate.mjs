@@ -47,6 +47,7 @@ export const NOT_EVALUATED_CODES = Object.freeze([
   'condition_unknown', // :<token> a lot-condition token the vector does not carry
   'named_lots_only', // address → parcel matching not held (M-41)
   'target_cycle',
+  'unregulated_in_arithmetic', // M-54: `unregulated` is terminal
   'referenced_target_conflict', // :<target> a variable whose own effective() is an eval_conflict
   'expression_error', // :<DslError code>
 ]);
@@ -97,10 +98,12 @@ export function enactedDatesFromText(text) {
  */
 export function evaluate(expr, lot, ctx) {
   const C = ctxOf(ctx);
-  let ast;
+  let ast; let clausePath = null;
   try {
     // a statement starts "target =" (a comparison `=` never follows a bare leading identifier at depth 0)
-    ast = typeof expr === 'string' ? (/^\s*[A-Za-z_][A-Za-z0-9_]*\s*=/.test(expr) ? parseStatement(expr).expr : parseExpr(expr)) : expr.type === 'statement' ? expr.expr : expr;
+    const st = typeof expr === 'string' ? (/^\s*[A-Za-z_][A-Za-z0-9_]*\s*=/.test(expr) ? parseStatement(expr) : null) : expr.type === 'statement' ? expr : null;
+    ast = st ? st.expr : typeof expr === 'string' ? parseExpr(expr) : expr;
+    clausePath = st ? st.path : null;
   } catch (err) {
     if (err instanceof DslError) return { value: null, unit: null, not_evaluated: `expression_error:${err.code}`, trace: [err.message] };
     throw err;
@@ -109,6 +112,7 @@ export function evaluate(expr, lot, ctx) {
   const env = { C, lot, trace, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {} };
   const r = ev(ast, env);
   if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace };
+  if (r.value === 'unregulated') return { value: 'unregulated', unit: r.unit, clause: clausePath, trace }; // M-54: carries the clause that says so
   return { value: r.value === 'unlimited' ? 'unlimited' : r9(r.value), unit: r.unit, trace };
 }
 
@@ -117,6 +121,7 @@ function ev(e, env) {
   switch (e.type) {
     case 'lit': return { value: e.value, unit: e.unit };
     case 'unlimited': return { value: 'unlimited', unit: null };
+    case 'unregulated': return { value: 'unregulated', unit: null };
     case 'var': return variable(e.name, env);
     case 'label': {
       if (!lot.label) return ne('missing_input', 'zone_label');
@@ -147,7 +152,7 @@ function ev(e, env) {
     case 'band': {
       const v = variable(e.v.name, env);
       if (v.ne) return v;
-      if (v.value === 'unlimited') return ne('unlimited_in_arithmetic');
+      if (v.value === 'unlimited' || v.value === 'unregulated') return ne(`${v.value}_in_arithmetic`);
       for (let i = 0; i < e.arms.length; i++) {
         const a = e.arms[i];
         if (a.conds.every((c) => cmp(v.value, c.cmp, c.lit.value))) { trace.push(`band arm ${i + 1} (${e.v.name}=${r9(v.value)})`); return ev(a.value, env); }
@@ -172,6 +177,7 @@ function ev(e, env) {
       const a = ev(e.l, env); if (a.ne) return { ne: a.ne };
       const b = ev(e.r, env); if (b.ne) return { ne: b.ne };
       if (!['+', '−', '×', '÷'].includes(e.op)) return ne('expression_error', `operator ${e.op}`);
+      if (a.value === 'unregulated' || b.value === 'unregulated') return ne('unregulated_in_arithmetic');
       if (a.value === 'unlimited' || b.value === 'unlimited') return ne('unlimited_in_arithmetic');
       const unit = combineUnits(e.op, a.unit, b.unit);
       if (e.op === '+') return { value: a.value + b.value, unit };
@@ -216,6 +222,7 @@ function callMaxMin(e, env) {
     }
     const r = ev(a, env);
     if (r.ne) { if (r.absent) { absent++; env.trace.push(`absent map argument dropped (${r.ne})`); continue; } notAbsentNe = notAbsentNe || r; continue; }
+    if (r.value === 'unregulated') return ne('unregulated_in_arithmetic');
     vals.push(r);
   }
   if (notAbsentNe) return notAbsentNe;
@@ -254,7 +261,7 @@ function evCond(c, env) {
     case 'cmp': {
       const l = ev(c.lhs, env);
       if (l.ne) return { ne: l.ne };
-      if (l.value === 'unlimited') return ne('unlimited_in_arithmetic');
+      if (l.value === 'unlimited' || l.value === 'unregulated') return ne(`${l.value}_in_arithmetic`);
       return cmp(l.value, c.cmp, c.lit.value);
     }
     default: return ne('expression_error', c.type);
@@ -494,11 +501,11 @@ function effCore(lot, target, candidates, C, env) {
       const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: ed ? ed.args : {} });
       const id = ed ? `${u.unit_id}<${ed.by.join('+')}` : u.unit_id;
       if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures });
-      vals[b].push({ id, v: r.value });
+      vals[b].push({ id, unitId: u.unit_id, v: r.value });
       trace.push(`${id} → ${r.value} ${tUnit ?? ''}${r.trace.length ? ` [${r.trace.join(', ')}]` : ''}`.trim());
     }
   }
-  const finite = (xs) => xs.filter((x) => x.v !== 'unlimited');
+  const finite = (xs) => xs.filter((x) => typeof x.v === 'number');
   const res = {};
   for (const [b, xs] of Object.entries(vals)) {
     if (b === 'exact') {
@@ -507,18 +514,20 @@ function effCore(lot, target, candidates, C, env) {
       res.exact = xs[0];
     } else {
       const f = finite(xs);
-      if (!f.length) res[b] = xs[0]; // only `unlimited`: no bound
+      // only non-finite values (`unlimited` / `unregulated`, M-48 / M-54): no bound; a mix reports `unlimited` (traced)
+      if (!f.length) { res[b] = xs.find((x) => x.v === 'unlimited') || xs[0]; if (new Set(xs.map((x) => x.v)).size > 1) trace.push('rule 4a: unlimited and unregulated both apply; reported unlimited'); }
       else res[b] = f.reduce((a, c) => ((b === 'min' ? c.v > a.v : c.v < a.v) ? c : a));
-      if (f.length && f.length < xs.length) trace.push(`rule 4a: unlimited loses to a finite ${b}`);
+      if (f.length && f.length < xs.length) trace.push(`rule 4a: unlimited / unregulated loses to a finite ${b}`);
     }
   }
-  if (res.min && res.max && res.min.v !== 'unlimited' && res.max.v !== 'unlimited' && res.min.v > res.max.v + EPS) {
+  if (res.min && res.max && typeof res.min.v === 'number' && typeof res.max.v === 'number' && res.min.v > res.max.v + EPS) {
     return { status: 'conflict', value: null, reason: 'eval_conflict', conflict: `min ${res.min.v} (${res.min.id}) above max ${res.max.v} (${res.max.id})`, applied: [res.min.id, res.max.id], trace: [...trace, 'rule 4a: CONFLICT (min above max)'], disclosures };
   }
   const win = res.exact || res.min || res.max;
   const boundOf = res.exact ? 'exact' : res.min ? 'min' : 'max';
   return {
     status: 'value', value: win.v, unit: tUnit, bound: boundOf, winner: win.id,
+    ...(win.v === 'unregulated' ? { clause: win.unitId } : {}),
     bounds: Object.fromEntries(Object.entries(res).map(([k, x]) => [k, x.v])),
     applied: Object.values(vals).flat().map((x) => x.id), trace, disclosures,
   };
@@ -657,6 +666,7 @@ export function checkEval({ units, vectors, vocab, enactments = {} }) {
       if (r.per_type) row.expected_in_per_type = Object.entries(r.per_type).filter(([, v]) => (typeof v === 'number' && typeof exp.value === 'number' ? Math.abs(v - exp.value) <= TOL : v === exp.value)).map(([k]) => k);
       rows.push(row); continue;
     } else if (exp.value === 'unlimited') match = r.status === 'value' && r.value === 'unlimited';
+    else if (exp.value === 'unregulated') match = r.status === 'value' && r.value === 'unregulated' && (!exp.clause || r.clause === exp.clause);
     else if (typeof exp.value === 'number' && r.status === 'value' && typeof r.value === 'number') match = Math.abs(r.value - exp.value) <= TOL;
     else match = false;
     if (match) { row.verdict = 'match'; counts.match++; rows.push(row); continue; }

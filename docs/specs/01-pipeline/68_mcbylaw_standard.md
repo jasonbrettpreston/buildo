@@ -249,7 +249,7 @@ Every clause unit — of a standard regulation, an overlay or an exception — i
 
 ### 7.2 `value_form` — the shape of the value (generated, never keyed)
 
-`literal · band · formula · by_building_type · if · map_lookup · existing_as_of · none`, derived from the parsed `numeric_expression` (`band(…)` → band; `max/min(…)` → formula; `by_type(…)` → by_building_type; `if(…)` → if; `label(letter)` / `overlay(code)` → map_lookup; `existing(var; date)` → existing_as_of). A nested expression takes the form of its outermost head.
+`literal · band · formula · by_building_type · if · map_lookup · existing_as_of · none`, derived from the parsed `numeric_expression` (`band(…)` → band; `max/min(…)` → formula; a bare `unlimited` or `unregulated` → literal (Spec 69 M-54); `by_type(…)` → by_building_type; `if(…)` → if; `label(letter)` / `overlay(code)` → map_lookup; `existing(var; date)` → existing_as_of). A nested expression takes the form of its outermost head.
 
 ### 7.3 Per-archetype unit shape (G-SHAPE)
 
@@ -273,7 +273,7 @@ One red-first fixture per archetype × value-form pair **that occurs in real tex
 
 ```
 statement := target "=" expr "@" clause_path
-expr      := literal | variable | unlimited | "(" expr ")" | max(arg; …) | min(arg; …) | band(variable; cond:literal; …)
+expr      := literal | variable | unlimited | unregulated | "(" expr ")" | max(arg; …) | min(arg; …) | band(variable; cond:literal; …)
            | if(cond; expr; expr) | by_type(type:expr; …[; other:expr]) | existing(variable; date | enacted(bylaw))
            | label(letter) | overlay(code) | expr op expr
 arg       := expr ["@" clause_path]       (a max/min argument may carry its own clause path)
@@ -292,6 +292,10 @@ literal   := number unit      unit ∈ { m, m2, pct, storeys, units, ratio }
 - **Argument-level displacement** — `displaces[]` may name a clause path inside another unit's expression (an `arg` tagged `@clause`); only that argument is removed (§7.5 rule 2): 600.60.40(2)(A) displaces 10.20.40.10(1)(C)(ii) (the 10.0 m argument), so `max(overlay(HT) @(C)(i); 10.0 m @(C)(ii))` keeps HT. The spike's whole-unit drop returned 10.5 m where the by-law gives 12.0 m (HT 12.0).
 - **Named enactment date** — `enacted(569-2013)` resolves from the pinned page header ("enacted on May 9, 2013" → 2013-05-09), so a clause that says "on the day of the enactment of this By-law" (RD 587) carries no date literal absent from its text.
 - **`ratio`** — the unit for a bare FSI number (S0.5 convention fix, M-17 note 2026-10-07): `0.6 ratio × lot_area_m2`.
+
+**Operator ruling 2026-10-07 (Spec 69 M-54; evidence `.cursor/mcbylaw/phase2-trial/TRIAL-REPORT.md` §1.4, 166,909 coverage-null lots):**
+- **`unregulated`** — "the by-law sets no limit here", distinct from `unlimited` ("not limited by this regulation") and from `not_evaluated` (we cannot tell): 10.20.30.40(1)(B) (and 10.40/10.60/10.80.30.40(1)(B)) "if a lot is not in an area with a numerical value on the Lot Coverage Overlay Map, no lot coverage applies" → `lot_coverage_pct = unregulated @(1)(B)`. It is terminal (a whole value or a band / if / by_type arm, never an operand of `max`, `min` or arithmetic); a finite bound at the same layer beats it (rule 4a) and a higher layer replaces it (rule 4). **An `unregulated` result carries the clause that says so** (`evaluate()` returns the statement path, `effective()` the unit id). The R zone has no principal-building coverage regulation at all, so no clause can be carried: R coverage stays `no_candidate` until a ruling on regulation-by-absence.
+- **Label letter `au`** — 10.5.1.10(3)(C): "the letters "au" and a numerical value indicates the required minimum lot area for each dwelling unit on a lot, in square metres" → `label(au)`, unit `m2` (read by 10.20/10.40/10.60.30.10(2) for townhouses and 10.80.30.10(2)–(3) for apartment buildings and townhouses; 1,622 lots). Label letters are `f` (m), `a` (m2), `au` (m2), `u` (units), `d` (ratio).
 
 ### 7.5 Precedence — one function, data-driven
 

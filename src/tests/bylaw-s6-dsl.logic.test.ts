@@ -70,6 +70,26 @@ describe('§7.4 S1 additions (Spec 69 M-48) — each parses and keeps its meanin
   });
 });
 
+describe('operator ruling 2026-10-07 (Spec 69 M-54): `unregulated` and label letter `au`', () => {
+  it('unregulated parses as its own value, distinct from unlimited', () => {
+    expect(D.parseStatement('lot_coverage_pct = unregulated @(1)(B)').expr).toEqual({ type: 'unregulated' });
+    expect(D.canonicalStatement('lot_coverage_pct = unregulated @(1)(B)')).not.toBe(D.canonicalStatement('lot_coverage_pct = unlimited @(1)(B)'));
+  });
+  it('unregulated is a value: value_form literal (§7.2); legal as a band / if / by_type arm', () => {
+    expect(D.valueForm(['lot_coverage_pct = unregulated @(1)(B)'])).toBe('literal');
+    expect(D.checkStatement('lot_coverage_pct = if(lot_frontage_m < 6 m; unregulated; 50 pct) @x', VOCAB)).toEqual([]);
+    expect(code(() => D.parseStatement('lot_coverage_pct = band(lot_frontage_m; < 6 m: unregulated; ≥ 6 m: 50 pct) @x'))).toBe('no_error');
+  });
+  it('unregulated is terminal: never an operand of arithmetic, max or min', () => {
+    expect(D.checkStatement('lot_coverage_pct = unregulated + 5 pct @x', VOCAB)).toContain('unregulated_not_terminal');
+    expect(D.checkStatement('lot_coverage_pct = max(unregulated; 50 pct) @x', VOCAB)).toContain('unregulated_not_terminal');
+  });
+  it('label letter au (10.5.1.10(3)(C): required minimum lot area for each dwelling unit, m²) binds to an m2 target', () => {
+    expect(D.checkStatement('lot_area_per_unit_min_m2 = label(au) @(2)', VOCAB)).toEqual([]);
+    expect(D.checkStatement('lot_frontage_min_m = label(au) @(2)', VOCAB).map((e: string) => e.split(':')[0])).toContain('unit_mismatch');
+  });
+});
+
 describe('closed error codes — one known-bad input each (+ the good twin above)', () => {
   it.each([
     ['bad_unit', 'side_setback_m = 1.8 @(A)'],
@@ -77,6 +97,7 @@ describe('closed error codes — one known-bad input each (+ the good twin above
     ['bad_clause_path', 'side_setback_m = 1.8 m'],
     ['bad_clause_path', 'side_setback_m = 1.8 m @ ;'],
     ['bad_target', 'max = 1.8 m @(A)'],
+    ['bad_target', 'unregulated = 1.8 m @(A)'],
     ['unknown_function', 'side_setback_m = avg(1 m; 2 m) @(A)'],
     ['mixed_and_or', 'x_m = if(lot_frontage_m ≥ 6 m and lot_frontage_m < 15 m or lot_depth_m > 1 m; 1 m; 2 m) @(A)'],
     ['band_arm_not_literal', 'gfa_m2 = band(lot_area_m2; < 408 m2: min(0.6 ratio × lot_area_m2; 204 m2)) @(A)'],

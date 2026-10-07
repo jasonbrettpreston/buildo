@@ -143,7 +143,7 @@
       "instrument": "none",
       "layer": "base",
       "numeric_expression": [
-        "lot_coverage_pct = unlimited @(1)(B)"
+        "lot_coverage_pct = unregulated @(1)(B)"
       ],
       "ranks_layers": "none",
       "regulation_id": "10.20.30.40(1)",
@@ -1542,7 +1542,7 @@
       "instrument": "none",
       "layer": "base",
       "numeric_expression": [
-        "lot_coverage_pct = unlimited @(1)(B)"
+        "lot_coverage_pct = unregulated @(1)(B)"
       ],
       "ranks_layers": "none",
       "regulation_id": "10.40.30.40(1)",
@@ -3063,6 +3063,44 @@
     {
       "application": {
         "building_types": [
+          "townhouse"
+        ],
+        "zones": [
+          "RT"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "archetype": "LIMIT",
+      "bound": "min",
+      "candidate": true,
+      "clause_path": "(2)",
+      "condition": {
+        "if": "labelled(au)",
+        "tokens": [
+          "label_value"
+        ]
+      },
+      "displaces": [],
+      "evaluated_by_us": "none",
+      "instrument": "none",
+      "layer": "base",
+      "numeric_expression": [
+        "lot_area_per_unit_min_m2 = label(au) @(2)"
+      ],
+      "ranks_layers": "none",
+      "regulation_id": "10.60.30.10(2)",
+      "requirement": "none",
+      "source_text": "(2) Minimum Lot Area For Each Dwelling Unit in a Townhouse If a zone label applying to a lot in the RT zone includes the letters \"au\", on the Zoning By-law Map, the numerical value following the letters \"au\" is the required minimum lot area for each dwelling unit in a townhouse.",
+      "spike_fixture_set": "s6b_m54_added",
+      "target": "lot_area_per_unit_min_m2",
+      "unit_id": "10.60.30.10(2)#whole"
+    },
+    {
+      "application": {
+        "building_types": [
           "any"
         ],
         "zones": [
@@ -3126,7 +3164,7 @@
       "instrument": "none",
       "layer": "base",
       "numeric_expression": [
-        "lot_coverage_pct = unlimited @(1)(B)"
+        "lot_coverage_pct = unregulated @(1)(B)"
       ],
       "ranks_layers": "none",
       "regulation_id": "10.60.30.40(1)",
@@ -4053,7 +4091,7 @@
       "instrument": "none",
       "layer": "base",
       "numeric_expression": [
-        "lot_coverage_pct = unlimited @(1)(B)"
+        "lot_coverage_pct = unregulated @(1)(B)"
       ],
       "ranks_layers": "none",
       "regulation_id": "10.80.30.40(1)",

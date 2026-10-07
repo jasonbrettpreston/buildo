@@ -160,7 +160,7 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     expect({ pass: r.pass, violations: r.violations }).toEqual({ pass: true, violations: [] });
   });
   it('vector verdict counts (pinned; a change is a reviewed edit)', () => {
-    expect(r.counts).toEqual({ units_evaluated: 114, unit_vector_evaluations: 4830, vectors: 109, match: 61, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 37, pending: 0, excluded: 7, inexpressible: 2, no_expected: 2 });
+    expect(r.counts).toEqual({ units_evaluated: 115, unit_vector_evaluations: 4863, vectors: 109, match: 61, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 37, pending: 0, excluded: 7, inexpressible: 2, no_expected: 2 });
   });
   it('every not_evaluated vector carries a reason from the closed set', () => {
     const bad = r.rows.filter((x: Json) => x.verdict === 'not_evaluated' && !E.NOT_EVALUATED_CODES.includes(E.reasonCode(String(x.got).replace(/^not_evaluated:/, '')))).map((x: Json) => `${x.id} ${x.got}`);
@@ -173,8 +173,8 @@ describe('G-EVAL (a)+(b) over scripts/seeds/bylaw/eval-vectors.json (fixture uni
     expect(withF).toEqual(ids.map((id) => vec(id).adjudication.with_label_f_equal_to_frontage.value));
     expect(withF).toEqual([0.6, 0.9, 1.8, 3, 1.8]);
   });
-  it('the 9 S0.5-inexpressible "not limited" vectors are now expressible: 7 match `unlimited` or are not_evaluated with a named input; the 2 RT front-landscaping vectors stay inexpressible (Spec 69 §4 item 8)', () => {
-    const unl = r.rows.filter((x: Json) => x.expected && x.expected.value === 'unlimited');
+  it('the 9 S0.5-inexpressible "not limited" vectors are now expressible: 7 match `unlimited` / `unregulated` (M-54) or are not_evaluated with a named input; the 2 RT front-landscaping vectors stay inexpressible (Spec 69 §4 item 8)', () => {
+    const unl = r.rows.filter((x: Json) => x.expected && (x.expected.value === 'unlimited' || x.expected.value === 'unregulated'));
     expect(unl.map((x: Json) => `${x.id}:${x.verdict}`)).toEqual([
       'derwyn:height_storeys:match', 'eastbourne:lot_coverage_pct:match', 'futura:fsi:not_evaluated', 'cordella:lot_coverage_pct:match',
       'p5071306:fsi:not_evaluated', 'bijou:fsi:not_evaluated', 'bijou:lot_coverage_pct:match',
@@ -204,6 +204,40 @@ describe('evaluator — review-lens fixes (DeepSeek error-paths / spec lenses, a
   });
   it('a vector with a status outside the closed set fails G-EVAL', () => {
     expect(E.checkEval({ units: UNITS, vectors: [{ ...vec('V8'), vector_status: 'by_law_expected_v2' }], vocab: VOCAB }).violations.map((v: string) => v.split(':')[0])).toEqual(['bad_vector_status']);
+  });
+});
+
+describe('operator ruling 2026-10-07 (Spec 69 M-54): unregulated results carry their clause; label au', () => {
+  const U = (o: Json) => ({ layer: 'base', archetype: 'LIMIT', bound: 'max', displaces: [], condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'] }, ...o });
+  const lot = { zone: 'RD', label: {}, overlays: {}, vars: { lot_frontage_m: 10 }, flags: { major_street: false }, building_type: 'detached_house' };
+  it('evaluate(): unregulated is a value with its clause path, not not_evaluated', () => {
+    expect(E.evaluate('lot_coverage_pct = unregulated @(1)(B)', lot, C)).toMatchObject({ value: 'unregulated', clause: '(1)(B)' });
+  });
+  it('evaluate(): unregulated in arithmetic is not_evaluated (never a number)', () => {
+    expect(E.evaluate('lot_coverage_pct = unregulated + 5 pct @x', lot, C).not_evaluated).toBe('unregulated_in_arithmetic');
+  });
+  it('effective(): a coverage-null RD lot is unregulated by 10.20.30.40(1)(B), and the result names the clause', () => {
+    const r = eff({ ...DERWYN, overlays: { HT: 8.5 }, building_type: 'detached_house' }, 'lot_coverage_pct');
+    expect([r.status, r.value, r.clause]).toEqual(['value', 'unregulated', '10.20.30.40(1)#(B)']);
+  });
+  it('effective(): a finite bound at the same layer beats unregulated (rule 4a); a higher layer replaces it (rule 4)', () => {
+    const unreg = U({ unit_id: '10.20.30.40(1)#(B)', regulation_id: '10.20.30.40(1)', target: 'lot_coverage_pct', numeric_expression: ['lot_coverage_pct = unregulated @(1)(B)'] });
+    expect(show(E.effective(lot, 'lot_coverage_pct', [unreg, U({ unit_id: 'X#(C)', target: 'lot_coverage_pct', numeric_expression: ['lot_coverage_pct = 50 pct @(C)'] })], C))).toBe(50);
+    expect(show(E.effective(lot, 'lot_coverage_pct', [unreg, U({ unit_id: 'EX#(A)', layer: 'exception', target: 'lot_coverage_pct', numeric_expression: ['lot_coverage_pct = 40 pct @(A)'] })], C))).toBe(40);
+    expect(show(E.effective(lot, 'lot_coverage_pct', [unreg], C))).toBe('unregulated');
+  });
+  it('R zone: no principal coverage regulation exists, so no clause can be carried; the result stays no_candidate', () => {
+    expect(show(eff({ ...DERWYN, zone: 'R', overlays: {}, building_type: 'detached_house' }, 'lot_coverage_pct'))).toBe('not_evaluated:no_candidate');
+  });
+  it('G-EVAL: an unregulated expectation matches only with the same clause', () => {
+    const v = vec('eastbourne:lot_coverage_pct');
+    expect(v.expected).toEqual({ value: 'unregulated', clause: '10.20.30.40(1)#(B)' });
+    expect(E.checkEval({ units: UNITS, vectors: [v], vocab: VOCAB }).pass).toBe(true);
+    expect(E.checkEval({ units: UNITS, vectors: [{ ...v, expected: { value: 'unregulated', clause: '10.20.30.40(1)#(A)' } }], vocab: VOCAB }).pass).toBe(false);
+  });
+  it('label au: p5071306 "RT (au220.0)" reads 220 m² per dwelling unit (10.60.30.10(2))', () => {
+    const r = eff({ ...vec('p5071306:side_setback_m').lot }, 'lot_area_per_unit_min_m2');
+    expect([show(r), r.unit]).toEqual([220, 'm2']);
   });
 });
 
