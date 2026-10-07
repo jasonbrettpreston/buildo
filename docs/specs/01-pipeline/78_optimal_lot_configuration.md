@@ -1,6 +1,7 @@
 # Spec 78 — Optimal Lot Configuration
 
 **Status:** Built — Phases 0-3 + 4A + 4D shipped/PUSHED; only forecast/cost reconciliation moved to Spec 88.
+**Phase 3 amendment (McBylaw):** §6 + Known Failure Modes + Appendix R — PROPOSED 2026-10-07 (Spec 69 M-61..M-71), not ratified.
 **Domain:** Backend / Pipeline. **Advisory lock / spec number:** 78.
 **Design reports (authoritative for the full epic):**
 `docs/reports/optimal-lot-configuration-implementation-plan.md`,
@@ -421,6 +422,174 @@ The envelope this spec consumes is **computed** by Spec 65 §4 and **derived / e
 - **S6 — §P2.1 soft landscaping (150.7.50.10(1)).** Consistent with Spec 67 Appendix B ledger L20 (verbatim-verified: garden suite, 50 % for frontage > 6.0 m, 25 % for ≤ 6.0 m). The Spec 65 greenspace permission uses a different 30 %-of-lot heuristic (Spec 67 KFM-9).
 - **S7 — planned value moves.** When the by-law WF2 lands, EF-19 / EF-20 move `opt_aor_*` / `opt_coa_*` (down in the common case; up where front-yard averaging applies — plan EF-4).
 - **S8 — §2 Out-of-Scope bullets.** The bullets that place `scripts/enrich-parcels.js` and the optimal-config engine / comps out of scope date from Phase 1; Phases 2–3 are built (header Status). They are historical, not current scope.
+- **S9 — §P2.1 suite constants are stale (2026-10-07).** The garden-suite footprint, height and separation values predate 849-2025 (KFM-78-5). Phase 3 replaces the whole §P2.1 table with Layer 1 rows read through Layer 2 (§6, Spec 69 P-8); until then the table records the as-built code, not the law.
+
+## §6 — McBylaw Phase 3: the by-law-driven report (PROPOSED 2026-10-07)
+
+> **PROPOSED.** The operator approved the approach on 2026-10-07. The rulings are Spec 69 M-61..M-71 (PROPOSED); the standard is Spec 68 §11.1. Ratification follows a grounded matrix and a red-team. Nothing here changes Phases 1–4D behaviour until the Phase 3 plan is authorized and its shadow columns pass (M-71). Inputs: `.cursor/mcbylaw/phase3-prework/` (`field-inventory.md`, `generator-design.md`, `scenario-scan.md`, `scenario-clauses.json`, `coa-scenario-counts.json`). Evidence tags: *[measured]* a query or script ran · *[read]* code or clause text · *[inferred]* not executed.
+
+### 6.1 What the report delivers
+
+For each residential parcel in scope: **report fields × permitted scenarios × {as-of-right, CoA}**. There is no user choice (M-63). Per scenario × tier, ≈ 20 fields (scenario scan §5.1):
+
+| Group | Fields |
+|---|---|
+| Identity | `scenario_id` (P / A / K code), `principal_type`, `dwelling_units` |
+| Principal | `main_footprint_sqm`, `main_storeys`, `main_height_m`, `main_gfa_sqm`, `main_binding` ∈ {fsi, coverage, height, depth, length, setback} |
+| Law applied | `coverage_pct_applied` + clause; `fsi_applied`, or `not_applicable` + clause |
+| Suite | `suite_type`, `suite_gfa_sqm`, `suite_height_m`, `suite_binding` |
+| Parking | `garage_type`, `garage_sqm`, `garage_gfa_deduction_sqm` |
+| Totals | `total_gfa_sqm`, `avg_unit_gfa_sqm`, `max_bedrooms` |
+| CoA tier only | `coa_gfa_sqm`, `coa_uplift_sqm`, `coa_form` (single · multiplex), `coa_factor` (the k logic-variable id and value) (§6.4) |
+| Every value | status (M-64) and lineage: formula id, scenario id, tier, the Layer 2 rows read, `table_version`, `evaluator_version` |
+
+**Headline per parcel** (persisted, §6.8): the permitted scenario with the largest `total_gfa_sqm` per tier, its id, and the counters. The headline takes over the display role of `max_buildable_gfa_sqm` / `opt_aor_*` / `opt_coa_*` only after its shadow passes. Which live columns are retired, kept as headline aliases or superseded is a Phase 3 plan item, listed from Appendix R.
+
+### 6.2 The scenario catalogue (Spec 69 M-63)
+
+Closed data, pinned. Each axis value cites the clause that defines or permits it (scenario scan §1.1, §2.1 *[read]*).
+
+| Axis | Values | Permission source |
+|---|---|---|
+| **P** principal form | detached · detached + secondary suite · detached houseplex 2–4 · detached houseplex 5–6 (inside 600.60 only) · semi · semi + suite · semi houseplex · townhouse · townhouse + suite | zone permitted-types lists 10.x.20.40; `u` label 10.x.40.1; houseplex definitions 800.50(181)/(746), 600.60.20; one suite per unit 150.10.20.1(2); provincial floor M-55 |
+| **A** ancillary suite | none · garden · laneway | 150.7.20.1(2) = 150.8.20.1(2) (not both); laneway needs a lane 800.50(402) |
+| **K** parking | none · integral garage · detached garage (M-66) | parking never required: 200.5.10.1 R3/R5 |
+| **T** tier | as-of-right · CoA (M-65) | — |
+
+**Collapse rules** — declared equalities with their evidence, each a metamorphic fixture run both ways:
+
+| # | Equality | Holds when | Evidence |
+|---|---|---|---|
+| C1 | houseplex 2 = 3 = 4 (one envelope; units, average unit size, bedrooms are fields) | always | no envelope clause names a count *[measured, scan §2.2]* |
+| C2 | houseplex 5 = 6 | always (600.60 only) | 600.60.30(3), 600.60.40(1)(B), (2)(A) |
+| C3 | detached = detached + suite (envelope) | no `d` applies and LC ≥ 45 % or unmapped | 10.x.40.40(1)(C), 10.x.30.40(1)(D) |
+| C4 | pad = none | always | no size rule reads a pad (10.5.80.10 is location only) |
+| C5 | integral = none | FSI does not bind or is disapplied | 10.5.40.40(3)(C)/(D) is a deduction inside FSI |
+| C6 | detached garage = none | neither coverage nor an ancillary cap binds | 10.5.60.70(1), 10.5.60.50(2) |
+| C7 | semi / townhouse scenarios on a single detached lot → `not_permitted` | lot is not a semi half / per-unit frontage or `au` not met | 800.50(746)(B); 10.x.30.10(1)(B); `au` (open: Q2) |
+
+House + suite ≠ houseplex (height max(HT, 10.0), no storey cap and 19 m depth apply to the houseplex only) — **separate envelopes** *[read, scan §2.2 item 3]*.
+
+**Grid size** *[inferred]*: typical RD detached lot 14 envelopes × 2 tiers = 28 computations; worst case (R zone, lane, 600.60, FSI binding) 81 × 2 = 162. Suite size is computed **per principal scenario** (GFA < principal GFA; the 150.7.60.70(1) (A)-or-(B) coverage regimes; the rear soft-landscaping area; height vs separation) *[read, scan §3]*.
+
+### 6.3 Formula registry and the one step (M-61, M-62, M-68, M-69)
+
+**Registry row** (data, double-keyed; ⧉ = keyed): `formula_id` · `field` · `tier` · `kind` ∈ {`formula`, `empirical_ref`, `cost_ref`, `input`} (M-69) · ⧉ `applies_to_scenarios` · ⧉ `expression` (Spec 68 §7.4 DSL) · ⧉ `inputs[]` — each a Layer 2 `dsl_target` × structure, or a declared geometry input from a closed list (`lot_size_sqm`, `frontage_m`, `depth_m`, existing primary footprint, `storeys_p50`; the CoA factor k is a logic variable, not an input) · `literals[]` — each a Layer 1 clause id or a `logic_variables.json` id · ⧉ `status_map` (which input status yields `not_permitted` / `not_evaluated`) · `vectors[]` (Spec 67 worked examples × scenario, each expected value cited).
+
+**Handlers:** one per Spec 68 §7.1 archetype that reaches a report field (≤ 10; keys equal `vocab.archetype`, both directions, Spec 68 §8 rule 2) — e.g. LIMIT caps an input, PERMIT / PROHIBIT set a scenario's status, DISAPPLY yields `not_applicable`. No handler branches on a zone, a scenario or a regulation id.
+
+**The step** (one, converted under Specs 122/124; proposed slug `compute_maxbld_scenarios`): reads the Layer 2 resolution rows, lot inputs and norms; runs the registry through `evaluate.mjs`; writes the headline, the counters and the shadow columns. `records_meta` counters: `scenarios_computed`, `scenarios_permitted`, `scenarios_not_permitted` (by clause), `scenarios_collapsed` (by rule), `scenarios_not_evaluated` (by closed reason). Chain placement after `resolve_bylaws` and before `compute_parcel_cost_estimates` *[inferred; plan item]*.
+
+### 6.4 The CoA axis (Spec 69 M-65)
+
+**One method** (operator ruling 2026-10-07; grounded in `.cursor/mcbylaw/phase3-prework/coa-analysis.md`): **CoA(s) = AOR(s) × k_form(s)**.
+- **Form.** k is chosen by the scenario's building form (the analysis's option C), not by the zone. The P → form map is catalogue data: detached and semi → `single`; houseplex 2–4 and 5–6 → `multiplex`.
+- **Fitting.** Each k is citywide: the median of realized post-CoA new-build GFA ÷ model as-of-right GFA for that form.
+- **Storage.** The k values are admin logic variables (M-68). Each carries its fit n, its window and its real/predicted on the held-out half.
+- **No local cohort.** No per-neighbourhood cohort, no storey-p90 switch and no `realized_fsi_p90` cap. The neighbourhood still enters through AOR(s).
+
+| Form | k today | Fit basis | Held-out real / predicted · median APE |
+|---|---|---|---|
+| single | ≈ 1.11 | 1,579 post-CoA single new builds | **1.003** · 0.210 (n 811) |
+| multiplex | ≈ 1.42 | 279 post-CoA multiplex new builds (121 since 2025-06-26) | **1.013** · 0.286 (n 147) |
+
+All figures *[measured, coa-analysis §2.4]*. No figure gets below a median APE of ≈ 0.20 per lot: that floor is the spread of what owners choose to build.
+
+**Re-fit.**
+- k is re-fitted from permits on a schedule, writing an audit row (n, window, real/predicted).
+- **A re-fit is mandatory after the E2 label-FSI fix.** Today `bylaw_max_fsi` is NULL on ≈ 99 % of residential parcels *[measured]*, so AOR runs ≈ 1.2× the legal cap (permitted GFA in the 2017 notices = 0.83× our AOR, n 36 *[measured]*), and k absorbs that gap.
+- Once E2 lowers AOR to the law, an un-refitted k under-states CoA. A k older than the AOR basis it was fitted against FAILS the step's check.
+- A form with no fitted k (e.g. townhouse) is `not_evaluated:coa_factor_unfitted`, never borrowed from another form.
+
+**Both live CoA columns retire from the report**, each as `superseded_by:coa_gfa_sqm` (M-69):
+- **`max_newbuild_coa_gfa_sqm`** (×1.05, Spec 65 SC-1) was the better-validated of the two on single dwellings: median APE 0.204 vs 0.253; 48.7 % vs 43.0 % within ±20 % *[measured]*. It retires because it cannot price multiplexes (≈ 25 % under) and has no form semantics, not because it is wrong.
+- **`opt_coa_gfa_sqm`** is in effect a 0 / +50 % storey switch. It equals AOR on 52 % of parcels and over-predicts by 17 % where it fires *[measured]*.
+
+**Why no neighbourhood cohort or fallback.**
+- Only 10 neighbourhoods have ≥ 5 decided multiplex CoAs since 2025-06-26, and `neighbourhood_build_norms` has 0 of 25 multiplex rows above the low-sample bar *[measured]*.
+- A same-neighbourhood detached fallback would bias multiplex CoA GFA ≈ 24 % low, because multiplex builds realize 1.32× the FSI of single CoA builds on matched lots *[measured ratio; bias inferred]*.
+- A CoA adds ≈ 0 % floor area to a multiplex (1.014 [0.93, 1.09]) but +12.7 % to a single dwelling. Approval rates no longer differ by form after 2025-06-26 (0.836 vs 0.830) *[measured]*.
+
+CoA applications remain validation data (oracle C, M-71), never inputs.
+
+### 6.5 Parking (Spec 69 M-66)
+
+| K | Rules applied (change size) | Not evaluated in Layer 3 (compliance only, disclosed) |
+|---|---|---|
+| none (pad folds in, C4) | — | front soft landscaping 75 % without a driveway (10.5.50.10(1)(D)) |
+| integral garage | 10.5.40.40(3)(C)/(D): 1 space per dwelling unit (+1 for a detached house, frontage > 12.0 m) deducted from FSI GFA, only where FSI binds | entrance width ≤ 6.0 m (10.5.80.40(1)); lane access first (10.5.80.40(3)) |
+| detached garage | in overall coverage (10.5.60.70(1)(A)); ancillary ≤ 10 % (1)(B) (R: 10.10.60.70(1)(B) parking exemption); ancillary floor area 60 / 40 m² (10.5.60.50(2)); shares the garden-suite 45 % / 20 % and laneway 30 % caps | rear-yard parking count (10.5.80.10(7)) |
+
+The as-built `garageFit` (18.5 m² one-car floor, 20 % shared cap) is replaced by these rows (KFM-78-2).
+
+### 6.6 Presentation rules
+
+1. Shown: `computed` values of **permitted** scenarios only. `not_permitted`, `collapsed_into` and `not_evaluated` are counted, never displayed (M-64).
+2. Order: headline first; then catalogue order (P, A, K); as-of-right before CoA.
+3. Houseplex 2–4 (and 5–6) appear as unit rows inside one scenario: units, average unit size, maximum bedrooms.
+4. Every number carries its citation and amendment status (Spec 69 P-1). CoA values say "calibrated from citywide CoA builds of this form, not law" and show the form (`coa_form`).
+5. A parcel with no permitted computed scenario shows its closed reason (e.g. `not_evaluated:ambiguous_zone`), never a blank.
+6. Formats are unchanged (`mobile/src/lib/parcelCostFormat.ts`); cost lines are unchanged (M-67).
+7. Surfaces S-001 / S-072 follow Spec 126; the screen change is an Admin-domain item of the Phase 3 plan.
+
+### 6.7 Assumptions are admin logic variables (Spec 69 M-68)
+
+Non-law numbers on today's report path, each to be (or stay) a `logic_variables.json` row cited by id: `storey_height_m` 3 · `max_build_lot_min/max_sqm` 50 / 2000 · `max_build_min_dimension_m` 3 · `LOT_TOLERANCE` 0.15 · `BUILD_NORM_MIN_SAMPLE_DEFAULT` 5 · `FSI_PLAUSIBILITY_MAX` 10 · `OVER_CAPTURE_CLAMP` 1.1 · the pocket-storeys fallback literal `2` (`optimal-config.js:260`) *[read, field inventory]* · new: the CoA form factors `k_single` ≈ 1.11 and `k_multiplex` ≈ 1.42 (§6.4) *[measured, coa-analysis]*; `reno_coa_uplift_pct` retires with its column. Law-reading constants (suite, garage, setback and coverage values) do **not** become logic variables: they come from Layer 1 rows through Layer 2.
+
+### 6.8 Storage (Spec 69 M-70) — every number *[inferred]* until the Phase 3 trial measures it
+
+- Layer 2 b2 rows are **not** keyed by scenario: ≈ 5.6 M rows ≈ 2.9 GB fails the K5 10 % disk line.
+- Differing scenario classes ride inside the existing (cell × target) rows, with `collapsed_into` for the rest: ≈ 380 MB → ≈ 0.6 GB.
+- Per parcel, persist only the headline per tier and the counters. The grid is computed on read from the b2 rows and lot metrics (24-row read 3.9 / 13.9 ms p50 / p95 *[measured, Phase 2 trial]*). Persisting the full grid ≈ 387 M values ≈ 1–3 GB fails or crowds K5.
+- The trial also measures per-parcel compute (28–162 evaluations), the full run time and WAL.
+
+### 6.9 Gates and validation
+
+| Item | Closed answer | Gate (Spec 68 §11.1 arm or step check) |
+|---|---|---|
+| Report-field totality | inventory ⇄ registry, both ways; retirement reason closed | G-UNIVERSE report-field arm |
+| Formula shape | inputs resolve; literals licensed (clause or logic variable); ⧉ present | G-SHAPE formula arm |
+| Formula execution | every row evaluates on every applicable vector; expected values match or an `eval_mismatch` adjudication | G-EVAL formula arm |
+| Formula keying | agree / adjudicated / pending | G-AGREE, G-PROV |
+| Status set | `computed` · `not_permitted` · `collapsed_into` · `not_evaluated` + closed reason | G-SHAPE status arm; step check |
+| Scenario totality | one status per parcel × scenario × tier | G-UNIVERSE scenario arm; step check |
+| Drift | inventory, catalogue, registry regenerate byte-identically or match their pin | G-DRIFT |
+| Lineage | every `computed` value has formula, scenario, tier, Layer 2 rows, versions | step check (FAIL) |
+| Plausibility | per field a zone-aware bound; invariants: `suite_gfa < main_gfa`; CoA(s) ≥ AOR(s); `total_gfa ≥ main_gfa`; `main_gfa ≤ fsi × lot` where FSI applies; footprint ≤ coverage × lot where regulated | Reality-Check bounds (existing plausibility executor); step checks |
+| Shadow before switch | each difference in a closed class; `unexplained` = 0, `layer3_defect` = 0 | `step-validate` G8 explained diffs (M-71) |
+| Oracles | C CoA notices (planned Spec 129 `load_coa_notices`), metamorphic (C1–C7, monotonicity), D expert sample, held-out lots | Phase 2 round runner, reused unchanged |
+
+### 6.10 Out of scope
+
+Builder cost and the cost menu (Spec 88, M-67) · compliance-only parking rules (§6.5) · conversions of existing buildings (10.5.20.40, 600.60.40(3)) · apartment buildings (a 5–6 unit building outside 600.60 is `not_permitted`) · Ch.970 transition parking (scan F3).
+
+### 6.11 Open questions for ratification
+
+1. 150.7.60.70(1): compute both the (A) and (B) coverage regimes per scenario and take the more permissive *[read: the text gives alternatives]*.
+2. Semi / townhouse scenarios on a single detached lot: `not_permitted` (severance needed) or `not_evaluated`.
+3. 600.60 overlay membership source (R-10; `not_evaluated:map_area_not_held` until then).
+4. The M-55 provincial 4 m separation read as `max_requirement`: it changes the suite height tier.
+5. ~~CoA cohort family: zone or scenario form.~~ **Answered 2026-10-07 (operator, M-65 rewrite):** from the scenario's building form, through a citywide factor per form; no neighbourhood cohort. Still open: whether "house + secondary suite" maps to `single` or `multiplex` (the analysis's multiplex class includes "2 Unit" permits, which may be house + suite).
+6. Inventory generator: SQL source (recorded trace vs rendered builders) and home (Spec 126 tooling or Spec 68) — `generator-design.md` §4.
+7. Which live columns retire, alias or stay (Appendix R).
+
+## Known Failure Modes (Phase 3 inputs; traced at `bfaad556`, 2026-10-07)
+
+- **KFM-78-1 — two disagreeing CoA GFA figures, neither form-aware.** The two figures are `max_newbuild_coa_gfa_sqm` = `max_buildable_gfa_sqm × (1 + reno_coa_uplift_pct)` (`enrich-parcels.js:929`) and `opt_coa_gfa_sqm` (the §P2.2 storey-p90 / realized-p90 tier).
+  - **They disagree on almost every parcel:** opt_coa is lower on 258,181 and higher on 191,491 of 449,673 *[measured]*. The Tracked screen shows the first; the detail cost line prices the second.
+  - **Against realized post-CoA single builds, ×1.05 is the better predictor:** median APE 0.204 vs 0.253 on held-out parcels *[measured, coa-analysis §2.4]*.
+  - **opt_coa is a 0 / +50 % storey switch.** It equals AOR on 235,359 parcels (52 %) — 43.8 % because pocket p90 = p50 storeys, 8.0 % from the `realized_fsi_floor` — and over-predicts by 17 % where it fires *[measured]*.
+  - **Neither prices multiplexes:** ×1.05 is ≈ 25 % under.
+  - **Stale comment:** migration 206 says `coa_fsi = realized_fsi_p90`, but the code computes `opt_coa_gfa_sqm / lot` *[read]*.
+  - **Phase 3:** one method, CoA(s) = AOR(s) × k_form; both columns retire (M-65).
+- **KFM-78-2 — uncited suite and garage constants; two models.** The priced garden / laneway suite and garage lines use max-build-pass constants classed by-law-claimed-unsourced or heuristic (`GARDEN_SUITE_MAX_GFA_SQM` 60, `GARDEN_SUITE_MIN_LOT_SQM` 270, `LANEWAY_SUITE_MAX_GFA_SQM` 120, `GARAGE_MAX_GFA_SQM` 60, `ACCESSORY_MAX_COVERAGE_PCT` 0.30, `CAR_FOOTPRINT_SQM` 18.5, …; `enrich-parcels.js:631-654`). The by-law-cited `optimal-config.js` `BYLAW` set drives only `opt_suite_*`, which the report does not show *[read]*. Phase 3: both models are replaced by formula rows over Layer 2.
+- **KFM-78-3 — the front setback reads a banned reference.** `buildMaxBuildSql` uses `COALESCE(bylaw_standard_setback_m, zone default)` as the front setback (`enrich-parcels.js:502`); STAND_SET-as-setback is in `vocab.banned_code_refs` (Spec 67 KFM-14), to be removed for residential parcels by E1 (Spec 68 §11). Side, rear and flankage come from 65 zone-default proxies, coverage from 13 statistical medians *[read]*. This is the largest Layer 2 replacement surface.
+- **KFM-78-4 — `parcels.realized_fsi_p90` has no producer.** Its only writer is `compute_parcel_cost_estimates` copying the column's own prior value back (`parcel-cost.js:377` ← `compute-parcel-cost-estimates.js:150`); 0 parcels have it non-NULL *[measured]*. It is a dead field in the consumer contract (retire under M-69). The Phase 3 CoA method reads no `realized_fsi_p90` at all (M-65).
+- **KFM-78-5 — the garden-suite `BYLAW` constants predate 849-2025.** `optimal-config.js` cites "150.7.60.70(1)(C)" for a 40 % rear-yard / 60 m² footprint; the adopted page has no (1)(C) and no "40 percent" *[measured]*. It has (A) 45 % shared or (B) LC + 20 % all-ancillary (150.7.60.70(1)), GFA 120 / 60 m² (150.7.60.50(4)), height 4.0 / 6.3 m (150.7.60.40(1)) and separation 4.0 / 7.5 m (150.7.60.30(1)); the code has 4.0 / 6.0 m and 5.0 / 7.5 m *[read, scan §8 F1]*. §P2.1 repeats the old values (§5.2 S9). Held until Phase 3 (Spec 69 M-25 F-1).
+- **KFM-78-6 — as-of-right runs above the legal FSI cap.** `bylaw_max_fsi` is NULL on 100 % of RS/RT/RM/R and 99.4 % of RD parcels *[measured]*. As a result:
+  - the as-of-right envelope is ≈ 1.2× the legal cap (permitted GFA in the 2017 decision notices = 0.83× our AOR, n 36 *[measured]*);
+  - the fitted CoA factors k absorb that gap.
+  - E2 (label FSI, Spec 69 M-25 / Spec 68 §11) fixes AOR. **k must be re-fitted after E2** (M-65), or CoA will be under-stated.
 
 ## 2. Operating Boundaries
 
@@ -446,12 +615,14 @@ The envelope this spec consumes is **computed** by Spec 65 §4 and **derived / e
   `docs/specs/_contracts.json` (`build_norms` group), `docs/runbook/permit_occupancy_first_deploy.md`.
 - `scripts/enrich-permits.js` — §4D wires `OPT_COMP_PROP_COLS`, `assertOptConfigColumns`, and the per-run propagation audit rows into this script (otherwise Spec 66)
 - Tests this spec governs beyond its generated step suites (Amendment 6 of the generated-Target-Files WF2: the block's step tests switched off the system map's whole-spec test fallback, so these are now named here): `src/tests/optimal-config.logic.test.ts`
+- **PLANNED — McBylaw Phase 3 (§6; PROPOSED, not created):** the formula registry and scenario catalogue under `scripts/seeds/bylaw/` (data, Spec 68 §10 layout); the report-field generator `scripts/analysis/report-fields.mjs` and its outputs `docs/reference/maxbld-report-fields.md` / `.json`; one converted step (proposed slug `compute_maxbld_scenarios`: step file, descriptor, compute module and its step test directory); `src/tests/report-fields.infra.test.ts`. Paths are fixed by the Phase 3 plan after the trial (Spec 69 M-70).
 
 ### Out-of-Scope Files
 - `scripts/enrich-parcels.js` and the parcel new-fields / degrade-retire pass — **Phase 3**.
 - Any optimal-config engine or comps kNN — **Phases 2–3**.
 - `cost_estimates` / `trade_forecasts` reconciliation — **Phase 4**.
 - *(2026-09-29)* The two bullets above that name Phases 2–3 are historical — those phases are built; see §5.2 S8.
+- *(Phase 3, PROPOSED 2026-10-07)* Builder cost — `scripts/lib/parcel-cost.js`, `scripts/lib/compute/compute-parcel-cost-estimates.js`, the rate tables — owned by Spec 88 and untouched (Spec 69 M-67). The by-law table and evaluator (`scripts/analysis/bylaw/`, `scripts/generate-bylaw-provisions.mjs`) are Spec 68's; Phase 3 reads them, never forks them.
 
 ### Cross-Spec Dependencies
 - **Relies on:** Spec 65 §4 (max-build envelope: `max_buildable_gfa_sqm`, `lot_size_sqm`), Spec 65 §8
@@ -461,6 +632,7 @@ The envelope this spec consumes is **computed** by Spec 65 §4 and **derived / e
 - `load-parcels.js` — upstream loader for the `parcels` rows this spec's lot-driven outputs are computed on
 - `compute-storey-norms.js` — `storeys_p50/p90` joined from its `neighbourhood_storey_norms` output (Spec 65 §8); `compute_build_norms` runs after it in-chain
 - **Spec 67** (`67_maxbuild_bylaw_derivation.md`) — MaxBuild derivation methodology, field universe and scenarios for the envelope this spec consumes (§5)
+- **Phase 3 (§6, PROPOSED):** relies on Specs 68/69 (Layer 1 table, evaluator, Layer 2 resolution; rulings M-61..M-71), Specs 122/124 (the converted step), Spec 126 (report surfaces), planned Spec 129 `load_coa_notices` (oracle C); consumed by Spec 88 (reads the area columns only) and the MaxBLD report surfaces.
 
 ---
 
@@ -471,3 +643,31 @@ The envelope this spec consumes is **computed** by Spec 65 §4 and **derived / e
 - **Spec 48** §3.6 row-derived verdict cascade + §3.7 first-deploy runbook.
 - **Spec 30** — Mutator archetype (recomputed summary table).
 - Design reports listed in the header are authoritative for Phases 2–4.
+
+---
+
+## Appendix R — MaxBLD report-field inventory (generated; PLANNED)
+
+**The generated block lands with the generator** (Spec 69 M-69): `scripts/analysis/report-fields.mjs --write | --check` (proposed name) renders `docs/reference/maxbld-report-fields.{md,json}` and this appendix, one row per user-visible calculated field: surface, render site, label, format, column, producer step, formula chain (file:line nodes), constants with their class, variant (aor · coa · heritage · ravine · fallback), Layer 2 targets, evidence class. Stages reuse existing tools: surface descriptors and the TypeScript compiler API (display), the lineage snapshot and consumer registry (producer), the sql-witness resolver (SQL chain), code-link `classifyConstants` (constants), `vocab.json` `dsl_target` (targets). Drift lock: `src/tests/report-fields.infra.test.ts` runs `--check`. Design: `.cursor/mcbylaw/phase3-prework/generator-design.md`.
+
+**Hand first edition (2026-10-07, `field-inventory.md`; replaced by the generator, never hand-maintained):**
+
+| # | Field (column) | Variant | Producer | Layer 2 targets | Phase 3 kind (M-69) |
+|---|---|---|---|---|---|
+| 1 | `max_buildable_gfa_sqm` | aor envelope | `enrich_parcels` max-build pass | fsi, lot_coverage_pct, gfa_m2, height_m, height_storeys, front/rear/side/side_street setbacks, building_depth_m, building_length_m, required_lot_area_m2, required_lot_frontage_m | formula |
+| 1a | `max_newbuild_coa_gfa_sqm` | coa (×1.05) | `enrich_parcels` pass 3 | none (empirical) | retire: `superseded_by:coa_gfa_sqm` (M-65; the better-validated of the two, KFM-78-1) |
+| 2 | `opt_aor_gfa_sqm` | aor tier | `enrich_parcels` pass 5 (optimal-config) | as row 1 + dwelling_units_max | formula |
+| 2a | `opt_coa_gfa_sqm` | coa tier | pass 5 | none (empirical) | retire: `superseded_by:coa_gfa_sqm` (M-65, KFM-78-1) |
+| 3 | `max_build_stories` | aor | max-build pass | height_storeys, height_m, main_wall_height_m | formula |
+| 3b | `opt_aor_storeys` / `opt_coa_storeys` | aor / coa | pass 5 | height_storeys | formula |
+| 4 | `max_build_fsi` | aor envelope | `compute_parcel_cost_estimates` | fsi (parity) | formula |
+| 4a | `coa_fsi` | coa | `compute_parcel_cost_estimates` | none (empirical) | formula |
+| 5 | `envelope_constrained` + `envelope_constraint_reason` | — | max-build pass | required_lot_area_m2, required_lot_frontage_m | formula (status) |
+| 6 | `lot_size_sqm` | — | `load_parcels` | — | input |
+| C1–C13 | the 13 cost lines | aor / coa | `compute_parcel_cost_estimates` | via their area columns | cost_ref (Spec 88, M-67) |
+| C5–C7 areas | `max_garden_suite_gfa_sqm`, `max_laneway_suite_gfa_sqm`, `max_garage_gfa_sqm` | aor | max-build pass | suite / ancillary envelope, landscaping, parking_access | formula |
+| N1–N5 | `nearby_builds_summary`, `comp_count`, `comp_fsi_p50`, `comp_dominant_build`, comp examples | — | pass 4 / norms | none (empirical) | empirical_ref |
+| N6 | Tracked "New Nearby CoA Ruling" | — | nothing computes it | — | open (no producer) |
+| — | `realized_fsi_p90` (payload only) | — | self-loop | — | retire: `dead_field` (KFM-78-4) |
+
+Payload-only (whitelisted, not rendered): `opt_aor_storeys`, `opt_coa_gfa_sqm`, `opt_coa_storeys`, `max_buildable_footprint_sqm`, `cur_floor_gfa_sqm`, `lot_size_sqft`, the 12 cost scalars, `comp_build_ratio_p50`, `neighbourhood_cost_premium` *[read, `consumer-lookup.ts:33-41` vs `[parcelId].tsx`]*.

@@ -425,6 +425,13 @@ Each stage has one owner, one artifact and one gate, and is independently revert
 
 Held until Phase 3 (Spec 69 M-25): F-1..F-5 (plan). **Carve-out:** E1 (dominant-label zoning parameters) is zoning *application* under Spec 69 M-42, approved 2026-10-06 and run as its own WF3; it also removes the STAND_SET-as-setback path from residential parcels (Spec 67 KFM-14). E2 (label FSI) is deferred to Phase 3.
 
+### 11.1 Layer 3 — report fields as declared formulas (PROPOSED 2026-10-07; Spec 69 M-61..M-71; detail Spec 78 §6)
+
+**Contract.** Each calculated report field is a formula-registry row (data): a §7.4 expression over Layer 2 winners and declared geometry inputs, run by the §7.6 evaluator per parcel × catalogue scenario × tier. Code = the evaluator, one handler per archetype (§8 rule 2) and one converted step; no code names a zone, scenario or regulation id. A formula literal cites a clause or a logic variable.
+**Status (closed):** `computed` · `not_permitted:<clause>` · `collapsed_into:<scenario>:<rule>` · `not_evaluated:<reason>`. Only `computed` values of permitted scenarios are displayed; the rest are counted.
+**Lineage** on every value: formula id, scenario id, tier, the Layer 2 rows read, `table_version`, `evaluator_version`.
+**Gates — arms on existing gates, no new gate:** G-SHAPE (formula-row shape, literal licence, status set) · G-AGREE (formula rows ⧉) · G-EVAL (worked examples × scenario) · G-UNIVERSE (report-field totality: generated inventory ⇄ registry both ways, retirement needs a closed reason; scenario totality) · G-DRIFT (inventory, catalogue, registry generated or pinned). The step adds Spec 124 checks and `step-validate` G8 explained diffs over shadow columns before any switch.
+
 ## 12. Behavioral contract and testing
 
 **Inputs:** the committed snapshot and authored files; code files named by `code_refs` or `vocab.code_roots`, parsed, never executed; `--refresh-census` only: one session under `BEGIN TRANSACTION READ ONLY` (server-enforced), running the witness-checked `census.sql`. No mode writes to the DB.
