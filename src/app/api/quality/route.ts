@@ -168,6 +168,8 @@ export const GET = withApiEnvelope(async function GET() {
     // (not historical 24h failures that may have been successfully rerun since)
     // Normalize chain-prefixed names (e.g. "permits:assert_schema" → "assert_schema")
     // so a successful chain run supersedes a stale standalone failure.
+    // A `captured` row (a golden-harness run, Spec 120 §3.2b) is excluded: it judged nothing, and
+    // as the latest row it would hide a still-open failure (WF3 capture-ledger gap).
     let pipelineFailures: PipelineFailure[] = [];
     try {
       const failureRows = await query<{ pipeline: string; error_message: string; failed_at: string }>(
@@ -179,6 +181,7 @@ export const GET = withApiEnvelope(async function GET() {
                        ELSE pipeline END AS base_pipeline,
                   status, error_message, started_at AS failed_at
            FROM pipeline_runs
+           WHERE status <> 'captured'
            ORDER BY base_pipeline, started_at DESC
          ) latest
          WHERE status = 'failed'`

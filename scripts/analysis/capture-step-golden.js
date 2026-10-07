@@ -15,9 +15,14 @@
  *       print; run-chain takes the LAST summary because multi-worker scripts emit several)
  *   (c) the `pipeline_runs` row(s) written during the run — `SELECT max(id)` before, rows with
  *       `id > that` after. NOTE: a step run under `PIPELINE_CHAIN` skips its OWN ledger row
- *       (run-chain owns it — `assert-schema.js:272`), so in-chain captures legitimately show
- *       zero rows; the standalone (`--chain=none`) capture is the one that exercises the
- *       step's own ledger path.
+ *       (run-chain owns it — `scripts/lib/step/ledger.js` ownsLedgerRow), so in-chain captures
+ *       legitimately show zero rows here; the standalone (`--chain=none`) capture is the one that
+ *       exercises the step's own ledger path. LEDGER RECORD (WF3 capture-ledger gap, 2026-10-06):
+ *       (c) is read BEFORE anything is recorded and is unchanged, but every run this harness
+ *       spawns (run 1, the POST run 2, --trace-only) is then recorded by `./capture-ledger.js` — a
+ *       bare-slug row with status `captured` (Spec 120 §3.2b: never a baseline, always upstream
+ *       activity), or a `capture` stamp on the row a standalone step wrote itself. The row ids
+ *       land top-level in `capture_ledger_rows`, never in `normalised`.
  *   (d) a normalised form + a non-determinism inventory: every key / pattern the normaliser
  *       stripped or masked is listed under `nondeterminism`, declared BEFORE the first diff
  *       (§5.3: "Non-determinism inventory declared *before* the first diff").
@@ -62,6 +67,7 @@
  *   --table-columns=t:a,b[;t2:c]  project the content hash onto these columns (bypasses the ceiling)
  *   --table-order=t:a,b[;t2:c]    ORDER BY these columns instead of the pk
  *   --invariants=<f>    JSON array of `{name, sql}` scalar queries captured after the child exits
+ *   --ledger-slug=<s>   the pipeline_runs slug, when the manifest/descriptor cannot name the step
  *
  * DB target: `scripts/lib/resolve-db.js` — no silent default, host+database printed before the
  * child runs (tasks/lessons.md 2026-07-30: "print the host+database you connected to").
@@ -78,6 +84,7 @@ const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, FAIL: 
 const { parseFiveWords, captureGuardDecision, sameSessionDecision, prePathFor } = require('./capture-guard');
 const os = require('os');
 const witness = require('./capture-witness');
+const ledger = require('./capture-ledger');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -799,7 +806,7 @@ function spawnStep({ scriptPath, args, env }) {
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
-async function capture({ step, chain, args, tables, tablesSource, ceiling, tableSpecs = {}, invariantSpec, invariantsFile, traceDir = null, traceOut = null }) {
+async function capture({ step, chain, args, tables, tablesSource, ceiling, tableSpecs = {}, invariantSpec, invariantsFile, traceDir = null, traceOut = null, session = null, kind = 'adhoc' }) {
   const pool = createResolvedPool({ label: 'capture-step-golden' });
   // Print the target BEFORE running (lessons.md) — assertDbTarget logs database + migrations on
   // the first checkout below; this line names the host even if that first checkout fails.
@@ -816,9 +823,11 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
     console.log(`[capture-step-golden] spawning: ${runtimeFor(step)} ${step} ${args.join(' ')} ` +
       `(PIPELINE_CHAIN=${chain === 'none' ? '<unset>' : chain}; pipeline_runs max(id) before = ${maxIdBefore})`);
 
+    const win = session ? await ledger.openWindow(pool) : null;
     const t0 = Date.now();
     const child = await spawnStep({ scriptPath: step, args, env: runEnv });
     const wallMs = Date.now() - t0;
+    if (session) session.push(ledger.sessionEntry({ run: 1, kind, chain, win, completed_at: await ledger.closeWindow(pool), child, markers: parseMarkers(child.stdout) }));
 
     const rowsRes = await pool.query(
       `SELECT id, pipeline, status, started_at, completed_at, duration_ms,
@@ -889,7 +898,7 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
  * a coverage review retires them. A descriptor with no zero_writes target never runs
  * run 2 (answer NOT_APPLICABLE).
  */
-async function runRerunProof({ step, chain, args, descriptor }) {
+async function runRerunProof({ step, chain, args, descriptor, session = null }) {
   const tables = rerunTables(descriptor);
   if (tables.length === 0) return rerunProofDecision({ tables, measured: {}, run2: null });
   const pool = createResolvedPool({ label: 'capture-step-golden:rerun-proof' });
@@ -898,7 +907,9 @@ async function runRerunProof({ step, chain, args, descriptor }) {
     if (chain === 'none') delete env.PIPELINE_CHAIN; else env.PIPELINE_CHAIN = chain;
     console.log(`[capture-step-golden] rerun proof: run 2 of ${step} (zero_writes tables: ${tables.map((t) => `${t.table}(${t.mode})`).join(', ')})`);
     const { measured, run2, lo } = await measureRerun(pool, tables, async () => {
+      const win = session ? await ledger.openWindow(pool) : null;
       const child = await spawnStep({ scriptPath: step, args, env });
+      if (session) session.push(ledger.sessionEntry({ run: 2, kind: 'post', chain, win, completed_at: await ledger.closeWindow(pool), child, markers: parseMarkers(child.stdout) }));
       const rm = parseMarkers(child.stdout).summary?.records_meta ?? {};
       return { exit_code: child.exit_code, skipped: rm.skipped === true, terminal: rm.terminal ?? null };
     });
@@ -1075,6 +1086,11 @@ function gitHead() {
   return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 }
 
+// WF3 capture-ledger gap — main() points this at its session's flush once a session exists, so the
+// require.main catch can record every spawned run on ANY throw (a refusal, a rerun FAIL, a
+// captureTableState failure after the spawn). Null until then: an early refusal touches no DB.
+let pendingLedgerFlush = null;
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
@@ -1126,6 +1142,14 @@ async function main() {
 
   const descriptorPath = descriptorPathFor(step);
   const descriptor = fs.existsSync(descriptorPath) ? JSON.parse(fs.readFileSync(descriptorPath, 'utf8')) : null;
+  // WF3 capture-ledger gap — resolved AFTER the overwrite and capture-last guards (their refusals
+  // stay seconds-cheap and DB-free) and BEFORE any spawn: a step the ledger cannot name refuses here.
+  const ledgerSlug = ledger.resolveLedgerSlug({
+    stepRel: path.relative(REPO_ROOT, path.resolve(step)),
+    manifest: JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')),
+    descriptor,
+    override: opts['ledger-slug'] ? String(opts['ledger-slug']) : null,
+  });
   const { tables, source: tablesSource } = resolveTables({ descriptor, tablesArg: opts.tables });
   const ceiling = parseRowCeiling(opts['table-row-ceiling']);
   const argColumns = parseTableColumnSpec(opts['table-columns'], '--table-columns');
@@ -1157,7 +1181,16 @@ async function main() {
 
   const traceDir = opts.out ? fs.mkdtempSync(path.join(os.tmpdir(), 'buildo-trace-')) : null;
   const traceOut = {};
-  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile, traceDir, traceOut });
+  // WF3 capture-ledger gap — every run spawned from here on is recorded (./capture-ledger.js): the
+  // explicit flush below on success, the require.main catch on any throw, and a signal latch so a
+  // Ctrl-C waits for the child instead of killing the harness between the child's exit and the flush.
+  const session = [];
+  const ledgerCtx = { slug: ledgerSlug, descriptor, harness: 'scripts/analysis/capture-step-golden.js', out: opts.out ? String(opts.out) : null, ...ledger.gitState(REPO_ROOT) };
+  const flush = () => ledger.flushSession(session, { createPool: () => createResolvedPool({ label: 'capture-step-golden:ledger' }), ctx: ledgerCtx });
+  pendingLedgerFlush = flush;
+  const latch = ledger.installSignalLatch({ flush });
+  const kind = ledger.captureKind({ out: opts.out ? String(opts.out) : null, isPost, traceOnly });
+  const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile, traceDir, traceOut, session, kind });
   const doc = buildCapture(raw);
   assertCaptureIsValid(doc);
 
@@ -1173,13 +1206,21 @@ async function main() {
 
   // Item 7 — a POST capture is a two-run proof: run 2 must write nothing to any
   // zero_writes table. Top-level field (never in `normalised`, so no G8 diff).
+  if (latch.latched()) throw new Error(`[capture-step-golden] interrupted (${latch.latched()}): run 1 is recorded, nothing else is spawned, no golden written`);
   if (isPost) {
-    doc.rerun_proof = await runRerunProof({ step, chain: String(opts.chain), args, descriptor });
+    doc.rerun_proof = await runRerunProof({ step, chain: String(opts.chain), args, descriptor, session });
     console.log(`[capture-step-golden] rerun proof: ${doc.rerun_proof.answer} — ${doc.rerun_proof.reason}`);
     if (doc.rerun_proof.answer === RERUN_FAIL) {
       throw new Error(`[capture-step-golden] REFUSING --out=${opts.out}: the immediate second run was not a zero-write rerun (${doc.rerun_proof.reason}) — the descriptor's idempotent_rerun: "zero_writes" is false for this step`);
     }
   }
+
+  // WF3 capture-ledger gap — record every spawned run BEFORE anything is written (golden, trace,
+  // sidecar), so the golden carries the row ids (top-level, never in `normalised`).
+  if (latch.latched()) throw new Error(`[capture-step-golden] interrupted (${latch.latched()}): the spawned run(s) are recorded, no golden written`);
+  doc.capture_ledger_rows = await flush();
+  latch.dispose();
+  console.log(`[capture-step-golden] ledger: ${doc.capture_ledger_rows.map((r) => `pipeline_runs ${r.id} (${r.recorded_by})`).join(', ')}`);
 
   // R-C — the LOCKFILE stamp. Computed after the run (not before): the fields it hashes
   // (step file, descriptor, notes, compute module) are exactly what could have changed
@@ -1277,9 +1318,12 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch((err) => {
+  main().catch(async (err) => {
     console.error(`[capture-step-golden] ${err.stack || err.message}`);
     process.exitCode = 1;
+    // WF3 capture-ledger gap — a refusal or throw after a spawn still records the run(s). The
+    // error above wins; a flush failure is logged beside it, never instead of it.
+    await ledger.flushAfterError(pendingLedgerFlush);
   });
 }
 

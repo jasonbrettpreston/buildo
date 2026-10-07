@@ -596,3 +596,65 @@ describe('sql-witness harness — structural lock (P1-C3b5): only run 1 is trace
     expect(functionBody(SRC, 'async function runRerunProof(')).not.toContain('traceEnv');
   });
 });
+
+describe('capture ledger wiring — structural lock (WF3 capture-ledger gap, L3)', () => {
+  // SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3
+  // SPEC LINK: .cursor/wf3_capture_ledger_gap_active_task.md L3 (and Self-Checklist items 1, 2, 7)
+  // Every run the harness spawns is recorded by scripts/analysis/capture-ledger.js. The record is
+  // written from the PARENT, only AFTER a child exits (never a pre-spawn row, never inside the traced
+  // child env), BEFORE the golden is written, and on every throw after a spawn. Read as source text,
+  // the same way as the run-2-is-never-traced block above: no import, no DB, no spawn.
+  const HARNESS_SRC_PATH = path.join(process.cwd(), 'scripts/analysis/capture-step-golden.js');
+  const LEDGER_SRC_PATH = path.join(process.cwd(), 'scripts/analysis/capture-ledger.js');
+
+  function bodyOf(src: string, declaration: string): string {
+    const start = src.indexOf(declaration);
+    expect(start, `declaration ${JSON.stringify(declaration)} not found in the harness source`).toBeGreaterThanOrEqual(0);
+    const rest = src.slice(start + declaration.length);
+    const nextDecl = [(rest.indexOf('\nasync function ')), (rest.indexOf('\nfunction '))].filter((i) => i >= 0);
+    return rest.slice(0, nextDecl.length === 0 ? rest.length : Math.min(...nextDecl));
+  }
+
+  let SRC = '';
+  beforeAll(() => {
+    SRC = fs.readFileSync(HARNESS_SRC_PATH, 'utf8');
+  });
+
+  it('RED: run 1 and run 2 open their own window before the spawn and join the session after it; neither writes a row', () => {
+    for (const decl of ['async function capture(', 'async function runRerunProof(']) {
+      const body = bodyOf(SRC, decl);
+      const spawnAt = body.indexOf('spawnStep(');
+      expect(spawnAt, decl).toBeGreaterThanOrEqual(0);
+      expect(body.indexOf('ledger.openWindow('), decl).toBeGreaterThanOrEqual(0);
+      expect(body.indexOf('ledger.openWindow('), decl).toBeLessThan(spawnAt);
+      expect(body.indexOf('session.push('), decl).toBeGreaterThan(spawnAt);
+      expect(body, decl).not.toContain('INSERT INTO pipeline_runs');
+      expect(body, decl).not.toContain('STEP_RUN_ID');
+      expect(body, decl).not.toContain('flushSession');
+    }
+  });
+
+  it('RED: main() resolves the slug after the first overwrite guard, and records after run 2 but before any golden or trace-only exit', () => {
+    const main = bodyOf(SRC, 'async function main(');
+    const flushAt = main.indexOf('doc.capture_ledger_rows = await flush()');
+    expect(flushAt).toBeGreaterThan(main.indexOf('runRerunProof('));
+    expect(flushAt).toBeLessThan(main.indexOf('fs.writeFileSync(outPath'));
+    expect(flushAt).toBeLessThan(main.indexOf('--trace-only: golden NOT written'));
+    expect(main.indexOf('pendingLedgerFlush = flush')).toBeGreaterThanOrEqual(0);
+    expect(main.indexOf('pendingLedgerFlush = flush')).toBeLessThan(main.indexOf('await capture('));
+    expect(main.indexOf('ledger.resolveLedgerSlug(')).toBeGreaterThan(main.indexOf('overwriteDecision('));
+    expect(main.indexOf('ledger.resolveLedgerSlug(')).toBeLessThan(main.indexOf('await capture('));
+  });
+
+  it('RED: the error path records — the require.main catch prints the error, then flushes (the error wins)', () => {
+    const tail = SRC.slice(SRC.indexOf('if (require.main === module)'));
+    expect(tail).toContain('ledger.flushAfterError(pendingLedgerFlush)');
+    expect(tail.indexOf('console.error(')).toBeLessThan(tail.indexOf('ledger.flushAfterError('));
+  });
+
+  it('neither the harness nor the recorder requires run-chain.js (it installs a SIGINT handler that exits at load)', () => {
+    const requiresRunChain = /require\(\s*['"][./]*\/?run-chain(\.js)?['"]\s*\)/;
+    expect(SRC).not.toMatch(requiresRunChain);
+    expect(fs.readFileSync(LEDGER_SRC_PATH, 'utf8')).not.toMatch(requiresRunChain);
+  });
+});

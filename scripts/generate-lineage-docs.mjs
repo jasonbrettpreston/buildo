@@ -113,6 +113,7 @@ async function refresh() {
            records_meta->'pipeline_meta' AS pm
     FROM pipeline_runs
     WHERE records_meta ? 'pipeline_meta'
+      AND status <> 'captured'
     ORDER BY pipeline, started_at DESC
   `);
   await pool.end();

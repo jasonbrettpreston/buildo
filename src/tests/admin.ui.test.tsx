@@ -2628,11 +2628,13 @@ describe('Funnel panel components extracted to separate file', () => {
     // timing_calibration entries + 3 marketplace tail steps to PIPELINE_CHAINS.
     // WF1 2026-04-19 (spec 49): bumped from 1400 to 1500 after adding columnar
     // audit_table render path for assert-global-coverage (two render sites).
+    // WF3 capture-ledger gap 2026-10-06: bumped from 1500 to 1510 for the `captured`
+    // run-status branch in getStatusDot (Spec 120 §3.2b; locked by FreshnessTimeline.ui.test.tsx).
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1500);
+    expect(lineCount).toBeLessThan(1510);
   });
 
   it('FunnelPanels.tsx exports CircularBadge and DataFlowTile', () => {

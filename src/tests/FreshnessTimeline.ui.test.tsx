@@ -173,3 +173,57 @@ describe('`self_skipped` renders in both admin consumers — never as PASS', () 
     expect(stats).toMatch(/CHAIN_SLUGS = \['chain_coa'/);
   });
 });
+
+// ── `captured` consumer tripwire (Spec 120 §3.2b / WF3 capture-ledger gap, L9) ──
+//
+// Same class as the `self_skipped` block above: a status the pipeline WRITES but no consumer
+// RENDERS is a silent misrender. `captured` is written ONLY by scripts/analysis/capture-ledger.js
+// (every step run the golden-capture harness spawns). It is a real write, recorded so it can be
+// traced, but nothing judged it: both chips are neutral, never PASS. The /api/quality failure
+// alert takes each step's LATEST row, so a capture there would mask a still-open failure; it is
+// excluded. Source-shape assertions, as above.
+describe('`captured` renders in both admin consumers and never masks a failure alert', () => {
+  it('the capture recorder is the only producer, and the step library never writes it', () => {
+    expect(read('scripts/analysis/capture-ledger.js')).toMatch(/const CAPTURED = 'captured';/);
+    expect(read('scripts/lib/step/ledger.js')).not.toMatch(/'captured'/);
+  });
+
+  it('FreshnessTimeline.getStatusDot has a captured branch, neutral and labelled, placed below self_skipped', () => {
+    const src = read('src/components/FreshnessTimeline.tsx');
+    const dot = src.match(/function getStatusDot[\s\S]*?\n}/)?.[0];
+    expect(dot, 'getStatusDot not found').toBeTruthy();
+    expect(dot!).toMatch(/info\.status === 'captured'/);
+    expect(dot!).toMatch(/label: 'Captured \(golden harness\)'/);
+    const branch = dot!.match(/info\.status === 'captured'\)\s*return\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(branch).toContain('bg-gray-50');
+    // Below self_skipped: the admin.ui byte-window locks slice fixed windows from the top.
+    expect(dot!.indexOf("'captured'")).toBeGreaterThan(dot!.indexOf("'self_skipped'"));
+  });
+
+  it('DataQualityDashboard.getChainVerdict has a captured branch ABOVE its PASS fallthrough', () => {
+    const src = read('src/components/DataQualityDashboard.tsx');
+    const fn = src.match(/function getChainVerdict[\s\S]*?\n  }/)?.[0];
+    expect(fn, 'getChainVerdict not found').toBeTruthy();
+    expect(fn!).toMatch(/info\.status === 'captured'\) return \{ label: 'CAPTURED'/);
+    expect(fn!.indexOf("'captured'")).toBeLessThan(fn!.indexOf("label: 'PASS'"));
+    expect(fn!).not.toMatch(/captured[\s\S]{0,120}bg-green/);
+  });
+
+  it('/api/quality: a captured row never becomes the latest row the failure alert reads', () => {
+    const src = read('src/app/api/quality/route.ts');
+    expect(src).toMatch(/FROM pipeline_runs\s+WHERE status <> 'captured'\s+ORDER BY base_pipeline, started_at DESC/);
+  });
+
+  it('admin status + stats routes: a captured row never overwrites a real run, and a chain row always replaces it (OUTPUT-roster D1)', () => {
+    for (const rel of ['src/app/api/admin/pipelines/status/route.ts', 'src/app/api/admin/stats/route.ts']) {
+      const src = read(rel);
+      expect(src, rel).toContain("if (row.status === 'captured' && pipelineLastRun[row.pipeline]) continue;");
+      expect(src.indexOf("row.status === 'captured'"), rel).toBeLessThan(src.indexOf('pipelineLastRun[row.pipeline] = entry;'));
+      expect(src, rel).toMatch(/if \(!existing \|\| existing\.status === 'captured' \|\|/);
+    }
+  });
+
+  it('generate-lineage-docs never documents a captured row as lineage (OUTPUT-roster D3)', () => {
+    expect(read('scripts/generate-lineage-docs.mjs')).toMatch(/WHERE records_meta \? 'pipeline_meta'\s+AND status <> 'captured'/);
+  });
+});
