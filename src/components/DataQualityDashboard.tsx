@@ -132,6 +132,9 @@ const HealthBanner = React.memo(function HealthBanner({
     // otherwise fall through to a green PASS chip for work that never ran.
     // Must stay ABOVE the PASS fallthrough. Neutral, not PASS — nothing judged.
     if (info.status === 'self_skipped') return { label: 'SKIP', cls: 'text-gray-600 bg-gray-50 border-gray-200' };
+    // WF3 capture-ledger gap (Spec 120 §3.2b) — a root step's latest row can be a `captured`
+    // golden-harness run (same `chainInfo ?? rootInfo` fallback). Neutral, never PASS: no chain judged it.
+    if (info.status === 'captured') return { label: 'CAPTURED', cls: 'text-gray-600 bg-gray-50 border-gray-200' };
     return { label: 'PASS', cls: 'text-green-700 bg-green-50 border-green-200' };
   }
 

@@ -177,6 +177,7 @@ export const CHAIN_META_KEYS = Object.freeze({
   telemetry: 'scripts/run-chain.js:956 (recordsMeta = { ...(recordsMeta || {}), telemetry })',
   skipped: "scripts/lib/pipeline.js:1068 (records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' } — the advisory-lock SKIP summary)",
   reason: "scripts/lib/pipeline.js:1068 (records_meta: { skipped: true, reason: 'advisory_lock_held_elsewhere' } — the advisory-lock SKIP summary)",
+  capture: 'scripts/analysis/capture-ledger.js:191 (records_meta: { ...child records_meta, capture: stamp } — the golden-capture harness recorder, Spec 120 §3.2b `captured`)',
 });
 
 /** Corpus roots the completeness scan walks (Rule 10/R-T closed corpus). */

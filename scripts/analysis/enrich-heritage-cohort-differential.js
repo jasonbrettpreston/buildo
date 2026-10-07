@@ -35,9 +35,14 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const ledger = require('./capture-ledger');
+const { parseMarkers } = require('./capture-step-golden.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const COHORT_PATH = path.join(REPO_ROOT, 'docs/reports/golden/enrich_heritage/differential/cohort.json');
+// WF3 capture-ledger gap — the step this script spawns in-chain, recorded as a `captured` pipeline_runs row (L6).
+const LEDGER_SLUG = 'enrich_heritage';
+const LEDGER_DESCRIPTOR = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/enrich-heritage.descriptor.json'), 'utf8'));
 
 /** The projected content hash — same formula capture-step-golden.js's narrow-table path uses,
  * scoped to the four columns this step writes, ordered by the primary key. */
@@ -96,6 +101,7 @@ async function main() {
     return verify;
   }
 
+  const session = [];
   let ok = false;
   try {
     await pool.query(
@@ -109,11 +115,23 @@ async function main() {
     if (perturbed === baseline) throw new Error('perturbation did not change the hash — void differential');
 
     console.log('[differential] running the real converted step (node scripts/enrich-heritage.js, PIPELINE_CHAIN=sources)...');
-    const out = execFileSync('node', ['scripts/enrich-heritage.js'], {
-      cwd: REPO_ROOT,
-      env: { ...process.env, PIPELINE_CHAIN: 'sources' },
-      encoding: 'utf8',
-    });
+    // WF3 capture-ledger gap — the run is recorded whether execFileSync returns or throws.
+    const win = await ledger.openWindow(pool);
+    let child;
+    let out;
+    try {
+      out = execFileSync('node', ['scripts/enrich-heritage.js'], {
+        cwd: REPO_ROOT,
+        env: { ...process.env, PIPELINE_CHAIN: 'sources' },
+        encoding: 'utf8',
+      });
+      child = { exit_code: 0, signal: null, stdout: out, stderr: '' };
+    } catch (err) {
+      child = { exit_code: typeof err.status === 'number' ? err.status : null, signal: err.signal ?? null, stdout: String(err.stdout ?? ''), stderr: String(err.stderr ?? '') };
+      throw err;
+    } finally {
+      session.push(ledger.sessionEntry({ run: 1, kind: 'cohort', chain: 'sources', win, completed_at: await ledger.closeWindow(pool).catch(() => null), child, markers: parseMarkers(child.stdout) }));
+    }
     const summaryLine = out.split('\n').filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop();
     if (!summaryLine) throw new Error('no PIPELINE_SUMMARY line in step output');
     const summary = JSON.parse(summaryLine.slice('PIPELINE_SUMMARY:'.length));
@@ -141,6 +159,14 @@ async function main() {
       if (verifyHash !== baseline) process.exitCode = 2;
     } else {
       console.log('[differential] table already at baseline — no restore needed.');
+    }
+    // WF3 capture-ledger gap — record the spawned run AFTER the restore, in its own try/catch: a
+    // ledger error never alters the restore result or the exit code (L6).
+    try {
+      const rows = await ledger.flushSession(session, { pool, ctx: { slug: LEDGER_SLUG, descriptor: LEDGER_DESCRIPTOR, harness: 'scripts/analysis/enrich-heritage-cohort-differential.js', out: null, ...ledger.gitState(REPO_ROOT) } });
+      if (rows.length > 0) console.log(`[differential] ledger: ${rows.map((r) => `pipeline_runs ${r.id} (${r.recorded_by})`).join(', ')}`);
+    } catch (e) {
+      console.error(`[differential] ledger record FAILED (restore result and exit code unchanged): ${e.message}`);
     }
   }
   await pool.end();

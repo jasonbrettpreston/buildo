@@ -35,9 +35,14 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const ledger = require('./capture-ledger');
+const { parseMarkers } = require('./capture-step-golden.js');
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const COHORT_PATH = path.join(REPO_ROOT, 'docs/reports/golden/compute_parcel_cost_estimates/differential/cohort.json');
+// WF3 capture-ledger gap — the step this script spawns in-chain, recorded as a `captured` pipeline_runs row (L6).
+const LEDGER_SLUG = 'compute_parcel_cost_estimates';
+const LEDGER_DESCRIPTOR = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/compute-parcel-cost-estimates.descriptor.json'), 'utf8'));
 
 // The 16 columns this step writes (Spec 88 §2.5), in the fixed order the hash is computed over.
 const COLS = [
@@ -125,6 +130,7 @@ async function main() {
     return verify;
   }
 
+  const session = [];
   let ok = false;
   try {
     // COMMIT the perturbation — menu AND scalars, so "wrote nothing" cannot hash-equal baseline.
@@ -145,12 +151,24 @@ async function main() {
     if (perturbed === baseline) throw new Error('perturbation did not change the hash — void differential');
 
     console.log(`[differential:${args.side}] running the real step (node ${args.stepScript}, cwd=${args.stepCwd}, PIPELINE_CHAIN=sources)...`);
-    const out = execFileSync('node', [args.stepScript], {
-      cwd: args.stepCwd,
-      env: { ...process.env, PIPELINE_CHAIN: 'sources' },
-      encoding: 'utf8',
-      maxBuffer: 1024 * 1024 * 64,
-    });
+    // WF3 capture-ledger gap — the run is recorded whether execFileSync returns or throws.
+    const win = await ledger.openWindow(pool);
+    let child;
+    let out;
+    try {
+      out = execFileSync('node', [args.stepScript], {
+        cwd: args.stepCwd,
+        env: { ...process.env, PIPELINE_CHAIN: 'sources' },
+        encoding: 'utf8',
+        maxBuffer: 1024 * 1024 * 64,
+      });
+      child = { exit_code: 0, signal: null, stdout: out, stderr: '' };
+    } catch (err) {
+      child = { exit_code: typeof err.status === 'number' ? err.status : null, signal: err.signal ?? null, stdout: String(err.stdout ?? ''), stderr: String(err.stderr ?? '') };
+      throw err;
+    } finally {
+      session.push(ledger.sessionEntry({ run: 1, kind: 'cohort', chain: 'sources', win, completed_at: await ledger.closeWindow(pool).catch(() => null), child, markers: parseMarkers(child.stdout) }));
+    }
     const summaryLine = out.split('\n').filter((l) => l.startsWith('PIPELINE_SUMMARY:')).pop();
     if (!summaryLine) throw new Error('no PIPELINE_SUMMARY line in step output — full output follows:\n' + out.slice(-4000));
     const summary = JSON.parse(summaryLine.slice('PIPELINE_SUMMARY:'.length));
@@ -182,6 +200,14 @@ async function main() {
       if (verifyHash !== baseline) process.exitCode = 2;
     } else {
       console.log(`[differential:${args.side}] table already at baseline — no restore needed.`);
+    }
+    // WF3 capture-ledger gap — record the spawned run AFTER the restore, in its own try/catch: a
+    // ledger error never alters the restore result or the exit code (L6).
+    try {
+      const rows = await ledger.flushSession(session, { pool, ctx: { slug: LEDGER_SLUG, descriptor: LEDGER_DESCRIPTOR, harness: 'scripts/analysis/compute-parcel-cost-cohort-differential.js', out: null, ...ledger.gitState(REPO_ROOT) } });
+      if (rows.length > 0) console.log(`[differential:${args.side}] ledger: ${rows.map((r) => `pipeline_runs ${r.id} (${r.recorded_by})`).join(', ')}`);
+    } catch (e) {
+      console.error(`[differential:${args.side}] ledger record FAILED (restore result and exit code unchanged): ${e.message}`);
     }
   }
   await pool.end();

@@ -270,6 +270,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
           records_updated: row.records_updated,
           records_meta: row.records_meta ?? null,
         };
+        // WF3 capture-ledger gap (Spec 120 §3.2b) — a `captured` golden-harness row judged nothing:
+        // it never overwrites a real run under its key, and a chain row always replaces it below,
+        // so a capture can never mask a failed chain row.
+        if (row.status === 'captured' && pipelineLastRun[row.pipeline]) continue;
         pipelineLastRun[row.pipeline] = entry;
 
         // Normalize chain-prefixed names (e.g. "permits:assert_schema" → "assert_schema")
@@ -277,7 +281,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
         if (row.pipeline.includes(':')) {
           const baseName = row.pipeline.split(':').pop()!;
           const existing = pipelineLastRun[baseName];
-          if (!existing || !existing.last_run_at || (entry.last_run_at && entry.last_run_at > existing.last_run_at)) {
+          if (!existing || existing.status === 'captured' || !existing.last_run_at || (entry.last_run_at && entry.last_run_at > existing.last_run_at)) {
             pipelineLastRun[baseName] = entry;
           }
         }

@@ -354,6 +354,10 @@ function getStatusDot(info: PipelineRunInfo | undefined, isRunning: boolean): { 
   // break them for no behavioural reason. Rationale + tripwire live in
   // FreshnessTimeline.ui.test.tsx.
   if (info.status === 'self_skipped') return { color: 'bg-gray-50', label: 'Self-skipped (lock)' };
+  // WF3 capture-ledger gap (Spec 120 §3.2b) — a run the golden-capture harness spawned: a real
+  // write, recorded so it is traceable, but nothing judged it. Neutral like `skipped`; BELOW
+  // self_skipped for the same byte-window reason given above.
+  if (info.status === 'captured') return { color: 'bg-gray-50', label: 'Captured (golden harness)' };
   return { color: '', label: info.status ?? 'Unknown' };
 }
 
