@@ -1,0 +1,33 @@
+{
+  "note": "Signature rules that classify each A≠B disagreement (first match wins). Each class is reasoned from the spec text, never from which oracle is 'usually right'; agreement≠correctness. Classes: A_wrong · B_wrong · spec_ambiguous. Adding or changing a rule is an adjudication (Phase 2 plan §V-5), not a fix to either oracle.",
+  "rules": [
+    {
+      "id": "C1-argument-displacement-substitution",
+      "class": "B_wrong",
+      "match": { "any_includes": "600.60.40(2)#(A)" },
+      "why": "A substitutes the displacing unit 600.60.40(2)(A) (10.5 m) into the (C)(ii) argument slot, max(HT; 10.5); B removes the argument and then lets the overlay unit replace the base unit under rule 4 (overlay > base, same bound), giving 10.5 m. Spec 68 §7.4 (M-48) states the outcome explicitly: 'max(overlay(HT) @(C)(i); 10.0 m @(C)(ii)) keeps HT. The spike's whole-unit drop returned 10.5 m where the by-law gives 12.0 m (HT 12.0)'. B follows rule 2 + rule 4 literally and contradicts that worked example, so B is wrong against the spec's stated result; the rules themselves never say the argument-displacer is consumed into its host (ambiguity A1). Cascades to main_wall_height_m (reads height_m) and to M-50 per-type results on detached_houseplex.",
+      "cites": ["Spec 68 §7.4 S1 additions, argument-level displacement", "Spec 68 §7.5 rule 2 and rule 4", "Spec 69 M-48"]
+    },
+    {
+      "id": "C2-immaterial-undecided-applicability",
+      "class": "spec_ambiguous",
+      "match": { "any_includes": "undecided but immaterial" },
+      "why": "A unit's applicability cannot be decided (a token, input or user input has no lot value) but every completion gives the same result. B returns that result (the M-50 'return the value only if all agree' rule applied to every undecided fact); A returns not_evaluated with the undecided reason. Spec 68 §7.5 states the all-worlds rule only for building type (M-50); for other undecided conditions it says only 'keep only units whose condition holds' and rule 7 'never a silent default'. Neither reading is a silent default; the spec does not choose (ambiguity A2).",
+      "cites": ["Spec 68 §7.5 rule 1, rule 7, the building-type-unknown paragraph", "Spec 69 M-50"]
+    },
+    {
+      "id": "C3-immaterial-undecided-under-m50",
+      "class": "spec_ambiguous",
+      "match": { "any_includes": "M-50: every residential type agrees", "a_reason": "needs_user_input" },
+      "why": "Same root as C2 inside the M-50 enumeration: for some building types A reports not_evaluated (an undecided token such as major_street) where B finds the token immaterial, so B's types all agree and A's do not.",
+      "cites": ["Spec 68 §7.5 building-type-unknown paragraph", "Spec 69 M-50"]
+    },
+    {
+      "id": "C4-provincial-scope-and-yield",
+      "class": "A_wrong",
+      "match": { "set": "provincial", "any_includes": "O.Reg.299/19" },
+      "why": "A applies every O. Reg. 299/19 unit unconditionally as a plain highest-layer LIMIT: on lots outside the unit's scope (apartment buildings, lots without an additional residential unit) and without the bylaw_prevails yield (a by-law coverage of 50 % is replaced by 45 %). Spec 68 §6.1: 'the evaluator treats it as a layer-provincial candidate (§7.5) only when the lot meets scope'; §7.5 rule 4 (M-55): 'A provincial unit whose regulation says a by-law prevails ... yields to a lower-layer unit that is more permissive'. Caveat: A exposes no input for scope / bylaw_prevails through loadCandidates / effective / makeContext, so the harness passes the provincial units to A converted to unit shape (the only path); the defect is the missing scope + yield, not the conversion.",
+      "cites": ["Spec 68 §6.1 provincial units", "Spec 68 §7.5 rule 4 (M-55)", "Spec 69 M-55"]
+    }
+  ]
+}
