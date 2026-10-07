@@ -325,6 +325,10 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
   7. no candidate remains => "not evaluated" (never a silent default)
   result: {value | not_evaluated | conflict, applied[], winner, trace}
 
+  7a. unregulated BY ABSENCE (Spec 69 M-54 note 2026-10-07): when no candidate of any layer exists for the target
+     and the lot's exception (if any) is captured, a cited `absence-rulings.json` entry (zone, target, stated absence,
+     checked against the pinned page) gives `unregulated` with evidence kind `absence` — never a clause — flagged for
+     the M-29 expert sample; first entry ABS-1: R-zone principal-building coverage (no 10.10.30.40; only 10.10.60.70)
 permitted(lot, building_type) applies the same rules to PERMIT / PROHIBIT units
   (result: permitted | prohibited | not_evaluated | conflict); the M-38 fixture runs through it.
 

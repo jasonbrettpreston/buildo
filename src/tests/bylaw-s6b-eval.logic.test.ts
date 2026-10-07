@@ -226,9 +226,51 @@ describe('operator ruling 2026-10-07 (Spec 69 M-54): unregulated results carry t
     expect(show(E.effective(lot, 'lot_coverage_pct', [unreg, U({ unit_id: 'EX#(A)', layer: 'exception', target: 'lot_coverage_pct', numeric_expression: ['lot_coverage_pct = 40 pct @(A)'] })], C))).toBe(40);
     expect(show(E.effective(lot, 'lot_coverage_pct', [unreg], C))).toBe('unregulated');
   });
-  it('R zone: no principal coverage regulation exists, so no clause can be carried; the result stays no_candidate', () => {
+  it('R zone without an absence ruling: no clause can be carried, the result stays no_candidate', () => {
     expect(show(eff({ ...DERWYN, zone: 'R', overlays: {}, building_type: 'detached_house' }, 'lot_coverage_pct'))).toBe('not_evaluated:no_candidate');
   });
+});
+
+describe('operator ruling 2026-10-07 (Spec 69 M-54 note): R-zone coverage unregulated BY ABSENCE, cited', () => {
+  const ABS = read('scripts/seeds/bylaw/absence-rulings.json');
+  const CA = E.makeContext ? E.makeContext(VOCAB, { enactments: ENACT, absences: ABS.rulings }) : {};
+  const rLot = { ...DERWYN, zone: 'R', overlays: {}, building_type: 'detached_house', exception: null };
+  const effA = (lot: Json, units = UNITS): Json => E.effective(lot, 'lot_coverage_pct', E.loadCandidates(lot, units).candidates, CA);
+  const covEx = { unit_id: '900.2.10(9)#SSP(A)', regulation_id: '900.2.10(9)', exception: '900.2.10(9)', layer: 'exception', archetype: 'LIMIT', target: 'lot_coverage_pct', bound: 'max', condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['R'], building_types: ['any'] }, displaces: [], numeric_expression: ['lot_coverage_pct = 35 pct @SSP(A)'] };
+  it('an R lot with no candidate for lot_coverage_pct is unregulated with evidence kind "absence", the stated absence and the M-29 flag', () => {
+    const r = effA(rLot);
+    expect([r.status, r.value, r.clause]).toEqual(['value', 'unregulated', null]);
+    expect(r.evidence).toEqual({ kind: 'absence', ruling: 'ABS-1', statement: 'no principal-building lot coverage regulation in 569-2013 Ch.10.10 for the R zone; only the ancillary cap 10.10.60.70', expert_sample: true });
+  });
+  it('a clause-stated unregulated carries evidence kind "clause", never "absence"', () => {
+    const r = E.effective({ ...DERWYN, overlays: { HT: 8.5 }, building_type: 'detached_house' }, 'lot_coverage_pct', E.loadCandidates(DERWYN, UNITS).candidates, CA);
+    expect(r.evidence).toEqual({ kind: 'clause', clause: '10.20.30.40(1)#(B)' });
+  });
+  it('absence does not apply when an exception candidate for lot_coverage_pct exists, even when it does not apply to the lot', () => {
+    const lot = { ...rLot, exception: '900.2.10(9)' };
+    expect(show(effA(lot, [...UNITS, covEx]))).toBe(35);
+    expect(show(effA(lot, [...UNITS, { ...covEx, application: { zones: ['R'], building_types: ['townhouse'] } }]))).toBe('not_evaluated:no_candidate');
+  });
+  it('absence does not apply to an overlay or provincial candidate either', () => {
+    for (const layer of ['overlay', 'provincial']) {
+      const u = { ...covEx, unit_id: `${layer}#c`, layer, exception: undefined, application: { zones: ['R'], building_types: ['townhouse'] } };
+      expect(show(effA(rLot, [...UNITS, u]))).toBe('not_evaluated:no_candidate');
+    }
+  });
+  it('absence does not apply on a lot whose exception is not captured (no unit loaded for it): not_evaluated, never inferred', () => {
+    expect(show(effA({ ...rLot, exception: '900.2.10(777)' }))).toBe('not_evaluated:no_candidate');
+  });
+  it('absence is zone- and target-scoped: RD coverage and R height are untouched', () => {
+    expect(effA({ ...DERWYN, overlays: { HT: 8.5 }, building_type: 'detached_house' }).evidence.kind).toBe('clause');
+    expect(show(E.effective(rLot, 'building_length_m', E.loadCandidates(rLot, UNITS).candidates, CA))).toBe('not_evaluated:no_candidate');
+  });
+  it('with building type unknown (M-50) every type agrees, so the absence result stands with its evidence', () => {
+    const r = effA({ ...rLot, building_type: null });
+    expect([r.value, r.evidence.kind]).toEqual(['unregulated', 'absence']);
+  });
+});
+
+describe('M-54 G-EVAL (continued)', () => {
   it('G-EVAL: an unregulated expectation matches only with the same clause', () => {
     const v = vec('eastbourne:lot_coverage_pct');
     expect(v.expected).toEqual({ value: 'unregulated', clause: '10.20.30.40(1)#(B)' });

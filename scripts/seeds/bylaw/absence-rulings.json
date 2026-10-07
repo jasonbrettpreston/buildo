@@ -1,0 +1,23 @@
+{
+  "note": "Spec 68 §7.5; Spec 69 M-54 dated note 2026-10-07 (operator ruling). An absence ruling makes a target `unregulated` BY ABSENCE for a zone, only when no candidate unit of any layer exists for that target on the lot (and the lot's exception, if any, is captured). The result carries evidence kind `absence`, never a clause, and is flagged for the M-29 expert sample. Each entry is executed against its pinned page by bylaw-s6b-eval.infra.test.ts.",
+  "rulings": [
+    {
+      "absent_phrases": [
+        "10.10.30.40",
+        "Maximum Lot Coverage"
+      ],
+      "checked_page": "ch10_10",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-1",
+      "present_phrases": [
+        "10.10.60.70 Lot Coverage (1) Lot Coverage Requirement for Ancillary Buildings and Structures",
+        "may not exceed 5% of the lot area"
+      ],
+      "ruling": "Spec 69 M-54 note 2026-10-07",
+      "statement": "no principal-building lot coverage regulation in 569-2013 Ch.10.10 for the R zone; only the ancillary cap 10.10.60.70",
+      "target": "lot_coverage_pct",
+      "zone": "R"
+    }
+  ]
+}
