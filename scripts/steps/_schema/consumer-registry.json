@@ -442,6 +442,38 @@
     },
     {
       "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "coa_applications.lifecycle_phase",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "coa_applications.lifecycle_stalled",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "permits.lifecycle_phase",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "permits.lifecycle_stalled",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
       "producer": "classify_permits",
       "kind": "table",
       "key": "permit_trades.is_active",
@@ -469,6 +501,22 @@
       "producer": "classify_permits",
       "kind": "table",
       "key": "permit_trades.trade_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.address",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.application_number",
       "value": "any",
       "source": "src_sql"
     },
@@ -517,6 +565,102 @@
       "producer": "compute_trade_forecasts",
       "kind": "table",
       "key": "trade_forecasts.trade_slug",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.permit_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.revision_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.street_name",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.street_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "coa_applications.lifecycle_phase",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "classify_lifecycle_phase",
+      "kind": "table",
+      "key": "permits.lifecycle_phase",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.address",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.application_number",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.permit_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.revision_num",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.street_name",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "permits.street_num",
       "value": "any",
       "source": "src_sql"
     },
@@ -3767,6 +3911,14 @@
       "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "coa",
       "kind": "table",
+      "key": "lifecycle_status_history.event_date",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "coa",
+      "kind": "table",
       "key": "lifecycle_status_history.from_status",
       "value": "any",
       "source": "src_sql"
@@ -4272,6 +4424,14 @@
       "producer": "parcels",
       "kind": "table",
       "key": "parcels.lot_size_sqm",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "permits",
+      "kind": "table",
+      "key": "lifecycle_status_history.event_date",
       "value": "any",
       "source": "src_sql"
     },

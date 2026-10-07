@@ -586,6 +586,9 @@ function resolveNode(node, fp, catalog) {
   return result('utility', fp, {}, {}, [], null);
 }
 
+/** SelectStmt.op values of a set operation (a plain SELECT is 'SETOP_NONE'). */
+const SETOP_KINDS = new Set(['SETOP_UNION', 'SETOP_INTERSECT', 'SETOP_EXCEPT']);
+
 /**
  * Resolve a read scope (SELECT subtree / CTE body / subquery). Recurses into
  * FROM/JOIN relations, target list columns and WHERE/JOIN conditions.
@@ -593,6 +596,41 @@ function resolveNode(node, fp, catalog) {
 function resolveScope(scopeNode, catalog, reads, writes, excluded, _topLevel, parent) {
   scopeNode = unwrap(scopeNode);
   if (!scopeNode || typeof scopeNode !== 'object') return;
+
+  // WF3 sql-witness set-op (.cursor/wf3_sql_witness_setop_active_task.md; Spec 122 §6.6.1(e)):
+  // a UNION / INTERSECT / EXCEPT node is not a scope — each arm (larg / rarg, possibly a
+  // nested or parenthesised set-op) resolves as its OWN scope, so every arm column (and a
+  // table read only inside an arm's own WITH) is witnessed and aliases never collide across
+  // arms. The node's own WITH binds over both arms (its CTE bodies resolve here, like
+  // resolveClauseColumns). Its own sortClause / limitCount / limitOffset name OUTPUT
+  // columns, so no ColumnRef there is credited; only SubLink / RangeSubselect bodies there
+  // are resolved. Never reaches collectScope, so JoinExpr larg/rarg are untouched.
+  if (SETOP_KINDS.has(scopeNode.op)) {
+    const wc = scopeNode.withClause;
+    const ctes = wc && Array.isArray(wc.ctes) ? wc.ctes : [];
+    const cteNames = ctes
+      .map((c) => (c && c.CommonTableExpr ? c.CommonTableExpr.ctename : null))
+      .filter((n) => typeof n === 'string');
+    const setScope = { relations: [], derived: new Set(cteNames), subselectRels: [], funcCols: new Map(), parent };
+    for (const c of ctes) {
+      const body = c && c.CommonTableExpr ? c.CommonTableExpr.ctequery : null;
+      if (body) resolveScope(body, catalog, reads, writes, excluded, false, setScope);
+    }
+    resolveScope(scopeNode.larg, catalog, reads, writes, excluded, false, setScope);
+    resolveScope(scopeNode.rarg, catalog, reads, writes, excluded, false, setScope);
+    for (const k of Object.keys(scopeNode)) {
+      if (k === 'withClause' || k === 'larg' || k === 'rarg') continue;
+      const v = scopeNode[k];
+      if (v === null || typeof v !== 'object') continue;
+      walkOwnScope(v, (n) => {
+        if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, setScope);
+        const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
+        if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, setScope);
+      });
+    }
+    return;
+  }
+
   const scope = collectScope(scopeNode, parent);
 
   // Record FROM/JOIN relations as reads of the table (bare touch).
@@ -616,7 +654,9 @@ function resolveScope(scopeNode, catalog, reads, writes, excluded, _topLevel, pa
   // WF3 C2b: only the IMMEDIATE nested scopes (walkOwnScope never enters a body; each
   // nested scope descends into its own), over every clause except the WITH list (CTE
   // bodies resolve in resolveClauseColumns). collectScope no longer gathers nested-scope
-  // relations, so every nested scope must be reached here (sortClause, larg/rarg, ...).
+  // relations, so every nested scope must be reached here (sortClause, limit*, ...).
+  // Set-op arms (larg/rarg) never reach here: the set-op branch above resolves each arm
+  // as its own scope.
   const descend = (node) => {
     walkOwnScope(node, (n) => {
       if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
