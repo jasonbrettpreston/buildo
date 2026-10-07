@@ -23,7 +23,8 @@
 //   external_evaluated_by_invalid      evaluated_by_us is not "no" or "yes:<spec number>"
 //   external_precedence_invalid        precedence not in none · active, or `active` on a row that is not a verified_primary
 //                                      provincial row carrying provincial_units[] (Spec 69 M-55), or units on a `none` row
-//   external_provincial_unit_invalid   a provincial unit outside the Spec 68 §6.1 shape (target, bound, value, scope, prevails)
+//   external_provincial_unit_invalid   a provincial unit outside the Spec 68 §6.1 shape (target, bound, value, scope,
+//                                      limits_bylaw consistent with bound, direction_basis)
 //   external_feeds_invalid             risk_feeds empty, duplicated, or outside the M-52 vocabulary
 //   external_pinned_page_mismatch      a row on a pinned page whose source_sha256 is not the manifest raw_sha256,
 //                                      or an excerpt fragment not found in pages/<key>.txt
@@ -52,9 +53,12 @@ export const PRIMARY_HOSTS = Object.freeze(['ontario.ca', 'toronto.ca', 'canada.
 const ROW_KEYS = Object.freeze(['additional_sources', 'authority', 'citation', 'evaluated_by_us', 'excerpt', 'explanation', 'id', 'kind', 'precedence', 'provincial_units', 'risk_feeds', 'source_sha256', 'title', 'url', 'verification_status', 'verified_on']);
 const SOURCE_KEYS = Object.freeze(['citation', 'source_sha256', 'url']);
 const REF_KEYS = Object.freeze(['citation', 'id', 'kind', 'reason', 'url']);
-const UNIT_KEYS = Object.freeze(['bound', 'bylaw_prevails', 'bylaw_prevails_citation', 'citation', 'scope', 'target', 'unit', 'unit_id', 'value', 'verbatim']);
+const UNIT_KEYS = Object.freeze(['bound', 'bylaw_prevails_citation', 'citation', 'direction_basis', 'limits_bylaw', 'scope', 'target', 'unit', 'unit_id', 'value', 'verbatim']);
 const SCOPE_KEYS = Object.freeze(['applies_to', 'land', 'other_building_contains_unit', 'principal_building_types', 'unit_configurations']);
-const PREVAILS = Object.freeze(['more_permissive', 'never']);
+// How a provincial unit restrains a by-law (Spec 69 M-55): min_permission = a by-law max may not be below `value`
+// (bound max); max_requirement = a by-law min may not be above `value` (bound min). Never imposed where the by-law is silent.
+const LIMITS = Object.freeze({ min_permission: 'max', max_requirement: 'min' });
+const DIRECTION_BASIS = Object.freeze(['verbatim', 'inferred']);
 const APPLIES_TO = Object.freeze(['parcel', 'building_pair']);
 const LANDS = Object.freeze(['parcel_of_urban_residential_land']);
 const UNIT_MEASURES = Object.freeze(['m', 'pct', 'ratio']);
@@ -68,8 +72,10 @@ function unitProblems(u) {
   if (!['min', 'max'].includes(u.bound)) out.push('bound must be min · max');
   if (!UNIT_MEASURES.includes(u.unit)) out.push(`unit must be ${UNIT_MEASURES.join(' · ')}`);
   if (!(typeof u.value === 'number' && Number.isFinite(u.value) && u.value >= 0) && u.value !== 'unlimited') out.push('value must be a non-negative number or "unlimited"');
-  if (!PREVAILS.includes(u.bylaw_prevails)) out.push(`bylaw_prevails must be ${PREVAILS.join(' · ')}`);
-  if (u.bylaw_prevails === 'more_permissive' ? !isText(u.bylaw_prevails_citation) : u.bylaw_prevails_citation !== null) out.push('bylaw_prevails_citation must be text exactly when bylaw_prevails is more_permissive');
+  if (!own(LIMITS, u.limits_bylaw)) out.push(`limits_bylaw must be ${Object.keys(LIMITS).join(' · ')}`);
+  else if (LIMITS[u.limits_bylaw] !== u.bound) out.push(`limits_bylaw ${u.limits_bylaw} needs bound ${LIMITS[u.limits_bylaw]}`);
+  if (!DIRECTION_BASIS.includes(u.direction_basis)) out.push(`direction_basis must be ${DIRECTION_BASIS.join(' · ')}`);
+  if (u.bylaw_prevails_citation !== null && !isText(u.bylaw_prevails_citation)) out.push('bylaw_prevails_citation must be text or null');
   const sc = u.scope;
   if (!isObj(sc)) return [...out, 'scope must be an object'];
   out.push(...keyDiff(sc, SCOPE_KEYS).map((x) => `scope ${x}`));
@@ -305,7 +311,7 @@ export function checkExternalFile({ seeds, bytes } = {}) {
 
 function fixtureUnit() {
   return {
-    bound: 'max', bylaw_prevails: 'more_permissive', bylaw_prevails_citation: 'Reg, s. 5(2)', citation: 'Reg, s. 5(1)', target: 'lot_coverage_pct',
+    bound: 'max', bylaw_prevails_citation: 'Reg, s. 5(2)', citation: 'Reg, s. 5(1)', direction_basis: 'verbatim', limits_bylaw: 'min_permission', target: 'lot_coverage_pct',
     unit: 'pct', unit_id: 'Reg s.5(1)1', value: 45, verbatim: 'Up to 45 per cent.',
     scope: { applies_to: 'parcel', land: 'parcel_of_urban_residential_land', other_building_contains_unit: null, principal_building_types: ['detached_house'], unit_configurations: [{ ancillary_units: [0], house_units: [3] }] },
   };

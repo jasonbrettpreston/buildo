@@ -46,9 +46,10 @@
       "provincial_units": [
         {
           "bound": "min",
-          "bylaw_prevails": "more_permissive",
           "bylaw_prevails_citation": "O. Reg. 299/19, s. 4(2): A by-law passed under section 34 of the Act that permits buildings or structures to be less than 4 metres from one another prevails over the requirement set out in paragraph 2 of subsection (1) of this section.",
           "citation": "O. Reg. 299/19, s. 4(1), para. 2 (O. Reg. 462/24, s. 2)",
+          "direction_basis": "inferred",
+          "limits_bylaw": "max_requirement",
           "scope": {
             "applies_to": "building_pair",
             "land": "parcel_of_urban_residential_land",
@@ -95,9 +96,10 @@
         },
         {
           "bound": "max",
-          "bylaw_prevails": "more_permissive",
           "bylaw_prevails_citation": "O. Reg. 299/19, s. 5(2): A by-law passed under section 34 of the Act that permits more than 45 per cent of the surface of the parcel to be covered by buildings and structures prevails over the requirement set out in paragraph 1 of subsection (1) of this section.",
           "citation": "O. Reg. 299/19, s. 5(1), para. 1 (O. Reg. 462/24, s. 2)",
+          "direction_basis": "verbatim",
+          "limits_bylaw": "min_permission",
           "scope": {
             "applies_to": "parcel",
             "land": "parcel_of_urban_residential_land",
@@ -144,9 +146,10 @@
         },
         {
           "bound": "max",
-          "bylaw_prevails": "never",
           "bylaw_prevails_citation": null,
           "citation": "O. Reg. 299/19, s. 5(1), para. 2 (O. Reg. 462/24, s. 2)",
+          "direction_basis": "verbatim",
+          "limits_bylaw": "min_permission",
           "scope": {
             "applies_to": "parcel",
             "land": "parcel_of_urban_residential_land",

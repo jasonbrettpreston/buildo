@@ -74,9 +74,13 @@ describe('S12b — committed external.json', () => {
     const units = row(readDoc(), 'EXT-prov-1').provincial_units as Json[];
     const by = Object.fromEntries(units.map((u) => [u.target, u]));
     expect(Object.keys(by).sort()).toEqual(['fsi', 'lot_coverage_pct', 'separation_m']);
-    expect([by.lot_coverage_pct.bound, by.lot_coverage_pct.value, by.lot_coverage_pct.unit, by.lot_coverage_pct.bylaw_prevails]).toEqual(['max', 45, 'pct', 'more_permissive']);
-    expect([by.fsi.bound, by.fsi.value, by.fsi.bylaw_prevails, by.fsi.bylaw_prevails_citation]).toEqual(['max', 'unlimited', 'never', null]);
-    expect([by.separation_m.bound, by.separation_m.value, by.separation_m.unit, by.separation_m.bylaw_prevails]).toEqual(['min', 4, 'm', 'more_permissive']);
+    // Direction as data (Spec 69 M-55 note): coverage/FSI are permissions a by-law max may not undercut ("is permitted",
+    // "no limit"); separation is a requirement a by-law min may not exceed — inferred, since s.4(2) states only that a
+    // by-law permitting LESS prevails.
+    expect([by.lot_coverage_pct.bound, by.lot_coverage_pct.value, by.lot_coverage_pct.unit, by.lot_coverage_pct.limits_bylaw, by.lot_coverage_pct.direction_basis]).toEqual(['max', 45, 'pct', 'min_permission', 'verbatim']);
+    expect([by.fsi.bound, by.fsi.value, by.fsi.limits_bylaw, by.fsi.direction_basis, by.fsi.bylaw_prevails_citation]).toEqual(['max', 'unlimited', 'min_permission', 'verbatim', null]);
+    expect([by.separation_m.bound, by.separation_m.value, by.separation_m.unit, by.separation_m.limits_bylaw, by.separation_m.direction_basis]).toEqual(['min', 4, 'm', 'max_requirement', 'inferred']);
+    expect(by.separation_m.verbatim).toBe('The building or structure shall be at least 4 metres from another building or structure on the parcel if the other building or structure contains a residential unit.');
     expect(by.separation_m.scope.applies_to).toBe('building_pair');
     expect(by.separation_m.scope.other_building_contains_unit).toBe(true);
     for (const u of units) {
@@ -201,8 +205,8 @@ describe('S12b — G-READ external arm reason codes (known-bad + good twin)', ()
 
   it('external_provincial_unit_invalid: a unit outside the §6.1 shape', () => {
     const muts: Array<(u: Json) => void> = [
-      (u) => { u.bound = 'exact'; }, (u) => { u.value = -1; }, (u) => { u.bylaw_prevails = 'sometimes'; },
-      (u) => { u.bylaw_prevails_citation = null; }, (u) => { u.scope.applies_to = 'lot'; }, (u) => { u.scope.unit_configurations = []; },
+      (u) => { u.bound = 'exact'; }, (u) => { u.value = -1; }, (u) => { u.limits_bylaw = 'sometimes'; },
+      (u) => { u.limits_bylaw = 'max_requirement'; }, (u) => { u.direction_basis = 'guessed'; }, (u) => { u.bylaw_prevails_citation = 7; }, (u) => { u.scope.applies_to = 'lot'; }, (u) => { u.scope.unit_configurations = []; },
       (u) => { u.scope.unit_configurations = [{ ancillary_units: [4], house_units: [2] }]; }, (u) => { u.scope.other_building_contains_unit = true; },
       (u) => { u.extra = 1; }, (u) => { delete u.verbatim; },
     ];
