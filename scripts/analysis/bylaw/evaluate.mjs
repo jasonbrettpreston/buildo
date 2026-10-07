@@ -74,6 +74,7 @@ export function makeContext(vocab, extra = {}) {
     userInputs: new Set(vocab.user_input || []),
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     enactments: extra.enactments || {},
+    absences: extra.absences || [], // scripts/seeds/bylaw/absence-rulings.json (Spec 69 M-54 note 2026-10-07)
   };
 }
 const ctxOf = (c) => (c && c.units ? c : makeContext(c || {}));
@@ -476,7 +477,19 @@ function effCore(lot, target, candidates, C, env) {
     if (bad) trace.push(`rule 1: ${u.unit_id} unit of measure ≠ ${target} (${tUnit}) — G-CLAUSE failure, never a candidate`);
     return !bad;
   });
-  if (!T.length) return NE_RESULT('no_candidate', { trace: [...trace, `rule 7: no candidate for ${target}`], disclosures });
+  if (!T.length) {
+    // M-54 note (2026-10-07): unregulated BY ABSENCE, only when no candidate of any layer exists for the target and the
+    // lot's exception (if any) is captured; the evidence kind is `absence` (never a clause) and the row is flagged for M-29
+    const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
+    const excCaptured = !lot.exception || candidates.some((u) => u.layer === 'exception');
+    if (abs && !valueUnits.length && excCaptured) {
+      return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
+        evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
+        bounds: {}, applied: [], trace: [...trace, `rule 7 + ${abs.id}: no candidate of any layer for ${target}; unregulated by absence (${abs.statement})`], disclosures };
+    }
+    if (abs) trace.push(`${abs.id} not applied: ${valueUnits.length ? 'a candidate exists for the target' : "the lot's exception is not captured"}`);
+    return NE_RESULT('no_candidate', { trace: [...trace, `rule 7: no candidate for ${target}`], disclosures });
+  }
 
   // rule 4: per bound direction, the highest layer (with rule 3 immunity) replaces lower layers; rule 6 falls out
   const layerOf = (u) => (edits.has(u.unit_id) ? edits.get(u.unit_id).layer : u.layer);
@@ -527,7 +540,7 @@ function effCore(lot, target, candidates, C, env) {
   const boundOf = res.exact ? 'exact' : res.min ? 'min' : 'max';
   return {
     status: 'value', value: win.v, unit: tUnit, bound: boundOf, winner: win.id,
-    ...(win.v === 'unregulated' ? { clause: win.unitId } : {}),
+    ...(win.v === 'unregulated' ? { clause: win.unitId, evidence: { kind: 'clause', clause: win.unitId } } : {}),
     bounds: Object.fromEntries(Object.entries(res).map(([k, x]) => [k, x.v])),
     applied: Object.values(vals).flat().map((x) => x.id), trace, disclosures,
   };
@@ -614,8 +627,8 @@ const TOL = 0.005 + EPS; // Spec 67 records values to 2 decimals
  * (b) every by_law_expected vector whose target has candidates matches effective(), or carries an eval_mismatch
  *     adjudication naming which side is wrong; a vector whose target has no candidate is `pending`, never failed.
  */
-export function checkEval({ units, vectors, vocab, enactments = {} }) {
-  const C = makeContext(vocab, { enactments });
+export function checkEval({ units, vectors, vocab, enactments = {}, absences = [] }) {
+  const C = makeContext(vocab, { enactments, absences });
   const violations = []; const rows = [];
   const counts = { units_evaluated: 0, unit_vector_evaluations: 0, vectors: 0, match: 0, mismatch_adjudicated: 0, mismatch_unadjudicated: 0, not_evaluated: 0, pending: 0, excluded: 0, inexpressible: 0, no_expected: 0 };
   let checked = 0;

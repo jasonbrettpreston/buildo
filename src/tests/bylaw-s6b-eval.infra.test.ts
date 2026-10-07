@@ -83,3 +83,19 @@ describe('determinism (§10): the seed is byte-stable', () => {
     expect(RAW).toBe(`${JSON.stringify(sortKeys(SEED), null, 2)}\n`);
   });
 });
+
+describe('absence-rulings.json (Spec 69 M-54 note 2026-10-07): every absence is executed against the pinned page', () => {
+  const A: Json = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/absence-rulings.json'), 'utf8'));
+  it('ABS-1: Ch.10.10 has no principal-building coverage regulation (no 10.10.30.40, no "Maximum Lot Coverage") and does have the ancillary cap 10.10.60.70', () => {
+    const r = A.rulings.find((x: Json) => x.id === 'ABS-1');
+    expect(r).toMatchObject({ zone: 'R', target: 'lot_coverage_pct', evidence_kind: 'absence', expert_sample: true });
+    const page = ws(fs.readFileSync(path.join(ROOT, `scripts/seeds/bylaw/pages/${r.checked_page}.txt`), 'utf8'));
+    for (const absent of r.absent_phrases) expect({ absent, found: page.includes(absent) }).toEqual({ absent, found: false });
+    for (const present of r.present_phrases) expect({ present, found: page.includes(ws(present)) }).toEqual({ present, found: true });
+  });
+  it('the seed is byte-stable (sorted keys, LF)', () => {
+    const raw = fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw/absence-rulings.json'), 'utf8');
+    expect(raw).toBe(`${JSON.stringify(sortKeys(JSON.parse(raw)), null, 2)}
+`);
+  });
+});
