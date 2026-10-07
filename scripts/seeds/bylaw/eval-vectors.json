@@ -1,0 +1,4724 @@
+{
+  "source": "Promoted at S6b from the S0.5 spike draft (item4/eval-vectors.draft.json): the six Spec 67 worked examples (inputs from their recorded query results only) and V1-V25. Every by_law_expected value carries a Spec 67 anchor (line + line text, checked by test) and the by-law clause it reads (literals checked against the pinned page text, not Spec 67 prose). M-51: V1-V4 and V25 side are corrected as eval_vector adjudications.",
+  "spec": "docs/specs/01-pipeline/68_mcbylaw_standard.md §7.6; docs/specs/01-pipeline/69_mcbylaw_policy.md M-43, M-50, M-51",
+  "spec67": "docs/specs/01-pipeline/67_maxbuild_bylaw_derivation.md",
+  "vector_status_enum": [
+    "by_law_expected",
+    "no_expected:<reason>",
+    "model_composite"
+  ],
+  "vectors": [
+    {
+      "bylaw_clause": "10.20.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "derwyn:front_setback_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1059,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (19.69 ft) — `bylaw_default_6m`; averaging research-required | no STAND_SET (Q4); NF-6 not measured, so the averaging branch cannot resolve; the depth cap (19.0 m "
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(2)#whole",
+        "literals": [
+          "7.5 metres",
+          "25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 8.39
+      },
+      "id": "derwyn:rear_setback_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1060,
+        "text": "| Rear setback | yes | NF-2 = GREATEST(7.5, 0.25 × 33.56 = 8.39) = **8.39 m** (27.53 ft) | RD takes the depth term | G1 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(3)#(B)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(B)",
+        "literals": [
+          "0.9 metres if the required minimum lot frontage is 6.0 metres to less than 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "derwyn:side_setback_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1061,
+        "text": "| Side setback | yes | NF-3 = **0.9 m** × 2 sides | band (B): measured 9.75 and required 9.0 both in \"6.0 to less than 12.0\" (F1 moot) | G1 (3) |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.20.40.10(1)#(A)",
+        "literals": [
+          "the numerical value, in metres, following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 8.5
+      },
+      "id": "derwyn:height_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1063,
+        "text": "| Height | yes | EF-5 = COALESCE(8.50, 10.0) = **8.50 m** (27.89 ft), NF-7 `overlay` | HT 8.5 on the Height Overlay Map (Q6) | G6 |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.10(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.10(2)#whole",
+        "literals": [
+          "the higher of 7.0 metres above established grade or 2.5 metres less"
+        ]
+      },
+      "expected": {
+        "value": 7
+      },
+      "id": "derwyn:main_wall_height_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1065,
+        "text": "| Main-wall height | yes (not modelled) | higher of 7.0 m or 8.5 − 2.5 = 6.0 m → 7.0 m | governs wall height, not footprint/GFA; neither code nor plan models it | W4 |"
+      },
+      "target": "main_wall_height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.10(3)#(B)",
+      "clause_check": {
+        "clause": "10.20.40.10(3)#(B)",
+        "literals": [
+          "the number of storeys is not limited by this regulation"
+        ]
+      },
+      "expected": {
+        "value": "unlimited"
+      },
+      "id": "derwyn:height_storeys",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1064,
+        "text": "| Storeys | no | — (not limited) | no ST value (Q6) | W3 |"
+      },
+      "target": "height_storeys",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.20.40.40(1)#(A)",
+        "literals": [
+          "the numerical value following the letter \"d\""
+        ]
+      },
+      "expected": {
+        "value": 0.45
+      },
+      "id": "derwyn:fsi",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1066,
+        "text": "| FSI | yes | d0.45 → lot × 0.45 = 147.20 m² | label carries `d` (G8(A)) — but `bylaw_max_fsi` is NULL (step 12 finding); W2(C) exempts a houseplex / secondary suite | G8, W2 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.20(1)#whole",
+        "literals": [
+          "18.0 metres or less",
+          "17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "derwyn:building_length_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1067,
+        "text": "| Building length | yes | NF-10 = 17.0 m | RD, required frontage 9.0 ≤ 18.0 (F3), not on a major street (`on_policy_road` false, Q4) | G3, G20 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.30(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.30(1)#whole",
+        "literals": [
+          "18.0 metres or less",
+          "detached house or detached houseplex",
+          "19.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 19
+      },
+      "id": "derwyn:building_depth_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1068,
+        "text": "| Building depth | yes | NF-11 = 19.0 m from the required front setback | RD, required frontage 9.0 ≤ 18.0 (F3); applies to a detached house / detached houseplex | G4, G20 |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.30.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.20.30.40(1)#(A)",
+        "literals": [
+          "that numerical value is the permitted maximum lot coverage"
+        ]
+      },
+      "expected": {
+        "value": 35
+      },
+      "id": "derwyn:lot_coverage_pct",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1069,
+        "text": "| Coverage | yes | 35 % → 114.49 m²; 45 % if houseplex / secondary suite | overlay-mapped (Q6) | G7, W1 |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(B)",
+        "literals": [
+          "6.0 metres to less than 15.0 metres",
+          "a minimum of 50 percent of the front yard must be landscaping"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "derwyn:front_landscaping_pct",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1070,
+        "text": "| Front landscaping % | yes (if NF-15 in L4 scope) | NF-12 = 50 % | 6.0 ≤ 9.75 < 15.0 (actual frontage — L-tiers use the measured frontage) | L4, L6 |"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(A)",
+        "literals": [
+          "a minimum of 50% of the rear yard for soft landscaping, if the lot frontage is greater than 6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "derwyn:rear_soft_landscaping_pct",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1073,
+        "text": "| Rear soft | yes | NF-13 = 50 % of rear yard (NF-24 50 % if a garden suite is built) | frontage > 6.0 | L10, L20 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(C)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(C)",
+        "literals": [
+          "6.0 metres to 23.0 metres inclusive",
+          "(i) 6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "derwyn:driveway_width_m",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1074,
+        "text": "| Driveway width | yes (if in L15 scope) | NF-23 = LEAST(6.0, parking width) → 6.0 cap-only | 6.0 ≤ 9.75 ≤ 23.0 | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "derwyn:fsi_gfa_cap_m2",
+      "inputs_from": "W.0 Q3 (frontage 9.75, depth 33.56, lot 327.12, not corner/through), Q4 (RD (f9.0; a280; d0.45), exception null, on_policy_road false, dominant share 1.0000), Q6 (HT 8.5 no ST; LC 35 area_share 1). building_type NULL (W.6b: NF-15 user input).",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 280,
+          "d": 0.45,
+          "f": 9
+        },
+        "overlays": {
+          "HT": 8.5,
+          "LC": 35
+        },
+        "vars": {
+          "lot_area_m2": 327.12,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 9.75
+        },
+        "zone": "RD",
+        "zone_label": "RD (f9.0; a280; d0.45)"
+      },
+      "source": "41 Derwyn Road",
+      "spec67_anchor": {
+        "line": 1066,
+        "text": "| FSI | yes | d0.45 → lot × 0.45 = 147.20 m² | label carries `d` (G8(A)) — but `bylaw_max_fsi` is NULL (step 12 finding); W2(C) exempts a houseplex / secondary suite | G8, W2 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "eastbourne:front_setback_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1423,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (averaging research-required; NF-6 unmeasured) | no STAND_SET | G1 (1), G19 |"
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(2)#whole",
+        "literals": [
+          "7.5 metres",
+          "25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 8.97
+      },
+      "id": "eastbourne:rear_setback_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1424,
+        "text": "| Rear setback | yes | NF-2 = GREATEST(7.5, 0.25 × 35.88 = 8.97) = **8.97 m** | RD depth term | G1 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(3)#(B)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(B)",
+        "literals": [
+          "0.9 metres if the required minimum lot frontage is 6.0 metres to less than 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "eastbourne:side_setback_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "note": "Step 7 states plan 1.2 (measured frontage 12.14) vs F1 0.9 (required f10.5); the by-law keys on REQUIRED frontage → 0.9",
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1425,
+        "text": "| Side setback | yes | plan (on `frontage_m` 12.14): **1.2 m**; F1 (on required 10.50): **0.9 m**; × 2 sides | band (C) vs (B) | G1 (3) |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.20.40.10(1)#(A)",
+        "literals": [
+          "following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 9.5
+      },
+      "id": "eastbourne:height_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1426,
+        "text": "| Height | yes | EF-5 = COALESCE(9.50, 10.0) = 9.50 m, NF-7 `overlay` | HT 9.5 | G6 |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.20.40.40(1)#(A)",
+        "literals": [
+          "the numerical value following the letter \"d\""
+        ]
+      },
+      "expected": {
+        "value": 0.4
+      },
+      "id": "eastbourne:fsi",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1427,
+        "text": "| FSI | yes | d0.4 → 435.53 × 0.40 = 174.21 m² | label `d`, held in `bylaw_max_density` (data gap, step 12); not for a houseplex / suite (H8) | G8, H8 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.20(1)#whole",
+        "literals": [
+          "18.0 metres or less",
+          "17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "eastbourne:building_length_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1428,
+        "text": "| Building length | yes | NF-10 = 17.0 m | required 10.5 ≤ 18.0 (F3); not a major street | G3, G20 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.30(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.30(1)#whole",
+        "literals": [
+          "19.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 19
+      },
+      "id": "eastbourne:building_depth_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1429,
+        "text": "| Building depth | yes | NF-11 = 19.0 m | required 10.5 ≤ 18.0 (F3) | G4, G20 |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.30.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.20.30.40(1)#(B)",
+        "literals": [
+          "no lot coverage applies"
+        ]
+      },
+      "expected": {
+        "clause": "10.20.30.40(1)#(B)",
+        "value": "unregulated"
+      },
+      "id": "eastbourne:lot_coverage_pct",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1430,
+        "text": "| Coverage | **no** | unregulated (NF-18 NULL); as-built median 33 % | no overlay value (Q6) | G7 |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(B)",
+        "literals": [
+          "a minimum of 50 percent of the front yard must be landscaping"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "eastbourne:front_landscaping_pct",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1431,
+        "text": "| Front landscaping | yes (NF-15 in L4 scope) | NF-12 = 50 % (6.0 ≤ 12.14 < 15.0) | measured frontage | L4, L6 |"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(A)",
+        "literals": [
+          "a minimum of 50% of the rear yard"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "eastbourne:rear_soft_landscaping_pct",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1432,
+        "text": "| Rear soft | yes | NF-13 = 50 % of rear yard | frontage > 6.0 | L10 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(C)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(C)",
+        "literals": [
+          "(i) 6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "eastbourne:driveway_width_m",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1433,
+        "text": "| Driveway width | yes (L15 scope) | NF-23 = LEAST(6.0, parking width) → 6.0 | 6.0 ≤ 12.14 ≤ 23.0 | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "eastbourne:fsi_gfa_cap_m2",
+      "inputs_from": "X.0 Q3 (12.14 × 35.88, 435.53), Q4 (RD (f10.5; a325; d0.4), on_policy_road false), Q6 (HT 9.5, no ST, coverage_overlay null). building_type NULL.",
+      "lot": {
+        "building_type": null,
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 325,
+          "d": 0.4,
+          "f": 10.5
+        },
+        "overlays": {
+          "HT": 9.5
+        },
+        "vars": {
+          "lot_area_m2": 435.53,
+          "lot_depth_m": 35.88,
+          "lot_frontage_m": 12.14
+        },
+        "zone": "RD",
+        "zone_label": "RD (f10.5; a325; d0.4)"
+      },
+      "source": "64 Eastbourne Crescent",
+      "spec67_anchor": {
+        "line": 1427,
+        "text": "| FSI | yes | d0.4 → 435.53 × 0.40 = 174.21 m² | label `d`, held in `bylaw_max_density` (data gap, step 12); not for a houseplex / suite (H8) | G8, H8 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "futura:front_setback_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1646,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (averaging research-required) | no STAND_SET | G9 (1), G19 |"
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.40.40.70(2)#whole",
+        "literals": [
+          "7.5 metres",
+          "25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 8.39
+      },
+      "id": "futura:rear_setback_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1647,
+        "text": "| Rear setback | yes | NF-2 = GREATEST(7.5, 0.25 × 33.56) = **8.39 m** | RS depth term | G9 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(3)#(D)",
+      "clause_check": {
+        "clause": "10.40.40.70(3)#(D)",
+        "literals": [
+          "1.5 metres, if the required minimum lot frontage for a permitted residential building is 15.0 metres or more"
+        ]
+      },
+      "expected": {
+        "value": 1.5
+      },
+      "id": "futura:side_setback_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "note": "Step 7 states plan 0.9 (measured 8.83) vs F1 1.5 (required f18.0); by-law keys on REQUIRED frontage → 1.5",
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1648,
+        "text": "| Side setback | yes | plan (on `frontage_m` 8.83): **0.9 m**; F1 (on required 18.00): **1.5 m**; × side_count 1 (party wall on the other side) | RS tiers: band (B) vs band (D) \"15.0 metres or more\" |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.40.40.10(1)#(A)",
+        "literals": [
+          "following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 10
+      },
+      "id": "futura:height_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1649,
+        "text": "| Height / storeys | yes | 10.00 m; ST 2 | Height Overlay | EF-5 row; overlay (Q6) |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.40.40.10(3)#(A)",
+        "literals": [
+          "the numerical value following the letters \"ST\""
+        ]
+      },
+      "expected": {
+        "value": 2
+      },
+      "id": "futura:height_storeys",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1649,
+        "text": "| Height / storeys | yes | 10.00 m; ST 2 | Height Overlay | EF-5 row; overlay (Q6) |"
+      },
+      "target": "height_storeys",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.40.40.40(1)#(B)",
+        "literals": [
+          "the floor space index is not limited by this regulation"
+        ]
+      },
+      "expected": {
+        "value": "unlimited"
+      },
+      "id": "futura:fsi",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1650,
+        "text": "| FSI | no | no `d` value → not limited | H23 (A)/(B) | H23 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.20(1)#whole",
+        "literals": [
+          "17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "futura:building_length_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1651,
+        "text": "| Building length | yes | NF-10 = 17.0 m | RS base cap, not on a major street | G10 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.30(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.30(1)#whole",
+        "literals": [
+          "semi-detached house",
+          "19.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 19
+      },
+      "id": "futura:building_depth_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1652,
+        "text": "| Building depth | yes | NF-11 = 19.0 m (semi-detached house named) | RS | G11 |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.30.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.40.30.40(1)#(A)",
+        "literals": [
+          "that numerical value is the permitted maximum lot coverage"
+        ]
+      },
+      "expected": {
+        "value": 30
+      },
+      "id": "futura:lot_coverage_pct",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1653,
+        "text": "| Coverage | yes | 30.00 % → 88.90 m² | Lot Coverage Overlay | RS (A)/(B) — the G7 text on the RS page (§6.7) |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(B)",
+        "literals": [
+          "a minimum of 50 percent of the front yard must be landscaping"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "futura:front_landscaping_pct",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1654,
+        "text": "| Front landscaping | yes | NF-12 = 50 % (6.0 ≤ 8.83 < 15.0) | semi-detached house is in L4 scope | L4, L6 |"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(A)",
+        "literals": [
+          "a minimum of 50% of the rear yard"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "futura:rear_soft_landscaping_pct",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1655,
+        "text": "| Rear soft | yes | NF-13 = 50 % | frontage > 6.0 | L10 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(C)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(C)",
+        "literals": [
+          "(i) 6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "futura:driveway_width_m",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1656,
+        "text": "| Driveway width | yes | NF-23 = LEAST(6.0, parking width) | 6.0 ≤ frontage ≤ 23.0 | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "futura:fsi_gfa_cap_m2",
+      "inputs_from": "S1.0 Q3 (8.83 × 33.56, 296.33), Q4 (RS (f18.0; a665), on_policy_road false), Q6 (HT 10.0, ST 2; LC 30 area_share 1). building_type semi_detached_house is ASSUMED by the example (massing corroboration, not a column).",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 665,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 10,
+          "LC": 30,
+          "ST": 2
+        },
+        "vars": {
+          "lot_area_m2": 296.33,
+          "lot_depth_m": 33.56,
+          "lot_frontage_m": 8.83
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a665)"
+      },
+      "source": "96 Futura Drive",
+      "spec67_anchor": {
+        "line": 1650,
+        "text": "| FSI | no | no `d` value → not limited | H23 (A)/(B) | H23 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "cordella:front_setback_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1831,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (averaging research-required) | no STAND_SET | G9 (1), G19 |"
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.40.40.70(2)#whole",
+        "literals": [
+          "7.5 metres",
+          "25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 8.38
+      },
+      "id": "cordella:rear_setback_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1832,
+        "text": "| Rear setback | yes | NF-2 = GREATEST(7.5, 0.25 × 33.51) = **8.38 m** | RS depth term | G9 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(3)#(D)",
+      "clause_check": {
+        "clause": "10.40.40.70(3)#(D)",
+        "literals": [
+          "15.0 metres or more"
+        ]
+      },
+      "expected": {
+        "value": 1.5
+      },
+      "id": "cordella:side_setback_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "note": "plan 0.9 (measured 7.73) vs F1 1.5 (required f18.0)",
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1833,
+        "text": "| Side setback | yes | plan (on `frontage_m` 7.73): **0.9 m**; F1 (on required 18.00): **1.5 m**; × side_count 1 (party wall on the other side) | RS tiers: band (B) vs band (D) \"15.0 metres or more\" |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.40.40.10(1)#(A)",
+        "literals": [
+          "following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 11
+      },
+      "id": "cordella:height_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1834,
+        "text": "| Height / storeys | yes | 11.00 m; ST 3 | Height Overlay | EF-5 row; overlay (Q6) |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.40.40.10(3)#(A)",
+        "literals": [
+          "following the letters \"ST\""
+        ]
+      },
+      "expected": {
+        "value": 3
+      },
+      "id": "cordella:height_storeys",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1834,
+        "text": "| Height / storeys | yes | 11.00 m; ST 3 | Height Overlay | EF-5 row; overlay (Q6) |"
+      },
+      "target": "height_storeys",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.40.40.40(1)#(A)",
+        "literals": [
+          "the numerical value following the letter \"d\""
+        ]
+      },
+      "expected": {
+        "value": 0.6
+      },
+      "id": "cordella:fsi",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1835,
+        "text": "| FSI | yes | d0.6 → 155.50 m² (held in `bylaw_max_density`) | H23 (A)/(B) | H23 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.20(1)#whole",
+        "literals": [
+          "17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "cordella:building_length_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1836,
+        "text": "| Building length | yes | NF-10 = 17.0 m | RS base cap, not on a major street | G10 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.30(1)#whole",
+      "clause_check": {
+        "clause": "10.40.40.30(1)#whole",
+        "literals": [
+          "19.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 19
+      },
+      "id": "cordella:building_depth_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1837,
+        "text": "| Building depth | yes | NF-11 = 19.0 m (semi-detached house named) | RS | G11 |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.30.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.40.30.40(1)#(B)",
+        "literals": [
+          "no lot coverage applies"
+        ]
+      },
+      "expected": {
+        "clause": "10.40.30.40(1)#(B)",
+        "value": "unregulated"
+      },
+      "id": "cordella:lot_coverage_pct",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1838,
+        "text": "| Coverage | **no** | unregulated; as-built median 33 % | Lot Coverage Overlay | RS (A)/(B) — the G7 text on the RS page (§6.7) |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(B)",
+        "literals": [
+          "a minimum of 50 percent of the front yard must be landscaping"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "cordella:front_landscaping_pct",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1839,
+        "text": "| Front landscaping | yes | NF-12 = 50 % (6.0 ≤ 7.73 < 15.0) | semi-detached house is in L4 scope | L4, L6 |"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(A)",
+        "literals": [
+          "a minimum of 50% of the rear yard"
+        ]
+      },
+      "expected": {
+        "value": 50
+      },
+      "id": "cordella:rear_soft_landscaping_pct",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1840,
+        "text": "| Rear soft | yes | NF-13 = 50 % | frontage > 6.0 | L10 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(C)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(C)",
+        "literals": [
+          "(i) 6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "cordella:driveway_width_m",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1841,
+        "text": "| Driveway width | yes | NF-23 = LEAST(6.0, parking width) | 6.0 ≤ frontage ≤ 23.0 | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "cordella:fsi_gfa_cap_m2",
+      "inputs_from": "S2.0 Q3 (7.73 × 33.51, 259.16), Q4 (RS (f18.0; a550; d0.6)), Q6 (HT 11.0, ST 3; no coverage overlay). building_type semi_detached_house ASSUMED by the example.",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "exception": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "a": 550,
+          "d": 0.6,
+          "f": 18
+        },
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 259.16,
+          "lot_depth_m": 33.51,
+          "lot_frontage_m": 7.73
+        },
+        "zone": "RS",
+        "zone_label": "RS (f18.0; a550; d0.6)"
+      },
+      "source": "68 Cordella Avenue",
+      "spec67_anchor": {
+        "line": 1835,
+        "text": "| FSI | yes | d0.6 → 155.50 m² (held in `bylaw_max_density`) | H23 (A)/(B) | H23 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.60.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "p5071306:front_setback_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2016,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (averaging research-required) | no STAND_SET | G12 (1), G19 |"
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.60.40.70(2)#whole",
+        "literals": [
+          "The required minimum rear yard setback in the RT zone is 7.5 metres"
+        ]
+      },
+      "expected": {
+        "value": 7.5
+      },
+      "id": "p5071306:rear_setback_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2017,
+        "text": "| Rear setback | yes | NF-2 = **7.5 m flat** (no depth term in RT) | RT | G12 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(3)#(B)(vi)",
+      "clause_check": {
+        "clause": "10.60.40.70(3)#(B)(vi)",
+        "literals": [
+          "0.9 metres for",
+          "a townhouse, if all the dwelling units front directly on a street"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "p5071306:side_setback_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "note": "example: 0.9 with building_type townhouse (assumed); NF-3 NULL when NF-15 NULL",
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2018,
+        "text": "| Side setback | yes | townhouse, all units front a street: **0.9 m** — but side_count 0 (party walls both sides), so it removes no width; NF-15 NULL → **NF-3 NULL** | RT side is by building type | G1"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.60.40.10(1)#(A)",
+        "literals": [
+          "following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 10.5
+      },
+      "id": "p5071306:height_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "note": "two height polygons intersect the lot (HT 10.0/ST 2 and HT 10.5/ST 3); overlay dominance not recorded — the stored MAX is used",
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2019,
+        "text": "| Height / storeys | yes | 10.50 m; ST 3 (EF-5 RT does not branch on type: NULL-type 10.50) | Height Overlay | G14 (1)(A), (2)(A) |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.10(2)#(A)",
+      "clause_check": {
+        "clause": "10.60.40.10(2)#(A)",
+        "literals": [
+          "following the letters \"ST\""
+        ]
+      },
+      "expected": {
+        "value": 3
+      },
+      "id": "p5071306:height_storeys",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2019,
+        "text": "| Height / storeys | yes | 10.50 m; ST 3 (EF-5 RT does not branch on type: NULL-type 10.50) | Height Overlay | G14 (1)(A), (2)(A) |"
+      },
+      "target": "height_storeys",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.60.40.40(1)#(B)",
+        "literals": [
+          "the floor space index is not limited by this regulation"
+        ]
+      },
+      "expected": {
+        "value": "unlimited"
+      },
+      "id": "p5071306:fsi",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2020,
+        "text": "| FSI | no | no `d` value → not limited |  | H24 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.60.40.20(1)#whole",
+        "literals": [
+          "If a lot abuts a major street"
+        ]
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "p5071306:building_length_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2021,
+        "text": "| Building length | **no** | NF-10 NULL — RT has a length cap only on a major street | `on_policy_road` false | G13 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "(absence: no RT building-depth regulation)",
+      "clause_check": {
+        "checked": false,
+        "why": "absence claim (Spec 67 plan NF-11)"
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "p5071306:building_depth_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2022,
+        "text": "| Building depth | **no** | NF-11 NULL — no RT depth provision (confirmed absence, plan NF-11) | — | — |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.30.40(1)#(A)",
+      "clause_check": {
+        "clause": "10.60.30.40(1)#(A)",
+        "literals": [
+          "that numerical value is the permitted maximum lot coverage"
+        ]
+      },
+      "expected": {
+        "value": 25
+      },
+      "id": "p5071306:lot_coverage_pct",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2023,
+        "text": "| Coverage | yes | 25.00 % → 37.48 m² | Lot Coverage Overlay | RT (A)/(B) (§6.7) |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(A)",
+        "literals": [
+          "excluding a permitted driveway or permitted parking pad must be landscaping"
+        ]
+      },
+      "expected": {
+        "category": "under6m_all_but_driveway",
+        "note": "percent of a stated base (front yard minus driveway): inexpressible after M-48, open in Spec 69 §4 item 8"
+      },
+      "id": "p5071306:front_landscaping_pct",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2024,
+        "text": "| Front landscaping | yes | townhouse unit 5.12 m wide < 6.0 → NF-22 `under6m_all_but_driveway` (front yard minus a permitted driveway / parking pad must be landscaping) | L5 keys on the townhouse dwe"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(B)",
+        "literals": [
+          "a minimum of 25% of the rear yard for soft landscaping, if the lot frontage is 6.0 metres or less"
+        ]
+      },
+      "expected": {
+        "value": 25
+      },
+      "id": "p5071306:rear_soft_landscaping_pct",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2025,
+        "text": "| Rear soft | yes | NF-13 = 25 % (frontage ≤ 6.0) |  | L10 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(B)",
+        "literals": [
+          "a maximum width of 2.6 metres"
+        ]
+      },
+      "expected": {
+        "value": 2.6
+      },
+      "id": "p5071306:driveway_width_m",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2026,
+        "text": "| Driveway width | yes | NF-23 = 2.6 m (unit < 6.0 m wide) |  | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "p5071306:fsi_gfa_cap_m2",
+      "inputs_from": "T1.0 Q3 (5.12 × 29.28, 149.93), Q4 (RT (au220.0); stored HT 10.5 / ST 3), Q6 (TWO height polygons intersect: HT 10.0 ST 2 and HT 10.5 ST 3, no area share recorded — the stored 10.5/3 is used as the example uses it; LC 25 area_share 1 vs LC 30 area_share 0). building_type townhouse + \"units assumed to front a street\" ASSUMED by the example. Label letters \"au\" not decoded (neither a nor u alone).",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {
+          "au": 220
+        },
+        "overlays": {
+          "HT": 10.5,
+          "LC": 25,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 149.93,
+          "lot_depth_m": 29.28,
+          "lot_frontage_m": 5.12
+        },
+        "zone": "RT",
+        "zone_label": "RT (au220.0)"
+      },
+      "source": "parcel 5071306",
+      "spec67_anchor": {
+        "line": 2020,
+        "text": "| FSI | no | no `d` value → not limited |  | H24 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(1)#whole",
+      "clause_check": {
+        "clause": "10.60.40.70(1)#whole",
+        "literals": [
+          "6.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 6
+      },
+      "id": "bijou:front_setback_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2201,
+        "text": "| Front setback | yes | NF-1 = 6.0 m (averaging research-required) | no STAND_SET | G12 (1), G19 |"
+      },
+      "target": "front_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.60.40.70(2)#whole",
+        "literals": [
+          "The required minimum rear yard setback in the RT zone is 7.5 metres"
+        ]
+      },
+      "expected": {
+        "value": 7.5
+      },
+      "id": "bijou:rear_setback_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2202,
+        "text": "| Rear setback | yes | NF-2 = **7.5 m flat** (no depth term in RT) | RT | G12 (2) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(3)#(B)(vi)",
+      "clause_check": {
+        "clause": "10.60.40.70(3)#(B)(vi)",
+        "literals": [
+          "0.9 metres for",
+          "a townhouse, if all the dwelling units front directly on a street"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "bijou:side_setback_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "note": "example: 0.9 with building_type townhouse (assumed); NF-3 NULL when NF-15 NULL",
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2203,
+        "text": "| Side setback | yes | townhouse, all units front a street: **0.9 m** — but side_count 0 (party walls both sides), so it removes no width; NF-15 NULL → **NF-3 NULL** | RT side is by building type | G1"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.60.40.10(1)#(A)",
+        "literals": [
+          "following the letters \"HT\""
+        ]
+      },
+      "expected": {
+        "value": 11
+      },
+      "id": "bijou:height_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2204,
+        "text": "| Height / storeys | yes | 11.00 m; ST 3 (EF-5 RT does not branch on type: NULL-type 11.00) | Height Overlay | G14 (1)(A), (2)(A) |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.10(2)#(A)",
+      "clause_check": {
+        "clause": "10.60.40.10(2)#(A)",
+        "literals": [
+          "following the letters \"ST\""
+        ]
+      },
+      "expected": {
+        "value": 3
+      },
+      "id": "bijou:height_storeys",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2204,
+        "text": "| Height / storeys | yes | 11.00 m; ST 3 (EF-5 RT does not branch on type: NULL-type 11.00) | Height Overlay | G14 (1)(A), (2)(A) |"
+      },
+      "target": "height_storeys",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.60.40.40(1)#(B)",
+        "literals": [
+          "the floor space index is not limited by this regulation"
+        ]
+      },
+      "expected": {
+        "value": "unlimited"
+      },
+      "id": "bijou:fsi",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2205,
+        "text": "| FSI | no | no `d` value → not limited |  | H24 |"
+      },
+      "target": "fsi",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.60.40.20(1)#whole",
+        "literals": [
+          "If a lot abuts a major street"
+        ]
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "bijou:building_length_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2206,
+        "text": "| Building length | **no** | NF-10 NULL — RT has a length cap only on a major street | `on_policy_road` false | G13 |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "(absence: no RT building-depth regulation)",
+      "clause_check": {
+        "checked": false,
+        "why": "absence claim (Spec 67 plan NF-11)"
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "bijou:building_depth_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2207,
+        "text": "| Building depth | **no** | NF-11 NULL — no RT depth provision (confirmed absence, plan NF-11) | — | — |"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.30.40(1)#(B)",
+      "clause_check": {
+        "clause": "10.60.30.40(1)#(B)",
+        "literals": [
+          "no lot coverage applies"
+        ]
+      },
+      "expected": {
+        "clause": "10.60.30.40(1)#(B)",
+        "value": "unregulated"
+      },
+      "id": "bijou:lot_coverage_pct",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2208,
+        "text": "| Coverage | **no** | unregulated; as-built median 33 % | Lot Coverage Overlay | RT (A)/(B) (§6.7) |"
+      },
+      "target": "lot_coverage_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(1)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(1)#(A)",
+        "literals": [
+          "excluding a permitted driveway or permitted parking pad must be landscaping"
+        ]
+      },
+      "expected": {
+        "category": "under6m_all_but_driveway",
+        "note": "percent of a stated base (front yard minus driveway): inexpressible after M-48, open in Spec 69 §4 item 8"
+      },
+      "id": "bijou:front_landscaping_pct",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2209,
+        "text": "| Front landscaping | yes | townhouse unit 5.15 m wide < 6.0 → NF-22 `under6m_all_but_driveway` (front yard minus a permitted driveway / parking pad must be landscaping) | L5 keys on the townhouse dwe"
+      },
+      "target": "front_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(3)#(B)",
+      "clause_check": {
+        "clause": "10.5.50.10(3)#(B)",
+        "literals": [
+          "a minimum of 25% of the rear yard for soft landscaping, if the lot frontage is 6.0 metres or less"
+        ]
+      },
+      "expected": {
+        "value": 25
+      },
+      "id": "bijou:rear_soft_landscaping_pct",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2210,
+        "text": "| Rear soft | yes | NF-13 = 25 % (frontage ≤ 6.0) |  | L10 |"
+      },
+      "target": "rear_soft_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.100.1(1)#(B)",
+      "clause_check": {
+        "clause": "10.5.100.1(1)#(B)",
+        "literals": [
+          "a maximum width of 2.6 metres"
+        ]
+      },
+      "expected": {
+        "value": 2.6
+      },
+      "id": "bijou:driveway_width_m",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2211,
+        "text": "| Driveway width | yes | NF-23 = 2.6 m (unit < 6.0 m wide) |  | L15 |"
+      },
+      "target": "driveway_width_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "GFA cap = label d × lot area is a model product (definition of FSI in Ch.800), not a by-law target value; excluded from value checks"
+      },
+      "id": "bijou:fsi_gfa_cap_m2",
+      "inputs_from": "T2.0 Q3 (5.15 × 16.34, 84.13), Q4 (RT, no label letters), Q6 (HT 11.0, ST 3; no coverage overlay). building_type townhouse + units front a street ASSUMED by the example.",
+      "lot": {
+        "building_type": "townhouse",
+        "exception": null,
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 11,
+          "ST": 3
+        },
+        "vars": {
+          "lot_area_m2": 84.13,
+          "lot_depth_m": 16.34,
+          "lot_frontage_m": 5.15
+        },
+        "zone": "RT",
+        "zone_label": "RT"
+      },
+      "source": "7 Bijou Walk",
+      "spec67_anchor": {
+        "line": 2205,
+        "text": "| FSI | no | no `d` value → not limited |  | H24 |"
+      },
+      "target": "gfa_m2 (FSI × lot area)",
+      "vector_status": "model_composite"
+    },
+    {
+      "adjudication": {
+        "adjudicated_by": "operator (S1 ruling, 2026-10-07)",
+        "kind": "eval_vector",
+        "reason": "10.20.40.70(3) keys on the REQUIRED minimum lot frontage, i.e. label f (10.20.30.20(1)(A)); the vector supplies only the measured frontage 5 m and no label f, so the required frontage is the RD default 12.0 m (10.20.30.20(1)(B)), band (C) 1.2 m. Spec 67 states 0.6 m (band (A)) by keying the band on measured frontage.",
+        "ruling": "Spec 69 M-51",
+        "with_label_f_equal_to_frontage": {
+          "bylaw_clause": "10.20.40.70(3)#(A)",
+          "label_f": 5,
+          "value": 0.6
+        },
+        "wrong_side": "Spec 67 vector (KFM-4)"
+      },
+      "bylaw_clause": "10.20.40.70(3)#(C)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(C)",
+        "literals": [
+          "1.2 metres if the required minimum lot frontage is 12.0 metres to less than 15.0 metres",
+          "if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V1",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_frontage_m": 5
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V1",
+      "spec67_anchor": {
+        "line": 529,
+        "text": "| V1 | RD | `frontage_m=5` | NF-3 side | band (A) `<6.0` | `0.6` |"
+      },
+      "spec67_value": 0.6,
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "adjudication": {
+        "adjudicated_by": "operator (S1 ruling, 2026-10-07)",
+        "kind": "eval_vector",
+        "reason": "10.20.40.70(3) keys on the REQUIRED minimum lot frontage, i.e. label f (10.20.30.20(1)(A)); the vector supplies only the measured frontage 10 m and no label f, so the required frontage is the RD default 12.0 m (10.20.30.20(1)(B)), band (C) 1.2 m. Spec 67 states 0.9 m (band (B)) by keying the band on measured frontage.",
+        "ruling": "Spec 69 M-51",
+        "with_label_f_equal_to_frontage": {
+          "bylaw_clause": "10.20.40.70(3)#(B)",
+          "label_f": 10,
+          "value": 0.9
+        },
+        "wrong_side": "Spec 67 vector (KFM-4)"
+      },
+      "bylaw_clause": "10.20.40.70(3)#(C)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(C)",
+        "literals": [
+          "1.2 metres if the required minimum lot frontage is 12.0 metres to less than 15.0 metres",
+          "if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V2",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_frontage_m": 10
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V2",
+      "spec67_anchor": {
+        "line": 366,
+        "text": "| V2 | RD | `frontage_m=10` | NF-3 side | band (B) `6.0–<12.0` | `0.9` |"
+      },
+      "spec67_value": 0.9,
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "adjudication": {
+        "adjudicated_by": "operator (S1 ruling, 2026-10-07)",
+        "kind": "eval_vector",
+        "reason": "10.20.40.70(3) keys on the REQUIRED minimum lot frontage, i.e. label f (10.20.30.20(1)(A)); the vector supplies only the measured frontage 20 m and no label f, so the required frontage is the RD default 12.0 m (10.20.30.20(1)(B)), band (C) 1.2 m. Spec 67 states 1.8 m (band (E)) by keying the band on measured frontage.",
+        "ruling": "Spec 69 M-51",
+        "with_label_f_equal_to_frontage": {
+          "bylaw_clause": "10.20.40.70(3)#(E)",
+          "label_f": 20,
+          "value": 1.8
+        },
+        "wrong_side": "Spec 67 vector (KFM-4)"
+      },
+      "bylaw_clause": "10.20.40.70(3)#(C)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(C)",
+        "literals": [
+          "1.2 metres if the required minimum lot frontage is 12.0 metres to less than 15.0 metres",
+          "if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V3",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V3",
+      "spec67_anchor": {
+        "line": 572,
+        "text": "| V3 | RD | `frontage_m=20` | NF-3 side | band (E) `18.0–<24.0` | `1.8` |"
+      },
+      "spec67_value": 1.8,
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "adjudication": {
+        "adjudicated_by": "operator (S1 ruling, 2026-10-07)",
+        "kind": "eval_vector",
+        "reason": "10.20.40.70(3) keys on the REQUIRED minimum lot frontage, i.e. label f (10.20.30.20(1)(A)); the vector supplies only the measured frontage 32 m and no label f, so the required frontage is the RD default 12.0 m (10.20.30.20(1)(B)), band (C) 1.2 m. Spec 67 states 3 m (band (G)) by keying the band on measured frontage.",
+        "ruling": "Spec 69 M-51",
+        "with_label_f_equal_to_frontage": {
+          "bylaw_clause": "10.20.40.70(3)#(G)",
+          "label_f": 32,
+          "value": 3
+        },
+        "wrong_side": "Spec 67 vector (KFM-4)"
+      },
+      "bylaw_clause": "10.20.40.70(3)#(C)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(C)",
+        "literals": [
+          "1.2 metres if the required minimum lot frontage is 12.0 metres to less than 15.0 metres",
+          "if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V4",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_frontage_m": 32
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V4",
+      "spec67_anchor": {
+        "line": 573,
+        "text": "| V4 | RD | `frontage_m=32` | NF-3 side | band (G) `≥30.0` | `3.0` |"
+      },
+      "spec67_value": 3,
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(3)#(D)",
+      "clause_check": {
+        "clause": "10.40.40.70(3)#(D)",
+        "literals": [
+          "1.5 metres, if the required minimum lot frontage for a permitted residential building is 15.0 metres or more"
+        ]
+      },
+      "expected": {
+        "value": 1.5
+      },
+      "id": "V5",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_frontage_m": 16
+        },
+        "zone": "RS",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V5",
+      "spec67_anchor": {
+        "line": 367,
+        "text": "| V5 | RS | `frontage_m=16` | NF-3 side | band (D) `≥15.0`, flat (NOT further tiered like RD) | `1.5` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.70(3)#(E)",
+      "clause_check": {
+        "clause": "10.40.40.70(3)#(E)",
+        "literals": [
+          "1.8 metres, for a non-residential building"
+        ]
+      },
+      "expected": {
+        "value": 1.8
+      },
+      "id": "V6",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "non_residential_building",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RS",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V6",
+      "spec67_anchor": {
+        "line": 575,
+        "text": "| V6 | RS | non-residential building | NF-3 side | clause (E), use-based exception | `1.8` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(2)#whole",
+        "literals": [
+          "(A) 7.5 metres; or (B) 25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 7.5
+      },
+      "id": "V7",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 25
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V7",
+      "spec67_anchor": {
+        "line": 368,
+        "text": "| V7 | RD | `depth_m=25` | NF-2 rear | `GREATEST(7.5, 0.25×25=6.25)` | `7.5` (floor binds) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(2)#whole",
+        "literals": [
+          "(A) 7.5 metres; or (B) 25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 8.75
+      },
+      "id": "V8",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 35
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V8",
+      "spec67_anchor": {
+        "line": 620,
+        "text": "| V8 | RD | `depth_m=35` | NF-2 rear | `GREATEST(7.5, 0.25×35=8.75)` | `8.75` (%-of-depth binds) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.60.40.70(2)#whole",
+        "literals": [
+          "in the RT zone is 7.5 metres"
+        ]
+      },
+      "expected": {
+        "value": 7.5
+      },
+      "id": "V9",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 35
+        },
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V9",
+      "spec67_anchor": {
+        "line": 621,
+        "text": "| V9 | RT | `depth_m=35` | NF-2 rear | flat, no depth term | `7.5` (unchanged regardless of depth — contrast with V8) |"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(3)#(B)",
+      "clause_check": {
+        "clause": "10.60.40.70(3)#(B)",
+        "literals": [
+          "0.9 metres for: (i) a detached house"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "V10",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "detached_house",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V10",
+      "spec67_anchor": {
+        "line": 369,
+        "text": "| V10 | RT | `building_type='detached'` | NF-3 side | branch (B)(i) | `0.9` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(3)#(A)",
+      "clause_check": {
+        "clause": "10.60.40.70(3)#(A)",
+        "literals": [
+          "(A) the required minimum side yard setback is 7.5 metres"
+        ]
+      },
+      "expected": {
+        "value": 7.5
+      },
+      "id": "V11",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "apartment_building",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V11",
+      "spec67_anchor": {
+        "line": 892,
+        "text": "| V11 | RT | `building_type='apartment'` (not enumerated in (B)) | NF-3 side | falls to (A) | `7.5` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.70(3)",
+      "clause_check": {
+        "checked": false,
+        "why": "no literal (absence or no_expected vector)"
+      },
+      "expected": {
+        "not_evaluated": "needs_user_input:building_type",
+        "note": "V12 NULL is a fallback policy, mapped to not_evaluated (Spec 68 §7.6, M-50)"
+      },
+      "id": "V12",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V12",
+      "spec67_anchor": {
+        "line": 893,
+        "text": "| V12 | RT | `building_type=NULL` | NF-3 side | fallback-philosophy decision (Step 1c) | **`NULL`, per the recommended fix** — NOT `7.5` and NOT the old flat constant; confirm this is what actually go"
+      },
+      "target": "side_setback_m",
+      "vector_status": "no_expected:policy_null"
+    },
+    {
+      "bylaw_clause": "10.80.40.70(3)#whole",
+      "clause_check": {
+        "clause": "10.80.40.70(3)#whole",
+        "literals": [
+          "(A) 1.2 metres for a detached house"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V13",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "detached_house",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V13",
+      "spec67_anchor": {
+        "line": 370,
+        "text": "| V13 | RM | `building_type='detached'` | NF-3 side | (A) | `1.2` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.80.40.70(3)#whole",
+      "clause_check": {
+        "clause": "10.80.40.70(3)#whole",
+        "literals": [
+          "(B) 1.5 metres for a semi-detached house"
+        ]
+      },
+      "expected": {
+        "value": 1.5
+      },
+      "id": "V14",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "semi_detached_house",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V14",
+      "spec67_anchor": {
+        "line": 371,
+        "text": "| V14 | RM | `building_type='semi_detached'` | NF-3 side | (B) | `1.5` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.80.40.70(4)#(C)(i)",
+      "clause_check": {
+        "clause": "10.80.40.70(4)#(C)(i)",
+        "literals": [
+          "(i) 0.9 metres, if all dwelling units front directly onto a street"
+        ]
+      },
+      "expected": {
+        "value": 0.9
+      },
+      "id": "V15",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "townhouse",
+        "flags": {
+          "all_units_front_street": true,
+          "corner_lot": false,
+          "major_street": true,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V15",
+      "spec67_anchor": {
+        "line": 712,
+        "text": "| V15 | RM | `building_type='townhouse'`, `all_units_front_street=true`, on major street | NF-3 side | §10.80.40.70(4)(C)(i) | `0.9` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.80.40.70(3)",
+      "clause_check": {
+        "checked": false,
+        "why": "no literal (absence or no_expected vector)"
+      },
+      "expected": {
+        "note": "Spec 67 records no citation for this value (§7.6: V16 has none)"
+      },
+      "id": "V16",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "townhouse",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V16",
+      "spec67_anchor": {
+        "line": 713,
+        "text": "| V16 | RM | `building_type='townhouse'`, off major street | NF-3 side | **UNCONFIRMED — no citation found; must be resolved (Step 1) before this input is safe to test against a fixed expected value**"
+      },
+      "target": "side_setback_m",
+      "vector_status": "no_expected:unconfirmed_no_citation"
+    },
+    {
+      "bylaw_clause": "10.80.40.70(3)#whole",
+      "clause_check": {
+        "clause": "10.80.40.70(3)#whole",
+        "literals": [
+          "(C) 2.4 metres for an apartment building"
+        ]
+      },
+      "expected": {
+        "value": 2.4
+      },
+      "id": "V17",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "apartment_building",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V17",
+      "spec67_anchor": {
+        "line": 372,
+        "text": "| V17 | RM | `building_type='apartment'` | NF-3 side | (C), ELSE branch | `2.4` |"
+      },
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.20.40.10(1)#(B)",
+        "literals": [
+          "if the lot is in an area with no numerical value following the letters \"HT\" on the Height Overlay Map, 10.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 10
+      },
+      "id": "V18-RD",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {},
+        "vars": {},
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V18",
+      "spec67_anchor": {
+        "line": 373,
+        "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.40.40.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.40.40.10(1)#(B)",
+        "literals": [
+          "on the Height Overlay Map, 10.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 10
+      },
+      "id": "V18-RS",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {},
+        "vars": {},
+        "zone": "RS",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V18",
+      "spec67_anchor": {
+        "line": 373,
+        "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.60.40.10(1)#(B)",
+        "literals": [
+          "on the Height Overlay Map, 10.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 10
+      },
+      "id": "V18-RT",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {},
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V18",
+      "spec67_anchor": {
+        "line": 373,
+        "text": "| V18 | RD/RS/RT | height overlay NULL | EF-5 height | flat default | `10.0` |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.80.40.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.80.40.10(1)#(B)",
+        "literals": [
+          "(i) 10.0 metres, for a detached house or semi-detached house"
+        ]
+      },
+      "expected": {
+        "value": 10
+      },
+      "id": "V19",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "detached_house",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {},
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V19",
+      "spec67_anchor": {
+        "line": 374,
+        "text": "| V19 | RM | height overlay NULL, `building_type='detached'` | EF-5 height | (B)(i) | `10.0` |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.80.40.10(1)#(B)",
+      "clause_check": {
+        "clause": "10.80.40.10(1)#(B)",
+        "literals": [
+          "(ii) 12.0 metres, for any other building or structure"
+        ]
+      },
+      "expected": {
+        "value": 12
+      },
+      "id": "V20",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": "apartment_building",
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {},
+        "vars": {},
+        "zone": "RM",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V20",
+      "spec67_anchor": {
+        "line": 896,
+        "text": "| V20 | RM | height overlay NULL, `building_type='apartment'` | EF-5 height | (B)(ii) | `12.0` — **this is the case that would previously have been silently NULL; confirm it now populates** |"
+      },
+      "target": "height_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.20(1)#whole",
+        "literals": [
+          "with a required minimum lot frontage of 18.0 metres or less, the permitted maximum building length for a permitted residential building is 17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "V21",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V21",
+      "spec67_anchor": {
+        "line": 714,
+        "text": "| V21 | RD | not on major street | NF-10 length | base case | `17.0` |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.60.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.60.40.20(1)#whole",
+        "literals": [
+          "If a lot abuts a major street, the permitted maximum building length is"
+        ]
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "V22",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V22",
+      "spec67_anchor": {
+        "line": 715,
+        "text": "| V22 | RT | not on major street | NF-10 length | RT has no base case | `NULL` — confirm NOT `17.0` (the RD/RS/RM number must not leak into RT) |"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(2)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(2)#(A)",
+        "literals": [
+          "a corner lot with a detached house"
+        ]
+      },
+      "expected": {
+        "not_evaluated": "no_candidate"
+      },
+      "id": "V23",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RT",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V23",
+      "spec67_anchor": {
+        "line": 668,
+        "text": "| V23 | RT | `is_corner_lot=false` | NF-14 corner landscaping | `NULL` gate | `NULL` |"
+      },
+      "target": "side_street_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.5.50.10(2)#(A)",
+      "clause_check": {
+        "clause": "10.5.50.10(2)#(A)",
+        "literals": [
+          "a minimum of 60 percent of the side yard abutting a street for landscaping"
+        ]
+      },
+      "expected": {
+        "value": 60
+      },
+      "id": "V24",
+      "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": true,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {},
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V24",
+      "spec67_anchor": {
+        "line": 669,
+        "text": "| V24 | any | `is_corner_lot=true` | NF-14 corner landscaping | flat | `60` |"
+      },
+      "target": "side_street_landscaping_pct",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "expected": {
+        "note": "footprint 311.6 m² = model width × MIN(length, 19.0); excluded from value checks"
+      },
+      "id": "V25",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 45,
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "source": "V25",
+      "spec67_anchor": {
+        "line": 622,
+        "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
+      },
+      "target": "footprint (model LEAST(...))",
+      "vector_status": "model_composite"
+    },
+    {
+      "adjudication": {
+        "adjudicated_by": "operator (S1 ruling, 2026-10-07)",
+        "kind": "eval_vector",
+        "reason": "10.20.40.70(3) keys on the REQUIRED minimum lot frontage, i.e. label f (10.20.30.20(1)(A)); the vector supplies only the measured frontage 20 m and no label f, so the required frontage is the RD default 12.0 m (10.20.30.20(1)(B)), band (C) 1.2 m. Spec 67 states 1.8 m (band (E)) by keying the band on measured frontage.",
+        "ruling": "Spec 69 M-51",
+        "with_label_f_equal_to_frontage": {
+          "bylaw_clause": "10.20.40.70(3)#(E)",
+          "label_f": 20,
+          "value": 1.8
+        },
+        "wrong_side": "Spec 67 vector (KFM-4)"
+      },
+      "bylaw_clause": "10.20.40.70(3)#(C)",
+      "clause_check": {
+        "clause": "10.20.40.70(3)#(C)",
+        "literals": [
+          "1.2 metres if the required minimum lot frontage is 12.0 metres to less than 15.0 metres",
+          "if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is 12.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 1.2
+      },
+      "id": "V25:side_setback_m",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 45,
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "note": "component of the V25 composite",
+      "source": "V25",
+      "spec67_anchor": {
+        "line": 622,
+        "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
+      },
+      "spec67_value": 1.8,
+      "target": "side_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.70(2)#whole",
+      "clause_check": {
+        "clause": "10.20.40.70(2)#whole",
+        "literals": [
+          "25% of the lot depth"
+        ]
+      },
+      "expected": {
+        "value": 11.25
+      },
+      "id": "V25:rear_setback_m",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 45,
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "note": "component of the V25 composite",
+      "source": "V25",
+      "spec67_anchor": {
+        "line": 622,
+        "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
+      },
+      "target": "rear_setback_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.20(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.20(1)#whole",
+        "literals": [
+          "17.0 metres"
+        ]
+      },
+      "expected": {
+        "value": 17
+      },
+      "id": "V25:building_length_m",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 45,
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "note": "component of the V25 composite",
+      "source": "V25",
+      "spec67_anchor": {
+        "line": 622,
+        "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
+      },
+      "target": "building_length_m",
+      "vector_status": "by_law_expected"
+    },
+    {
+      "bylaw_clause": "10.20.40.30(1)#whole",
+      "clause_check": {
+        "clause": "10.20.40.30(1)#whole",
+        "literals": [
+          "19.0 metres from the required front yard setback"
+        ]
+      },
+      "expected": {
+        "value": 19
+      },
+      "id": "V25:building_depth_m",
+      "lot": {
+        "building_type": null,
+        "flags": {
+          "corner_lot": false,
+          "major_street": false,
+          "through_lot": false
+        },
+        "label": {},
+        "overlays": {
+          "HT": 10
+        },
+        "vars": {
+          "lot_depth_m": 45,
+          "lot_frontage_m": 20
+        },
+        "zone": "RD",
+        "zone_label": "RD (no label letters supplied)"
+      },
+      "note": "component of the V25 composite",
+      "source": "V25",
+      "spec67_anchor": {
+        "line": 622,
+        "text": "| **V25 (end-to-end regression lock — the most important vector, shows the fix's real magnitude)** | RD | `frontage_m=20, depth_m=45, side_count=2, on_major_street=false`, coverage unmapped | EF-2/EF-"
+      },
+      "target": "building_depth_m",
+      "vector_status": "by_law_expected"
+    }
+  ]
+}
