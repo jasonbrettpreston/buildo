@@ -945,6 +945,7 @@ Also write-only and worth retiring: `parcels.zoning_base_source_dataset_version`
 | Mechanism | Trigger | NULLs | Consumed by |
 |---|---|---|---|
 | `migrations/242:32-48` — `BEFORE UPDATE OF geom, geometry` **trigger** | **any** write path | `parcels.massing_enriched_at`, `zoning_enriched_at` | `enrich-parcels.js:365-367, :183-186` |
+| `migrations/251` — the same trigger, rewired (WF3 parcels geom drift, 2026-10-06; 245/249 arms folded in) | a **material** geom change on **any** write path (`public.parcels_geom_materially_changed`, tolerance `parcels_geom_change_tolerance_deg`); a raw-jsonb-only change only when geom is NULL on both sides | `massing_enriched_at`, `zoning_enriched_at`, `centroid_lat/lng`, and the three `*_dataset_version_when_enriched` stamps (stamps on a material geom change only) | `enrich-parcels`, `compute-centroids`, `enrich-ravines`, `enrich-heritage`, `enrich-centreline` |
 | `load-parcels.js:353-361` — DEC-FENCE2, inside **one** `ON CONFLICT` clause | geometry change **via that loader only** | the three `*_dataset_version_when_enriched` stamps | `enrich-ravines`, `enrich-heritage`, `enrich-centreline` |
 | `enrich-permits.js:518-549` | a lead loses **all** parcel links | `zoning_enriched_at` + derived columns; NOT-NULL booleans reset to `false` | itself, next run |
 | `load-permits.js:363` + `close-stale-permits.js:129,148` | status moves off `'Inspection'` | `permits.enriched_status` | the three `classify-*` scripts |

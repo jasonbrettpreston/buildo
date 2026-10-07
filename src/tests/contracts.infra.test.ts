@@ -73,6 +73,11 @@ interface Contracts {
   max_build: {
     min_dimension_m: number;
   };
+  parcels_geom_change_tolerance_deg: {
+    default: number;
+    min: number;
+    max: number;
+  };
   optimal_config: {
     garden_footprint_rear_frac: number;
     garden_footprint_max_sqm: number;
@@ -291,6 +296,43 @@ const rules: Rule[] = [
     value: contracts.max_build.min_dimension_m,
     file: 'scripts/seeds/logic_variables.json',
     pattern: new RegExp(`"max_build_min_dimension_m":[\\s\\S]{0,30}"default":\\s*${contracts.max_build.min_dimension_m}\\b`),
+  },
+  // ---- parcels geometry material-change tolerance (WF3 parcels geom drift, migration 251) ----
+  {
+    name: 'parcels_geom_change_tolerance_deg.default → migration 251 seed literal',
+    value: contracts.parcels_geom_change_tolerance_deg.default,
+    file: 'migrations/251_parcels_geom_material_change.sql',
+    pattern: new RegExp(`'parcels_geom_change_tolerance_deg',\\s*${contracts.parcels_geom_change_tolerance_deg.default}\\b`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.min → migration 251 function bound check',
+    value: contracts.parcels_geom_change_tolerance_deg.min,
+    file: 'migrations/251_parcels_geom_material_change.sql',
+    pattern: new RegExp(`tol < ${contracts.parcels_geom_change_tolerance_deg.min}\\b`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.max → migration 251 function bound check',
+    value: contracts.parcels_geom_change_tolerance_deg.max,
+    file: 'migrations/251_parcels_geom_material_change.sql',
+    pattern: new RegExp(`tol > ${contracts.parcels_geom_change_tolerance_deg.max}\\b`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.default → seed JSON default',
+    value: contracts.parcels_geom_change_tolerance_deg.default,
+    file: 'scripts/seeds/logic_variables.json',
+    pattern: new RegExp(`"parcels_geom_change_tolerance_deg":[\\s\\S]{0,30}"default":\\s*${contracts.parcels_geom_change_tolerance_deg.default}\\b`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.min → seed JSON min',
+    value: contracts.parcels_geom_change_tolerance_deg.min,
+    file: 'scripts/seeds/logic_variables.json',
+    pattern: new RegExp(`"parcels_geom_change_tolerance_deg":[\\s\\S]{0,90}"min":\\s*${contracts.parcels_geom_change_tolerance_deg.min}\\b`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.max → seed JSON max',
+    value: contracts.parcels_geom_change_tolerance_deg.max,
+    file: 'scripts/seeds/logic_variables.json',
+    pattern: new RegExp(`"parcels_geom_change_tolerance_deg":[\\s\\S]{0,120}"max":\\s*${contracts.parcels_geom_change_tolerance_deg.max}\\b`),
   },
   // ---- zoning ambiguity threshold (Spec 65 enrich-parcels) ----
   {
@@ -566,6 +608,7 @@ describe('contracts.json — drift enforcement across spec/SQL/Zod/migration', (
     expect(contracts.optimal_config).toBeDefined();
     expect(contracts.parcel_cost_model).toBeDefined();
     expect(contracts.engine_health).toBeDefined();
+    expect(contracts.parcels_geom_change_tolerance_deg).toBeDefined();
   });
 
   it('permit pillar maxes sum to permit_total_max (spec 70 §4 invariant)', () => {
