@@ -1,0 +1,70 @@
+{
+  "$comment": "AUTHORED (S12, Spec 69 M-21; claude adjudicates, the operator confirms). The judgment inputs of the one-time legacy-id map built by scripts/analysis/bylaw/legacy.mjs. Everything else in the map is derived from the page. picks: a quote that matches more than one place on a page → the chosen candidate (checked to be one of the matches). relocate: a quote not in the cited article but found elsewhere on the page → the accepted location (checked). retire: a fragment retired with a closed reason (the 12 UNVERIFIED C-claims retire from the source's own result, not from here). external: a claim whose source is not a pinned by-law page → an external.json ref id; proposed_refs are the ref entries S12 proposes for external.json (the REF reason set needs the patch in the S12 report).",
+  "adoption_id": "adoption-3",
+  "external": {
+    "H26": "REF-1",
+    "H27": "REF-2",
+    "H28": "REF-3"
+  },
+  "legacy_sources": {
+    "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
+    "spec58": "4a50e9589154a04d8b1b34eacf35f915a064d22a",
+    "spec67": "9dd9494fd40be585e488ddf212b98abaaefd26a3",
+    "spec78": "c0f50bd2d0b3b64fd0405b17f960672e53f53974"
+  },
+  "picks": {
+    "C15@ch10_5": "10.5.50.10(1)#(1)(C)",
+    "C57@ch10_80": "10.80.40.70(1)#(1)",
+    "C6@ch10_20": "10.20.40.10(1)#(1)(B)",
+    "C6@ch10_40": "10.40.40.10(1)#(1)(B)",
+    "C6@ch10_60": "10.60.40.10(1)#(1)(B)"
+  },
+  "picks_why": {
+    "C15@ch10_5": "C15 is an NF-12 (front-yard landscaping %) claim; the 60 percent front-yard tier is (1)(C). (2)(A) is the corner side yard (NF-14, C17).",
+    "C57@ch10_80": "C57 records the front-yard setback condition of 10.80.40.70; (1) is the front yard setback. (4)(A)(i)(b) is the townhouse-row arm.",
+    "C6@ch10_20": "C6 is NF-7 (height when no HT value); (1)(B) is the no-numerical-value default. (1)(C)(ii) is the houseplex arm (C76).",
+    "C6@ch10_40": "as C6@ch10_20",
+    "C6@ch10_60": "as C6@ch10_20"
+  },
+  "proposed_refs": [
+    {
+      "citation": "Zoning By-law 569-2013, 40.5.1.10(3)(B) and (4) (Commercial Residential Development Standard Set symbol)",
+      "id": "REF-1",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "Zoning By-law 569-2013, 40.10.1.10(2) (CR zone Development Standard Sets SS1-SS5)",
+      "id": "REF-2",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_10.htm"
+    },
+    {
+      "citation": "City of Toronto Open Data, Zoning By-law dataset, Zoning_readme.txt (field STAND_SET)",
+      "id": "REF-3",
+      "kind": "ref",
+      "reason": "dataset_documentation",
+      "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/34927e44-fc11-4336-a8aa-a0dfb27658b7/resource/aa11a6f1-17fd-49b7-bbe4-f381bbc36f94/download/zoning_readme.txt"
+    }
+  ],
+  "relocate": {
+    "H19@ch10_40": "10.40.20.40(1)",
+    "H20@ch10_60": "10.60.20.40(1)"
+  },
+  "relocate_why": {
+    "H19@ch10_40": "Spec 67 cites 10.40.20.20(1) (Permitted Uses with Conditions); the quoted building-type list is 10.40.20.40(1) (Permitted Residential Building Types) on the pinned page.",
+    "H20@ch10_60": "Spec 67 cites 10.60.20.20(1); the quoted building-type list is 10.60.20.40(1) on the pinned page."
+  },
+  "retire": {
+    "C4@10.20.40.70": {
+      "reason": "quote_not_in_cited_article",
+      "why": "\"(Deleted by By-law 648-2025)\" is not in 10.20.40.70 on the pinned page nor on the legacy 2026-09-29 page; the legacy check matched it in 10.20.20.40 (building types). The NF-3 claim is the RT clause 10.60.40.70(3)(B)(v)."
+    },
+    "C4@10.40.40.70": {
+      "reason": "quote_not_in_cited_article",
+      "why": "As C4@10.20.40.70: not in 10.40.40.70 on either page; the legacy match was 10.40.20.40(1)(E) (building types)."
+    }
+  }
+}
