@@ -1,0 +1,545 @@
+{
+  "contract_version": 1,
+  "step": "link_massing",
+  "plan": ".cursor/wf2_link_massing_nonzero_close_active_task.md D3",
+  "derived_at": "2026-10-07T02:19:59.532Z",
+  "git_head": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+  "config": {
+    "link_massing_centroid_confidence": 0.95
+  },
+  "n_u": 50,
+  "n_x": 25,
+  "u_decrement": 0.01,
+  "candidate_lookahead": 35,
+  "phantom": {
+    "is_primary": false,
+    "structure_type": "other",
+    "match_type": "centroid_in_parcel",
+    "linked_at": "2000-01-01T00:00:00.000Z"
+  },
+  "lock_id": 902004,
+  "u_keys": [
+    {
+      "parcel_id": 1,
+      "building_id": 490803,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1,
+      "building_id": 491906,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 3,
+      "building_id": 490815,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 3,
+      "building_id": 490979,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 58,
+      "building_id": 760413,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 116,
+      "building_id": 491706,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 116,
+      "building_id": 491708,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 140,
+      "building_id": 759782,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 148,
+      "building_id": 755302,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 153,
+      "building_id": 491771,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 159,
+      "building_id": 754370,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 164,
+      "building_id": 760362,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 397,
+      "building_id": 751409,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 516,
+      "building_id": 761321,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 670,
+      "building_id": 761729,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 741,
+      "building_id": 759053,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 993,
+      "building_id": 445601,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 993,
+      "building_id": 445602,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 993,
+      "building_id": 445604,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1046,
+      "building_id": 428818,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1058,
+      "building_id": 755471,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1058,
+      "building_id": 755474,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1058,
+      "building_id": 755476,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1058,
+      "building_id": 755477,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1058,
+      "building_id": 755482,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1133,
+      "building_id": 445606,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1155,
+      "building_id": 428872,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1211,
+      "building_id": 449993,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1211,
+      "building_id": 450552,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1211,
+      "building_id": 451244,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1297,
+      "building_id": 429815,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1394,
+      "building_id": 756065,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1394,
+      "building_id": 756286,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1394,
+      "building_id": 756803,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1458,
+      "building_id": 485814,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1458,
+      "building_id": 485831,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1483,
+      "building_id": 751921,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1648,
+      "building_id": 752182,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1759,
+      "building_id": 487339,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1773,
+      "building_id": 488156,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1903,
+      "building_id": 751479,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1903,
+      "building_id": 751480,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1919,
+      "building_id": 751797,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 1968,
+      "building_id": 484021,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2080,
+      "building_id": 483027,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2080,
+      "building_id": 483029,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2080,
+      "building_id": 483031,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2151,
+      "building_id": 465047,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2185,
+      "building_id": 443980,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    },
+    {
+      "parcel_id": 2197,
+      "building_id": 443983,
+      "confidence": "0.95",
+      "linked_at": "2026-09-22 06:19:58.659+00"
+    }
+  ],
+  "x_pairs": [
+    {
+      "parcel_id": 1,
+      "building_id": 491071
+    },
+    {
+      "parcel_id": 2,
+      "building_id": 490812
+    },
+    {
+      "parcel_id": 3,
+      "building_id": 759447
+    },
+    {
+      "parcel_id": 4,
+      "building_id": 491047
+    },
+    {
+      "parcel_id": 5,
+      "building_id": 491078
+    },
+    {
+      "parcel_id": 6,
+      "building_id": 490981
+    },
+    {
+      "parcel_id": 8,
+      "building_id": 491018
+    },
+    {
+      "parcel_id": 9,
+      "building_id": 490840
+    },
+    {
+      "parcel_id": 10,
+      "building_id": 490985
+    },
+    {
+      "parcel_id": 11,
+      "building_id": 491022
+    },
+    {
+      "parcel_id": 12,
+      "building_id": 490992
+    },
+    {
+      "parcel_id": 13,
+      "building_id": 490928
+    },
+    {
+      "parcel_id": 15,
+      "building_id": 491090
+    },
+    {
+      "parcel_id": 16,
+      "building_id": 491008
+    },
+    {
+      "parcel_id": 17,
+      "building_id": 490964
+    },
+    {
+      "parcel_id": 18,
+      "building_id": 491361
+    },
+    {
+      "parcel_id": 19,
+      "building_id": 490906
+    },
+    {
+      "parcel_id": 20,
+      "building_id": 491025
+    },
+    {
+      "parcel_id": 21,
+      "building_id": 490990
+    },
+    {
+      "parcel_id": 23,
+      "building_id": 490915
+    },
+    {
+      "parcel_id": 24,
+      "building_id": 490855
+    },
+    {
+      "parcel_id": 26,
+      "building_id": 491787
+    },
+    {
+      "parcel_id": 27,
+      "building_id": 759442
+    },
+    {
+      "parcel_id": 28,
+      "building_id": 491349
+    },
+    {
+      "parcel_id": 29,
+      "building_id": 490945
+    }
+  ],
+  "proofs": {
+    "touched_parcels": 56,
+    "drift_extra": 0,
+    "drift_missing": 0,
+    "drift_guard_diff": 0,
+    "x_primary_matched": 25,
+    "x_pairs_derived": 0,
+    "x_pairs_stored": 0
+  },
+  "backup": {
+    "base": "link_massing_cohort_bak_20261007t0220z",
+    "pb": "link_massing_cohort_bak_20261007t0220z_pb",
+    "pm": "link_massing_cohort_bak_20261007t0220z_pm",
+    "created_at": "2026-10-07T02:23:21.334Z",
+    "database": "postgres",
+    "system_identifier": "7663896436381360167",
+    "baseline": {
+      "parcel_buildings": {
+        "rows": 534989,
+        "hash": "84ee66592e2b9e8925029b24e1bdb25e",
+        "columns": "all"
+      },
+      "parcels": {
+        "rows": 496536,
+        "hash": "81cd05813478952da121b3cf171dc4fc",
+        "columns": "all"
+      },
+      "parcels_pm": {
+        "rows": 496536,
+        "hash": "bfa418fa7c756067933a4d28a72b96fa",
+        "columns": [
+          "id",
+          "massing_enriched_at"
+        ]
+      }
+    },
+    "dropped_at": "2026-10-07T02:57:42.804Z"
+  },
+  "last_run": {
+    "started_at": "2026-10-07T02:23:21.678Z",
+    "git_head": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+    "capture": "docs/reports/golden/link_massing/post/cohort-heal.json",
+    "chain": "sources",
+    "harness_exit": {
+      "code": 0,
+      "signal": null,
+      "error": null
+    },
+    "claims": {
+      "shape": {
+        "ok": true,
+        "reasons": []
+      },
+      "counts": {
+        "ok": true,
+        "reasons": [],
+        "expected": {
+          "records_new": 0,
+          "records_updated": 50,
+          "links_updated": 50,
+          "links_inserted": 0,
+          "primary_cleared": 0,
+          "links_deleted": 25,
+          "parcels_flagged_lost_link": 25
+        },
+        "got": {
+          "records_new": 0,
+          "records_updated": 50,
+          "links_updated": 50,
+          "links_inserted": 0,
+          "primary_cleared": 0,
+          "links_deleted": 25,
+          "parcels_flagged_lost_link": 25
+        }
+      },
+      "rerun": {
+        "ok": true,
+        "reasons": []
+      }
+    },
+    "pre_restore_diff": {
+      "parcel_buildings": {
+        "extra": 0,
+        "missing": 0,
+        "changed": 50,
+        "guard_changed": 0
+      },
+      "parcels": {
+        "extra": 0,
+        "missing": 0,
+        "changed": 25
+      },
+      "judged": {
+        "ok": true,
+        "reasons": []
+      },
+      "unexpected": null
+    },
+    "restore_counts": {
+      "parcel_buildings extra -> DELETE": 0,
+      "parcel_buildings changed -> UPDATE": 50,
+      "parcel_buildings missing -> INSERT (original id)": 0,
+      "parcels.massing_enriched_at -> backup value": 25
+    },
+    "post_restore": {
+      "parcel_buildings": {
+        "rows": 534989,
+        "hash": "84ee66592e2b9e8925029b24e1bdb25e",
+        "ms": 1353
+      },
+      "parcels": {
+        "rows": 496536,
+        "hash": "81cd05813478952da121b3cf171dc4fc",
+        "ms": 69150
+      }
+    },
+    "asserted": true,
+    "restored": true,
+    "finished_at": "2026-10-07T02:57:42.804Z"
+  }
+}

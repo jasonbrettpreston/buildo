@@ -358,17 +358,17 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
 | 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 363 definition row(s) checked, 44 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (15 ledger-allowed, 4 outputs:"none" vacuous) |
-| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 82 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (13 ledger-allowed, 4 outputs:"none" vacuous) |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 29 finding(s), all ledger-allowed (29) |
-| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 20 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
+| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 19 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 27 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 20 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 443 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 475 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 296 declared-key check(s), 0 violations; 149 terminal(s) unwitnessed (no capture) |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 298 declared-key check(s), 0 violations; 149 terminal(s) unwitnessed (no capture) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -377,11 +377,12 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 - compare ran: true · diffs found: 2497 · unexplained: 0
 
 ### Test suite (item iii)
-- 2057/2057 passed (suite success=true)
-- harvested: 58 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 2061/2062 passed (suite success=false)
+- harvested: 59 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing: none
+- failing (1):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

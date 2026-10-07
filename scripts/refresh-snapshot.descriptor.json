@@ -1020,12 +1020,12 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T15:50:55.112Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 4,
-        "sample_n": 15,
+        "at": "2026-10-07T01:24:59.716Z",
+        "commit": "3965900e7c39a44d01e46794c910a76b5f381b39",
+        "cost_ms": 3,
+        "sample_n": 16,
         "source_run": {
-          "run_id": "2335",
+          "run_id": "2347",
           "chain": null,
           "event": "golden_capture"
         }

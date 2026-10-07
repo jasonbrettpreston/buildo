@@ -863,26 +863,6 @@
     },
     {
       "gate": "G",
-      "step": "link_massing",
-      "item": "nonzero:parcel_buildings",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-10-06 (FLEET-2 §5 recapture, fast invariant #38): every link_massing POST capture is a steady-state re-derive that changed 0 rows (records_new=0, records_updated=0 on standalone, sources-full, sources-full-forced-1). The earlier 59-row standalone capture was a failed_write_privilege (R1) run and was superseded. A healing cohort capture (perturb, run, verified restore) is owed. Ledgered under the operator standing direction of 2026-10-05 (compliant, minor, do not derail the run); confirm at the FLEET-2 commit.",
-      "closing_brief": ".cursor/fleet2-assembly/ASSEMBLY.md A31: link_massing healing cohort capture (gate G #38)",
-      "filed": "2026-10-06",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
-      "step": "link_massing",
-      "item": "nonzero:parcels",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-10-06 (FLEET-2 §5 recapture, fast invariant #38): every link_massing POST capture is a steady-state re-derive that changed 0 rows (records_new=0, records_updated=0 on standalone, sources-full, sources-full-forced-1). The 4th write target parcels.massing_enriched_at (lost-link flag) has no write count in records_meta (written.e4 is not exposed), so no capture can evidence it yet. A healing cohort capture (perturb, run, verified restore) is owed. Ledgered under the operator standing direction of 2026-10-05 (compliant, minor, do not derail the run); confirm at the FLEET-2 commit.",
-      "closing_brief": ".cursor/fleet2-assembly/ASSEMBLY.md A31: link_massing healing cohort capture (gate G #38)",
-      "filed": "2026-10-06",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
       "step": "enrich_ravines",
       "item": "nonzero:parcels",
       "disposition": "pending_recapture",
@@ -1657,16 +1637,6 @@
       "item": "red-evidence",
       "disposition": "pending_remediation",
       "why": "no docs/reports/red-evidence/parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "K",
-      "step": "link_massing",
-      "item": "red-evidence",
-      "disposition": "pending_remediation",
-      "why": "no docs/reports/red-evidence/link_massing/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26); a PREVIOUSLY CONVERTED step, not the in-development `massing` ingestor slug",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
       "filed": "2026-09-26",
       "adjudicated_by": "operator"

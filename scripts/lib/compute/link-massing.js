@@ -611,6 +611,21 @@ function upsert(ctx) {
   return (ctx.written && ctx.written.e2) || {};
 }
 
+/**
+ * ONE per-target write counter, by declared position (`written.eN` is `outputs.writes[N-1]`;
+ * src/tests/steps/link_massing/written-by-target.logic.test.ts T2c locks the order), or NULL when
+ * that target — or that field — was never measured. NULL rather than 0 (WF2 link_massing
+ * nonzero-close, fold F-8): "not measured" and "measured zero" are different claims, and gate G's
+ * cohort `count_path` reads these keys to attribute a write to ONE of this step's two tables. The
+ * runner zero-initialises every declared target before the first batch, so null reaches a capture
+ * only on a path where the keyed writes never ran.
+ */
+function targetCount(ctx, target, field) {
+  const t = ctx.written && ctx.written[target];
+  const v = t ? t[field] : undefined;
+  return Number.isFinite(v) ? v : null;
+}
+
 function round(n) {
   return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
 }
@@ -651,6 +666,13 @@ function buildLinkMeta(ctx) {
     matches_centroid_in_parcel: m.centroid_in_parcel,
     matches_nearest: m.nearest,
     no_match_count: m.no_match,
+    // WF2 link_massing nonzero-close (D1): the runner's per-target counters, so a capture can
+    // attribute a write to parcel_buildings (e1/e2/e3) or to parcels (e4) — gate G count_path.
+    primary_cleared: targetCount(ctx, 'e1', 'rows_changed'),
+    links_inserted: targetCount(ctx, 'e2', 'inserted'),
+    links_updated: targetCount(ctx, 'e2', 'updated'),
+    links_deleted: targetCount(ctx, 'e3', 'deleted'),
+    parcels_flagged_lost_link: targetCount(ctx, 'e4', 'updated'),
   };
 }
 

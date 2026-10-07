@@ -893,10 +893,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 247,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 182,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -922,10 +922,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 534989,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 61,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 76,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -951,10 +951,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 494932,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 147,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 130,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -980,10 +980,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 496321,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 458,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 371,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1009,10 +1009,10 @@
       "frequency": "every_run",
       "last_measured": {
         "value": 20.14,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 58,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 37,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1041,10 +1041,10 @@
       "retighten_when": "zero rows (this check is expected to already read 0 — a non-zero count is a genuine finding, not a standing residual)",
       "last_measured": {
         "value": 186,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 972,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 853,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1071,10 +1071,10 @@
       "retighten_when": "zero rows — closes when the overlap-only fallback narrowing (Spec 56 §3 new subsection, slice 1) retires the disjoint nearest matches that fabricate a borrowed primary; the surviving genuinely-overlapping nearest links resolve to a real apportioned share instead.",
       "last_measured": {
         "value": 106275,
-        "at": "2026-10-06T14:22:17.845Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 198,
-        "sample_n": 6,
+        "at": "2026-10-07T04:33:29.781Z",
+        "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+        "cost_ms": 159,
+        "sample_n": 10,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -1159,6 +1159,41 @@
       "key": "no_match_count",
       "type": "int",
       "consumers": []
+    },
+    {
+      "key": "primary_cleared",
+      "type": "int",
+      "consumers": [
+        "scripts/analysis/link-massing-healing-cohort.js"
+      ]
+    },
+    {
+      "key": "links_inserted",
+      "type": "int",
+      "consumers": [
+        "scripts/analysis/link-massing-healing-cohort.js"
+      ]
+    },
+    {
+      "key": "links_updated",
+      "type": "int",
+      "consumers": [
+        "scripts/analysis/link-massing-healing-cohort.js"
+      ]
+    },
+    {
+      "key": "links_deleted",
+      "type": "int",
+      "consumers": [
+        "scripts/analysis/link-massing-healing-cohort.js"
+      ]
+    },
+    {
+      "key": "parcels_flagged_lost_link",
+      "type": "int",
+      "consumers": [
+        "scripts/analysis/link-massing-healing-cohort.js"
+      ]
     }
   ],
   "deviations": [
@@ -1403,6 +1438,11 @@
         "matches_centroid_in_parcel": "int",
         "matches_nearest": "int",
         "no_match_count": "int",
+        "primary_cleared": "int",
+        "links_inserted": "int",
+        "links_updated": "int",
+        "links_deleted": "int",
+        "parcels_flagged_lost_link": "int",
         "audit_table": "object",
         "terminal": "string"
       },
@@ -1431,6 +1471,11 @@
         "matches_centroid_in_parcel": "int",
         "matches_nearest": "int",
         "no_match_count": "int",
+        "primary_cleared": "int",
+        "links_inserted": "int",
+        "links_updated": "int",
+        "links_deleted": "int",
+        "parcels_flagged_lost_link": "int",
         "audit_table": "object",
         "terminal": "string"
       },
