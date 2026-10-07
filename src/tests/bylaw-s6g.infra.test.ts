@@ -3,8 +3,9 @@
 //            ("a Spec 69 parse that yields 0 rulings FAILS"); docs/specs/01-pipeline/69_mcbylaw_policy.md M-39, M-45;
 //            docs/reports/mcbylaw-phase1-plan.md S6
 //
-// S6 authored-field gates on the REAL tree (offline): the fixture verbatims are still the pinned page text and re-cut
-// exactly as the live slicer cuts them; every gate runs on the real slice + seeds + Spec 69 and passes with nothing
+// S6 authored-field gates on the REAL tree (offline): every fixture is cut from the live slice (current adoption,
+// slicer and vocab) and every gate selfTest() runs on it, so drift reds here; every gate runs on the real slice +
+// seeds + Spec 69 and passes with nothing
 // authored yet (every in-scope row `pending`, never `failed`); Spec 69 has no duplicate ruling id (lesson 10).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
@@ -21,33 +22,38 @@ const CL = await load('scripts/analysis/bylaw/clause.mjs');
 const XR = await load('scripts/analysis/bylaw/xref.mjs');
 const SH = await load('scripts/analysis/bylaw/shape.mjs');
 const KP = await load('scripts/analysis/bylaw/keyer-prov.mjs');
-const SL = await load('scripts/analysis/bylaw/slice.mjs');
 const SEEDS = path.join(ROOT, 'scripts', 'seeds', 'bylaw');
 const readJson = (rel: string) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
-describe('fixture text is real (Spec 68 §7.3)', () => {
-  const real = FX.REAL_ROWS || { rows: [] };
-  it('every fixture verbatim is a substring of its pinned normalized page', () => {
-    expect(real.rows.length).toBeGreaterThan(0);
-    for (const r of real.rows) {
-      const page = fs.readFileSync(path.join(SEEDS, 'pages', `${r.page}.txt`), 'utf8');
-      expect(page.includes(r.verbatim), `${r.regulation_id} on ${r.page}`).toBe(true);
-    }
+describe('fixtures are cut from the LIVE slice, so slicer / vocab drift reds here (Spec 68 §7.3, §9)', () => {
+  const live = FX.liveSlice();
+  it('every fixture row id is a row of the live slice', () => {
+    const ids = new Set(live.rows.map((r: Json) => r.regulation_id));
+    for (const id of FX.FIXTURE_ROW_IDS) expect(ids.has(id), id).toBe(true);
   });
-  it('the fixture rows re-cut through the slice API equal the live slicer rows (clauses, literals, refs)', () => {
-    const live = SL.sliceSnapshot({ pages: SL.loadSnapshotPages(SEEDS).pages });
-    const byId = new Map(live.rows.map((r: Json) => [r.regulation_id, r]));
-    const pick = (r: Json) => ({ clauses: r.clauses.map((c: Json) => c.path), literals: r.literals.map((l: Json) => `${l.value}${l.unit || ''}@${l.clause_path}`), refs: r.refs.map((x: Json) => `${x.citation}@${x.clause_path}`), sha256: r.sha256 });
-    for (const fx of FX.fixtureSlice().rows) {
-      const lr = byId.get(fx.regulation_id) as Json;
-      expect(lr, fx.regulation_id).toBeDefined();
-      expect(pick(fx)).toEqual(pick(lr));
-    }
+  it('every good-twin unit id resolves in the live slice (a leaf, a clause or #whole)', () => {
+    const idx = AU.buildIndex(live);
+    for (const [n, u] of Object.entries(FX.GOOD as Record<string, Json>)) expect(AU.unitView(idx, u.unit_id), `${n}: ${u.unit_id}`).not.toBeNull();
   });
+  const SELF: [string, () => Json][] = [
+    ['G-AGREE', () => AG.selfTest()],
+    ['G-CLAUSE', () => CL.selfTest()],
+    ['G-XREF', () => XR.selfTest()],
+    ['G-SHAPE', () => SH.selfTest()],
+    ['G-PROV keyer arm', () => KP.keyerSelfTest()],
+    ['G-PROV ruling-id arm', () => KP.rulingSelfTest()],
+  ];
+  for (const [gate, st] of SELF) {
+    it(`${gate} selfTest() passes on the live slice + current vocab`, () => {
+      const r = st();
+      expect(r.results.filter((x: Json) => !x.ok)).toEqual([]);
+      expect(r.pass).toBe(true);
+    });
+  }
 });
 
 describe('the S6 gates on the real tree (nothing authored yet → pass, every row pending)', () => {
-  const live = SL.sliceSnapshot({ pages: SL.loadSnapshotPages(SEEDS).pages });
+  const live = FX.liveSlice();
   const vocab = readJson('scripts/seeds/bylaw/vocab.json');
   const adjudications = readJson('scripts/seeds/bylaw/adjudications.json');
   const external = readJson('scripts/seeds/bylaw/external.json');

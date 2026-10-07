@@ -5,7 +5,7 @@
 //            docs/reports/mcbylaw-phase1-plan.md S6
 //
 // S6 authored-field gates: one known-bad fixture per reason code plus a good twin, from real clause text
-// (scripts/analysis/bylaw/fixtures/real-rows.json); each gate's closed reason-code list; the S7 interface contract
+// (cut from the live slice by authored-fixtures.mjs); each gate's closed reason-code list; the S7 interface contract
 // ({status ∈ vocab.gate_state, checked, violations[{code, id, detail}]} + selfTest()); the closed sets locked both
 // directions against vocab.json where vocab lists them.
 import { describe, expect, it } from 'vitest';
@@ -179,7 +179,7 @@ describe('displacesOf — generated from the clause text through the slice API (
     expect(r.triggers.filter((t: Json) => t.n === 0).map((t: Json) => t.phrase)).toEqual(['despite']);
   });
   it('every vocab trigger phrase that occurs in the fixture text has a fixture above (notwithstanding: 0 occurrences in the pinned pages)', () => {
-    const text = FX.REAL_ROWS.rows.map((r: Json) => r.verbatim).join('\n');
+    const text = FX.fixtureSlice().rows.map((r: Json) => r.verbatim).join('\n');
     const occurs = VOCAB.displacement_triggers.phrases.filter((p: string) => new RegExp(`(?<![A-Za-z])${p}(?![A-Za-z])`).test(text));
     expect(occurs.sort()).toEqual(['Despite', 'despite', 'do not apply', 'does not apply']);
   });
