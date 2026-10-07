@@ -15,6 +15,11 @@
 > (M-3..M-10, M-12, M-13, M-16, M-18, M-24) are now §6.4 here; their ids are retired there and never reused.
 > Zoning-application checks (ZV-1..ZV-4) live on the zoning steps, not here (Spec 69 M-42).
 >
+> **S1 amendments (2026-10-07, operator rulings on the S0.5 spike; evidence `docs/reports/mcbylaw-s05-spike.md`):**
+> the §7.4 grammar additions (Spec 69 M-48); argument-level, own-target displacement and the rule 3 tie-break (§7.5,
+> M-48, M-49); building type unknown → all types must agree (§7.5, M-50); `calculation_handling` status single-drafted
+> (§6, M-17 note); the page set per M-47 (§6.4, §10, §11); Spec 67 V1–V4/V25 corrected at S6b (§7.6, M-51).
+>
 > **Byte budget:** `measured_at × 1.1` in lines **and** bytes (the `spec-split-check` arm (iv) rule, Spec 122/124
 > convention), `measured_at` taken at the spec commit — about 76 KB for this spec and 38 KB for Spec 69 (measured at the activation commit: 68.8 KB / 34.3 KB). Enforced by `spec-split-check` arm (iv) once S8 adds 68/69 to its `SPEC_FILES`
 > and to `122_split_manifest.json` `budgets` (`headroom_pct` 10, measured at the spec commit). Until then the budget is
@@ -73,7 +78,7 @@ Each is printed by the validator or recorded by a named artifact.
 | **SC-8** | Zero hand-edited rows | generated JSON / MD byte-equal to an in-memory regeneration | n/a | **0 diffs** | 1 | G-DRIFT |
 | **SC-9** | Zero unresolved references | refs that resolve to neither a row nor an `external.json` `ref` entry | 2 of 97 exception targets *[measured]* | **0** (source defects carry a closed reason, counted) | 1 (std), 2 (exceptions) | G-XREF |
 | **SC-10** | Nothing hidden | every row state, draft failure, disagreement, finding and gate state counted on the five lines | n/a | **no PASS hides an unrun gate** | 1 | validator output |
-| **SC-11** | Page-set completeness | TOC entries that touch residential zones and map to neither a pinned page nor a page rule | 1 missed (Ch.600.60) *[measured]* | **0** | 1 | G-UNIVERSE |
+| **SC-11** | Page-set completeness | TOC entries that touch residential zones and map to neither a pinned page nor a page rule | 1 missed (Ch.600.60) *[measured]*; S0.5: 23 more + 1 undetermined (Ch.500) *[measured]*, ruled by Spec 69 M-47 | **0** | 1 | G-UNIVERSE |
 | **SC-12** | Closed-model fit | clause units keyed `UNUSUAL` | pre-sorter prior only (3.0 % std · 1.0 % exception, a regex of ≈ 77–90 % precision, not a measurement); **true share measured on keyed units by S0.5** | every UNUSUAL unit `not_modelled` and disclosed; share reported | 1–2 | G-SHAPE |
 | **SC-13** | Exception coverage | excepted residential lots whose exception, and every exception it INCLUDEs, is captured | 0 % | wave 1 / both waves re-measured at Phase 2 entry (probe: direct-ranked top 220 = **74.75 %**; INCLUDE-closed-ranked top 220 = **74.38 %**; both waves 88.6 % of 339,125) *[measured, panel]* | 2 | census render |
 
@@ -106,7 +111,7 @@ Each word is one `--validate` line. Common fields: `WORD: PASS|FAIL (complete n 
 | Airtight V2 term | By-law table analogue | Enforced by |
 |---|---|---|
 | **Generated** | Every *generated* field (id, verbatim, clauses, literals, units, refs, provenance, `value_form`, `layer`, `displaces[]`, status) is written only by the generator from the pinned pages. | G-SHAPE (no generated field in an authored file), G-DRIFT |
-| **Witnessed** | Every ⧉ field is double-keyed blind and agrees canonically or carries an adjudication by a person who is neither keyer. Single-drafted fields (`explanation`, `description`, `gaps`, `disclosure`, `code_refs`, heuristic rows) are checked mechanically and sampled by the expert. All are validated against the clause text. | G-AGREE, G-PROV, G-CLAUSE, G-READ |
+| **Witnessed** | Every ⧉ field is double-keyed blind and agrees canonically or carries an adjudication by a person who is neither keyer. Single-drafted fields (`explanation`, `calculation_handling` status, `description`, `gaps`, `disclosure`, `code_refs`, heuristic rows) are checked mechanically and sampled by the expert. All are validated against the clause text. | G-AGREE, G-PROV, G-CLAUSE, G-READ |
 | **Executed** | Every agreed `numeric_expression` is evaluated, and `effective()` resolves precedence on real lot vectors, in Phase 1. | G-EVAL |
 | **Never hand-kept** | No row, count, backlog or appendix is typed by hand. Counts come from `universe.lock.json` / `census.json`; Spec 67 appendices are generated blocks. | G-DRIFT, G-UNIVERSE |
 | **Declared == observed (Phase 1)** | **The table equals the by-law text**: each verbatim equals its page slice; each literal is in the cited clause; each verified unit is pinned to the unit sha it was verified against. | G-TEXT, G-CLAUSE |
@@ -146,12 +151,12 @@ One row per slicer `regulation_id` (`<article>(<n>)`, `<article>#article`, `800.
 | | `numeric_expression` | ⧉ | DSL statements, each `@clause`, or "none" (§7.4) |
 | | `literals_not_expressed[]` | ⧉ | `{literal, clause, reason}`, closed reasons |
 | | `application` | ⧉ | zones, building types, lot conditions, uses — each token with clause + ≥ 2-word evidence phrase |
-| | **`condition`** | ⧉ | a `lot_condition` token + DSL `if`, or "none"; a numeric `if` needs a band/threshold token; a token-only condition has no `if` |
+| | **`condition`** | ⧉ | one or more `lot_condition` tokens (a list is a conjunction, §7.4) + DSL `if`, or "none"; a numeric `if` needs a band/threshold token; a token-only condition has no `if` |
 | | **`applies_to.part`** | ⧉ | `whole · named_addresses · lot_list · map_area`, with refs |
 | | `cross_refs[]` | G | resolved row or `external.json` `ref` ids |
 | | **`displaces[]`** | G | resolved ids from "Despite …" / "does not apply"; irreflexive and acyclic |
 | | `include_ref` | G | INCLUDE units only; resolved to a row; expanded transitively with cycle check |
-| | `calculation_handling` | ⧉ (status, `not_modelled_reason`, `user_inputs`) + A (description, gaps) | `modelled · partially_modelled · not_modelled · informational` |
+| | `calculation_handling` | ⧉ (`not_modelled_reason`, `user_inputs`) + A (status — drafted once by keyer A, because it needs code knowledge keyer B must not have (Spec 69 M-17 note 2026-10-07); description, gaps) | `modelled · partially_modelled · not_modelled · informational` |
 | | `code_refs[]` | A | `table.column` · `module#dotted.member` (paths limited to `vocab.code_roots`; anything else fails closed) · logic variable, + `expects` on constants |
 | UNDERSTANDABLE | `explanation` | A | buyer-facing text |
 | | `definitions_used[]` | G | resolved |
@@ -188,7 +193,7 @@ A model heuristic is a number our code uses that is **not** a by-law value. It i
 
 ### 6.4 Standing rules (moved from Spec 69 v0.4; ids retired there, never reused)
 
-1. **(was M-3) The universe is a pinned, versioned page set.** Changing it is a Spec 69 ruling (M-37 is the first). — G-UNIVERSE, G-PROV.
+1. **(was M-3) The universe is a pinned, versioned page set.** Changing it is a Spec 69 ruling (M-37 is the first, M-47 the second). **One page per TOC section**: a chapter URL holds only that chapter's first section *[measured, S0.5]*, so the pinned list names each section page. — G-UNIVERSE, G-PROV.
 2. **(was M-4) Exhaustiveness is a gate.** Every row matches exactly one scope rule; judgment reasons carry evidence; in-scope counts are pinned both directions. — G-UNIVERSE.
 3. **(was M-5) Coverage is complete-row counts.** No floor file: pending = 0 at close (SC-1) supersedes it. — five lines.
 4. **(was M-6) Generated and authored fields are disjoint;** every authored file has a schema; no prose lives in code. — G-SHAPE.
@@ -267,12 +272,25 @@ One red-first fixture per archetype × value-form pair **that occurs in real tex
 
 ```
 statement := target "=" expr "@" clause_path
-expr      := literal | variable | "(" expr ")" | max(expr; …) | min(expr; …) | band(variable; cond:literal; …)
-           | if(cond; expr; expr) | by_type(type:expr; …) | existing(variable; date) | label(letter) | overlay(code)
-           | expr op expr
-literal   := number unit      unit ∈ { m, m2, pct, storeys, units }
+expr      := literal | variable | unlimited | "(" expr ")" | max(arg; …) | min(arg; …) | band(variable; cond:literal; …)
+           | if(cond; expr; expr) | by_type(type:expr; …[; other:expr]) | existing(variable; date | enacted(bylaw))
+           | label(letter) | overlay(code) | expr op expr
+arg       := expr ["@" clause_path]       (a max/min argument may carry its own clause path)
+cond      := atom { (and | or) atom }
+atom      := variable cmp literal | mapped(code) | labelled(letter) | not atom
+literal   := number unit      unit ∈ { m, m2, pct, storeys, units, ratio }
 ```
-`op` ∈ `+ − × ÷` (usual precedence, left-associative); `cond := variable cmp literal` with `cmp` ∈ `< ≤ > ≥ =`, joined by `and`/`or`; arguments separated by `;`; `date` is ISO `YYYY-MM-DD`. Every literal occurs in the cited clause; every variable is in `vocab.json` and licensed by a phrase in the clause; **a literal's unit equals the unit of the variable or target it binds to** (so condition literals in an `if` may differ from the target's unit). Targets are unit-specific (`height_m` and `height_storeys` are two targets): a mixed-measure clause yields two units, never a conversion, and both limits apply independently (so "the lesser of" holds without a cross-target operator). `band` with no matching band and `by_type` for an unlisted building type evaluate to `not_evaluated` with a reason, never a default. Two drafts agree when their canonical forms are equal: whitespace removed, numerals normalized, arguments sorted **only** for `max`, `min`, `+`, `×` and `by_type` keys; `if` and `band` keep their order. The grammar is drafted and exercised in the S0.5 spike, then fixture-tested at S6 before A1.
+`op` ∈ `+ − × ÷` (usual precedence, left-associative); `cmp` ∈ `< ≤ > ≥ =`; arguments separated by `;`; `date` is ISO `YYYY-MM-DD`. Every literal occurs in the cited clause; every variable is in `vocab.json` and licensed by a phrase in the clause; **a literal's unit equals the unit of the variable or target it binds to** (so condition literals in an `if` may differ from the target's unit). Targets are unit-specific (`height_m` and `height_storeys` are two targets): a mixed-measure clause yields two units, never a conversion, and both limits apply independently (so "the lesser of" holds without a cross-target operator). `band` with no matching band and `by_type` for an unlisted building type (with no `other` key) evaluate to `not_evaluated` with a reason, never a default. Two drafts agree when their canonical forms are equal: whitespace removed, numerals normalized, arguments sorted **only** for `max`, `min`, `+`, `×` and `by_type` keys; `if` and `band` keep their order. The grammar was exercised in the S0.5 spike and is fixture-tested at S6 before A1.
+
+**S1 additions (2026-10-07, Spec 69 M-48; each closes an S0.5 gap, `docs/reports/mcbylaw-s05-spike.md` §2.4):**
+- **`unlimited`** — "no limit applies" (a value, distinct from `not_evaluated`): 10.20.40.40(1)(B) "the floor space index is not limited by this regulation" → `fsi = unlimited @(1)(B)`. `effective()` treats it as no bound in rule 4a (a max with `unlimited` loses to any finite max). It closed 7 of the 9 inexpressible `by_law_expected` vectors.
+- **Presence tests** `mapped(code)`, `labelled(letter)`, `not` — the "if there is no value on the map / in the label" arms: 10.20.40.10(1)(B) `condition.if = not mapped(HT)`; 10.20.30.20(1)(B) `not labelled(f)`; 600.60.40(1)(A) `labelled(u) and label(u) < 6 units`.
+- **Absent map arguments in `max`/`min`** — an `overlay(code)` / `label(letter)` argument with no value for the lot is dropped; if every argument is absent the result is `not_evaluated`: 10.20.40.10(1)(D)(i) `height_m = max(13.0 m; overlay(HT))` with HT unmapped → 13.0 m.
+- **`other` in `by_type`** — the "any other building" arm: 10.80.40.10(1)(B) `by_type(detached_house: 10.0 m; semi_detached_house: 10.0 m; other: 12.0 m)`. Without `other`, an unlisted type is still `not_evaluated`.
+- **Multi-token conditions** — `condition` tokens are a list, read as a conjunction: 10.20.40.70(6) `condition = [corner_lot, <adjacent lot fronts the flanking street>] + if required_lot_frontage_m ≥ 12.0 m` (the second token is added to `vocab.lot_condition` at S5).
+- **Argument-level displacement** — `displaces[]` may name a clause path inside another unit's expression (an `arg` tagged `@clause`); only that argument is removed (§7.5 rule 2): 600.60.40(2)(A) displaces 10.20.40.10(1)(C)(ii) (the 10.0 m argument), so `max(overlay(HT) @(C)(i); 10.0 m @(C)(ii))` keeps HT. The spike's whole-unit drop returned 10.5 m where the by-law gives 12.0 m (HT 12.0).
+- **Named enactment date** — `enacted(569-2013)` resolves from the pinned page header ("enacted on May 9, 2013" → 2013-05-09), so a clause that says "on the day of the enactment of this By-law" (RD 587) carries no date literal absent from its text.
+- **`ratio`** — the unit for a bare FSI number (S0.5 convention fix, M-17 note 2026-10-07): `0.6 ratio × lot_area_m2`.
 
 ### 7.5 Precedence — one function, data-driven
 
@@ -283,9 +301,13 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
      applies_to binds the lot; the lot's exception units (INCLUDE-expanded); provincial units.
      Keep only units whose condition holds for the lot. A unit whose unit-of-measure differs from the
      target's declared unit is a G-CLAUSE failure, never a candidate
-  2. drop units named in an applicable DISAPPLY or in another applicable unit's displaces[]
+  2. drop units named in an applicable DISAPPLY or in another applicable unit's displaces[]. A displacer
+     with a target drops only units of its own target; an entry naming an argument path inside a unit
+     drops only that argument (§7.4)                                                          (Spec 69 M-48)
   3. an applicable unit whose displaces[] names a PROCEDURAL unit with non-empty ranks_layers[]
      is not outranked by the layers that unit ranks (read from ranks_layers[], never an id)   (Spec 69 M-38, RATIFIED 2026-10-06)
+     - tie-break: it ranks just above the highest layer that rule ranks, so it beats a unit at that
+       layer outright; rule 4a (most restrictive) never runs between them                      (Spec 69 M-49)
   4. otherwise the highest layer wins: provincial > exception > overlay > base               (900.1.10(3); Spec 69 M-34)
      - a higher-layer unit replaces only lower-layer units with the same bound direction; a
      different direction is additional. Phase 1 has no provincial units (EXT-prov-1 precedence
@@ -300,14 +322,19 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
 
 permitted(lot, building_type) applies the same rules to PERMIT / PROHIBIT units
   (result: permitted | prohibited | not_evaluated | conflict); the M-38 fixture runs through it.
+
+building type unknown (lot.building_type NULL) and a candidate's applicability depends on it: evaluate
+  every residential building type (the list pinned in vocab.json at S6b); return the value only if all
+  types agree, else not_evaluated "needs_user_input:building_type" with the per-type values in the
+  trace (Spec 69 M-50; V12 is its fixture)
 ```
-Rules 2 and 3 differ: 600.60.40(1)(A) displaces base Ch.10 unit-count rows (rule 2); 600.60.40(1)(B) displaces the 900.1.10 precedence rules themselves (rule 3). Replace-vs-additional is computed from whether a lower-layer unit exists for the same `target` (Phase 0b pitfall 5): only **3.6 %** of exception clauses say "Despite" *[measured]*; the rest override implicitly under 900.1.10(3) *[read]*. Precedence is therefore keyed on `target`, never on a cited regulation id. Because this implicit-override reading decides most exception outcomes, the 900.1.10 rows are always in the expert sample (Spec 69 M-29).
+Rules 2 and 3 differ: 600.60.40(1)(A) displaces base Ch.10 unit-count rows (rule 2); 600.60.40(1)(B) displaces the 900.1.10 precedence rules themselves (rule 3). Rule 2's own-target limit is from S0.5: "Despite regulation 10.20.40.70(3)" in 10.20.40.70(6) (street side yard) dropped every (3) unit, so the corner lot lost its interior side yard (1.5 m, 10.20.40.70(3)(D)) *[measured, spike]*. Rule 3's tie-break: with a plain tie, rule 4a would let an exception max of 9.0 m beat an overlay "Despite 900.1.10(3)" max of 10.5 m; the spike fixture expects 10.5 *[measured, spike]*. Replace-vs-additional is computed from whether a lower-layer unit exists for the same `target` (Phase 0b pitfall 5): only **3.6 %** of exception clauses say "Despite" *[measured]*; the rest override implicitly under 900.1.10(3) *[read]*. Precedence is therefore keyed on `target`, never on a cited regulation id. Because this implicit-override reading decides most exception outcomes, the 900.1.10 rows are always in the expert sample (Spec 69 M-29).
 
 ### 7.6 The evaluator — executed in Phase 1 (Spec 69 M-43)
 
 `scripts/analysis/bylaw/evaluate.mjs` is a pure function (no DB, no network, no clock): `evaluate(expr, lot) → {value, unit, trace}`, `effective(lot, target, candidates)` and `permitted(lot, building_type)` (§7.5), plus the candidate loader. A **lot vector** holds the zone and label parameters read from the parcel's **dominant label + exception key** (Spec 69 M-42, never the aggregated `bylaw_*` columns; a residential label's `d` is the zone FSI), lot metrics, and user inputs as scenarios. `map_lookup` and `existing_as_of` evaluate to `not_evaluated` with a reason unless the vector supplies the value.
 
-**Vectors** (`scripts/seeds/bylaw/eval-vectors.json`): the six Spec 67 worked examples — 41 Derwyn Rd, 64 Eastbourne Cres, 96 Futura Dr, 68 Cordella Ave, parcel 5071306 (RT row), 7 Bijou Walk — and V1–V25. None of the six examples carries an exception. Inputs are extracted from the examples' recorded query results. Each vector has a closed `vector_status`: `by_law_expected` (expected value with its Spec 67 anchor **and** the by-law clause it reads, checked against the page text, not Spec 67 prose), `no_expected:<reason>` (V16 has none; V12's NULL is a fallback policy, mapped to `not_evaluated`), or `model_composite` (V25's footprint is a model `LEAST(…)`; excluded from value checks). A transcribed value is an `eval_vector` adjudication. G-EVAL applicability comes from the row's generated chapter zone, not the keyed `application`, so a mis-scoped draft cannot hide from a vector. The S0.5 spike drafts the vectors in its own directory; S6b promotes them.
+**Vectors** (`scripts/seeds/bylaw/eval-vectors.json`): the six Spec 67 worked examples — 41 Derwyn Rd, 64 Eastbourne Cres, 96 Futura Dr, 68 Cordella Ave, parcel 5071306 (RT row), 7 Bijou Walk — and V1–V25. None of the six examples carries an exception. Inputs are extracted from the examples' recorded query results. Each vector has a closed `vector_status`: `by_law_expected` (expected value with its Spec 67 anchor **and** the by-law clause it reads, checked against the page text, not Spec 67 prose), `no_expected:<reason>` (V16 has none; V12's NULL is a fallback policy, mapped to `not_evaluated`), or `model_composite` (V25's footprint is a model `LEAST(…)`; excluded from value checks). A transcribed value is an `eval_vector` adjudication. G-EVAL applicability comes from the row's generated chapter zone, not the keyed `application`, so a mis-scoped draft cannot hide from a vector. The S0.5 spike drafts the vectors in its own directory; S6b promotes them. **V1–V4 and V25's side setback are wrong as Spec 67 states them** (KFM-4): they key 10.20.40.70(3) on measured frontage, but the clause keys on the *required* minimum lot frontage, i.e. label `f` (default 12.0 m, 10.20.30.20(1)(B)). S6b corrects them from the spike evaluator — with no `f` the by-law value is 1.2 m; with `f` = the stated frontage it is 0.6 / 0.9 / 1.8 / 3.0 / 1.8 m — and records each as an `eval_vector` adjudication; Spec 67 itself is regenerated at S13 (Spec 69 M-51).
 
 ## 8. Anti-spaghetti rules
 
@@ -354,7 +381,7 @@ Each stage has one owner, one artifact and one gate, and is independently revert
 
 | # | Stage | Does | Owner | Artifact | Gate |
 |---|---|---|---|---|---|
-| 1 | **Snapshot** | `--refresh` fetches exactly the pinned page list (all-or-nothing, git-ignored `.staging/`; never follows links); `--adopt` writes raw + normalized pages, manifest, adoption entry | Claude (network) | `scripts/seeds/bylaw/pages/`, `manifest.json`, `adoptions.json` | G-PROV, G-CHANGE, G-UNIVERSE |
+| 1 | **Snapshot** | `--refresh` fetches exactly the pinned page list, one page per TOC section (§6.4 rule 1; all-or-nothing, git-ignored `.staging/`; never follows links); `--adopt` writes raw + normalized pages, manifest, adoption entry | Claude (network) | `scripts/seeds/bylaw/pages/`, `manifest.json`, `adoptions.json` | G-PROV, G-CHANGE, G-UNIVERSE |
 | 2 | **Slice** | cut pages into regulations and clauses; extract literals, units, tags (with clause path), refs, `displaces[]`; log every source defect | generator | in-memory rows | G-TEXT |
 | 3 | **Scope** | apply scope rules; pin counts | generator + `--accept --ruling` | `universe.json`, `universe.lock.json` | G-UNIVERSE |
 | 4 | **Pre-sort** | dev tool only: proposes `archetype` / `target`, never shown to keyers, output not committed | dev | — | — (rate reported) |
@@ -374,7 +401,7 @@ Each stage has one owner, one artifact and one gate, and is independently revert
 
 | Phase | Delivers | Does not |
 |---|---|---|
-| **1 — the table** | the generator; the 569-2013 table (standard regulations, definitions, 900.1 precedence rows, the Ch.600.60 overlay rows (Spec 69 M-37, ratified 2026-10-06)); external and heuristic rows; the **evaluator + `effective()`** under G-EVAL; the direct-lot census render; the validator; the expert audit | write the DB; change any live output; build Ch.900 exception rows; rank by INCLUDE-closed lots |
+| **1 — the table** | the generator; the 569-2013 table (standard regulations, definitions, 900.1 precedence rows, the Ch.600.60 overlay rows (Spec 69 M-37, ratified 2026-10-06), and the M-47 sections — 1.20, 1.40, 150.15/.20/.22/.25/.30/.45/.48/.50, 200.10/.15/.20/.25, Ch.220, Ch.230, 970.30, 995.20/.30/.41/.50/.60, Ch.990 by a map rule, and the cited clauses 15.10.40.50, 40.10.20.10, 40.10.40.10, 80.5.40.40, 80.10.40.40); external and heuristic rows; the **evaluator + `effective()`** under G-EVAL; the direct-lot census render; the validator; the expert audit | write the DB; change any live output; build Ch.900 exception rows; rank by INCLUDE-closed lots |
 | **2 — our fields, user inputs, Ch.900** | a one-way DB load as a pipeline step under Specs 122/124, validated by Spec 79; NF/EF fields re-keyed to `regulation_id`; user inputs as scenarios; the Ch.900 pages `ch900_2..6` pinned, exception rows (≥ 100 INCLUDE-closed lots, two waves); `dsl_target` extended; address → parcel and street-abutment inputs; overlay geometry; CoA harness (SC-5) | correct live outputs |
 | **3 — output correction** | drive calculations from the table through one handler per archetype and `effective()`; shadow columns + Reality-Check bounds through the existing plausibility executor; CoA validation before switching; G-CODE (ii) blocking; label FSI (E2) | — |
 
@@ -433,11 +460,11 @@ Established practices the design follows, stated as practice, not as sourced cla
 ## 15. Operating Boundaries
 
 ### Target Files
-**Created in the spec commit:** `docs/reports/mcbylaw-phase0-audit.md`, `docs/reports/mcbylaw-phase0b-exceptions.md`, `docs/reports/mcbylaw-zoning-validation.md` (the ground-truth reports), `docs/reports/mcbylaw-phase1-plan.md` (the authorized Phase 1 plan).
+**Created in the spec commit:** `docs/reports/mcbylaw-phase0-audit.md`, `docs/reports/mcbylaw-phase0b-exceptions.md`, `docs/reports/mcbylaw-zoning-validation.md` (the ground-truth reports), `docs/reports/mcbylaw-phase1-plan.md` (the authorized Phase 1 plan). **Created at S1 (2026-10-07):** `docs/reports/mcbylaw-s05-spike.md`.
 
 **PLANNED — not created yet:**
 - `scripts/generate-bylaw-provisions.mjs`, `scripts/analysis/bylaw/`, `scripts/seeds/bylaw/`
-- `docs/reference/bylaw-provisions.json`, `docs/reference/bylaw-provisions.md`, `docs/reference/bylaw-code-findings.md`, `docs/reports/red-evidence/bylaw/`, `docs/reports/mcbylaw-s05-spike.md`
+- `docs/reference/bylaw-provisions.json`, `docs/reference/bylaw-provisions.md`, `docs/reference/bylaw-code-findings.md`, `docs/reports/red-evidence/bylaw/`
 - `src/tests/bylaw-provisions.logic.test.ts`, `src/tests/bylaw-provisions.infra.test.ts`, `src/tests/fixtures/bylaw/`
 - S8 registrations: `scripts/analysis/spec-split-check.mjs` `SPEC_FILES` + `122_split_manifest.json` `budgets` (68/69); `.husky/pre-commit`; `hooks-composition.infra.test.ts`; `package.json`.
 
