@@ -337,7 +337,14 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
      checked against the pinned page) gives `unregulated` with evidence kind `absence` — never a clause — flagged for
      the M-29 expert sample; first entry ABS-1: R-zone principal-building coverage (no 10.10.30.40; only 10.10.60.70)
 permitted(lot, building_type) applies the same rules to PERMIT / PROHIBIT units
-  (result: permitted | prohibited | not_evaluated | conflict); the M-38 fixture runs through it.
+  (result: permitted | prohibited | not_evaluated); a PERMIT and a PROHIBIT at the same rank → prohibited, both
+  clauses traced, flagged for the M-29 expert sample (operator ruling (a) 2026-10-07); the M-38 fixture runs through it.
+
+lot gate (operator rulings 2026-10-07, before rules 1–7, for every target and for permitted()):
+  (e) a lot label letter outside vocab.label_letter => not_evaluated "label_letter_unknown:<letter>" (fail closed)
+  (d) the lot's exception, or one in its INCLUDE closure, not authored for the target (permitted(): use_permission)
+      => not_evaluated "exception_not_authored:<exception>" — base and overlay values included, never a base value
+      under an exception nobody has read
 
 building type unknown (lot.building_type NULL) and a candidate's applicability depends on it: evaluate
   every residential building type (the list pinned in vocab.json at S6b); return the value only if all
@@ -350,7 +357,9 @@ building type unknown (lot.building_type NULL) and a candidate's applicability d
 - *Rule 4a:* `unlimited` and `unregulated` at one layer report `unlimited`; ties go to the first unit in the declared total order (layer, `unit_id`, content).
 - *Rule 7a:* absence needs the lot's exception and its INCLUDE closure authored for the target and no by-law unit (keyed or pending) for the target; else `not_evaluated:exception_not_authored:<exception>` or `no_candidate`. Every ruling is executed against its page, case-insensitive and structural.
 - *Undecided applicability:* every combination of undecided units (at most 8) is resolved; a value only if all agree (M-50 generalised), else `not_evaluated` with the declared-priority reason. Every result lists `inputs[]`, the lot inputs read (conditions included).
-- *Held:* PERMIT vs PROHIBIT at the same rank stays `conflict` for an operator ruling.
+- ~~*Held:* PERMIT vs PROHIBIT at the same rank stays `conflict` for an operator ruling.~~ **Ruled 2026-10-07 (a):** PROHIBIT wins; the result names both clauses and carries `expert_sample: true`.
+
+**Operator rulings 2026-10-07 (Spec 69 M-60, M-55 dated notes):** (a) PERMIT vs PROHIBIT at the same rank → PROHIBIT. (d) An unauthored exception (or one in its INCLUDE closure) blocks every target on the lot, not only rule 7a — *[measured, local DB 2026-10-07]* 339,125 of 440,094 residential lots (77.1 %) carry an exception and none is authored yet; after authoring wave 1 (220 exception keys) 85,622 (19.5 %) stay blocked, after wave 2 (295 more) 38,509 (8.75 %, the 2,378 keys under 100 lots). (e) A label letter outside the grammar fails closed; the letters that occur in residential dominant labels are exactly `f` 249,981 · `d` 222,130 · `a` 198,309 · `u` 54,891 · `au` 1,622 lots — none outside the grammar (5 lots carry the holding prefix `(H)`, not a label letter). (b) Provincial scope maps a detached / semi-detached houseplex (and duplex / triplex) only up to 3 lot units, as cited, inferred data for the M-29 expert sample. (c) `parcel_of_urban_residential_land`: an explicit lot input wins; else a declared citywide default `true` (Planning Act s. 1(1)); 6 septic-permit parcels are `unknown` → `not_evaluated:missing_input`.
 
 Rules 2 and 3 differ: 600.60.40(1)(A) displaces base Ch.10 unit-count rows (rule 2); 600.60.40(1)(B) displaces the 900.1.10 precedence rules themselves (rule 3). Rule 2's own-target limit is from S0.5: "Despite regulation 10.20.40.70(3)" in 10.20.40.70(6) (street side yard) dropped every (3) unit, so the corner lot lost its interior side yard (1.5 m, 10.20.40.70(3)(D)) *[measured, spike]*. Rule 3's tie-break: with a plain tie, rule 4a would let an exception max of 9.0 m beat an overlay "Despite 900.1.10(3)" max of 10.5 m; the spike fixture expects 10.5 *[measured, spike]*. Replace-vs-additional is computed from whether a lower-layer unit exists for the same `target` (Phase 0b pitfall 5): only **3.6 %** of exception clauses say "Despite" *[measured]*; the rest override implicitly under 900.1.10(3) *[read]*. Precedence is therefore keyed on `target`, never on a cited regulation id. Because this implicit-override reading decides most exception outcomes, the 900.1.10 rows are always in the expert sample (Spec 69 M-29).
 

@@ -361,6 +361,27 @@
       "url": "https://www.toronto.ca/legdocs/municode/1184_658.pdf",
       "verification_status": "verified_primary",
       "verified_on": "2026-10-07"
+    },
+    {
+      "citation": "Zoning By-law 569-2013, 40.5.1.10(3)(B) and (4) (Commercial Residential Development Standard Set symbol)",
+      "id": "REF-1",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "Zoning By-law 569-2013, 40.10.1.10(2) (CR zone Development Standard Sets SS1-SS5)",
+      "id": "REF-2",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_10.htm"
+    },
+    {
+      "citation": "City of Toronto Open Data, Zoning By-law dataset, Zoning_readme.txt (field STAND_SET)",
+      "id": "REF-3",
+      "kind": "ref",
+      "reason": "dataset_documentation",
+      "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/34927e44-fc11-4336-a8aa-a0dfb27658b7/resource/aa11a6f1-17fd-49b7-bbe4-f381bbc36f94/download/zoning_readme.txt"
     }
   ],
   "schema_version": "external-v1"

@@ -43,11 +43,11 @@ describe('S12b — committed external.json', () => {
     expect(r.pass).toBe(true);
   });
 
-  it('holds exactly the seven EXT-* rows of Spec 68 §6.1, and counts each kind separately', () => {
+  it('holds exactly the seven EXT-* rows of Spec 68 §6.1 (+ the S12 refs REF-1..3, operator 2026-10-07), and counts each kind separately', () => {
     const doc = readDoc();
-    expect(doc.entries.map((e: Json) => e.id)).toEqual(SEVEN);
+    expect(doc.entries.map((e: Json) => e.id)).toEqual([...SEVEN, 'REF-1', 'REF-2', 'REF-3']);
     expect(check(doc).counts).toEqual({
-      governance_former_bylaw: 1, model_heuristic: 0, provincial_precedence: 1, ref: 0, risk_reference: 5,
+      governance_former_bylaw: 1, model_heuristic: 0, provincial_precedence: 1, ref: 3, risk_reference: 5,
     });
   });
 
@@ -280,8 +280,8 @@ describe('S12b — G-READ external arm reason codes (known-bad + good twin)', ()
 
   it('ref and model_heuristic entries are counted, not rejected (their arms land at S12 / S9)', () => {
     const d = good();
-    d.entries.push({ citation: 'Chapter 900, 900.2.10(5)', id: 'REF-1', kind: 'ref', reason: 'phase2_exception', url: 'https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter900_2.htm' });
-    expect(check(d).counts.ref).toBe(1);
+    d.entries.push({ citation: 'Chapter 900, 900.2.10(5)', id: 'REF-9', kind: 'ref', reason: 'phase2_exception', url: 'https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter900_2.htm' });
+    expect(check(d).counts.ref).toBe(d.entries.filter((e: Json) => e.kind === 'ref').length);
     expect(check(d).violations).toEqual([]);
   });
 });

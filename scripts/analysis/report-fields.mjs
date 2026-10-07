@@ -17,13 +17,12 @@
 //   node scripts/analysis/report-fields.mjs --check   exit 1 when the committed render differs (drift); 2 = structural
 //
 // Deterministic: sorted keys and rows, LF, no clock, no git head; inputs are fingerprinted (sha256) in the header.
-// No DB. Executes no step: the only JS executed is the witness render of the pure SQL-string builders (PROVISIONAL —
-// generator-design.md §4.1 option (b)+(a)); the chain itself comes from the static render.
+// No DB. Executes no repo code (Spec 68 §6.4 rule 8; operator ruling Q6 2026-10-07): the chain AND the witness come from
+// the static render — the witness is the static render's fingerprint found in a recorded sql-witness trace.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import { createContext, classifyConstants } from './bylaw/code-link.mjs';
@@ -33,12 +32,10 @@ import {
   renderedPaths, renderedLocals, consumerMap, columnOfPath, trackedProjection, exportedConst, perSqmIds, jsxLine,
 } from './report-fields/display.mjs';
 
-const require = createRequire(import.meta.url);
-
 export const GENERATOR_VERSION = 1;
 export const DECL_PATH = 'scripts/surfaces/_schema/report-fields.decl.json';
 export const KINDS = Object.freeze(['cost', 'empirical', 'formula', 'input']);
-export const EVIDENCE = Object.freeze({ R: 'traced in code (file:line)', W: 'R + the rendered builder SQL fingerprint is in the committed sql-witness trace', I: 'inferred: the walk was cut (call depth) or a ref did not resolve' });
+export const EVIDENCE = Object.freeze({ R: 'traced in code (file:line)', W: 'R + the static render fingerprint of the builder SQL is in a recorded sql-witness trace (nothing executed)', I: 'inferred: the walk was cut (call depth) or a ref did not resolve' });
 
 export class ReportFieldsError extends Error {}
 
@@ -134,19 +131,19 @@ export async function buildInventory({ root }) {
     for (const rel of list) { const j = readJson(rel); for (const st of j.statements || []) s.add(st.fingerprint); }
     traceFps.set(step, s);
   }
-  const witnessOf = (rel, fn, args, step) => {
+  // Witness (operator ruling Q6 2026-10-07; Spec 68 §6.4 rule 8 "parsed, never executed"): the fingerprint of the
+  // STATIC render (spans → placeholder) looked up in the recorded sql-witness traces. No builder is loaded or run, so
+  // a builder whose spans change the statement shape (an interpolated fragment) is not witnessed and stays evidence R.
+  const witnessOf = (rel, fn, step, externals = new Map()) => {
     try {
-      const mod = require(path.join(root, rel));
-      const f = mod[fn];
-      if (typeof f !== 'function') { finding('witness_render_failed', `${rel}#${fn}: not exported`); return { witnessed: false, reason: 'builder not exported' }; }
-      const sql = Array.isArray(args) ? f(...args) : f(args || {});
-      const text = typeof sql === 'string' ? sql : sql && sql.sql;
-      const fp = libpg().fingerprintSync(text);
+      const fp = libpg().fingerprintSync(builderOf(rel, fn, externals).render.sql); // the same render the chain uses
       const set = traceFps.get(step) || new Set();
-      return { witnessed: set.has(fp), fingerprint: fp, traces: decl.witness_traces[step] || [] };
+      return set.has(fp)
+        ? { witnessed: true, fingerprint: fp, traces: decl.witness_traces[step] || [] }
+        : { witnessed: false, fingerprint: fp, reason: 'static-render fingerprint not in the recorded trace', traces: decl.witness_traces[step] || [] };
     } catch (e) {
       finding('witness_render_failed', `${rel}#${fn}: ${e.message}`);
-      return { witnessed: false, reason: `render failed: ${e.message}` };
+      return { witnessed: false, reason: `static render failed: ${e.message}` };
     }
   };
 
@@ -169,11 +166,11 @@ export async function buildInventory({ root }) {
       for (const t of p.temp_inputs || []) {
         const tb = builderOf(p.file, t.builder);
         if (tb.lineage.creates) externals.set(tb.lineage.creates, tb.lineage.root);
-        info.witness[t.builder] = witnessOf(p.file, t.builder, t.witness_args, p.step);
+        info.witness[t.builder] = witnessOf(p.file, t.builder, p.step);
       }
       const b = builderOf(p.file, p.builder, externals);
       info.builderKey = b.key;
-      info.witness[p.builder] = witnessOf(p.file, p.builder, p.witness_args, p.step);
+      info.witness[p.builder] = witnessOf(p.file, p.builder, p.step, externals);
       for (const c of b.lineage.root.order) if (stepWrites.has(c)) info.columns.push(c);
     } else if (p.kind === 'js_array') {
       const cols = exportedConst(files, p.file, p.columns_const);
@@ -210,7 +207,7 @@ export async function buildInventory({ root }) {
       for (const row of info.catalogueRows) if (row.scalar && stepWrites.has(row.scalar)) info.columns.push(row.scalar);
       if (stepWrites.has('parcel_cost_menu')) info.columns.push('parcel_cost_menu');
     }
-    if (p.row) info.witness[p.row.builder] = witnessOf(p.row.file, p.row.builder, p.row.witness_args, p.step);
+    if (p.row) info.witness[p.row.builder] = witnessOf(p.row.file, p.row.builder, p.step);
     for (const c of info.columns) {
       if (producerOfCol.has(c)) finding('column_two_producers', `${c}: ${producerOfCol.get(c)} and ${p.id}`);
       else producerOfCol.set(c, p.id);
@@ -687,7 +684,7 @@ export async function buildInventory({ root }) {
 
   const provisional = [
     'Home: generator lives under Spec 126 tooling (scripts/surfaces/_schema/report-fields.decl.json + scripts/analysis/report-fields.mjs); McBylaw consumes layer2_targets + constants as the Phase 3 parity worklist (design §4.2 recommendation; not ratified).',
-    'SQL source: chains come from a STATIC render of the builder template (spans → placeholder, parsed by libpg-query; no JS executed); the builders are additionally rendered in-process ONLY to fingerprint them against the committed sql-witness trace (evidence W). Design §4.1 recommends (b) render + (a) recorded-SQL witness; the static render replaces (b) for line mapping (not ratified: Spec 68 §6.4 rule 8 "parsed, never executed" — the witness render executes pure string builders).',
+    'SQL source: chains come from a STATIC render of the builder template (spans → placeholder, parsed by libpg-query; no JS executed). Witness (evidence W): the static render fingerprint found in a recorded sql-witness trace (operator ruling Q6 2026-10-07, Spec 68 §6.4 rule 8: no builder is loaded or run). A builder whose spans change the statement shape is not witnessed and its fields show evidence R.',
     `JS def-use depth: calls are followed ${maxDepth} levels deep (design §2 G3' says one level; one level cannot reach mainBuildGfa from computeOptConfigRow). A deeper call is cut and the field is evidence I.`,
     'Kind names: `empirical` / `cost` are the caller-briefed short forms of M-69\'s `empirical_ref` / `cost_ref`.',
   ];

@@ -293,10 +293,10 @@ describe('6. an undecided condition whose every resolution gives the same result
     const x = { ...a, numeric_expression: ['height_m = 8.0 m @(A)'] };
     expect(show(E.effective(lot, 'height_m', [x, c, b], C))).toBe(show(E.effective(lot, 'height_m', [c, b, x], C)));
   });
-  it('PERMIT vs PROHIBIT at the same rank is HELD (conflict), never decided', () => {
+  it('PERMIT vs PROHIBIT at the same rank → PROHIBIT wins (operator ruling (a) 2026-10-07; was HELD as conflict)', () => {
     const p = U({ unit_id: 'P#1', archetype: 'PERMIT', target: 'none', bound: 'none', numeric_expression: 'none' });
     const q = U({ unit_id: 'Q#1', archetype: 'PROHIBIT', target: 'none', bound: 'none', numeric_expression: 'none' });
-    expect(E.permitted(rdLot, 'detached_house', [q, p], C).status).toBe('conflict');
+    expect(E.permitted(rdLot, 'detached_house', [q, p], C).status).toBe('prohibited');
   });
 });
 

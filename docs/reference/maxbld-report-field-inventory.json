@@ -2538,7 +2538,7 @@
         "parcels.lot_size_sqm",
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
@@ -2677,9 +2677,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -3185,7 +3185,7 @@
         "parcels.max_buildable_gfa_basis",
         "parcels.max_buildable_gfa_sqm"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
@@ -3293,9 +3293,9 @@
       "witness": [
         {
           "builder": "buildOptConfigSelectSql",
-          "fingerprint": "5b6eac28654995c4",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "bcd7fc99cccaf27a",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -4157,7 +4157,7 @@
         "parcels.lot_size_sqm",
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -4289,9 +4289,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -5963,7 +5963,7 @@
         "parcels.lot_size_sqm",
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -6059,9 +6059,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -6924,7 +6924,7 @@
         "parcels.zoning_class",
         "parcels.zoning_is_ambiguous"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -7038,9 +7038,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -7079,7 +7079,7 @@
       "cuts": [],
       "db_constants": [],
       "direct_bases": [],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [],
@@ -7110,15 +7110,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -7593,7 +7593,7 @@
         "parcels.neighbourhood_id",
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -7665,9 +7665,9 @@
       "witness": [
         {
           "builder": "buildOptConfigSelectSql",
-          "fingerprint": "5b6eac28654995c4",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "bcd7fc99cccaf27a",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -7831,7 +7831,7 @@
         "permits.project_type",
         "permits.residential_sqm"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
@@ -7928,15 +7928,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -8057,7 +8057,7 @@
       "direct_bases": [
         "permits.project_type"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -8131,15 +8131,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -8277,7 +8277,7 @@
         "permits.street_name",
         "permits.street_num"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -8352,15 +8352,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -8498,7 +8498,7 @@
         "parcels.lot_size_sqm",
         "permits.residential_sqm"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
@@ -8574,15 +8574,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -8724,7 +8724,7 @@
       "direct_bases": [
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -8790,15 +8790,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -8919,7 +8919,7 @@
       "direct_bases": [
         "permits.project_type"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -8993,15 +8993,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -9122,7 +9122,7 @@
       "direct_bases": [
         "permits.residential_sqm"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
@@ -9196,15 +9196,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -9311,7 +9311,7 @@
       "direct_bases": [
         "coa_applications.decision"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -9375,15 +9375,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -19269,7 +19269,7 @@
         "parcels.lot_size_sqm",
         "parcels.zoning_class"
       ],
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": "formatGfa",
       "inline_literals": [
@@ -19409,9 +19409,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -20316,7 +20316,7 @@
     },
     {
       "path": "scripts/seeds/bylaw/vocab.json",
-      "sha256": "417b8b512e446265"
+      "sha256": "9c709a729706667b"
     },
     {
       "path": "scripts/seeds/lineage-meta-snapshot.json",
@@ -22288,7 +22288,7 @@
         "parcels.zoning_class"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -22402,9 +22402,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -23275,7 +23275,7 @@
         "parcels.max_buildable_gfa_sqm"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -23377,9 +23377,9 @@
       "witness": [
         {
           "builder": "buildOptConfigSelectSql",
-          "fingerprint": "5b6eac28654995c4",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "bcd7fc99cccaf27a",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -23993,7 +23993,7 @@
         "parcels.zoning_class"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -24087,9 +24087,9 @@
       "witness": [
         {
           "builder": "buildOptConfigSelectSql",
-          "fingerprint": "5b6eac28654995c4",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "bcd7fc99cccaf27a",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -24733,7 +24733,7 @@
         "parcels.zoning_class"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -24827,9 +24827,9 @@
       "witness": [
         {
           "builder": "buildOptConfigSelectSql",
-          "fingerprint": "5b6eac28654995c4",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "bcd7fc99cccaf27a",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -33304,7 +33304,7 @@
         "parcels.max_buildable_footprint_sqm"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -33428,15 +33428,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -33525,7 +33525,7 @@
         "neighbourhoods.avg_household_income"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [],
@@ -33553,9 +33553,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -33622,7 +33622,7 @@
         "neighbourhoods.id"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [],
@@ -33650,9 +33650,9 @@
       "witness": [
         {
           "builder": "buildMaxBuildSql",
-          "fingerprint": "de065d4eb895aa83",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "09567db370b1fa39",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -34013,7 +34013,7 @@
         "parcels.max_buildable_footprint_sqm"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -34126,15 +34126,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -34270,7 +34270,7 @@
         "parcels.geom"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -34334,15 +34334,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -34450,7 +34450,7 @@
         "parcels.frontage_m"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -34514,15 +34514,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -34630,7 +34630,7 @@
         "parcels.lot_size_sqm"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -34694,15 +34694,15 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     },
@@ -34824,7 +34824,7 @@
         "permits.storeys"
       ],
       "duplicate_of": null,
-      "evidence": "W",
+      "evidence": "R",
       "flags": [],
       "formatter": null,
       "inline_literals": [
@@ -34896,22 +34896,22 @@
       "witness": [
         {
           "builder": "buildComparableBuildsUpdateSql",
-          "fingerprint": "c58977afe724cfce",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "b746b6f8caa84d16",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         },
         {
           "builder": "buildCompCandidatesSql",
-          "fingerprint": "f053c76945f479c7",
-          "reason": null,
-          "witnessed": true
+          "fingerprint": "4927a5d61901d1e0",
+          "reason": "static-render fingerprint not in the recorded trace",
+          "witnessed": false
         }
       ]
     }
   ],
   "provisional": [
     "Home: generator lives under Spec 126 tooling (scripts/surfaces/_schema/report-fields.decl.json + scripts/analysis/report-fields.mjs); McBylaw consumes layer2_targets + constants as the Phase 3 parity worklist (design §4.2 recommendation; not ratified).",
-    "SQL source: chains come from a STATIC render of the builder template (spans → placeholder, parsed by libpg-query; no JS executed); the builders are additionally rendered in-process ONLY to fingerprint them against the committed sql-witness trace (evidence W). Design §4.1 recommends (b) render + (a) recorded-SQL witness; the static render replaces (b) for line mapping (not ratified: Spec 68 §6.4 rule 8 \"parsed, never executed\" — the witness render executes pure string builders).",
+    "SQL source: chains come from a STATIC render of the builder template (spans → placeholder, parsed by libpg-query; no JS executed). Witness (evidence W): the static render fingerprint found in a recorded sql-witness trace (operator ruling Q6 2026-10-07, Spec 68 §6.4 rule 8: no builder is loaded or run). A builder whose spans change the statement shape is not witnessed and its fields show evidence R.",
     "JS def-use depth: calls are followed 4 levels deep (design §2 G3' says one level; one level cannot reach mainBuildGfa from computeOptConfigRow). A deeper call is cut and the field is evidence I.",
     "Kind names: `empirical` / `cost` are the caller-briefed short forms of M-69's `empirical_ref` / `cost_ref`."
   ],

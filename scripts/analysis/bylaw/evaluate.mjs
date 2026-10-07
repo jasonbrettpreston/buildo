@@ -8,13 +8,20 @@
 //   evaluate(expr, lot, ctx)                 → {value, unit, not_evaluated?, trace}
 //   loadCandidates(lot, units)               → {candidates, log, include_depth}     (rule 1, the loader)
 //   effective(lot, target, candidates, ctx)  → {status, value, unit, bound, bounds, winner, applied, reason, trace, disclosures, per_type?}
-//   permitted(lot, building_type, candidates, ctx) → {status: permitted|prohibited|not_evaluated|conflict, …}
+//   permitted(lot, building_type, candidates, ctx) → {status: permitted|prohibited|not_evaluated, …}  (a same-rank
+//                                            PERMIT/PROHIBIT tie is prohibited + expert_sample, ruling (a) 2026-10-07)
 //   checkEval({units, vectors, vocab, enactments}) → {pass, violations, checked, counts, rows}   (G-EVAL (a)+(b))
 //   precedenceFixtures(vocab) / selfTest(vocab)                                           (G-EVAL (c))
 //
 // A lot vector (§7.6, M-42): {zone, label:{f,a,d,u…}, overlays:{HT,ST,LC…} (undefined = map not held),
 //   vars:{lot_frontage_m…}, flags:{corner_lot…}, building_type (null = unknown, M-50), exception, map_areas
-//   (undefined = not held), address, existing:{"<var>@<date>": value}}.
+//   (undefined = not held), address, parcel_id (the City PARCEL_ID: provincial land default / exclusions, ruling (c)),
+//   existing:{"<var>@<date>": value}}.
+//
+// Fail-closed lot gate (operator rulings 2026-10-07), before any precedence rule, for every target and permitted():
+// a label letter outside vocab.label_letter → label_letter_unknown:<letter> (e); the lot's exception or one in its
+// INCLUDE closure not authored for the target → exception_not_authored:<exception> (d). Every result lists
+// `exception` and `label` in inputs[].
 //
 // not_evaluated reasons are a closed set (NOT_EVALUATED_CODES), written `<code>` or `<code>:<detail>`.
 //
@@ -35,6 +42,7 @@ export const NOT_EVALUATED_CODES = Object.freeze([
   'map_area_not_held', // :<code|area> the map / overlay geometry is not held (M-41)
   'map_value_absent', // :<code> the map is held and the lot has no value (a bare overlay(), outside max/min)
   'label_value_absent', // :<letter>
+  'label_letter_unknown', // :<letter> the lot label carries a letter outside vocab.label_letter (operator ruling (e) 2026-10-07)
   'all_map_arguments_absent', // max/min whose every argument is an absent map/label value (M-48)
   'all_arguments_displaced', // max/min whose every argument was displaced
   'displaced_argument_not_found', // :<path> a displaces[] entry names an argument path the unit does not tag
@@ -50,8 +58,11 @@ export const NOT_EVALUATED_CODES = Object.freeze([
   'unregulated_in_arithmetic', // M-54: `unregulated` is terminal
   'referenced_target_conflict', // :<target> a variable whose own effective() is an eval_conflict
   'expression_error', // :<DslError code>
-  'exception_not_authored', // :<exception> rule 7a: the lot's exception (or one it INCLUDEs) is not authored for the target
+  'exception_not_authored', // :<exception> the lot's exception (or one it INCLUDEs) is not authored for the target — blocks
+  //                           every target, base included (operator ruling (d) 2026-10-07; was rule 7a only)
 ]);
+/** Lot inputs every result depends on through the fail-closed lot gate (rulings (d), (e)): recorded in inputs[]. */
+const GATE_READS = Object.freeze(['exception', 'label']);
 /** Undecided applicability is resolved by enumeration over at most this many units (2^n worlds), else not_evaluated. */
 export const MAX_UNDECIDED = 8;
 const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -84,7 +95,7 @@ export function makeContext(vocab, extra = {}) {
     enactments: extra.enactments || {},
     absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
     // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
-    // rule 7a reads it. Nothing listed = not authored (Phase 1 has no authored exception yet).
+    // the lot gate reads it (ruling (d)). Nothing listed = not authored (Phase 1 has no authored exception yet).
     authored: extra.authored || {},
   };
 }
@@ -415,12 +426,25 @@ function provincialScope(lot, p, C, reads, trace) {
   let out = true;
   reads.add('building_type');
   const bt = lot.building_type;
+  let cond = null; // ruling (b): a houseplex type that maps only up to max_lot_units
   if (!bt) unknowns.push('needs_user_input:building_type');
-  else if (!p.building_types.includes(bt) && !p.building_types.includes(C.typeParent[bt])) out = false;
+  else if (!p.building_types.includes(bt) && !p.building_types.includes(C.typeParent[bt])) {
+    cond = (p.conditional_types || []).find((c) => c.type === bt || c.children.includes(bt)) || null;
+    if (!cond) out = false;
+  }
+  // ruling (c): an explicit lot flag wins; else the declared default, unless the parcel is on the exclusion list (unknown)
   reads.add(`flags.${p.land_flag}`);
-  const land = lot.flags ? lot.flags[p.land_flag] : undefined;
+  let land = lot.flags ? lot.flags[p.land_flag] : undefined;
+  let landReason = `condition_unknown:${p.land_flag}`; let landNote = '';
+  if (land !== true && land !== false && typeof p.land_default === 'boolean') {
+    reads.add('parcel_id');
+    const pid = lot.parcel_id === undefined || lot.parcel_id === null ? null : String(lot.parcel_id);
+    if (pid === null) landNote = ' (no parcel_id: the exclusion list cannot be checked, default not applied)';
+    else if ((p.land_exclusions || []).includes(pid)) { landReason = `missing_input:${p.land_flag}`; landNote = ` (parcel ${pid} on the exclusion list: unknown)`; }
+    else { land = p.land_default; landNote = ' (declared citywide default)'; }
+  }
   if (land === false) out = false;
-  else if (land !== true) unknowns.push(`condition_unknown:${p.land_flag}`);
+  else if (land !== true) unknowns.push(landReason);
   reads.add(`vars.${p.house_var}`); reads.add(`vars.${p.ancillary_var}`);
   const h = lot.vars ? lot.vars[p.house_var] : undefined;
   const a = lot.vars ? lot.vars[p.ancillary_var] : undefined;
@@ -429,7 +453,9 @@ function provincialScope(lot, p, C, reads, trace) {
   if (!fits.length) out = false;
   else if (!known(h)) unknowns.push(`needs_user_input:${p.house_var}`);
   else if (!known(a)) unknowns.push(`needs_user_input:${p.ancillary_var}`);
-  trace.push(`provincial scope: building_type=${bt ?? 'unknown'}, ${p.land_flag}=${land ?? 'unknown'}, ${p.house_var}=${known(h) ? h : 'unknown'}, ${p.ancillary_var}=${known(a) ? a : 'unknown'}`);
+  if (cond && known(h) && known(a) && h + a > cond.max_lot_units) out = false;
+  trace.push(`provincial scope: building_type=${bt ?? 'unknown'}, ${p.land_flag}=${land ?? 'unknown'}${landNote}, ${p.house_var}=${known(h) ? h : 'unknown'}, ${p.ancillary_var}=${known(a) ? a : 'unknown'}`);
+  if (cond) trace.push(`provincial scope: conditional ${bt} → ${cond.provincial_type} via ${cond.type} (≤ ${cond.max_lot_units} lot units; evidence ${cond.evidence}; M-29 expert sample)`);
   if (out === false) return false;
   return unknowns.length ? unknowns[0] : true;
 }
@@ -481,8 +507,32 @@ export function effective(lot, target, candidates, ctx, _env = {}) {
   if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return NE_RESULT('no_569_2013_zone', { trace: ['rule 0: the lot has no 569-2013 residential zone'], inputs: ['zone'] });
   const depth = (_env.depth || 0) + 1;
   if (depth > 8) return NE_RESULT('target_cycle');
+  const gate = lotGate(lot, target, candidates, C);
+  if (gate) return gate;
   const cands = _env.sorted ? candidates : sortCandidates(candidates);
-  const core = effCore(lot, target, cands, C, { ...(_env), depth, sorted: true });
+  const r = effResolve(lot, target, cands, C, { ...(_env), depth, sorted: true });
+  return { ...r, inputs: [...new Set([...(r.inputs || []), ...GATE_READS])].sort(cmpStr) };
+}
+
+/**
+ * Fail-closed lot checks that run before any precedence rule (operator rulings 2026-10-07): (e) a label letter outside
+ * vocab.label_letter → label_letter_unknown:<first letter, sorted>; (d) the lot's exception, or one in its INCLUDE
+ * closure, not authored for `target` → exception_not_authored:<exception>, for EVERY target, base included (a base
+ * value under an unread exception may be the wrong law). null when the lot passes.
+ */
+function lotGate(lot, target, candidates, C) {
+  const inputs = [...GATE_READS, 'zone'].sort(cmpStr);
+  const letters = lot.label && typeof lot.label === 'object' ? Object.keys(lot.label) : [];
+  const unknownLetters = letters.filter((l) => !Object.hasOwn(C.units.label, l)).sort(cmpStr);
+  if (unknownLetters.length) return NE_RESULT(`label_letter_unknown:${unknownLetters[0]}`, { trace: [`ruling (e): label letter(s) ${unknownLetters.join(', ')} outside the grammar (vocab.label_letter) — not evaluated, never read as absent`], inputs });
+  const exc = exceptionNotAuthored(lot, target, candidates, C);
+  if (exc) return NE_RESULT(`exception_not_authored:${exc}`, { trace: [`ruling (d): exception ${exc} (the lot's exception or one it INCLUDEs) is not authored for ${target} — no layer resolves on this lot`], inputs });
+  return null;
+}
+
+function effResolve(lot, target, cands, C, _env) {
+  const { depth } = _env;
+  const core = effCore(lot, target, cands, C, _env);
   if (lot.building_type || _env.inScenario || core.reason !== 'needs_user_input:building_type') return core;
   // M-50: evaluate every residential type (sorted, order-free); a value only if all agree
   const per = {}; const results = {}; const inputs = new Set(['building_type', ...core.inputs]);
@@ -556,7 +606,7 @@ function effCore(lot, target, candidates, C, env) {
   return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
 }
 
-/** The lot's exception and its INCLUDE closure are authored for `target` (rule 7a); returns the first that is not, or null. */
+/** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
 function exceptionNotAuthored(lot, target, candidates, C) {
   if (!lot.exception) return null;
   const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
@@ -627,13 +677,11 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, p
   if (!T.length) {
     for (const p of prov) trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law unit for ${target} (a provincial unit is never additional)`);
     // rule 7a (M-54 note 2026-10-07; Spec 69 M-60): unregulated BY ABSENCE only when (i) a verified ruling covers
-    // (zone, target), (ii) the lot's exception and its INCLUDE closure are authored for the target (else
-    // exception_not_authored), (iii) no by-law unit of any layer carries the target, keyed or pending.
+    // (zone, target), (ii) the lot's exception and its INCLUDE closure are authored for the target — guaranteed here:
+    // effective()'s lot gate already returned exception_not_authored otherwise (ruling (d)), (iii) no by-law unit of
+    // any layer carries the target, keyed or pending.
     const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
     if (abs) {
-      reads.add('exception');
-      const exc = exceptionNotAuthored(lot, target, candidates, C);
-      if (exc) return NE_RESULT(`exception_not_authored:${exc}`, { trace: [...trace, `${abs.id} not applied: exception ${exc} (the lot's exception or one it INCLUDEs) is not authored for ${target}`], disclosures, inputs: ins() });
       const any = candidates.filter((u) => u.layer !== 'provincial' && (u.target === target || parsedFor(u, target).length));
       if (!any.length) {
         return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
@@ -767,8 +815,12 @@ export function permitted(lot, buildingType, candidates, ctx) {
   const C = ctxOf(ctx);
   if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return { status: 'not_evaluated', reason: 'no_569_2013_zone', winners: [], trace: ['rule 0'] };
   if (!buildingType) return { status: 'not_evaluated', reason: 'needs_user_input:building_type', winners: [], trace: [] };
+  // rulings (e), (d): the same fail-closed lot gate as effective(); a use permission is the target `use_permission`
+  // (Spec 69 M-56: a PERMIT / PROHIBIT with no target feeds aspect use_permission)
+  const gate = lotGate(lot, 'use_permission', candidates, C);
+  if (gate) return { status: 'not_evaluated', reason: gate.reason, winners: [], inputs: gate.inputs, trace: gate.trace };
   const L = { ...lot, building_type: buildingType };
-  const trace = []; const reads = new Set(['zone', 'building_type']);
+  const trace = []; const reads = new Set(['zone', 'building_type', ...GATE_READS]);
   candidates = sortCandidates(candidates); // declared total order (order-free result)
   const subjects = candidates.filter((u) => u.archetype === 'PERMIT' || u.archetype === 'PROHIBIT');
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
@@ -777,7 +829,9 @@ export function permitted(lot, buildingType, candidates, ctx) {
   const considered = new Set([...subjects, ...procs, ...disapply]);
   for (const u of candidates) {
     if (!considered.has(u)) continue;
-    const a = applies(L, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads);
+    const t = [];
+    const a = applies(L, u, C, (name) => effective(L, name, candidates, C, { sorted: true }), reads, t);
+    if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === null) unknown.push({ u, reason: a.reason });
     if (a.ok) A.push(u);
   }
@@ -798,8 +852,13 @@ export function permitted(lot, buildingType, candidates, ctx) {
   const win = T.filter((u) => rank(u) === top);
   trace.push(`rule 4: rank ${top}: ${win.map((u) => `${u.unit_id} ${u.archetype}`).join(', ')}`);
   const kinds = new Set(win.map((u) => u.archetype));
-  // PERMIT vs PROHIBIT at the same rank: HELD for an operator ruling (Spec 69 M-60 open item), never decided here
-  if (kinds.size > 1) return { status: 'conflict', reason: 'eval_conflict', held: 'permit_prohibit_same_rank', winners: win.map((u) => u.unit_id), inputs: inputs(), trace: [...trace, 'PERMIT and PROHIBIT at the same rank — held for an operator ruling, not decided'] };
+  // PERMIT vs PROHIBIT at the same rank (operator ruling (a) 2026-10-07, Spec 69 M-60 note): PROHIBIT wins — never show a
+  // permission the law may forbid; both clauses are named in the trace and the result goes to the M-29 expert sample
+  if (kinds.size > 1) {
+    const ids = (k) => win.filter((u) => u.archetype === k).map((u) => u.unit_id);
+    return { status: 'prohibited', winners: ids('PROHIBIT'), overruled_permits: ids('PERMIT'), ruling: 'prohibit_over_permit_same_rank', expert_sample: true, inputs: inputs(),
+      trace: [...trace, `ruling (a): PERMIT ${ids('PERMIT').join(', ')} and PROHIBIT ${ids('PROHIBIT').join(', ')} at the same rank — PROHIBIT wins (never show a permission the law may forbid); M-29 expert sample`] };
+  }
   return { status: kinds.has('PERMIT') ? 'permitted' : 'prohibited', winners: win.map((u) => u.unit_id), inputs: inputs(), trace };
 }
 
@@ -830,11 +889,15 @@ export function provincialUnits(external, vocab) {
       const land = map.land && map.land[sc.land];
       if (!land || !land.flag) bad.push(`land ${sc.land} unmapped`);
       else if (!Object.hasOwn(lotConditions, land.flag)) bad.push(`land flag ${land.flag} is not a vocab.lot_condition`);
-      const bts = [];
+      else bad.push(...landDefaultProblems(land, sc.land));
+      const bts = []; const conds = [];
       for (const t of sc.principal_building_types || []) {
         const m = map.building_type && map.building_type[t];
         if (!Array.isArray(m) || !m.length) { bad.push(`provincial building type ${t} unmapped`); continue; }
-        for (const x of m) { if (!Object.hasOwn(types, x)) bad.push(`provincial building type ${t} maps to ${x}, not a vocab.building_type`); else bts.push(x); }
+        for (const x of m) {
+          if (typeof x !== 'string') { const c = conditionalType(x, t, types, bad); if (c) conds.push(c); continue; }
+          if (!Object.hasOwn(types, x)) bad.push(`provincial building type ${t} maps to ${x}, not a vocab.building_type`); else bts.push(x);
+        }
       }
       for (const k of ['house_units', 'ancillary_units']) if (!map[k] || !Object.hasOwn(inputs, map[k])) bad.push(`${k} input ${map[k]} is not a vocab.dsl_input`);
       if (!['parcel', 'building_pair'].includes(sc.applies_to)) bad.push(`applies_to ${sc.applies_to}`);
@@ -843,6 +906,10 @@ export function provincialUnits(external, vocab) {
       else if (typeof pu.value === 'number' && pu.unit !== tgt.unit) bad.push(`unit ${pu.unit} ≠ target unit ${tgt.unit}`);
       if (!Array.isArray(sc.principal_building_types) || !sc.principal_building_types.length) bad.push('principal_building_types empty');
       if (!Array.isArray(sc.unit_configurations) || !sc.unit_configurations.length) bad.push('unit_configurations empty');
+      else for (const c of sc.unit_configurations) {
+        const ints = (xs) => Array.isArray(xs) && xs.length > 0 && xs.every((n) => Number.isInteger(n) && n >= 0);
+        if (!c || !ints(c.house_units) || !ints(c.ancillary_units)) bad.push(`unit_configuration ${JSON.stringify(c)} needs non-empty integer house_units and ancillary_units`);
+      }
       const lit = typeof pu.value === 'number' ? `${pu.value} ${pu.unit}` : pu.value === 'unlimited' ? 'unlimited' : null;
       if (lit === null) bad.push(`value ${JSON.stringify(pu.value)}`);
       if (bad.length) { violations.push(`provincial_unit_unmapped: ${id}: ${bad.join('; ')}`); continue; }
@@ -853,6 +920,9 @@ export function provincialUnits(external, vocab) {
         provincial: {
           row: e.id, citation: pu.citation, limits_bylaw: pu.limits_bylaw, direction_basis: pu.direction_basis, bylaw_prevails_citation: pu.bylaw_prevails_citation,
           applies_to: sc.applies_to, land_flag: land.flag, building_types: [...new Set(bts)].sort(cmpStr),
+          land_default: typeof land.default === 'boolean' ? land.default : null,
+          land_exclusions: (land.exclusions || []).map((x) => String(x.parcel_id)).sort(cmpStr),
+          conditional_types: [...new Map(conds.map((c) => [c.type, c])).values()].sort((a, b) => cmpStr(a.type, b.type)),
           house_var: map.house_units, ancillary_var: map.ancillary_units,
           unit_configurations: sc.unit_configurations.map((c) => ({ house_units: [...c.house_units], ancillary_units: [...c.ancillary_units] })),
         },
@@ -860,6 +930,47 @@ export function provincialUnits(external, vocab) {
     }
   }
   return { units, violations };
+}
+
+const COND_KEYS = Object.freeze(['children', 'citations', 'evidence', 'expert_sample', 'max_lot_units', 'type']);
+const EVIDENCE_CLASSES = Object.freeze(['measured', 'inferred', 'declared']);
+/**
+ * A conditional provincial building-type mapping (operator ruling (b) 2026-10-07, Spec 69 M-55 note): a 569-2013 type
+ * (and the listed child types) counts as the provincial type only while the lot's residential units (house +
+ * ancillary) are at most max_lot_units. Data with its evidence class, citations and the M-29 flag; anything else is a
+ * violation, never assumed. → the normalized entry, or null (problems pushed to `bad`).
+ */
+function conditionalType(x, provType, types, bad) {
+  const where = `provincial building type ${provType} conditional entry`;
+  if (!x || typeof x !== 'object' || Array.isArray(x)) { bad.push(`${where} ${JSON.stringify(x)} is not an object`); return null; }
+  const keys = Object.keys(x).sort(cmpStr);
+  if (stableJson(keys) !== stableJson(COND_KEYS)) { bad.push(`${where} keys ${keys.join(',')} ≠ ${COND_KEYS.join(',')}`); return null; }
+  const n = bad.length;
+  if (!Object.hasOwn(types, x.type)) bad.push(`${where} type ${x.type} is not a vocab.building_type`);
+  if (!Number.isInteger(x.max_lot_units) || x.max_lot_units < 1) bad.push(`${where} max_lot_units ${JSON.stringify(x.max_lot_units)} is not a positive integer`);
+  if (!Array.isArray(x.children)) bad.push(`${where} children is not a list`);
+  else for (const c of x.children) if (!types[c] || types[c].parent !== x.type) bad.push(`${where} child ${c} is not a vocab.building_type whose parent is ${x.type}`);
+  if (!EVIDENCE_CLASSES.includes(x.evidence) || x.expert_sample !== true) bad.push(`${where} needs evidence ∈ ${EVIDENCE_CLASSES.join(' · ')} and expert_sample true`);
+  if (!Array.isArray(x.citations) || !x.citations.length || !x.citations.every((c) => typeof c === 'string' && c.trim())) bad.push(`${where} citations empty`);
+  if (bad.length > n) return null;
+  return { type: x.type, children: [...x.children].sort(cmpStr), max_lot_units: x.max_lot_units, provincial_type: provType, evidence: x.evidence, expert_sample: true };
+}
+
+/**
+ * The land entry's declared default (operator ruling (c) 2026-10-07, Spec 69 M-55 note): `default` boolean with its
+ * evidence + citation, and `exclusions` [{parcel_id, address, value: 'unknown', permits}] (unique, sorted). → problems.
+ */
+function landDefaultProblems(land, name) {
+  const p = [];
+  if (land.default === undefined) return [`land ${name} has no declared default (ruling (c) 2026-10-07: an explicit lot input, else the declared default)`];
+  if (typeof land.default !== 'boolean') p.push(`land ${name} default ${JSON.stringify(land.default)} is not a boolean`);
+  if (!EVIDENCE_CLASSES.includes(land.evidence) || typeof land.citation !== 'string' || !land.citation.trim()) p.push(`land ${name} default needs evidence ∈ ${EVIDENCE_CLASSES.join(' · ')} and a citation`);
+  const ex = land.exclusions || [];
+  if (!Array.isArray(ex)) return [...p, `land ${name} exclusions is not a list`];
+  const ids = ex.map((x) => String(x && x.parcel_id));
+  for (const x of ex) if (!x || !/^\d+$/.test(String(x.parcel_id)) || x.value !== 'unknown' || typeof x.address !== 'string' || !Array.isArray(x.permits) || !x.permits.length) p.push(`land ${name} exclusion ${JSON.stringify(x && x.parcel_id)} needs {parcel_id (digits), address, value: unknown, permits[]}`);
+  if (stableJson(ids) !== stableJson([...new Set(ids)].sort(cmpStr))) p.push(`land ${name} exclusions are not unique and sorted by parcel_id`);
+  return p;
 }
 
 // ---------------------------------------------------------------- absence rulings (rule 7a) — verified against the page
@@ -1043,7 +1154,8 @@ export function checkEval({ units, vectors, vocab, enactments = {}, absences = [
 const U = (o) => ({ layer: 'base', archetype: 'LIMIT', bound: 'min', displaces: [], condition: 'none', applies_to: { part: 'whole' }, application: { zones: ['RD'], building_types: ['any'] }, ...o });
 /** The §7.5 precedence fixtures (rules 0–7, 4a conflicts, M-38 permitted(), M-48 own-target + argument, M-49, M-50). */
 export function precedenceFixtures(vocab) {
-  const C = makeContext(vocab);
+  // the fixtures' exceptions are declared authored: ruling (d) blocks every target under an unauthored exception
+  const C = makeContext(vocab, { authored: { '900.3.10(254)': 'authored', '900.3.10(5)': 'authored', '900.3.10(1463)': 'authored' } });
   const lot = { zone: 'RD', label: { f: 9 }, overlays: { HT: 8.5 }, vars: { lot_frontage_m: 9.75, lot_depth_m: 33.56, lot_area_m2: 327.12 }, flags: { corner_lot: false, major_street: false }, building_type: 'detached_house', exception: null };
   const side = (p, v, c) => U({ unit_id: `10.20.40.70(3)#(${p})`, regulation_id: '10.20.40.70(3)', target: 'side_setback_m', numeric_expression: [`side_setback_m = ${v} m @(3)(${p})`], condition: { tokens: ['required_frontage_band'], if: c } });
   const band = [side('B', '0.9', 'required_lot_frontage_m ≥ 6.0 m and required_lot_frontage_m < 12.0 m'), side('C', '1.2', 'required_lot_frontage_m ≥ 12.0 m and required_lot_frontage_m < 15.0 m'), side('D', '1.5', 'required_lot_frontage_m ≥ 15.0 m and required_lot_frontage_m < 18.0 m')];
