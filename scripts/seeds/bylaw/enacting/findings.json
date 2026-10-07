@@ -1,0 +1,87 @@
+{
+  "findings": [
+    {
+      "adjudicated_on": "2026-10-07",
+      "adjudicator": "operator",
+      "consolidated": {
+        "adoption_id": "adoption-1",
+        "end": 8359,
+        "end_marker": "Chapter 800 Definitions, include:",
+        "page": "ch600_60",
+        "sha256": "c6871ff84109410c2623174bb9133aea9b0fbcac12a0be9803d5131567471c01",
+        "source_normalized_sha256": "a768b5c758fca531b1293dc04eaf4f6b497f31f540f365104f9f93b32f453fd0",
+        "start": 8145,
+        "start_marker": "(C) Despite regulation 10.5.20.40(5)",
+        "text": "(C) Despite regulation 10.5.20.40(5), the words lawful, lawfully and lawfully existing, highlighted in bold type, in addition to the definitions provided in Zoning By-law 569-2013, Chapter 800 Definitions, include:"
+      },
+      "decision": "enacting_text_governs",
+      "enacting": {
+        "bylaw": "654-2025",
+        "end": 7580,
+        "end_marker": "lawfully issued before June 26, 2025.",
+        "extraction_sha256": "2a3af6773ff6d22f9e25fd0c65dc35c62137a7110b18f1944e3c6ed0397b2141",
+        "extractor": "pdftotext",
+        "extractor_version": "pdftotext version 4.00; Copyright 1996-2017 Glyph & Cog, LLC",
+        "fetch_id": "E-bcfdfef304fa9e29",
+        "normalizer_version": "enacting-norm-v1",
+        "pdf_sha256": "bcfdfef304fa9e290d6cc242f66b98577d16228eca097fe0a0734a08a0040237",
+        "sha256": "60d3a9e311789e2c0491efb8db9333a8154708890d682425b9973dd07ddafd20",
+        "source_normalized_sha256": "f1ad9ba6ce1a746724afa78605ecc1688301ed722b7d40dbbae18189e8334af1",
+        "start": 7201,
+        "start_marker": "(C) Despite regulation 10.5.20.40(5)",
+        "text": "(C) Despite regulation 10.5.20.40(5), the words lawful, lawfully and lawfully existing, highlighted in bold type, in addition to the definitions provided in Zoning By-law 569-2013, Chapter 800 Definitions, include: (i) buildings, structures or uses authorized or permitted on or before June 26, 2025; and (ii) for which a building permit was lawfully issued before June 26, 2025.",
+        "url": "https://www.toronto.ca/legdocs/bylaws/2025/law0654.pdf"
+      },
+      "found_in": "S10 (docs/reports/mcbylaw-phase1-plan.md); word-level comparison of Section 600.60, consolidation vs enacting text",
+      "kind": "consolidation_mismatch",
+      "observation": "The consolidation ends 600.60.40(3)(C) at \"include:\" and omits items (i) and (ii), which By-law 654-2025 enacts: the June 26, 2025 cut-off for \"lawful\", \"lawfully\" and \"lawfully existing\" in Section 600.60.",
+      "proposed_resolution_per_M_39": "The unit's cited clause becomes the enacting excerpt below (enacting_source: extraction sha + extractor version committed); the field is then verified; the disclosure stays; the verbatim stays the consolidation slice. Not applied: the operator adjudicates (Spec 69 M-17/M-39).",
+      "reason": "Spec 69 M-39: \"Consolidation ≠ enacting text: the enacting text governs, the unit is flagged and adjudicated.\" The consolidation omits items (i)-(ii) of 600.60.40(3)(C), which By-law 654-2025 enacts.",
+      "ruling": "M-39",
+      "status": "adjudicated",
+      "unit": "600.60.40(3)(C)"
+    }
+  ],
+  "section_comparison": {
+    "hunks": [
+      {
+        "at": "600.60.10(1)",
+        "class": "consolidation_heading",
+        "consolidation": "Sixplex Overlay Map",
+        "enacting": "",
+        "note": "the consolidation adds a regulation heading the enacting text does not have; no regulatory text differs"
+      },
+      {
+        "at": "600.60.40(2)(A)(ii)",
+        "class": "extraction_artifact",
+        "consolidation": "floor-to- ceiling",
+        "enacting": "floorto-ceiling",
+        "note": "the extractor removes a line-end hyphen when it joins lines; the consolidation is right"
+      },
+      {
+        "at": "600.60.40(3)(A)",
+        "class": "source_defect",
+        "consolidation": "(©",
+        "enacting": "(C).",
+        "note": "the garbled character in the City HTML already logged as a source_defect (Spec 69 §3, Spec 68 G-TEXT)"
+      },
+      {
+        "at": "600.60.40(3)(C)",
+        "class": "consolidation_mismatch",
+        "consolidation": "",
+        "enacting": "(i) buildings, structures or uses authorized or permitted on or before June 26, 2025; and (ii) for which a building permit was lawfully issued before June 26, 2025.",
+        "note": "the M-39 instance (findings[0])"
+      },
+      {
+        "at": "600.60.40(3)(D)",
+        "class": "extraction_artifact",
+        "consolidation": "semi-detached",
+        "enacting": "semidetached",
+        "note": "the extractor removes a line-end hyphen when it joins lines; the consolidation is right"
+      }
+    ],
+    "method": "word-level LCS diff (one-off, S10; Spec 69 M-39: no generic comparator)",
+    "scope": "Section 600.60 body: consolidation (ch600_60.txt, tags removed) vs enacting text from \"600.60 Sixplex Overlay Map\" to \"4. This By-law comes into force\"",
+    "second_consolidation_mismatch_found": false
+  }
+}
