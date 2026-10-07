@@ -2,13 +2,12 @@
   "bylaws": [
     {
       "bylaw": "1018-2026",
-      "captured": false,
+      "captured": true,
       "cites_pinned": [
         "10.10.20.100",
         "10.5.40.40"
       ],
       "linked": true,
-      "pdf_sha256": "f28d8802c93fa52fdf203cf5149ea163404e76d46a5d109a5cc352ec94ce1574",
       "url": "https://www.toronto.ca/legdocs/bylaws/2026/law1018.pdf"
     },
     {
@@ -38,7 +37,7 @@
     },
     {
       "bylaw": "1207-2026",
-      "captured": false,
+      "captured": true,
       "cites_pinned": [
         "150.45.40.1",
         "200.5.10.1",
@@ -49,7 +48,6 @@
         "995.10.1"
       ],
       "linked": true,
-      "pdf_sha256": "6c9c090b10a0d5e93ab9c6232e85bbfc6187b1796b0e8bc7a5b2b457ea3dbfd6",
       "url": "https://www.toronto.ca/legdocs/bylaws/2026/law1207.pdf"
     },
     {
@@ -73,7 +71,7 @@
     },
     {
       "bylaw": "262-2026",
-      "captured": false,
+      "captured": true,
       "cites_pinned": [
         "220.5.10.1",
         "5.10.30.1",
@@ -82,7 +80,6 @@
         "995.30.1"
       ],
       "linked": true,
-      "pdf_sha256": "c5d2c08ca0d746fb4bd82f83868a9cce35ced77d7998ed048022213992059b70",
       "url": "https://www.toronto.ca/legdocs/bylaws/2026/law0262.pdf"
     },
     {
@@ -94,7 +91,7 @@
     },
     {
       "bylaw": "63-2024",
-      "captured": false,
+      "captured": true,
       "cites_pinned": [
         "10.5.20.40",
         "150.5.20.1",
@@ -104,7 +101,6 @@
         "995.30.1"
       ],
       "linked": true,
-      "pdf_sha256": "1b803f2401285327bd3c5d0f2aa8ddaf7f6ccf6f8cff1799eb747bd515ca355a",
       "url": "https://www.toronto.ca/legdocs/bylaws/2024/law0063.pdf"
     },
     {
@@ -153,7 +149,7 @@
     },
     {
       "bylaw": "842-2025",
-      "captured": false,
+      "captured": true,
       "cites_pinned": [
         "200.5.1",
         "200.5.10.1",
@@ -167,11 +163,10 @@
         "995.50.1"
       ],
       "linked": true,
-      "pdf_sha256": "82696d711c3574f58f4c35725b975925ed80bead324e05a1346c5474a97ab5d0",
       "url": "https://www.toronto.ca/legdocs/bylaws/2025/law0842.pdf"
     }
   ],
-  "fetched_at": "2026-10-07T16:35:11.001Z",
+  "fetched_at": "2026-10-07T17:22:54.671Z",
   "page_sha256": "5f3c970de3e9a8e93cffcddcef96c25779a5c1a9619cf6f51e7eb7d03f8b5d2d",
   "url": "https://www.toronto.ca/city-government/planning-development/zoning-by-law-preliminary-zoning-reviews/zoning-by-law-569-2013-2/"
 }

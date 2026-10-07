@@ -77,7 +77,7 @@ describe('pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37
     expect(ps.pages.filter((p: Json) => p.status).map((p: Json) => [p.section, p.status]).sort()).toEqual([...retired, '600.10', '600.50'].map((s) => [s, 'retired']).sort());
     const m = readJson('manifest.json');
     for (const s of [...retired, '600.10', '600.50']) expect(m.pages.find((p: Json) => p.section === s).status).toBe('retired');
-    expect(ps.excluded_by_ruling.map((x: Json) => x.chapter)).toEqual(['500']);
+    expect(ps.excluded_by_ruling).toEqual([]); // Ch.500 (empty) is the universe.json chapter page rule 500 (M-56)
   });
 });
 

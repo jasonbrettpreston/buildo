@@ -25,6 +25,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { normalizeWithMap, pageStructure, rawToNorm } from './html.mjs';
 import { decodePage, parseToc, sha256 } from './snapshot.mjs';
 import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers } from './text.mjs';
@@ -33,15 +34,16 @@ export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs,
 
 export const SLICER_VERSION = 'slice-v2';
 
-/** Sections whose numbered divisions are defined terms (term = the title cell). Declared until S5 moves page kinds. */
-export const DEFINITION_SECTIONS = Object.freeze(['800.50']);
+/** Sections whose numbered divisions are defined terms (term = the title cell): vocab `slicer.definition_sections`. */
+export const DEFINITION_SECTIONS = Object.freeze([...createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer.definition_sections]);
 
 /**
  * Captured enacting by-laws (Spec 69 M-36) whose amendments are sliced into rows now (operator ruling R5,
- * 2026-10-07). 206-2026 and 650-2026 are captured and pinned, but their map and Ch.900 exception rows are
- * Phase 2; 654-2025 is consolidated (600.60) and kept as enacting_source only.
+ * 2026-10-07; the five site-specific by-laws added by the coordinator's R5 follow-up the same day). 206-2026 and
+ * 650-2026 are captured and pinned, but their map and Ch.900 exception rows are Phase 2; 654-2025 is consolidated
+ * (600.60) and kept as enacting_source only.
  */
-export const SLICED_ENACTING = Object.freeze(['1075-2026']);
+export const SLICED_ENACTING = Object.freeze(['1018-2026', '1075-2026', '1207-2026', '262-2026', '63-2024', '842-2025']);
 
 /** Variant status read from the variant's own text (R4). Closed set; null = unstatused. */
 export const VARIANT_STATUSES = Object.freeze([

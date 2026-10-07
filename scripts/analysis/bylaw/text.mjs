@@ -6,15 +6,21 @@
 // Text-level helpers of the slicer, all PURE: the inline-list parser (used only inside one HTML cell or an
 // enacting-text regulation), the defect-character scan, and the literal / tag / cross-reference extractors
 // with the anti-vacuity scan. The structure itself comes from the HTML (slice.mjs + html.mjs).
+// The declared configuration (allowed characters, encoding dash, unit table, anti-vacuity exclusions) is data:
+// scripts/seeds/bylaw/vocab.json `slicer` (Spec 69 M-56), read once at import — the one source; no copy here.
+
+import { createRequire } from 'node:module';
+
+const SLICER = createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer;
 
 /**
- * Characters that may appear in body text. Anything else in a row is a counted `source_defect`
- * disclosure (Spec 68 §9 G-TEXT), never a failure. U+0096 is the City's cp1252 en-dash served under
- * a declared iso-8859-1 charset (normalizer v1 keeps it); it is allowed, not a defect (a normalizer v2
- * mapping it to '-' is a proposed S3 follow-up).
+ * Characters that may appear in body text: printable ASCII plus vocab `slicer.allowed_extra_chars`. Anything else
+ * in a row is a counted `source_defect` disclosure (Spec 68 §9 G-TEXT), never a failure. `slicer.encoding_dash`
+ * (U+0096, the City's cp1252 en-dash served under a declared iso-8859-1 charset) is allowed, not a defect.
  */
-const ALLOWED_CHAR = /[\x20-\x7eçé²§°½×≤≥]/;
-const ENCODING_DASH = '\u0096';
+const reClass = (x) => x.replace(/[\\\]^-]/g, '\\$&');
+const ALLOWED_CHAR = new RegExp(`[\\x20-\\x7e${reClass(SLICER.allowed_extra_chars)}]`);
+const ENCODING_DASH = SLICER.encoding_dash;
 
 export const ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx', 'xxi', 'xxii', 'xxiii', 'xxiv', 'xxv', 'xxvi', 'xxvii', 'xxviii', 'xxix', 'xxx', 'xxxi', 'xxxii', 'xxxiii', 'xxxiv', 'xxxv', 'xxxvi', 'xxxvii', 'xxxviii', 'xxxix', 'xl'];
 const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -117,7 +123,6 @@ export function parseClauses(text, rootPath, { startLevel = 0, atStart = false, 
 
 // ---------------------------------------------------------------- extractors
 
-const MONTH = '(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\\.?';
 const WORD_NUM = {
   zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
   eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
@@ -126,14 +131,8 @@ const WORD_NUM = {
 const WORD_RE = `(?:(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)-(?:one|two|three|four|five|six|seven|eight|nine)|${Object.keys(WORD_NUM).join('|')})`;
 const NUM_RE = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)';
 
-/** The unit table (Spec 68 §6.5), longest form first. */
-export const UNIT_TABLE = Object.freeze([
-  ['square metres', 'm2'], ['square metre', 'm2'], ['sq. m', 'm2'], ['m²', 'm2'], ['m2', 'm2'],
-  ['metres', 'm'], ['metre', 'm'], ['m', 'm'],
-  ['per cent', 'pct'], ['percent', 'pct'], ['%', 'pct'],
-  ['storeys', 'storeys'], ['storey', 'storeys'],
-  ['dwelling units', 'units'], ['dwelling unit', 'units'],
-]);
+/** The unit table (Spec 68 §6.5), longest form first: vocab `slicer.unit_table`. */
+export const UNIT_TABLE = Object.freeze(SLICER.unit_table.map(([w, u]) => Object.freeze([w, u])));
 const UNIT_RE = UNIT_TABLE.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
 
 function wordValue(w) {
@@ -148,26 +147,10 @@ const unitOf = (u) => (u ? UNIT_TABLE.find(([w]) => w === u.toLowerCase() || w =
 /**
  * Spans excluded from the anti-vacuity scan (Spec 68 §6.5 "declared patterns"): clause and regulation
  * ids, by-law numbers, dates, zone labels / map codes, diagram / schedule / map numbers, tags. PURE.
- * Declared here until S5 moves them to vocab.json (proposed patch). Returns [{start, end, kind}].
+ * Declared in vocab.json `slicer.anti_vacuity_exclusions`. Returns [{start, end, kind}].
  */
 export function exclusionSpans(text) {
-  const pats = [
-    ['tag', /\[[^\]]*\]/g],
-    ['id', /(?<![\d.])\d{1,3}(?:\.\d{1,3}){2,3}(?:\([0-9A-Za-z]{1,7}\))*/g],
-    ['id', /\b(?:Sections?|Chapters?|Articles?|Clauses?|Regulations?)\s+\d{1,3}(?:\.\d{1,3})*(?:\([0-9A-Za-z]{1,7}\))*(?:(?:\s*,\s*|\s+(?:and|or|to)\s+)\d{1,3}(?:\.\d{1,3})*(?:\([0-9A-Za-z]{1,7}\))*)*/gi],
-    ['id', /\(\d{1,4}(?:\s*,\s*\d{1,4})*\)/g],
-    ['bylaw_number', /(?<![\w.])\d{1,5}-\d{2,4}(?![\w.])/g],
-    ['bylaw_number', /\bBy-laws?\s+(?:No\.?\s*)?\d{1,5}(?:-\d{2,4})?/gi],
-    ['bylaw_number', /\bSection\s+\d{1,4}-\d{1,3}(?:\.\d{1,3})?\s+of\s+Chapter\s+\d{1,4}/g],
-    // Statute chapter citations ("R.S.O. 1990, c. P.13", "S.O. 2006, c.11", "R.S.C. 1985, Chapter 1 (5th Supp.)").
-    ['statute_citation', /\b(?:R\.S\.O|S\.O|R\.S\.C)\.?\s*\d{4},?\s*(?:c\.\s*[A-Z]?\.?\s*\d+|Chapter\s+\d+(?:\s*\(\d+(?:st|nd|rd|th)\s+Supp\.\))?)/g],
-    ['date', new RegExp(`\\b${MONTH} \\d{1,2},? \\d{4}`, 'g')],
-    ['date', /\b\d{4}-\d{2}-\d{2}\b/g],
-    ['label_code', /\b[A-Za-z]{1,3}-?\d+(?:\.\d+)?\b/g],
-    // Street numbers and file numbers glued to letters ("25R", "21a", "9A", "A0771/05TEY").
-    ['label_code', /\b\d+[A-Za-z]+\b|\b[A-Z]\d+\/\d+[A-Z]*\b/g],
-    ['map_number', /\b(?:Diagrams?|Schedules?|Maps?|Figures?|Tables?|Appendix|Appendices|Sheets?)\s+\d+(?:\s*(?:,|and|to|or)\s*\d+)*/g],
-  ];
+  const pats = SLICER.anti_vacuity_exclusions.map((x) => [x.kind, new RegExp(x.pattern, x.flags)]);
   const out = [];
   for (const [kind, re] of pats) for (const m of text.matchAll(re)) out.push({ start: m.index, end: m.index + m[0].length, kind });
   return out.sort((a, b) => a.start - b.start || b.end - a.end);

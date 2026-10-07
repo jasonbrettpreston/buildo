@@ -1,29 +1,41 @@
 #!/usr/bin/env node
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §9 (exit codes), §10 (process + artifacts);
-//            docs/reports/mcbylaw-phase1-plan.md S3
+//            docs/reports/mcbylaw-phase1-plan.md S3, S5 (--accept), S11 (--refresh-census)
 //
-// McBylaw generator CLI. S3 lands the snapshot modes; the other Spec 68 §10 modes
-// (--write | --check | --validate | --self-test | --refresh-census | --accept | --sample | --plan-batches)
-// arrive with their steps (S4-S14) and are refused here until then.
+// McBylaw generator CLI. S3 landed the snapshot modes; S5 adds --accept, S11 --refresh-census; the other Spec 68
+// §10 modes (--write | --check | --validate | --self-test | --sample | --plan-batches) arrive with their steps.
 //
 //   node scripts/generate-bylaw-provisions.mjs --refresh [--baseline=<Phase 0 pages dir>] [--delay-ms=1000]
 //       fetch the pinned pages (scripts/seeds/bylaw/page-set.json) into the git-ignored .staging/,
-//       all or nothing, and print the change report. --baseline is required for adoption 1 only.
+//       all or nothing, and print the change report. --baseline is required for adoption 1 only. Then record the
+//       City's enacted, not-yet-consolidated list (unconsolidated.json; Spec 69 M-57 R5, G-UNIVERSE).
 //   node scripts/generate-bylaw-provisions.mjs --adopt
-//       re-validate the staging and write pages/, manifest.json, adoptions.json.
+//       re-validate the staging and write pages/, manifest.json, adoptions.json; then re-pin slice.lock.json under
+//       the new adoption (Spec 68 §8 rule 7: an adoption re-pins its per-page counts).
+//   node scripts/generate-bylaw-provisions.mjs --accept --ruling=<Spec 69 id>
+//       pin the universe (universe.lock.json + a ratchet-exceptions.json universe_pin row); refused unless the id is
+//       RATIFIED, G-UNIVERSE has no violation and nothing awaits a ruling (Spec 68 §8 rule 7).
+//   node scripts/generate-bylaw-provisions.mjs --refresh-census
+//       run census.sql in one BEGIN TRANSACTION READ ONLY session and write census.json (Spec 68 §11 Inputs).
 //
 // Exit: 0 ok · 2 structural (bad args, refused or failed refresh/adopt; nothing written).
 
 import path from 'node:path';
 import { nowIso, sleep } from './analysis/bylaw/clock.mjs';
 import { adopt, refresh, SnapshotError } from './analysis/bylaw/snapshot.mjs';
+import { acceptUniverse, universeInputs, UniverseError } from './analysis/bylaw/universe.mjs';
+import { loadSnapshotPages, sliceSnapshot } from './analysis/bylaw/slice.mjs';
+import { CensusError, refreshCensus } from './analysis/bylaw/census.mjs';
+import { writeSliceLock } from './analysis/bylaw/standardized.mjs';
+import { refreshUnconsolidated } from './analysis/bylaw/unconsolidated.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 function parseArgs(argv) {
-  const args = { modes: [], baseline: null, delayMs: 1000 };
+  const args = { modes: [], baseline: null, delayMs: 1000, ruling: null };
   for (const a of argv) {
-    if (a === '--refresh' || a === '--adopt') args.modes.push(a.slice(2));
+    if (a === '--refresh' || a === '--adopt' || a === '--accept' || a === '--refresh-census') args.modes.push(a.slice(2));
+    else if (a.startsWith('--ruling=')) args.ruling = a.slice('--ruling='.length);
     else if (a.startsWith('--baseline=')) args.baseline = path.resolve(a.slice('--baseline='.length));
     else if (a.startsWith('--delay-ms=')) args.delayMs = Number(a.slice('--delay-ms='.length));
     else args.unknown = a;
@@ -44,8 +56,9 @@ function printReport(report) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (args.unknown || args.modes.length !== 1 || !Number.isFinite(args.delayMs) || args.delayMs < 500) {
-    console.error('usage: generate-bylaw-provisions.mjs --refresh [--baseline=<dir>] [--delay-ms>=500] | --adopt');
+  const badRuling = (args.modes[0] === 'accept') !== Boolean(args.ruling);
+  if (args.unknown || args.modes.length !== 1 || badRuling || !Number.isFinite(args.delayMs) || args.delayMs < 500) {
+    console.error('usage: generate-bylaw-provisions.mjs --refresh [--baseline=<dir>] [--delay-ms>=500] | --adopt | --accept --ruling=<Spec 69 id> | --refresh-census');
     return 2;
   }
   const mode = args.modes[0];
@@ -62,13 +75,28 @@ async function main() {
       });
       console.log(`staged ${fetchId}`);
       printReport(report);
+      const uc = await refreshUnconsolidated({ seeds: path.join(ROOT, 'scripts', 'seeds', 'bylaw'), fetchImpl: fetch, nowIso, sleep, delayMs: args.delayMs });
+      console.log(`unconsolidated list: ${uc.bylaws.length} by-laws (${uc.bylaws.filter((b) => b.captured).length} captured)`);
+      return 0;
+    }
+    if (mode === 'accept') {
+      const snap = loadSnapshotPages(path.join(ROOT, 'scripts', 'seeds', 'bylaw'));
+      const inputs = universeInputs({ root: ROOT, slice: sliceSnapshot(snap), pages: snap.pages, adoptionId: snap.adoption_id });
+      const r = acceptUniverse({ root: ROOT, ruling: args.ruling, inputs });
+      console.log(`${r.unchanged ? 'unchanged' : 'pinned'} universe under ${args.ruling}: in scope ${r.counts.in_scope} of ${r.counts.rows} rows (${snap.adoption_id})`);
+      return 0;
+    }
+    if (mode === 'refresh-census') {
+      await refreshCensus({ root: ROOT, log: (m) => console.log(m) });
       return 0;
     }
     const { adoptionId, manifest } = adopt({ root: ROOT });
     console.log(`adopted ${adoptionId}: ${manifest.pages.length} pages`);
+    const lock = writeSliceLock({ seeds: path.join(ROOT, 'scripts', 'seeds', 'bylaw') });
+    console.log(`slice.lock.json re-pinned: ${lock.totals.rows} rows, ${lock.totals.units} units`);
     return 0;
   } catch (err) {
-    if (err instanceof SnapshotError) {
+    if (err instanceof SnapshotError || err instanceof UniverseError || err instanceof CensusError) {
       console.error(`refused — ${err.message}`);
       return 2;
     }

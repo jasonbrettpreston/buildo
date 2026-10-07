@@ -6,13 +6,14 @@
 -- zoning_overlays provenance JSON — never the precedence-aggregated parcels.bylaw_* columns.
 -- Shape (checked by census.mjs, because the witness resolver does not descend UNION arms): catalog
 -- tables are read only inside the CTE `base`; the UNION ALL arms read only `base`.
--- Residential = the 569-2013 residential zone classes R / RD / RS / RT / RM (Spec 69 M-15 denominator).
+-- Residential = the 569-2013 residential zone classes, bound as $1 from vocab.json `zone` (R / RD / RS / RT / RM;
+-- Spec 68 §6.5, Spec 69 M-15 denominator) — one source, never a second hand-kept list; census.json records the set.
 -- Every residential parcel lands in exactly one of: exception (number > 0), sentinel (-1),
 -- exception_invalid (any other number <= 0), no_exception (NULL); census.mjs checks the sum.
 WITH base AS (
   SELECT p.zoning_class AS zone,
          p.exception_number AS exception_number,
-         p.zoning_class IN ('R', 'RD', 'RS', 'RT', 'RM') AS residential,
+         p.zoning_class = ANY ($1::text[]) AS residential,
          (p.zoning_overlays -> 'lot_coverage_overlay' ->> 'coverage_max_pct') IS NULL AS coverage_null
     FROM parcels p
 )

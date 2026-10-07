@@ -1,0 +1,362 @@
+{
+  "$comment": "McBylaw scope rules and TOC page rules (Spec 68 §6.4 rules 1-2 and 11, §9 G-UNIVERSE, §10 stage 3; Spec 69 M-31, M-37, M-47). AUTHORED RULES, applied by scripts/analysis/bylaw/universe.mjs. Rows: every sliced row resolves to exactly one rule: the lowest tier that matches wins; two matching rules in one tier is a failure (scope_ambiguous); no rule is a failure (scope_unmatched). Tiers: 1 mechanical (deleted slots) · 2 page_status (retired pages, ruled) · 3 administrative (M-31: after mechanical, before everything else) · 4 other judgment reasons · 5 definitions (mechanical, by the declared matcher) · 6 page_scope (the in-scope default of a pinned page). A judgment rule whose `ruling` is null is PROPOSED: its rows are `awaiting_ruling` (counted) until the operator rules and `--accept --ruling=<id>` pins the universe. Match keys are ANDed; each key is an OR list. Evidence: every row a mechanical or judgment rule matches must contain one of its `evidence` patterns (case-insensitive, >= 2 words), else scope_evidence_missing. Counts are never written here: they are computed from the slice (universe.lock.json pins them).",
+  "version": 1,
+  "scope_rules": [
+    {
+      "id": "SR-DELETED",
+      "tier": 1,
+      "kind": "mechanical",
+      "scope": "out",
+      "reason": "deleted_slot",
+      "match": {
+        "verbatim_patterns": ["^\\(\\d+\\)\\s+(?:[^\\[\\]()]{0,90}?\\s)?(?:\\(?THIS DOES NOT CURRENTLY CONTAIN A REGULATION\\)?|\\(Deleted by [^)]*\\)|\\[Deleted\\]|Deleted in accordance with Regulation [\\d.]+, [A-Z][a-z]+ \\d{1,2}, \\d{4}\\.)(?:\\s*\\[[^\\]]*\\])*\\s*$"]
+      },
+      "evidence": ["does not currently contain a regulation", "deleted by", "\\[deleted\\]", "deleted in accordance with"],
+      "why": "the slot holds only a deletion notice; nothing applies"
+    },
+    {
+      "id": "SR-RETIRED-230-20",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "apartment_building_only",
+      "ruling": "M-47",
+      "match": { "pages": ["ch230_20"] },
+      "why": "Spec 69 M-47 dated note (operator S3 2026-10-07): 230.20 (Residential Apartment, RA/RAC/RAT) retired"
+    },
+    {
+      "id": "SR-RETIRED-230-NONRES",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "non_residential_zone_parking",
+      "ruling": "M-47",
+      "match": { "pages": ["ch230_30", "ch230_40", "ch230_50", "ch230_60", "ch230_80"] },
+      "why": "Spec 69 M-47 dated note (operator S3 2026-10-07): 230.30/.40/.50/.60/.80 (non-residential zone categories) retired"
+    },
+    {
+      "id": "SR-RETIRED-600-10",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-57",
+      "match": { "pages": ["ch600_10"] },
+      "why": "Building Setback Overlay District Map (downtown setbacks above 36 m, CR): pinned RETIRED at adoption-2 (Spec 69 M-57; the M-56 page rule became this page_status rule)"
+    },
+    {
+      "id": "SR-RETIRED-600-50",
+      "tier": 2,
+      "kind": "page_status",
+      "scope": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-57",
+      "match": { "pages": ["ch600_50"] },
+      "why": "Community Overlay District Maps (Queen St W eating-establishment overlay): pinned RETIRED at adoption-2 (Spec 69 M-57; the M-56 page rule became this page_status rule)"
+    },
+    {
+      "id": "SR-ADMIN-1-5",
+      "tier": 3,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "administrative_no_application_effect",
+      "ruling": "M-56",
+      "match": { "articles": ["1.5.1", "1.5.2", "1.5.3", "1.5.4", "1.5.5", "1.5.6", "1.5.8", "1.5.9", "1.5.10"] },
+      "evidence": ["is known as", "references to", "regulates the use of land", "does not relieve any person", "highlighted in bold", "map is found in", "repeals the provisions", "supersedes the former", "are part of this by-law", "are not part of this by-law", "invalidity of that regulation"],
+      "why": "title, internal reference, purpose, other by-laws, defined-term typography, map location, former by-laws not repealed/superseded, what is part of the by-law, severability: none changes what may be built on a lot. 1.5.7 (lands subject to this by-law) stays in: EXT-gov-1 rests on it"
+    },
+    {
+      "id": "SR-ADMIN-2-1",
+      "tier": 3,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "administrative_no_application_effect",
+      "ruling": "M-56",
+      "match": { "articles": ["2.1.2", "2.1.3.7", "2.1.3.8"] },
+      "evidence": ["minor variances", "former general zoning by-laws", "transition clause", "clauses 2.1.3.1 to 2.1.3.6"],
+      "why": "continuation of pre-2013 minor variances and the duration/repeal of the expired 2.1.3 transition clauses: administrative, no evaluable lot effect. 2.1.1 (conformity; lot reduction by severance) stays in"
+    },
+    {
+      "id": "SR-ADMIN-995-10",
+      "tier": 3,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "administrative_no_application_effect",
+      "ruling": "M-56",
+      "match": { "articles": ["995.10.1"], "kinds": ["regulation", "article"] },
+      "evidence": ["separately bound", "overlay map booklets"],
+      "why": "says where the Policy Area Overlay Map booklets are kept; no lot effect"
+    },
+    {
+      "id": "SR-NONRES-USE",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-56",
+      "match": { "article_patterns": ["^10\\.\\d+\\.20\\.100$"], "exclude_verbatim_patterns": ["specific use regulations in Section 150\\.(?:5|7|8|10|13|15|20|22|25|30|45|48|50)\\b"] },
+      "evidence": ["ambulance depot", "fire hall", "police station", "cogeneration energy", "renewable energy", "community centre", "public utility", "transportation use", "art gallery", "retail store", "automated banking machine", "outdoor sale", "outdoor patio", "market garden", "recreation use", "private home daycare", "nursing home", "retirement home", "respite care", "residential care home", "tourist home"],
+      "why": "conditions on a non-residential or institutional use permitted in a residential zone; pointer rows to the Ch.150 sections M-47 ruled in (suites, group homes, shelters, multi-tenant houses, day nurseries, schools, places of worship, short-term rentals) stay in, and the home-occupation pointer goes with 150.5"
+    },
+    {
+      "id": "SR-HOME-OCC",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "home_occupation_use",
+      "ruling": "M-56",
+      "match": { "pages": ["ch150_5"] },
+      "evidence": ["home occupation"],
+      "why": "Section 150.5 regulates a home occupation use, not the building or lot"
+    },
+    {
+      "id": "SR-HOME-OCC-POINTER",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "home_occupation_use",
+      "ruling": "M-56",
+      "match": { "article_patterns": ["^10\\.\\d+\\.20\\.100$"], "verbatim_patterns": ["specific use regulations in Section 150\\.5\\b"] },
+      "evidence": ["home occupation"],
+      "why": "the zone pointers to Section 150.5 (home occupation)"
+    },
+    {
+      "id": "SR-APT-ONLY",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "apartment_building_only",
+      "ruling": "M-56",
+      "match": {
+        "regulation_ids": ["10.5.40.40(4)", "10.5.50.10(4)", "10.5.50.10(5)", "10.5.80.10(2)", "10.5.80.30(1)", "10.5.100.1(4)", "10.5.100.1(5)", "10.80.30.10(2)", "150.7.60.70(2)", "200.5.1.10(12)", "970.30.15.15(1)"]
+      },
+      "evidence": ["apartment building"],
+      "why": "applies only where the building is an apartment building (MaxBLD scope: detached / semi / row / houseplex); 970.30.15.15 is the RA-zone transition analogue of the retired 230.20"
+    },
+    {
+      "id": "SR-APT-AMENITY-WASTE",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "apartment_amenity_or_waste",
+      "ruling": "M-56",
+      "match": { "articles": ["10.5.55.1", "10.5.150.1"] },
+      "evidence": ["amenity space", "waste and recyclable"],
+      "why": "apartment-building amenity space and waste storage"
+    },
+    {
+      "id": "SR-UNZONED-CITY",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "unzoned_or_city_service",
+      "ruling": "M-56",
+      "match": { "regulation_ids": ["5.10.1.30(1)", "5.10.1.30(2)", "5.10.20.1(1)", "5.10.60.1(2)", "5.10.60.1(3)", "5.10.60.1(4)"] },
+      "evidence": ["unzoned lands", "habitation in a vehicle", "city services", "satellite dish"],
+      "why": "unzoned land, living in a vehicle, City services, satellite dishes. 5.10.1.30(3) (dwelling unit below grade) and 5.10.20.1(2) (ancillary uses) stay in"
+    },
+    {
+      "id": "SR-PARKING-AISLE",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "parking_aisle_or_marking",
+      "ruling": "M-56",
+      "match": { "regulation_ids": ["200.5.1(3)", "200.5.1(4)", "200.5.1.10(10)"] },
+      "evidence": ["drive aisle", "clearly identified and marked"],
+      "why": "drive-aisle widths of a parking area, the outdoor-patio aisle reduction, and marking of non-residential parking"
+    },
+    {
+      "id": "SR-NONRES-ZONE",
+      "tier": 4,
+      "kind": "judgment",
+      "scope": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-56",
+      "match": { "articles": ["200.5.200.40", "200.5.200.50", "220.5.200.40", "220.5.200.50", "970.10.15.40", "970.10.15.50", "970.10.15.60", "970.30.15.30", "970.30.15.40", "970.30.15.50", "970.30.15.60"] },
+      "evidence": ["commercial residential", "employment industrial", "commercial zone", "cr zone", "cre zone"],
+      "why": "parking, loading and transition rules for the CR / CRE / E / CL zone categories; a residential lot is never in them. Uses the PROPOSED reason other_zone_category (none of the M-31 reasons fits a GFA or loading rule of another zone category)"
+    },
+    {
+      "id": "SR-DEF-UNUSED",
+      "tier": 5,
+      "kind": "mechanical",
+      "scope": "out",
+      "reason": "definition_not_used",
+      "match": { "kinds": ["definition"], "definition_used": false },
+      "why": "no in-scope regulation uses the term (vocab.definitions_matcher)"
+    },
+    {
+      "id": "SR-DEF-USED",
+      "tier": 5,
+      "kind": "mechanical",
+      "scope": "in",
+      "match": { "kinds": ["definition"], "definition_used": true },
+      "why": "an in-scope regulation uses the term (vocab.definitions_matcher)"
+    },
+    {
+      "id": "SR-IN-PHASE0",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "phase0",
+      "match": {
+        "kinds": ["regulation", "article"],
+        "pages": ["ch1_5", "ch2_1", "ch5_10", "ch10_5", "ch10_10", "ch10_20", "ch10_40", "ch10_60", "ch10_80", "ch150_5", "ch150_7", "ch150_8", "ch150_10", "ch150_13", "ch200_5", "ch600_5", "ch900_1", "ch970_10", "ch995_10"]
+      },
+      "why": "pinned by the Phase 0 universe (Spec 68 §6.4 rule 1)"
+    },
+    {
+      "id": "SR-IN-M37",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "M-37",
+      "match": { "kinds": ["regulation", "article"], "pages": ["ch600_60"] },
+      "why": "Spec 69 M-37: the Sixplex Overlay is in"
+    },
+    {
+      "id": "SR-IN-M47",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "M-47",
+      "match": {
+        "kinds": ["regulation", "article"],
+        "pages": ["ch1_20", "ch1_40", "ch15_10", "ch40_10", "ch80_5", "ch80_10", "ch150_15", "ch150_20", "ch150_22", "ch150_25", "ch150_30", "ch150_45", "ch150_48", "ch150_50", "ch200_10", "ch200_15", "ch200_20", "ch200_25", "ch220_5", "ch220_20", "ch230_5", "ch230_10", "ch230_90", "ch970_30", "ch995_20", "ch995_30", "ch995_41", "ch995_50", "ch995_60"]
+      },
+      "why": "Spec 69 M-47: the 23 residential TOC entries and the clause-level carve-ins are in"
+    },
+    {
+      "id": "SR-IN-ENACTING",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "M-36",
+      "match": { "kinds": ["enacting_amendment"] },
+      "why": "Spec 69 M-36 / M-57 R5: an amendment sliced from a captured enacting by-law targets a pinned in-scope article (the slicer skips any other target), so it is in"
+    }
+  ],
+  "page_rules": [
+    {
+      "entry": "500",
+      "level": "chapter",
+      "disposition": "out",
+      "reason": "chapter_empty",
+      "ruling": "M-56",
+      "why": "Special Districts - Heritage: recorded empty (completeness audit 2026-10-07); closes the M-47 deferral (Spec 69 M-56)"
+    },
+    {
+      "entry": "990",
+      "level": "chapter",
+      "disposition": "map_rule",
+      "reason": "zone_labels_from_dataset",
+      "ruling": "M-47",
+      "why": "Spec 69 M-47: Ch.990 by a map rule; labels come from the zoning dataset (M-42)"
+    },
+    {
+      "entry": "600.20",
+      "level": "section",
+      "disposition": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-37",
+      "why": "Spec 69 §4 Q2 (closed, approved as listed 2026-10-06; applied at S5 with M-37)"
+    },
+    {
+      "entry": "600.30",
+      "level": "section",
+      "disposition": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-37",
+      "why": "Spec 69 §4 Q2 (closed, approved as listed 2026-10-06; applied at S5 with M-37)"
+    },
+    {
+      "entry": "600.100",
+      "level": "section",
+      "disposition": "out",
+      "reason": "non_residential_use_condition",
+      "ruling": "M-37",
+      "why": "Spec 69 §4 Q2 (closed, approved as listed 2026-10-06; applied at S5 with M-37)"
+    },
+    {
+      "entry": "900.2",
+      "level": "section",
+      "disposition": "deferred",
+      "reason": "phase2_exception_pages",
+      "ruling": "M-15",
+      "why": "Spec 69 M-15 v0.5 note: Ch.900 residential exception pages are pinned at Phase 2 entry"
+    },
+    { "entry": "900.3", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
+    { "entry": "900.4", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
+    { "entry": "900.5", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
+    { "entry": "900.6", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
+    { "entry": "30", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Commercial (CL) zone category" },
+    { "entry": "50", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Commercial Residential Employment (CRE) zone category" },
+    { "entry": "60", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Employment Industrial (E/EL/EH/EO) zone category" },
+    { "entry": "90", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Open Space (O/ON/OR/OG/OC) zone category" },
+    { "entry": "100", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Utility and Transportation (UT) zone category" },
+    {
+      "entry": "280",
+      "level": "chapter",
+      "disposition": "out",
+      "reason": "chapter_empty",
+      "ruling": "M-56",
+      "why": "Special Districts - Downtown; page not pinned; the completeness audit (2026-10-07, .cursor/mcbylaw/completeness-audit/REPORT.md) records the chapter empty"
+    },
+    {
+      "entry": "300",
+      "level": "chapter",
+      "disposition": "out",
+      "reason": "chapter_empty",
+      "ruling": "M-56",
+      "why": "Special Districts - Centres; page not pinned; the completeness audit (2026-10-07, .cursor/mcbylaw/completeness-audit/REPORT.md) records the chapter empty"
+    },
+    {
+      "entry": "400",
+      "level": "chapter",
+      "disposition": "out",
+      "reason": "chapter_empty",
+      "ruling": "M-56",
+      "why": "Special Districts - Avenues; page not pinned; the completeness audit (2026-10-07, .cursor/mcbylaw/completeness-audit/REPORT.md) records the chapter empty"
+    },
+    {
+      "entry": "15.5",
+      "level": "section",
+      "disposition": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-56",
+      "why": "regulations for the Residential Apartment zone category (RA/RAC/RAT); M-47 carved in only 15.10.40.50"
+    },
+    { "entry": "15.20", "level": "section", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Residential Apartment Commercial (RAC) zone" },
+    {
+      "entry": "40.5",
+      "level": "section",
+      "disposition": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-56",
+      "why": "regulations for the Commercial Residential zone category; M-47 carved in only 40.10.20.10 and 40.10.40.10"
+    },
+    { "entry": "80.20", "level": "section", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Institutional Hospital (IH) zone" },
+    { "entry": "80.30", "level": "section", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Institutional Education (IE) zone" },
+    { "entry": "80.40", "level": "section", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Institutional School (IS) zone" },
+    { "entry": "80.50", "level": "section", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Institutional Place of Worship (IPW) zone" },
+    { "entry": "150.60", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Marihuana Production Facility (employment zones)" },
+    { "entry": "150.80", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Drive Through Facility" },
+    { "entry": "150.90", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Vehicle Dealership" },
+    { "entry": "150.92", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Vehicle Fuel Station" },
+    { "entry": "150.94", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Vehicle Service Shop" },
+    { "entry": "150.96", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Vehicle Washing Establishment" },
+    { "entry": "150.100", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Eating Establishment (not a Ch.10 use)" },
+    { "entry": "150.110", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Adult Entertainment Establishment" },
+    { "entry": "150.120", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Funeral Home" },
+    { "entry": "150.130", "level": "section", "disposition": "out", "reason": "non_residential_use_condition", "ruling": "M-56", "why": "Firing Range" },
+    {
+      "entry_pattern": "^900\\.(?:[7-9]|[1-5]\\d)$",
+      "level": "section",
+      "disposition": "out",
+      "reason": "other_zone_category",
+      "ruling": "M-56",
+      "why": "site exceptions for the RA / RAC / CL / CR / CRE / E / EL / EH / EO / I / IH / IE / IS / IPW / O / ON / OR / OG / OC / UT zones; a residential lot's exception is in 900.2-900.6"
+    }
+  ]
+}

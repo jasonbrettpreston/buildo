@@ -24,7 +24,7 @@ const slice: Json = sliced.slice;
 const unit = (id: string): Json => slice.units.find((u: Json) => u.unit_id === id) || {};
 const row = (id: string): Json => slice.rows.find((r: Json) => r.regulation_id === id) || {};
 
-describe('G-TEXT on the committed snapshot (adoption-2)', () => {
+describe('G-TEXT on the committed snapshot (adoption-3)', () => {
   it('passes with no violations', () => {
     const r = ST.checkText({ seeds: SEEDS });
     expect(r.violations).toEqual([]);
@@ -34,7 +34,7 @@ describe('G-TEXT on the committed snapshot (adoption-2)', () => {
   it('slice.lock.json is generated: it equals an in-memory regeneration, LF, sorted keys', () => {
     const text = fs.readFileSync(path.join(SEEDS, 'slice.lock.json'), 'utf8');
     const m = readJson('manifest.json');
-    expect(m.adoption_id).toBe('adoption-2');
+    expect(m.adoption_id).toBe('adoption-3'); // adoption-3 re-pins the page-set metadata edit of the S4 integration (same page bytes)
     expect(text.includes('\r')).toBe(false);
     expect(text).toBe(SNAP.stableStringify(ST.buildSliceLock(slice, { adoption_id: m.adoption_id, normalizer_version: m.normalizer_version })));
   });
@@ -92,9 +92,19 @@ describe('the completeness-audit classes, closed on the real text', () => {
     expect(rec.page_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(rec.bylaws.map((b: Json) => b.bylaw)).toEqual(expect.arrayContaining(['1075-2026', '206-2026', '650-2026']));
     const r = UC.checkUnconsolidated({ seeds: SEEDS });
-    expect(r.items).toEqual(['1018-2026', '1207-2026', '262-2026', '63-2024', '842-2025']);
+    expect(r.items).toEqual([]);
+    expect(r.pass).toBe(true);
   });
-  it('F — 600.10 and 600.50 are pinned RETIRED with closed reasons; Ch.500 is recorded empty', () => {
+  it('E (R5 follow-up) — the five site-specific by-laws are captured; their sliced amendments are overlay-map changes only', () => {
+    const caps = readJson('enacting/manifest.json').captures;
+    const five = ['1018-2026', '1207-2026', '262-2026', '63-2024', '842-2025'];
+    for (const b of five) expect(caps[b].pdf_sha256).toMatch(/^[0-9a-f]{64}$/);
+    const rows = slice.rows.filter((r: Json) => five.some((b) => r.page === `enacting:${b}`));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) expect(r.section.startsWith('995.')).toBe(true); // overlay maps; no pinned regulation's text
+    expect(slice.rows.filter((r: Json) => (r.amended_by || []).some((a: Json) => five.includes(a.bylaw)))).toEqual([]);
+  });
+  it('F — 600.10 and 600.50 are pinned RETIRED with closed reasons; Ch.500 is recorded empty once (universe page rule)', () => {
     const ps = readJson('page-set.json');
     for (const k of ['ch600_10', 'ch600_50']) {
       expect(ps.pages.find((p: Json) => p.key === k)).toMatchObject({ status: 'retired' });
@@ -102,8 +112,27 @@ describe('the completeness-audit classes, closed on the real text', () => {
       expect(rows.length).toBeGreaterThan(0);
       expect(rows.every((r: Json) => r.retired)).toBe(true);
     }
-    expect(ps.excluded_by_ruling).toEqual([expect.objectContaining({ chapter: '500' })]);
-    expect(ps.zone_scope.zones).toEqual(['R', 'RD', 'RS', 'RT', 'RM']);
+    const u = readJson('universe.json');
+    expect(u.page_rules.find((r: Json) => r.entry === '500')).toMatchObject({ level: 'chapter', reason: 'chapter_empty' }); // one record (S5 M-56)
+    expect(ps.excluded_by_ruling).toEqual([]);
+    expect(u.page_rules.some((r: Json) => ['600.10', '600.50'].includes(r.entry))).toBe(false); // pinned now: page_status rules, not page rules
+  });
+});
+
+describe('one source for the slicer configuration: vocab.json `slicer` (Spec 69 M-56)', () => {
+  it('no slicer module keeps a copy of the definition sections, unit table, allowed characters or exclusion patterns', () => {
+    const files = ['slice.mjs', 'text.mjs', 'html.mjs', 'standardized.mjs', 'unconsolidated.mjs'].map((f) => fs.readFileSync(path.join(process.cwd(), 'scripts/analysis/bylaw', f), 'utf8').replace(/^\s*(\/\/|\*).*$/gm, ''));
+    const copies: [string, RegExp][] = [
+      ['definition section literal', /['"]800\.50['"]/],
+      ['unit table entry', /['"]square metres['"]/],
+      ['allowed extra characters', /çé²|\\u00e7/],
+      ['statute citation pattern', /R\\\.S\\\.O/],
+      ['date month pattern', /January\|February/],
+      ['encoding dash literal', /\\u0096/],
+    ];
+    for (const src of files) for (const [what, re] of copies) expect([what, re.test(src)]).toEqual([what, false]);
+    const v = readJson('vocab.json').slicer;
+    expect(v.anti_vacuity_exclusions.map((x: Json) => x.kind)).toEqual(expect.arrayContaining(['statute_citation', 'label_code']));
   });
 });
 
