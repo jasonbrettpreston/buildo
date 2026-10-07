@@ -138,6 +138,7 @@
 | 99 | `docs/reference/bylaw-code-findings.md` | By-law code findings (generated — do not edit) | `src/lib/db/generated/schema.ts` | — | Done |
 | 99 | `docs/reference/data-lineage-map.md` | Data-Lineage Map | — | — | Done |
 | 99 | `docs/reference/logic-variables-registry.md` | Logic-Variables Registry | `src/lib/admin/control-panel.ts` | — | Done |
+| 99 | `docs/reference/maxbld-report-field-inventory.md` | MaxBLD report-field inventory (generated — do not edit) | `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/consumer-lookup.ts` | `src/tests/report-fields.infra.test.ts` | Done |
 
 ---
 
