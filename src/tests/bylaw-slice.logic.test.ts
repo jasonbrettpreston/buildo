@@ -118,9 +118,10 @@ describe('R4 — a repeated division is a status-tagged variant, never merged', 
     expect(s.problems).toEqual([]);
     expect(s.defects.map((d: Json) => d.kind)).toContain('variant_duplicate');
   });
-  it('an unstatused repeat with different numbers fails (200.15.1(1)(B) 3.9 m vs 3.4 m)', () => {
+  it('an unstatused repeat with different numbers is kept twice and disclosed, never a failure (Q-K7b; 200.15.1(1)(B) 3.9 m vs 3.4 m)', () => {
     const s = sliceOf([page([{ id: '200.15.1', regs: [{ clauses: [{ sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }], n: 1, text: 'Dims:', title: 'T' }], title: 'G' }], { chapter: '200', chapterTitle: 'Parking', key: 'ch200_15', section: '200.15', sectionTitle: 'Accessible' })]);
-    expect(s.problems.some((p: string) => p.startsWith('unstatused_variant:'))).toBe(true);
+    expect(s.problems).toEqual([]);
+    expect(s.defects.map((x: Json) => [x.kind, x.clause_path])).toEqual([['source_repeat_letter', '(1)(B)~repeat2']]);
   });
 });
 
@@ -199,7 +200,7 @@ describe('G-TEXT: one known-bad fixture per reason code, each with its good twin
   });
   it('the fixture set covers every G-TEXT reason code the module declares', () => {
     const reasons = new Set(ST.FIXTURES.map((f: Json) => f.reason).filter(Boolean));
-    for (const code of ['duplicate_id', 'slice_mismatch', 'clauses_not_concatenating', 'page_not_covered', 'span_overlap', 'numbering_gap_unproven', 'unstatused_variant', 'cell_set_mismatch', 'inline_split_undeclared', 'lock_missing', 'lock_stale', 'count_mismatch']) {
+    for (const code of ['duplicate_id', 'slice_mismatch', 'clauses_not_concatenating', 'page_not_covered', 'span_overlap', 'numbering_gap_unproven', 'cell_set_mismatch', 'inline_split_undeclared', 'lock_missing', 'lock_stale', 'count_mismatch']) {
       expect(reasons.has(code)).toBe(true);
     }
   });

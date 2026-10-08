@@ -1,6 +1,22 @@
 {
   "contract_version": 1,
   "budgets": {
+    "68": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 536,
+        "bytes": 93785,
+        "commit": "mcbylaw-merge-2026-10-07"
+      }
+    },
+    "69": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 133,
+        "bytes": 13885,
+        "commit": "156a7d7b+69a-pointer"
+      }
+    },
     "122": {
       "headroom_pct": 10,
       "measured_at": {
@@ -20,9 +36,9 @@
     "124": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 376,
-        "bytes": 142529,
-        "commit": "wf2-mcd-gates-close-2026-09-26"
+        "lines": 346,
+        "bytes": 115418,
+        "commit": "156a7d7b"
       }
     }
   },
@@ -398,6 +414,32 @@
       "commit": "2770d7d0",
       "classification": "HISTORICAL",
       "evidence": "Build-status snapshot of the R-BA gates A-K + H (all BUILT, test counts as of 2026-09-27); the R-BA register row stays the live rule and step-validate prints the live five-word verdict. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom)."
+    },
+    {
+      "id": "M18",
+      "from_spec": "124",
+      "anchor": "| R-A | Retirement of a tunable is a declaration (`config.retired[]`), never deletion of the live registry row; a retired name still holding a live row is a WARN | Rule 3 · `config` category | Spec 122 R-A |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B7 — Register rows R-A…R-AI (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-07",
+      "content_sha256": "9630b2e05515fcf2e48edaaa40fd0babd743145655233b5802c9424a9757a314",
+      "line_count": 36,
+      "moved_at": "2026-10-08",
+      "commit": "156a7d7b",
+      "classification": "REGISTER",
+      "evidence": "P1-C9 register move (QUEUE 2026-10-06: one owner, P1-C9; fleet2-assembly/P1-C9.md item 5). Spec 124 had 128 B of arm (iv) headroom and owed two §5 rows (R-BS geom drift Q1/Q2, R-BT Spec 78 Q9). Rows R-A…R-AI (the first contiguous register block, 2026-08-28…09-15) stay in force as Spec 124 §5 rulings and are cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a sections headed LIVE REGISTER. New rows are still added to Spec 124 §5."
+    },
+    {
+      "id": "M19",
+      "from_spec": "69",
+      "anchor": "## 1. The register",
+      "to_spec": "69a",
+      "to_anchor": "## §1. The register (moved from Spec 69 §1) — LIVE REGISTER, 2026-10-07",
+      "content_sha256": "2c80da148ea2ee18f7fadc11234528eb13296e199c2f11fb371796c235f4b0ca",
+      "line_count": 94,
+      "moved_at": "2026-10-08",
+      "commit": "156a7d7b",
+      "classification": "REGISTER",
+      "evidence": "Spec 69 split (QUEUE follow-up 2026-10-07: Spec 69 at 77.6 KB, split the register into 69a like 124→124a). The M-rows and dated notes stay in force and are cited as Spec 69 M-n; programs read 69a + 69 through readSpec69Rulings (scripts/analysis/bylaw/universe.mjs). New rows and dated notes are added in 69a."
     }
   ]
 }

@@ -376,5 +376,26 @@ exact secret + limit it is allowed to spend; §3b's reconcile step names the exa
 `UPDATE`), not a new gate this task introduces. If a machine-checked exact-command allow list is wanted, it is a
 separate, scoped WF — filed in `docs/reports/review_followups.md`.
 
+## 7. McBylaw by-law table (Spec 68 / 69; `npm run bylaw:provisions -- <mode>`)
+
+Offline generator for `docs/reference/bylaw-provisions.{json,md}`. No mode writes to the DB; `--refresh-census` is the only
+one that reads it (local dev, `BEGIN TRANSACTION READ ONLY`). Exit 0 pass · 1 drift / a failed row / a gate failure ·
+2 structural (refused; nothing written). Pending rows never fail a gate (Spec 69 M-45).
+
+| Command | When | Does |
+|---|---|---|
+| `node scripts/generate-bylaw-provisions.mjs --check` | every commit (pre-commit stage, Spec 69 M-32; ≈ 3–10 s) | all pre-commit gates offline + the in-memory render byte-compared with `docs/reference/`; prints the five lines. A drift line means: run `--write` and stage both renders. `bylaw-code-findings.md` staleness is report-only. |
+| `node scripts/generate-bylaw-provisions.mjs --write` | after any seed / authored / snapshot change | as `--check`, then rewrites the two renders + `bylaw-code-findings.md`. |
+| `node scripts/generate-bylaw-provisions.mjs --validate` | debugging a gate | as `--check`, plus every gate's arms, notes and violations. |
+| `node scripts/generate-bylaw-provisions.mjs --self-test` | after editing a gate module | every module's known-bad fixtures + the registry ⇄ fixture-provider check. |
+| `node scripts/generate-bylaw-provisions.mjs --plan-batches` | before an A1..A7 authoring batch | prints the provisional batch membership (rows, article shards). |
+| `node scripts/generate-bylaw-provisions.mjs --refresh [--baseline=<dir>]` | City amendment check (network) | fetches the pinned page set into the git-ignored `.staging/`, all or nothing; prints the change report. Commits nothing. |
+| `node scripts/generate-bylaw-provisions.mjs --adopt` | after reviewing a `--refresh` report | writes `pages/`, `manifest.json`, `adoptions.json`; rebuilds `amendments.json` and re-pins `slice.lock.json` under the new adoption; then `--write`. Changed units become `pending:stale`, never failures. |
+| `node scripts/generate-bylaw-provisions.mjs --amendments` | after an `amendments.json` status edit | rebuilds `amendments.json` from the adopted pages (authored statuses carried). |
+| `node scripts/generate-bylaw-provisions.mjs --capture-enacting=<NNNN-YYYY> --url=<pdf> --sha256=<pinned>` then `--adopt-enacting=<NNNN-YYYY>` | a Spec 69 M-36 enacting capture | fetch + sha-check + `pdftotext` twice into `.staging/enacting/`; adopt writes `enacting/`. |
+| `node scripts/generate-bylaw-provisions.mjs --accept --ruling=<Spec 69 id>` | pinning the universe (after an operator ruling) | writes `universe.lock.json` + a `ratchet-exceptions.json` row; refused unless the id is RATIFIED and nothing awaits a ruling. Until it runs, G-UNIVERSE is `not_run`. |
+| `node scripts/generate-bylaw-provisions.mjs --refresh-census` | after a parcels / zoning reload (local dev DB only) | witness-checks `census.sql`, runs it read-only, writes `census.json`. |
+| `node scripts/generate-bylaw-provisions.mjs --sample` | S14 (not built yet) | the G-AUDIT 50-row expert sample against a committed bar (Spec 69 M-29). |
+
 ## Python harness (`npm run test:py`)
 Unit tests for `scripts/*.py` live in `scripts/tests/` (pytest, no DB / no browser / no network). Install once with `pip install -r scripts/requirements-dev.txt`; the chains install `requirements.txt` only, so the harness can never affect a production run. CI runs it as the `Pytest (Pipeline Python)` job in `pipeline-lint.yml`. Added 2026-07-29 after three consecutive cloud-only failures (GH runs 30485096998 / 30487133930 / 30490094619) all turned out to be pure-logic seams costing a ~6-minute Actions round-trip each. Run it before pushing any `scripts/*.py` change.

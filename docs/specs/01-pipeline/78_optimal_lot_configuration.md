@@ -1,7 +1,7 @@
 # Spec 78 — Optimal Lot Configuration
 
 **Status:** Built — Phases 0-3 + 4A + 4D shipped/PUSHED; only forecast/cost reconciliation moved to Spec 88.
-**Phase 3 amendment (McBylaw):** §6 + Known Failure Modes + Appendix R — RATIFIED 2026-10-07 (operator; Spec 69 M-61..M-72; folded with the matrix + red-team, §6.12). Trial quantities stay to be measured (M-70); nothing is built.
+**Phase 3 amendment (McBylaw):** §6 + Known Failure Modes + Appendix R — RATIFIED 2026-10-07 (operator; Spec 69 M-61..M-72; folded with the matrix + red-team, §6.12). Trial quantities stay to be measured (M-70); nothing is built. **Pre-lock fixes 2026-10-07** from the Phase 3 trial: §6.13 (Spec 69 dated notes on M-63, M-64, M-70, M-72).
 **Domain:** Backend / Pipeline. **Advisory lock / spec number:** 78.
 **Design reports (authoritative for the full epic):**
 `docs/reports/optimal-lot-configuration-implementation-plan.md`,
@@ -454,9 +454,9 @@ Closed data, pinned. Each axis value cites the clause that defines or permits it
 
 | Axis | Values | Permission source |
 |---|---|---|
-| **P** principal form | detached · detached + secondary suite · detached houseplex 2–4 · detached houseplex 5–6 (inside 600.60 only) · semi · semi + suite · semi houseplex · townhouse · townhouse + suite | zone permitted-types lists 10.x.20.40; `u` label 10.x.40.1 (10.10.40.1(3)(A), 10.20.40.1(5)(A)); houseplex definitions 800.50(181)/(746), 600.60.20; one suite per unit 150.10.20.1(2); provincial floor M-55 |
-| **A** ancillary suite | none · garden · laneway | 150.7.20.1(2) = 150.8.20.1(2) (not both); laneway needs a lane 800.50(402) |
-| **K** parking | none · integral garage · detached garage (M-66) | parking never required: 200.5.10.1 R3/R5 |
+| **P** principal form | detached · detached + secondary suite · detached houseplex 2–4 · detached houseplex 5–6 (inside 600.60 only) · semi · semi + suite · semi houseplex · townhouse · townhouse + suite · **townhouse, a unit not fronting a street** (pre-lock fix) | zone permitted-types lists 10.x.20.40; `u` label 10.x.40.1 (10.10.40.1(3)(A), 10.20.40.1(5)(A)); houseplex definitions 800.50(181)/(746), 600.60.20; one suite per unit 150.10.20.1(2); provincial floor M-55; houseplex lot requirements on an excepted lot 10.x.30.1(1)–(2); the non-fronting townhouse 30.0 m frontage 10.10.30.20(1)(D), 10.20.30.20(1)(D), 10.40.30.20(1)(E), 10.60.30.20(1)(D)(i), 10.80.30.20(1)(E) |
+| **A** ancillary suite | none · garden · laneway | 150.7.20.1(2) = 150.8.20.1(2) (not both); laneway needs a lane 800.50(402) **and a rear or side lot line abutting it for ≥ 3.5 m, or 3.5 m cumulative along the side and rear lot lines** (150.8.30.20(1); strict test, KFM-78-9) |
+| **K** parking | none · integral garage · detached garage (M-66) | parking never required: 200.5.10.1 R3/R5; integral garage GFA deduction 10.5.40.40(3)(C) (one space per dwelling unit) + (3)(D) (one more, detached house, frontage > 12.0 m) |
 | **T** tier | as-of-right · CoA (M-65) | — |
 
 **Collapse rules** — declared, tier-qualified equalities with their evidence; each is a metamorphic fixture run both ways **and** a per-parcel equality check on the trial population (both sides computed, never inferred from the condition). A collapsed permitted scenario is listed as "same as <scenario>" (M-64): a collapse removes a duplicate computation, never a permission.
@@ -472,6 +472,11 @@ Closed data, pinned. Each axis value cites the clause that defines or permits it
 A front pad is not a K value (no size rule reads a pad; 10.5.80.10(3) is location only); it is disclosed under K = none (§6.5). The former C4 rule is dropped.
 
 **Permission rules** (not collapses): semi / townhouse scenarios on a single detached lot → `not_permitted:requires_severance` where the lot is not a semi half or per-unit frontage / `au` is not met (800.50(746)(B); 10.40.30.10(1)(B); `au`) — counted, hidden from the report (Q2, decided).
+
+**Catalogue homes for the Stage 1 reverse gaps (pre-lock fix 2026-10-07)** *[measured, `.cursor/mcbylaw/phase3-trial/STAGE1-REPORT.md`: of 297 permission-tagged clauses, 2 had no catalogue home; 31 others were envelope or out-of-scope rules that the pattern pass mis-tagged]*:
+- **10.x.30.1(1)** (9 units: a houseplex inherits the Ch.900 exception's lot requirements). It is not a new scenario. It is an application rule on the houseplex P values: on an excepted lot, a detached houseplex (semi houseplex: the semi half) takes the exception's lot requirements for a detached (semi-detached) house, and 10.x.30.1(2) keeps a more permissive coverage. Layer 2 applies it, and an unauthored exception stays `not_evaluated:exception_not_authored`.
+- **Townhouse units not fronting a street** (5 units). This is the new P value "townhouse, a unit not fronting a street". It is permitted only where the lot frontage is ≥ 30.0 m (in RD, RS and RM also only on a lot abutting a major street), else `not_permitted:<clause>`. Its setbacks come from the zone's townhouse rows through Layer 2. Example: RD 10.20.40.70(7)(C)(ii), a 7.5 m side yard where the units do not front a street *[read]*.
+- **Forward miss:** the integral-garage clause 10.5.40.40(3)(C) is in the K row above. The pre-work `scenario-clauses.json` held only (3)(D). The Phase 3 generator regenerates that list, and the catalogue ⇄ clauses check must find (3)(C).
 
 House + suite ≠ houseplex (height max(HT, 10.0), no storey cap and 19 m depth apply to the houseplex only) — **separate envelopes** *[read, scan §2.2 item 3]*, and a separate CoA form (`single_suite`, M-65 (2)).
 
@@ -526,9 +531,10 @@ The as-built `garageFit` (18.5 m² one-car floor, 20 % shared cap) is replaced b
 2. Order: headline first; then catalogue order (P, A, K); as-of-right before CoA.
 3. Houseplex 2–4 (and 5–6) appear as unit rows inside one scenario: units, average unit size, maximum bedrooms (split where C1 does not hold).
 4. Every number carries its citation and amendment status (Spec 69 P-1). CoA values say "calibrated from realized CoA builds of this form, not law" and show the form (`coa_form`); "nearby CoA builds" is labelled as observed nearby builds, not law and not the CoA figure.
-5. A parcel with no permitted computed scenario shows its closed reason (e.g. `not_evaluated:layer2_conflict:fsi`), never a blank.
+5. A parcel with no permitted computed scenario shows its closed reason (e.g. `not_evaluated:ambiguous_zone`, `not_evaluated:layer2_conflict:fsi`), never a blank.
 6. Formats are unchanged (`mobile/src/lib/parcelCostFormat.ts`); cost lines are unchanged (M-67). A CoA cost line whose priced area (`opt_coa_gfa_sqm`) differs from the shown `coa_gfa_sqm` states the area it priced.
 7. Surfaces S-001 / S-072 follow Spec 126; the screen change is an Admin-domain item of the Phase 3 plan.
+8. **`not_buildable`** (pre-lock fix, trial K2): a permitted scenario whose principal envelope field is `not_buildable:<clauses>` (e.g. a lot narrower than its two side setbacks) is **not shown as a scenario**. It is counted (`scenarios_not_buildable`) and never shown as a negative or zero size. If no permitted scenario is buildable, the parcel shows "not buildable as of right" with the binding clauses (rule 5).
 
 ### 6.7 Assumptions are admin logic variables (Spec 69 M-68)
 
@@ -540,6 +546,15 @@ Non-law numbers on today's report path, each to be (or stay) a `logic_variables.
 - Layer 2 b2 rows are **not** keyed by scenario: 625,992 × 9 ≈ 5.6 M rows ≈ 2.9 GB fails the K5 10 % disk line *[arithmetic re-executed; per-row size from the trial]*.
 - Per parcel, persist only the headline per tier and the counters. The grid is computed on read from the b2 rows and lot metrics (a 24-target read 3.9 / 13.9 ms p50 / p95 *[measured, Phase 2 trial]*; a 28–162-evaluation grid read is not measured). Persisting the full grid ≈ 387 M values *[arithmetic re-executed]* fails or crowds K5.
 - The trial also measures per-parcel compute, the full run time, WAL, and whether the headline and the on-read grid can differ in `evaluator_version` (M-64: same read).
+- **Measured by the Phase 3 trial (2026-10-07, `.cursor/mcbylaw/phase3-trial/TRIAL-REPORT.md` K4/K5/K6):**
+  - L3-a (headline + counters) is chosen: 880,188 rows, 282 MB. A local full run takes ≈ 12.8 min (compute 0.76 ms/parcel; compiled formula 1.8 µs/eval). A no-change re-run writes 0 rows and 0 WAL. On-read grid p95 is 76 ms on the worst parcel, and headline = grid on the same read. Small cloud is ≈ 31 min *[inferred]*.
+  - L3-b (persisted grid) is rejected: ≈ 1.28 GB lower bound and ≈ 14 % WAL *[inferred, linear from 20 K / 100 K]*.
+  - The persisted headline columns are `numeric` / `double`, never `real`: one K6 miss was float4 rounding (1,350.288 vs 1,350.29).
+- **Layer 2 is the blocker, so the Phase 2 plan locks a LEAN structure row** (pre-lock fix, K4). The trial stored the full trace + `scenarios` + `by_class` once per structure: **1,877,976 rows, 1,167 B/row (`by_class` 702 B) = 2,465 MB, + link 52 MB = 2.52 GB ≈ 20 % of the DB**. That is 2.4× the Phase 2 projection of 1.03 GB. Stripping winners from `by_class` saves only 7 % (649 vs 702 B) *[measured]*. The design:
+  - **(a)** One **signature row** per rule signature holds the trace once: candidates, winner, why the others lost, inputs, `table_version`.
+  - **(b)** A **structure row** per parcel × target × structure holds only the signature pointer, the structure, the value, the status / reason, and the **deltas** where that structure differs from the shared trace (its own winner or condition values).
+  - **(c)** Layer 3 lineage names the signature row plus the structure row.
+- **The re-measure is a Phase 2 trial item** (P2-0 round 0, not yet run). Kill line: L2 + L3-a ≤ 10 % of the DB (≈ 1.2 GB on the measured 12 GB local DB). The Phase 3 plan does not lock on storage until it passes.
 
 ### 6.9 Gates and validation
 
@@ -577,7 +592,7 @@ Builder cost and the cost menu (Spec 88, M-67) · compliance-only parking rules 
 7. **Column fates:** Appendix R kinds; `opt_coa_gfa_sqm` is `report_only_retired` and stays a DB column (M-65, M-67).
 8. **CoA method:** citywide per-form uplift u on AOR(s) of the same form, plus the separate "nearby CoA builds" figure (M-65, §6.4).
 9. **No-legacy step (Spec 124):** the population is declared as a query (R-AY: residential parcels with a Layer 2 resolution row, the step's own predicate, with its reset arm); the R-AS cohort-vs-legacy rule is N/A with a recorded reason (no legacy step to compare; the shadow diff against the live columns, M-71, replaces it). **The Spec 124 row is OWED at the P1-C9 register move**; Spec 124 is not edited here.
-10. **Layer 2 conflicts:** conservative. A value conflict on a target is field-level `layer2_conflict`; a permission conflict (PERMIT vs PROHIBIT at the same rank, still `conflict` under M-60) makes the scenario `not_evaluated:layer2_conflict` — never shown, never treated as permitted (Spec 68 §11.1).
+10. **Layer 2 conflicts** (wording aligned 2026-10-07 with the operator ruling **PROHIBIT wins at the same rank**, Spec 69 M-60 dated note (a)). A value conflict on a target is field-level `not_evaluated:layer2_conflict:<target>`. A permission conflict (PERMIT vs PROHIBIT at the same rank) makes the scenario **`not_permitted:<prohibiting clause>`**: the overruled PERMIT clause is named in the trace (`overruled_permits`), the row carries `expert_sample: true`, and it is counted and never shown (Spec 68 §11.1). It is not `not_evaluated`. Ambiguous-zone lots are a separate reason, `not_evaluated:ambiguous_zone` (operator ruling 2026-10-07), not a Layer 2 conflict.
 
 ### 6.12 Fold record (2026-10-07)
 
@@ -591,7 +606,7 @@ Sources: `.cursor/mcbylaw/phase3-check/MATRIX.md` (H = high, row ids §2–§8) 
 | H4 / D6 / T1 — k double-counts form size; wrong denominator | fixed (operator ruling 2026-10-07): pure uplift u on AOR(s) of the same form (u_multiplex = 1.00); also the hard requirement: fit against AOR(s) of the same form, `fit_basis` FAIL, kill test in M-70 | M-65 (1); §6.4 |
 | H5 / D7 / T2 — P → form map not total; house + suite | fixed: total map, `single_suite` form (operator ruling 2), `coa_factor_unfitted`, C3 as-of-right only | M-65 (2); §6.2, §6.4 |
 | H6 / D8 / T3 — retirement vs Spec 88 | fixed (operator ruling 3): `opt_coa_gfa_sqm` leaves the report, stays a DB column for the cost line; cost line states its priced area; Specs 83/66 added | M-65, M-67; §6.6 r6; KFM-78-8; §2 deps |
-| H7 — status / reason sets not closed (`ambiguous_zone`, `coa_factor_unfitted`, `not_applicable`, `conflict`, N6 `open`, row 5) | fixed: two closed levels; reasons `layer2_conflict`, `coa_factor_unfitted`, `no_producer` to `vocab.json` (PLANNED; red: G-SHAPE rejects an undeclared reason); `ambiguous_zone` dropped; N6 `no_producer`; row 5 `formula` | Spec 68 §11.1; M-64; App. R |
+| H7 — status / reason sets not closed (`ambiguous_zone`, `coa_factor_unfitted`, `not_applicable`, `conflict`, N6 `open`, row 5) | fixed: two closed levels; reasons `layer2_conflict`, `coa_factor_unfitted`, `no_producer` to `vocab.json` (PLANNED; red: G-SHAPE rejects an undeclared reason); `ambiguous_zone` dropped (**reversed 2026-10-07:** restored by operator ruling, §6.13); N6 `no_producer`; row 5 `formula` | Spec 68 §11.1; M-64; App. R |
 | H8 / F1 / T13 — totality denominator | fixed (ruling 4): inventory ∪ registry-introduced fields, output ⇄ registry ⇄ rendered; 3a, payload fields given kinds | M-69; App. R |
 | H9 / T20 / T4 — vector coverage | PLANNED vectors (houseplex, suite house, R zone, garden / laneway, garages, 600.60); ≥ 1 per branch; red = a branch with no vector fails G-EVAL | M-62; §6.3 |
 | A2 / T21 — ⧉ omits `literals[]`; hand edits | fixed: `literals[]` ⧉; registry generated from agreed shards | M-62; §6.3 |
@@ -632,10 +647,24 @@ Sources: `.cursor/mcbylaw/phase3-check/MATRIX.md` (H = high, row ids §2–§8) 
 | DeepSeek: monotonicity false under shared caps | refuted: the invariant is on permission status, not size | — |
 | DeepSeek: C2 evidence displacement-only | refuted: 600.60.30(3), (2)(A) treat 5–6 as one class | — |
 | DeepSeek: KFM-78-1 arithmetic | refuted: 258,181 + 191,491 + 1 equal = 449,673 *[re-executed]* | — |
-| DeepSeek: ambiguous zone is a Layer 2 `conflict` | fixed (operator ruling, conservative): permission conflict → scenario `not_evaluated:layer2_conflict`; value conflict field-level (Q10) | §6.11 |
+| DeepSeek: ambiguous zone is a Layer 2 `conflict` | fixed (operator ruling, conservative): permission conflict → scenario `not_evaluated:layer2_conflict`; value conflict field-level (Q10). **Superseded 2026-10-07:** ambiguous zone → `not_evaluated:ambiguous_zone`; permission conflict → PROHIBIT wins (`not_permitted`) (§6.13) | §6.11 |
 | CoA method (M-65) | fixed (operator ruling 2026-10-07): citywide u per form on AOR(s); neighbourhood term only if split-half r > 0.3 (−0.07 measured); separate "nearby CoA builds" figure | §6.4 |
 | Open questions Q2, Q3, Q4, Q6 | fixed (operator rulings 2026-10-07) | §6.11 |
 | Ratification | M-61..M-72 RATIFIED 2026-10-07 (operator); trial quantities to be measured (M-70) | Spec 69 |
+
+### 6.13 Pre-lock fixes from the Phase 3 trial (2026-10-07; the operator approved the approach)
+
+Evidence: `.cursor/mcbylaw/phase3-trial/TRIAL-REPORT.md` (Stages 2–3) and `STAGE1-REPORT.md` (Stage 1). Pre-registration: `phase3-trial-design.md` sha256 `088b87d5…c544e6`.
+
+| # | Trial finding | Fix | Where |
+|---|---|---|---|
+| 1 | K1: 3/36 formulas inexpressible (`units × m2`, `m2 ÷ units`); `max_bedrooms` has no producer | count-by-area unit rules; `max_bedrooms` = Layer 1 LIMIT `bedrooms` from 10.x.40.1(8)/(7)/(6) (648-2025), houseplex scenarios only | Spec 68 §7.4; M-72 note |
+| 2 | K2: 54 invariant cells on 2 lots from negative `buildable_width` | field status `not_buildable:<clauses>`, never a negative or a clamp; not shown as a scenario | Spec 68 §7.4, §11.1; §6.6 r8 |
+| 3 | K4: L2 full trace per structure ≈ 2.5 GB (20 %) | lean L2 structure row (shared trace per signature + per-structure deltas); re-measured in the Phase 2 trial | §6.8; M-70 note |
+| 4 | K3: reason set not built; `ambiguous_zone` (73,062 rows) outside it | closed `vocab.json` `layer3` block = Spec 68 §11.1, both directions; `ambiguous_zone` restored | Spec 68 §11.1; M-64 note |
+| 5 | Stage 1: 1 forward miss and 2 reverse catalogue gaps | 10.5.40.40(3)(C) in the K row; 10.x.30.1(1) as a houseplex application rule; new P value for a non-fronting townhouse (30.0 m) | §6.2; M-63 note |
+| 6 | Q10 wording contradicted the PROHIBIT-wins ruling | Q10 aligned: `not_permitted` with both clauses | §6.11 Q10; Spec 68 §11.1 |
+| 7 | Stage 1 Reality-Check: `abuts_laneway` over-flags ≈ 20 % | the laneway scenario uses the strict ≥ 3.5 m test; WF3 moved into Phase 3 | §6.2 A row; KFM-78-9 |
 
 ## Known Failure Modes (Phase 3 inputs; traced at `bfaad556`, 2026-10-07)
 
@@ -656,6 +685,12 @@ Sources: `.cursor/mcbylaw/phase3-check/MATRIX.md` (H = high, row ids §2–§8) 
   - E2 (label FSI, Spec 69 M-25 / Spec 68 §11) fixes AOR. **the CoA uplifts u must be re-fitted after E2** (M-65 (3)), or CoA will be mis-stated.
 - **KFM-78-7 — the fitted CoA factors would double-count form size.** k_multiplex ≈ 1.42 is realized multiplex GFA ÷ today's detached-shaped `opt_aor`; a CoA itself adds 1.014 [0.93, 1.09] to a multiplex *[measured, coa-analysis §3]*. A Phase 3 houseplex AOR(s) (FSI-exempt, max(HT, 10 m), no storey cap) already holds most of that size, so AOR(s) × 1.42 counts it twice, and the headline (largest permitted `total_gfa_sqm`) would pick it on most lots (red-team T1, CRITICAL *[inferred]*). Phase 3 (operator ruling 2026-10-07): the factor is the pure CoA uplift u fitted against AOR(s) of the same form (multiplex 0.997 → u = 1.00 *[measured, second look]*), with a `fit_basis` FAIL (M-65 (1)).
 - **KFM-78-8 — `opt_coa_gfa_sqm` has live cost and lead consumers.** `parcel-cost.js:100` (the `coa_build` area) and `:374` (`coa_fsi`), `archetype-cost-map.js:36` and `cost-model.ts:86/554` (Spec 83 leads via §4D) read it, and `enrich-permits.js:738` reads `max_newbuild_coa_gfa_sqm` *[read, matrix H6]*. Phase 3 (operator ruling 2026-10-07): the columns leave the report only; `opt_coa_gfa_sqm` keeps feeding the CoA cost line until the cost epic migrates it, and the cost line states the area it priced (§6.6 rule 6). Until then the shown `coa_gfa_sqm` and the priced CoA area can differ.
+- **KFM-78-9 — `abuts_laneway` is a 20 m proximity flag, not the by-law's 3.5 m lane frontage** (added 2026-10-07, Phase 3 trial Stage 1).
+  - **Current code:** `enrich-centreline.js:118-123` computes `bool_or(seg_is_lane)` over every centreline segment within 20 m (`enrich_centreline_proximity_m`) of the parcel. It has no length test and no rear / side lot-line test (Spec 65:260 records the limit).
+  - **The law:** 150.8.30.20(1) needs a rear or side lot line abutting a lane for ≥ 3.5 m, or 3.5 m cumulative along the side and rear lot lines.
+  - **Measured:** 60,624 lots flagged, of which 12,194 (20 %) fail the 3.5 m test (RD 37 %). In the R zone, 50,643 are flagged and 41,313 pass. In a sample of 20 flagged lots, 3 are false (the lane is 13–15 m away, with 0 m shared).
+  - **Phase 3 impact** *[measured, strict run]*: laneway-permitted rows −87 K; envelope p50 unchanged.
+  - **Phase 3 (operator, 2026-10-07):** the laneway scenario uses the **strict ≥ 3.5 m test**, never the 20 m flag. The `abuts_laneway` WF3 is **moved into Phase 3**: derive `lane_abutting_length_m` (lot boundary within a lane tolerance, a logic variable, 5 m, of a Laneway segment), and read ≥ 3.5 m from the 150.8.30.20(1) law row. The red test is the 3 sample false positives. Until it lands, the laneway scenario is `not_evaluated:missing_input:lane_abutting_length_m`, never permitted on the 20 m flag.
 
 ## 2. Operating Boundaries
 
@@ -697,6 +732,7 @@ Sources: `.cursor/mcbylaw/phase3-check/MATRIX.md` (H = high, row ids §2–§8) 
 - **Consumed by:** Phases 2–3 (optimal-config engine + parcel calibration), Phase 4 (forecast/cost).
 - `load-parcels.js` — upstream loader for the `parcels` rows this spec's lot-driven outputs are computed on
 - `compute-storey-norms.js` — `storeys_p50/p90` joined from its `neighbourhood_storey_norms` output (Spec 65 §8); `compute_build_norms` runs after it in-chain
+- `enrich-centreline.js` (`enrich_centreline`, Specs 62/65) — produces `abuts_laneway` (KFM-78-9); the Phase 3 strict lane-frontage WF3 changes it under its owner spec
 - **Spec 67** (`67_maxbuild_bylaw_derivation.md`) — MaxBuild derivation methodology, field universe and scenarios for the envelope this spec consumes (§5)
 - **Phase 3 (§6, ratified 2026-10-07):** relies on Specs 68/69 (Layer 1 table, evaluator, Layer 2 resolution; rulings M-61..M-72), Specs 122/124 (the converted step), Spec 126 (report surfaces), planned Spec 129 `load_coa_notices` (oracle C); consumed by Spec 88 (reads the area columns only, incl. `opt_coa_gfa_sqm`, KFM-78-8), Spec 83 (permit-lead cost model: `archetype-cost-map.js`, `cost-model.ts` via §4D) and Spec 66 (`enrich-permits.js` CoA propagation) and the MaxBLD report surfaces.
 

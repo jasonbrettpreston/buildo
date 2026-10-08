@@ -72,7 +72,7 @@
       "required": ["id", "from_spec", "anchor", "to_spec", "to_anchor", "line_count", "classification", "evidence"],
       "properties": {
         "id": { "type": "string", "pattern": "^(M[0-9]+[a-z]?|G-A[0-9]+)$" },
-        "from_spec": { "enum": ["122", "123", "124"] },
+        "from_spec": { "enum": ["122", "123", "124", "69"] },
         "anchor": { "type": "string", "minLength": 1 },
         "to_spec": { "type": "string", "minLength": 1 },
         "to_anchor": { "type": "string", "minLength": 1 },
@@ -80,7 +80,7 @@
         "line_count": { "type": "integer", "minimum": 1 },
         "moved_at": { "type": ["string", "null"] },
         "commit": { "type": ["string", "null"] },
-        "classification": { "enum": ["HISTORICAL", "GRANDFATHERED"] },
+        "classification": { "enum": ["HISTORICAL", "GRANDFATHERED", "REGISTER"] },
         "evidence": { "type": "string", "minLength": 1 }
       }
     }

@@ -811,7 +811,7 @@
       "statement": "\"parking pad\" does not occur in Chapter 800 (Definitions) or Chapter 200; in Chapter 10.5 it occurs once, inside L5."
     }
   ],
-  "adoption_id": "adoption-3",
+  "adoption_id": "adoption-4",
   "counts": {
     "claims": 156,
     "claims_fully_retired": 23,
@@ -4393,6 +4393,6 @@
       "10.5.50.10(2)"
     ]
   },
-  "slicer_version": "slice-v2",
+  "slicer_version": "slice-v4",
   "version": "legacy-map-v1"
 }

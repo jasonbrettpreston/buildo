@@ -1,3 +1,5 @@
 # Raw City pages are pinned by byte sha256 (Spec 68 §9 G-PROV); never convert their line endings.
 pages/*.htm -text
 pages/*.txt -text
+# Enacting texts are pinned by extraction / normalized sha256 (Spec 69 M-36, Spec 68 G-PROV); same rule.
+enacting/*.txt -text

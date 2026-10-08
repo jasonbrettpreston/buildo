@@ -1,8 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §9 G-PROV (page arm: "page ... shas match the
 //            manifest; manifest complete"), §6.4 rule 10 (provenance explicit, never mtimes), §8 rule 8 (module shape)
 //
-// OBSERVABLE word module. S3 lands the G-PROV page arm only; the amendment arm (S10), the keyer
-// provenance arm and the ruling-citation arm (S6) are added here by their steps.
+// OBSERVABLE word module. S3 lands the G-PROV page arm; S10 the amendment + enacting arms (checkProvAll); S8 the
+// ruling-citation arm (checkRulingCitations). The keyer provenance arm arrives with the first authored shard (S6/A1).
 //
 // Reason codes (closed set for the page arm):
 //   manifest_missing            no manifest.json
@@ -15,7 +15,10 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { checkAmendments } from './amendments.mjs';
+import { checkEnacting } from './enacting.mjs';
 import { decodePage, loadPageSet, normalize, sha256 } from './snapshot.mjs';
+import { parseRulings } from './universe.mjs';
 
 /** G-PROV page arm over a seeds directory. Returns {pass, violations, checked}. */
 export function checkProv({ seeds }) {
@@ -64,4 +67,101 @@ export function checkProv({ seeds }) {
     }
   }
   return { pass: violations.length === 0, violations, checked };
+}
+
+/** G-PROV over the page, amendment (amendments.mjs) and enacting (enacting.mjs) arms; reason codes stay per arm. */
+export function checkProvAll({ seeds }) {
+  const arms = [
+    { name: 'page', ...checkProv({ seeds }) },
+    { name: 'amendment', ...checkAmendments({ seeds }) },
+    { name: 'enacting', ...checkEnacting({ seeds }) },
+  ];
+  const violations = arms.flatMap((a) => a.violations);
+  return { pass: violations.length === 0, violations, checked: arms.reduce((n, a) => n + a.checked, 0), arms };
+}
+
+// ---------------------------------------------------------------- G-PROV ruling-citation arm (S8)
+//
+// Reason codes (closed set for the ruling-citation arm):
+//   ruling_parse_empty            Spec 69 parses to 0 rulings (Spec 68 §9: a 0-ruling parse FAILS)
+//   ruling_not_ratified           a ratchet-exceptions.json row cites a Spec 69 id that is not RATIFIED (or an
+//                                 adjudication cites a ruling that is not RATIFIED)
+//   ruling_anchor_missing         a ratchet-exceptions.json row's anchor is not the literal `**<id>**`, or Spec 69 does
+//                                 not contain it (gates/ledger.mjs literal-anchor semantics, copied)
+//   adjudicator_missing           an adjudications.json entry names no adjudicator
+//   consolidation_ruling_missing  a consolidation_mismatch adjudication does not cite M-39
+//   deferred_ruling_unknown       a `deferred_by_ruling:<id>` names an id Spec 69 does not carry (PROPOSED is allowed, counted)
+export const RULING_REASON_CODES = Object.freeze([
+  'ruling_parse_empty',
+  'ruling_not_ratified',
+  'ruling_anchor_missing',
+  'adjudicator_missing',
+  'consolidation_ruling_missing',
+  'deferred_ruling_unknown',
+]);
+
+const RULING_ID_RE = /\b([MP]-\d+)\b/g;
+const isText = (v) => typeof v === 'string' && v.trim() !== '';
+
+/**
+ * Ruling citations across the committed records. `ledger` = ratchet-exceptions.json (or null), `adjudications` =
+ * adjudications.json (or null), `deferred` = Spec 69 ids cited by `deferred_by_ruling:<id>` page / scope rules. PURE.
+ */
+export function checkRulingCitations({ spec69Text, ledger, adjudications, deferred = [] }) {
+  const violations = [];
+  let checked = 0;
+  const rulings = parseRulings(spec69Text || '');
+  if (rulings.size === 0) violations.push('ruling_parse_empty: Spec 69 parsed to 0 rulings');
+  for (const [i, row] of ((ledger && ledger.rows) || []).entries()) {
+    checked++;
+    const id = row && row.ruling;
+    if (rulings.size && rulings.get(id) !== 'RATIFIED') violations.push(`ruling_not_ratified: ratchet-exceptions.json rows[${i}] cites ${id} (${rulings.get(id) || 'absent'})`);
+    if (rulings.size && (!row || row.anchor !== `**${id}**` || !String(spec69Text || '').includes(`**${id}**`))) violations.push(`ruling_anchor_missing: ratchet-exceptions.json rows[${i}] anchor ${JSON.stringify(row && row.anchor)} is not the literal **${id}** in Spec 69`);
+  }
+  for (const a of (adjudications && adjudications.adjudications) || []) {
+    checked++;
+    const id = (a && a.id) || '?';
+    if (!a || !isText(a.adjudicator)) violations.push(`adjudicator_missing: ${id}`);
+    const cited = [...String((a && a.ruling) || '').matchAll(RULING_ID_RE)].map((m) => m[1]);
+    if (a && a.kind === 'consolidation_mismatch' && !cited.includes('M-39')) violations.push(`consolidation_ruling_missing: ${id} cites ${JSON.stringify(a.ruling ?? null)}, not M-39`);
+    for (const r of cited) if (rulings.size && rulings.get(r) !== 'RATIFIED') violations.push(`ruling_not_ratified: adjudication ${id} cites ${r} (${rulings.get(r) || 'absent'})`);
+  }
+  let deferredProposed = 0;
+  for (const id of [...new Set(deferred)].sort()) {
+    checked++;
+    if (!rulings.size) continue;
+    if (!rulings.has(id)) violations.push(`deferred_ruling_unknown: deferred_by_ruling:${id} is not a Spec 69 row`);
+    else if (rulings.get(id) === 'PROPOSED') deferredProposed++;
+  }
+  return { pass: violations.length === 0, violations, checked, counts: { deferred_proposed: deferredProposed, rulings: rulings.size } };
+}
+
+/** Known-bad fixture per ruling-arm reason code + the good twin (in memory). Returns {pass, results}. */
+export function selfTest() {
+  const spec = ['| **M-39** | x | y | G-PROV | RATIFIED 2026-10-06 |', '| **M-56** | x | y | G-UNIVERSE | RATIFIED 2026-10-07 |', '| **M-90** | x | y | G-UNIVERSE | PROPOSED |'].join('\n');
+  const good = () => ({
+    spec69Text: spec,
+    ledger: { rows: [{ kind: 'universe_pin', ruling: 'M-56', anchor: '**M-56**' }] },
+    adjudications: { adjudications: [{ id: 'ADJ-1', kind: 'consolidation_mismatch', adjudicator: 'operator', ruling: 'M-39' }] },
+    deferred: ['M-90'],
+  });
+  const cases = [
+    [null, () => {}],
+    ['ruling_parse_empty', (g) => { g.spec69Text = ''; }],
+    ['ruling_not_ratified', (g) => { g.ledger.rows[0].ruling = 'M-90'; g.ledger.rows[0].anchor = '**M-90**'; }],
+    ['ruling_anchor_missing', (g) => { g.ledger.rows[0].anchor = 'M-56'; }],
+    ['adjudicator_missing', (g) => { g.adjudications.adjudications[0].adjudicator = ' '; }],
+    ['consolidation_ruling_missing', (g) => { g.adjudications.adjudications[0].ruling = 'M-56'; }],
+    ['deferred_ruling_unknown', (g) => { g.deferred = ['M-999']; }],
+  ];
+  const results = cases.map(([code, mutate]) => {
+    const g = good();
+    mutate(g);
+    const r = checkRulingCitations(g);
+    const got = [...new Set(r.violations.map((v) => v.split(':')[0]))];
+    const pass = code === null ? r.pass : !r.pass && got.length === 1 && got[0] === code;
+    return { name: code || 'ruling arm good twin', pass, got };
+  });
+  for (const c of RULING_REASON_CODES) if (!cases.some((x) => x[0] === c)) results.push({ name: `fixture for ${c}`, pass: false, got: [] });
+  return { pass: results.every((r) => r.pass), results };
 }

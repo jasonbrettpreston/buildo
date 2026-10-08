@@ -14,21 +14,32 @@
 
 import { normalize } from './snapshot.mjs';
 
+// The raw-offset map is an Int32Array (one slot per output character, pre-sized; grown only if a replacement is longer
+// than its match): a boxed-number push per character dominated the slice at adoption-4 (4,123 in-scope rows).
 function mapReplace(s, map, re, fn) {
   let out = '';
-  const m2 = [];
+  let m2 = new Int32Array(s.length);
+  let n = 0;
+  const put = (v) => {
+    if (n === m2.length) {
+      const g = new Int32Array(m2.length * 2 + 16);
+      g.set(m2);
+      m2 = g;
+    }
+    m2[n++] = v;
+  };
   let last = 0;
   for (const m of s.matchAll(re)) {
     out += s.slice(last, m.index);
-    for (let i = last; i < m.index; i++) m2.push(map[i]);
+    for (let i = last; i < m.index; i++) put(map[i]);
     const rep = fn(m);
     out += rep;
-    for (let i = 0; i < rep.length; i++) m2.push(map[m.index]);
+    for (let i = 0; i < rep.length; i++) put(map[m.index]);
     last = m.index + m[0].length;
   }
   out += s.slice(last);
-  for (let i = last; i < s.length; i++) m2.push(map[i]);
-  return [out, m2];
+  for (let i = last; i < s.length; i++) put(map[i]);
+  return [out, m2.subarray(0, n)];
 }
 
 /** One entity decoded exactly as normalizer v1 decodes it (its own code path, not a copy); memoized. */
@@ -41,7 +52,8 @@ const decodeEntity = (ent) => {
 /** normalize(html) with a raw-offset map: {text, map} where map[k] = raw index of text[k]. PURE. */
 export function normalizeWithMap(html) {
   let s = String(html);
-  let map = Array.from({ length: s.length }, (_, i) => i);
+  let map = new Int32Array(s.length);
+  for (let i = 0; i < map.length; i++) map[i] = i;
   [s, map] = mapReplace(s, map, /<script[\s\S]*?<\/script>/gi, () => ' ');
   [s, map] = mapReplace(s, map, /<style[\s\S]*?<\/style>/gi, () => ' ');
   [s, map] = mapReplace(s, map, /<\/?(a|span|b|i|em|strong|u|sup|sub|font)\b[^>]*>/gi, () => '');
