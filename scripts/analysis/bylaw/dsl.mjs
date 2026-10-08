@@ -20,7 +20,8 @@
 //
 // Canonical form (§7.4, agreement compares canonical forms): whitespace removed, numerals normalized (15 ≡ 15.0),
 // ASCII operators mapped to × ÷ − ≤ ≥; arguments sorted ONLY for max, min, +, × and by_type keys; if and band keep
-// their order. A unit's statement list is a set, so `canonicalExpression()` sorts the canonical statements.
+// their order; an argument @path equal to its statement's @path is dropped (rule C3). A unit's statement list is a
+// set, so `canonicalExpression()` sorts the canonical statements.
 //
 // Errors are thrown as DslError with a closed `code`: syntax · bad_literal · bad_unit · bad_target · bad_clause_path
 // · unknown_function · mixed_and_or · band_arm_not_literal · min_max_arity · duplicate_by_type_key · value_form_mixed
@@ -328,17 +329,31 @@ function canonCond0(c) {
   }
 }
 
+/**
+ * Canonical rule C3 (A1 agreement analysis 2026-10-07): an argument `@path` equal to its statement's own `@path` names
+ * the statement itself — displacement of that path is whole-unit (evaluate.mjs refMatch → 'full'), never argument-level
+ * — so the tag is dropped before comparison. A sub-clause argument path is kept (M-48 argument-level displacement).
+ * Bounded like the canonicalizer (a node deeper than MAX_NEST is left as is; canonExpr then throws too_deep).
+ */
+function dropSelfArgPaths(e, self, depth = 0) {
+  if (!e || typeof e !== 'object' || depth > MAX_NEST) return e;
+  const out = Array.isArray(e) ? [] : {};
+  for (const k of Object.keys(e)) out[k] = k === 'argPath' ? e[k] : dropSelfArgPaths(e[k], self, depth + 1);
+  if (!Array.isArray(out) && out.argPath === self) delete out.argPath;
+  return out;
+}
+const canonStatementAst = (s) => `${s.target}=${canonExpr(dropSelfArgPaths(s.expr, s.path))}@${s.path}`;
+
 /** Canonical form of one statement string. */
 export function canonicalStatement(src) {
-  const s = parseStatement(src);
-  return `${s.target}=${canonExpr(s.expr)}@${s.path}`;
+  return canonStatementAst(parseStatement(src));
 }
 
 /** Canonical form of a unit's numeric_expression ("none" | string | string[]): sorted canonical statements joined by "\n". */
 export function canonicalExpression(numericExpression) {
   const sts = parseExpression(numericExpression);
   if (!sts.length) return 'none';
-  return [...new Set(sts.map((s) => `${s.target}=${canonExpr(s.expr)}@${s.path}`))].sort(byStr).join('\n');
+  return [...new Set(sts.map(canonStatementAst))].sort(byStr).join('\n');
 }
 
 /** Canonical form of a unit's `condition`: "none" | {tokens|token, if}. Tokens are a conjunction (a set) → sorted. */

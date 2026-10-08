@@ -113,6 +113,57 @@ describe('G-AGREE canonical comparison (Spec 68 §7.4, Spec 69 M-17 notes)', () 
     expect(field('instrument', { kind: 'former_bylaw', citation: 'By-law 438-86' }, { kind: 'former_bylaw', citation: 'Toronto By-law 438-86, s.6' })).toBe(true);
     expect(field('application', { zones: ['RD'], building_types: ['any'], evidence: { RD: 'in the RD zone' } }, { zones: ['RD'], building_types: ['any'], evidence: { RD: 'RD zone' } })).toBe(true);
   });
+  // A1 canonical rules (2026-10-07, A1 agreement analysis): each equates two spellings of ONE meaning, stated as a rule
+  it('C1: a threshold token implied by the condition.if (vocab lot_condition[t].reads) is canonical, keyed or not', () => {
+    // 10.20.30.10(1)(A) "if a zone label includes the letter "a"" — label_value reads `label`
+    expect(field('condition', { tokens: [], if: 'labelled(a)' }, { tokens: ['label_value'], if: 'labelled(a)' })).toBe(true);
+    // 10.20.30.40(1)(B) — overlay_mapped reads `overlay`
+    expect(field('condition', { tokens: [], if: 'not mapped(LC)' }, { tokens: ['overlay_mapped'], if: 'not mapped(LC)' })).toBe(true);
+    // 10.20.20.100(8)(B) — lot_area_band / frontage_band read lot_area_m2 / lot_frontage_m
+    expect(field('condition', { tokens: ['major_street'], if: 'lot_area_m2 ≥ 2000 m2 and lot_frontage_m ≥ 30 m' }, { tokens: ['major_street', 'lot_area_band', 'frontage_band'], if: 'lot_area_m2 >= 2000 m2 and lot_frontage_m >= 30 m' })).toBe(true);
+    // not implied → still compared: a token with no `if`, a non-threshold token, a different if
+    expect(field('condition', { tokens: ['corner_lot'] }, { tokens: ['corner_lot', 'frontage_band'] })).toBe(false);
+    expect(field('condition', { tokens: [], if: 'labelled(a)' }, { tokens: ['major_street'], if: 'labelled(a)' })).toBe(false);
+    expect(field('condition', { tokens: ['label_value'], if: 'labelled(a)' }, { tokens: ['label_value'], if: 'labelled(f)' })).toBe(false);
+  });
+  it('C2: a presence test of the generated exception_area layer is not keyed (note c(1)), in tokens or in the if', () => {
+    expect(field('condition', { tokens: [], if: 'mapped(exception_area)' }, 'none')).toBe(true);
+    expect(field('condition', { tokens: [], if: 'mapped(HT) and mapped(exception_area)' }, { tokens: ['overlay_mapped'], if: 'mapped(HT)' })).toBe(true);
+    expect(field('condition', { tokens: [], if: 'mapped(HT)' }, 'none')).toBe(false);
+  });
+  it('C3: an argument @path equal to its statement @path is the statement itself (no argument-level displacement can name it apart)', () => {
+    // 10.40.40.1(3)(B)
+    expect(field('numeric_expression', ['dwelling_units_max = max(60.0 units @(3)(B); label(u) @(3)(B)) @(3)(B)'], ['dwelling_units_max = max(60 units; label(u)) @(3)(B)'])).toBe(true);
+    // a sub-clause argument path is information (argument-level displacement, M-48) → still compared
+    expect(field('numeric_expression', ['height_m = max(13.0 m @(1)(D)(i); overlay(HT)) @(1)(D)'], ['height_m = max(13.0 m; overlay(HT)) @(1)(D)'])).toBe(false);
+  });
+  it('C4: a literals_not_expressed literal is identified by its number ("one storey" ≡ "one" ≡ "1", "12" ≡ "12.0 metres")', () => {
+    const e = (literal: string, clause = '(1)', reason = 'count_or_ordinal_not_a_limit') => ({ literal, clause, reason });
+    expect(field('literals_not_expressed', [e('one storey')], [e('one')])).toBe(true);
+    expect(field('literals_not_expressed', [e('12', '(3)(B)', 'threshold_used_in_application')], [e('12.0 metres', '(3)(B)', 'threshold_used_in_application')])).toBe(true);
+    expect(field('literals_not_expressed', [e('12 m', '(3)(B)', 'threshold_used_in_application')], [e('12 m', '(3)(B)', 'cross_reference_value')])).toBe(false);
+    expect(field('literals_not_expressed', [e('12 m', '(3)(B)')], [e('15 m', '(3)(B)')])).toBe(false);
+  });
+  it('C5: a literals_not_expressed entry holding no number the slicer counts (regulation ids, dates, ordinals — brief rule 9) is dropped', () => {
+    const e = (literal: string, reason = 'cross_reference_value') => ({ literal, clause: '(2)', reason });
+    expect(field('literals_not_expressed', [e('900.1.10(3)'), e('June 26, 2025', 'illustrative_or_historic'), e('Section 45'), e('second', 'count_or_ordinal_not_a_limit')], [])).toBe(true);
+    expect(field('literals_not_expressed', [e('900.1.10(3)'), e('45 pct')], [])).toBe(false);
+  });
+  it('C6: application.zones is compared by the zones it admits after the rule-1 chapter loader and rule 0', () => {
+    const app = (zones: string[]) => ({ zones, building_types: ['apartment_building'], lot_conditions: ['major_street'], uses: [] });
+    const f = (unitId: string, a: string[], b: string[]) => AU.canonicalField('application', app(a), { unitId }) === AU.canonicalField('application', app(b), { unitId });
+    // a 10.20 (RD chapter) base unit loads only on RD lots: [] ≡ [RD] ≡ all five (10.20.40.1(5)(B), 10.20.30.40(1)(C))
+    expect(f('10.20.40.1(5)#(5)(B)', [], ['RD'])).toBe(true);
+    expect(f('10.20.30.40(1)#(1)(C)', [], ['R', 'RD', 'RM', 'RS', 'RT'])).toBe(true);
+    // Residential Zone category (10.5, no chapter zone): [] ≡ all five ≡ any — rule 0 admits only those five
+    expect(f('10.5.40.11(2)#whole', [], ['R', 'RD', 'RM', 'RS', 'RT'])).toBe(true);
+    expect(f('10.5.40.11(2)#whole', ['any'], ['R', 'RD', 'RM', 'RS', 'RT'])).toBe(true);
+    // a zone set that excludes the chapter zone, or a proper subset outside a zone chapter, is a different meaning
+    expect(f('10.20.40.1(5)#(5)(B)', ['RS'], ['RD'])).toBe(false);
+    expect(f('10.5.40.11(2)#whole', ['RD'], [])).toBe(false);
+    // without a unit id the projection is the keyed set (no loader context)
+    expect(AU.canonicalField('application', app([])) === AU.canonicalField('application', app(['RD']))).toBe(false);
+  });
   it('an absent field never equals a written "none" ("none" is written, never omitted)', () => {
     expect(field('bound', undefined, 'none')).toBe(false);
   });

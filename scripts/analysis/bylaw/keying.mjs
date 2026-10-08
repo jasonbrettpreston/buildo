@@ -428,9 +428,9 @@ export function buildProv({ shardKey, briefs, seal, bRun, unitShas, model = 'dee
 
 // ---------------------------------------------------------------- the adjudication queue
 
-function canonOrError(field, value) {
+function canonOrError(field, value, unitId) {
   try {
-    return canonicalField(field, value);
+    return canonicalField(field, value, { unitId });
   } catch (err) {
     if (err instanceof DslError) return `!unparseable(${err.code})`;
     throw err;
@@ -463,8 +463,8 @@ export function buildQueue({ batch, agree, slice, shards, adjudications = null }
         field: f,
         clause_path: v ? v.clause_path : null,
         clause_text: v ? lf(v.text).trim() : '(unit no longer in the slice — stale; re-key)',
-        a: { value: a === undefined ? null : a, canonical: canonOrError(f, a) },
-        b: { value: b === undefined ? null : b, canonical: canonOrError(f, b) },
+        a: { value: a === undefined ? null : a, canonical: canonOrError(f, a, unitId) },
+        b: { value: b === undefined ? null : b, canonical: canonOrError(f, b, unitId) },
         keyers: rec.keyers ? { a: rec.keyers.a && rec.keyers.a.id, b: rec.keyers.b && rec.keyers.b.id } : null,
       });
     }
@@ -588,7 +588,7 @@ export function applyAnswers({ queue, answers, adjudicator, on, existing = null 
       continue;
     }
     if (a.answer === 'other') {
-      const c = canonOrError(it.field, a.value);
+      const c = canonOrError(it.field, a.value, it.unit);
       if (c.startsWith('!unparseable')) {
         errors.push(`${id}: the "other" value has no canonical form (${c})`);
         continue;

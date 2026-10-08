@@ -9,7 +9,7 @@
 //
 //   DOUBLE_KEYED / NARROWED_DOUBLE_KEYED / SINGLE_DRAFTED / ROW_SINGLE_DRAFTED / GENERATED_FIELDS   the ownership lists
 //   getField(unit, path)                 dotted-path read ('calculation_handling.status')
-//   canonicalField(path, value)          the canonical projection two drafts are compared on (§7.4)
+//   canonicalField(path, value, {unitId}?)   the canonical projection two drafts are compared on (§7.4; rules C1–C6)
 //   buildIndex(slice)                    rows / units / articles / sections / chapters / clause paths of a slice
 //   unitView(index, unitId)              {row, unit_id, clause_path, text, sha256} — a slice leaf or `<reg>#whole`
 //   resolveClause(row, path)             a statement / literal clause path → the row's clause (or null)
@@ -29,9 +29,18 @@
 
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
-import { canonicalCondition, canonicalExpression } from './dsl.mjs';
+import { canonCond, canonicalExpression, parseCond } from './dsl.mjs';
+import { chapterZone } from './evaluate.mjs';
 import { extractLiterals } from './slice.mjs';
+import { scanNumbers } from './text.mjs';
+
+/** vocab.json (read at load, like text.mjs reads `slicer`): lot_condition threshold tokens + what they read (rule C1). */
+const VOCAB = createRequire(import.meta.url)('../../seeds/bylaw/vocab.json');
+const LOT_CONDITION = VOCAB.lot_condition || {};
+/** vocab.json zone: the zones rule 0 evaluates (evaluate.mjs ctx zones), read by rule C6. */
+const ZONES = Object.freeze([...(VOCAB.zone || [])]);
 
 export const AUTHORED_REL = 'scripts/seeds/bylaw/authored';
 export const AUTHORED_SCHEMA = 'bylaw-authored-v1';
@@ -130,13 +139,6 @@ const ws = (s) => String(s).replace(/\s+/g, ' ').trim();
 /** JSON with sorted keys: a projection never depends on the key order a keyer typed. */
 export const sortedJson = (v) => JSON.stringify(v, (k, x) => (isMap(x) ? Object.fromEntries(Object.keys(x).sort(cmpStr).map((q) => [q, x[q]])) : x));
 
-/** Normalized literal "12.0 metres" / "12 m" / "one" → "12m" / "1"; anything unparseable → its trimmed text. */
-export function literalKey(raw) {
-  const lits = extractLiterals(` ${String(raw).trim()} `);
-  if (lits.length === 1) return `${lits[0].value}${lits[0].unit || ''}`;
-  return ws(raw).toLowerCase();
-}
-
 function canonRanks(v) {
   if (v === undefined || v === null || v === 'none') return 'none';
   if (Array.isArray(v)) return [...v].map(String).sort(cmpStr).join(',');
@@ -150,26 +152,98 @@ function canonInstrument(v) {
   const bylaw = /\d{1,5}-\d{2,4}/.exec(String(v.citation ?? ''));
   return `${v.kind ?? '?'}|${bylaw ? bylaw[0] : ws(v.citation ?? '').toLowerCase()}`;
 }
-function canonApplication(v) {
+/**
+ * Rule C6: zones are compared by the zones they admit (Spec 68 §7.5): rule 0 evaluates only lots in a vocab.zone zone,
+ * so [] ≡ ["any"] ≡ all of vocab.zone; rule 1 loads a base unit of a zone chapter (10.20 → RD, evaluate.mjs chapterZone)
+ * only for lots of that zone, so there the projection is whether the set admits the chapter zone. Without a unit id the
+ * keyed set is compared as written.
+ */
+function canonZones(zones, unitId) {
+  const zs = sortedStrs(zones);
+  if (unitId === undefined || unitId === null) return zs.join(',');
+  const admitted = !zs.length || zs.includes('any') ? [...ZONES].sort(cmpStr) : zs;
+  const z = chapterZone(splitUnitId(unitId).reg);
+  if (z) return admitted.includes(z) ? z : `¬${z}`;
+  return admitted.join(',');
+}
+function canonApplication(v, unitId) {
   if (v === undefined || v === null || v === 'none') return 'none';
   if (!isMap(v)) return `?${ws(JSON.stringify(v))}`;
   const lc = sortedStrs(v.lot_conditions).filter((t) => !GENERATED_CONDITION_TOKENS.includes(t));
   // evidence phrases are free text: checked by G-CLAUSE, never compared
-  return `z[${sortedStrs(v.zones)}]t[${sortedStrs(v.building_types)}]c[${lc}]u[${sortedStrs(v.uses)}]`;
+  return `z[${canonZones(v.zones, unitId)}]t[${sortedStrs(v.building_types)}]c[${lc}]u[${sortedStrs(v.uses)}]`;
+}
+/** Rule C2: a presence test of a generated layer (`mapped(exception_area)`) is not keyed (note c(1)) → removed. */
+function stripGeneratedTests(c) {
+  if (!c) return c;
+  if (c.type === 'mapped' && GENERATED_CONDITION_TOKENS.includes(c.code)) return null;
+  if (c.type === 'not') { const x = stripGeneratedTests(c.x); return x ? { ...c, x } : null; }
+  if (c.type === 'and' || c.type === 'or') {
+    const xs = c.xs.map(stripGeneratedTests).filter(Boolean);
+    return xs.length === 0 ? null : xs.length === 1 ? xs[0] : { ...c, xs };
+  }
+  return c;
+}
+/** What a condition reads, in vocab lot_condition `reads` terms: variables, `label` (label()/labelled()), `overlay` (overlay()/mapped()). */
+function condReads(node, out = new Set()) {
+  if (!node || typeof node !== 'object') return out;
+  if (node.type === 'var') out.add(node.name);
+  if (node.type === 'existing') out.add(node.var);
+  if (node.type === 'label' || node.type === 'labelled') out.add('label');
+  if (node.type === 'overlay' || node.type === 'mapped') out.add('overlay');
+  for (const k of Object.keys(node)) {
+    const x = node[k];
+    if (Array.isArray(x)) for (const y of x) condReads(y, out);
+    else if (x && typeof x === 'object') condReads(x, out);
+  }
+  return out;
+}
+/**
+ * Rule C1: the threshold tokens a condition.if implies — every vocab lot_condition with `threshold: true` whose `reads`
+ * the `if` reads (label_value ← labelled()/label(), overlay_mapped ← mapped()/overlay(), frontage_band ← lot_frontage_m …).
+ * The token set is compared as keyed tokens ∪ implied tokens, so writing an implied token or leaving it out is one meaning.
+ */
+function impliedThresholdTokens(cond) {
+  const reads = condReads(cond);
+  return Object.entries(LOT_CONDITION).filter(([, e]) => e && e.threshold && (e.reads || []).some((r) => reads.has(r))).map(([t]) => t);
 }
 function canonCondition(v) {
   if (v === undefined || v === null || v === 'none') return 'none';
   const raw = v.tokens ?? v.token ?? [];
-  const tokens = (Array.isArray(raw) ? raw : [raw]).filter((t) => !GENERATED_CONDITION_TOKENS.includes(t));
-  const stripped = { ...v, tokens };
-  delete stripped.token;
-  if (!tokens.length && (!v.if || v.if === 'none')) return 'none';
-  return canonicalCondition(stripped);
+  const tokens = new Set((Array.isArray(raw) ? raw : [raw]).filter((t) => t && t !== 'none' && !GENERATED_CONDITION_TOKENS.includes(t)));
+  let iff = 'none';
+  if (v.if && v.if !== 'none') {
+    const c = stripGeneratedTests(parseCond(v.if)); // throws DslError when unparseable (the caller counts a draft failure)
+    if (c) {
+      iff = canonCond(c);
+      for (const t of impliedThresholdTokens(c)) tokens.add(t);
+    }
+  }
+  if (!tokens.size && iff === 'none') return 'none';
+  return `[${[...tokens].sort(cmpStr).join(',')}]if:${iff}`;
+}
+/**
+ * Rules C4 + C5: a literals_not_expressed literal is identified by its number (the slicer's value; "one storey" ≡ "one"
+ * ≡ "1", "12" ≡ "12.0 metres" — the unit is the clause's, not the keyer's); an entry in which the slicer counts no number
+ * (a regulation id, by-law number, date, ordinal word — the classes brief rule 9 says to ignore) lists nothing and is
+ * dropped. G-CLAUSE still checks every listed entry of the agreed draft against its clause.
+ */
+function lneLiteralId(raw) {
+  const s = ` ${String(raw ?? '').trim()} `;
+  const lits = extractLiterals(s);
+  if (lits.length === 1) return String(lits[0].value);
+  if (!lits.length && !scanNumbers(s, lits).uncovered.length) return null;
+  return ws(raw).toLowerCase();
 }
 function canonLne(v) {
   if (v === undefined || v === null || v === 'none') return '[]';
   if (!Array.isArray(v)) return `?${ws(JSON.stringify(v))}`;
-  return `[${v.map((x) => `${literalKey(x && x.literal)}@${String((x && x.clause) ?? '').replace(/\s+/g, '')}:${x && x.reason}`).sort(cmpStr).join(';')}]`;
+  const keys = [];
+  for (const x of v) {
+    const id = lneLiteralId(x && x.literal);
+    if (id !== null) keys.push(`${id}@${String((x && x.clause) ?? '').replace(/\s+/g, '')}:${x && x.reason}`);
+  }
+  return `[${keys.sort(cmpStr).join(';')}]`;
 }
 function canonAppliesTo(v) {
   if (v === undefined || v === null || v === 'none') return 'none';
@@ -180,14 +254,14 @@ function canonAppliesTo(v) {
 /**
  * The canonical projection of one ⧉ field (Spec 68 §7.4: drafts agree when their canonical forms are equal).
  * Throws DslError for an unparseable numeric_expression / condition.if (the caller counts a draft failure).
- * `undefined` (field absent) → '∅', never equal to a written value.
+ * `undefined` (field absent) → '∅', never equal to a written value. `ctx.unitId` (the unit compared) lets rule C6 apply.
  */
-export function canonicalField(p, value) {
+export function canonicalField(p, value, ctx = {}) {
   if (value === undefined) return '∅';
   switch (p) {
     case 'numeric_expression': return canonicalExpression(value);
     case 'condition': return canonCondition(value);
-    case 'application': return canonApplication(value);
+    case 'application': return canonApplication(value, ctx && ctx.unitId);
     case 'literals_not_expressed': return canonLne(value);
     case 'instrument': return canonInstrument(value);
     case 'ranks_layers': return canonRanks(value);
