@@ -276,6 +276,10 @@ dispatch.
    step 5 have completed. Note in the run record that disk stays at its grown size by
    design (Supabase compute can downgrade; storage cannot shrink).
 
+## 3c-bis. enrich_parcels: a repeated `deferred_to_full` means a `--full` is owed (2026-10-06)
+
+An incremental (non-`--full`) `enrich_parcels` run whose combined pre-transaction scope reaches `enrich_parcels_defer_threshold_rows` (default 50,000) makes ZERO writes and ends with status and terminal `deferred_to_full`; its `records_meta.deferred` and the INFO row `enrich_parcels_deferred_to_full` carry the reason (combined scope vs threshold, per pass), and the INFO row `zoning_change_scope` says whether a zoning load caused it (Spec 65 §2 step 6). Two causes are expected: a zoning change since the last completed run (pass-1 scope becomes every parcel), or a mass geom rewrite (migration 242's trigger NULLs the stamps). Both heal on the next `--full` (`node scripts/enrich-parcels.js --full`, ≈64-71 min locally; the `sources` chain already passes `--full`). A `deferred_to_full` that repeats after a `--full` completed is a defect — check `zoning_stamp_null_count` on that `--full` run.
+
 ## 3d. Local DB: shared-memory exhaustion (`sys_dsm_capacity`, Spec 30 §4.1a)
 
 **Symptom:** a local chain step dies mid-query with `could not resize shared memory segment

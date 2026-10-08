@@ -109,6 +109,8 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // (ON CONFLICT / existence-checked), never torn down (harmless baseline state
   // other db.test.ts files in a full-suite run may also rely on).
   // ---------------------------------------------------------------------
+  let seededOwnRunId: number | null = null;
+
   async function seedGlobalPreconditions(): Promise<void> {
     const zoningProducer = await pool!.query(
       `SELECT 1 FROM pipeline_runs WHERE pipeline = 'sources:load_zoning' AND status = 'completed'
@@ -129,6 +131,16 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
         `INSERT INTO neighbourhood_build_norms (neighbourhood_id, structure_family) VALUES (NULL, 'all')`,
       );
     }
+
+    // zoning-change-scope WF3 (2026-10-06, [F-17]) — the producer row above counts as a zoning load
+    // that wrote; seed ONE completed own run after it so pass 1's incremental scope stays NULL-stamp
+    // only (hermetic ⑦a: scope_count exactly 1,001). Removed in afterAll by id.
+    const ownRun = await pool!.query(
+      `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status, records_meta)
+       VALUES ('enrich_parcels', NOW() + interval '1 second', NOW() + interval '2 seconds', 'completed', '{}'::jsonb)
+       RETURNING id`,
+    );
+    seededOwnRunId = ownRun.rows[0].id as number;
   }
 
   // Small, REALISTICALLY-SIZED polygon (~30m x 30m, a plausible urban lot) far out
@@ -212,6 +224,7 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   afterEach(clearFixtures, 30_000);
   afterAll(async () => {
     if (!pool) return;
+    if (seededOwnRunId != null) await pool.query('DELETE FROM pipeline_runs WHERE id = $1', [seededOwnRunId]);
     await pool.query(`DELETE FROM logic_variables WHERE variable_key = ANY($1::text[])`, [TOUCHED_LOGIC_VAR_KEYS]);
     if (savedVars.length > 0) {
       await pool.query(
@@ -271,6 +284,92 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
     }
     return { status: r.status, stdout, stderr: r.stderr ?? '', summary };
   }
+
+  // FLEET-2 input guard (scripts/lib/step/index.js measureInputGuards, inputs.expect_nonempty +
+  // on_missing:"halt"): every declared read table must be non-empty or the child HALTS before the
+  // defer decision. The testcontainer leaves 9 of them empty, so each child-process case seeds ONE
+  // marker row per EMPTY table (sentinel keys, far from the DEFER fixture) and removes exactly those
+  // rows after. parcel_buildings links an EXISTING fixture parcel (default ${FX}DEFER1), so the seed
+  // adds no parcel to any scope.
+  const INPUT_SENTINEL_INT = 991_000_001;
+  const INPUT_GEOM = JSON.stringify({ type: 'Polygon', coordinates: [[[-60, 50], [-59.999, 50], [-59.999, 50.001], [-60, 50.001], [-60, 50]]] });
+  let seededInputTables: string[] = [];
+  let seededStoreyNormsNbId: number | null = null;
+  let seededLinkParcelId: string | null = null;
+  async function tableEmpty(t: string): Promise<boolean> {
+    const r = await pool!.query(`SELECT 1 FROM ${t} LIMIT 1`);
+    return r.rowCount === 0;
+  }
+  async function seedZoneRow(t: string, cols: string, vals: unknown[]): Promise<void> {
+    const n = vals.length + 1;
+    await pool!.query(
+      `INSERT INTO ${t} (${cols}, geometry, geom) VALUES (${vals.map((_, i) => `$${i + 1}`).join(',')}, $${n}::jsonb, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($${n}::text),4326)))`,
+      [...vals, INPUT_GEOM],
+    );
+  }
+  async function seedNonEmptyInputs(linkParcelId: string = `${FX}DEFER1`): Promise<void> {
+    if (await tableEmpty('zoning_bylaw_areas')) {
+      await seedZoneRow('zoning_bylaw_areas', 'source_id, zn_zone, zn_string', [INPUT_SENTINEL_INT, 'RD', 'RD (input-guard seed)']);
+      seededInputTables.push('zoning_bylaw_areas');
+    }
+    if (await tableEmpty('zoning_height_overlay')) {
+      await seedZoneRow('zoning_height_overlay', 'source_id', [INPUT_SENTINEL_INT]);
+      seededInputTables.push('zoning_height_overlay');
+    }
+    if (await tableEmpty('zoning_lot_coverage_overlay')) {
+      await seedZoneRow('zoning_lot_coverage_overlay', 'source_id', [INPUT_SENTINEL_INT]);
+      seededInputTables.push('zoning_lot_coverage_overlay');
+    }
+    if (await tableEmpty('building_footprints')) {
+      await insBuildingFootprint(`${FX}INPUTBLDG`);
+      seededInputTables.push('building_footprints');
+    }
+    if (await tableEmpty('parcel_buildings')) {
+      const p = await pool!.query(`SELECT id FROM parcels WHERE parcel_id = $1`, [linkParcelId]);
+      const b = await pool!.query(`SELECT id FROM building_footprints ORDER BY id LIMIT 1`);
+      await linkParcelBuilding(p.rows[0].id as number, b.rows[0].id as number, new Date());
+      seededLinkParcelId = linkParcelId;
+      seededInputTables.push('parcel_buildings');
+    }
+    if (await tableEmpty('neighbourhoods')) {
+      await pool!.query(`INSERT INTO neighbourhoods (neighbourhood_id, name) VALUES ($1, $2)`, [INPUT_SENTINEL_INT, `${FX}NBHD`]);
+      seededInputTables.push('neighbourhoods');
+    }
+    if (await tableEmpty('neighbourhood_storey_norms')) {
+      // FK: neighbourhood_storey_norms.neighbourhood_id REFERENCES neighbourhoods(id) — the serial PK,
+      // not the business key neighbourhoods.neighbourhood_id.
+      const nb = await pool!.query(`SELECT id FROM neighbourhoods ORDER BY id LIMIT 1`);
+      await pool!.query(`INSERT INTO neighbourhood_storey_norms (neighbourhood_id, sample_count) VALUES ($1, 0)`, [nb.rows[0].id]);
+      seededStoreyNormsNbId = nb.rows[0].id as number;
+      seededInputTables.push('neighbourhood_storey_norms');
+    }
+    if (await tableEmpty('permits')) {
+      await pool!.query(`INSERT INTO permits (permit_num, revision_num) VALUES ($1, '00')`, [`${FX}PERMIT`]);
+      seededInputTables.push('permits');
+    }
+    if (await tableEmpty('coa_applications')) {
+      await pool!.query(`INSERT INTO coa_applications (application_number) VALUES ($1)`, [`${FX}COA`]);
+      seededInputTables.push('coa_applications');
+    }
+  }
+  async function clearSeededInputs(): Promise<void> {
+    const has = (t: string) => seededInputTables.includes(t);
+    if (has('parcel_buildings')) {
+      await pool!.query(`DELETE FROM parcel_buildings WHERE parcel_id IN (SELECT id FROM parcels WHERE parcel_id = $1)`, [seededLinkParcelId]);
+    }
+    if (has('building_footprints')) await pool!.query(`DELETE FROM building_footprints WHERE source_id = $1`, [`${FX}INPUTBLDG`]);
+    if (has('neighbourhood_storey_norms')) await pool!.query(`DELETE FROM neighbourhood_storey_norms WHERE neighbourhood_id = $1`, [seededStoreyNormsNbId]);
+    if (has('neighbourhoods')) await pool!.query(`DELETE FROM neighbourhoods WHERE neighbourhood_id = $1`, [INPUT_SENTINEL_INT]);
+    if (has('permits')) await pool!.query(`DELETE FROM permits WHERE permit_num = $1`, [`${FX}PERMIT`]);
+    if (has('coa_applications')) await pool!.query(`DELETE FROM coa_applications WHERE application_number = $1`, [`${FX}COA`]);
+    for (const t of ['zoning_bylaw_areas', 'zoning_height_overlay', 'zoning_lot_coverage_overlay']) {
+      if (has(t)) await pool!.query(`DELETE FROM ${t} WHERE source_id = $1`, [INPUT_SENTINEL_INT]);
+    }
+    seededInputTables = [];
+    seededStoreyNormsNbId = null;
+    seededLinkParcelId = null;
+  }
+  afterEach(clearSeededInputs, 30_000);
 
   // =========================================================================
   // ① — Massing gate NULL-arm / linked_at scope-builder (ⓔ, net-new export)
@@ -375,6 +474,8 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
       async () => {
         // "Run A" — crashed, leaving unconsumed scope rows for a real parcel.
         const pid = await insParcel(FX_PARCEL_ID(10), farBox(10));
+        // FLEET-2 inputs_nonempty halt guard — satisfied with the shared marker seed (links this fixture parcel).
+        await seedNonEmptyInputs(FX_PARCEL_ID(10));
         const crashedRun = await pool!.query(
           `INSERT INTO pipeline_runs (pipeline, started_at, completed_at, status)
            VALUES ('${FX}:enrich_parcels', NOW() - interval '1 hour', NOW() - interval '55 minutes', 'failed')
@@ -496,82 +597,54 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
   // =========================================================================
   // ⑦a — Citywide scope → clean defer marker (BEHAVIORAL RED, child-process)
   // =========================================================================
-  describe('⑦a citywide-scope defer marker (BEHAVIORAL RED, child-process pattern per v6.1 X-5)', () => {
-    // WF3 C5 (`.cursor/wf3_test_db_suite_red_active_task.md`, 2026-09-21) — PREMISE-VERIFIED,
-    // GENUINE PRODUCT DEFECT (Outcome B). Pinned per the plan's own routing rule: "do NOT fix it
-    // silently — pin it (it.fails + defect-ledger id + HIGH followup with the evidence) and
-    // report; the orchestrator will rule." Defect ledger: DEFECT-EP-D19-DEFER-SILENT (row filed
-    // in docs/reports/review_followups.md, HIGH).
-    //
-    // GROUND TRUTH, measured via a direct probe against the live fixture (this test's own DB
-    // state, same pool, immediately before spawning the child):
-    //   `compute.computeDeferScope(pool, 1000)` -> `{scope_count: 1001, threshold: 1000, ratio:
-    //   1, perPass: {pass1: 1001, massing: 1001, decision: 0, backlog: 0}}`. The threshold READS
-    //   CORRECTLY (config.enrich_parcels_defer_threshold_rows resolved to the seeded 1000 — the
-    //   child's own records_meta.config confirms it), scope_count genuinely exceeds it, so
-    //   runEnrichPhase's `if (scope.scope_count >= deferThreshold)` (scripts/lib/step/index.js:
-    //   3123) DOES fire and the run DOES take the early-return `{deferred: true, matched: {
-    //   defer_scope: scope, enrich_parcels_duration_ms }, ...}` path (confirmed: the measured
-    //   child run's own `duration_ms` in records_meta came from exactly this branch's
-    //   `Date.now() - t0`, and zero enrichment counters — zone_class_pct, parcels_enriched_count,
-    //   etc. — appear anywhere in its output, which only happens when no pass ran).
-    //
-    //   The defect: `scripts/lib/compute/enrich-parcels.js`'s `compute(ctx)` (the archetype-
-    //   generic checks dispatcher `runWithPool` calls to build `records_meta`, lines ~2245-2257)
-    //   hardcodes the list of `ctx.matched.*` fields it copies into the emitted summary —
-    //   duration_ms, zone_class_pct, total_parcels_scanned, records_updated_aggregate, and five
-    //   `*_enriched_count` fields — and `defer_scope` (with its `{scope_count, threshold, ratio}`
-    //   payload) is NOT one of them. The defer decision is computed correctly and threaded into
-    //   `ctx.matched.defer_scope` by the runner, and then silently dropped when the compute
-    //   module builds its own records_meta — an operator reading a deferred run's PIPELINE_SUMMARY
-    //   sees a near-empty, PASS-shaped result (verdict PASS, terminal "enriched_full" — the
-    //   descriptor declares no defer-specific terminal, so `selectTerminal` falls back to the
-    //   same id a normal completion uses) with ZERO indication the run deferred and wrote
-    //   nothing. `status = RUN_STATUS.DEFERRED_TO_FULL` (index.js:5027) is stamped on the
-    //   `pipeline_runs.status` DB COLUMN only (via `finalizeLedgerRow`), never into records_meta —
-    //   so records_meta genuinely carries no trace under ANY key. This is the exact "nothing
-    //   hidden" (Spec 48 §3.6) failure class the estate's own doctrine exists to catch: a
-    //   real state (deferred, zero writes) that is observable ONLY by a side-channel DB column
-    //   query, not from the run's own emitted summary.
-    //
-    // NOT a test/seeding-drift defect: the threshold name matches (`enrich_parcels_defer_
-    // threshold_rows`, exactly what `execution.enrich_hooks.defer_scope.threshold_from_config`
-    // declares), it resolves to the seeded value, and the scope count genuinely exceeds it —
-    // every premise the plan asked to verify before assuming a product bug holds.
-    it.fails(
-      'a scope that exceeds a (seeded, low) pass-scope threshold produces a clean defer marker ' +
-        '{step, scope_count, threshold, ratio} on stdout and the child exits 0 — PINNED PRODUCT DEFECT ' +
-        '(DEFECT-EP-D19-DEFER-SILENT): the defer decision IS made correctly but compute()\'s hardcoded ' +
-        'records_meta field list drops ctx.matched.defer_scope, so no trace of it reaches PIPELINE_SUMMARY',
+  describe('⑦a citywide-scope defer marker (behavioural lock, child-process pattern per v6.1 X-5)', () => {
+    // EP-D19 — CLOSED by the defer-observability WF3 (2026-10-06, HIGH). This case was an
+    // it.fails pin: a deferred run recorded pipeline_runs.status = deferred_to_full but its own
+    // record said otherwise — compute()'s hand-listed records_meta dropped ctx.matched.defer_scope,
+    // the descriptor declared no deferred_to_full terminal (selectTerminal fell back to
+    // enriched_full), and no when:"pre" check survived the runner's defer narrowing. It is now an
+    // exact-contract lock on the child's PIPELINE_SUMMARY AND its own pipeline_runs row.
+    // seedNonEmptyInputs() exists because the FLEET-2 inputs_nonempty halt fires before the defer
+    // decision on an empty testcontainer.
+    it(
+      'EP-D19 (closed 2026-10-06) — a deferred child run declares itself: terminal deferred_to_full, ' +
+        'records_meta.deferred {step, scope_count, threshold, ratio}, an INFO enrich_parcels_deferred_to_full ' +
+        'audit row naming the reason, 0/0/0 counters, and exactly one deferred_to_full ledger row',
       async () => {
-        // Seed the threshold at its LEGAL FLOOR. The registry bounds
-        // (seeds/logic_variables.json: min 1000, max 500000) are mirrored by
-        // enrich-parcels.js's Zod schema, which FAILS LOUDLY on out-of-bounds
-        // operator overrides — the original fixture's threshold=1 was therefore
-        // structurally illegal (the child crashed at validation, never reaching
-        // the defer check). Fixture corrected 2026-08-14: floor threshold +
-        // a generate_series scope that exceeds it.
         await seedDeferScenario();
+        await seedNonEmptyInputs();
+        const maxBefore = Number((await pool!.query('SELECT COALESCE(max(id),0)::int AS m FROM pipeline_runs')).rows[0].m);
+        try {
+          const r = runEnrichParcels();
+          expect(r.status, `enrich-parcels.js child did not exit 0.\nstderr:\n${r.stderr}`).toBe(0);
 
-        const r = runEnrichParcels();
-        expect(r.status, `enrich-parcels.js child did not exit 0.\nstderr:\n${r.stderr}`).toBe(0);
+          const meta = r.summary?.records_meta as Record<string, unknown> | undefined;
+          expect(meta?.terminal, `records_meta: ${JSON.stringify(meta)}`).toBe('deferred_to_full');
+          expect(meta?.deferred).toEqual({ step: 'enrich_parcels', scope_count: 1001, threshold: 1000, ratio: 1 });
 
-        const meta = r.summary?.records_meta as Record<string, unknown> | undefined;
-        const auditRows =
-          (meta?.audit_table as { rows?: Array<{ metric: string; value: unknown }> } | undefined)?.rows ?? [];
-        // THE red-first assertion. Search both records_meta (a top-level defer_marker /
-        // step_completeness.deferred_at key) and the audit rows for ANY trace of a defer
-        // decision — today there is none, under any shape.
-        const hasDeferMarker =
-          meta != null &&
-          (JSON.stringify(meta).includes('deferred_to_full') ||
-            JSON.stringify(meta).includes('scope_count') ||
-            auditRows.some((row) => String(row.metric).includes('defer')));
-        expect(
-          hasDeferMarker,
-          `expected a defer marker {step, scope_count, threshold, ratio} somewhere in records_meta; ` +
-            `got: ${JSON.stringify(meta)}`,
-        ).toBe(true);
+          const auditRows =
+            (meta?.audit_table as { rows?: Array<{ metric: string; value: unknown; status: string }> } | undefined)?.rows ?? [];
+          const deferRow = auditRows.find((row) => row.metric === 'enrich_parcels_deferred_to_full');
+          expect(deferRow, `audit rows: ${JSON.stringify(auditRows)}`).toBeDefined();
+          expect(deferRow?.status).toBe('INFO');
+          expect(String(deferRow?.value)).toContain('1001 >= threshold 1000');
+
+          const led = await pool!.query(
+            `SELECT id, status, records_meta->>'terminal' AS terminal, records_total, records_new, records_updated
+               FROM pipeline_runs WHERE pipeline = 'enrich_parcels' AND id > $1`,
+            [maxBefore],
+          );
+          expect(led.rows).toHaveLength(1);
+          const row = led.rows[0];
+          expect(row.status).toBe('deferred_to_full');
+          expect(row.terminal).toBe('deferred_to_full');
+          for (const k of ['records_total', 'records_new', 'records_updated']) {
+            expect(row[k], `${k} must be a truthful 0 on a deferred run, never NULL`).not.toBeNull();
+            expect(Number(row[k]), k).toBe(0);
+          }
+        } finally {
+          await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline = 'enrich_parcels' AND id > $1`, [maxBefore]);
+        }
       },
       60_000,
     );
@@ -579,37 +652,49 @@ describe.skipIf(!dbAvailable())('enrich-parcels — B2 incremental (massing wate
     it(
       'B-1 pin, asserted on the SAME scenario as the primary red above — zero watermark stamps are ' +
         'written by a deferring run (pre-txn defer decisions only; passes 2-4 must never see a partially ' +
-        'stamped pass-1 watermark). Holds VACUOUSLY today (nothing stamps massing_enriched_at at all yet) ' +
-        '— documented as a post-impl lock, not evidence of correct defer behavior today.',
+        'stamped pass-1 watermark). Non-vacuous since the FLEET-2 input guard is satisfied (seedNonEmptyInputs) — ' +
+        'the child genuinely defers.',
       async () => {
         await seedDeferScenario(); // clearFixtures wiped the primary's — reseed or the child full-runs
+        await seedNonEmptyInputs();
         const pid = await insParcel(FX_PARCEL_ID(30), farBox(30));
         const bid = await insBuildingFootprint(`${FX}BLDG30`);
         await linkParcelBuilding(pid, bid, new Date());
 
-        const r = runEnrichParcels();
-        expect(r.status).toBe(0);
+        const maxBefore = Number((await pool!.query('SELECT COALESCE(max(id),0)::int AS m FROM pipeline_runs')).rows[0].m);
+        try {
+          const r = runEnrichParcels();
+          expect(r.status).toBe(0);
 
-        const after = await pool!.query(`SELECT massing_enriched_at FROM parcels WHERE id = $1`, [pid]);
-        expect(after.rows[0].massing_enriched_at).toBeNull();
+          const after = await pool!.query(`SELECT massing_enriched_at FROM parcels WHERE id = $1`, [pid]);
+          expect(after.rows[0].massing_enriched_at).toBeNull();
+        } finally {
+          await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline = 'enrich_parcels' AND id > $1`, [maxBefore]);
+        }
       },
       60_000,
     );
 
     it(
       'B-1 pin — zero enrich_parcels_pass3_scope rows are written by a deferring run. ' +
-        'Holds VACUOUSLY today for the same reason as the watermark check above.',
+        'Non-vacuous since the FLEET-2 input guard is satisfied (seedNonEmptyInputs) — the child genuinely defers.',
       async () => {
         await seedDeferScenario(); // clearFixtures wiped the primary's — reseed or the child full-runs
+        await seedNonEmptyInputs();
         const pid = await insParcel(FX_PARCEL_ID(31), farBox(31));
         const bid = await insBuildingFootprint(`${FX}BLDG31`);
         await linkParcelBuilding(pid, bid, new Date());
 
         const before = await pool!.query(`SELECT count(*)::int AS n FROM enrich_parcels_pass3_scope`);
-        const r = runEnrichParcels();
-        expect(r.status).toBe(0);
-        const after = await pool!.query(`SELECT count(*)::int AS n FROM enrich_parcels_pass3_scope`);
-        expect(after.rows[0].n).toBe(before.rows[0].n);
+        const maxBefore = Number((await pool!.query('SELECT COALESCE(max(id),0)::int AS m FROM pipeline_runs')).rows[0].m);
+        try {
+          const r = runEnrichParcels();
+          expect(r.status).toBe(0);
+          const after = await pool!.query(`SELECT count(*)::int AS n FROM enrich_parcels_pass3_scope`);
+          expect(after.rows[0].n).toBe(before.rows[0].n);
+        } finally {
+          await pool!.query(`DELETE FROM pipeline_runs WHERE pipeline = 'enrich_parcels' AND id > $1`, [maxBefore]);
+        }
       },
       60_000,
     );

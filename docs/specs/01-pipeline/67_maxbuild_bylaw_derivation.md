@@ -148,6 +148,8 @@ Enumerated mechanically: the 29 `MAX_BUILD_COLS` (formula = the expression `buil
 
 **Note — `bylaw_standard_setback_m` (CKAN `STAND_SET`), 2026-09-29 (CRITICAL finding, pending ruling; §8 KFM-14).** The table above traces it as the source of the front setback. The City's data dictionary says otherwise: STAND_SET = (Set of standards referred to in the Commercial-Residential mixed use zone, based on three different design typologies. The "standard set" number is prefaced by the letters "SS" in the zone label.) [H28]; Chapter 40 makes it a selector of five Development Standard Sets (H26/H27). Values are only 1/2/3; 2,341 residential parcels carry it only through MAX aggregation from edge-touching CR polygons. The field is kept; the proposed reading is in the plan's "Scope additions" (c).
 
+**Dated hand note, 2026-10-06 (E1 WF3, Spec 69 R-ZV / M-42).** The generated §3.1 rows above still read `precedence rule max` / `min` for the 9 base parameters (`bylaw_max_units`, `bylaw_max_density`, `bylaw_pct_*_max` ×4, `bylaw_min_frontage_m`, `bylaw_min_area_sqm`, `bylaw_standard_setback_m`). Since E1 all nine are `dominant` (`scripts/lib/zoning-precedence.js`) and the base `coverage_max_pct` is taken from the dominant row too. The generated tables are left for McBylaw Phase 1 to regenerate (`spec67-gen` cannot run against a worktree — operator Q4).
+
 ### 3.2 Intermediate terms of the as-built pass *(generated)*
 
 | Term | CTE in `buildMaxBuildSql` | Generated SQL (JS-fallback defaults) |
@@ -2408,8 +2410,10 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
 - **KFM-10 — `STAND_SET` semantics.** Whether `STAND_SET` encodes a Chapter 900 front-setback exception (and so outranks averaging) is an inference from schema position (plan NF-1 caveat), not a verbatim rule.
 - **KFM-11 — quotes that are not verbatim.** 12 quoted strings in the plan/report fail verification (Appendix A) — elided `[ By-law … ]` notes, single-for-double quotes, a paraphrased Major-Street definition (C12), a merged "front/side" 75 % rule (C18), a period inserted into a section heading (C55), and the report's own emphasis phrases (C58/C59). They must not be re-used as quotes. (Separately, the RD coverage clause on the City page itself reads "if a lot in is in an area" — G7 reproduces it as published.)
 - **KFM-12 — zone-label FSI never applied (plan Scope additions (a), EF-23).** `fsi_cap` reads `bylaw_max_fsi` (CKAN `FSI_TOTAL`); the label `d` (the FSI by G8/H23–H25) is in `bylaw_max_density` on 119,386 RD/RS/RT/RM parcels; 82,444 GFAs would drop (8,511,554 m²). `bylaw_max_density` is MIN-sourced — a fix must source it dominant (DEC-1).
+  - *Dated note, 2026-10-06 (E1):* `bylaw_max_density` is now sourced from the dominant row (13,376 parcels changed value); EF-23 itself is not decided here.
 - **KFM-13 — garden-suite permission is not §150.7.50.10 (plan Scope additions (b), EF-24).** The 30 %-of-lot greenspace test passes suites that the by-law's 50 % / 25 % soft share of the area behind the house rejects: 214,586 of 279,243 at envelope length (41 Derwyn Rd: ≤ 41.73 m² vs 60 m²).
 - **KFM-14 — STAND_SET is a Development Standard Set number, not metres (plan Scope additions (c), EF-25/EF-26).** Borrowed onto 2,341 residential parcels by MAX aggregation and used as a 2–3 m front setback: 127 footprints and 127 GFAs too large, 2,020 confidence labels inflated. Field kept; ruling pending.
+  - *Dated note, 2026-10-06 (E1):* the "source it dominant" half LANDED — the borrowed STAND_SET goes to NULL on 4,319 residential parcels (KFM-14's 2,341 RD/RS/RT/RM counted on 2026-09-29 + 139 drift, plus 1,839 R parcels it did not count), so their front setback becomes the 6.0 m zone default and non-heritage residential `max_build_confidence = 'high'` falls from ≈3,268 to ≈3. The metres-vs-selector reading (EF-25) is still open, including CR-dominant parcels.
 
 ## 9. Open operator decisions (surfaced, not decided)
 
@@ -2422,6 +2426,7 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
 7. KFM-12 / EF-23 — read the label FSI from `bylaw_max_density` (sourced dominant), gated on Reality-Check?
 8. KFM-13 / EF-24 — replace the 30 %-of-lot garden-suite test with the §150.7.50.10 share of the area behind the house?
 9. KFM-14 / EF-25 / EF-26 — treat STAND_SET as the CR standard-set selector (never a residential front setback) and source it dominant? (operator belief and evidence side by side in the plan)
+   *Partially decided 2026-10-06:* "source it dominant" = YES (E1, Spec 69 R-ZV); "never a residential front setback" (EF-25) still open.
 
 ## 10. Testing Mandate
 
@@ -2474,7 +2479,7 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
   - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `enrich_parcels_pass3_scope` writes (migrations/240_phase_b_massing_watermark_and_pass3_scope.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
   - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · massing · neighbourhoods · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity · compute_parcel_cost_estimates · link_massing
-  - consumers: none
+  - consumers: scripts/run-chain.js (records_meta deferred)
 <!-- /generated:target-files -->
 - `scripts/lib/max-build.js` — as-built constants + generators (`SETBACK_DEFAULTS`, `COVERAGE_DEFAULTS`, `buildSetbackCase`, `buildCoverageCase`, `buildSideCountCase`, `MAX_BUILD_COLS`) — documented here, owned by Spec 65
 - `scripts/seeds/logic_variables.json` — the max-build / zoning-pass tunables of §3.3

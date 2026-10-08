@@ -3232,6 +3232,13 @@
       ]
     },
     {
+      "key": "zoning_rows_changed",
+      "type": "int",
+      "consumers": [
+        "enrich_parcels"
+      ]
+    },
+    {
       "key": "audit_table",
       "type": "object",
       "consumers": []

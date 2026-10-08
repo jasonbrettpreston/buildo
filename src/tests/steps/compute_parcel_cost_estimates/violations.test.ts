@@ -495,7 +495,7 @@ describe('compute_parcel_cost_estimates — CPCE-D2: writes[1] codegen lock (fak
     // the WHOLE widened scope (both S0.2 arms) must be wrapped in ONE outer paren pair, so
     // "AND (<guards>)" binds to the entire OR, not just its last disjunct.
     expect(plan.clear_sql).toMatch(
-      /WHERE \(\(zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%'\) OR \(upper\(zoning_class\) LIKE 'R%' AND \(max_buildable_gfa_sqm IS NULL OR cur_floor_gfa_sqm > 750\)\)\) AND \(parcel_cost_menu IS DISTINCT FROM null OR/,
+      /WHERE \(\(zoning_class IS NULL OR upper\(zoning_class\) NOT LIKE 'R%'\) OR \(upper\(zoning_class\) LIKE 'R%' AND \(max_buildable_gfa_sqm IS NULL OR lot_size_sqm IS NULL OR cur_floor_gfa_sqm > 750\)\)\) AND \(parcel_cost_menu IS DISTINCT FROM null OR/,
     );
     // RED-proof of the precedence bug itself: a row matching ONLY the non-R% arm, with every
     // guard column already NULL (nothing to retract), must NOT be selected by this WHERE — the
@@ -679,6 +679,7 @@ describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 �
     expect(scope, 'the ORIGINAL CPCE-D2 arm must survive byte-for-byte').toContain("(zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%')");
     expect(scope).toContain("upper(zoning_class) LIKE 'R%'");
     expect(scope).toContain('max_buildable_gfa_sqm IS NULL');
+    expect(scope, 'C5 2026-10-08: a NULL lot is outside the product scope (Spec 88 §2.1)').toContain('lot_size_sqm IS NULL');
     expect(scope).toContain('cur_floor_gfa_sqm > 750');
     // still exactly ONE writes[1] target — S0.2 widens, it does not add a second retraction.
     expect(descriptor.outputs.writes).toHaveLength(2);
@@ -689,6 +690,13 @@ describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 �
     const invs = descriptor.invariants.filter((i: { id: string }) => i.id === 'no_cost_outside_population');
     expect(invs, 'exactly one no_cost_outside_population row — S0.2 widens it, never duplicates it').toHaveLength(1);
     expect(invs[0].sql).toContain('max_buildable_gfa_sqm IS NULL');
+    expect(invs[0].sql).toContain('lot_size_sqm IS NULL');
     expect(invs[0].sql).toContain('cur_floor_gfa_sqm > 750');
+  });
+
+  it('C5 2026-10-08 — buildSourceSql and buildZoneSql both exclude a NULL lot (the SAME bound in both, or the Σ-identity throws)', () => {
+    const src = fs.readFileSync(path.join(process.cwd(), 'scripts/lib/compute/compute-parcel-cost-estimates.js'), 'utf8');
+    expect(src).toContain('AND p.lot_size_sqm IS NOT NULL');
+    expect(src).toMatch(/\n\s+AND lot_size_sqm IS NOT NULL\n/);
   });
 });

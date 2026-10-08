@@ -99,7 +99,7 @@
             "text": "CPCE-D2 CLOSED. The SAME 16-column set as writes[0]'s guard, OR-joined by write.js's set-based codegen — \"carries at least one of the 16 cost/FSI values\" is the predicate that confines the retraction to a parcel that genuinely has something to null, so a parcel already all-NULL (never priced, or already retracted by a prior run) is never rewritten. `set_value: null` on all 16 columns is what makes this a class-O (set_based_null_retract) target rather than a per-row value write — the UPDATE ... SET <col> = NULL ... WHERE <scope> AND (<16 guards OR-joined>) shape write.js#buildWritePlan already generates for `set_based_null_retract`.",
             "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
           },
-          "scope": "((zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%') OR (upper(zoning_class) LIKE 'R%' AND (max_buildable_gfa_sqm IS NULL OR cur_floor_gfa_sqm > 750)))",
+          "scope": "((zoning_class IS NULL OR upper(zoning_class) NOT LIKE 'R%') OR (upper(zoning_class) LIKE 'R%' AND (max_buildable_gfa_sqm IS NULL OR lot_size_sqm IS NULL OR cur_floor_gfa_sqm > 750)))",
           "expected_change_ratio": "none",
           "idempotent_rerun": "zero_writes",
           "idempotent_rerun_why": {
@@ -242,7 +242,7 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3101, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4457, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
       "why": { "text": "§7 invariant 3 — a cost line can only be priced from a non-null lot-derived area. MEASURED 0, 2026-09-21.", "liveness": { "kind": "column", "ref": "parcels.cost_fb_total" } }
     },
     {
@@ -254,19 +254,19 @@
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3160, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4518, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
       "why": { "text": "§7 invariant 2 — a new build can never legitimately cost more than the CoA build (CoA can only add). MEASURED 0, 2026-09-21. NOTE: coa_fsi > max_build_fsi is a SEPARATE, documented divergent reference (Spec 88 §2.6/2.6) and is NOT a violation of this invariant.", "liveness": { "kind": "column", "ref": "parcels.cost_coa_total" } }
     },
     {
       "id": "no_cost_outside_population",
-      "sql": "SELECT count(*)::int FROM parcels WHERE (NOT (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') OR max_buildable_gfa_sqm IS NULL OR cur_floor_gfa_sqm > 750) AND (parcel_cost_menu IS NOT NULL OR cost_fb_total IS NOT NULL OR cost_coa_total IS NOT NULL OR cost_solar_total IS NOT NULL OR cost_garden_suite_total IS NOT NULL OR cost_laneway_suite_total IS NOT NULL OR cost_garage_total IS NOT NULL OR cost_gut_total IS NOT NULL OR cost_addition_total IS NOT NULL OR cost_kitchen_per_sqm IS NOT NULL OR cost_bath_per_sqm IS NOT NULL OR cost_basement_per_sqm IS NOT NULL OR cost_basement_underpin_per_sqm IS NOT NULL OR max_build_fsi IS NOT NULL OR coa_fsi IS NOT NULL OR realized_fsi_p90 IS NOT NULL)",
+      "sql": "SELECT count(*)::int FROM parcels WHERE (NOT (zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%') OR max_buildable_gfa_sqm IS NULL OR lot_size_sqm IS NULL OR cur_floor_gfa_sqm > 750) AND (parcel_cost_menu IS NOT NULL OR cost_fb_total IS NOT NULL OR cost_coa_total IS NOT NULL OR cost_solar_total IS NOT NULL OR cost_garden_suite_total IS NOT NULL OR cost_laneway_suite_total IS NOT NULL OR cost_garage_total IS NOT NULL OR cost_gut_total IS NOT NULL OR cost_addition_total IS NOT NULL OR cost_kitchen_per_sqm IS NOT NULL OR cost_bath_per_sqm IS NOT NULL OR cost_basement_per_sqm IS NOT NULL OR cost_basement_underpin_per_sqm IS NOT NULL OR max_build_fsi IS NOT NULL OR coa_fsi IS NOT NULL OR realized_fsi_p90 IS NOT NULL)",
       "bound": "viol == 0",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "source": "invariant",
       "frequency": "every_run",
-      "last_measured": { "value": 0, "at": "2026-10-05T20:56:24.061Z", "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945", "cost_ms": 3393, "sample_n": 2, "source_run": { "run_id": "2309", "chain": null, "event": "golden_capture" } },
+      "last_measured": { "value": 0, "at": "2026-10-08T14:24:20.571Z", "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e", "cost_ms": 4812, "sample_n": 4, "source_run": { "run_id": "2373", "chain": null, "event": "golden_capture" } },
       "why": { "text": "CPCE-D2 CLOSED, WIDENED S0.2 — the Spec 48 §3.6 dual-pattern's gate half (paired with the `stranded_cost_rows_retracted` INFO counter). Evaluated `when:\"post\"`, AFTER this run's own `ctx.retract` has already fired in the same run, so it reads 0 including on the very FIRST post-fix run, not merely in steady state. A non-zero value here means the retraction scope/guard has a gap a future zoning-vocabulary change opened — never a data condition to tolerate. CPCE peel (DeepSeek/grounded O4, 2026-09-21) widened the COLUMN coverage to all 16 `write_discipline.guard_columns`. S0.2 (WF3 existing-structure-area-artifacts, 2026-09-21/22) widens the POPULATION half in the SAME statement, matching `writes[1]`'s own widened `scope`: `max_buildable_gfa_sqm IS NULL` (S0.1's lot-band bound) or `cur_floor_gfa_sqm > 750` (`product_scope_max_existing_gfa_sqm`, FOLD-RC2) now ALSO count as 'outside the population', not only a non-R% zoning. The two widenings (columns, O4; population, S0.2) are orthogonal and composed here, never duplicated as separate invariants.", "liveness": { "kind": "column", "ref": "parcels.parcel_cost_menu" } }
     }
   ],

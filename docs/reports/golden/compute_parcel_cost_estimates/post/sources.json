@@ -3,39 +3,39 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-parcel-cost-estimates.js",
   "chain": "sources",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "7882f6639e18886e7e1c5ae048562fedee4f739e",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 416185,
+    "records_total": 416188,
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 93635,
-      "residential_parcels_examined": 416185,
+      "duration_ms": 316498,
+      "residential_parcels_examined": 416188,
       "records_updated": 0,
-      "records_skipped": 416185,
+      "records_skipped": 416188,
       "null_geom_basis_count": 0,
       "engine_error_count": 0,
       "line_coverage": {
-        "max_build": 416185,
-        "coa_build": 416185,
-        "solar_max": 416185,
-        "solar_coa": 416185,
-        "garden_suite": 286629,
+        "max_build": 416188,
+        "coa_build": 416188,
+        "solar_max": 416188,
+        "solar_coa": 416188,
+        "garden_suite": 286628,
         "laneway_suite": 21394,
         "kitchen": 383542,
         "bath": 383542,
-        "garage": 183162,
+        "garage": 182869,
         "basement_underpin": 383542,
         "basement": 383542,
         "gut": 383542,
         "addition": 383542
       },
       "area_confidence": {
-        "high": 2040754,
+        "high": 2040337,
         "medium": 1917710,
-        "low": 498713
+        "low": 498848
       },
       "fit_gated_suite_count": 0,
       "fit_gated_garage_count": 0,
@@ -44,27 +44,27 @@
       "cost_index_age_months": 3,
       "rates_max_as_of_date": "Tue Jun 30 2026 00:00:00 GMT-0400 (Eastern Daylight Time)",
       "unmapped_residential_family_fallback_count": 99268,
-      "stranded_cost_rows_retracted": 0,
+      "stranded_cost_rows_retracted": 1,
       "cost_by_zone": {
         "RD": {
-          "parcels": 223831,
-          "menus": 223831,
+          "parcels": 223834,
+          "menus": 223834,
           "empty_menus": 0,
-          "p50_cost_fb": 2156112.84,
+          "p50_cost_fb": 2156045.02,
           "max_cost_gut": 8870989.72
         },
         "R": {
           "parcels": 97982,
           "menus": 97982,
           "empty_menus": 0,
-          "p50_cost_fb": 1230310.61,
+          "p50_cost_fb": 1230220.99,
           "max_cost_gut": 8859759.26
         },
         "RM": {
           "parcels": 50983,
           "menus": 50983,
           "empty_menus": 0,
-          "p50_cost_fb": 1246017.28,
+          "p50_cost_fb": 1245808.98,
           "max_cost_gut": 8875649.17
         },
         "RS": {
@@ -85,7 +85,7 @@
           "parcels": 1189,
           "menus": 1189,
           "empty_menus": 0,
-          "p50_cost_fb": 1308926.3,
+          "p50_cost_fb": 1308664.73,
           "max_cost_gut": 8278284.17
         },
         "RAC": {
@@ -131,7 +131,7 @@
       "terminal": "priced_with_warnings",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "code_sha": "7882f6639e18886e7e1c5ae048562fedee4f739e",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 2,
@@ -147,7 +147,7 @@
         "rows": [
           {
             "metric": "residential_parcels_examined",
-            "value": 416185,
+            "value": 416188,
             "threshold": "value_min 1",
             "status": "PASS",
             "source": "check",
@@ -227,7 +227,7 @@
           },
           {
             "metric": "stranded_cost_rows_retracted",
-            "value": 0,
+            "value": 1,
             "threshold": "value_min 0",
             "status": "INFO",
             "source": "check",
@@ -235,7 +235,7 @@
           },
           {
             "metric": "line_coverage_max_build",
-            "value": 416185,
+            "value": 416188,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -243,7 +243,7 @@
           },
           {
             "metric": "line_coverage_coa_build",
-            "value": 416185,
+            "value": 416188,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -251,7 +251,7 @@
           },
           {
             "metric": "line_coverage_solar_max",
-            "value": 416185,
+            "value": 416188,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -259,7 +259,7 @@
           },
           {
             "metric": "line_coverage_solar_coa",
-            "value": 416185,
+            "value": 416188,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -267,7 +267,7 @@
           },
           {
             "metric": "line_coverage_garden_suite",
-            "value": 286629,
+            "value": 286628,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -299,7 +299,7 @@
           },
           {
             "metric": "line_coverage_garage",
-            "value": 183162,
+            "value": 182869,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -366,7 +366,7 @@
             "value": {
               "archetype_cost_rates": 12,
               "parcel_cost_lines": 13,
-              "logic_variables": 680
+              "logic_variables": 681
             },
             "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
             "status": "INFO"
@@ -381,31 +381,31 @@
           },
           {
             "metric": "sys_no_priced_null_lot_parcel_duration_ms",
-            "value": 1653,
+            "value": 16894,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_new_build_cost_not_gt_coa_cost_duration_ms",
-            "value": 1761,
+            "value": 16797,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_no_cost_outside_population_duration_ms",
-            "value": 2040,
+            "value": 16950,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 4348.12,
+            "value": 1247.82,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 95716,
+            "value": 333531,
             "threshold": null,
             "status": "INFO"
           }
@@ -484,16 +484,16 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"[compute_parcel_cost_estimates] target: compute_parcel_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=247 (floor 201)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"phase cost_menu starting (post_commit, timeout 60min)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"phase cost_menu completed in 86480ms\"}\nPIPELINE_SUMMARY:{\"records_total\":416185,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":93635,\"residential_parcels_examined\":416185,\"records_updated\":0,\"records_skipped\":416185,\"null_geom_basis_count\":0,\"engine_error_count\":0,\"line_coverage\":{\"max_build\":416185,\"coa_build\":416185,\"solar_max\":416185,\"solar_coa\":416185,\"garden_suite\":286629,\"laneway_suite\":21394,\"kitchen\":383542,\"bath\":383542,\"garage\":183162,\"basement_underpin\":383542,\"basement\":383542,\"gut\":383542,\"addition\":383542},\"area_confidence\":{\"high\":2040754,\"medium\":1917710,\"low\":498713},\"fit_gated_suite_count\":0,\"fit_gated_garage_count\":0,\"cost_escalation_index\":100,\"cost_rates_age_months\":3,\"cost_index_age_months\":3,\"rates_max_as_of_date\":\"Tue Jun 30 2026 00:00:00 GMT-0400 (Eastern Daylight Time)\",\"unmapped_residential_family_fallback_count\":99268,\"stranded_cost_rows_retracted\":0,\"cost_by_zone\":{\"RD\":{\"parcels\":223831,\"menus\":223831,\"empty_menus\":0,\"p50_cost_fb\":2156112.84,\"max_cost_gut\":8870989.72},\"R\":{\"parcels\":97982,\"menus\":97982,\"empty_menus\":0,\"p50_cost_fb\":1230310.61,\"max_cost_gut\":8859759.26},\"RM\":{\"parcels\":50983,\"menus\":50983,\"empty_menus\":0,\"p50_cost_fb\":1246017.28,\"max_cost_gut\":8875649.17},\"RS\":{\"parcels\":28179,\"menus\":28179,\"empty_menus\":0,\"p50_cost_fb\":1160133.16,\"max_cost_gut\":5768550.38},\"RT\":{\"parcels\":13924,\"menus\":13924,\"empty_menus\":0,\"p50_cost_fb\":714596.5699999998,\"max_cost_gut\":8266456.34},\"RA\":{\"parcels\":1189,\"menus\":1189,\"empty_menus\":0,\"p50_cost_fb\":1308926.3,\"max_cost_gut\":8278284.17},\"RAC\":{\"parcels\":97,\"menus\":97,\"empty_menus\":0,\"p50_cost_fb\":2320823.37,\"max_cost_gut\":5738123.51},\"other\":{\"parcels\":0,\"menus\":0,\"empty_menus\":0,\"p50_cost_fb\":null,\"max_cost_gut\":null}},\"rates_as_of\":\"2026-06-30T20:30:33.974Z\",\"index_updated_at\":\"2026-06-30T20:30:33.974Z\",\"cost_lines_updated_at\":\"2026-09-23T12:58:54.869Z\",\"config\":{\"cost_escalation_index\":100,\"cost_rates_stale_months\":3,\"cost_index_stale_months\":4,\"compute_parcel_cost_heartbeat_minutes\":5,\"compute_parcel_cost_lock_timeout_ms\":5000,\"compute_parcel_cost_phase_timeout_minutes\":60,\"compute_parcel_cost_batch_size\":1000,\"compute_parcel_cost_stream_batch_size\":100,\"compute_parcel_cost_min_population\":1,\"compute_parcel_cost_engine_error_max\":0,\"compute_parcel_cost_fsi_max_plausible\":99.999,\"compute_parcel_cost_escalation_min_multiplier\":1,\"compute_parcel_cost_escalation_fallback_multiplier\":1,\"compute_parcel_cost_premium_default\":1,\"compute_parcel_cost_adjustment_factor_default\":1,\"compute_parcel_cost_min_priceable_area_sqm\":0,\"compute_parcel_cost_menu_coverage_min_pct\":99,\"compute_parcel_cost_empty_menu_max_pct\":5,\"compute_parcel_cost_line_total_max_cad\":250000000,\"product_scope_max_existing_gfa_sqm\":750},\"terminal\":\"priced_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"compute_parcel_cost_menu_coverage_min_pct: 93.9\",\"unmapped_residential_family_fallback_count: 99268\"],\"audit_table\":{\"phase\":23,\"name\":\"Parcel Renovation Cost Model\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"residential_parcels_examined\",\"value\":416185,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"fsi_implausible_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"new_build_fallback_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"engine_error_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"cost_rates_stale\",\"value\":false,\"threshold\":\"{\\\"warn\\\":1,\\\"fail\\\":2}\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"cost_index_stale\",\"value\":false,\"threshold\":\"{\\\"warn\\\":1,\\\"fail\\\":999}\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_menu_coverage_min_pct\",\"value\":93.9,\"threshold\":\"value_min 99\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_empty_menu_max_pct\",\"value\":0,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_line_total_max_cad\",\"value\":8875649.17,\"threshold\":\"value_max 250000000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_residential_family_fallback_count\",\"value\":99268,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stranded_cost_rows_retracted\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_max_build\",\"value\":416185,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_coa_build\",\"value\":416185,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_solar_max\",\"value\":416185,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_solar_coa\",\"value\":416185,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_garden_suite\",\"value\":286629,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_laneway_suite\",\"value\":21394,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_kitchen\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_bath\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_garage\",\"value\":183162,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_basement_underpin\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_basement\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_gut\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_addition\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_priced_null_lot_parcel\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"new_build_cost_not_gt_coa_cost\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"no_cost_outside_population\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"archetype_cost_rates\":12,\"parcel_cost_lines\":13,\"logic_variables\":680},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"archetype_cost_rates\":12},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_no_priced_null_lot_parcel_duration_ms\",\"value\":1653,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_new_build_cost_not_gt_coa_cost_duration_ms\",\"value\":1761,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_no_cost_outside_population_duration_ms\",\"value\":2040,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":4348.12,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":95716,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\",\"as_of_date\",\"updated_at\"],\"parcel_cost_lines\":[\"id\",\"archetype\",\"base_confidence\",\"fit_permitted_values\",\"updated_at\"],\"logic_variables\":[\"variable_key\",\"variable_value\",\"updated_at\"],\"parcels\":[\"id\",\"zoning_class\",\"lot_size_sqm\",\"max_buildable_gfa_sqm\",\"opt_aor_gfa_sqm\",\"max_buildable_footprint_sqm\",\"opt_coa_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_garage_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"realized_fsi_p90\",\"neighbourhood_cost_premium\",\"rear_suite_permission\",\"garage_permission\",\"max_build_confidence\"]},\"writes\":{\"parcels\":[\"parcel_cost_menu\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\"]}}\n\n[compute_parcel_cost_estimates] completed in 95.7s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"[compute_parcel_cost_estimates] target: compute_parcel_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=249 (floor 201)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"phase cost_menu starting (post_commit, timeout 60min)\"}\n{\"level\":\"INFO\",\"tag\":\"[compute_parcel_cost_estimates]\",\"msg\":\"phase cost_menu completed in 256623ms\"}\nPIPELINE_SUMMARY:{\"records_total\":416188,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":316498,\"residential_parcels_examined\":416188,\"records_updated\":0,\"records_skipped\":416188,\"null_geom_basis_count\":0,\"engine_error_count\":0,\"line_coverage\":{\"max_build\":416188,\"coa_build\":416188,\"solar_max\":416188,\"solar_coa\":416188,\"garden_suite\":286628,\"laneway_suite\":21394,\"kitchen\":383542,\"bath\":383542,\"garage\":182869,\"basement_underpin\":383542,\"basement\":383542,\"gut\":383542,\"addition\":383542},\"area_confidence\":{\"high\":2040337,\"medium\":1917710,\"low\":498848},\"fit_gated_suite_count\":0,\"fit_gated_garage_count\":0,\"cost_escalation_index\":100,\"cost_rates_age_months\":3,\"cost_index_age_months\":3,\"rates_max_as_of_date\":\"Tue Jun 30 2026 00:00:00 GMT-0400 (Eastern Daylight Time)\",\"unmapped_residential_family_fallback_count\":99268,\"stranded_cost_rows_retracted\":1,\"cost_by_zone\":{\"RD\":{\"parcels\":223834,\"menus\":223834,\"empty_menus\":0,\"p50_cost_fb\":2156045.02,\"max_cost_gut\":8870989.72},\"R\":{\"parcels\":97982,\"menus\":97982,\"empty_menus\":0,\"p50_cost_fb\":1230220.99,\"max_cost_gut\":8859759.26},\"RM\":{\"parcels\":50983,\"menus\":50983,\"empty_menus\":0,\"p50_cost_fb\":1245808.98,\"max_cost_gut\":8875649.17},\"RS\":{\"parcels\":28179,\"menus\":28179,\"empty_menus\":0,\"p50_cost_fb\":1160133.16,\"max_cost_gut\":5768550.38},\"RT\":{\"parcels\":13924,\"menus\":13924,\"empty_menus\":0,\"p50_cost_fb\":714596.5699999998,\"max_cost_gut\":8266456.34},\"RA\":{\"parcels\":1189,\"menus\":1189,\"empty_menus\":0,\"p50_cost_fb\":1308664.73,\"max_cost_gut\":8278284.17},\"RAC\":{\"parcels\":97,\"menus\":97,\"empty_menus\":0,\"p50_cost_fb\":2320823.37,\"max_cost_gut\":5738123.51},\"other\":{\"parcels\":0,\"menus\":0,\"empty_menus\":0,\"p50_cost_fb\":null,\"max_cost_gut\":null}},\"rates_as_of\":\"2026-06-30T20:30:33.974Z\",\"index_updated_at\":\"2026-06-30T20:30:33.974Z\",\"cost_lines_updated_at\":\"2026-09-23T12:58:54.869Z\",\"config\":{\"cost_escalation_index\":100,\"cost_rates_stale_months\":3,\"cost_index_stale_months\":4,\"compute_parcel_cost_heartbeat_minutes\":5,\"compute_parcel_cost_lock_timeout_ms\":5000,\"compute_parcel_cost_phase_timeout_minutes\":60,\"compute_parcel_cost_batch_size\":1000,\"compute_parcel_cost_stream_batch_size\":100,\"compute_parcel_cost_min_population\":1,\"compute_parcel_cost_engine_error_max\":0,\"compute_parcel_cost_fsi_max_plausible\":99.999,\"compute_parcel_cost_escalation_min_multiplier\":1,\"compute_parcel_cost_escalation_fallback_multiplier\":1,\"compute_parcel_cost_premium_default\":1,\"compute_parcel_cost_adjustment_factor_default\":1,\"compute_parcel_cost_min_priceable_area_sqm\":0,\"compute_parcel_cost_menu_coverage_min_pct\":99,\"compute_parcel_cost_empty_menu_max_pct\":5,\"compute_parcel_cost_line_total_max_cad\":250000000,\"product_scope_max_existing_gfa_sqm\":750},\"terminal\":\"priced_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"7882f6639e18886e7e1c5ae048562fedee4f739e\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":2,\"errors\":[],\"warnings\":[\"compute_parcel_cost_menu_coverage_min_pct: 93.9\",\"unmapped_residential_family_fallback_count: 99268\"],\"audit_table\":{\"phase\":23,\"name\":\"Parcel Renovation Cost Model\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"residential_parcels_examined\",\"value\":416188,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"fsi_implausible_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"new_build_fallback_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"engine_error_count\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"cost_rates_stale\",\"value\":false,\"threshold\":\"{\\\"warn\\\":1,\\\"fail\\\":2}\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"cost_index_stale\",\"value\":false,\"threshold\":\"{\\\"warn\\\":1,\\\"fail\\\":999}\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_menu_coverage_min_pct\",\"value\":93.9,\"threshold\":\"value_min 99\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_empty_menu_max_pct\",\"value\":0,\"threshold\":\"value_max 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_parcel_cost_line_total_max_cad\",\"value\":8875649.17,\"threshold\":\"value_max 250000000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"unmapped_residential_family_fallback_count\",\"value\":99268,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stranded_cost_rows_retracted\",\"value\":1,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_max_build\",\"value\":416188,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_coa_build\",\"value\":416188,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_solar_max\",\"value\":416188,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_solar_coa\",\"value\":416188,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_garden_suite\",\"value\":286628,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_laneway_suite\",\"value\":21394,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_kitchen\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_bath\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_garage\",\"value\":182869,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_basement_underpin\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_basement\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_gut\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"line_coverage_addition\",\"value\":383542,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_priced_null_lot_parcel\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"new_build_cost_not_gt_coa_cost\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"no_cost_outside_population\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"archetype_cost_rates\":12,\"parcel_cost_lines\":13,\"logic_variables\":681},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"archetype_cost_rates\":12},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_no_priced_null_lot_parcel_duration_ms\",\"value\":16894,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_new_build_cost_not_gt_coa_cost_duration_ms\",\"value\":16797,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_no_cost_outside_population_duration_ms\",\"value\":16950,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1247.82,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":333531,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\",\"as_of_date\",\"updated_at\"],\"parcel_cost_lines\":[\"id\",\"archetype\",\"base_confidence\",\"fit_permitted_values\",\"updated_at\"],\"logic_variables\":[\"variable_key\",\"variable_value\",\"updated_at\"],\"parcels\":[\"id\",\"zoning_class\",\"lot_size_sqm\",\"max_buildable_gfa_sqm\",\"opt_aor_gfa_sqm\",\"max_buildable_footprint_sqm\",\"opt_coa_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_garage_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"realized_fsi_p90\",\"neighbourhood_cost_premium\",\"rear_suite_permission\",\"garage_permission\",\"max_build_confidence\"]},\"writes\":{\"parcels\":[\"parcel_cost_menu\",\"cost_fb_total\",\"cost_coa_total\",\"cost_solar_total\",\"cost_garden_suite_total\",\"cost_laneway_suite_total\",\"cost_garage_total\",\"cost_gut_total\",\"cost_addition_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_basement_per_sqm\",\"cost_basement_underpin_per_sqm\",\"max_build_fsi\",\"coa_fsi\",\"realized_fsi_p90\"]}}\n\n[compute_parcel_cost_estimates] completed in 333.5s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2308,
+  "pipeline_runs_max_id_before": 2370,
   "table_state": [
     {
       "table": "parcels",
       "row_count": 496536,
       "ceiling_bypassed": "projected",
-      "content_hash": "6f8c520493fefde318f749dbc8232a3d",
+      "content_hash": "6909e4a450ecb86de895a9ae747ceb64",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -522,7 +522,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 14759
+    "parcels": 40781
   },
   "table_specs": {
     "parcels": {
@@ -589,8 +589,8 @@
     "summary": {
       "records_meta": {
         "area_confidence": {
-          "high": 2040754,
-          "low": 498713,
+          "high": 2040337,
+          "low": 498848,
           "medium": 1917710
         },
         "audit_table": {
@@ -603,7 +603,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 1",
-              "value": 416185
+              "value": 416188
             },
             {
               "metric": "fsi_implausible_count",
@@ -683,7 +683,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "value_min 0",
-              "value": 0
+              "value": 1
             },
             {
               "metric": "line_coverage_max_build",
@@ -691,7 +691,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 416185
+              "value": 416188
             },
             {
               "metric": "line_coverage_coa_build",
@@ -699,7 +699,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 416185
+              "value": 416188
             },
             {
               "metric": "line_coverage_solar_max",
@@ -707,7 +707,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 416185
+              "value": 416188
             },
             {
               "metric": "line_coverage_solar_coa",
@@ -715,7 +715,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 416185
+              "value": 416188
             },
             {
               "metric": "line_coverage_garden_suite",
@@ -723,7 +723,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 286629
+              "value": 286628
             },
             {
               "metric": "line_coverage_laneway_suite",
@@ -755,7 +755,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 183162
+              "value": 182869
             },
             {
               "metric": "line_coverage_basement_underpin",
@@ -819,7 +819,7 @@
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
               "value": {
                 "archetype_cost_rates": 12,
-                "logic_variables": 680,
+                "logic_variables": 681,
                 "parcel_cost_lines": 13
               }
             },
@@ -863,14 +863,14 @@
             "empty_menus": 0,
             "max_cost_gut": 8859759.26,
             "menus": 97982,
-            "p50_cost_fb": 1230310.61,
+            "p50_cost_fb": 1230220.99,
             "parcels": 97982
           },
           "RA": {
             "empty_menus": 0,
             "max_cost_gut": 8278284.17,
             "menus": 1189,
-            "p50_cost_fb": 1308926.3,
+            "p50_cost_fb": 1308664.73,
             "parcels": 1189
           },
           "RAC": {
@@ -883,15 +883,15 @@
           "RD": {
             "empty_menus": 0,
             "max_cost_gut": 8870989.72,
-            "menus": 223831,
-            "p50_cost_fb": 2156112.84,
-            "parcels": 223831
+            "menus": 223834,
+            "p50_cost_fb": 2156045.02,
+            "parcels": 223834
           },
           "RM": {
             "empty_menus": 0,
             "max_cost_gut": 8875649.17,
             "menus": 50983,
-            "p50_cost_fb": 1246017.28,
+            "p50_cost_fb": 1245808.98,
             "parcels": 50983
           },
           "RS": {
@@ -931,24 +931,24 @@
           "basement": 383542,
           "basement_underpin": 383542,
           "bath": 383542,
-          "coa_build": 416185,
-          "garage": 183162,
-          "garden_suite": 286629,
+          "coa_build": 416188,
+          "garage": 182869,
+          "garden_suite": 286628,
           "gut": 383542,
           "kitchen": 383542,
           "laneway_suite": 21394,
-          "max_build": 416185,
-          "solar_coa": 416185,
-          "solar_max": 416185
+          "max_build": 416188,
+          "solar_coa": 416188,
+          "solar_max": 416188
         },
         "null_geom_basis_count": 0,
         "pool_errors": 0,
         "rates_as_of": "<TS>",
         "rates_max_as_of_date": "Tue Jun 30 2026 00:00:00 GMT-0400 (Eastern Daylight Time)",
-        "records_skipped": 416185,
+        "records_skipped": 416188,
         "records_updated": 0,
-        "residential_parcels_examined": 416185,
-        "stranded_cost_rows_retracted": 0,
+        "residential_parcels_examined": 416188,
+        "stranded_cost_rows_retracted": 1,
         "terminal": "priced_with_warnings",
         "unmapped_residential_family_fallback_count": 99268,
         "warnings": [
@@ -957,7 +957,7 @@
         ]
       },
       "records_new": 0,
-      "records_total": 416185,
+      "records_total": 416188,
       "records_updated": 0
     },
     "summary_count": 1,
@@ -1031,7 +1031,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[compute_parcel_cost_estimates] target: compute_parcel_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=247 (floor 201)\",\"tag\":\"[compute_parcel_cost_estimates]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[compute_parcel_cost_estimates] target: compute_parcel_cost_estimates (descriptor.database) → database=postgres user=postgres migrations=249 (floor 201)\",\"tag\":\"[compute_parcel_cost_estimates]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase cost_menu starting (post_commit, timeout <DUR>)\",\"tag\":\"[compute_parcel_cost_estimates]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase cost_menu completed in <DUR>\",\"tag\":\"[compute_parcel_cost_estimates]\"}",
       "[compute_parcel_cost_estimates] completed in <DUR>"
@@ -1058,7 +1058,7 @@
           "coa_fsi",
           "realized_fsi_p90"
         ],
-        "content_hash": "6f8c520493fefde318f749dbc8232a3d",
+        "content_hash": "6909e4a450ecb86de895a9ae747ceb64",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -1094,14 +1094,24 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 3197474,
+    "txid_before_run2": 3340226,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "priced_with_warnings"
     }
   },
-  "source_fingerprint": "e35ce3c17d37954c4da5f40ca4feaa9fa67529e20e4a310c032bebb664fe1497",
+  "capture_ledger_rows": [
+    {
+      "id": 2371,
+      "recorded_by": "harness"
+    },
+    {
+      "id": 2372,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": "44401c334607510424ceac14d29e66055458b4f605358e8daded6a74b787f015",
   "fingerprint_files": [
     "scripts/compute-parcel-cost-estimates.descriptor.json",
     "scripts/compute-parcel-cost-estimates.js",

@@ -2155,6 +2155,75 @@ describe('LPA-D4 — any step that can gated-skip declares at least one when:"pr
 });
 
 // ---------------------------------------------------------------------------
+// LPA-D4 (scope-defer, EP-D19, 2026-10-06) — scope-defer is the OTHER zero-write outcome.
+// A converted step declaring `execution.enrich_hooks.defer_scope` (present and not "none", the
+// same test runEnrichPhase applies) narrows its audit table to `when:"pre"` checks on a deferred
+// run, and the runner records status `deferred_to_full` and asks
+// selectTerminal(descriptor, {kind:'success', status:'deferred_to_full'}). With no `pre` check the
+// defer reason is never persisted; with no matching terminal selectTerminal falls back to the
+// first success terminal, so the ledger names the wrong terminal (EP-D19).
+// ---------------------------------------------------------------------------
+
+interface DeferDecisionDescriptor {
+  checks: Array<{ id: string; when: string }>;
+  terminals: Array<{ id: string; kind: string; status?: string }>;
+  execution?: { enrich_hooks?: { defer_scope?: unknown } };
+}
+
+function deferDecisionFor(relFile: string): { hasDeferHook: boolean; preCheckCount: number; hasDeferredTerminal: boolean } {
+  const d = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, `${relFile.slice(0, -3)}.descriptor.json`), 'utf8')) as DeferDecisionDescriptor;
+  const defer = d.execution && d.execution.enrich_hooks ? d.execution.enrich_hooks.defer_scope : undefined;
+  return {
+    hasDeferHook: defer != null && defer !== 'none',
+    preCheckCount: (d.checks || []).filter((c) => c.when === 'pre').length,
+    hasDeferredTerminal: (d.terminals || []).some((t) => t.status === 'deferred_to_full'),
+  };
+}
+
+/** The scope-defer finding, as a pure predicate (RED canary parameters, below). */
+function deferDecisionFindings(
+  relFile: string,
+  subject: { hasDeferHook: boolean; preCheckCount: number; hasDeferredTerminal: boolean },
+): string[] {
+  if (!subject.hasDeferHook) return [];
+  const out: string[] = [];
+  if (subject.preCheckCount === 0) {
+    out.push(
+      `${relFile}: declares execution.enrich_hooks.defer_scope but zero checks[].when === "pre" — a deferred ` +
+        "run's audit table carries no step row and the defer reason is never persisted (EP-D19)",
+    );
+  }
+  if (!subject.hasDeferredTerminal) {
+    out.push(
+      `${relFile}: declares execution.enrich_hooks.defer_scope but no terminals[] entry with status ` +
+        '"deferred_to_full" — selectTerminal falls back to the first success terminal and the ledger records the wrong terminal (EP-D19)',
+    );
+  }
+  return out;
+}
+
+describe('LPA-D4 (scope-defer) — any step that can scope-defer declares a when:"pre" check AND a deferred_to_full terminal', () => {
+  it('at least one converted step declares execution.enrich_hooks.defer_scope (else the battery is vacuous)', () => {
+    const any = CONVERTED.some((f) => deferDecisionFor(f).hasDeferHook);
+    expect(any, 'no converted step declares execution.enrich_hooks.defer_scope — the battery below would be vacuous').toBe(true);
+  });
+
+  for (const relFile of CONVERTED) {
+    it(`${relFile} — declares a pre check + a deferred_to_full terminal if it can scope-defer`, () => {
+      const findings = deferDecisionFindings(relFile, deferDecisionFor(relFile));
+      expect(findings, findings.join('\n')).toEqual([]);
+    });
+  }
+
+  for (const relFile of CONVERTED.filter((f) => deferDecisionFor(f).hasDeferHook)) {
+    it(`RED — ${relFile}: zero pre checks and no deferred_to_full terminal reddens`, () => {
+      const findings = deferDecisionFindings(relFile, { hasDeferHook: true, preCheckCount: 0, hasDeferredTerminal: false });
+      expect(findings, findings.join('\n')).toHaveLength(2);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 

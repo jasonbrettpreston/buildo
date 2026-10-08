@@ -125,6 +125,7 @@
           "rear_suite_permission",
           "rear_suite_type",
           "zoning_class",
+          "zoning_enriched_at",
           "zoning_holding",
           "zoning_is_ambiguous"
         ]

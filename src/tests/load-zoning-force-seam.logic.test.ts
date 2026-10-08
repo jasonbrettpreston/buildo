@@ -43,6 +43,7 @@ const PRIOR = {
   source_dataset_version: V,
   zoning_layer_versions: Object.fromEntries(IDS.map((id) => [id, V])),
   base_layer_committed_after_overlays_failed: false,
+  zoning_rows_changed: 0,
 };
 
 // The 0y all-primaries gate over the descriptor's OWN trigger and emits, with a HEAD that agrees with

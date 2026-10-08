@@ -914,7 +914,7 @@ Five edge classes. **All five are real today; none is declared anywhere a machin
 
 Regression-locked at `load-ravines.infra.test.ts:102`, `load-heritage.infra.test.ts:53`, `enrich-ravines.logic.test.ts:38-73`.
 
-**Ten further CONTRACT keys** with real consumers: `step_verdicts` and `step_completeness` (→ `check-chain-verdict.js`, CI gates) · `deferred` (→ `run-chain.js:86-98`, routes `deferred_to_full`) · `gated_skip` (→ `api/quality/route.ts:59-65`) · `pipeline_meta` (→ `FunnelPanels.tsx`) · `audit_table` (→ `FreshnessTimeline.tsx` ×6, `observe-chain.js:77`) · `engine_health` · `telemetry` · `warnings`/`errors` · `zoning_layer_versions` (self, cross-run).
+**Ten further CONTRACT keys** with real consumers: `step_verdicts` and `step_completeness` (→ `check-chain-verdict.js`, CI gates) · `deferred` (→ `run-chain.js:266-287 / :964-990`, routes `deferred_to_full`) · `gated_skip` (→ `api/quality/route.ts:59-65`) · `pipeline_meta` (→ `FunnelPanels.tsx`) · `audit_table` (→ `FreshnessTimeline.tsx` ×6, `observe-chain.js:77`) · `engine_health` · `telemetry` · `warnings`/`errors` · `zoning_layer_versions` (self, cross-run).
 
 **And three WRITE-ONLY keys** — declared, emitted, consumed by nothing outside their own shape-lock test: `permit_rule_distribution`, `seq_violations`, `seq_violations_truncated_count`. ⚠️ **These are the wiring census's seed instances, found in the wild.** The census is per-**property**, not per-field (Spec 121 §12.1a instance 2: 798 declared bounds under 112 readers, zero bound-readers).
 

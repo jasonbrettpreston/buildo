@@ -16,11 +16,14 @@ const AMBIGUOUS_DOMINANT_SHARE_MAX = 0.6;
 // exist in the base-candidate CTE (intersect_area, zn_zone, source_id).
 const DOMINANT_ORDER_BY = 'intersect_area DESC, zn_zone ASC, source_id ASC';
 
-// Per-column precedence rule (DEC-1):
-//   dominant    — value from the area-dominant base zone (the rn=1 / largest-area row)
-//   min         — numeric ceiling: most-restrictive = MIN across intersecting base polygons
-//   max         — numeric floor:  most-restrictive = MAX across intersecting base polygons
-//   overlay_min — value from an overlay table (REPLACES base per D4); MIN if multiple overlap
+// Per-column precedence rule (Spec 65 DEC-1, amended by E1 2026-10-06 — Spec 69 R-ZV / M-42):
+//   dominant    — value from the area-dominant base zone (DOMINANT_ORDER_BY row); its NULL stays NULL
+//                 (the dominant label governs). EVERY base-zone parameter uses it: a parcel's regulations
+//                 are those of its dominant 569-2013 label. The retired 'min'/'max' kinds ("ceilings MIN,
+//                 floors MAX" across every intersecting base polygon) let sub-1 m² sliver zones donate
+//                 values — measured 2026-10-06 on 38,769 zoned parcels (29,139 residential). A genuine
+//                 split is DISCLOSED (zoning_is_ambiguous, the share, zoning_overlays.base), never aggregated.
+//   overlay_min — value from an overlay table (REPLACES base per D4); MIN if multiple overlays overlap
 //   membership  — boolean: parcel intersects / is within range of the overlay
 const PRECEDENCE_RULES = {
   // identity / categorical ← dominant base zone
@@ -40,18 +43,16 @@ const PRECEDENCE_RULES = {
   // 'dominant' sources FSI from the area-dominant zone only; NULL when that zone has none
   // (the dominant zone governs; zoning_is_ambiguous separately flags share < 0.6).
   bylaw_max_fsi: 'dominant',
-  // numeric ceilings ← MIN (most-restrictive). NB: siblings stay 'min' — they feed no cost path;
-  // MIN is defensible for genuine density splits (revisit → review_followups.md).
-  bylaw_max_units: 'min',
-  bylaw_max_density: 'min',
-  bylaw_pct_commercial_max: 'min',
-  bylaw_pct_residential_max: 'min',
-  bylaw_pct_employment_max: 'min',
-  bylaw_pct_office_max: 'min',
-  // numeric floors ← MAX (most-restrictive)
-  bylaw_min_frontage_m: 'max',
-  bylaw_min_area_sqm: 'max',
-  bylaw_standard_setback_m: 'max',
+  // E1 (Spec 69 R-ZV, 2026-10-06): the sibling ceilings and floors are dominant too (was 'min' / 'max').
+  bylaw_max_units: 'dominant',
+  bylaw_max_density: 'dominant',
+  bylaw_pct_commercial_max: 'dominant',
+  bylaw_pct_residential_max: 'dominant',
+  bylaw_pct_employment_max: 'dominant',
+  bylaw_pct_office_max: 'dominant',
+  bylaw_min_frontage_m: 'dominant',
+  bylaw_min_area_sqm: 'dominant',
+  bylaw_standard_setback_m: 'dominant',
   // overlay-sourced numerics ← overlay replaces base (D4); MIN if multiple
   bylaw_max_coverage_pct: 'overlay_min',
   bylaw_max_height_m: 'overlay_min',
@@ -84,11 +85,8 @@ function sqlAggregate(col, src) {
   const rule = PRECEDENCE_RULES[col];
   if (!rule) throw new Error(`zoning-precedence: no precedence rule for column "${col}"`);
   switch (rule) {
-    case 'min':
     case 'overlay_min':
       return `MIN(${src})`;
-    case 'max':
-      return `MAX(${src})`;
     case 'membership':
       return `bool_or(${src})`;
     case 'dominant':
