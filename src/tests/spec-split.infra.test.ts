@@ -33,6 +33,9 @@ const SPEC_FILES: Record<string, string> = {
   '123': '123_step_opt_assessment_validation.md',
   '124': '124_step_standard_policy.md',
   '124a': '124a_step_standard_policy_appendix.md',
+  // McBylaw S8 (Spec 68 header byte budget): registered for arm (iv) budgets + the arm (v) system-map shape check.
+  '68': '68_mcbylaw_standard.md',
+  '69': '69_mcbylaw_policy.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {

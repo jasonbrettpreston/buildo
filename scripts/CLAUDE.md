@@ -24,7 +24,7 @@ Read tool calls in a single message:
 
 **Before changing a step, run `npm run step:registry -- <slug>`; every row must be READ (touched Y/N, behaviour impact, registration, owner spec updated same commit).** (Its DECLARED half is the step's generated Target Files sub-list in its owner spec(s); the PreToolUse hook shows it on the first read/edit of a step file each session.)
 
-**AI-operator docs (lazy-Read, generated):** `docs/reference/logic-variables-registry.md` (every logic var → default/bounds/consumers, `npm run logic-vars-docs`) · `docs/reference/data-lineage-map.md` (column → producer → consumers, `npm run lineage-docs`) · `docs/runbook/README.md` (runbook + one-off script index + deploy-ordering rules).
+**AI-operator docs (lazy-Read, generated):** `docs/reference/logic-variables-registry.md` (every logic var → default/bounds/consumers, `npm run logic-vars-docs`) · `docs/reference/data-lineage-map.md` (column → producer → consumers, `npm run lineage-docs`) · `docs/runbook/README.md` (runbook + one-off script index + deploy-ordering rules) · `docs/reference/bylaw-provisions.md` (the Spec 68 by-law table: every 569-2013 regulation with scope + row state; its JSON twin `bylaw-provisions.json` is the source of truth; `npm run bylaw:provisions -- --write`) · `docs/reference/bylaw-code-findings.md` (Spec 68 G-CODE report-only findings).
 
 ---
 

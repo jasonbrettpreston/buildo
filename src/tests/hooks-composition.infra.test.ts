@@ -264,6 +264,24 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     expect(tampered).not.toBe(PRE_COMMIT);
     expect(stripComments(tampered)).not.toContain('generate-chain-args.mjs --check');
   });
+
+  // Spec 69 M-32 (RATIFIED 2026-10-06; McBylaw S8): the by-law table `--check` is its own pre-commit line,
+  // because authoring batches are data-only commits that `vitest related` never selects and step-validate
+  // --staged returns early on. Positional lock: after the chain_args check, before step-validate.
+  it('GREEN — runs the McBylaw generator --check after the chain_args check and before step-validate (M-32)', () => {
+    const code = stripComments(PRE_COMMIT);
+    const at = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
+    expect(at).toBeGreaterThan(-1);
+    expect(at).toBeGreaterThan(code.indexOf('node scripts/analysis/generate-chain-args.mjs --check'));
+    expect(at).toBeLessThan(code.indexOf('step-validate.mjs --staged --fast'));
+    expect(code.split('generate-bylaw-provisions.mjs --check').length).toBe(2);
+  });
+
+  it('RED — a tampered pre-commit with the McBylaw --check stripped is caught', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/generate-bylaw-provisions\.mjs --check && \\\n\s*/, '');
+    expect(tampered).not.toBe(PRE_COMMIT);
+    expect(stripComments(tampered)).not.toContain('generate-bylaw-provisions.mjs --check');
+  });
 });
 
 // ---------------------------------------------------------------------------

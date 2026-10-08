@@ -119,6 +119,10 @@ export const SPEC_FILES = {
   // Spec 124's own appendix (operator ruling "Split to 124a", 2026-10-02) — like 122a, a
   // move DESTINATION only (never a `from_spec`), verified by arms (i)/(ii)/(vi).
   '124a': '124a_step_standard_policy_appendix.md',
+  // McBylaw (Spec 68 header "Byte budget"; plan S8): registered for the arm (iv) budget and the arm (v) system-map
+  // shape check only — arm (iii)'s citation census stays the 119-124 family (CITATION_SECTION_RE), never widened here.
+  68: '68_mcbylaw_standard.md',
+  69: '69_mcbylaw_policy.md',
 };
 // The family that shares 122a as a citation-resolution fallback (arm iii).
 const APPENDIX_FAMILY = new Set(['122', '123', '124']);
