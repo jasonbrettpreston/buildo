@@ -45,7 +45,7 @@ const baseLockText = fs.readFileSync(path.join(ROOT, LOCK_REL), 'utf8');
 // The A9 base is the CURRENT adoption (working tree = what a pre-commit sees staged), so its blob oracle is git's own hash of
 // the working-tree file — never HEAD, which lags the adoption mid-change. The git-witness suite below asserts only on the
 // already-COMMITTED lock (HEAD's blob), so every test holds both mid-change (staged) and committed.
-const git = (...args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' });
+const git = (...args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }); // the lock is MBs since adoption-4
 const baseLockOid = git('hash-object', '--no-filters', LOCK_REL).trim();
 const nextId = 'adoption-next';
 const adoptions = [...readJson('scripts/seeds/bylaw/adoptions.json').adoptions, { adoption_id: nextId }];
