@@ -3,13 +3,12 @@
 //            ch900_2..6 and double-key the top 30 wave-1 exceptions before PLAN LOCKED); docs/specs/01-pipeline/
 //            68_mcbylaw_standard.md §6 (Ch.900 rows `900.<k>.10(<n>)`, k = 2..6), §6 archetype INCLUDE, §10 (determinism)
 //
-// The K7 keying list: the top 30 wave-1 exceptions by DIRECT residential lots (census.json backlog; the ranking the
-// operator's Q-K7a lane named), each with the facts its keying shard needs — page, unit count, list-group units, the
-// INCLUDE edges extracted from the slice, unconsolidated amendments, and any G-TEXT source repeat inside it. Wave 1 =
-// the top 220 by direct lots (Phase 2 panel data-measured §1.2). M-15 ranks MEMBERSHIP by INCLUDE-closed lots: that
-// count (own direct lots + the direct lots of every exception that includes it, transitively, over the extracted
-// edges) is printed beside each entry, with the exceptions in the closed top 30 that the direct top 30 misses — the
-// operator chooses; nothing here selects by it. Zones come from the slice (article title "Exceptions for RD Zone").
+// The K7 keying list (plan E-5): the top 30 wave-1 exceptions by INCLUDE-CLOSED residential lots (Spec 69 M-15: an
+// exception's own direct lots + the direct lots of every exception that includes it, transitively, over the INCLUDE
+// edges extracted from the slice; census.json backlog for the direct lots), each with the facts its keying shard needs
+// - page, unit count, list-group units, INCLUDE edges, unconsolidated amendments, any City repeat-letter inside it.
+// Wave 1 = the top 220 by the same count. Coverage shares use direct lots (M-15). Zones come from the slice (article
+// title "Exceptions for RD Zone").
 //
 //   buildK7({census, slice, adoptionId, groups})  → the k7-exceptions.json document. PURE. Throws K7Error.
 //   renderK7Markdown(doc)                         → the short markdown summary. PURE.
@@ -107,22 +106,28 @@ export function buildK7({ census, slice, adoptionId, groups = [] }) {
     }
     closed.set(e.regulation_id, lotsOf(e.regulation_id) + [...seen].reduce((s, id) => s + lotsOf(id), 0));
   }
-  const rankClosed = [...index.values()].sort((a, b) => closed.get(b.regulation_id) - closed.get(a.regulation_id) || cmpStr(a.zone, b.zone) || a.exception - b.exception);
-  const closedRank = new Map(rankClosed.map((e, i) => [e.regulation_id, i + 1]));
-  const wave1 = rankDirect.slice(0, WAVE1_SIZE);
+  // Candidates (Spec 69 M-15: membership and rank by INCLUDE-closed lots): every sliced exception, plus every census
+  // exception the pinned pages do not hold (no edges known: its closed lots are its direct lots). Ties: direct lots,
+  // then zone, then number.
+  const cands = [...index.values()].map((e) => ({ closed: closed.get(e.regulation_id), direct: lotsOf(e.regulation_id), e, exception: e.exception, zone: e.zone }));
+  for (const b of census.backlog) if (!byZoneN.has(key(b.zone, Number(b.exception_number)))) cands.push({ closed: Number(b.lots), direct: Number(b.lots), e: null, exception: Number(b.exception_number), zone: b.zone });
+  const ranked = cands.filter((c) => c.closed > 0).sort((a, b) => b.closed - a.closed || b.direct - a.direct || cmpStr(a.zone, b.zone) || a.exception - b.exception);
+  const directRank = new Map(rankDirect.map((b, i) => [key(b.zone, Number(b.exception_number)), i + 1]));
+  const wave1 = ranked.slice(0, WAVE1_SIZE);
   const top = wave1.slice(0, TOP_N);
   const missing = [];
-  const exceptions = top.map((b, i) => {
-    const e = byZoneN.get(key(b.zone, Number(b.exception_number)));
+  const exceptions = top.map((c, i) => {
+    const e = c.e;
+    const k = key(c.zone, c.exception);
     if (!e) {
-      missing.push(key(b.zone, b.exception_number));
-      return { direct_lots: Number(b.lots), exception: Number(b.exception_number), rank: i + 1, regulation_id: null, wave: 1, zone: b.zone };
+      missing.push(k);
+      return { closed_lots: c.closed, direct_lots: c.direct, direct_rank: directRank.get(k) ?? null, exception: c.exception, rank: i + 1, regulation_id: null, wave: 1, zone: c.zone };
     }
     return {
       amended_by: [...e.amended_by].sort(),
-      closed_lots: closed.get(e.regulation_id),
-      closed_rank: closedRank.get(e.regulation_id),
-      direct_lots: Number(b.lots),
+      closed_lots: c.closed,
+      direct_lots: c.direct,
+      direct_rank: directRank.get(k) ?? null,
       exception: e.exception,
       groups: e.groups,
       included_by_direct: (includedBy.get(e.regulation_id) || []).length,
@@ -134,17 +139,30 @@ export function buildK7({ census, slice, adoptionId, groups = [] }) {
       source_repeats: [...e.repeats].sort(),
       units: e.units,
       wave: 1,
-      zone: b.zone,
+      zone: c.zone,
     };
   });
   const inTop = new Set(exceptions.map((x) => x.regulation_id).filter(Boolean));
   const outside = [...new Set(exceptions.flatMap((x) => x.includes || []))].filter((id) => !inTop.has(id)).sort();
-  const sum = (xs) => xs.reduce((s, b) => s + Number(b.lots), 0);
+  // SC-13 "captured": an exception in the list whose INCLUDE closure (what it includes, transitively) is in the list too.
+  const closureIn = (id) => {
+    const seen = new Set();
+    const todo = [...((index.get(id) || {}).includes || [])];
+    while (todo.length) {
+      const x = todo.pop();
+      if (seen.has(x)) continue;
+      seen.add(x);
+      todo.push(...((index.get(x) || {}).includes || []));
+    }
+    return [...seen].every((x) => inTop.has(x));
+  };
+  const sumDirect = (xs) => xs.reduce((s, c) => s + c.direct, 0);
   const share = (n) => Math.round((n / Number(census.excepted.lots)) * 1e6) / 1e6;
-  const closedTop = rankClosed.slice(0, TOP_N).map((e) => e.regulation_id);
+  const capturedLots = exceptions.filter((x) => x.regulation_id && closureIn(x.regulation_id)).reduce((s, x) => s + x.direct_lots, 0);
+  const directTop = rankDirect.slice(0, TOP_N).map((b) => byZoneN.get(key(b.zone, Number(b.exception_number)))?.regulation_id ?? key(b.zone, b.exception_number));
   const censusKeys = new Set(direct.keys());
   return {
-    $comment: `GENERATED by scripts/analysis/bylaw/k7.mjs --write from census.json (backlog, ${census.adoption_id}) and the live slice (${adoptionId}). Do not edit. Ranked by direct residential lots (census backlog), ties by zone then number; wave 1 = the top ${WAVE1_SIZE} (Spec 69 M-15). closed_lots / closed_rank: INCLUDE-closed lots over the sliced exception rows (M-15 membership counting), shown, not used to select. INCLUDE edges are extracted refs from a clause that says "comply with" (generated, not keyed).`,
+    $comment: `GENERATED by scripts/analysis/bylaw/k7.mjs --write from census.json (backlog, ${census.adoption_id}) and the live slice (${adoptionId}). Do not edit. Ranked by INCLUDE-closed residential lots (Spec 69 M-15: an exception's own direct lots + the direct lots of every exception that INCLUDEs it, transitively), ties by direct lots, zone, number; wave 1 = the top ${WAVE1_SIZE}. Coverage shares use direct lots (M-15). INCLUDE edges are extracted refs from a clause that says "comply with" (generated, not keyed).`,
     adoption_id: adoptionId,
     census: { adoption_id: census.adoption_id, current: census.adoption_id === adoptionId, excepted_lots: Number(census.excepted.lots), sql_blob_sha: census.sql?.blob_sha ?? null },
     closure_outside_top: outside.map((id) => ({ closed_lots: index.has(id) ? closed.get(id) : null, direct_lots: index.has(id) ? lotsOf(id) : null, regulation_id: id })),
@@ -158,13 +176,15 @@ export function buildK7({ census, slice, adoptionId, groups = [] }) {
     k7_version: K7_VERSION,
     missing_from_slice: missing,
     refs: refCounts,
-    top_by_closed_lots_not_in_top_by_direct: closedTop.filter((id) => !inTop.has(id)),
+    top_by_direct_lots_not_in_top: directTop.filter((id) => !inTop.has(id)),
     totals: {
-      top_direct_lots: sum(top),
-      top_share_of_excepted: share(sum(top)),
+      top_captured_direct_lots: capturedLots,
+      top_captured_share_of_excepted: share(capturedLots),
+      top_direct_lots: sumDirect(top),
+      top_share_of_excepted: share(sumDirect(top)),
       top_units: exceptions.reduce((s, x) => s + (x.units || 0), 0),
-      wave1_direct_lots: sum(wave1),
-      wave1_share_of_excepted: share(sum(wave1)),
+      wave1_direct_lots: sumDirect(wave1),
+      wave1_share_of_excepted: share(sumDirect(wave1)),
     },
     top_n: TOP_N,
     wave1_size: WAVE1_SIZE,
@@ -184,17 +204,17 @@ export function renderK7Markdown(doc) {
     '',
     `> GENERATED by \`node scripts/analysis/bylaw/k7.mjs --write\` (${doc.k7_version}) from \`census.json\` (${doc.census.adoption_id}${doc.census.current ? '' : ', STALE'}) and the slice of ${doc.adoption_id}. Do not edit. Data: \`k7-exceptions.json\`. Spec 69 M-15 (dated note 2026-10-07, operator Q-K7a).`,
     '',
-    `Ranked by direct residential lots. Top ${doc.top_n}: **${thousands(t.top_direct_lots)}** lots (${pct(t.top_share_of_excepted)} of ${thousands(doc.census.excepted_lots)} excepted), **${t.top_units}** clause units. Wave 1 (top ${doc.wave1_size}): ${thousands(t.wave1_direct_lots)} lots (${pct(t.wave1_share_of_excepted)}).`,
+    `Ranked by INCLUDE-closed residential lots (Spec 69 M-15). Top ${doc.top_n}: **${thousands(t.top_direct_lots)}** direct lots (${pct(t.top_share_of_excepted)} of ${thousands(doc.census.excepted_lots)} excepted); captured with their whole INCLUDE closure in the list: **${thousands(t.top_captured_direct_lots)}** (${pct(t.top_captured_share_of_excepted)}); **${t.top_units}** clause units. Wave 1 (top ${doc.wave1_size} by closed lots): ${thousands(t.wave1_direct_lots)} direct lots (${pct(t.wave1_share_of_excepted)}).`,
     '',
-    '| # | Zone | Exception | Direct lots | Closed lots (rank) | Page | Units | SSP / PBS units | INCLUDEs | Included by | Amended by (unconsolidated) | Source repeats |',
+    '| # | Zone | Exception | Closed lots | Direct lots (rank) | Page | Units | SSP / PBS units | INCLUDEs | Included by | Amended by (unconsolidated) | Source repeats |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|',
     ...doc.exceptions.map((e) =>
-      `| ${e.rank} | ${cell(e.zone)} | ${e.regulation_id ? cell(e.regulation_id) : `${e.exception} (not in slice)`} | ${lots(e.direct_lots)} | ${lots(e.closed_lots)} (${e.closed_rank ?? '–'}) | ${e.page ? cell(e.page) : '–'} | ${e.units ?? '–'} | ${e.groups ? `${e.groups.SSP ?? 0} / ${e.groups.PBS ?? 0}` : '–'} | ${list(e.includes)} | ${e.included_by_direct ?? '–'} | ${list(e.amended_by)} | ${list(e.source_repeats)} |`,
+      `| ${e.rank} | ${cell(e.zone)} | ${e.regulation_id ? cell(e.regulation_id) : `${e.exception} (not in slice)`} | ${lots(e.closed_lots)} | ${lots(e.direct_lots)} (${e.direct_rank ?? '–'}) | ${e.page ? cell(e.page) : '–'} | ${e.units ?? '–'} | ${e.groups ? `${e.groups.SSP ?? 0} / ${e.groups.PBS ?? 0}` : '–'} | ${list(e.includes)} | ${e.included_by_direct ?? '–'} | ${list(e.amended_by)} | ${list(e.source_repeats)} |`,
     ),
     '',
     `SSP / PBS units = clause units under "Site Specific Provisions" / "Prevailing By-laws and Prevailing Sections" (a "(None Apply)" list is one unit). Included by = exceptions that INCLUDE it directly. INCLUDE targets outside the ${doc.top_n} (stay \`exception_not_authored\` until keyed): ${doc.closure_outside_top.length ? doc.closure_outside_top.map((x) => `${cell(x.regulation_id)} (direct ${lots(x.direct_lots)}, closed ${lots(x.closed_lots)})`).join('; ') : 'none'}.`,
     '',
-    `In the top ${doc.top_n} by INCLUDE-closed lots but not by direct lots: ${list(doc.top_by_closed_lots_not_in_top_by_direct)}.`,
+    `In the top ${doc.top_n} by direct lots but not by INCLUDE-closed lots: ${list(doc.top_by_direct_lots_not_in_top)}.`,
     '',
     `Join: ${j.census_exceptions} census exceptions, ${j.slice_exceptions} sliced; not on the pinned pages: ${j.census_not_in_slice.length ? cell(j.census_not_in_slice.join(', ')) : 'none'}; sliced with no residential lot: ${j.slice_not_in_census}. Missing from the slice in the top ${doc.top_n}: ${list(doc.missing_from_slice)}. Exception refs ${doc.refs.exception_refs}, of which INCLUDE edges ${doc.refs.include_edges}.`,
     '',

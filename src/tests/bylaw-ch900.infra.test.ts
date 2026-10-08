@@ -89,7 +89,7 @@ describe('the slicer on the real exception pages (G-TEXT)', () => {
   });
 });
 
-describe('k7-exceptions.json — the wave-1 top 30 by direct residential lots (generated, deterministic)', () => {
+describe('k7-exceptions.json — the wave-1 top 30 by INCLUDE-closed residential lots (Spec 69 M-15, plan E-5; generated, deterministic)', () => {
   it('equals an in-memory regeneration from census.json + the live slice (LF, sorted keys)', () => {
     const text = fs.readFileSync(path.join(SEEDS, 'k7-exceptions.json'), 'utf8');
     expect(text.includes('\r')).toBe(false);
@@ -100,18 +100,21 @@ describe('k7-exceptions.json — the wave-1 top 30 by direct residential lots (g
     expect(doc.census.current).toBe(true); // census.json re-run on adoption-4: only adoption_id moved
     expect(doc.refs.include_edges).toBeGreaterThan(1000);
   });
-  it('the INCLUDE-closed count reproduces M-15: RD 1462 inherits 38,512 lots (0 direct) and is an INCLUDE target of the 30', () => {
+  it('the INCLUDE-closed ranking reproduces M-15: RD 1462 / RS 336 / RT 352 (0 direct lots) inherit 38,512 / 8,249 / 2,323 and rank 2 / 5 / 19; top 220 = 74.38 % of excepted', () => {
     const k = readJson('k7-exceptions.json');
-    expect(k.closure_outside_top).toEqual([{ closed_lots: 38512, direct_lots: 0, regulation_id: '900.3.10(1462)' }]);
-    expect(k.top_by_closed_lots_not_in_top_by_direct).toEqual(expect.arrayContaining(['900.3.10(1462)', '900.4.10(336)', '900.5.10(352)']));
+    const at = (id: string) => k.exceptions.find((e: Json) => e.regulation_id === id) || {};
+    expect([at('900.3.10(1462)'), at('900.4.10(336)'), at('900.5.10(352)')].map((e: Json) => [e.rank, e.closed_lots, e.direct_lots])).toEqual([[2, 38512, 0], [5, 8249, 0], [19, 2323, 0]]);
+    expect((k.totals.wave1_share_of_excepted * 100).toFixed(2)).toBe('74.38'); // M-15 v0.5 note: INCLUDE-closed-ranked top 220 = 74.38 %
+    expect(k.closure_outside_top).toEqual([]); // every INCLUDE target of the 30 is in the 30
+    expect(k.totals.top_captured_direct_lots).toBe(k.totals.top_direct_lots);
   });
-  it('30 wave-1 exceptions, ranked by direct lots (desc), each on a pinned page with ≥ 1 unit', () => {
+  it('30 wave-1 exceptions, ranked by INCLUDE-closed lots (desc; ties by direct lots), each on a pinned page with >= 1 unit', () => {
     const k = readJson('k7-exceptions.json');
     expect(k.exceptions).toHaveLength(30);
-    const lots = k.exceptions.map((e: Json) => e.direct_lots);
+    const lots = k.exceptions.map((e: Json) => e.closed_lots);
     expect(lots).toEqual([...lots].sort((a: number, b: number) => b - a));
     for (const e of k.exceptions) {
-      expect([e.regulation_id, EXC.includes(e.page), e.units > 0, e.wave]).toEqual([e.regulation_id, true, true, 1]);
+      expect([e.regulation_id, EXC.includes(e.page), e.units > 0, e.wave, e.closed_lots >= e.direct_lots]).toEqual([e.regulation_id, true, true, 1, true]);
       expect(e.regulation_id).toBe(`900.${{ R: 2, RD: 3, RS: 4, RT: 5, RM: 6 }[e.zone as 'R']}.10(${e.exception})`);
     }
   });
