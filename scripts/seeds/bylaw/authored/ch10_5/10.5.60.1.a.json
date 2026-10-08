@@ -1,0 +1,268 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.60.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.60.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary buildings or structures",
+          "dwelling_unit": "to dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Scope: Article 10.5.60 applies to ancillary buildings or structures in the Residential Zone category that are ancillary to dwelling units or residential buildings.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.1(2)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "An ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "An ancillary building in the Residential Zone category may not be used for living accommodation.",
+        "gaps": "Living accommodation is not a vocab.uses token, so the prohibited use is described here rather than keyed. Whether an ancillary building is used for living accommodation is a design/use fact we do not evaluate."
+      },
+      "disclosure": "An accessory building (such as a garage or shed) in a residential zone cannot be used as living space. We do not check how an accessory building will be used.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.1(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "An ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "An ancillary building in the Residential Zone category may have both food preparation facilities and sanitary facilities if it is for indoor amenity space required by the By-law.",
+        "gaps": "Facilities and amenity-space purpose are design facts with no vocab token; not evaluated."
+      },
+      "disclosure": "An accessory building used as required indoor amenity space may have both a kitchen and washroom facilities. We do not check accessory building fit-out.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.1(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "An ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "An ancillary building in the Residential Zone category used for any purpose other than required indoor amenity space may have either food preparation facilities or sanitary facilities, but not both.",
+        "gaps": "Keyed PERMIT (the clause grants either facility); its 'but not both' limb is a restriction on the same permission and is described here, not keyed as a separate PROHIBIT. Design facts with no vocab token; not evaluated."
+      },
+      "disclosure": "Any other accessory building may have a kitchen or washroom facilities, but not both. We do not check accessory building fit-out.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.1(4)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "an ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "In the Residential Zone category, no above-ground part of an ancillary building or structure may be erected before the main walls and roof of a residential building on the same lot are erected and completed.",
+        "gaps": "A construction-sequencing rule; it constrains timing, not the built envelope, and is not evaluated."
+      },
+      "disclosure": "An accessory building cannot be built above ground before the house on the same lot has its main walls up and roof completed. This is a construction-timing rule we do not evaluate.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.60.1(1)": {
+      "explanation": "The rules in Article 10.5.60 cover accessory buildings and structures (garages, sheds and similar) in all residential zones when they serve homes or residential buildings.",
+      "code_refs": "none"
+    },
+    "10.5.60.1(2)": {
+      "explanation": "An accessory building in a residential zone cannot be used as living space.",
+      "code_refs": "none"
+    },
+    "10.5.60.1(3)": {
+      "explanation": "An accessory building used as required indoor amenity space may have both kitchen and washroom facilities; any other accessory building may have one or the other, but not both.",
+      "code_refs": "none"
+    },
+    "10.5.60.1(4)": {
+      "explanation": "In residential zones, an accessory building cannot be built above ground until the house on the lot has its main walls built and roof completed.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.40.61", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.40.61(1)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["lawfully_existing"]},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"R": "the R zone", "lawfully_existing": "a lawfully existing porch"}},
+   "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status"], "status": "not_modelled", "description": "Despite the encroachment rules 10.5.40.50(2) and 10.5.40.60(1)(A), a lawfully existing porch in the R zone may be reconstructed or replaced within its same outer limits, with no enlargement.", "gaps": "Depends on an existing porch and its lawful status, which we do not hold. A porch has no vocab.uses token. Displaces 10.5.40.50(2) and 10.5.40.60(1)(A) for the existing porch only (no displaces field in the template)."},
+   "disclosure": "An existing lawful porch can be rebuilt or replaced in the same footprint even if it doesn't meet today's encroachment rules, as long as it is not enlarged. We don't hold information about existing porches.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.40.61(1)": {"explanation": "In the R zone, a lawfully existing porch can be rebuilt or replaced even if it doesn't meet current encroachment rules, as long as the new porch stays within the same outer limits and is not enlarged.", "code_refs": "none"}
+ }
+}

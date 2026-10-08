@@ -1,0 +1,61 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.75.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.75.1(1)#(1)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": ["energy_device"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite",
+          "energy_device": "photovoltaic solar energy device or thermal solar energy device"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.75.1(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.2 metres", "clause": "(1)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": ["energy_device"],
+        "evidence": {
+          "ancillary_building": "permitted maximum height for an ancillary building",
+          "garden_suite": "ancillary building containing a garden suite",
+          "energy_device": "no part of the device may be higher"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    }
+  ]
+}

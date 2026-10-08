@@ -1,0 +1,107 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_7/150.7.75.1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.75.1(1)#(1)(A)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "energy_device"
+    ],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "on an ancillary building",
+     "energy_device": "solar energy device"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "Despite 10.5.75.1(4), a solar energy device on a garden suite building must comply with the minimum building setbacks for a garden suite building.",
+    "gaps": "Incorporates the garden suite building setbacks (150.7.60.20) for the device; read as INCLUDE rather than REQUIRE because no vocab.requirement token fits. Solar devices are not part of the envelope calculation."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.75.1(1)#(1)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.2",
+     "clause": "(1)(B)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "energy_device"
+    ],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "on an ancillary building",
+     "energy_device": "solar energy device"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "No part of a solar energy device on a garden suite building may be more than 1.2 m above the permitted maximum height for that building.",
+    "gaps": "The 1.2 m is a projection allowance above the building's permitted height; there is no DSL target for a device height, so it is recorded as threshold_used_in_application (closest closed reason) and the unit as a PERMIT of the projection."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.75.1(1)": {
+   "explanation": "Solar panels on a garden suite must respect the garden suite's setbacks and may rise no more than 1.2 m above the garden suite's height limit.",
+   "code_refs": "none"
+  }
+ }
+}

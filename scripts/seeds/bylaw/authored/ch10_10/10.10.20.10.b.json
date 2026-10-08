@@ -1,0 +1,38 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.20.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.20.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "Clause 10.10.20.40", "clause": "(1)", "reason": "cross_reference_value"},
+        {"literal": "Municipal Shelter", "clause": "(1)", "reason": "cross_reference_value"},
+        {"literal": "Park", "clause": "(1)", "reason": "cross_reference_value"},
+        {"literal": "545-2019", "clause": "(1)", "reason": "illustrative_or_historic"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "permitted in the R zone",
+          "any": "permitted residential building type in Clause 10.10.20.40",
+          "dwelling_unit": "Dwelling Unit in a permitted residential building type"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

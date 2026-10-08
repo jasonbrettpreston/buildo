@@ -1,0 +1,106 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.30.1", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.30.1(1)#(1)(A)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": ["detached_houseplex"],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "permitted detached houseplex is subject"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "ch900_backlog",
+    "user_inputs": ["building_type"],
+    "description": "Where a Chapter 900 exception sets lot requirements for a detached house, those requirements are applied to a detached houseplex that is the only residential building on the lot.",
+    "gaps": "Read as INCLUDE (the houseplex takes the exception's detached-house lot requirements); a PROCEDURAL reading is possible because it opens with 'Despite regulations 900.1.10(3) and 900.1.10(4)(A)'. The condition 'the only residential building on a lot' has no vocab.lot_condition token and is not keyed as a condition. Depends on Chapter 900 exception content (backlog)."
+   },
+   "disclosure": "If your lot is in a Chapter 900 exception area with lot requirements for a detached house, those requirements also apply to a detached houseplex; we do not yet evaluate exception lot requirements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.10.30.1(1)#(1)(B)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": ["semi_detached_houseplex"],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "semi_detached_houseplex": "permitted semi-detached houseplex is subject"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "ch900_backlog",
+    "user_inputs": ["building_type"],
+    "description": "Where a Chapter 900 exception sets lot requirements for a semi-detached house, those requirements (for the portion that is an individual dwelling unit) are applied to a semi-detached houseplex that is the only residential building on the lot.",
+    "gaps": "Read as INCLUDE; a PROCEDURAL reading is possible ('Despite regulations 900.1.10(3) and 900.1.10(4)(A)'). The condition 'the only residential building on a lot' has no vocab.lot_condition token. Depends on Chapter 900 exception content (backlog)."
+   },
+   "disclosure": "If your lot is in a Chapter 900 exception area with lot requirements for a semi-detached house, those requirements also apply to a semi-detached houseplex; we do not yet evaluate exception lot requirements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.10.30.1(2)#whole",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "base > exception",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+    "lot_conditions": ["has_secondary_suite"],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "with a detached houseplex",
+     "semi_detached_houseplex": "semi-detached houseplex or a residential building",
+     "has_secondary_suite": "with a secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": ["building_type", "has_secondary_suite"],
+    "description": "Where the lot coverage under 10.10.60.70(1)(C) is more permissive than the coverage that would apply under 10.10.30.1(1) (exception lot requirements), the more permissive one prevails.",
+    "gaps": "Precedence is conditional on which value is more permissive, not a fixed layer order; 'base > exception' records that the base-chapter regulation 10.10.60.70(1)(C) may override the exception-derived coverage despite 900.1.10(3)/(4)(A). The secondary-suite arm is an alternative (or), not a conjunction, so it is recorded in application rather than condition."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.30.1(1)": {"explanation": "If your lot is covered by a site-specific Chapter 900 exception that sets lot requirements for a detached or semi-detached house, a detached or semi-detached houseplex that is the only residential building on the lot must meet those same exception requirements.", "code_refs": "none"},
+  "10.10.30.1(2)": {"explanation": "For a houseplex or a house with a secondary suite, if the general lot coverage rule in 10.10.60.70(1)(C) is more generous than the coverage set by a site-specific exception, the more generous lot coverage applies.", "code_refs": "none"}
+ }
+}

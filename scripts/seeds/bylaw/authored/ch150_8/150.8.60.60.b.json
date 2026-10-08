@@ -1,0 +1,365 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.60.60",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.8.60.60(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.3 metres", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "50 percent", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing",
+          "deck_or_platform": "exterior sides of a platform"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 0.1 ratio × interior_floor_area_m2 @(2)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "interior floor area of the laneway suite",
+          "deck_or_platform": "area of the platform"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "the ancillary building containing a laneway suite",
+          "deck_or_platform": "the platform complies with"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(C)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "containing a laneway suite",
+          "deck_or_platform": "exterior sides of a platform"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_height_m = 0.2 m @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "containing a laneway suite",
+          "deck_or_platform": "level of the floor of a platform"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_height_m = 4.0 m @(3)(B)"],
+      "literals_not_expressed": [
+        {"literal": "0.3 metres", "clause": "(3)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "containing a laneway suite",
+          "deck_or_platform": "floor of a platform permitted",
+          "abuts_lane": "a main wall facing a lane"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(4)#whole",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.5 m @(4)"],
+      "literals_not_expressed": [
+        {"literal": "0.3 metres", "clause": "(4)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "ancillary_building": "front main wall of the ancillary building",
+          "deck_or_platform": "stairs or ramps leading to the platform"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = 4.0 m @(5)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "abutting main wall of the ancillary building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.5 m @(5)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "front main wall of the ancillary building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.75 m @(5)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "containing a laneway suite",
+          "abuts_lane": "between a lane and the ancillary building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.6 m @(6)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.6 m @(6)(B)"],
+      "literals_not_expressed": [
+        {"literal": "2.0 metres", "clause": "(6)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(7)#(7)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.6 m @(7)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite",
+          "abuts_lane": "main wall of the ancillary building facing a lane",
+          "lane_setback_m": "minimum building setbacks abutting the lane"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.8.60.60(7)#(7)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.6 m @(7)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "front main wall of the ancillary building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

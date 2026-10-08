@@ -1,0 +1,11 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.60.1", "keyer": "A",
+ "units": [
+  {"unit_id": "10.10.60.1(1)#whole", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none", "literals_not_expressed": [],
+   "application": {"zones": ["R"], "building_types": ["ancillary_building"], "lot_conditions": [], "uses": [], "evidence": {"R": "the R zone", "ancillary_building": "ancillary buildings or structures"}},
+   "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": [], "status": "informational", "description": "Scope statement: Article 10.10.60 applies to ancillary buildings or structures in the R zone that are ancillary to dwelling units or residential buildings, in addition to Article 10.5.60.", "gaps": "Scope only; Article 10.5.60 continues to apply alongside."},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.10.60.1(1)": {"explanation": "The R-zone rules for garages, sheds and other ancillary buildings serving homes apply on top of the general ancillary-building rules in Article 10.5.60.", "code_refs": "none"}
+ }}

@@ -1,0 +1,73 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.60.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.8.60.70(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "lot_coverage_pct",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["has_secondary_suite"],
+        "if": "mapped(LC) and has_laneway_suite"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["has_secondary_suite"],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite",
+          "secondary_suite_use": "containing a laneway suite",
+          "has_secondary_suite": "if a lot has an ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["has_laneway_suite"]
+      }
+    },
+    {
+      "unit_id": "150.8.60.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["has_secondary_suite"],
+        "if": "has_laneway_suite"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "lot_coverage_pct = 30 pct @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["has_secondary_suite"],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "ancillary_building": "all ancillary buildings combined",
+          "secondary_suite_use": "ancillary building containing a laneway suite",
+          "has_secondary_suite": "if a lot has an ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["has_laneway_suite"]
+      }
+    }
+  ]
+}

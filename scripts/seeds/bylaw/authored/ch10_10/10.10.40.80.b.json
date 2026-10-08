@@ -1,0 +1,194 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.80",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.80(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not suite_wall_openings(any)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 2.0 m @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "a townhouse or an apartment building has main walls",
+          "apartment_building": "townhouse or an apartment building has main walls"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["suite_wall_openings"]
+      }
+    },
+    {
+      "unit_id": "10.10.40.80(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not suite_wall_openings(either_one_of_two)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 5.5 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "a townhouse or an apartment building has main walls",
+          "apartment_building": "townhouse or an apartment building has main walls"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["suite_wall_openings"]
+      }
+    },
+    {
+      "unit_id": "10.10.40.80(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "suite_wall_openings(each)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 11.0 m @(1)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "a townhouse or an apartment building has main walls",
+          "apartment_building": "townhouse or an apartment building has main walls"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["suite_wall_openings"]
+      }
+    },
+    {
+      "unit_id": "10.10.40.80(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"],
+        "if": "not suite_wall_openings(one_or_more)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 5.5 m @(2)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "two or more townhouses or apartment buildings",
+          "apartment_building": "townhouses or apartment buildings or combination",
+          "major_street": "same lot abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["suite_wall_openings", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.40.80(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"],
+        "if": "suite_wall_openings(each)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 11.0 m @(2)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "two or more townhouses or apartment buildings",
+          "apartment_building": "townhouses or apartment buildings or combination",
+          "major_street": "same lot abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["suite_wall_openings", "building_type"]
+      }
+    }
+  ]
+}

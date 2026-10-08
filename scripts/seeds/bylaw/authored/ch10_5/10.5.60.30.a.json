@@ -1,0 +1,129 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_5/10.5.60.30",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.5.60.30(1)#whole",
+   "archetype": "LIMIT",
+   "target": "separation_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "building_height_band"
+    ],
+    "if": "proposed_height_m > 2.5 m or gfa_m2 > 10 m2"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "separation_m = 1.8 m @(1)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [
+     "building_height_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "R": "In the Residential Zone category",
+     "RD": "In the Residential Zone category",
+     "RS": "In the Residential Zone category",
+     "RT": "In the Residential Zone category",
+     "RM": "In the Residential Zone category",
+     "ancillary_building": "an ancillary building or structure",
+     "building_height_band": "with a height greater than 2.5 metres"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "An ancillary building or structure taller than 2.5 m or larger than 10 m2 GFA must be at least 1.8 m from a residential building on the same lot.",
+    "gaps": "The condition is a disjunction of a height test (proposed_height_m of the ancillary building) and a GFA test (gfa_m2 of the ancillary building); there is no GFA band token, so only building_height_band is listed. The heights and GFAs of proposed ancillary structures are scenario values."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.60.30(2)#whole",
+   "archetype": "LIMIT",
+   "target": "separation_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "separation_m = 2.0 m @(2)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "energy_device"
+    ],
+    "evidence": {
+     "R": "in the Residential Zone category",
+     "RD": "in the Residential Zone category",
+     "RS": "in the Residential Zone category",
+     "RT": "in the Residential Zone category",
+     "RM": "in the Residential Zone category",
+     "energy_device": "heating or air-conditioning device"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "A ground-mounted heating or air-conditioning device in the rear yard may be no more than 2.0 m from the rear main wall of the residential building.",
+    "gaps": "separation_m is normally a minimum between buildings; here it is a maximum distance between a device and the rear main wall, the nearest vocab target. building_types any: \"the residential building\" names no type. Equipment placement is not part of the envelope calculation."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.5.60.30(1)": {
+   "explanation": "In residential zones, a shed, garage or other ancillary structure taller than 2.5 m or larger than 10 m2 must be at least 1.8 m away from the house.",
+   "code_refs": "none"
+  },
+  "10.5.60.30(2)": {
+   "explanation": "In residential zones, a ground-mounted air conditioner or heat pump in the rear yard must be within 2.0 m of the house's rear wall.",
+   "code_refs": "none"
+  }
+ }
+}

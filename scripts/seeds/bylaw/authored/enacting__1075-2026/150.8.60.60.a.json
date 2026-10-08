@@ -1,0 +1,103 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "enacting:1075-2026/150.8.60.60",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.8.60.60(7)@1075-2026#[instruction]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "33",
+     "clause": "[instruction]",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Amending By-law 1075-2026, item 33, replaces regulation 150.8.60.60(7) with the text keyed in the (7) unit.",
+    "gaps": "Amendment instruction (replacement); the operative text is the (7) unit. \"33\" is the item number of the amending by-law, recorded as count_or_ordinal_not_a_limit in case it is not treated as a regulation number."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.60(7)@1075-2026#(7)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(7)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3",
+     "clause": "(7)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "ancillary_building": "on an ancillary building",
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "description": "Wall-mounted equipment (vents, pipes, utility equipment, satellite dishes, antennae) on a laneway suite building may encroach up to 0.6 m into a required setback, if it stays at least 0.3 m from the lot line.",
+    "gaps": "The 0.3 m minimum distance from the lot line is a condition on the encroachment (it would be encroachment_clearance_m, a different target with a min bound); there is no threshold token for it, so it is recorded as threshold_used_in_application rather than a second statement. Equipment encroachments do not change the building envelope."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.8.60.60(7)@1075-2026": {
+   "explanation": "As replaced by By-law 1075-2026: equipment mounted on the walls of a laneway suite (vents, pipes, utility equipment, satellite dishes, antennae) may stick out up to 0.6 m into the required setback, but must stay at least 0.3 m from the lot line.",
+   "code_refs": "none"
+  }
+ }
+}

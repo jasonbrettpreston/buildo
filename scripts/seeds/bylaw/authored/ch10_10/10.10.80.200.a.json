@@ -1,0 +1,20 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.80.200", "keyer": "A",
+ "units": [
+  {"unit_id": "10.10.80.200(1)#(1)(A)", "archetype": "DISAPPLY", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 7.6 m"},
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none",
+   "literals_not_expressed": [{"literal": "one", "clause": "(1)(A)(ii)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": ["R"], "building_types": ["detached_house", "semi_detached_house", "detached_houseplex", "semi_detached_houseplex", "townhouse"], "lot_conditions": ["frontage_band"], "uses": ["parking_space"], "evidence": {"R": "the R zone", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, detached", "detached_houseplex": "detached houseplex, semi-detached", "semi_detached_houseplex": "semi-detached houseplex, or", "townhouse": "unit of a townhouse", "frontage_band": "7.6 metres or less", "parking_space": "no parking space"}},
+   "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"], "status": "not_modelled", "description": "Despite Chapter 200, no parking space is required in the R zone where access to a side- or rear-yard parking space cannot be provided from a lane or flanking street, the lot frontage is 7.6 m or less, the deed was registered on or before July 2, 1996, and a detached or semi-detached house or houseplex, or one townhouse unit, is erected after July 2, 1996.", "gaps": "Displaces the Chapter 200 parking space requirement. The no-lane/no-flanking-street access condition is a negated token test the grammar cannot express, and the deed registration date is data we do not hold."},
+   "disclosure": "Narrow lots (7.6 m or less) with no lane or flanking-street access and a deed registered by July 2, 1996 may need no parking; we cannot confirm the deed date or access.", "not_an_override": []},
+  {"unit_id": "10.10.80.200(1)#(1)(B)", "archetype": "DISAPPLY", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 7.6 m"},
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none",
+   "literals_not_expressed": [{"literal": "three", "clause": "(1)(B)", "reason": "threshold_used_in_application"}, {"literal": "one", "clause": "(1)(B)", "reason": "threshold_used_in_application"}],
+   "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": ["frontage_band"], "uses": ["parking_space", "dwelling_unit"], "evidence": {"R": "the R zone", "frontage_band": "7.6 metres or less", "parking_space": "no parking space", "dwelling_unit": "one dwelling unit"}},
+   "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["unit_count"], "status": "not_modelled", "description": "Despite Chapter 200, no parking space is required where access cannot be provided from a lane or flanking street and a lot not previously severed is severed into at most three lots, each with at most one dwelling unit and a lot frontage of 7.6 m or less.", "gaps": "Requires severance history and the no-lane/no-flanking-street access test, neither of which we hold or can express."},
+   "disclosure": "Lots created by a first severance into up to three narrow single-unit lots may need no parking; we cannot confirm severance history.", "not_an_override": []}
+ ],
+ "rows": {
+  "10.10.80.200(1)": {"explanation": "On narrow R-zone lots (7.6 m frontage or less) where parking cannot be reached from a lane or side street, no parking space is required if the lot dates from 1996 or earlier, or was created by a first severance into up to three single-unit lots. We do not evaluate this.", "code_refs": "none"}
+ }}

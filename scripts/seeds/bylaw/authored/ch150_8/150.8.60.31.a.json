@@ -1,0 +1,174 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.60.31",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.8.60.31(1)#whole",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = existing(separation_m; enacted(569-2013)) @(1)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "existing ancillary building",
+          "laneway_suite": "a laneway suite",
+          "lawfully_existing": "lawfully existing residential"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "If the separation between a lawfully existing ancillary building and a lawfully existing residential building on the same lot is less than the laneway suite separation required by 150.8.60.30, the required minimum separation is the existing separation.",
+        "gaps": "existing() needs a date; the clause names none ('lawfully existing'), so the enactment of By-law 569-2013 is used as the reference (the conservative reading of 'lawfully existing' under this By-law); flag for adjudication. The relief applies only where the existing separation is less than the 150.8.60.30 requirement, and then replaces that requirement for the existing pair of buildings. We hold no as-built separation, so it is not evaluated."
+      },
+      "disclosure": "If an existing accessory building is already closer to the house than the laneway suite rules require, the existing distance is accepted. We do not know existing building positions, so we apply the standard separation.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.31(2)#whole",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_length_m = existing(building_length_m; enacted(569-2013)) @(2)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "existing ancillary building",
+          "laneway_suite": "a laneway suite",
+          "lawfully_existing": "a lawfully existing"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "If the lawful building length of a lawfully existing ancillary building exceeds the maximum laneway suite building length in 150.8.60.30(5), the permitted maximum building length for an ancillary building containing a laneway suite is the existing lawful length.",
+        "gaps": "existing() needs a date; the clause names none ('lawfully existing'), so the enactment of By-law 569-2013 is used as the reference (the conservative reading of 'lawfully existing' under this By-law); flag for adjudication. Applies only where the existing lawful length exceeds the 150.8.60.30(5) maximum, and then replaces it. We hold no as-built length, so it is not evaluated."
+      },
+      "disclosure": "If an existing accessory building is longer than the laneway suite length limit, a laneway suite in it may keep that existing length. We do not know existing building sizes, so we apply the standard limit.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.31(3)#whole",
+      "archetype": "LIMIT",
+      "target": "building_width_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_width_m = existing(building_width_m; enacted(569-2013)) @(3)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "existing ancillary building",
+          "laneway_suite": "a laneway suite",
+          "lawfully_existing": "a lawfully existing"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "If the lawful building width of a lawfully existing ancillary building exceeds the maximum laneway suite building width in 150.8.60.30(6), the permitted maximum building width for an ancillary building containing a laneway suite is the existing lawful width.",
+        "gaps": "existing() needs a date; the clause names none ('lawfully existing'), so the enactment of By-law 569-2013 is used as the reference (the conservative reading of 'lawfully existing' under this By-law); flag for adjudication. Applies only where the existing lawful width exceeds the 150.8.60.30(6) maximum, and then replaces it. We hold no as-built width, so it is not evaluated."
+      },
+      "disclosure": "If an existing accessory building is wider than the laneway suite width limit, a laneway suite in it may keep that existing width. We do not know existing building sizes, so we apply the standard limit.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.8.60.31(1)": {
+      "explanation": "If an existing legal accessory building is closer to the existing house than the laneway suite separation rule requires, that existing distance becomes the required separation.",
+      "code_refs": "none"
+    },
+    "150.8.60.31(2)": {
+      "explanation": "If an existing legal accessory building is longer than the laneway suite length limit, a laneway suite may use that existing length as its maximum.",
+      "code_refs": "none"
+    },
+    "150.8.60.31(3)": {
+      "explanation": "If an existing legal accessory building is wider than the laneway suite width limit, a laneway suite may use that existing width as its maximum.",
+      "code_refs": "none"
+    }
+  }
+}

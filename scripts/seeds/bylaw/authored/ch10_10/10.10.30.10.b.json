@@ -1,0 +1,59 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.30.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.30.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(a)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_area_m2 = label(a) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the R zone",
+          "lot_conditions": "the letter \"a\""
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.30.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(a)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_area_m2 = required_lot_frontage_m × 30.0 m @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "30 metres", "clause": "(1)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the R zone",
+          "lot_conditions": "does not have an \"a\" value"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

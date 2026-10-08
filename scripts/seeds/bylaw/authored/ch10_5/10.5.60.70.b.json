@@ -1,0 +1,140 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.60.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.60.70(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "lot_coverage_pct",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["swimming_pool"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "An ancillary building or structure",
+          "swimming_pool": "water surface area of an outdoor swimming pool"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 10 pct @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "all ancillary buildings and structures"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.70(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "(mapped(overlay(LC)) = false) and (lot_coverage_pct > 45 pct)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "secondary_suite"],
+        "lot_conditions": [],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "detached_houseplex": "a lot with a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "secondary_suite": "residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.70(2)#(2)(A)",
+      "archetype": "DEFINE",
+      "target": "lot_coverage_pct",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["swimming_pool"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "other structure used to hold water",
+          "swimming_pool": "water surface area of an outdoor swimming pool"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.70(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 15 pct @(2)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["swimming_pool"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "other structure used to hold water",
+          "swimming_pool": "water surface area of an outdoor swimming pool"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

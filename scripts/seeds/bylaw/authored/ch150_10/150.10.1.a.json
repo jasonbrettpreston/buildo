@@ -1,0 +1,53 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_10/150.10.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.10.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "secondary_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "secondary_suite": "to secondary suites",
+          "secondary_suite_use": "apply to secondary suites"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Scope: the regulations in Section 150.10 apply to secondary suites.",
+        "gaps": "No zone is named; the scope is any lot with a secondary suite, so zones is empty."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.10.1(1)": {
+      "explanation": "The rules in Section 150.10 apply to secondary suites (a second unit inside a house). This sentence only says which rules govern secondary suites; it sets no limit itself.",
+      "code_refs": "none"
+    }
+  }
+}

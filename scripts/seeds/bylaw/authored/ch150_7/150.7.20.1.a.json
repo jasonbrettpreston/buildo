@@ -1,0 +1,269 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.20.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.7.20.1(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "one garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "modelled",
+        "description": "Despite 10.5.60.1(2), an ancillary building may be used for living accommodation in one garden suite.",
+        "gaps": "Overrides the 10.5.60.1(2) prohibition on living accommodation in ancillary buildings, for one garden suite. No zone is named."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.20.1(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.1(3), an ancillary building may have both food preparation facilities and sanitary facilities in a garden suite.",
+        "gaps": "Overrides the 'not both' limb of 10.5.60.1(3) for a garden suite. Interior fit-out is a design fact; not evaluated."
+      },
+      "disclosure": "A garden suite may have both a kitchen and washroom facilities. We do not check interior fit-out.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.20.1(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.1(4), above-ground parts of an ancillary building containing a garden suite may be erected before the main walls and roof of the residential building on the same lot are erected and completed.",
+        "gaps": "Overrides the construction-timing prohibition of 10.5.60.1(4) for an ancillary building containing a garden suite; a sequencing rule, not evaluated."
+      },
+      "disclosure": "A garden suite building may be built before the main house on the lot is finished. This is a construction-timing rule we do not evaluate.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.20.1(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "garden_suite": "a garden suite",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 150.5.60.1(1), a home occupation is permitted in a garden suite that is exclusively and separately occupied as a principal residence, applying Section 150.5 as if the garden suite were a dwelling unit.",
+        "gaps": "Home occupation is not a vocab.uses token; the dwelling_unit token records the 'as if it is a dwelling unit' treatment. Occupancy (principal residence) is not a lot fact; not evaluated."
+      },
+      "disclosure": "A home business may operate in a garden suite that is someone's principal residence, under the home occupation rules in Section 150.5. We do not evaluate home occupations.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.20.1(1)#(1)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 150.13.20.1(1), a short-term rental is permitted in an ancillary building if it is in a garden suite that is exclusively and separately occupied as a principal residence.",
+        "gaps": "Short-term rental is not a vocab.uses token. Occupancy (principal residence) is not a lot fact; not evaluated."
+      },
+      "disclosure": "A short-term rental is allowed in a garden suite that is someone's principal residence. We do not evaluate short-term rental use.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.20.1(2)#whole",
+      "archetype": "LIMIT",
+      "target": "buildings_on_lot",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "buildings_on_lot = 1 units @(2)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "one ancillary building",
+          "garden_suite": "a garden suite",
+          "laneway_suite": "a laneway suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_garden_suite",
+          "has_laneway_suite"
+        ],
+        "status": "modelled",
+        "description": "A maximum of one ancillary building containing either a garden suite or a laneway suite is permitted on a lot, and a lot may not contain both a garden suite and a laneway suite.",
+        "gaps": "The limit is written 'a maximum of one'; keyed as the numeral 1 units. The second sentence (a lot may not contain both a garden suite and a laneway suite) is a prohibition carried by this same unit; it is described here rather than split into a separate unit."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.7.20.1(1)": {
+      "explanation": "These rules let a garden suite do things an ordinary accessory building cannot: be lived in (one garden suite), have both a kitchen and washroom, be built before the main house is finished, host a home business, and be used as a short-term rental if it is someone's principal residence.",
+      "code_refs": "none"
+    },
+    "150.7.20.1(2)": {
+      "explanation": "A lot can have only one accessory building containing a garden suite or a laneway suite, and cannot have both a garden suite and a laneway suite.",
+      "code_refs": "none"
+    }
+  }
+}

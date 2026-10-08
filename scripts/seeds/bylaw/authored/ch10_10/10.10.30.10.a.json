@@ -1,0 +1,101 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.30.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.30.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "labelled(a)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_area_m2 = label(a) @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Minimum lot area in the R zone is the numerical value after the letter \"a\" in the lot's zone label (square metres), when the label has an \"a\" value.",
+        "gaps": "Condition keyed as a presence test only (labelled(a)); no lot_condition token applies to a presence test."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.30.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not labelled(a)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_area_m2 = required_lot_frontage_m × 30 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Where the zone label has no \"a\" value, the minimum lot area (square metres) is the required minimum lot frontage multiplied by 30 metres.",
+        "gaps": "required_lot_frontage_m is the required (label f / zone) frontage, not the measured frontage, per the clause wording \"required minimum lot frontage\". If no required frontage resolves for the lot, the result is not_evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.30.10(1)": {
+      "explanation": "In the R zone the smallest lot allowed is set by the zone label on the Zoning By-law Map: if the label has an \"a\" number, that number is the minimum lot area in square metres; if not, the minimum lot area is the required minimum lot frontage times 30 metres.",
+      "code_refs": "none"
+    }
+  }
+}

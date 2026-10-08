@@ -1,0 +1,430 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_7/150.7.60.21",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.60.21(1)#(1)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite",
+     "ancillary_building"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "for a garden suite",
+     "ancillary_building": "lawfully existing ancillary building",
+     "lawfully_existing": "lawfully existing ancillary building"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "has_garden_suite",
+     "lawfully_existing_status"
+    ],
+    "description": "Where a lawfully existing ancillary building is closer to the lot line than 150.7.60.20 requires, a garden suite in it may keep that building's existing rear yard setback.",
+    "gaps": "Could be read as LIMIT rear_setback_m = existing(rear_setback_m; …), but the clause gives no date or enactment for the existing value, so it is keyed as a PERMIT of the existing setback. Depends on the as-built setback of the existing ancillary building."
+   },
+   "disclosure": "If you convert an existing garage or shed that is closer to the lot line than the garden suite rules allow, the suite may keep the existing rear setback; we cannot check this without the as-built setbacks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(1)#(1)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite",
+     "ancillary_building"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "for a garden suite",
+     "ancillary_building": "lawfully existing ancillary building",
+     "lawfully_existing": "lawfully existing ancillary building"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "has_garden_suite",
+     "lawfully_existing_status"
+    ],
+    "description": "Likewise, a garden suite in a lawfully existing ancillary building may keep that building's existing side yard setback.",
+    "gaps": "Could be read as LIMIT side_setback_m = existing(side_setback_m; …), but no date is given; keyed as PERMIT. Depends on the as-built side setback."
+   },
+   "disclosure": "If you convert an existing garage or shed that is closer to the side lot line than the garden suite rules allow, the suite may keep the existing side setback; we cannot check this without the as-built setbacks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "lawfully existing garden suite",
+     "lawfully_existing": "lawfully existing garden suite"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "has_garden_suite",
+     "lawfully_existing_status"
+    ],
+    "description": "A lawfully existing garden suite may keep side or rear setbacks smaller than 150.7.60.20(2) and (6) require, if no additions after July 24, 2025 increase the non-compliance.",
+    "gaps": "The date July 24, 2025 is a date, not a literal."
+   },
+   "disclosure": "An existing garden suite built before the July 24, 2025 setback change may keep its smaller setbacks; we cannot check this without the building history.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "A garden suite may"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "A garden suite built under a permit issued after July 24, 2025 may have reduced setbacks only where they were already identified in a zoning certificate, rezoning, minor variance or site plan application filed on or before July 24, 2025.",
+    "gaps": "Transition rule keyed on application filing dates; \"Section 45 of the Planning Act\" is a statute reference, not a literal. The lot's application history is not held."
+   },
+   "disclosure": "Garden suites with applications filed on or before July 24, 2025 may keep reduced setbacks approved through those applications; we cannot check application history.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(C)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "A garden suite may"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "For a garden suite built under (2)(B), later additions may not increase the setback non-compliance beyond that established by the building permit.",
+    "gaps": "none"
+   },
+   "disclosure": "A garden suite that relies on the transition setbacks cannot later be extended in a way that makes the setbacks worse; we do not evaluate this.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of regulation 150.7.60.21(2)",
+     "lawfully_existing": "lawfully and lawfully existing"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "For 150.7.60.21(2), lawful / lawfully / lawfully existing also include anything authorized on or before July 24, 2025 or with a building permit lawfully issued before that date.",
+    "gaps": "garden_suite evidence is the scope phrase (150.7.60.21(2) governs garden suites). Dates are not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of regulation 150.7.60.21(2)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"request for a zoning certificate\" by reference to Municipal Code Chapter 363, Article I.",
+    "gaps": "\"Chapter 363\" and \"Article I\" are code references, not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of regulation 150.7.60.21(2)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for a zoning by-law amendment\" by reference to Official Plan Policy 5.5.2.",
+    "gaps": "\"5.5.2\" is a policy number, not a literal."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(D)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of regulation 150.7.60.21(2)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for a minor variance\" by reference to Section 2 of O. Reg. 200/96 under the Planning Act.",
+    "gaps": "\"Section 2\" and \"200/96\" are statute references, not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(E)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of regulation 150.7.60.21(2)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for site plan approval\" by reference to Official Plan Policy 5.5.2.",
+    "gaps": "\"5.5.2\" is a policy number, not a literal."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.60.21(1)": {
+   "explanation": "If a garden suite is created inside an existing garage or shed that is closer to the lot lines than the garden suite rules allow, the suite may keep that building's existing rear and side setbacks.",
+   "code_refs": "none"
+  },
+  "150.7.60.21(2)": {
+   "explanation": "Garden suites that already existed, or whose applications were filed on or before July 24, 2025, may keep side or rear setbacks smaller than the current rules require, as long as later additions do not make them worse.",
+   "code_refs": "none"
+  },
+  "150.7.60.21(3)": {
+   "explanation": "Defines the terms used in the July 24, 2025 garden suite transition rules: what counts as lawfully existing, and what counts as a complete zoning certificate, rezoning, minor variance or site plan application.",
+   "code_refs": "none"
+  }
+ }
+}

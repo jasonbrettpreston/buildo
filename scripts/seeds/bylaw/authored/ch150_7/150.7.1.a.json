@@ -1,0 +1,96 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_7/150.7.1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.1(1)#whole",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "apply to garden suites"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Scope clause: the regulations of Section 150.7 apply to garden suites.",
+    "gaps": "Not a precedence rule, so ranks_layers is none. No zone named."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.1(2)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "For the purposes of Chapter 150.7",
+     "lawfully_existing": "lawful and lawfully"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "For Chapter 150.7 (garden suites), \"lawful\" and \"lawfully\" also include anything existing or authorized on or before February 3, 2022.",
+    "gaps": "The date February 3, 2022 is a date and not keyed as a literal. The defined term is not a DSL variable. garden_suite evidence is the chapter scope phrase; the chapter applies to garden suites per 150.7.1(1)."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.1(1)": {
+   "explanation": "Section 150.7 of the zoning by-law sets the rules for garden suites (a separate dwelling unit in a detached building in the back yard).",
+   "code_refs": "none"
+  },
+  "150.7.1(2)": {
+   "explanation": "For the garden suite rules, anything that existed or was approved on or before February 3, 2022 counts as \"lawful\".",
+   "code_refs": "none"
+  }
+ }
+}

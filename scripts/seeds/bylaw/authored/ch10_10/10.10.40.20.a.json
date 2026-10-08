@@ -1,0 +1,43 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.40.20", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.40.20(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "building_length_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["major_street"]},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["building_length_m = 19.0 m @(1)(A)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["R"], "building_types": ["townhouse"], "lot_conditions": ["major_street"], "uses": [], "evidence": {"R": "the R zone", "townhouse": "for a townhouse", "major_street": "abutting a major street"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "In the R zone, on a lot abutting a major street, the maximum building length of a townhouse is 19.0 m.", "gaps": "Applies only when the lot abuts a major street; depends on the major-street designation being known for the lot."},
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.10.40.20(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "building_length_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["major_street"]},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["building_length_m = 25.0 m @(1)(B)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["R"], "building_types": ["apartment_building"], "lot_conditions": ["major_street"], "uses": [], "evidence": {"R": "the R zone", "apartment_building": "for an apartment building", "major_street": "abutting a major street"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "In the R zone, on a lot abutting a major street, the maximum building length of an apartment building is 25.0 m.", "gaps": "Applies only when the lot abuts a major street; depends on the major-street designation being known for the lot."},
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.40.20(1)": {"explanation": "In the R zone, on a lot next to a major street, a townhouse can be at most 19.0 m long and an apartment building at most 25.0 m long.", "code_refs": "none"}
+ }
+}

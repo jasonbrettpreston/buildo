@@ -1,0 +1,65 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.60.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.60.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_setback_m = 1.0 m @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "ancillary building or structure",
+          "uses": "containing a parking space"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.60.20(1)#(1)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "ancillary building or structure",
+          "uses": "containing a parking space"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

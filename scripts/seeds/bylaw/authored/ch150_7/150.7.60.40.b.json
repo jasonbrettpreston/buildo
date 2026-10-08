@@ -1,0 +1,398 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.60.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["separation_band"],
+        "if": "distance_to_residential_m < 7.5 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = 4.0 m @(1)(A)"],
+      "literals_not_expressed": [
+        {"literal": "7.5 metres", "clause": "(1)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": ["separation_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite",
+          "separation_band": "less than 7.5 metres from the residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["separation_band"],
+        "if": "distance_to_residential_m ≥ 7.5 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = 6.3 m @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "7.5 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": ["separation_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite",
+          "separation_band": "7.5 metres or more from the residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(2)#whole",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_storeys = 2 storeys @(2)"],
+      "literals_not_expressed": [
+        {"literal": "10.5.60.40(3)", "clause": "(2)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(3)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(3)#(3)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(3)(C)", "encroachment_clearance_m = 1.0 m @(3)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "parapets for a green roof"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(3)#(3)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(3)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(3)#(3)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(3)(E)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(4)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 0.3 m @(4)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(5)#(5)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(5)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "functional operation of the ancillary building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(5)#(5)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(5)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "enclosed stairwells, roof access"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(5)#(5)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_m = 1.0 m @(5)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "enclosed stairwells, roof access"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 30 pct @(6)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building permitted in regulation",
+          "garden_suite": "area of the roof, measured horizontally"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "150.7.60.40(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_clearance_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["encroachment_clearance_m = 1.0 m @(6)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "main walls of the ancillary building",
+          "garden_suite": "closer than 1.0 metre"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.60.40(7)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "10.5.60.40(4)", "clause": "(7)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

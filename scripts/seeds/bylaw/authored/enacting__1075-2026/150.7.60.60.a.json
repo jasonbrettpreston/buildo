@@ -1,0 +1,95 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "enacting:1075-2026/150.7.60.60",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.60.60(7)@1075-2026#[instruction]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Amending instruction of By-law 1075-2026: regulation 150.7.60.60(7) of Zoning By-law 569-2013 is replaced by the text that follows.",
+    "gaps": "An amendment instruction with no regulatory content of its own; the section number '31.' and by-law numbers are not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(7)@1075-2026#(7)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(7)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(7)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "As replaced by By-law 1075-2026: wall-mounted equipment on a garden-suite building (vents, pipes, utility equipment, satellite dishes or antennae), no closer than 0.3 m to a lot line, may encroach up to 0.6 m.",
+    "gaps": "Source defect (lead_in_without_items): the replacement text ends 'as follows' but lists no items, so the setbacks or separation into which the equipment may encroach are not stated; the encroachment target is kept generic. Air conditioners are no longer listed. The 0.3 m lot-line clearance is a precondition, listed as a threshold. No zone is named."
+   },
+   "disclosure": "Wall-mounted equipment on a garden suite may project up to 0.6 m if it stays at least 0.3 m from the lot line. The amended text does not say which setbacks this applies to, and we do not model these details.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.60.60(7)@1075-2026": {
+   "explanation": "By-law 1075-2026 rewrites the garden-suite equipment rule: wall-mounted equipment such as vents, pipes, utility equipment, satellite dishes or antennae may project up to 0.6 m, if it stays at least 0.3 m from any lot line. (Air conditioners are no longer listed, and the new text does not list which setbacks it applies to.)",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,112 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.80.1(1)#(1)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": [], "if": "has_garden_suite"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "dwelling_unit", "secondary_suite_use"],
+        "evidence": {
+          "detached_house": "a detached house, semi-detached",
+          "semi_detached_house": "semi-detached house, townhouse",
+          "townhouse": "townhouse, detached houseplex",
+          "detached_houseplex": "detached houseplex or semi-detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex on the same lot",
+          "parking_space": "no parking spaces are required",
+          "dwelling_unit": "for any dwelling units and secondary",
+          "secondary_suite_use": "secondary suites in a detached"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite"]}
+    },
+    {
+      "unit_id": "150.7.80.1(1)#(1)(B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "garden_suite": "required for a garden suite",
+          "parking_space": "no parking space is required"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite"]}
+    },
+    {
+      "unit_id": "150.7.80.1(2)#whole",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["bicycle_parking_spaces = 2 units @(2)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "An ancillary building containing a garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite"]}
+    },
+    {
+      "unit_id": "150.7.80.1(3)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "access_from_lane",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": [], "if": "has_garden_suite"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "parking_space": "vehicle access to a parking space"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite", "lawfully_existing_status"]}
+    }
+  ]
+}

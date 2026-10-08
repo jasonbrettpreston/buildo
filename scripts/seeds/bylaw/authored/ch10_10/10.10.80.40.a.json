@@ -1,0 +1,116 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_10/10.10.80.40",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.80.40(1)#whole",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "frontage_band"
+    ],
+    "if": "lot_frontage_m ≤ 7.6 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "frontage_band"
+    ],
+    "uses": [
+     "private_garage"
+    ],
+    "evidence": {
+     "R": "in the R zone",
+     "frontage_band": "has a lot frontage of 7.6 metres or less",
+     "private_garage": "Garage Entrance in Front Wall"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "On an R-zone lot with frontage of 7.6 m or less, a vehicle entrance through the front main wall of a (non-ancillary) building is not permitted, despite 10.5.80.40(1).",
+    "gaps": "building_types left any: the text names only \"a building, other than an ancillary building\". The subject (an integral garage entrance in the front wall) is tokenised as private_garage from the heading. Whether a scheme has an integral front garage is a design choice not held for the lot."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.10.80.40(2)#whole",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "access_from_lane",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "corner_lot",
+     "abuts_lane"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "R": "In the R zone",
+     "corner_lot": "on a corner lot",
+     "abuts_lane": "on a lot abutting a lane",
+     "parking_space": "to any parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "On a corner lot or a lot abutting a lane, vehicle access to any parking space must be from the flanking street or the lane.",
+    "gaps": "The two lot conditions are alternatives (corner lot OR lot abutting a lane), so they are recorded in application.lot_conditions and not as a conjunctive condition. The requirement token access_from_lane covers the lane arm; for a corner lot without a lane the access is from the flanking street, which has no separate requirement token."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.80.40(1)": {
+   "explanation": "On an R-zone lot 7.6 m wide or narrower, a garage door (vehicle entrance) in the front wall of the house is not allowed.",
+   "code_refs": "none"
+  },
+  "10.10.80.40(2)": {
+   "explanation": "On a corner lot or a lot next to a lane, driveway access to parking must come from the side (flanking) street or from the lane, not the front street.",
+   "code_refs": "none"
+  }
+ }
+}

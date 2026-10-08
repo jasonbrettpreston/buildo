@@ -1,0 +1,323 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_8/150.8.60.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.8.60.20(1)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Measurement rule: the required minimum ancillary building setbacks apply to all above-ground and below-ground parts of a laneway-suite building, excluding footings.",
+    "gaps": "A rule on which parts of the building the setbacks are measured to; it defines no single DSL variable, so target is 'none'. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks are measured to every part of the building above and below ground (except footings). We do not model below-grade parts.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(2)#(2)(A)",
+   "archetype": "LIMIT",
+   "target": "rear_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "rear_setback_m = 0.0 m @(2)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite",
+     "suite_wall_openings"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.20(2) and (5) and 10.10.60.20(1), the minimum rear yard setback of a laneway-suite building is 0.0 m if the rear lot line does not abut a street or lane and the rear main wall has no openings (vehicle access, doors or windows).",
+    "gaps": "The conditions are negations (rear lot line does NOT abut a street or lane; NO openings in the rear wall); the condition grammar has no negated token, so condition is 'none' and the arm depends on the lot's rear abutment and on the user's wall openings (suite_wall_openings). Displaces 10.5.60.20(2), 10.5.60.20(5) and 10.10.60.20(1) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(2)#(2)(B)",
+   "archetype": "LIMIT",
+   "target": "rear_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "rear_setback_m = 1.0 m @(2)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite",
+     "suite_wall_openings"
+    ],
+    "status": "not_modelled",
+    "description": "In all other cases (rear lot line abuts a street or lane, or the rear wall has openings), the minimum rear yard setback of a laneway-suite building is 1.0 m.",
+    "gaps": "'in all other cases' is the complement of (2)(A), which has no expressible condition; condition is 'none'. Displaces 10.5.60.20(2), 10.5.60.20(5) and 10.10.60.20(1) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(A)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "side_setback_m = 0.0 m @(3)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite",
+     "suite_wall_openings"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.20(3) and (6) and 10.10.60.20(1), the minimum side yard setback of a laneway-suite building is 0.0 m if the side lot line does not abut a street or lane and the side main wall has no openings.",
+    "gaps": "The conditions are negations with no negated token in the grammar; condition is 'none'. Depends on side-lot-line abutment and the user's wall openings. Displaces 10.5.60.20(3), 10.5.60.20(6) and 10.10.60.20(1) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(B)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "If the side lot line abuts a street, the minimum side yard setback of the laneway-suite building is the required minimum side yard setback for the residential building on the lot.",
+    "gaps": "Incorporates the residential building's required side yard setback by reference; no literal of its own, so keyed as INCLUDE (the template has no include_ref field; the referenced value is the zone's side setback for the residential building on a street side). The street-abutting side lot line has no plain lot_condition token, so condition is 'none'. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_lane"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "side_setback_m = 1.5 m @(3)(C)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "4.0 metres",
+     "clause": "(3)(C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite",
+     "ancillary_building"
+    ],
+    "lot_conditions": [
+     "abuts_lane"
+    ],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite",
+     "ancillary_building": "an ancillary building must",
+     "abuts_lane": "rear lot line abuts a lane"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "If the side lot line abuts a lot in the R, RD, RS, RT or RM zone and the rear lot line abuts a lane, the part of the laneway-suite building above a height of 4.0 m must be set back 1.5 m from a side lot line that abuts the rear lot line of another lot.",
+    "gaps": "A stepback above 4.0 m, not a whole-building setback; the 4.0 m height threshold is listed as not expressed. The neighbouring lot's residential zone and the side-lot-line-abuts-rear-lot-line geometry have no tokens; the R/RD/RS/RT/RM zones describe the abutting lot, not where the unit applies, so application.zones is empty."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "side_setback_m = 1.0 m @(3)(D)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite",
+     "suite_wall_openings"
+    ],
+    "status": "not_modelled",
+    "description": "In all other cases, the minimum side yard setback of a laneway-suite building is 1.0 m.",
+    "gaps": "'in all other cases' is the complement of (3)(A)-(C), which have no fully expressible conditions; condition is 'none'. Displaces 10.5.60.20(3), 10.5.60.20(6) and 10.10.60.20(1) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite setbacks apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.8.60.20(1)": {
+   "explanation": "Laneway suite setbacks apply to every part of the building, above and below ground, except the footings.",
+   "code_refs": "none"
+  },
+  "150.8.60.20(2)": {
+   "explanation": "A laneway suite can be built right at the rear lot line (0.0 m) if that line does not border a street or lane and the rear wall has no doors, windows or vehicle openings; otherwise it must be at least 1.0 m back.",
+   "code_refs": "none"
+  },
+  "150.8.60.20(3)": {
+   "explanation": "A laneway suite can be built at the side lot line (0.0 m) if that line does not border a street or lane and the side wall has no openings. On a street side it must match the house's side setback. Beside another residential lot's rear yard on a lane lot, the part above 4.0 m must step back 1.5 m. Otherwise the side setback is at least 1.0 m.",
+   "code_refs": "none"
+  }
+ }
+}

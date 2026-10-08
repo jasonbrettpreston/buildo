@@ -1,0 +1,44 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_5/10.5.60.10", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.5.60.10(1)#whole",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["ancillary_building"], "lot_conditions": [], "uses": [], "evidence": {"R": "the Residential Zone category", "RD": "the Residential Zone category", "RS": "the Residential Zone category", "RT": "the Residential Zone category", "RM": "the Residential Zone category", "ancillary_building": "An ancillary building or structure"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "In the Residential Zone category, an ancillary building or structure may not be located in a front yard.", "gaps": "A siting rule for a proposed ancillary building; we do not place ancillary buildings, so it is shown as information."},
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.60.10(2)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Despite 10.5.60.10(1), public utility equipment essential to the building's operation (such as an electrical transformer or equipment to connect to public utilities) may be located in the front yard.", "gaps": "Public utility equipment has no vocab.uses or building_type token. The unit text names no zone (the Residential Zone category is named only in (1)), so zones is left empty for lack of an evidence phrase. Displaces 10.5.60.10(1) for this equipment only."},
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.5.60.10(1)": {"explanation": "In residential zones, sheds, detached garages and other ancillary buildings or structures cannot be placed in the front yard.", "code_refs": "none"},
+  "10.5.60.10(2)": {"explanation": "Utility equipment the building needs to function, such as an electrical transformer or equipment connecting to public utilities, is allowed in the front yard.", "code_refs": "none"}
+ }
+}

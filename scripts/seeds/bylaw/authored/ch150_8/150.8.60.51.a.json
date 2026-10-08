@@ -1,0 +1,328 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_8/150.8.60.51",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.8.60.51(1)#(1)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "lawfully existing laneway suite",
+     "lawfully_existing": "lawfully existing laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "has_laneway_suite",
+     "lawfully_existing_status"
+    ],
+    "description": "A lawfully existing laneway suite may exceed the GFA requirements of 150.8.60.50(2) and (4), if no additions after July 24, 2025 increase the non-compliance.",
+    "gaps": "The date July 24, 2025 is a date, not a literal."
+   },
+   "disclosure": "An existing laneway suite built before the July 24, 2025 floor area change may keep its larger floor area; we cannot check this without the building history.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(1)#(1)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "A laneway suite may"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "A laneway suite built under a permit issued after July 24, 2025 may exceed the GFA requirements only where the excess was identified in a zoning certificate, rezoning, minor variance or site plan application filed on or before July 24, 2025.",
+    "gaps": "Transition rule keyed on application filing dates; \"Section 45 of the Planning Act\" is a statute reference, not a literal. The lot's application history is not held."
+   },
+   "disclosure": "Laneway suites with applications filed on or before July 24, 2025 may keep extra floor area approved through those applications; we cannot check application history.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(1)#(1)(C)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "A laneway suite may"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "For a laneway suite built under (1)(B), later additions may not increase the GFA non-compliance beyond that established by the building permit.",
+    "gaps": "none"
+   },
+   "disclosure": "A laneway suite that relies on the transition floor area cannot later be extended in a way that adds more excess floor area; we do not evaluate this.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "For the purposes of regulation 150.8.60.51(1)",
+     "lawfully_existing": "lawfully and lawfully existing"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "For 150.8.60.51(1), lawful / lawfully / lawfully existing also include anything authorized on or before July 24, 2025 or with a building permit lawfully issued before that date.",
+    "gaps": "laneway_suite evidence is the scope phrase (150.8.60.51(1) governs laneway suites). Dates are not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "For the purposes of regulation 150.8.60.51(1)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"request for a zoning certificate\" by reference to Municipal Code Chapter 363, Article I.",
+    "gaps": "\"Chapter 363\" and \"Article I\" are code references, not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "For the purposes of regulation 150.8.60.51(1)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for a zoning by-law amendment\" by reference to Official Plan Policy 5.5.2.",
+    "gaps": "\"5.5.2\" is a policy number, not a literal."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(D)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "For the purposes of regulation 150.8.60.51(1)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for a minor variance\" by reference to Section 2 of O. Reg. 200/96 under the Planning Act.",
+    "gaps": "\"Section 2\" and \"200/96\" are statute references, not literals."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(E)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "For the purposes of regulation 150.8.60.51(1)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Defines a \"complete application for site plan approval\" by reference to Official Plan Policy 5.5.2.",
+    "gaps": "\"5.5.2\" is a policy number, not a literal."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.8.60.51(1)": {
+   "explanation": "Laneway suites that already existed, or whose applications were filed on or before July 24, 2025, may keep more gross floor area than the current rules allow, as long as later additions do not add more.",
+   "code_refs": "none"
+  },
+  "150.8.60.51(2)": {
+   "explanation": "Defines the terms used in the July 24, 2025 laneway suite floor area transition rules: what counts as lawfully existing, and what counts as a complete zoning certificate, rezoning, minor variance or site plan application.",
+   "code_refs": "none"
+  }
+ }
+}

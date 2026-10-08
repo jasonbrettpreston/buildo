@@ -1,0 +1,180 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.50.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.8.50.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band"
+        ],
+        "if": "lot_frontage_m ≤ 6.0 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "rear_soft_landscaping_pct = 60 pct @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "frontage_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "frontage_band": "a lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "On a lot with a residential building and a laneway suite, with a lot frontage of 6.0 m or less, at least 60 percent of the area between the house's rear main walls and the laneway suite's front main wall must be soft landscaping.",
+        "gaps": "rear_soft_landscaping_pct is the closest target: the regulated area (between all rear main walls of the residential building and the front main wall of the laneway suite building) lies in the rear yard but is not the whole rear yard, so the share applies to that area only. Overrides 10.5.50.10(3) on a lot with a laneway suite."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.50.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band"
+        ],
+        "if": "lot_frontage_m > 6.0 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "rear_soft_landscaping_pct = 85 pct @(1)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "1.5",
+          "clause": "(1)(B)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "frontage_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "frontage_band": "a lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "On a lot with a residential building and a laneway suite, with a lot frontage greater than 6.0 m, at least 85 percent of the area between the house's rear main walls and the laneway suite's front main wall must be soft landscaping, excluding a pedestrian walkway up to 1.5 m wide.",
+        "gaps": "rear_soft_landscaping_pct is the closest target: the regulated area (between all rear main walls of the residential building and the front main wall of the laneway suite building) lies in the rear yard but is not the whole rear yard, so the share applies to that area only. Overrides 10.5.50.10(3) on a lot with a laneway suite. The 1.5 m is the maximum width of the excluded pedestrian walkway (it bounds the exclusion, not the soft landscaping share); no target exists for walkway width."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.50.10(1)#(1)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "landscaping_type",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_lane"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1.5",
+          "clause": "(1)(C)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "75",
+          "clause": "(1)(C)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "abuts_lane"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "the ancillary building",
+          "laneway_suite": "a laneway suite",
+          "abuts_lane": "abutting a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "On a lot with a laneway suite, the area between the laneway suite building and the lot line abutting the lane, excluding a permitted driveway and a pedestrian walkway up to 1.5 m wide, must be landscaping, of which at least 75 percent must be soft landscaping.",
+        "gaps": "Keyed REQUIRE landscaping_type (the area must be landscaping). The 75 percent soft-landscaping share applies to the lane-side strip; no DSL target covers that area (rear_soft_landscaping_pct is the rear yard between house and suite), so it is not expressed. The 1.5 m bounds the excluded walkway width."
+      },
+      "disclosure": "The strip between a laneway suite and the lane (apart from a permitted driveway and a walkway up to 1.5 m wide) must be landscaped, at least 75% of it with soft landscaping such as grass or planting. We do not check this strip.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.8.50.10(1)": {
+      "explanation": "On a lot with a laneway suite, the yard between the back of the house and the front of the laneway suite must be mostly soft landscaping (grass, plants): at least 60% on lots 6.0 m wide or narrower, and at least 85% on wider lots (not counting a walkway up to 1.5 m wide). The strip between the laneway suite and the lane must be landscaped, at least 75% soft, apart from a driveway and walkway.",
+      "code_refs": "none"
+    }
+  }
+}
