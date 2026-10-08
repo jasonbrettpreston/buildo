@@ -28,6 +28,8 @@
  *   reno.kitchenPct -> reno_kitchen_gfa_pct        (runPass3)
  *   reno.bathPct    -> reno_bath_gfa_pct           (runPass3)
  *   reno.mislinkTol -> mislink_footprint_lot_tol   (runPass2 AND runPass3)
+ *
+ * zoning-change-scope WF3 (2026-10-06): ctx.contract.zoning_change is read from the ledger for every non-full call (contractFor).
  */
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -56,13 +58,13 @@ async function baseConfig(poolOrClient) {
   return cached;
 }
 
-function makeCtx({ scopeWhere, full, config, extra }) {
+function makeCtx({ scopeWhere, full, config, contract = null, extra }) {
   const now = new Date();
   return {
     full: !!full,
     scopeWhere,
     staleOverlays: new Set(),
-    contract: null,
+    contract,
     clock: { now: () => now, asOfDate: () => now.toISOString().slice(0, 10) },
     log: silentLog,
     config,
@@ -72,17 +74,29 @@ function makeCtx({ scopeWhere, full, config, extra }) {
   };
 }
 
-/** Splits a legacy-shaped opts object into {scopeWhere, full, configOverrides}. */
+/** Splits a legacy-shaped opts object into {scopeWhere, full, contract, configOverrides}. */
 function splitOpts(opts) {
-  const { scopeWhere, full, ...configOverrides } = opts || {};
-  return { scopeWhere, full, configOverrides };
+  const { scopeWhere, full, contract, ...configOverrides } = opts || {};
+  return { scopeWhere, full, contract, configOverrides };
+}
+
+/**
+ * zoning-change-scope WF3 (2026-10-06, [F-16]) — the runner fills ctx.contract from the declared
+ * contract_read hook (readZoningContract → zoning_change); pass 1 THROWS on a non-full run without it.
+ * Mirror that here: read the ledger answer on the SAME client the test BEGIN'd, so ledger rows the
+ * test inserted inside its transaction are visible. An explicit `contract` option overrides.
+ */
+async function contractFor(client, full, explicit) {
+  if (explicit !== undefined) return explicit;
+  if (full) return null;
+  return { zoning_change: await compute.readZoningChange(client) };
 }
 
 async function runSharedPass(passFn, client, opts) {
-  const { scopeWhere, full, configOverrides } = splitOpts(opts);
+  const { scopeWhere, full, contract, configOverrides } = splitOpts(opts);
   const base = await baseConfig(client);
   const config = { ...base, ...configOverrides };
-  const ctx = makeCtx({ scopeWhere, full, config });
+  const ctx = makeCtx({ scopeWhere, full, config, contract: await contractFor(client, full, contract) });
   return passFn(client, ctx, config);
 }
 
@@ -106,7 +120,7 @@ async function enrichComparableBuilds(client, opts) { return runSharedPass(compu
  * connection for both a write and an open cursor is the documented deadlock (H1).
  */
 async function enrichOptimalConfig(pool, opts) {
-  const { scopeWhere, full, configOverrides } = splitOpts(opts);
+  const { scopeWhere, full, contract, configOverrides } = splitOpts(opts);
   const base = await baseConfig(pool);
   const config = { ...base, ...configOverrides };
   const writeClient = await pool.connect();
@@ -128,6 +142,7 @@ async function enrichOptimalConfig(pool, opts) {
       scopeWhere,
       full,
       config,
+      contract: await contractFor(pool, full, contract),
       extra: {
         stream: (sql, params, streamOpts) => streamOverClient(streamClient, sql, params, { batchSize: streamBatchSize, ...streamOpts }),
         flushBatch,

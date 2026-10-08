@@ -1644,3 +1644,39 @@ describe('row 3.3 — the commit-① assessment report (plain it: GREEN today)',
     expect(report).toContain('**Commit form: compressed (R-PACE-1)**');
   });
 });
+
+// SPEC LINK: docs/specs/01-pipeline/58_source_zoning_bylaw.md §3 (emitMeta: zoning_rows_changed, non-§9) ·
+//   docs/specs/01-pipeline/65_enrich_parcels.md §2 step 6 (the consumer)
+describe('zoning_rows_changed (enrich_parcels zoning-change scope, A1, 2026-10-06)', () => {
+  it('compute emits zoning_rows_changed = Σ inserted+updated+deleted over EVERY written lane (overlay-only and delete-only changes count; a lane without `deleted` adds 0, never NaN)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const compute = require(path.join(REPO_ROOT, 'scripts/lib/compute/load-zoning.js')) as (ctx: unknown) => Promise<{ records_meta: Record<string, unknown> }>;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const descriptor = require(path.join(REPO_ROOT, 'scripts/load-zoning.descriptor.json')) as { inputs: { reads: { externals: Array<{ id: string; target: string }> } } };
+    const ex = descriptor.inputs.reads.externals;
+    const primaries: Record<string, unknown> = {};
+    for (const e of ex) primaries[e.id] = { outcome: 'loaded', source_dataset_version: '2026-02-20T21:29:00Z' };
+    const byTarget: Record<string, unknown> = {
+      [ex[0]!.target]: { inserted: 0, updated: 0, unchanged: 11719 },          // base untouched (no `deleted` key → 0)
+      [ex[1]!.target]: { inserted: 0, updated: 47, unchanged: 100, deleted: 0 }, // overlay-only change
+      [ex[2]!.target]: { inserted: 0, updated: 0, unchanged: 50, deleted: 1 },   // delete-only change
+    };
+    const out = await compute({ descriptor, checks: [], acquired: { primaries }, written: { by_target: byTarget }, report: () => {}, log: { info() {}, warn() {}, error() {}, debug() {} } });
+    expect(out.records_meta.zoning_rows_changed).toBe(48);
+  });
+
+  it('a run that changed no row in any layer emits zoning_rows_changed = 0 (the 2260/2283 no-op force-run shape)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const compute = require(path.join(REPO_ROOT, 'scripts/lib/compute/load-zoning.js')) as (ctx: unknown) => Promise<{ records_meta: Record<string, unknown> }>;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const descriptor = require(path.join(REPO_ROOT, 'scripts/load-zoning.descriptor.json')) as { inputs: { reads: { externals: Array<{ id: string; target: string }> } } };
+    const primaries: Record<string, unknown> = {};
+    const byTarget: Record<string, unknown> = {};
+    for (const e of descriptor.inputs.reads.externals) {
+      primaries[e.id] = { outcome: 'loaded' };
+      byTarget[e.target] = { inserted: 0, updated: 0, unchanged: 10, deleted: 0 };
+    }
+    const out = await compute({ descriptor, checks: [], acquired: { primaries }, written: { by_target: byTarget }, report: () => {}, log: { info() {}, warn() {}, error() {}, debug() {} } });
+    expect(out.records_meta.zoning_rows_changed).toBe(0);
+  });
+});

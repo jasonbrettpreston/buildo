@@ -708,7 +708,7 @@ Evidence: `.cursor/mcbylaw/phase3-trial/TRIAL-REPORT.md` (Stages 2–3) and `STA
   - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `enrich_parcels_pass3_scope` writes (migrations/240_phase_b_massing_watermark_and_pass3_scope.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
   - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · massing · neighbourhoods · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity · compute_parcel_cost_estimates · link_massing
-  - consumers: none
+  - consumers: scripts/run-chain.js (records_meta deferred)
 <!-- /generated:target-files -->
 - `scripts/load-permits.js` (occupancy ingest), `scripts/lib/build-norms.js` (NEW, pure),
   `scripts/compute-build-norms.js` (NEW, Mutator), `scripts/manifest.json` (chain wiring),

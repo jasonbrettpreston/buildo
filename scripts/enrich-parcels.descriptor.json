@@ -428,7 +428,7 @@
           "class": "temp_materialize",
           "guard": "is_distinct_from",
           "guard_columns": "all_declared",
-          "scope": "buildPass1ScopeWhere({full}) — TRUE under --full (the only cloud invocation); otherwise (p.zoning_enriched_at IS NULL OR a zoning_bylaw_areas polygon's source_dataset_version outdates it)",
+          "scope": "buildPass1ScopeWhere({full, zoningChanged}) — TRUE under --full (the only cloud invocation), or when a load_zoning run (any ledger form, any terminal except running/skipped/self_skipped, not a gated skip, with zoning rows changed) completed at or after this step's last completed run started (readZoningChange, read once per run by readZoningContract); otherwise p.zoning_enriched_at IS NULL",
           "expected_change_ratio": "none",
           "idempotent_rerun": "zero_writes",
           "txn_scope": "step",
@@ -1047,7 +1047,7 @@
           "class": "set_based_scoped",
           "guard": "none",
           "guard_why": {
-            "text": "Rule 9 (LG-9-style run-clock stamp). zoning_enriched_at (:375/:443, Fold E1 — the third unguarded write) and massing_enriched_at (:831, deliberately unguarded by design, :824-828) are BOTH run-clock watermarks, columns[].source \"run_at\" — a run-clock column is DISTINCT FROM its own stored value on every run, so an IS DISTINCT FROM guard naming either is vacuous by construction, the exact LG-9 trap. These are the invalidation TARGETS mig 242's trg_parcels_geom_invalidation trigger nulls on a parcels.geom change (outputs.invalidates[1]/[2] below), which is the real staleness signal for passes 1/2's own incremental scope — the stamp itself carries none.",
+            "text": "Rule 9 (LG-9-style run-clock stamp). zoning_enriched_at (buildZoningStampSql, pass 1) and massing_enriched_at (buildMassingStampSql, pass 2) are BOTH run-clock watermarks, columns[].source \"run_at\" — a run-clock column is DISTINCT FROM its own stored value on every run, so an IS DISTINCT FROM guard naming either is vacuous by construction, the exact LG-9 trap. These are the invalidation TARGETS mig 242's trg_parcels_geom_invalidation trigger nulls on a parcels.geom change (outputs.invalidates[1]/[2] below), which is the real staleness signal for passes 1/2's own incremental scope — the stamp itself carries none. The zoning stamp's own WHERE carries p.zoning_enriched_at IS DISTINCT FROM $1 — a same-statement DEDUPE, not a value guard: it skips only the rows the guarded value UPDATE just stamped with the same $1 (one row version per changed parcel, not two); every other recomputed parcel is restamped (FOLD DS-7, deliberate difference from the massing stamp).",
             "liveness": {
               "kind": "file",
               "ref": "scripts/steps/_schema/grandfathered.json"
@@ -1061,7 +1061,7 @@
               "ref": "scripts/lib/step/validate.js"
             }
           },
-          "scope": "each stamp fires alongside its own owning pass's UPDATE (zoning_enriched_at inside pass 1's statement; massing_enriched_at as pass 2's own separate exec :897) — never independently scheduled",
+          "scope": "each stamp fires with its own owning pass, never independently scheduled: zoning_enriched_at as pass 1's own separate exec right after the guarded value UPDATE (buildZoningStampSql — stamps every parcel pass 1 recomputed, stamp heal 2026-10-06), massing_enriched_at as pass 2's own separate exec (buildMassingStampSql)",
           "expected_change_ratio": "== 1.0",
           "idempotent_rerun": "declared_drift",
           "idempotent_rerun_why": {
@@ -1161,7 +1161,7 @@
       {
         "table": "parcels",
         "column": "zoning_enriched_at",
-        "when": "trg_parcels_geom_invalidation (migration 242) nulls zoning_enriched_at when parcels.geom changes — verified live (pg_trigger on parcels), the real re-eligibility signal for pass 1's own incremental scope predicate.",
+        "when": "trg_parcels_geom_invalidation (migration 242) nulls zoning_enriched_at when parcels.geom changes — verified live (pg_trigger on parcels), the real re-eligibility signal for pass 1's own incremental scope predicate. Second re-eligibility signal (zoning-change scope, 2026-10-06): a load_zoning run that wrote after this step's last completed run makes pass 1's next incremental scope TRUE (readZoningChange) — every parcel, which crosses enrich_parcels_defer_threshold_rows and defers to the next --full.",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       },
@@ -1174,9 +1174,9 @@
       }
     ],
     "write_inventory": {
-      "statements": 14,
+      "statements": 15,
       "why": {
-        "text": "The 27-statement DML/DDL enumeration (commit 1) minus temp-table CREATE/DROP/INDEX/ANALYZE (statements 1-8, 27) and the two SET LOCAL statement/lock timeout statements (18-19, txn config, not writes): pass1 UPDATE (9), pass2 UPDATE (10), massing stamp (11), existing UPDATE (12), scenario UPDATE (13), comps ineligibility reset (14), --full-only comp blanket reset (15), pass4 comps UPDATE (16), comp_count zero-fill (17), pass3_scope INSERT (20), pass5 ineligibility reset (21), pass5 batched UPDATE (22), pass3_scope consumed_at flips (23/24 counted once — same statement shape, bulk + per-parcel). The two optional pipeline_runs heartbeat/stall-diagnostic UPDATEs (25/26) are EXCLUDED from this count (EP-D5 — undeclared in emitMeta's own writes map today; not this write_inventory's own target table, cascades territory) — see limitations[].",
+        "text": "The 27-statement DML/DDL enumeration (commit 1) minus temp-table CREATE/DROP/INDEX/ANALYZE (statements 1-8, 27) and the two SET LOCAL statement/lock timeout statements (18-19, txn config, not writes): pass1 UPDATE (9), pass1 zoning stamp (buildZoningStampSql, stamp heal 2026-10-06), pass2 UPDATE (10), massing stamp (11), existing UPDATE (12), scenario UPDATE (13), comps ineligibility reset (14), --full-only comp blanket reset (15), pass4 comps UPDATE (16), comp_count zero-fill (17), pass3_scope INSERT (20), pass5 ineligibility reset (21), pass5 batched UPDATE (22), pass3_scope consumed_at flips (23/24 counted once — same statement shape, bulk + per-parcel). The two optional pipeline_runs heartbeat/stall-diagnostic UPDATEs (25/26) are EXCLUDED from this count (EP-D5 — undeclared in emitMeta's own writes map today; not this write_inventory's own target table, cascades territory) — see limitations[].",
         "liveness": {
           "kind": "file",
           "ref": ".cursor/pilot9_enrich_parcels_active_task.md"
@@ -1219,6 +1219,39 @@
         "stamp": "records_meta.zoning_layers_loaded",
         "why": {
           "text": "readZoningContract (scripts/lib/compute/enrich-parcels.js) HALTs unless the latest completed sources:load_zoning run carries zoning_layers_loaded.base === true",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
+      {
+        "step": "load_zoning",
+        "stamp": "pipeline_runs.completed_at",
+        "why": {
+          "text": "zoning-change scope (Spec 65 §2 step 6, 2026-10-06): readZoningChange compares a load_zoning run's completed_at (DB clock) with the started_at of this step's last completed run — our clock against our clock, never the publisher's source_dataset_version.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
+      {
+        "step": "load_zoning",
+        "stamp": "records_meta.gate.gated_skip",
+        "why": {
+          "text": "zoning-change scope: a gated skip re-emits the prior run's declared keys (runner-owned), so readZoningChange tests gate.gated_skip FIRST and never counts a skipped load as a change.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
+      {
+        "step": "load_zoning",
+        "stamp": "records_meta.zoning_rows_changed",
+        "why": {
+          "text": "zoning-change scope (operator ruling A1): the producer's own Σ inserted+updated+deleted over all 10 targets — the base-only ledger counters miss overlay-only changes and deletions. Missing / null / non-number reads as changed (fail-safe).",
           "liveness": {
             "kind": "file",
             "ref": "scripts/lib/compute/enrich-parcels.js"
@@ -2007,6 +2040,86 @@
           "ref": "enrich_parcels_pass3_scope"
         }
       }
+    },
+    {
+      "id": "zoning_stamp_null_count",
+      "kind": "bound",
+      "expect": {
+        "of": "geom parcels whose zoning_enriched_at is NULL after the run (pass 1 recomputes every geom parcel on --full, and every NULL-stamp geom parcel on an incremental run, then stamps each one — buildZoningStampSql)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Stamp heal (2026-10-06 HIGH): after any non-deferred run every geom parcel pass 1 recomputed carries a fresh stamp, so a NULL stamp means the heal contract broke — the defect this row exists for left 446,682 stamps NULL and every incremental run deferred. WARN, not FAIL: the row reads parcels AFTER the step's commit, so a concurrent load_parcels geom rewrite can legitimately NULL stamps between pass 1 and this read (a race, not a broken contract).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-parcels.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_stamp_only_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "parcels pass 1 restamped WITHOUT a value change (buildZoningStampSql rowCount; disjoint from parcels_enriched_count)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Stamp heal (2026-10-06 HIGH). INFO under the Rule 10 exception for a purely DESCRIPTIVE counter that no threshold can bound: violations is always 0 and the count lives in detail; its size is ≈ total_parcels_scanned − parcels_enriched_count on --full and the trigger-invalidated count on an incremental run, both legitimate at any size. The heal contract itself is bounded by zoning_stamp_null_count (WARN, viol == 0).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-parcels.js"
+        }
+      }
+    },
+    {
+      "id": "enrich_parcels_deferred_to_full",
+      "kind": "field_coverage",
+      "expect": {
+        "of": "the pre-transaction defer decision (computeDeferScope) — combined scope vs threshold, per pass; detail null on a run that did not defer"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "EP-D19 (2026-10-06 HIGH) — the legacy defer row (metric name restored), emitted on every run so a deferred run carries its own reason. when:\"pre\" because the runner narrows a deferred run to pre checks. INFO is a declared INTERIM (Rule 10 exception, operator ruling 2026-10-06), for three reasons: (1) INFO is forced by the runner — its deferred branch selects deferred_to_full only when verdict !== 'FAIL' && verdict !== 'WARN' (scripts/lib/step/index.js), so a WARN row would reroute the run to completed_with_warnings and the ledger would lose deferred_to_full; (2) the row is descriptive — violations is always 0 and the defer reason is in detail; (3) the closing row is the review_followups.md \"Runner gaps\" row filed with this fix: once the runner selects deferred_to_full independently of a WARN verdict, re-evaluate this severity. The run's own status (deferred_to_full) is the severity signal meanwhile.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_change_scope",
+      "kind": "field_coverage",
+      "expect": {
+        "of": "the run-ledger answer that chose pass 1's incremental scope (readZoningChange): changed since the last completed run (scope all), unchanged (NULL-stamp only), or no prior completed run (scope all, fail-safe); detail names the snapshot source (contract read or the defer count's read); null under --full"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "zoning-change scope (2026-10-06 MED): a REASON row, not a gate — Rule 1 (nothing hidden) for the scope decision on every incremental run, deferred included (when:\"pre\" survives the defer narrowing). INFO under the Rule 10 exception for a purely descriptive row: violations is always 0 and the reason is in detail; the guard is the db locks (V1-V10) and the fail-safe resolution of every unknown to the wider scope.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-parcels.js"
+        }
+      }
     }
   ],
   "invariants": [
@@ -2029,10 +2142,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1249,
-        "sample_n": 1,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 1814,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2066,10 +2179,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1161,
-        "sample_n": 1,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 1753,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2106,11 +2219,11 @@
         }
       },
       "last_measured": {
-        "value": 3645,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1501,
-        "sample_n": 1,
+        "value": 3647,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 2100,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2145,10 +2258,10 @@
       },
       "last_measured": {
         "value": 1770,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1430,
-        "sample_n": 1,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 2050,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2183,10 +2296,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 1583,
-        "sample_n": 1,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 2174,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2213,11 +2326,11 @@
       "frequency": "every_run",
       "retighten_when": "migration 247's tuned autovacuum params keep the post-run ratio under half the warn bound for 5 consecutive runs",
       "last_measured": {
-        "value": 0.7359,
-        "at": "2026-10-05T23:30:04.357Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 41,
-        "sample_n": 1,
+        "value": 0.7931,
+        "at": "2026-10-08T06:02:44.433Z",
+        "commit": "8427dd4ffaccb455d005299b101cd5fbb901980b",
+        "cost_ms": 43,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": "sources",
@@ -2288,9 +2401,29 @@
       "key": "opt_config_engine_errors",
       "type": "int",
       "consumers": []
+    },
+    {
+      "key": "deferred",
+      "type": "object",
+      "consumers": [
+        "scripts/run-chain.js"
+      ]
     }
   ],
-  "deviations": "none",
+  "deviations": [
+    {
+      "from": "legacy scripts/enrich-parcels.js (7e3cc6e70:1955-1990) emitted the defer row enrich_parcels_deferred_to_full at WARN plus 4 always-on per-pass scope rows (enrich_parcels_{pass1,massing,decision}_scope_rows, enrich_parcels_pass3_backlog_rows, WARN at >=80% of the threshold)",
+      "why": {
+        "text": "EP-D19 (2026-10-06): the converted step emits ONE defer row, at INFO, on every run (detail null when not deferred) — INFO because the runner's deferred branch requires verdict !== 'WARN' (a WARN row would turn a defer into completed_with_warnings), declared INTERIM until the runner selects deferred_to_full independently of a WARN verdict. The 4 per-pass rows on NON-deferred incremental runs cannot be emitted compute-side without re-running the 4 scope COUNTs (the runner discards the defer scope when scope < threshold); both residuals are filed as one review_followups.md \"Runner gaps\" row for the next scripts/lib/step batch.",
+        "liveness": {
+          "kind": "check",
+          "ref": "enrich_parcels_deferred_to_full"
+        }
+      },
+      "adjudicated_by": "operator (2026-10-06 rulings on the defer-observability WF3: INFO accepted as a declared interim; per-pass rows to the lib batch)",
+      "date": "2026-10-06"
+    }
+  ],
   "limitations": [
     {
       "what": "pipeline_runs is written by recordHeartbeat/captureStallDiagnostic (:1547/:1593) but absent from emitMeta's own declared writes map (EP-D5, OPEN, PIN) — a producer/consumer records_meta contract gap (Spec 48 §3.6/§3.7). Not declared as an outputs.writes[] target this commit (the writes are operational heartbeat telemetry, not step-owned data); filed for a future peel.",
@@ -2311,6 +2444,11 @@
       "what": "Pass 5 runs outside both runPass (:2058/:2062/:2067/:2071) and the SET LOCAL statement_timeout/lock_timeout pair (:2047-2048, txn-scoped to passes 1-4 only) in the LEGACY script (EP-D7, OPEN — Ask 7 ruling pending). This descriptor declares enrich_parcels_pass5_timeout_minutes as its bound; the runner (runEnrichPhase, commit 7d) is what actually enforces it via a live SET on the pass-5 session, closing the legacy gap.",
       "measured": "scripts/enrich-parcels.js:2088-2096",
       "check_id": "none"
+    },
+    {
+      "what": "zoning-change scope vs the contract read (F-18): readZoningChange reads every load_zoning ledger form and both success statuses, but readZoningContract still derives zoning_layers_loaded / staleOverlays from the latest COMPLETED sources:load_zoning run only, until #44-clean D7 aligns it (it reuses ZONING_PRODUCER_FORMS). Bounded today: runs 2189 (sources, legacy) and 2282 (standalone) both report all 10 zoning_layers_loaded = true, so the derived staleOverlays is empty either way; divergence needs a standalone load that flips a layer's loaded flag.",
+      "measured": "pipeline_runs 2189 / 2282 records_meta.zoning_layers_loaded, measured 2026-10-06 (zoning-change-scope WF3 premise)",
+      "check_id": "zoning_change_scope"
     }
   ],
   "interpretation": {
@@ -2694,7 +2832,7 @@
         "terminal": "string"
       },
       "why": {
-        "text": "A WARN row stands (zone-class pct floor, massing_zero_link_ghost, ambiguous-zone pct, or a plausibility WARN) and nothing FAILED.",
+        "text": "A WARN row stands (zone-class pct floor, massing_zero_link_ghost, ambiguous-zone pct, zoning_stamp_null_count, or a plausibility WARN) and nothing FAILED.",
         "liveness": {
           "kind": "check",
           "ref": "massing_zero_link_ghost"
@@ -2762,6 +2900,23 @@
         "liveness": {
           "kind": "check",
           "ref": "opt_config_engine_errors"
+        }
+      }
+    },
+    {
+      "id": "deferred_to_full",
+      "kind": "success",
+      "status": "deferred_to_full",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string",
+        "deferred": "object"
+      },
+      "why": {
+        "text": "Spec 122 §1.5 scope-defer (RE-FREEZE #8, execution.enrich_hooks.defer_scope): an incremental run whose combined pre-transaction scope >= enrich_parcels_defer_threshold_rows makes ZERO writes and defers to the next --full. kind is 'success' because the runner selects it with {kind:'success', status:'deferred_to_full'} (scripts/lib/step/index.js deferred branch) — a 'defer' kind would never be selected. Declared LAST so every other success fallback (pool[0]) stays enriched_full. EP-D19 (2026-10-06): until this terminal existed a deferred run's records_meta.terminal read enriched_full.",
+        "liveness": {
+          "kind": "check",
+          "ref": "enrich_parcels_deferred_to_full"
         }
       }
     }

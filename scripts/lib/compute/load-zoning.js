@@ -598,6 +598,11 @@ function buildLoadMeta(ctx) {
     // LZ-D12 PIN (write_skipped path): an acquired-but-not-written layer still records its version.
     zoning_layer_versions: Object.fromEntries(all.map((l) => [l.id, l.acquired.source_dataset_version || null])),
     base_layer_committed_after_overlays_failed: loaded(base) && missing.length > 0,
+    // enrich_parcels zoning-change scope (A1, 2026-10-06; Spec 58 §3, a per-run NON-§9 key) — rows this
+    // run changed across ALL 10 targets (base + 9 overlays), deletions included. The base-only ledger
+    // counters miss overlay-only changes and deletes. A gated skip re-emits the prior value (runner-owned);
+    // the consumer tests gate.gated_skip first.
+    zoning_rows_changed: all.reduce((s, l) => (l.written ? s + num(l.written.inserted) + num(l.written.updated) + num(l.written.deleted) : s), 0),
   };
 }
 

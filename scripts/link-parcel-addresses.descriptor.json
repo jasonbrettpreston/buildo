@@ -796,10 +796,10 @@
       },
       "last_measured": {
         "value": 0,
-        "at": "2026-10-06T20:03:31.894Z",
-        "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
-        "cost_ms": 47642,
-        "sample_n": 1,
+        "at": "2026-10-08T16:04:36.527Z",
+        "commit": "7882f6639e18886e7e1c5ae048562fedee4f739e",
+        "cost_ms": 48453,
+        "sample_n": 2,
         "source_run": {
           "run_id": null,
           "chain": null,

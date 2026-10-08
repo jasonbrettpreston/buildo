@@ -19,7 +19,9 @@ import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 // RE-POINTED — WF3 C2. `enrichMaxBuild` -> `runPass2` via `./_lib/enrich-parcels-harness.js`.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { enrichMaxBuild } = require('./_lib/enrich-parcels-harness');
+const { enrichParcels, enrichMaxBuild } = require('./_lib/enrich-parcels-harness');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mb = require('../../../scripts/lib/max-build.js');
 
 const TEST_PARCEL = 991_000_000;
 const SCOPE = `p.feature_type = 'TEST' AND p.parcel_id LIKE '991%'`;
@@ -30,6 +32,23 @@ function sq(x0: number, y0: number, side: number): string {
     type: 'Polygon',
     coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
   });
+}
+
+// GeoJSON axis-aligned rectangle from explicit corners (for split-zone fixtures).
+function rect(x0: number, y0: number, x1: number, y1: number): string {
+  return JSON.stringify({
+    type: 'Polygon',
+    coordinates: [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]],
+  });
+}
+
+// Insert a zoning_bylaw_areas base polygon — the pass-1 zoning feed (E1 dominance tests).
+async function insZone(c: PoolClient, sid: number, zn: string, geo: string, standardSetback: number | null): Promise<void> {
+  await c.query(
+    `INSERT INTO zoning_bylaw_areas (source_id, zn_zone, zn_string, standard_setback, geometry, geom, source_dataset_version)
+     VALUES ($1, $2, $3, $4, $5::jsonb, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON($5::text),4326)), NOW())`,
+    [sid, zn, zn, standardSetback, geo],
+  );
 }
 
 interface MbFields {
@@ -113,7 +132,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       const res2 = await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
       expect(res2.updated).toBe(0);
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('over-sized lot (>LOT_MAX) → low confidence, envelope NULL, reason lot_too_large', async () => {
@@ -134,7 +153,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.garden_suite_fits).toBe(false);
       expect(p.envelope_constraint_reason).toBe('lot_too_large');   // WF3: was low_lot_confidence
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('under-sized lot (<LOT_MIN) → low confidence, envelope NULL, reason lot_too_small', async () => {
@@ -152,7 +171,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.max_buildable_footprint_sqm).toBeNull();
       expect(p.envelope_constraint_reason).toBe('lot_too_small');
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('heritage WITH massing → freeze to existing dims (basis heritage_existing, confidence high)', async () => {
@@ -178,7 +197,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.envelope_constraint_reason).toBe('heritage');
       expect(p.max_build_width_m).toBeNull();                      // freeze has no W/L
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3: heritage with massing but NO bylaw_max_stories → storeys must come from the POCKET p50 branch of
@@ -211,7 +230,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(Number(p.max_buildable_gfa_sqm)).toBe(400);         // 200 × 2 (frozen fp × pocket p50)
       expect(p.max_build_basis).toBe('heritage_existing');       // footprint still frozen
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('heritage WITHOUT massing → heritage_no_massing, footprint NULL', async () => {
@@ -228,7 +247,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.max_buildable_footprint_sqm).toBeNull();
       expect(p.envelope_constraint_reason).toBe('heritage_no_massing');
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3 — heritage WITH a MISLINKED (oversized) massing: the primary footprint exceeds the lot, so the
@@ -250,7 +269,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.envelope_constraint_reason).toBe('heritage_footprint_exceeds_lot');
       expect(s.heritage_mislink_cnt).toBeGreaterThanOrEqual(1);
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('ravine lot → envelope_constrained, reason ravine', async () => {
@@ -272,7 +291,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.envelope_constraint_reason).toBe('ravine');
       expect(p.garden_suite_fits).toBe(false); // suite excluded on ravine
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3-B — party-wall side-setbacks: attached types subtract fewer side setbacks (RD 2 / RS 1 / RT 0).
@@ -300,7 +319,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(Number(rt.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rs.max_buildable_footprint_sqm));
       expect(Number(rs.max_buildable_footprint_sqm)).toBeGreaterThan(Number(rd.max_buildable_footprint_sqm));
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3 — zone-default coverage caps the footprint when bylaw_max_coverage_pct is NULL (the ~37% gap).
@@ -321,7 +340,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(s.coverage_defaulted_cnt).toBeGreaterThanOrEqual(1);
       expect(s.coverage_binding_cnt).toBeGreaterThanOrEqual(1); // coverage actually reduced the footprint
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3 — a NULL lot_size_sqm parcel cannot be coverage-capped (lot × pct = NULL → coverage_cap NULL).
@@ -342,7 +361,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(s.coverage_defaulted_cnt).toBe(0); // coverage_cap NULL → excluded (default didn't produce a cap)
       expect(s.coverage_binding_cnt).toBe(0);
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3-C2: pocket-derived storeys + neighbourhood premium via the parcels→neighbourhoods spatial join.
@@ -375,7 +394,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(Number(p.neighbourhood_id)).toBe(8001);
       expect(Number(p.neighbourhood_cost_premium)).toBe(1.35); // income 120000 → tier 1.35
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   it('parcel with NO neighbourhood join → premium 1.00, neighbourhood_id NULL, derived/bylaw stories unchanged', async () => {
@@ -396,7 +415,7 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       expect(p.max_build_stories_aggressive).toBeNull();       // no pocket
       expect(p.market_exceeds_bylaw).toBe(false);
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
   });
 
   // WF3-B NEW-1 cascade: the wider width_m for attached flows into rear_yard_area → garage GFA.
@@ -418,6 +437,61 @@ describe.skipIf(!dbAvailable())('Spec 65 max-build — live DB (migration 185 + 
       // RT's wider width_m → larger rear_yard_area → larger garage GFA (both below the 60 m² cap)
       expect(Number(rt.max_garage_gfa_sqm)).toBeGreaterThan(Number(rd.max_garage_gfa_sqm));
       await c.query('ROLLBACK');
-    } finally { c.release(); }
+    } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
+  });
+
+  // E1 (Spec 69 R-ZV, 2026-10-06 HIGH) — after the fix all 9 base parameters source from the DOMINANT
+  // label, so a sliver zone can no longer donate a numeric floor/ceiling to the parcel. These lock the
+  // defect end-to-end: pass 1 (zoning) → pass 2 (max-build).
+  describe('E1 — dominant-label parameters through pass 2 (Spec 69 R-ZV, 2026-10-06 HIGH)', () => {
+    // A4 — the sliver zone's STAND_SET (2.0) must NOT become the parcel front setback.
+    it("A4 — a sliver zone's STAND_SET no longer becomes the front setback: basis zone_default, length = depth − zone front − zone rear", async () => {
+      const c = await pool.connect();
+      try {
+        await c.query('BEGIN');
+        // Dominant RD zone (STAND_SET NULL) covering the whole parcel; a thin RD sliver (STAND_SET 2.0)
+        // overlapping the parcel by only a ~4e-9° strip. Pre-fix: MAX(standard_setback) borrowed 2.0.
+        await insZone(c, 991_000_100, 'RD', sq(-0.001, -0.001, 0.003), null);
+        await insZone(c, 991_000_101, 'RD', rect(0.000199996, -0.001, 0.003, 0.003), 2.0);
+        await insMb(c, TEST_PARCEL + 100, sq(0, 0, 0.0002), {
+          lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24,
+        });
+        await enrichParcels(c, { scopeWhere: SCOPE, full: true });
+        await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+        const p = await getParcel(c, TEST_PARCEL + 100);
+        expect(Number(p.zoning_base_source_id)).toBe(991_000_100);
+        expect(p.zoning_is_ambiguous).toBe(false);
+        expect(Number(p.zoning_dominant_area_share)).toBeGreaterThanOrEqual(0.999);
+        expect(p.bylaw_standard_setback_m).toBeNull();
+        expect(p.max_build_setback_basis).toBe('zone_default');
+        expect(Number(p.max_build_length_m)).toBeCloseTo(
+          22.24 - mb.SETBACK_DEFAULTS.RD.front - mb.SETBACK_DEFAULTS.RD.rear, 2);
+        await c.query('ROLLBACK');
+      } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
+    });
+
+    // A3b — a genuine < 0.6 split is disclosed on the envelope (fence test; GREEN today).
+    it('A3b — a genuine split below 0.6 is disclosed on the envelope: ambiguous, confidence low, reason ambiguous_zone (fence)', async () => {
+      const c = await pool.connect();
+      try {
+        await c.query('BEGIN');
+        // Zone A covers x∈[-0.001, 0.000104] (share 0.52 of the x∈[0, 0.0002] parcel); zone B the rest.
+        await insZone(c, 991_000_110, 'RD', rect(-0.001, -0.001, 0.000104, 0.003), null);
+        await insZone(c, 991_000_111, 'RD', rect(0.000104, -0.001, 0.003, 0.003), null);
+        await insMb(c, TEST_PARCEL + 110, sq(0, 0, 0.0002), {
+          lot_size_sqm: 495, frontage_m: 22.24, depth_m: 22.24,
+        });
+        await enrichParcels(c, { scopeWhere: SCOPE, full: true });
+        await enrichMaxBuild(c, { scopeWhere: SCOPE, full: true });
+        const p = await getParcel(c, TEST_PARCEL + 110);
+        expect(Math.abs(Number(p.zoning_dominant_area_share) - 0.52)).toBeLessThan(0.001);
+        expect(p.zoning_is_ambiguous).toBe(true);
+        expect(p.max_build_width_m).not.toBeNull();
+        expect(p.max_build_length_m).not.toBeNull();
+        expect(p.max_build_confidence).toBe('low');
+        expect(p.envelope_constraint_reason).toBe('ambiguous_zone');
+        await c.query('ROLLBACK');
+      } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
+    });
   });
 });

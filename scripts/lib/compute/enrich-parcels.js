@@ -167,6 +167,63 @@ for (const c of Object.keys(BASE_SRC)) {
 // ---------------------------------------------------------------------------
 const PRODUCER_NAME = 'sources:load_zoning'; // Spec 58 producer enrich_parcels consumes (§9)
 
+// zoning-change scope (2026-10-06 MED, Spec 65 §2 step 6) — every ledger name each step runs under
+// (operator decision 2: a standalone load_zoning run counts as a zoning change). Frozen literals,
+// pinned equal to scripts/lib/ledger.js slugForms(name, ['sources']) by test (enrich-centreline precedent).
+const ZONING_PRODUCER_FORMS = Object.freeze(['sources:load_zoning', 'load_zoning', 'load-zoning']);
+const ENRICH_SELF_FORMS = Object.freeze(['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels']);
+
+/**
+ * Did zoning change since this step's last completed run? ONE read-only ledger statement, DB clock only.
+ *  - own runs E: completed / completed_with_warnings, minus a write_skipped_pre_write_warn run (Spec 124
+ *    R-BG (iv)); deferred / self_skipped / failed / completed_with_errors / running never advance the
+ *    baseline. E_last = latest by completed_at, id.
+ *  - producer runs P: any terminal that may have committed a write (load_zoning writes one txn per target,
+ *    so failed / crashed / cancelled count) — NOT running / skipped / self_skipped; never a gated skip
+ *    (tested FIRST: a gated skip re-emits the prior run's keys); "wrote" = records_meta.zoning_rows_changed
+ *    > 0 when it is a JSON number, and a missing / null / malformed key counts as wrote (fail-safe).
+ *    P and E use DIFFERENT status sets on purpose (P over-inclusive, E under-inclusive; both fail-safe).
+ *  - changed = no E_last at all (fail-safe: scope all), or some P completed at/after E_last.started_at.
+ * Throws on a query error (fail closed, as readZoningContract does): an unreadable ledger never picks a scope.
+ * @param {{query: Function}} q - a pool or client
+ * @returns {Promise<{changed: boolean, producer_run_id: number|null, producer_completed_at: Date|null,
+ *   own_last_run_id: number|null, own_last_started_at: Date|null, read_at: Date}>}
+ */
+async function readZoningChange(q) {
+  const { rows } = await q.query(
+    `WITH own_last AS (
+       SELECT id, started_at FROM pipeline_runs
+        WHERE pipeline = ANY($1::text[])
+          AND status IN ('completed', 'completed_with_warnings')
+          AND NOT COALESCE(records_meta -> 'audit_table' -> 'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
+        ORDER BY completed_at DESC, id DESC
+        LIMIT 1
+     ),
+     producer AS (
+       SELECT p.id, p.completed_at FROM pipeline_runs p
+        WHERE p.pipeline = ANY($2::text[])
+          AND p.status NOT IN ('running', 'skipped', 'self_skipped')
+          AND (p.records_meta -> 'gate' ->> 'gated_skip') IS DISTINCT FROM 'true'
+          AND COALESCE(
+                CASE WHEN jsonb_typeof(p.records_meta -> 'zoning_rows_changed') = 'number'
+                     THEN (p.records_meta ->> 'zoning_rows_changed')::numeric > 0 END,
+                true)
+          AND p.completed_at >= (SELECT started_at FROM own_last)
+        ORDER BY p.completed_at DESC, p.id DESC
+        LIMIT 1
+     )
+     SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM own_last) THEN true
+                 ELSE EXISTS (SELECT 1 FROM producer) END AS changed,
+            (SELECT id FROM producer) AS producer_run_id,
+            (SELECT completed_at FROM producer) AS producer_completed_at,
+            (SELECT id FROM own_last) AS own_last_run_id,
+            (SELECT started_at FROM own_last) AS own_last_started_at,
+            now() AS read_at`,
+    [[...ENRICH_SELF_FORMS], [...ZONING_PRODUCER_FORMS]],
+  );
+  return rows[0];
+}
+
 async function readZoningContract(pool) {
   const latest = await pool.query(
     `SELECT status, records_meta FROM pipeline_runs WHERE pipeline = $1 ORDER BY started_at DESC LIMIT 1`,
@@ -190,10 +247,13 @@ async function readZoningContract(pool) {
   if (layers.base !== true) {
     throw new Error(`${TAG} ${PRODUCER_NAME}.zoning_layers_loaded.base !== true — base zoning missing, cannot enrich`);
   }
+  // Read ONCE per run, before the defer decision (F-9): pass 1 consumes this snapshot via ctx.contract.
+  const zoningChange = await readZoningChange(pool);
   return {
     layers,
     partial: meta.zoning_partial_load || false,
     baseCommittedAfterOverlayFailed: meta.base_layer_committed_after_overlays_failed === true,
+    zoning_change: zoningChange,
   };
 }
 
@@ -201,22 +261,31 @@ async function readZoningContract(pool) {
 // PASS 1 — zoning (Spec 65 §2). Verbatim from scripts/enrich-parcels.js :210-458.
 // ===========================================================================
 
-function buildPass1ScopeWhere({ full = false } = {}) {
+/**
+ * Pass 1's scope predicate (Spec 65 §2 step 6, zoning-change scope 2026-10-06). --full → TRUE. Otherwise
+ * the run-ledger answer decides: zoning changed since the last completed run → TRUE (every parcel; an
+ * all-scope incremental crosses enrich_parcels_defer_threshold_rows and defers to the next --full);
+ * unchanged → only parcels whose stamp is NULL (never enriched, or NULLed by mig 242's geom trigger).
+ * The retired arm compared zoning_bylaw_areas.source_dataset_version (a publisher clock) with
+ * zoning_enriched_at (our run clock) — two different clocks; never reintroduce it.
+ * `zoningChanged` MUST be a boolean on a non-full call: an omitted flag would silently narrow (F-10).
+ */
+function buildPass1ScopeWhere({ full = false, zoningChanged } = {}) {
   if (full) return 'TRUE';
-  return `(p.zoning_enriched_at IS NULL OR EXISTS (
-         SELECT 1 FROM zoning_bylaw_areas zv
-         WHERE zv.geom && p.geom AND ST_Intersects(p.geom, zv.geom)
-           AND zv.source_dataset_version > p.zoning_enriched_at))`;
+  if (typeof zoningChanged !== 'boolean') {
+    throw new Error(`${TAG} buildPass1ScopeWhere: zoningChanged must be a boolean on a non-full run (got ${JSON.stringify(zoningChanged)})`);
+  }
+  return zoningChanged ? 'TRUE' : '(p.zoning_enriched_at IS NULL)';
 }
 
 /**
  * SECURITY — scopeWhere is interpolated verbatim into the SQL. It MUST come from trusted code only
  * (the runner passes the literal 'TRUE'; tests pass literal predicates). NEVER pass user/request-derived
  * input here — it would be a SQL-injection vector.
- * @param {{scopeWhere?: string, full?: boolean, staleOverlays?: Set<string>, bboxDivisor: number}} opts
+ * @param {{scopeWhere?: string, full?: boolean, zoningChanged?: boolean, staleOverlays?: Set<string>, bboxDivisor: number}} opts
  */
-function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, staleOverlays = new Set(), bboxDivisor }) {
-  const incremental = buildPass1ScopeWhere({ full });
+function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, zoningChanged, staleOverlays = new Set(), bboxDivisor }) {
+  const incremental = buildPass1ScopeWhere({ full, zoningChanged });
 
   const baseAgg = Object.entries(BASE_SRC)
     .map(([col, src]) => `      ${sqlAggregate(col, src)} AS ${col}`)
@@ -308,7 +377,7 @@ base_pos AS (
 base_agg AS (
   SELECT parcel_id,
 ${baseAgg},
-      MIN(coverage_max_pct) AS base_coverage_max_pct,
+      (array_agg(coverage_max_pct ORDER BY ${DOMINANT_ORDER_BY}))[1] AS base_coverage_max_pct, -- E1: dominant row (was MIN; value-identical today, 0 of 11,719 source rows populated)
       (array_agg(source_id ORDER BY ${DOMINANT_ORDER_BY}))[1] AS zoning_base_source_id,
       (array_agg(source_dataset_version ORDER BY ${DOMINANT_ORDER_BY}))[1] AS zoning_base_source_dataset_version,
       -- Round to the parcels.zoning_dominant_area_share NUMERIC(5,4) precision so the
@@ -322,7 +391,8 @@ ${baseAgg},
       COUNT(DISTINCT fsi_max)      FILTER (WHERE fsi_max IS NOT NULL)      AS fsi_distinct,
       COUNT(DISTINCT frontage_min_m) FILTER (WHERE frontage_min_m IS NOT NULL) AS frontage_distinct,
       jsonb_agg(jsonb_build_object('source_id', source_id, 'zn_zone', zn_zone,
-        'area_share', round(area_share::numeric, 4)) ORDER BY intersect_area DESC) AS base_candidates
+        -- E1 (F-15): candidates ordered like the dominant pick, so base[0] is the dominant row on exact-area ties too.
+        'area_share', round(area_share::numeric, 4)) ORDER BY ${DOMINANT_ORDER_BY}) AS base_candidates
   FROM base_pos GROUP BY parcel_id
 ),
 ${heightCte}${covCte}${memberCtes}
@@ -365,15 +435,40 @@ RETURNING p.id;`; // D#5 — ids feed the run's honest aggregate records_updated
 }
 
 /**
+ * Stamp heal (2026-10-06 HIGH, Spec 65 §2 step 5) — pass 1's run-clock watermark, written on EVERY
+ * parcel pass 1 recomputed (every row of parcel_zoning_enrich), not only on the rows whose 35 values
+ * changed. The guarded value UPDATE above still stamps the rows it changes; this separate statement
+ * stamps the rest, so a stamp NULLed by mig 242's geom trigger (or made stale) on a parcel whose
+ * zoning is unchanged heals on the next run instead of staying in pass 1's incremental scope forever.
+ * Massing precedent: buildMassingStampSql. `p.zoning_enriched_at IS DISTINCT FROM $1` is a
+ * same-statement DEDUPE, not a value guard: it skips the rows the value UPDATE just stamped with the
+ * same $1, so a changed row gets one new row version, not two. Its rowCount (stampOnly) is disjoint
+ * from the value UPDATE's `updated` and never feeds records_updated.
+ */
+function buildZoningStampSql() {
+  return `
+UPDATE parcels p SET zoning_enriched_at = $1
+FROM parcel_zoning_enrich e
+WHERE p.parcel_id = e.parcel_id
+  AND p.zoning_enriched_at IS DISTINCT FROM $1;`;
+}
+
+/**
  * Pass 1 — zoning. `run(client, ctx, config)`. Returns the same stats shape as the legacy
  * `enrichParcels()`, plus nothing runner-owned (no duration timing — the runner times the call).
  */
 async function runPass1(client, ctx, config) {
+  // zoning-change scope — the ledger answer read ONCE by readZoningContract (the contract_read hook),
+  // before the defer decision (F-9). A non-full run without it would silently narrow: refuse.
+  const zoningChange = ctx.full ? null : (ctx.contract && ctx.contract.zoning_change) || null;
+  if (!ctx.full && !zoningChange) {
+    throw new Error(`${TAG} runPass1: ctx.contract.zoning_change missing on a non-full run — readZoningContract must run first`);
+  }
   const roadDist = Number(config.road_overlay_distance_m);
   const bboxDivisor = Number(config.enrich_parcels_bbox_degree_divisor);
   await client.query('DROP TABLE IF EXISTS parcel_zoning_enrich');
   await client.query(
-    buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, staleOverlays: ctx.staleOverlays, bboxDivisor }),
+    buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, zoningChanged: zoningChange ? zoningChange.changed : undefined, staleOverlays: ctx.staleOverlays, bboxDivisor }),
     [roadDist],
   );
 
@@ -393,11 +488,15 @@ async function runPass1(client, ctx, config) {
 
   const stamp = ctx.clock.now();
   const upd = await client.query(buildUpdateSql(), [stamp]);
+  // Stamp heal — the SAME `stamp` (one clock read), so the dedupe skips the rows `upd` just stamped.
+  const restamp = await client.query(buildZoningStampSql(), [stamp]);
 
   return {
     scoped: Number(s.scoped),
     updated: upd.rowCount,
     updatedIds: upd.rows.map((r) => r.id),
+    stampOnly: restamp.rowCount,
+    zoningChange: zoningChange ? { ...zoningChange, source: 'contract' } : null,
     gaps: Number(s.gaps),
     ambiguous: Number(s.ambiguous),
     multiZone: Number(s.multi_zone),
@@ -1850,7 +1949,8 @@ async function countUnconsumedBacklog(client) {
 }
 
 async function computeDeferScope(client, threshold) {
-  const pass1Where = buildPass1ScopeWhere({ full: false });
+  const zoningChange = await readZoningChange(client);
+  const pass1Where = buildPass1ScopeWhere({ full: false, zoningChanged: zoningChange.changed });
   const massingWhere = buildMassingScopeWhere({ full: false });
   const decisionWhere = buildDecisionScopeWhere({ full: false });
   const [pass1, massing, decision, combined, backlog] = await Promise.all([
@@ -1864,7 +1964,8 @@ async function computeDeferScope(client, threshold) {
   // decision is double-counted, which only makes the bound MORE conservative (never less).
   const scopeCount = combined + backlog;
   const ratio = threshold > 0 ? Math.round((scopeCount / threshold) * 100) / 100 : null;
-  return { scope_count: scopeCount, threshold, ratio, perPass: { pass1, massing, decision, backlog } };
+  return { scope_count: scopeCount, threshold, ratio, perPass: { pass1, massing, decision, backlog },
+    zoning_change: { ...zoningChange, source: 'defer' } };
 }
 
 // ===========================================================================
@@ -1910,7 +2011,11 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
 // ===========================================================================
 
 async function computePostPhase(pool, { passRaw }) {
-  const totalParcels = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE geom IS NOT NULL').then((r) => r.rows[0].n);
+  // Stamp heal (lens I3) — the zoning_enriched_at NULL count rides the SAME geom-parcel scan; no extra query.
+  const geomScan = await pool.query(
+    'SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE zoning_enriched_at IS NULL)::int AS stamp_null FROM parcels WHERE geom IS NOT NULL',
+  ).then((r) => r.rows[0]);
+  const totalParcels = geomScan.n;
   const withZone = await pool.query('SELECT COUNT(*)::int AS n FROM parcels WHERE zoning_class IS NOT NULL').then((r) => r.rows[0].n);
   const zonePct = totalParcels ? Math.round((1000 * withZone) / totalParcels) / 10 : 0;
   const optAorWithoutMaxGfa = await pool.query(
@@ -1955,6 +2060,11 @@ async function computePostPhase(pool, { passRaw }) {
       scope_recovery_recovered_count: optCfg.scope_recovery_recovered_count || 0,
       scope_recovery_batches: optCfg.scope_recovery_batches || 0,
       scope_stamped_without_recompute_count: optCfg.scope_stamped_without_recompute_count || 0,
+      // Stamp heal (2026-10-06 HIGH) — the heal contract (WARN at viol == 0) and the rows pass 1
+      // restamped without a value change (INFO, descriptive: ≈ total − parcels_enriched_count on --full).
+      zoning_stamp_null_count: geomScan.stamp_null,
+      zoning_stamp_only_count: zoning.stampOnly || 0,
+      zoning_change: (passRaw && passRaw.zoning && passRaw.zoning.zoningChange) || null,
     },
     // D#5 — the honest aggregate, computed by this module's own pure helper (never
     // re-derived by the runner) — feeds counters.records_updated via the descriptor's
@@ -2079,6 +2189,62 @@ function scope_recovery_batches(ctx) {
 function scope_stamped_without_recompute_count(ctx) {
   const n = ctx.matched.scope_stamped_without_recompute_count || 0;
   ctx.report('scope_stamped_without_recompute_count', { violations: 0, detail: n });
+}
+
+// Stamp heal (2026-10-06 HIGH) — every geom parcel was recomputed by pass 1 on a non-deferred run, so
+// a NULL zoning_enriched_at afterwards means the heal contract broke (WARN, viol == 0).
+function zoning_stamp_null_count(ctx) {
+  const n = ctx.matched.zoning_stamp_null_count || 0;
+  ctx.report('zoning_stamp_null_count', { violations: n, detail: n });
+}
+
+// Descriptive INFO counter (FOLD DS-4): the count lives in detail, never in violations.
+function zoning_stamp_only_count(ctx) {
+  const n = ctx.matched.zoning_stamp_only_count || 0;
+  ctx.report('zoning_stamp_only_count', { violations: 0, detail: n });
+}
+
+// EP-D19 (defer observability, 2026-10-06 HIGH) — the step's OWN record of a scope-defer. Declared
+// when:"pre" so it survives the runner's defer narrowing, and INFO (a declared INTERIM, see the
+// descriptor's deviations[]): the runner selects deferred_to_full only when the verdict is neither
+// FAIL nor WARN, so a WARN row here would reroute the run to completed_with_warnings. Descriptive:
+// violations is always 0; the reason (combined scope vs threshold, per pass) is in detail, and detail
+// is null on a run that did not defer (including --full, which never evaluates the defer).
+function enrich_parcels_deferred_to_full(ctx) {
+  const ds = ctx.matched ? ctx.matched.defer_scope : null;
+  if (!ds) {
+    ctx.report('enrich_parcels_deferred_to_full', { violations: 0, detail: null });
+    return;
+  }
+  const p = ds.perPass || {};
+  ctx.report('enrich_parcels_deferred_to_full', {
+    violations: 0,
+    detail: `combined scope ${ds.scope_count} >= threshold ${ds.threshold} (ratio ${ds.ratio}); `
+      + `pass1 ${p.pass1}, massing ${p.massing}, decision ${p.decision}, backlog ${p.backlog}`,
+  });
+}
+
+// zoning-change scope (2026-10-06 MED) — a REASON row, not a gate (F-13): violations is always 0 and
+// detail names which ledger snapshot chose pass 1's incremental scope (the contract read on a normal
+// run, the defer count's own read on a deferred one). null under --full (scope TRUE, ledger unread).
+function zoning_change_scope(ctx) {
+  const m = ctx.matched || {};
+  const zc = m.zoning_change || (m.defer_scope && m.defer_scope.zoning_change) || null;
+  let detail = null;
+  if (zc) {
+    const src = zc.source || 'contract';
+    // pg returns timestamptz as a Date; never construct one here (compute-no-wall-clock bans new Date()).
+    const iso = (t) => (t == null ? 'unknown' : (t instanceof Date ? t.toISOString() : String(t)));
+    if (zc.own_last_run_id == null) {
+      detail = `no prior completed run — scope all (fail-safe) [${src}]`;
+    } else if (zc.changed) {
+      detail = `changed: load_zoning run ${zc.producer_run_id} (completed ${iso(zc.producer_completed_at)}) `
+        + `after enrich_parcels run ${zc.own_last_run_id} (started ${iso(zc.own_last_started_at)}) [${src}]`;
+    } else {
+      detail = `unchanged since enrich_parcels run ${zc.own_last_run_id} [${src}]`;
+    }
+  }
+  ctx.report('zoning_change_scope', { violations: 0, detail });
 }
 
 function parcels_enriched_count(ctx) {
@@ -2210,6 +2376,10 @@ const CHECKS = {
   scope_recovery_recovered_count,
   scope_recovery_batches,
   scope_stamped_without_recompute_count,
+  zoning_stamp_null_count,
+  zoning_stamp_only_count,
+  enrich_parcels_deferred_to_full,
+  zoning_change_scope,
 };
 
 // ---------------------------------------------------------------------------
@@ -2251,6 +2421,7 @@ async function compute(ctx) {
     }
   }
   if (!ctx.matched) return { records_meta: {} };
+  const ds = ctx.matched.defer_scope || null;
   // A summarized subset of runEnrichPhase's own `matched` object (:2465-2503) — the
   // per-check `ctx.report` rows already carry the full per-metric detail; records_meta is
   // the human-scannable run-level roll-up, mirroring link-parcels.js's buildLinkMeta shape.
@@ -2266,7 +2437,14 @@ async function compute(ctx) {
       comparable_builds_enriched_count: ctx.matched.comparable_builds_enriched_count,
       optimal_config_enriched_count: ctx.matched.optimal_config_enriched_count,
       opt_config_engine_errors: ctx.matched.opt_config_engine_errors,
+      // EP-D19 — the run-chain.js CONTRACT key (parseDeferMarker), restored from the legacy script.
+      // Emitted on EVERY run (null when not deferred) so emits[] equals every golden's key set.
+      deferred: ds
+        ? { step: ctx.descriptor.identity.name, scope_count: ds.scope_count, threshold: ds.threshold, ratio: ds.ratio }
+        : null,
     },
+    // EP-D19 — a deferred run wrote nothing: a truthful Mutator zero (Spec 47 §8.7), never NULL.
+    ...(ds ? { counters: { records_total: 0, records_new: 0, records_updated: 0 } } : {}),
   };
 }
 
@@ -2292,11 +2470,15 @@ Object.assign(module.exports, {
   ALL_WRITE_COLS,
   OVERLAY_LAYERS,
   readZoningContract,
+  ZONING_PRODUCER_FORMS,
+  ENRICH_SELF_FORMS,
+  readZoningChange,
   checks: CHECKS,
   // pass 1
   buildPass1ScopeWhere,
   buildEnrichmentSql,
   buildUpdateSql,
+  buildZoningStampSql,
   runPass1,
   // pass 2
   buildMassingScopeWhere,

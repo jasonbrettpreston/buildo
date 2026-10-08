@@ -2485,11 +2485,12 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     };
     // The three step-level COUNTs, answered with DISTINCT values so a swapped
     // assignment is visible rather than coincidentally equal.
-    const counts = [{ n: 1000 }, { n: 966 }, { n: 7 }];
+    // stamp heal (2026-10-06): the FIRST count also carries the zoning_enriched_at NULL count (same scan, no 4th query).
+    const counts = [{ n: 1000, stamp_null: 71 }, { n: 966 }, { n: 7 }];
     let i = 0;
     const pool = guard.wrap({ query: async () => ({ rows: [counts[i++]!] }) });
     const passRaw = {
-      zoning: { updated: 11, scoped: 1200, ambiguous: 2, fsiSourceNulled: 3, updatedIds: [1, 2] },
+      zoning: { updated: 11, scoped: 1200, ambiguous: 2, fsiSourceNulled: 3, stampOnly: 73, updatedIds: [1, 2] },
       max_build: { updated: 13, zero_link_ghost_cnt: 4, coverage_defaulted_cnt: 5, box_excluded_cnt: 6, heritage_mislink_cnt: 7, ravine_constrained_cnt: 8, updatedIds: [2, 3] },
       existing_structure: { updated: 17, mislinked: 9, scenarioUpdated: 19, updatedIds: [4], scenarioUpdatedIds: [5] },
       comparable_builds: { candidates: 23, updated: 29, zero_comps: 31 },
@@ -2501,7 +2502,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     };
     const res = await ep.computePostPhase(pool, { passRaw });
 
-    // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped.
+    // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped — plus the three keys the stamp-heal and zoning-change-scope WF3s added (2026-10-06).
     expect(Object.keys(res.matched).sort()).toEqual([
       'comp_candidate_pool', 'comp_zero_comps_count', 'comparable_builds_enriched_count',
       'existing_mislinked_footprint_count', 'existing_structure_enriched_count',
@@ -2512,7 +2513,8 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       'parcels_ambiguous_zone_count', 'parcels_enriched_count', 'pending_scope_parcels',
       'ravine_constrained_count', 'scenario_enriched_count',
       'scope_recovery_batches', 'scope_recovery_recovered_count', 'scope_stamped_without_recompute_count',
-      'zone_class_pct', 'zoning_fsi_source_nulled_count',
+      'zone_class_pct', 'zoning_change', 'zoning_fsi_source_nulled_count',
+      'zoning_stamp_null_count', 'zoning_stamp_only_count',
     ].sort());
 
     // (2) Every value comes from the pass field it always came from.
@@ -2542,6 +2544,9 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       scope_recovery_recovered_count: 59,
       scope_recovery_batches: 61,
       scope_stamped_without_recompute_count: 67,
+      zoning_stamp_null_count: 71, // the first count's stamp_null column
+      zoning_stamp_only_count: 73,
+      zoning_change: null, // passRaw.zoning.zoningChange absent (--full)
     });
 
     // (3) The aggregate block keeps `enrich_parcels`' OWN key names (the runner never
@@ -2763,5 +2768,238 @@ describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driv
     };
     expect(seed.max_build_lot_min_sqm.default).toBe(mb.LOT_MIN_SQM);
     expect(seed.max_build_lot_max_sqm.default).toBe(mb.LOT_MAX_SQM);
+  });
+});
+
+// SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md §2 step 5, §3a (stamp heal — 2026-10-06 HIGH)
+describe('stamp heal (2026-10-06 HIGH) — L7 logic locks', () => {
+  // The compute module's export is the compute(ctx) FUNCTION decorated with static properties;
+  // loadComputeModule() wraps a function export as {compute}, which drops them — read the raw export.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const rawCompute = (): Record<string, unknown> => require(abs(COMPUTE_REL)) as Record<string, unknown>;
+
+  it('L7a — buildZoningStampSql is exported and is a pure run-clock stamp: UPDATE … SET zoning_enriched_at = $1, no IS DISTINCT FROM over any of the 35 ALL_WRITE_COLS', () => {
+    const mod = rawCompute();
+    expect(typeof mod.buildZoningStampSql, 'RED today: buildZoningStampSql is not exported').toBe('function');
+    const sql = (mod.buildZoningStampSql as () => string)();
+    expect(sql).toMatch(/UPDATE\s+parcels\s+p\s+SET\s+zoning_enriched_at\s*=\s*\$1/);
+    for (const col of mod.ALL_WRITE_COLS as string[]) {
+      expect(sql.includes(`p.${col} IS DISTINCT FROM`), `the stamp statement must not guard on p.${col}`).toBe(false);
+    }
+    expect(sql).toMatch(/zoning_enriched_at IS DISTINCT FROM \$1/);
+  });
+
+  it('L7b — computePostPhase surfaces zoning_stamp_null_count (from the same COUNT scan, no extra query) and zoning_stamp_only_count (from passRaw.zoning.stampOnly)', async () => {
+    const mod = rawCompute();
+    expect(typeof mod.computePostPhase, 'RED today: computePostPhase must exist').toBe('function');
+    const calls: string[] = [];
+    const fakePool = {
+      query: async (sql: string) => {
+        calls.push(sql);
+        return { rows: [{ n: 10, stamp_null: 3 }] };
+      },
+    };
+    const out = await (mod.computePostPhase as (...args: unknown[]) => Promise<{ matched: Record<string, number> }>)(
+      fakePool,
+      { passRaw: { zoning: { stampOnly: 7, updated: 0, updatedIds: [] } } },
+    );
+    expect(out.matched.zoning_stamp_null_count, 'RED today: the key is absent (undefined)').toBe(3);
+    expect(out.matched.zoning_stamp_only_count, 'RED today: the key is absent (undefined)').toBe(7);
+    expect(calls.length, 'the post phase still issues exactly 3 queries — the stamp-null count rides the existing total-parcels scan (lens I3)').toBe(3);
+  });
+
+  it('L7c — the two check fns report the declared shapes: zoning_stamp_null_count = {violations:n, detail:n}; zoning_stamp_only_count = {violations:0, detail:n} (FOLD DS-4)', () => {
+    const mod = rawCompute();
+    const reports: Array<[string, unknown]> = [];
+    const report = (id: string, r: unknown) => { reports.push([id, r]); };
+    const checks = mod.checks as Record<string, (...args: unknown[]) => unknown>;
+    expect(typeof checks.zoning_stamp_null_count, 'RED today: the check fn is absent').toBe('function');
+    expect(typeof checks.zoning_stamp_only_count, 'RED today: the check fn is absent').toBe('function');
+    checks.zoning_stamp_null_count!({ matched: { zoning_stamp_null_count: 4 }, report });
+    checks.zoning_stamp_only_count!({ matched: { zoning_stamp_only_count: 9 }, report });
+    expect(reports).toEqual([
+      ['zoning_stamp_null_count', { violations: 4, detail: 4 }],
+      ['zoning_stamp_only_count', { violations: 0, detail: 9 }],
+    ]);
+  });
+
+  it('L7d — the compute dispatch table keys equal descriptor.checks[].id IN ORDER, and both new ids are declared', () => {
+    const mod = rawCompute();
+    const descriptor = loadDescriptor() as unknown as { checks: Array<{ id: string }> };
+    const ids = descriptor.checks.map((c) => c.id);
+    expect(ids).toContain('zoning_stamp_null_count');
+    expect(ids).toContain('zoning_stamp_only_count');
+    expect(Object.keys(mod.checks as object)).toEqual(ids);
+  });
+});
+
+// SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md §3, §3a, §3c (EP-D19 — defer observability, 2026-10-06 HIGH)
+describe('EP-D19 defer observability — producer/consumer contract, terminal selection, INFO fence', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const rawCompute = (): Record<string, unknown> => require(abs(COMPUTE_REL)) as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { parseDeferMarker } = require(abs('scripts/run-chain.js')) as { parseDeferMarker: (m: unknown) => unknown };
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { selectTerminal } = require(abs(INDEX_REL)) as {
+    selectTerminal: (d: unknown, q: { kind: string; status: string; discriminator?: string }) => { id: string } | null;
+  };
+  const DEFER_SCOPE = { scope_count: 446682, threshold: 50000, ratio: 8.93, perPass: { pass1: 446682, massing: 0, decision: 0, backlog: 0 } };
+  const silent = { info() {}, warn() {}, error() {}, debug() {} };
+
+  async function runCompute(matched: Record<string, unknown>) {
+    const reports: Array<[string, unknown]> = [];
+    const fn = rawCompute().compute as (ctx: unknown) => Promise<{ records_meta: Record<string, unknown>; counters?: Record<string, number> }>;
+    const result = await fn({
+      descriptor: loadDescriptor(),
+      checks: ['enrich_parcels_deferred_to_full'],
+      matched,
+      report: (id: string, r: unknown) => { reports.push([id, r]); },
+      log: silent,
+    });
+    return { result, reports };
+  }
+
+  it('R2 — a deferred run emits records_meta.deferred that run-chain.js parseDeferMarker accepts verbatim (producer ↔ consumer), plus 0/0/0 counters', async () => {
+    const { result } = await runCompute({ defer_scope: DEFER_SCOPE });
+    expect(parseDeferMarker(result.records_meta)).toEqual({ step: 'enrich_parcels', scope_count: 446682, threshold: 50000, ratio: 8.93 });
+    expect(result.counters).toEqual({ records_total: 0, records_new: 0, records_updated: 0 });
+  });
+
+  it('R2 — a non-deferred run emits deferred: null (the key is present on EVERY run, gate C) and parseDeferMarker reads null', async () => {
+    const { result } = await runCompute({});
+    expect(Object.prototype.hasOwnProperty.call(result.records_meta, 'deferred')).toBe(true);
+    expect(result.records_meta.deferred).toBeNull();
+    expect(parseDeferMarker(result.records_meta)).toBeNull();
+    expect(result.counters, 'a non-deferred run leaves counters to the descriptor sources').toBeUndefined();
+  });
+
+  it('R2 — the enrich_parcels_deferred_to_full row reports violations 0 with the defer reason in detail, and detail null when not deferred', async () => {
+    const deferred = await runCompute({ defer_scope: DEFER_SCOPE });
+    expect(deferred.reports).toEqual([[
+      'enrich_parcels_deferred_to_full',
+      { violations: 0, detail: 'combined scope 446682 >= threshold 50000 (ratio 8.93); pass1 446682, massing 0, decision 0, backlog 0' },
+    ]]);
+    const normal = await runCompute({});
+    expect(normal.reports).toEqual([['enrich_parcels_deferred_to_full', { violations: 0, detail: null }]]);
+  });
+
+  it('R3 — selectTerminal picks the declared deferred_to_full terminal for the runner\'s deferred query', () => {
+    expect(selectTerminal(loadDescriptor(), { kind: 'success', status: 'deferred_to_full' })?.id).toBe('deferred_to_full');
+  });
+
+  it('R3 fences — completed → enriched_full, completed_with_warnings → enriched_full_with_warnings (pool[0] stays enriched_full)', () => {
+    expect(selectTerminal(loadDescriptor(), { kind: 'success', status: 'completed' })?.id).toBe('enriched_full');
+    expect(selectTerminal(loadDescriptor(), { kind: 'success', status: 'completed_with_warnings' })?.id).toBe('enriched_full_with_warnings');
+  });
+
+  // [FOLD DS-6] A no-regression pin of the EXISTING pool[0] fallback, NOT an endorsement of it: a
+  // completed_with_errors run has no declared terminal and falls back to enriched_full. Making that
+  // selection loud is runner-owned and filed with the next scripts/lib/step batch ("Runner gaps").
+  it('R3 fence (existing fallback pinned, not endorsed — see the runner-gaps row) — completed_with_errors still falls back to pool[0] = enriched_full', () => {
+    expect(selectTerminal(loadDescriptor(), { kind: 'success', status: 'completed_with_errors' })?.id).toBe('enriched_full');
+  });
+
+  it('R4 — the INFO-not-WARN fence: enrich_parcels_deferred_to_full is severity INFO, when "pre", non-blocking', () => {
+    const d = loadDescriptor() as unknown as { checks: Array<{ id: string; severity: string; when: string; blocking: boolean }> };
+    const c = d.checks.find((x) => x.id === 'enrich_parcels_deferred_to_full');
+    expect(c, 'the defer row must be a declared check').toBeDefined();
+    expect(
+      c?.severity,
+      "must stay INFO: scripts/lib/step/index.js selects deferred_to_full only when verdict !== 'FAIL' && verdict !== 'WARN' — a WARN defer row would reroute the run to completed_with_warnings and lose the deferred_to_full terminal",
+    ).toBe('INFO');
+    expect(c?.when, 'must be when:"pre" — the runner narrows a deferred run to pre checks only').toBe('pre');
+    expect(c?.blocking).toBe(false);
+  });
+});
+
+// SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md §2 step 6, §3a, §3c (zoning-change scope — 2026-10-06 MED)
+describe('zoning-change scope (2026-10-06 MED) — L-logic locks', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const raw = (): Record<string, any> => require(abs(COMPUTE_REL)) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { slugForms } = require(abs('scripts/lib/ledger.js')) as { slugForms: (n: string, c: string[]) => string[] };
+
+  it('buildPass1ScopeWhere — full → TRUE; changed → TRUE; unchanged → NULL-stamp only; an omitted flag THROWS (never silently narrows, F-10)', () => {
+    const m = raw();
+    expect(m.buildPass1ScopeWhere({ full: true })).toBe('TRUE');
+    expect(m.buildPass1ScopeWhere({ full: false, zoningChanged: true })).toBe('TRUE');
+    expect(m.buildPass1ScopeWhere({ full: false, zoningChanged: false })).toBe('(p.zoning_enriched_at IS NULL)');
+    expect(() => m.buildPass1ScopeWhere({ full: false })).toThrow();
+  });
+
+  it('anti-reintroduction — the rendered pass-1 SQL never compares a publisher version (no `source_dataset_version >`)', () => {
+    const m = raw();
+    for (const zoningChanged of [true, false]) {
+      const sql = m.buildEnrichmentSql({ scopeWhere: 'TRUE', full: false, zoningChanged, bboxDivisor: 1000 }) as string;
+      expect(sql).not.toMatch(/source_dataset_version\s*>/);
+    }
+  });
+
+  it('producer / own slug forms are derived from slugForms (operator decision 2: both ledger names count)', () => {
+    const m = raw();
+    expect([...m.ZONING_PRODUCER_FORMS]).toEqual(slugForms('load_zoning', ['sources']));
+    expect([...m.ENRICH_SELF_FORMS]).toEqual(slugForms('enrich_parcels', ['sources']));
+  });
+
+  it('readZoningChange — ONE bound statement; R-BG(iv) own baseline incl. completed_with_warnings; explicit no-own-run arm (F-5); producer status set deliberately differs from the own set (F-3)', async () => {
+    const m = raw();
+    const calls: Array<{ sql: string; params: unknown[] }> = [];
+    const row = { changed: true, producer_run_id: 7, producer_completed_at: null, own_last_run_id: null, own_last_started_at: null, read_at: null };
+    const out = await m.readZoningChange({ query: async (sql: string, params: unknown[]) => { calls.push({ sql, params }); return { rows: [row] }; } });
+    expect(calls).toHaveLength(1);
+    const sql = calls[0]!.sql.replace(/\s+/g, ' ');
+    expect(sql).toContain('completed_with_warnings');
+    expect(sql).toContain('NOT EXISTS (SELECT 1 FROM own_last)');
+    expect(sql).toMatch(/status IN \('completed', 'completed_with_warnings'\)/);
+    expect(sql).toMatch(/status NOT IN \('running', 'skipped', 'self_skipped'\)/);
+    expect(calls[0]!.params).toEqual([[...m.ENRICH_SELF_FORMS], [...m.ZONING_PRODUCER_FORMS]]);
+    expect(out).toEqual(row);
+  });
+
+  it('readZoningContract returns zoning_change (read once, before the defer decision, F-9)', async () => {
+    const m = raw();
+    const pool = {
+      query: async (sql: string) => {
+        if (sql.includes('own_last')) return { rows: [{ changed: false, producer_run_id: null, producer_completed_at: null, own_last_run_id: 1, own_last_started_at: null, read_at: null }] };
+        if (sql.includes('zoning_layers_loaded')) return { rows: [{ records_meta: { zoning_layers_loaded: { base: true } } }] };
+        return { rows: [{ status: 'completed', records_meta: {} }] };
+      },
+    };
+    const contract = await m.readZoningContract(pool);
+    expect(contract.zoning_change).toEqual({ changed: false, producer_run_id: null, producer_completed_at: null, own_last_run_id: 1, own_last_started_at: null, read_at: null });
+    expect(contract.layers).toEqual({ base: true });
+  });
+
+  it('runPass1 THROWS before any query on a non-full run without ctx.contract.zoning_change (no silent narrowing)', async () => {
+    const m = raw();
+    const calls: string[] = [];
+    const client = { query: async (sql: string) => { calls.push(sql); return { rows: [{}], rowCount: 0 }; } };
+    const now = new Date();
+    const ctx = { full: false, scopeWhere: 'TRUE', staleOverlays: new Set(), contract: null, clock: { now: () => now } };
+    await expect(m.runPass1(client, ctx, { road_overlay_distance_m: 5, enrich_parcels_bbox_degree_divisor: 1000 })).rejects.toThrow(/zoning_change/);
+    expect(calls).toEqual([]);
+  });
+
+  it('computePostPhase with passRaw = {} does not throw and maps zoning_change to null (F-12)', async () => {
+    const m = raw();
+    const out = await m.computePostPhase({ query: async () => ({ rows: [{ n: 0, stamp_null: 0 }] }) }, { passRaw: {} });
+    expect(out.matched.zoning_change).toBeNull();
+  });
+
+  it('zoning_change_scope — a reason row, not a gate: violations always 0; the detail names the snapshot source', () => {
+    const m = raw();
+    const reports: Array<[string, unknown]> = [];
+    const report = (id: string, r: unknown) => { reports.push([id, r]); };
+    const ts = (s: string) => new Date(s).toISOString();
+    m.checks.zoning_change_scope({ matched: { zoning_change: { changed: true, producer_run_id: 2283, producer_completed_at: new Date('2026-10-05T12:00:00Z'), own_last_run_id: 2202, own_last_started_at: new Date('2026-10-01T15:25:00Z'), source: 'contract' } }, report });
+    m.checks.zoning_change_scope({ matched: { zoning_change: { changed: false, own_last_run_id: 2400, source: 'contract' } }, report });
+    m.checks.zoning_change_scope({ matched: { defer_scope: { zoning_change: { changed: true, own_last_run_id: null, source: 'defer' } } }, report });
+    m.checks.zoning_change_scope({ matched: {}, report });
+    expect(reports).toEqual([
+      ['zoning_change_scope', { violations: 0, detail: `changed: load_zoning run 2283 (completed ${ts('2026-10-05T12:00:00Z')}) after enrich_parcels run 2202 (started ${ts('2026-10-01T15:25:00Z')}) [contract]` }],
+      ['zoning_change_scope', { violations: 0, detail: 'unchanged since enrich_parcels run 2400 [contract]' }],
+      ['zoning_change_scope', { violations: 0, detail: 'no prior completed run — scope all (fail-safe) [defer]' }],
+      ['zoning_change_scope', { violations: 0, detail: null }],
+    ]);
   });
 });

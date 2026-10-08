@@ -156,6 +156,7 @@ function buildSourceSql(maxExistingGfaSqm) {
     FROM parcels p
     WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
       AND p.max_buildable_gfa_sqm IS NOT NULL
+      AND p.lot_size_sqm IS NOT NULL
       AND (p.cur_floor_gfa_sqm IS NULL OR p.cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
     ORDER BY p.id ASC`;
 }
@@ -378,6 +379,7 @@ function buildZoneSql(maxExistingGfaSqm) {
       FROM parcels
      WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'
        AND max_buildable_gfa_sqm IS NOT NULL
+       AND lot_size_sqm IS NOT NULL
        AND (cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
      GROUP BY 1
      ORDER BY 1`;

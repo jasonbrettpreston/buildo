@@ -1533,16 +1533,6 @@
     },
     {
       "gate": "K",
-      "step": "enrich_parcels",
-      "item": "red-evidence",
-      "disposition": "pending_remediation",
-      "why": "no docs/reports/red-evidence/enrich_parcels/*.json citation — the assessment report's PH-7 section still only narrates the bare word RED in prose (gate K, operator decision 3, 2026-09-26)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated, closes on full-chain acceptance)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "K",
       "step": "assert_global_coverage",
       "item": "red-evidence",
       "disposition": "pending_remediation",

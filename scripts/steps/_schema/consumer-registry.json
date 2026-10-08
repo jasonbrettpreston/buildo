@@ -105,6 +105,14 @@
       "source": "emits"
     },
     {
+      "consumer": "enrich_parcels",
+      "producer": "load_zoning",
+      "kind": "records_meta",
+      "key": "zoning_rows_changed",
+      "value": "any",
+      "source": "emits"
+    },
+    {
       "consumer": "enrich_ravines",
       "producer": "load_ravines",
       "kind": "records_meta",
@@ -357,6 +365,14 @@
       "producer": "load_heritage",
       "kind": "records_meta",
       "key": "heritage_load",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "scripts/run-chain.js",
+      "producer": "enrich_parcels",
+      "kind": "records_meta",
+      "key": "deferred",
       "value": "any",
       "source": "emits"
     },

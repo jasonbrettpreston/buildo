@@ -191,6 +191,10 @@
     {
       "key": "summary.records_meta.errors",
       "why": "FLEET-2 lib #75 reconcile (fold 11 item 6): records_meta.errors and records_meta.warnings are now ALWAYS emitted, [] when no FAIL/WARN row (scripts/lib/step/index.js:6858-6863). The PRE omitted the key on a clean run. POST value is [], so no new FAIL row."
+    },
+    {
+      "key": "summary.records_meta.zoning_rows_changed",
+      "why": "New per-run, non-§9 records_meta key added by the enrich_parcels zoning-change-scope WF3 (Spec 58 zoning_rows_changed paragraph, operator ruling A1, 2026-10-06): the sum of inserted + updated + deleted over all 10 write targets, consumed by enrich_parcels readZoningChange (Spec 65 §2 step 6). Absent in PRE (the key did not exist). POST = 195 on both chains (2026-10-08 recapture) = 187 written + 8 orphans deleted on the forced cohort (per target: loaded_count - unchanged_skipped, plus orphans_removed_count). Additive; no table_state or other value changes."
     }
   ]
 }
