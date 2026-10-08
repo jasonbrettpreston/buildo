@@ -48,6 +48,19 @@ const write = (root: string, rel: string, text: string) => {
 };
 
 const slice = () => F.fixtureSlice();
+
+describe('loadAuthored reads an enacting:<bylaw> shard by its KEY (the A1 `status` "no A 2", 2026-10-07)', () => {
+  it('drafts written at shardPaths(key) load back under that key, with page enacting:<bylaw>', () => {
+    const root = path.join(TMP, 'enacting');
+    const key = 'enacting:1075-2026/10.5.40.40';
+    const p = K.shardPaths(key);
+    for (const [k, rel] of Object.entries(p) as [string, string][]) write(root, rel, `${JSON.stringify({ schema: AU.AUTHORED_SCHEMA, shard: key, keyer: k === 'a' ? 'A' : 'B', units: [] })}
+`);
+    const shards = AU.loadAuthored(root);
+    expect(shards.map((s: Json) => [s.key, s.page, s.article, s.paths.a])).toEqual([[key, 'enacting:1075-2026', '10.5.40.40', p.a]]);
+    expect(shards[0].a && shards[0].b && shards[0].prov).toBeTruthy();
+  });
+});
 const shard = () => K.planBatch({ slice: slice(), inScopeIds: new Set(['600.60.40(1)']), batch: 'A7' }).shards[0];
 const UNITS = () => [F.GOOD['LIMIT×literal (label condition)'], F.GOOD['PERMIT×none']];
 const aDoc = (s: Json) => ({ schema: AU.AUTHORED_SCHEMA, shard: s.key, keyer: 'A', units: UNITS(), rows: { '600.60.40(1)': { explanation: 'The overlay caps dwelling units.', code_refs: 'none' } } });

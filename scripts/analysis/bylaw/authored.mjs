@@ -35,6 +35,18 @@ import { extractLiterals } from './slice.mjs';
 
 export const AUTHORED_REL = 'scripts/seeds/bylaw/authored';
 export const AUTHORED_SCHEMA = 'bylaw-authored-v1';
+/**
+ * The ONE shard-key ⇄ path codec. A shard key is `<page>/<article>`; an enacting pseudo-page is `enacting:<bylaw>`,
+ * and Windows forbids ":" in a path segment, so ":" is stored as "__" in the page directory. Page keys never contain
+ * "__" (section pages are `chN_M`), so the map is injective and keyOfShardDir() inverts it.
+ */
+export const shardDirOfKey = (key) => String(key).replace(/:/g, '__');
+export const keyOfShardDir = (rel) => String(rel).replace(/__/g, ':');
+/** Repo-relative draft paths of a shard key: {a, b, prov}. */
+export function shardRelPaths(key) {
+  const p = `${AUTHORED_REL}/${shardDirOfKey(key)}`;
+  return { a: `${p}.a.json`, b: `${p}.b.json`, prov: `${p}.prov.json` };
+}
 export const WHOLE = 'whole';
 /** Gate state (Spec 68 §4): closed; a gate not run is never a PASS. */
 export const GATE_STATES = Object.freeze(['pass', 'fail', 'not_run']);
@@ -313,8 +325,8 @@ export function loadAuthored(root) {
     for (const f of fs.readdirSync(dir).sort(cmpStr)) {
       const m = /^(.+)\.(a|b|prov)\.json$/.exec(f);
       if (!m) continue;
-      const key = `${page}/${m[1]}`;
-      if (!shards.has(key)) shards.set(key, { key, page, article: m[1], paths: {}, a: null, b: null, prov: null, a_sha256: null, parse_errors: [] });
+      const key = keyOfShardDir(`${page}/${m[1]}`); // the shard key, not its on-disk spelling (enacting__… → enacting:…)
+      if (!shards.has(key)) shards.set(key, { key, page: keyOfShardDir(page), article: m[1], paths: {}, a: null, b: null, prov: null, a_sha256: null, parse_errors: [] });
       const s = shards.get(key);
       const rel = `${AUTHORED_REL}/${page}/${f}`;
       s.paths[m[2]] = rel;

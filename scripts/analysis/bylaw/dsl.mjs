@@ -23,14 +23,17 @@
 // their order. A unit's statement list is a set, so `canonicalExpression()` sorts the canonical statements.
 //
 // Errors are thrown as DslError with a closed `code`: syntax · bad_literal · bad_unit · bad_target · bad_clause_path
-// · unknown_function · mixed_and_or · band_arm_not_literal · min_max_arity · duplicate_by_type_key · value_form_mixed.
+// · unknown_function · mixed_and_or · band_arm_not_literal · min_max_arity · duplicate_by_type_key · value_form_mixed
+// · too_deep (nesting past MAX_NEST — parse and canonicalize are bounded, so no input ever overflows the stack).
 
 export const LITERAL_UNITS = Object.freeze(['m', 'm2', 'pct', 'storeys', 'units', 'ratio']);
 export const VALUE_FORMS = Object.freeze(['literal', 'band', 'formula', 'by_building_type', 'if', 'map_lookup', 'existing_as_of', 'none']);
 export const DSL_ERROR_CODES = Object.freeze([
   'syntax', 'bad_literal', 'bad_unit', 'bad_target', 'bad_clause_path', 'unknown_function', 'mixed_and_or',
-  'band_arm_not_literal', 'min_max_arity', 'duplicate_by_type_key', 'value_form_mixed',
+  'band_arm_not_literal', 'min_max_arity', 'duplicate_by_type_key', 'value_form_mixed', 'too_deep',
 ]);
+/** Nesting bound for the recursive parser and canonicalizer (real by-law expressions nest < 10 deep). */
+export const MAX_NEST = 200;
 
 const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'enacted', 'label', 'overlay', 'unlimited', 'unregulated', 'mapped', 'labelled', 'not', 'and', 'or']);
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
@@ -86,7 +89,11 @@ function tokenize(src) {
 
 // ---------------------------------------------------------------- parser
 class Parser {
-  constructor(src) { this.src = src; this.toks = tokenize(src); this.i = 0; }
+  constructor(src) { this.src = src; this.toks = tokenize(src); this.i = 0; this.depth = 0; }
+  nest(fn) {
+    if (++this.depth > MAX_NEST) throw new DslError('too_deep', `nesting deeper than ${MAX_NEST} in: ${this.src.slice(0, 120)}`);
+    try { return fn(); } finally { this.depth--; }
+  }
   peek(k = 0) { return this.toks[this.i + k]; }
   next() {
     const t = this.toks[this.i++];
@@ -120,7 +127,8 @@ class Parser {
     this.i++;
     return { type: 'lit', raw: n.v, value: Number(n.v), unit: u.v };
   }
-  factor() {
+  factor() { return this.nest(() => this.factor0()); }
+  factor0() {
     const t = this.peek();
     if (!t) throw new DslError('syntax', `unexpected end of: ${this.src}`);
     if (t.t === 'num') return this.literal();
@@ -217,7 +225,8 @@ class Parser {
     }
     return atoms.length === 1 ? atoms[0] : { type: joiner, xs: atoms };
   }
-  atom() {
+  atom() { return this.nest(() => this.atom0()); }
+  atom0() {
     if (this.isId('not')) { this.next(); return { type: 'not', x: this.atom() }; }
     if (this.isId('mapped') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'mapped', code: c }; }
     if (this.isId('labelled') && this.isTok('(', 1)) { this.next(); this.next(); const c = this.expect('id').v; this.expect(')'); return { type: 'labelled', letter: c }; }
@@ -262,9 +271,15 @@ export function parseExpression(numericExpression) {
 function num(raw) { return String(Number(raw)); }
 const byStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
+let canonDepth = 0;
+function bounded(fn) {
+  if (++canonDepth > MAX_NEST) { canonDepth = 0; throw new DslError('too_deep', `canonical: nesting deeper than ${MAX_NEST}`); }
+  try { return fn(); } finally { if (canonDepth > 0) canonDepth--; }
+}
+
 export function canonExpr(e) {
   const tag = e.argPath ? `@${e.argPath}` : '';
-  return canonCore(e) + tag;
+  return bounded(() => canonCore(e)) + tag;
 }
 function canonCore(e) {
   switch (e.type) {
@@ -282,8 +297,10 @@ function canonCore(e) {
     case 'bin': {
       if (e.op === '+' || e.op === '×') {
         const flat = [];
+        // flatten from the root's OPERANDS: the root itself may carry an argPath (`max(25 pct × d_m @(B); …)`), and
+        // pushing it as its own operand re-entered canonExpr(e) forever (the A1 stack overflow)
         const walk = (n) => { if (n.type === 'bin' && n.op === e.op && !n.argPath) { walk(n.l); walk(n.r); } else flat.push(n); };
-        walk(e);
+        walk(e.l); walk(e.r);
         return flat.map(wrap).sort(byStr).join(e.op);
       }
       return wrap(e.l) + e.op + wrap(e.r);
@@ -293,7 +310,8 @@ function canonCore(e) {
 }
 function wrap(n) { return n.type === 'bin' && !n.argPath ? `(${canonExpr(n)})` : canonExpr(n); }
 
-export function canonCond(c) {
+export function canonCond(c) { return bounded(() => canonCond0(c)); }
+function canonCond0(c) {
   switch (c.type) {
     // delimited, so the map is injective (`not(a<5m)` ≠ a variable `nota`); nested same-type and/or flatten (associative)
     case 'and': case 'or': {

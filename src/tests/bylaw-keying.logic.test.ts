@@ -243,4 +243,36 @@ describe('adjudication queue (closed answers) → G-AGREE entries', () => {
     expect(K.applyAnswers({ queue: q, answers: ans, adjudicator: 'operator', on: 'd' }).errors).toEqual(['Q-A7-ffffffff: not in the A7 queue']);
     expect(K.applyAnswers({ queue: q, answers: ans, adjudicator: '', on: 'd' }).errors).toEqual(['an adjudicator is required']);
   });
+
+  it('an uncanonicalizable draft is an open disagreement with a closed !unparseable(<code>) reason — never a crash, never agreed', () => {
+    const deep = `side_setback_m = ${'('.repeat(20000)}0.6 m${')'.repeat(20000)} @(A)`;
+    const s = shardWithDisagreement();
+    s.a.units[0].numeric_expression = [deep];
+    s.b.units[0].numeric_expression = [deep]; // byte-equal on both sides, still not agreed (Spec 68 §7.4)
+    const g = AG.checkAgree({ shards: [s], vocab: F.REAL_VOCAB });
+    expect(g.units.get('600.60.40(1)#(1)(A)').disagreements).toContain('numeric_expression');
+    const it0 = K.buildQueue({ batch: 'A7', agree: g, slice: slice(), shards: [s] }).items.find((i: Json) => i.field === 'numeric_expression');
+    expect([it0.a.canonical, it0.b.canonical]).toEqual(['!unparseable(too_deep)', '!unparseable(too_deep)']);
+  });
+  it('the A1 tagged-× expression (the 2026-10-07 stack overflow) canonicalizes and agrees across argument order', () => {
+    const s = shardWithDisagreement();
+    s.a.units[0].numeric_expression = ['rear_setback_m = max(7.5 m @(2)(A); 25 pct × lot_depth_m @(2)(B)) @(2)'];
+    s.b.units[0].numeric_expression = ['rear_setback_m = max(lot_depth_m × 25 pct @(2)(B); 7.5 m @(2)(A)) @(2)'];
+    const g = AG.checkAgree({ shards: [s], vocab: F.REAL_VOCAB });
+    expect(g.units.get('600.60.40(1)#(1)(A)').disagreements).toEqual(['bound']);
+  });
+});
+
+describe('shard key ⇄ path codec (one source: authored.mjs; Windows forbids ":" in a path segment)', () => {
+  it('an enacting:<bylaw> key maps ":" → "__" for every draft path, and the page dir decodes back to the key', () => {
+    const key = 'enacting:1075-2026/10.5.40.40';
+    expect(K.shardPaths(key)).toEqual({
+      a: 'scripts/seeds/bylaw/authored/enacting__1075-2026/10.5.40.40.a.json',
+      b: 'scripts/seeds/bylaw/authored/enacting__1075-2026/10.5.40.40.b.json',
+      prov: 'scripts/seeds/bylaw/authored/enacting__1075-2026/10.5.40.40.prov.json',
+    });
+    expect(K.shardPaths(key)).toEqual(AU.shardRelPaths(key));
+    expect(AU.keyOfShardDir(AU.shardDirOfKey(key))).toBe(key);
+    expect(K.shardPaths('ch10_20/10.20.40.70').a).toBe('scripts/seeds/bylaw/authored/ch10_20/10.20.40.70.a.json');
+  });
 });

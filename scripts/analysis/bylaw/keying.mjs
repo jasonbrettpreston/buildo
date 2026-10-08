@@ -22,7 +22,7 @@
 // Blindness is structural: a brief is a function of (shard, slice, vocab, Spec 68 text, ⧉ set) only — no draft,
 // no other brief, no code — so neither keyer's brief can carry the other keyer's output. Tests pin it.
 
-import { DOUBLE_KEYED, AUTHORED_REL, AUTHORED_SCHEMA, buildIndex, canonicalField, getField, sha256, sortedJson, unitView } from './authored.mjs';
+import { DOUBLE_KEYED, AUTHORED_SCHEMA, shardRelPaths, buildIndex, canonicalField, getField, sha256, sortedJson, unitView } from './authored.mjs';
 import { DslError } from './dsl.mjs';
 import { cmpSection } from './snapshot.mjs';
 
@@ -154,10 +154,8 @@ export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNI
   return { schema: KEYING_SCHEMA, batch, label: rule.label, max_units: maxUnits, shards };
 }
 
-/** The repo-relative draft paths of a shard. */
-export function shardPaths(key) {
-  return { a: `${AUTHORED_REL}/${key}.a.json`, b: `${AUTHORED_REL}/${key}.b.json`, prov: `${AUTHORED_REL}/${key}.prov.json` };
-}
+/** The repo-relative draft paths of a shard (authored.mjs shardRelPaths — the one key⇄path codec, `:` → `__`). */
+export const shardPaths = (key) => shardRelPaths(key);
 /** A file-name-safe slug of a shard key (briefs, queue files). */
 export const shardSlug = (key) => String(key).replace(/[^A-Za-z0-9._-]+/g, '__');
 

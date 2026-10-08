@@ -116,7 +116,32 @@ describe('closed error codes — one known-bad input each (+ the good twin above
     expect(code(() => D.valueForm(['height_m = 10 m @(A)', 'height_storeys = overlay(ST) @(A)']))).toBe('value_form_mixed');
   });
   it('the error-code list is closed and matches what the parser throws', () => {
-    expect(D.DSL_ERROR_CODES).toEqual(['syntax', 'bad_literal', 'bad_unit', 'bad_target', 'bad_clause_path', 'unknown_function', 'mixed_and_or', 'band_arm_not_literal', 'min_max_arity', 'duplicate_by_type_key', 'value_form_mixed']);
+    expect(D.DSL_ERROR_CODES).toEqual(['syntax', 'bad_literal', 'bad_unit', 'bad_target', 'bad_clause_path', 'unknown_function', 'mixed_and_or', 'band_arm_not_literal', 'min_max_arity', 'duplicate_by_type_key', 'value_form_mixed', 'too_deep']);
+  });
+});
+
+describe('canonicalizer is total: a tagged + / × argument canonicalizes; any nesting is bounded (A1 stack overflow, 2026-10-07)', () => {
+  // A1 draft ch10_20/10.20.40.70 (2)(A)/(B): the × argument carries its own @clause path. The flatten walk pushed the
+  // tagged root back as its own operand and re-entered canonExpr forever (RangeError: Maximum call stack size exceeded).
+  const A1 = 'rear_setback_m = max(7.5 m @(2)(A); 25 pct × lot_depth_m @(2)(B)) @(2)';
+  it('the A1 expression canonicalizes, argument order-free, the tag kept on its argument', () => {
+    expect(code(() => D.canonicalStatement(A1))).toBe('no_error');
+    expect(D.canonicalStatement(A1)).toBe('rear_setback_m=max(25pct×lot_depth_m@(2)(B);7.5m@(2)(A))@(2)');
+    expect(D.canonicalStatement('rear_setback_m = max(lot_depth_m * 25 pct @(2)(B); 7.5 m @(2)(A)) @(2)')).toBe(D.canonicalStatement(A1));
+  });
+  it('a tagged + argument flattens its operands (and stays distinct from the untagged sum)', () => {
+    expect(D.canonicalStatement('x_m = min(a_m + 1 m + b_m @(A); 2 m) @(1)')).toBe('x_m=min(1m+a_m+b_m@(A);2m)@(1)');
+    expect(D.canonicalStatement('x_m = min(a_m + 1 m + b_m; 2 m) @(1)')).not.toBe(D.canonicalStatement('x_m = min(a_m + 1 m + b_m @(A); 2 m) @(1)'));
+  });
+  it('nesting past MAX_NEST is the closed too_deep code at parse and at canonicalize — never a stack overflow', () => {
+    const deep = `x_m = ${'('.repeat(20000)}1 m${')'.repeat(20000)} @(A)`;
+    expect(code(() => D.parseStatement(deep))).toBe('too_deep');
+    expect(code(() => D.canonicalExpression([deep]))).toBe('too_deep');
+    expect(code(() => D.parseCond(`${'not '.repeat(20000)}a_m < 1 m`))).toBe('too_deep');
+    let e: Json = { type: 'lit', raw: '1', unit: 'm' };
+    for (let i = 0; i < 20000; i++) e = { type: 'if', cond: { type: 'mapped', code: 'HT' }, a: e, b: { type: 'lit', raw: '2', unit: 'm' } };
+    expect(code(() => D.canonExpr(e))).toBe('too_deep');
+    expect(D.canonicalStatement('x_m = 1 m @(A)')).toBe('x_m=1m@(A)'); // the depth counter is reset after a too_deep
   });
 });
 
