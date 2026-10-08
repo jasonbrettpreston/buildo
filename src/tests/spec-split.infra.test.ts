@@ -36,6 +36,8 @@ const SPEC_FILES: Record<string, string> = {
   // McBylaw S8 (Spec 68 header byte budget): registered for arm (iv) budgets + the arm (v) system-map shape check.
   '68': '68_mcbylaw_standard.md',
   '69': '69_mcbylaw_policy.md',
+  // Spec 69's §1 register, moved out by M19 (2026-10-07) — a move destination like 124a.
+  '69a': '69a_mcbylaw_register.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {
@@ -222,10 +224,10 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     expect(run.stderr).toContain('arm(vi) UNDECLARED MOVE — 124a heading');
   });
 
-  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M17) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
+  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M18) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; to_spec: string; content_sha256: string | null }[] };
     const into124a = manifest.moves.filter((m) => m.to_spec === '124a');
-    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17']);
+    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17', 'M18']);
     for (const m of into124a) expect(m.content_sha256, `${m.id} must carry the hash --refresh recorded`).toMatch(/^[0-9a-f]{64}$/);
 
     const green = makeFixtureTree();
@@ -238,14 +240,43 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     const red = makeFixtureTree();
     const appendixPath = path.join(red.dir, SPEC_FILES['124a']!);
     const text = fs.readFileSync(appendixPath, 'utf8');
-    expect(text.split('| R-B |').length - 1, 'the tamper target must exist exactly once in M08\'s moved block').toBe(1);
-    fs.writeFileSync(appendixPath, text.replace('| R-B |', '| R-B. |'));
+    // A string only M08's block carries: `| R-B |` stopped being unique once M18 moved register rows R-A..R-AI here.
+    expect(text.split('link_massing_grid_degrees').length - 1, 'the tamper target must exist exactly once in M08\'s moved block').toBe(1);
+    fs.writeFileSync(appendixPath, text.replace('link_massing_grid_degrees', 'link_massing_grid_degree5'));
     const bad = runCli(['--check'], {
       BUILDO_SPEC_SPLIT_SPEC_DIR: red.relDir,
       BUILDO_SPEC_SPLIT_MANIFEST_PATH: red.relManifest,
     });
     expect(bad.status, `stdout=${bad.stdout}`).toBe(1);
     expect(bad.stderr).toContain('arm(i) move M08');
+  });
+
+  // M18 (2026-10-07, P1-C9 register move): register rows R-A..R-AI live in 124a §B7, a section headed LIVE REGISTER.
+  // Arm (iii) resolves a `Spec 124 R-xx` citation against Spec 124 §5 PLUS those sections only — a register-shaped
+  // row in a HISTORICAL 124a block (M08's worked-examples table has `| R-B |`) never counts as a ruling.
+  it('RED/GREEN — register rows moved to 124a §B7 (M18, LIVE REGISTER) still resolve; a history block row does not', async () => {
+    const mod = await import(GENERATOR);
+    const texts: Record<string, string> = {};
+    for (const [id, file] of Object.entries(SPEC_FILES)) texts[id] = fs.readFileSync(path.join(SPEC_DIR, file), 'utf8');
+    expect(mod.extractRegisterRulingIds(texts['124']).has('R-A'), 'R-A moved out of Spec 124 itself').toBe(false);
+    const ids = mod.extractRegisterRulingIds(texts['124'], texts['124a']);
+    for (const id of ['R-A', 'R-J', 'R-K.1', 'R-PACE-1', 'R-AI', 'R-AJ', 'R-BR', 'R-BS', 'R-BT']) expect(ids.has(id), id).toBe(true);
+    expect(ids.has('R-S'), 'R-S stays never-written').toBe(false);
+    const row = '\n\n| R-ZQ | fixture | x | y |\n';
+    const hist = `${texts['124a']}\n## Appendix §B99 — fixture (moved from Spec 124 §2) — HISTORICAL, 2026-10-07${row}`;
+    expect(mod.extractRegisterRulingIds(texts['124'], hist).has('R-ZQ'), 'a HISTORICAL block row must not resolve').toBe(false);
+    const live = `${texts['124a']}\n## Appendix §B98 — fixture rows (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-07${row}`;
+    expect(mod.extractRegisterRulingIds(texts['124'], live).has('R-ZQ'), 'a LIVE REGISTER block row resolves').toBe(true);
+    const cite = [{ citation: 'Spec 124 R-B', specId: '124', kind: 'ruling' as const, file: 'fixture.md', line: 1 }];
+    expect(mod.checkCitationsResolve(cite, texts, []).dangling.length).toBe(0);
+    expect(mod.checkCitationsResolve(cite, { ...texts, '124a': '' }, []).dangling.length, 'without 124a §B7, R-B dangles').toBe(1);
+  });
+
+  it('GREEN — the Spec 69 -> 69a register move (M19) is declared, hashed and lands in 69a', () => {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; from_spec: string; to_spec: string; content_sha256: string | null }[] };
+    const m19 = manifest.moves.find((m) => m.id === 'M19');
+    expect(m19 && [m19.from_spec, m19.to_spec]).toEqual(['69', '69a']);
+    expect(m19!.content_sha256).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('RED — bad-move-breaks-reader.json: a move whose anchor collides with a declared reader_guards slice fails --check', () => {

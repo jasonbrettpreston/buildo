@@ -31,7 +31,7 @@ import { buildTable, escapeMd, JSON_REL, MD_REL, readCommitted, renderAll, rende
 import { loadSnapshotPages, sliceSnapshot } from './slice.mjs';
 import { cmpSection, sha256 } from './snapshot.mjs';
 import { checkTextSlice, LOCK_FILE, selfTest as standardizedSelfTest } from './standardized.mjs';
-import { checkUniverse, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
+import { checkUniverse, readSpec69Rulings, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
 import { checkFeedsTotality, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
 
 export const WORDS = Object.freeze(['STANDARDIZED', 'OBSERVABLE', 'ACCURATE', 'UNDERSTANDABLE', 'SCALABLE']);
@@ -285,7 +285,7 @@ export async function runGates(I) {
     const uni = readJsonIf(path.join(I.seeds, 'universe.json')) || {};
     for (const r of [...(uni.page_rules || []), ...(uni.scope_rules || [])]) if (r.reason === 'deferred_by_ruling' && r.ruling) deferred.push(r.ruling);
     const rulings = checkRulingCitations({
-      spec69Text: fs.readFileSync(path.join(I.root, 'docs/specs/01-pipeline/69_mcbylaw_policy.md'), 'utf8'),
+      spec69Text: readSpec69Rulings(I.root),
       ledger: readJsonIf(path.join(I.root, 'scripts/seeds/bylaw/ratchet-exceptions.json')),
       adjudications: I.adjudications,
       deferred,

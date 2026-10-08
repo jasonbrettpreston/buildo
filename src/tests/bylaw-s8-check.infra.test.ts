@@ -93,7 +93,7 @@ describe('a gate that throws (Spec 68 §9: exit 2, the gate named, nothing writt
       fs.cpSync(path.join(ROOT, 'scripts/seeds/bylaw'), path.join(tmp, 'scripts/seeds/bylaw'), { recursive: true });
       fs.rmSync(path.join(tmp, 'scripts/seeds/bylaw/universe.json'));
       fs.mkdirSync(path.join(tmp, 'docs/specs/01-pipeline'), { recursive: true });
-      fs.copyFileSync(path.join(ROOT, 'docs/specs/01-pipeline/69_mcbylaw_policy.md'), path.join(tmp, 'docs/specs/01-pipeline/69_mcbylaw_policy.md'));
+      for (const f of ['69_mcbylaw_policy.md', '69a_mcbylaw_register.md']) fs.copyFileSync(path.join(ROOT, 'docs/specs/01-pipeline', f), path.join(tmp, 'docs/specs/01-pipeline', f));
       const r = await check({ root: tmp, write: true });
       expect(r.code).toBe(2);
       expect(r.written).toBe(false);

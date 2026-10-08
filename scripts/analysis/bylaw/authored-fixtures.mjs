@@ -349,7 +349,7 @@ const SPEC69 = ['| **M-17** | x | y | G-AGREE | RATIFIED 2026-10-06 (decision 10
 
 /** G-PROV ruling-id arm: {name, reason, input:{spec69Text, ledger, adjudications}}. */
 export function rulingFixtures() {
-  const pin = (o = {}) => ({ adjudicated_by: 'operator', adoption_id: 'adoption-1', anchor: '**M-56**', kind: 'universe_pin', ruling: 'M-56', spec_ref: 'docs/specs/01-pipeline/69_mcbylaw_policy.md', ...o });
+  const pin = (o = {}) => ({ adjudicated_by: 'operator', adoption_id: 'adoption-1', anchor: '**M-56**', kind: 'universe_pin', ruling: 'M-56', spec_ref: 'docs/specs/01-pipeline/69a_mcbylaw_register.md', ...o });
   const real = realAdjudications();
   return [
     { name: 'good twin: a RATIFIED, literally anchored pin + the M-39 adjudication', reason: null, input: { spec69Text: SPEC69, ledger: { rows: [pin()] }, adjudications: real } },
