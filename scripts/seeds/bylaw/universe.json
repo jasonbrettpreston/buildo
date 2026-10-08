@@ -216,6 +216,16 @@
       "why": "Spec 69 M-37: the Sixplex Overlay is in"
     },
     {
+      "id": "SR-IN-K7A",
+      "tier": 6,
+      "kind": "page_scope",
+      "scope": "in",
+      "basis": "Q-K7a operator 2026-10-07",
+      "ruling": "M-15",
+      "match": { "kinds": ["regulation", "article"], "pages": ["ch900_2", "ch900_3", "ch900_4", "ch900_5", "ch900_6"] },
+      "why": "Spec 69 M-15 dated note 2026-10-07 (operator Q-K7a): the Ch.900 residential exception pages are pinned for Phase 2 prep; wave membership (>= 100 INCLUDE-closed lots) is the Phase 2 G-UNIVERSE membership arm"
+    },
+    {
       "id": "SR-IN-M47",
       "tier": 6,
       "kind": "page_scope",
@@ -278,18 +288,6 @@
       "ruling": "M-37",
       "why": "Spec 69 §4 Q2 (closed, approved as listed 2026-10-06; applied at S5 with M-37)"
     },
-    {
-      "entry": "900.2",
-      "level": "section",
-      "disposition": "deferred",
-      "reason": "phase2_exception_pages",
-      "ruling": "M-15",
-      "why": "Spec 69 M-15 v0.5 note: Ch.900 residential exception pages are pinned at Phase 2 entry"
-    },
-    { "entry": "900.3", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
-    { "entry": "900.4", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
-    { "entry": "900.5", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
-    { "entry": "900.6", "level": "section", "disposition": "deferred", "reason": "phase2_exception_pages", "ruling": "M-15", "why": "Spec 69 M-15 v0.5 note" },
     { "entry": "30", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Commercial (CL) zone category" },
     { "entry": "50", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Commercial Residential Employment (CRE) zone category" },
     { "entry": "60", "level": "chapter", "disposition": "out", "reason": "other_zone_category", "ruling": "M-56", "why": "Employment Industrial (E/EL/EH/EO) zone category" },

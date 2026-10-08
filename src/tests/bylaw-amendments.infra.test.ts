@@ -39,15 +39,16 @@ describe('amendments.json over the committed adoption (G-PROV amendment arm)', (
     expect(SNAP.stableStringify(AM.buildAmendments({ seeds: SEEDS, prior: JSON.parse(committed) }))).toBe(committed);
   });
 
-  it('the singular tag count reconciles with the manifest (884 over 59 pages at adoption-2: +9 on the retired 600.10 / 600.50 pages, operator 2026-10-07); the 8 list tags are pinned separately', () => {
+  it('the singular tag count reconciles with the manifest (1,508 over 64 pages at adoption-4: 884 on the 59 Phase 1 pages, +624 on the five Ch.900 exception pages pinned by Q-K7a, operator 2026-10-07); the 8 list tags are pinned separately', () => {
     const m = readJson('manifest.json');
     const a = readJson('amendments.json');
     expect(a.adoption_id).toBe(m.adoption_id);
     const manifestTotal = m.pages.reduce((s: number, p: Json) => s + p.tag_count, 0);
-    expect(manifestTotal).toBe(884);
-    expect(a.totals).toMatchObject({ pages: 59, tags: 884, list_tags: 8, article_level_tags: 0 }); // 0: every tag binds below an article (a markup change that loses the label cells fails here)
+    expect(manifestTotal).toBe(1508);
+    expect(a.totals).toMatchObject({ pages: 64, tags: 1508, list_tags: 8, article_level_tags: 0 }); // 0: every tag binds below an article (a markup change that loses the label cells fails here)
     for (const p of m.pages) expect([p.key, a.pages[p.key].tag_count]).toEqual([p.key, p.tag_count]);
-    expect(a.tags).toHaveLength(884 + 8);
+    expect(a.tags).toHaveLength(1508 + 8);
+    expect(a.tags.filter((t: Json) => /^ch900_[2-6]$/.test(t.page) && t.form === 'single')).toHaveLength(624);
     expect(a.tags.filter((t: Json) => t.clause_path === null)).toEqual([]);
   });
 
