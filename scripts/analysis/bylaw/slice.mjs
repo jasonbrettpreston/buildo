@@ -32,7 +32,7 @@ import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiter
 
 export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, UNIT_TABLE } from './text.mjs';
 
-export const SLICER_VERSION = 'slice-v3';
+export const SLICER_VERSION = 'slice-v4';
 
 /** Sections whose numbered divisions are defined terms (term = the title cell): vocab `slicer.definition_sections`. */
 export const DEFINITION_SECTIONS = Object.freeze([...createRequire(import.meta.url)('../../seeds/bylaw/vocab.json').slicer.definition_sections]);
@@ -339,13 +339,17 @@ export function slicePage(input) {
     const base = subtreeText(node.variantOf);
     let status = null;
     for (const [s, re] of VARIANT_STATUSES) if (re.test(t) && !re.test(base)) status = status || s;
-    const same = node.parent.children.filter((x) => x.variantOf === node.variantOf && x.idx < node.idx && x.variantStatus === status).length;
+    // Operator ruling Q-K7b (Spec 69 M-57 dated note 2026-10-07): an unstatused repeat with DIFFERENT numbers is a City
+    // repeat-letter — both versions are kept as units (`~repeat2`, `~repeat3` …), disclosed `source_repeat_letter`, and an
+    // authored row on one is complete only after an adjudication (G-SHAPE `repeat_letter_unadjudicated`).
+    const repeat = !status && numbersOf(t) !== numbersOf(base);
+    const kind = status || (repeat ? 'repeat' : null);
+    const same = node.parent.children.filter((x) => x.variantOf === node.variantOf && x.idx < node.idx && x.variantKind === kind).length;
     node.variantStatus = status;
-    node.variantTag = `~${status || 'unstatused'}${same ? same + 1 : ''}`;
-    if (!status) {
-      if (numbersOf(t) !== numbersOf(base)) problems.push(`unstatused_variant: ${key} ${node.article}${pathOf(node.variantOf)} repeats with different numbers and no status`);
-      else defects.push({ context: t.slice(0, 80), kind: 'variant_duplicate', node });
-    }
+    node.variantKind = kind;
+    node.variantTag = repeat ? `~repeat${same + 2}` : `~${status || 'unstatused'}${same ? same + 1 : ''}`;
+    if (repeat) defects.push({ context: `repeats ${node.symbol} with different numbers: ${t.slice(0, 70)}`, kind: 'source_repeat_letter', node });
+    else if (!status) defects.push({ context: t.slice(0, 80), kind: 'variant_duplicate', node });
   }
   for (const node of nodes) node.path = pathOf(node);
 
@@ -583,7 +587,7 @@ function makeRow({ input, top, from, to, text, ownerOf, defects }) {
     tags: tags.map(withPath),
     ...(definition ? { term: top.title } : {}),
     uncovered_numbers: scan.uncovered.map(withPath),
-    ...(top.variantOf ? { variant_of: `${top.article}(${top.symbol})`, variant_status: status || 'unstatused' } : {}),
+    ...(top.variantOf ? { variant_of: `${top.article}(${top.symbol})`, variant_status: status || (top.variantKind === 'repeat' ? 'repeat' : 'unstatused') } : {}),
     verbatim,
   };
 }

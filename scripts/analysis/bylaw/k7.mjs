@@ -58,7 +58,7 @@ export function exceptionIndex(slice, groups = []) {
     e.rows++;
     e.pages.add(r.page);
     for (const a of r.amended_by || []) e.amended_by.add(a.bylaw);
-    for (const c of r.clauses) if (/~unstatused/.test(c.path)) e.repeats.add(c.path);
+    for (const c of r.clauses) if (/~repeatd/.test(c.path)) e.repeats.add(c.path); // a City repeat-letter (Q-K7b)
     for (const ref of r.refs) {
       if (!EXCEPTION_ID.test(ref.citation) || ref.citation === id) continue;
       refCounts.exception_refs++;

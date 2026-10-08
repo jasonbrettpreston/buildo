@@ -17,6 +17,8 @@ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-ex
 const load = (rel: string): Promise<Json> => import(pathToFileURL(path.join(process.cwd(), rel)).href).catch((err: unknown) => ({ importError: String(err) }));
 const SL = await load('scripts/analysis/bylaw/slice.mjs');
 const ST = await load('scripts/analysis/bylaw/standardized.mjs');
+const SH = await load('scripts/analysis/bylaw/shape.mjs');
+const AF = await load('scripts/analysis/bylaw/authored-fixtures.mjs');
 const VOCAB = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'scripts/seeds/bylaw/vocab.json'), 'utf8'));
 
 const CONT = '<TD ALIGN=RIGHT VALIGN=TOP width="5%"></TD>';
@@ -79,10 +81,11 @@ describe('an exception is one row; its two lists are path groups, not variants',
     const g = sliceOf([exception(30, [{ sym: 'A', text: 'x;' }, { sym: 'C', text: 'y.' }], null)]);
     expect(g.numbering.gaps.concat(g.numbering.unproven).filter((x: Json) => x.parent).map((x: Json) => [x.parent, x.missing])).toEqual([['(30)[SSP]', 'B']]);
   });
-  it('without the group rule the two (A)s collide: a heading-less exception still reports the repeat (R4 unchanged)', () => {
+  it('without the group rule the two (A)s collide: a heading-less exception keeps both as a disclosed repeat (R4 + Q-K7b)', () => {
     const html = `${LANDS}<TR>${CONT}<TD VALIGN=TOP>${ST.clauseTable([{ sym: 'A', text: 'x 1;' }])}</TD></TR><TR>${CONT}<TD VALIGN=TOP>${ST.clauseTable([{ sym: 'A', text: 'y 2.' }])}</TD></TR>`;
     const b = sliceOf([{ html, n: 31, title: 'Exception RD 31' }]);
-    expect(b.problems.some((p: string) => p.startsWith('unstatused_variant:'))).toBe(true);
+    expect(b.problems).toEqual([]);
+    expect(b.defects.map((d: Json) => [d.kind, d.clause_path])).toEqual([['source_repeat_letter', '(31)(A)~repeat2']]);
   });
 });
 
@@ -169,5 +172,56 @@ describe('inline-list depth under a lettered cell (DeepSeek error-paths lens, CR
   it('the same holds under a Ch.900 list group: (28)[SSP](A) splits its (i) / (ii)', () => {
     const s = sliceOf([exception(28, [{ sym: 'A', text: 'The minimum side yard setback is: (i) 1.2 metres; and (ii) 0.9 metres.' }], null)]);
     expect(s.units.filter((u: Json) => u.regulation_id === '900.3.10(28)').map((u: Json) => u.unit_id)).toEqual(['900.3.10(28)#(28)[SSP](A)(i)', '900.3.10(28)#(28)[SSP](A)(ii)', '900.3.10(28)#(28)[PBS]']);
+  });
+});
+
+describe('Q-K7b (operator 2026-10-07): a City repeat-letter is kept twice, disclosed, and adjudicated before it counts', () => {
+  const dims = (clauses: Json[]) =>
+    SL.sliceSnapshot({ pages: [ST.fixturePage({ articles: [{ id: '200.15.1', regs: [{ clauses, n: 1, text: 'Dims:', title: 'T' }], title: 'G' }], chapter: '200', chapterTitle: 'Parking', key: 'ch200_15', section: '200.15', sectionTitle: 'Accessible' })] });
+  it('a repeat with different numbers and no status: both versions are units (~repeat2), a source_repeat_letter disclosure, no problem', () => {
+    const s = dims([{ sym: 'A', text: 'x;' }, { sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }]);
+    expect(s.problems).toEqual([]);
+    expect(s.units.map((u: Json) => u.unit_id)).toEqual(['200.15.1(1)#(1)(A)', '200.15.1(1)#(1)(B)', '200.15.1(1)#(1)(B)~repeat2']);
+    expect(s.defects.map((d: Json) => [d.kind, d.regulation_id, d.clause_path])).toEqual([['source_repeat_letter', '200.15.1(1)', '(1)(B)~repeat2']]);
+  });
+  it('a third version is ~repeat3; a same-numbers repeat stays a variant_duplicate (~unstatused), a status still wins', () => {
+    const s = dims([{ sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }, { sym: 'B', text: 'width of 3.1 metres' }, { sym: 'C', text: 'z 1.' }, { sym: 'C', text: 'z 1.' }]);
+    expect(s.units.map((u: Json) => u.unit_id)).toEqual(['200.15.1(1)#(1)(B)', '200.15.1(1)#(1)(B)~repeat2', '200.15.1(1)#(1)(B)~repeat3', '200.15.1(1)#(1)(C)', '200.15.1(1)#(1)(C)~unstatused']);
+    expect(s.defects.map((d: Json) => d.kind).sort()).toEqual(['source_repeat_letter', 'source_repeat_letter', 'variant_duplicate']);
+  });
+  it('G-TEXT discloses the class instead of failing: pass, counted under source_defect_by_kind', () => {
+    const pg = ST.fixturePage({ articles: [{ id: '200.15.1', regs: [{ clauses: [{ sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }], n: 1, text: 'Dims:', title: 'T' }], title: 'G' }], chapter: '200', chapterTitle: 'Parking', key: 'ch200_15', section: '200.15', sectionTitle: 'Accessible' });
+    const slice = SL.sliceSnapshot({ pages: [pg] });
+    const lock = ST.buildSliceLock(slice, { adoption_id: 'a', normalizer_version: 'n' });
+    const r = ST.checkTextSlice({ expect: { adoption_id: 'a', normalizer_version: 'n' }, lock, pages: { ch200_15: pg.normalized }, slice });
+    expect(r.violations).toEqual([]);
+    expect(r.disclosures.source_defect_by_kind.source_repeat_letter).toBe(1);
+    expect(ST.REASON_CODES).not.toContain('unstatused_variant');
+  });
+  describe('G-SHAPE completeness: an authored row holding a repeat-letter unit is pending until adjudicated (enacting text or expert)', () => {
+    const rid = '10.20.40.70(6)';
+    const whole = () => JSON.parse(JSON.stringify(AF.GOOD['LIMIT×literal (whole, displaces)']));
+    const repeatSlice = () => AF.fixtureSlice((m: Map<string, Json>) => (m.get(rid) as Json).defects.push({ clause_path: '(6)~repeat2', code: null, context: 'fixture', index: 0, kind: 'source_repeat_letter' }));
+    const status = (adjudications: Json | null) => {
+      const slice = repeatSlice();
+      const r = SH.checkShape({ adjudications, shards: [AF.shardOf([whole()], { slice })], slice, vocab: AF.REAL_VOCAB });
+      return r.rows.find((x: Json) => x.regulation_id === rid);
+    };
+    const adj = (basis: string) => ({ adjudications: [{ adjudicator: 'operator', basis, decision: 'keep_both', id: 'ADJ-repeat-1', kind: 'source_repeat_letter', reason: 'fixture', unit: `${rid}#(6)~repeat2` }] });
+    it('the closed reason is declared; without an adjudication the otherwise complete row is pending with it', () => {
+      expect(SH.PENDING_REASONS).toContain('repeat_letter_unadjudicated');
+      const row = status(null);
+      expect(row.row_status).toBe('pending');
+      expect(row.why.startsWith(`repeat_letter_unadjudicated: ${rid}#(6)~repeat2`)).toBe(true);
+    });
+    it('an adjudication on the enacting text or by an expert completes it; any other basis does not', () => {
+      expect(status(adj('enacting_text')).row_status).toBe('complete');
+      expect(status(adj('expert')).row_status).toBe('complete');
+      expect(status(adj('opinion')).row_status).toBe('pending');
+    });
+    it('source_repeat_letter is a vocab adjudication kind and a vocab source_defect', () => {
+      expect(AF.REAL_VOCAB.adjudication_kind).toContain('source_repeat_letter');
+      expect(AF.REAL_VOCAB.disclosure_reason.source_defect).toEqual(expect.arrayContaining(['source_repeat_letter', 'group_heading_in_cell']));
+    });
   });
 });

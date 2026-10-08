@@ -24,27 +24,29 @@ const slice: Json = sliced.slice;
 const unit = (id: string): Json => slice.units.find((u: Json) => u.unit_id === id) || {};
 const row = (id: string): Json => slice.rows.find((r: Json) => r.regulation_id === id) || {};
 
-// The 26 City source repeats on the Ch.900 exception pages pinned by Q-K7a (adoption-4): a clause letter repeated
-// under one exception with different numbers and no status (e.g. 900.4.10(26) SSP "(B) A semi-detached house …" then
-// "(B) A detached house …"; 900.3.10(664) (A)(xiv)(a) 10.3 m then 10.0 m [By-law 78-2017]). R4 (Spec 68 §9 G-TEXT)
-// FAILS them and no ruling covers them yet (open question Q-K7b): G-TEXT stays FAIL on exactly this list; anything
-// else, or one of these disappearing, fails the test. The Phase 1 pages carry no violation.
-const CH900_SOURCE_REPEATS = [
-  'ch900_2 900.2.10(22)[SSP](A)', 'ch900_2 900.2.10(660)[SSP](B)(ii)',
-  'ch900_3 900.3.10(284)[SSP](D)', 'ch900_3 900.3.10(284)[SSP](E)', 'ch900_3 900.3.10(327)[SSP](F)', 'ch900_3 900.3.10(342)[SSP](B)',
-  'ch900_3 900.3.10(454)[SSP](E)', 'ch900_3 900.3.10(466)[SSP](D)', 'ch900_3 900.3.10(664)[SSP](A)(xiv)(a)', 'ch900_3 900.3.10(664)[SSP](A)(xiv)(b)',
-  'ch900_3 900.3.10(682)[SSP](D)', 'ch900_3 900.3.10(682)[SSP](E)', 'ch900_3 900.3.10(832)[SSP](E)', 'ch900_3 900.3.10(837)[SSP](E)',
-  'ch900_3 900.3.10(960)[SSP](C)', 'ch900_3 900.3.10(1033)[SSP](D)', 'ch900_3 900.3.10(1227)[SSP](D)', 'ch900_3 900.3.10(1245)[SSP](B)(ii)',
-  'ch900_4 900.4.10(26)[SSP](B)', 'ch900_4 900.4.10(133)[SSP](D)', 'ch900_4 900.4.10(141)[SSP](D)', 'ch900_4 900.4.10(187)[SSP](C)',
-  'ch900_4 900.4.10(187)[SSP](D)', 'ch900_4 900.4.10(209)[SSP](G)(ii)', 'ch900_5 900.5.10(345)[SSP](A)(ii)', 'ch900_6 900.6.10(268)[SSP](F)(ii)',
+// The City repeat-letters (operator ruling Q-K7b, Spec 69 M-57 dated note 2026-10-07): a clause letter repeated with
+// different numbers and no status (e.g. 900.4.10(26) SSP "(B) A semi-detached house …" then "(B) A detached house …";
+// 900.3.10(664) (A)(xiv)(a) 10.3 m then 10.0 m). Both versions are units (`~repeat2`), each a disclosed
+// source_repeat_letter; G-TEXT passes. The set is pinned exactly (all on the Ch.900 exception pages of adoption-4).
+const SOURCE_REPEAT_LETTERS = [
+  '900.2.10(22)#(22)[SSP](A)~repeat2', '900.2.10(660)#(660)[SSP](B)(ii)~repeat2',
+  '900.3.10(284)#(284)[SSP](D)~repeat2', '900.3.10(284)#(284)[SSP](E)~repeat2', '900.3.10(327)#(327)[SSP](F)~repeat2', '900.3.10(342)#(342)[SSP](B)~repeat2',
+  '900.3.10(454)#(454)[SSP](E)~repeat2', '900.3.10(466)#(466)[SSP](D)~repeat2', '900.3.10(664)#(664)[SSP](A)(xiv)(a)~repeat2', '900.3.10(664)#(664)[SSP](A)(xiv)(b)~repeat2',
+  '900.3.10(682)#(682)[SSP](D)~repeat2', '900.3.10(682)#(682)[SSP](E)~repeat2', '900.3.10(832)#(832)[SSP](E)~repeat2', '900.3.10(837)#(837)[SSP](E)~repeat2',
+  '900.3.10(960)#(960)[SSP](C)~repeat2', '900.3.10(1033)#(1033)[SSP](D)~repeat2', '900.3.10(1227)#(1227)[SSP](D)~repeat2', '900.3.10(1245)#(1245)[SSP](B)(ii)~repeat2',
+  '900.4.10(26)#(26)[SSP](B)~repeat2', '900.4.10(133)#(133)[SSP](D)~repeat2', '900.4.10(141)#(141)[SSP](D)~repeat2', '900.4.10(187)#(187)[SSP](C)~repeat2',
+  '900.4.10(187)#(187)[SSP](D)~repeat2', '900.4.10(209)#(209)[SSP](G)(ii)~repeat2', '900.5.10(345)#(345)[SSP](A)(ii)~repeat2', '900.6.10(268)#(268)[SSP](F)(ii)~repeat2',
 ];
 const EXC_PAGES = /^ch900_[2-6]$/;
 
 describe('G-TEXT on the committed snapshot (adoption-4)', () => {
-  it('fails on exactly the 26 Ch.900 source repeats awaiting a ruling (Q-K7b) and nothing else', () => {
+  it('passes with no violations; the 26 City repeat-letters are disclosed source_repeat_letter (Q-K7b), both versions kept', () => {
     const r = ST.checkText({ seeds: SEEDS });
-    expect(r.violations).toEqual(CH900_SOURCE_REPEATS.map((x) => `unstatused_variant: ${x} repeats with different numbers and no status`));
-    expect(r.pass).toBe(false); // never a silent pass: the gate reports the repeats
+    expect(r.violations).toEqual([]);
+    expect(r.pass).toBe(true);
+    expect(r.disclosures.source_defect_by_kind.source_repeat_letter).toBe(SOURCE_REPEAT_LETTERS.length);
+    expect(slice.defects.filter((d: Json) => d.kind === 'source_repeat_letter').map((d: Json) => `${d.regulation_id}#${d.clause_path}`)).toEqual(SOURCE_REPEAT_LETTERS);
+    for (const id of SOURCE_REPEAT_LETTERS) expect([id, Boolean(unit(id).unit_id) || slice.rows.some((x: Json) => x.clauses.some((c: Json) => `${x.regulation_id}#${c.path}` === id))]).toEqual([id, true]);
     expect(r.checked).toBeGreaterThan(1200);
   });
   it('slice.lock.json is generated: it equals an in-memory regeneration, LF, sorted keys', () => {

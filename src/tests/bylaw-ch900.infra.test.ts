@@ -41,10 +41,9 @@ describe('the Ch.900 residential exception pages are pinned (Q-K7a, Spec 69 M-15
 });
 
 describe('the slicer on the real exception pages (G-TEXT)', () => {
-  it('no unproven gap; the only slicer problems are the 26 City source repeats (unstatused_variant, pinned in bylaw-slice.infra, Q-K7b)', () => {
-    const onExc = slice.problems.filter((p: string) => EXC.some((k) => p.includes(` ${k} `)));
-    expect(onExc.filter((p: string) => !p.startsWith('unstatused_variant: '))).toEqual([]);
-    expect(onExc).toHaveLength(26);
+  it('no slicer problem and no unproven gap on the exception pages; the 26 City repeat-letters are disclosures (Q-K7b, pinned in bylaw-slice.infra)', () => {
+    expect(slice.problems.filter((p: string) => EXC.some((k) => p.includes(` ${k} `)))).toEqual([]);
+    expect(slice.defects.filter((d: Json) => d.kind === 'source_repeat_letter' && EXC.includes(d.page))).toHaveLength(26);
     expect(slice.numbering.unproven.filter((g: Json) => EXC.includes(g.key))).toEqual([]);
     expect(slice.numbering.gaps.filter((g: Json) => EXC.includes(g.key)).length).toBeGreaterThan(500); // deleted / never-used exception numbers, proven absent
   });

@@ -2,7 +2,8 @@
 //            round-trip; per-page counts equal the lock; slices + declared non-regulation spans cover each page;
 //            the unit set equals the HTML clause-cell set + declared inline splits, both directions; a numbering
 //            gap at any level fails unless the page proves the number absent; repeats are status-tagged variants,
-//            an unstatused variant with different numbers fails; source defects are counted disclosures), §8 rule 8
+//            an unstatused repeat with different numbers is a disclosed source_repeat_letter (Spec 69 M-57 dated note,
+//            operator Q-K7b 2026-10-07); source defects are counted disclosures), §8 rule 8
 //            (module shape); docs/specs/01-pipeline/69_mcbylaw_policy.md M-2, M-36, M-57 (operator rulings R1–R5,
 //            2026-10-07); docs/reports/mcbylaw-phase1-plan.md S4 (rework).
 //
@@ -16,7 +17,6 @@
 //   page_not_covered             non-whitespace page text outside every row and declared span
 //   span_overlap                 two rows / spans overlap on a page
 //   numbering_gap_unproven       a gap (or a swallowed division) at any level the page does not prove absent (R3)
-//   unstatused_variant           a repeated division with no status whose numbers differ from the first (R4)
 //   cell_set_mismatch            the page's clause cells != the sliced cell nodes (R1, both directions)
 //   inline_split_undeclared      an inline-list unit not in the lock's declared splits, or a declared one gone (R1)
 //   normalizer_map_mismatch      the raw→normalized map does not reproduce the pinned normalized page
@@ -26,8 +26,10 @@
 //   lock_stale                   the lock was generated for another adoption, normalizer or slicer version
 //   count_mismatch               a per-page count differs from the lock (either direction)
 // Disclosures (counted, never failures): source_defect (garbled_character, lead_in_without_items,
-// heading_not_in_toc, anchor_mismatch, variant_duplicate, division_repeat, marker_typo, group_heading_in_cell) and
-// proven numbering gaps.
+// heading_not_in_toc, anchor_mismatch, variant_duplicate, division_repeat, marker_typo, group_heading_in_cell,
+// source_repeat_letter) and proven numbering gaps. `unstatused_variant` is retired (Q-K7b): an unstatused repeat with
+// different numbers is kept as `~repeat<n>` units and disclosed `source_repeat_letter`; G-SHAPE holds an authored row
+// on one at `pending` (repeat_letter_unadjudicated) until it is adjudicated.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,7 +40,9 @@ export const LOCK_FILE = 'slice.lock.json';
 /** Per-page counts the lock pins (Spec 68 §9 G-TEXT "per-page counts equal the lock"). */
 export const LOCKED_COUNTS = Object.freeze(['cells_sliced', 'definitions', 'inline_units', 'retired_rows', 'rows', 'table_units', 'units']);
 /** Problem prefixes of the slicer that are G-TEXT reason codes. */
-const SLICER_CODES = Object.freeze(['cell_set_mismatch', 'footer_not_found', 'normalizer_map_mismatch', 'row_not_contiguous', 'unstatused_variant']);
+const SLICER_CODES = Object.freeze(['cell_set_mismatch', 'footer_not_found', 'normalizer_map_mismatch', 'row_not_contiguous']);
+/** G-TEXT reason codes (closed set). */
+export const REASON_CODES = Object.freeze(['duplicate_id', 'slice_mismatch', 'clauses_not_concatenating', 'page_not_covered', 'span_overlap', 'numbering_gap_unproven', 'cell_set_mismatch', 'inline_split_undeclared', 'normalizer_map_mismatch', 'row_not_contiguous', 'footer_not_found', 'lock_missing', 'lock_stale', 'count_mismatch']);
 
 const isWs = (s) => /^\s*$/.test(s);
 
@@ -230,7 +234,7 @@ export const FIXTURES = Object.freeze([
   { input: () => ({ mutate: (s) => s.spans.ch10_20.push({ end: s.rows[0].start + 5, kind: 'heading', start: s.rows[0].start }), pages: GOOD() }), name: 'a declared span overlaps a row', reason: 'span_overlap' },
   { input: () => ({ pages: one([{ n: 1, text: 'x. (2) Swallowed Rear yard is 7.5 metres. y', title: 'T' }, { n: 3, text: 'z', title: 'V' }]) }), name: 'a regulation whose cell the page lost: (2) is in the text, not a cell', reason: 'numbering_gap_unproven' },
   { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'length of 6.0 metres (B) width of 3.2 metres' }], n: 3, text: 'Minimum:', title: 'T' }]) }), name: 'class A: (B) swallowed inside the (A) cell', reason: 'numbering_gap_unproven' },
-  { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'x;' }, { sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }], n: 1, text: 'Dims:', title: 'T' }]) }), name: 'an unstatused repeat with different numbers (200.15.1(1)(B))', reason: 'unstatused_variant' },
+  { input: () => ({ pages: one([{ clauses: [{ sym: 'A', text: 'x;' }, { sym: 'B', text: 'width of 3.9 metres' }, { sym: 'B', text: 'width of 3.4 metres' }], n: 1, text: 'Dims:', title: 'T' }]) }), name: 'good twin: an unstatused repeat with different numbers (200.15.1(1)(B)) is a disclosed source_repeat_letter (Q-K7b)', reason: null },
   { input: () => ({ mutate: (s) => s.problems.push('cell_set_mismatch: ch10_20 html clause cells 5 != sliced 4'), pages: GOOD() }), name: 'the cell set and the slice disagree', reason: 'cell_set_mismatch' },
   { input: () => ({ lockMutate: (l) => ({ ...l, inline_splits: [] }), pages: one([{ n: 1, text: 'Rates: (A) in Zone A 1.0; and (B) in Zone B 2.0.', title: 'T' }]) }), name: 'an inline split the lock does not declare', reason: 'inline_split_undeclared' },
   { input: () => ({ lockMutate: () => null, pages: GOOD() }), name: 'no lock', reason: 'lock_missing' },
