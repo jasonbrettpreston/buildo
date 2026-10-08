@@ -1,6 +1,6 @@
 {
   "$comment": "SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D5. Closed sets of the CoA decision-notice ingestor. The CHECK-backed sets equal the CHECK constraints of migrations/252_coa_notice_variances.sql and the parser constants, both directions (src/tests/steps/load_coa_notices/vocab-check-parity.infra.test.ts). The emits-only sets equal the emits skeleton keys. Bump `version` whenever any value changes; it is stamped on every row as vocab_version.",
-  "version": "coa-vocab-1",
+  "version": "coa-vocab-2",
   "check_backed": {
     "source_family": ["toronto_ca_decision_pdf"],
     "parse_status": ["pair", "no_required_value", "no_proposed_value", "unit_family_mismatch", "multi_value_ambiguous", "side_ambiguous", "no_split"],
@@ -43,6 +43,8 @@
     "spaces": "spaces",
     "unit": "units",
     "units": "units",
+    "parking space": "spaces",
+    "parking spaces": "spaces",
     "dwelling unit": "units",
     "dwelling units": "units"
   },
@@ -65,14 +67,18 @@
     "max": ["maximum", "not exceed", "not more than", "no more than", "up to"],
     "exact": ["exactly"]
   },
-  "compound_markers": ["plus", "by", "for each", "no less than", "where", "or"],
+  "formula_markers": ["plus", "for each", "for every"],
+  "conditional_markers": ["if ", "provided that", "provided they", "so long as", "where the"],
+  "adjectival_required": ["the required", "a required", "any required", "each required"],
+  "number_words": {"zero": 0, "no": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10},
   "qualified_markers": ["erected before", "for a corner lot", "if ", "where the lot", "provided that", "except", "despite"],
   "segmentation": {
-    "$comment": "Structural constants of the notice text layout (not tunables): page-furniture lines at each page edge, the head window that decides 'minor variance', the decision-paragraph window, and the zone-label cap.",
+    "$comment": "Structural constants of the notice text layout (not tunables): page-furniture lines at each page edge, the head window that decides 'minor variance', the decision-paragraph window, the zone-label cap, and the most words between two values of one list (coordinated_max_words, fold LCN-D4).",
     "edge_lines": 2,
     "head_window_chars": 400,
     "decision_window_lines": 3,
-    "zone_label_max_chars": 120
+    "zone_label_max_chars": 120,
+    "coordinated_max_words": 10
   },
   "decision_lexicon": {
     "refused": ["is refused", "not approved", "refused"],

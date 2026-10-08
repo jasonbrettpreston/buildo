@@ -106,10 +106,12 @@ describe('coa-notices parse-values', () => {
   });
 
   describe('T-PARSE reversed side', () => {
-    it('T-PARSE-c a reversed whereas is side_ambiguous', () => {
+    // Fold LCN-D4 (operator ruling 2026-10-07): a reversal with BOTH halves unambiguous is
+    // swapped (T-CMP-12); only a one-sided reversal stays side_ambiguous.
+    it('T-PARSE-c a one-sided reversed whereas is side_ambiguous', () => {
       const r = P.classifyItem({
         head: 'Chapter 10.10.40.30.(1), By-law No. 569-2013',
-        body: 'The By-law requires a minimum front yard setback of 6 metres, whereas the proposed front yard setback will be 4.8 metres.',
+        body: 'The By-law requires a minimum front yard setback of 6 metres, whereas 4.8 metres exists.',
       });
       expect(r.parse_status).toBe('side_ambiguous');
       expect(r.parse_confidence).toBe('low');
