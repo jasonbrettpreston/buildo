@@ -26,8 +26,13 @@ const CLI = path.join(ROOT, 'scripts/generate-bylaw-provisions.mjs');
 // one `--check` spawn 3.5–5.5 s (7.6 s cold, first run after a checkout), selfTest() 46–120 ms. Budget = the worst warm
 // measurement × 1.1. R-H "WARN then tighten": past its budget a run WARNs (re-measure; tighten, never widen silently);
 // the hard vitest timeout is 3 × budget (never below the 5 s vitest default), so only a hang fails.
-const CHECK_BUDGET_MS = 4_700;
-const SPAWN_BUDGET_MS = 6_100;
+// Re-measured 2026-10-07 after adoption-4 (Ch.900 pages; in-scope rows 1,090 -> 4,123): one `--check` spawn 26 s on the
+// loaded workstation. Budgets re-set to measured x 1.1 (R-H: re-measure, recorded here). The run already slices ONCE
+// (validate.mjs loadInputs); html.mjs normalizeWithMap now keeps its raw-offset map in an Int32Array (slice ~30% faster,
+// in-process A/B, byte-identical output). FOLLOW-UP (QUEUE): the rest is slicePage per-character loops + definitions.mjs
+// termsUsed (~8 s) — needed to bring the pre-commit stage under ~10 s.
+const CHECK_BUDGET_MS = 28_600;
+const SPAWN_BUDGET_MS = 28_600;
 const SELFTEST_BUDGET_MS = 140;
 const warnIfNear = (what: string, ms: number, budget: number) => {
   if (ms > budget) console.warn(`[bylaw-s8] ${what} took ${ms} ms, past its ${budget} ms budget (measured × 1.1) — re-measure (R-H)`);

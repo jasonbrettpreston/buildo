@@ -17,7 +17,10 @@
 // Row state (§4), first match wins: `failed` — an agreed / adjudicated unit (not stale) that a gate rejects, incl. this
 // gate; `pending:stale` — an agreed unit whose pin (prov.unit_shas, copied from the brief) ≠ the current unit sha;
 // `pending` — no authored entry, a draft awaiting its pair or an adjudication, or a leaf no agreed unit covers;
-// `complete` — otherwise (row fields present, every leaf covered by agreed units, every pin current).
+// `complete` — otherwise (row fields present, every leaf covered by agreed units, every pin current), unless the row holds
+// a City repeat-letter unit (slice defect `source_repeat_letter`) with no adjudications.json entry of kind
+// `source_repeat_letter` on a closed basis (enacting_text | expert): then `pending`, why `repeat_letter_unadjudicated: …`
+// (operator ruling Q-K7b, Spec 69 M-57 dated note 2026-10-07).
 //
 // Reason codes (closed):
 //   schema_invalid             an authored file does not parse or breaks its declared shape (bylaw-authored-v1)
@@ -60,6 +63,19 @@ export const REASON_CODES = Object.freeze([
 ]);
 /** §4 row state, the order G-SHAPE decides it in. */
 export const ROW_STATUSES = Object.freeze(['failed', 'pending:stale', 'pending', 'complete']);
+/** Closed pending reasons a `why` may start with beyond the §4 ones (Q-K7b). */
+export const PENDING_REASONS = Object.freeze(['repeat_letter_unadjudicated']);
+/** The bases on which a repeat-letter adjudication counts (Q-K7b: the enacting text, or an expert). */
+export const REPEAT_ADJUDICATION_BASES = Object.freeze(['enacting_text', 'expert']);
+
+/** Repeat-letter unit ids adjudicated on a closed basis by a named adjudicator. PURE. */
+function repeatAdjudicated(adjudications) {
+  const out = new Set();
+  for (const e of (adjudications && Array.isArray(adjudications.adjudications) ? adjudications.adjudications : [])) {
+    if (e && e.kind === 'source_repeat_letter' && isStr(e.unit) && isStr(e.adjudicator) && REPEAT_ADJUDICATION_BASES.includes(e.basis)) out.add(e.unit);
+  }
+  return out;
+}
 /** §7.3 allowed value_form per archetype (null = any except none for LIMIT, any for DEFINE). */
 export const ALLOWED_FORMS = Object.freeze({
   LIMIT: ['literal', 'band', 'formula', 'by_building_type', 'if', 'map_lookup', 'existing_as_of'],
@@ -311,6 +327,7 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
     unitsByRow.get(reg).push([id, rec]);
   }
   const scope = inScopeIds ? new Set(inScopeIds) : null;
+  const repeatOk = repeatAdjudicated(adjudications);
   const rows = [];
   for (const row of [...index.rows.values()].sort((x, y) => cmpStr(x.regulation_id, y.regulation_id))) {
     const rid = row.regulation_id;
@@ -355,8 +372,9 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
         status = 'pending';
         why = `gate(s) not run: ${notRunGates.join(', ')}`;
       } else {
-        status = 'complete';
-        why = '';
+        const open = (row.defects || []).filter((d) => d.kind === 'source_repeat_letter').map((d) => `${rid}#${d.clause_path}`).filter((u) => !repeatOk.has(u));
+        status = open.length ? 'pending' : 'complete';
+        why = open.length ? `repeat_letter_unadjudicated: ${open.join(', ')} (adjudicate on the enacting text or by an expert)` : '';
       }
     }
     counts[status]++;

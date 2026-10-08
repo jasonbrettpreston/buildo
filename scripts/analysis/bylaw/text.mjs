@@ -135,7 +135,7 @@ const NUM_RE = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)';
 export const UNIT_TABLE = Object.freeze(SLICER.unit_table.map(([w, u]) => Object.freeze([w, u])));
 const UNIT_RE = UNIT_TABLE.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
 
-function wordValue(w) {
+export function wordValue(w) {
   const k = w.toLowerCase();
   if (k in WORD_NUM) return WORD_NUM[k];
   const [t, o] = k.split('-');
