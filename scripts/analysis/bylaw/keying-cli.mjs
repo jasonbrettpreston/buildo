@@ -96,7 +96,7 @@ async function main() {
     const specText = fs.readFileSync(path.join(root, SPEC68), 'utf8');
     const index = {};
     for (const shard of plan.shards) {
-      const b = buildBriefs({ shard, slice: ctx.slice, vocab: ctx.vocab, specText });
+      const b = buildBriefs({ shard, slice: ctx.slice, vocab: ctx.vocab, specText, batch });
       const slug = shardSlug(shard.key);
       writeLf(path.join(dir, 'briefs', `${slug}.a.md`), b.a.text);
       writeLf(path.join(dir, 'briefs', `${slug}.b.md`), b.b.text);

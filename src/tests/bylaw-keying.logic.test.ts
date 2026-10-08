@@ -125,6 +125,30 @@ describe('blind briefs', () => {
     expect(narrow).toContain('"numeric_expression":');
   });
 
+  it('after the M-17 narrowing: B\'s template holds the four ⧉ fields only; A\'s brief adds the narrowed-out fields as single-drafted', () => {
+    const b = briefs();
+    const tmplB = b.b.text.split('## Field rules')[0];
+    for (const k of ['"archetype":', '"target":', '"bound":', '"numeric_expression":']) expect(tmplB).toContain(k);
+    for (const k of ['"application":', '"condition":', '"literals_not_expressed":', '"ranks_layers":', '"calculation_handling":']) expect(tmplB).not.toContain(k);
+    const aAppendix = b.a.text.split('## Keyer A — your output')[1] || '';
+    for (const k of ['"application":', '"condition":', '"literals_not_expressed":', '"ranks_layers":', '"not_modelled_reason"']) expect(aAppendix).toContain(k);
+    expect(b.b.text).not.toContain('## Keyer A');
+  });
+
+  it('PROVISIONAL A1 conventions: a marked block in the shared core from batch A4 on; A1–A3 briefs carry none', () => {
+    const core = (batch?: string) => K.briefCore({ shard: twoUnitShard(), slice: slice(), vocab, specText: SPEC68, batch });
+    for (const batch of [undefined, 'A1', 'A2', 'A3']) expect(core(batch)).not.toContain('PROVISIONAL');
+    for (const batch of ['A4', 'A7']) {
+      const c = core(batch);
+      expect(c).toContain('## Keying conventions — PROVISIONAL (A1 analysis 2026-10-07; operator to confirm)');
+      expect(c.split('\n').filter((l: string) => /^P\d+\. /.test(l))).toHaveLength(K.PROVISIONAL_CONVENTIONS.length);
+    }
+    expect(K.PROVISIONAL_CONVENTIONS.length).toBe(15); // item 16 (parse-check B) is harness, not a keying convention
+    const b4 = K.buildBriefs({ shard: twoUnitShard(), slice: slice(), vocab, specText: SPEC68, batch: 'A4' });
+    expect(b4.a.text.startsWith(core('A4'))).toBe(true);
+    expect(b4.b.text.includes(core('A4'))).toBe(true);
+  });
+
   it('a stale plan (the unit text changed) refuses to emit a brief', () => {
     const s = clone(twoUnitShard());
     s.units[0].sha256 = '0'.repeat(64);

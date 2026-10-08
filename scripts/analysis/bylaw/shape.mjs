@@ -36,7 +36,7 @@
 
 import { DslError, parseCond, parseExpression, valueForm } from './dsl.mjs';
 import {
-  AUTHORED_SCHEMA, DOUBLE_KEYED, GENERATED_FIELDS, INSTRUMENT_KINDS, OPTIONAL_KEYED, ROW_SINGLE_DRAFTED,
+  AUTHORED_SCHEMA, DOUBLE_KEYED, GENERATED_FIELDS, INSTRUMENT_KINDS, NARROWED_OUT, OPTIONAL_KEYED, ROW_SINGLE_DRAFTED,
   SINGLE_DRAFTED, buildIndex, gateResult, getField, splitUnitId, unitView, violation,
 } from './authored.mjs';
 import { checkAgree } from './agree.mjs';
@@ -76,7 +76,7 @@ export const ALLOWED_FORMS = Object.freeze({
 /** §7.3 "must be none": the expression, for every archetype whose only allowed form is none. */
 const EXPRESSION_NONE = Object.freeze(['REQUIRE', 'DISAPPLY', 'INCLUDE', 'PREVAILING', 'PROCEDURAL', 'UNUSUAL']);
 const REQUIRED_SINGLE = Object.freeze(['calculation_handling.status', 'calculation_handling.description', 'calculation_handling.gaps', 'disclosure']);
-const UNIT_KEYS = new Set(['unit_id', ...DOUBLE_KEYED.map((p) => p.split('.')[0]), ...SINGLE_DRAFTED.map((p) => p.split('.')[0])]);
+const UNIT_KEYS = new Set(['unit_id', ...[...DOUBLE_KEYED, ...NARROWED_OUT, ...SINGLE_DRAFTED].map((p) => p.split('.')[0])]);
 const NOT_HELD_PARTS = Object.freeze(['map_area', 'named_addresses', 'lot_list']);
 
 const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -281,7 +281,8 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
     for (const [k, draft] of [['a', d.a], ['b', d.b]]) {
       if (!draft) continue;
       for (const g of GENERATED_FIELDS) if (Object.hasOwn(draft, g)) flag(id, 'generated_field_authored', `keyer ${k.toUpperCase()} wrote ${g}`);
-      for (const f of DOUBLE_KEYED) if (!OPTIONAL_KEYED.includes(f) && getField(draft, f) === undefined) flag(id, 'field_missing', `keyer ${k.toUpperCase()} omits ${f}`);
+      // keyer A writes every keyed field; keyer B the ⧉ set only (the narrowed-out fields, if B wrote them, are ignored)
+      for (const f of k === 'a' ? [...DOUBLE_KEYED, ...NARROWED_OUT] : DOUBLE_KEYED) if (!OPTIONAL_KEYED.includes(f) && getField(draft, f) === undefined) flag(id, 'field_missing', `keyer ${k.toUpperCase()} omits ${f}`);
     }
     if (d.b) for (const f of SINGLE_DRAFTED) if (getField(d.b, f) !== undefined) flag(id, 'single_field_in_b', `keyer B wrote ${f}`);
     for (const f of REQUIRED_SINGLE) if (getField(u, f) === undefined) flag(id, 'field_missing', `keyer A omits ${f}`);

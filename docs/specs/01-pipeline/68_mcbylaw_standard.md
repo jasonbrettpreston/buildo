@@ -127,7 +127,7 @@ One row per slicer `regulation_id` (`<article>(<n>)`, `<article>#article`, `800.
 
 **The unit of classification is the clause, not the row.** A regulation often bundles clauses of different archetypes (600.60.40(3): (A) PERMIT, (B) a requirement, (C) DEFINE, (D) PROHIBIT). The classification facets — `archetype`, `target`, `bound`, `value_form`, `condition`, `applies_to.part`, `displaces[]`, `include_ref` and the §7.3 archetype-specific fields — live on each **leaf clause unit** in `clauses[]`. The row carries the verbatim, provenance, scope, status and explanation.
 
-**G** = generated; **A** = authored once; **⧉** = authored by two blind keyers and compared. **The ⧉ set is exactly the fields marked ⧉ in this table** (Spec 69 M-17). An authored file may contain only A / ⧉ fields.
+**G** = generated; **A** = authored once; **⧉** = authored by two blind keyers and compared. **The ⧉ set is exactly the fields marked ⧉ in this table** (Spec 69 M-17) — since the A1 narrowing (M-17 dated note 2026-10-07 (A1)): `archetype`, `target`, `bound`, `numeric_expression`; the fields narrowed out are drafted once by keyer A and expert-sampled (M-29). An authored file may contain only A / ⧉ fields.
 
 | Word | Field | Own | Closed set / content |
 |---|---|---|---|
@@ -138,10 +138,10 @@ One row per slicer `regulation_id` (`<article>(<n>)`, `<article>#article`, `800.
 | | **`value_form`** (per unit) | G | derived from the parsed `numeric_expression` (§7.2) |
 | | **`target`** (per unit) | ⧉ | a `vocab.dsl_target` variable, or "none" (a LIMIT unit must name one) |
 | | **`bound`** (LIMIT units) | ⧉ | `min · max · exact` (a count is a target in `units`, bounded min or max) |
-| | **`requirement`** (REQUIRE units) | ⧉ | `vocab.requirement` |
-| | **`instrument`** (PREVAILING units) | ⧉ | `{kind: former_bylaw · former_section · schedule_map, citation, municipality}` |
-| | **`evaluated_by_us`** (PREVAILING units) | ⧉ | `no` (kept ⧉ by operator direction, B4) |
-| | **`ranks_layers[]`** (PROCEDURAL precedence units) | ⧉ | the layers this precedence rule ranks, e.g. 900.1.10(3): `exception > base, overlay`; the data §7.5 rule 3 reads |
+| | **`requirement`** (REQUIRE units) | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `vocab.requirement` |
+| | **`instrument`** (PREVAILING units) | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `{kind: former_bylaw · former_section · schedule_map, citation, municipality}` |
+| | **`evaluated_by_us`** (PREVAILING units) | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `no` (kept ⧉ by operator direction, B4) |
+| | **`ranks_layers[]`** (PROCEDURAL precedence units) | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | the layers this precedence rule ranks, e.g. 900.1.10(3): `exception > base, overlay`; the data §7.5 rule 3 reads |
 | | `disclosure` (UNUSUAL / not-evaluated units) | A | buyer text, G-READ rules |
 | | **`layer`** | G | `base · overlay · exception · provincial`, from the source (Ch.600 → `overlay`) |
 | | `units[]` | G | unit table |
@@ -153,18 +153,18 @@ One row per slicer `regulation_id` (`<article>(<n>)`, `<article>#article`, `800.
 | | `last_changed_in` | G | adoption id in which the verbatim last changed (`adoptions.json` records each adoption's per-unit shas, so this is reproducible offline) |
 | ACCURATE | `verbatim` + sha, `clauses[]`, `numeric_literals[]` | G | page slice |
 | | `numeric_expression` | ⧉ | DSL statements, each `@clause`, or "none" (§7.4) |
-| | `literals_not_expressed[]` | ⧉ | `{literal, clause, reason}`, closed reasons |
-| | `application` | ⧉ | zones, building types, lot conditions, uses — each token with clause + ≥ 2-word evidence phrase |
-| | **`condition`** | ⧉ | one or more `lot_condition` tokens (a list is a conjunction, §7.4) + DSL `if`, or "none"; a numeric `if` needs a band/threshold token; a token-only condition has no `if` |
-| | **`applies_to.part`** | ⧉ | `whole · named_addresses · lot_list · map_area`, with refs |
+| | `literals_not_expressed[]` | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `{literal, clause, reason}`, closed reasons |
+| | `application` | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | zones, building types, lot conditions, uses — each token with clause + ≥ 2-word evidence phrase |
+| | **`condition`** | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | one or more `lot_condition` tokens (a list is a conjunction, §7.4) + DSL `if`, or "none"; a numeric `if` needs a band/threshold token; a token-only condition has no `if` |
+| | **`applies_to.part`** | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `whole · named_addresses · lot_list · map_area`, with refs |
 | | `cross_refs[]` | G | resolved row or `external.json` `ref` ids |
 | | **`displaces[]`** | G | resolved ids from "Despite …" / "does not apply"; irreflexive and acyclic |
 | | `include_ref` | G | INCLUDE units only; resolved to a row; expanded transitively with cycle check |
-| | `calculation_handling` | ⧉ (`not_modelled_reason`, `user_inputs`) + A (status — drafted once by keyer A, because it needs code knowledge keyer B must not have (Spec 69 M-17 note 2026-10-07); description, gaps) | `modelled · partially_modelled · not_modelled · informational` |
+| | `calculation_handling` | A (`not_modelled_reason`, `user_inputs`: ⧉ until A1, narrowed by Spec 69 M-17 note 2026-10-07 (A1)) + A (status — drafted once by keyer A, because it needs code knowledge keyer B must not have (Spec 69 M-17 note 2026-10-07); description, gaps) | `modelled · partially_modelled · not_modelled · informational` |
 | | `code_refs[]` | A | `table.column` · `module#dotted.member` (paths limited to `vocab.code_roots`; anything else fails closed) · logic variable, + `expects` on constants |
 | UNDERSTANDABLE | `explanation` | A | buyer-facing text |
 | | `definitions_used[]` | G | resolved |
-| | `input_fidelity` (Ch.800 measurement rows only) | ⧉ (status) + A (why, `evidence_ref`) | `{our_field, matches · approximates · differs · unknown, why, evidence_ref}` |
+| | `input_fidelity` (Ch.800 measurement rows only) | A (status: ⧉ until A1, narrowed by Spec 69 M-17 note 2026-10-07 (A1)) + A (why, `evidence_ref`) | `{our_field, matches · approximates · differs · unknown, why, evidence_ref}` |
 | SCALABLE | `scope`, `scope_rule_id`, `out_of_scope_reason` | G | one rule per row, closed reasons; mechanical reasons first, then `administrative_no_application_effect` beats informational (Spec 69 M-31) |
 | | `verified_against_sha256` (per unit) | G | sha256 of the **unit's normalized text**, written by the generator into the brief and copied into the agreement record (never typed by a keyer); a mismatch with the current unit makes it `pending:stale`. A normalizer bump that leaves the normalized text unchanged changes nothing |
 | | `drafts` | G | draft ids, `agreed · adjudicated`, `adjudicated_by`; rendered in the table. Draft bodies and the provenance record stay in `authored/` |

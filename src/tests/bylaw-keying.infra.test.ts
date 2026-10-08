@@ -142,6 +142,28 @@ describe('keyer-B runner: ordering and blindness (fail closed, before the engine
     await expect(B.runKeyerB({ ...base, runEngine: stubEngine({ calls: [], bUnits: UNITS().map(F.bDraftOf), ledgerDir: path.join(TMP, 'l1'), readPath: '../Buildo/x/600.60.40.a.json' }) })).rejects.toThrow(/a_in_b_read_paths/);
     await expect(B.runKeyerB({ ...base, runEngine: stubEngine({ calls: [], bUnits: UNITS().map(F.bDraftOf).slice(0, 1), ledgerDir: path.join(TMP, 'l2') }) })).rejects.toThrow(/b_units_mismatch/);
   });
+
+  it('a B draft whose numeric_expression does not parse is retried once, then refused (b_unparseable); a parseable retry is accepted', async () => {
+    const main = repo();
+    const s = shard();
+    const bRoot = path.join(TMP, 'kb-parse');
+    B.ensureKeyerBWorktree({ mainRoot: main, bRoot });
+    const aBytes = Buffer.from(JSON.stringify(aDoc(s)));
+    const seal = K.sealDraft({ aBytes, shardKey: s.key });
+    const base = { bRoot, shard: s, briefB: { text: 'brief' }, seal, aSha: K.draftSha(aBytes) };
+    const good = UNITS().map(F.bDraftOf) as Json[];
+    const bad = good.map((u, i) => (i === 0 ? { ...u, numeric_expression: ['height_m = max(10 m; 12 m)'] } : u)); // no final @clause_path (A1: 26 such B statements)
+    const calls1: Json[] = [];
+    await expect(B.runKeyerB({ ...base, runEngine: stubEngine({ calls: calls1, bUnits: bad, ledgerDir: path.join(TMP, 'p1') }) })).rejects.toThrow(/b_unparseable/);
+    expect(calls1).toHaveLength(2); // the first attempt + one retry
+    const calls2: Json[] = [];
+    const flaky = stubEngine({ calls: calls2, bUnits: bad, ledgerDir: path.join(TMP, 'p2') });
+    const fixed = stubEngine({ calls: calls2, bUnits: good, ledgerDir: path.join(TMP, 'p2') });
+    const r = await B.runKeyerB({ ...base, runEngine: (x: Json) => (calls2.length === 0 ? flaky(x) : fixed(x)) });
+    expect(calls2).toHaveLength(2);
+    expect(r.attempts).toBe(2);
+    expect(JSON.parse(r.b_bytes).units).toEqual(good);
+  });
 });
 
 describe('end to end: a 2-unit shard through the harness with a stub keyer B', () => {

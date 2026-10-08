@@ -167,11 +167,35 @@ describe('G-AGREE canonical comparison (Spec 68 §7.4, Spec 69 M-17 notes)', () 
   it('an absent field never equals a written "none" ("none" is written, never omitted)', () => {
     expect(field('bound', undefined, 'none')).toBe(false);
   });
-  it('the ⧉ set is the M-17 set: calculation_handling status is single-drafted (note d), ranks_layers is keyed', () => {
-    expect(AU.DOUBLE_KEYED).toContain('ranks_layers');
+  it('the ⧉ set is the NARROWED M-17 set (dated note 2026-10-07, A1 re-measure): archetype, target, bound, numeric_expression', () => {
+    expect([...AU.DOUBLE_KEYED]).toEqual(['archetype', 'target', 'bound', 'numeric_expression']);
+    expect([...AU.NARROWED_DOUBLE_KEYED]).toEqual([...AU.DOUBLE_KEYED]);
+    // the eleven fields that left the ⧉ set are single-drafted by keyer A (expert-sampled, M-29), never compared
+    expect([...AU.NARROWED_OUT].sort()).toEqual(['application', 'applies_to', 'calculation_handling.not_modelled_reason', 'calculation_handling.user_inputs', 'condition', 'evaluated_by_us', 'input_fidelity.status', 'instrument', 'literals_not_expressed', 'ranks_layers', 'requirement']);
+    for (const f of AU.NARROWED_OUT) expect(AU.DOUBLE_KEYED).not.toContain(f);
     expect(AU.DOUBLE_KEYED).not.toContain('calculation_handling.status');
     expect(AU.SINGLE_DRAFTED).toContain('calculation_handling.status');
-    for (const f of AU.NARROWED_DOUBLE_KEYED) expect(AU.DOUBLE_KEYED).toContain(f);
+  });
+  it('G-AGREE compares the narrowed set only: B differing on a narrowed-out field still agrees; on a core field it does not', () => {
+    const a = FX.GOOD['LIMIT×literal'];
+    const s1 = FX.shardOf([a]);
+    // an A1–A3 B draft (keyed under the v0.5 set) still carries the narrowed-out fields: ignored, never compared
+    s1.b.units[0] = { ...s1.b.units[0], application: { zones: ['RS'], building_types: ['townhouse'], lot_conditions: [], uses: [] }, condition: { tokens: ['corner_lot'] } };
+    const r1 = AG.checkAgree({ shards: [s1], vocab: VOCAB });
+    expect([r1.counts.units_agreed, r1.counts.disagreements]).toEqual([1, 0]);
+    const s2 = FX.shardOf([a]);
+    s2.b.units[0] = { ...s2.b.units[0], bound: a.bound === 'min' ? 'max' : 'min' };
+    expect(AG.checkAgree({ shards: [s2], vocab: VOCAB }).units.get(a.unit_id).disagreements).toEqual(['bound']);
+  });
+  it('G-SHAPE after the narrowing: keyer A must write every narrowed-out field; keyer B writing one (A1–A3 drafts) is not a violation', () => {
+    const a = FX.GOOD['LIMIT×literal'];
+    const s = FX.shardOf([a]);
+    s.b.units[0] = { ...s.b.units[0], application: a.application, ranks_layers: 'none', calculation_handling: { not_modelled_reason: 'none', user_inputs: [] } };
+    expect(SH.checkShape({ slice: FX.fixtureSlice(), shards: [s], vocab: VOCAB }).violations).toEqual([]);
+    const noApp = JSON.parse(JSON.stringify(a));
+    delete noApp.application;
+    const s2 = FX.shardOf([noApp]);
+    expect(SH.checkShape({ slice: FX.fixtureSlice(), shards: [s2], vocab: VOCAB }).violations.map((v: Json) => [v.code, v.detail])).toContainEqual(['field_missing', 'keyer A omits application']);
   });
 });
 
@@ -186,7 +210,7 @@ describe('closed sets locked both directions against vocab.json', () => {
     for (const k of [...AG.HANDLED_KINDS, ...KP.HANDLED_KINDS]) expect(VOCAB.adjudication_kind).toContain(k);
   });
   it('the ⧉ / A / G ownership lists are disjoint', () => {
-    const all = [...AU.DOUBLE_KEYED, ...AU.SINGLE_DRAFTED, ...AU.ROW_SINGLE_DRAFTED, ...AU.GENERATED_FIELDS];
+    const all = [...AU.DOUBLE_KEYED, ...AU.NARROWED_OUT, ...AU.SINGLE_DRAFTED, ...AU.ROW_SINGLE_DRAFTED, ...AU.GENERATED_FIELDS];
     expect(new Set(all).size).toBe(all.length);
   });
 });

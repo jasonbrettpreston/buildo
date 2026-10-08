@@ -9,18 +9,20 @@
 //
 //   ensureKeyerBWorktree({mainRoot, bRoot, commit, git})       create the detached B worktree once; → its HEAD commit
 //   assertBlind({bRoot, commit, aPaths, lsTree, git, fs})       the witness, before B runs (throws KeyingError)
-//   runKeyerB({bRoot, shard, briefB, seal, aSha, runEngine, …})  seal check → witness → brief → engine → collect
+//   runKeyerB({bRoot, shard, briefB, seal, aSha, runEngine, …})  seal check → witness → brief → engine → collect (+ DSL parse;
+//                                                               an unparseable draft re-runs the same brief, maxAttempts 2)
 //   spawnEngine({engine, env})                                  the default runEngine: node deepseek-exec.js (async)
 //   readEnvKey(file, name)                                      one key from a .env file (never printed)
 //
 // Closed failure codes (KeyingError.code): seal_missing · seal_mismatch · witness_commit_unknown · a_visible_to_b ·
 // a_present_in_b_worktree · same_tree · brief_mismatch · engine_failed · b_head_moved · b_missing · b_shape · b_units_mismatch ·
-// a_in_b_read_paths · ledger_missing
+// a_in_b_read_paths · ledger_missing · b_unparseable (B's numeric_expression does not parse after maxAttempts runs)
 
 import { execFileSync, spawn } from 'node:child_process';
 import nodeFs from 'node:fs';
 import path from 'node:path';
 import { AUTHORED_REL, AUTHORED_SCHEMA, sha256 } from './authored.mjs';
+import { DslError, parseExpression } from './dsl.mjs';
 import { KeyingError, extractReadPaths, shardPaths, shardSlug, unitCoverage } from './keying.mjs';
 import { gitLsTree } from './keyer-prov.mjs';
 
@@ -115,10 +117,10 @@ export function spawnEngine({ engine, env, maxIterations = 40 }) {
 /**
  * Run keyer B for one shard. Order (each step fail-closed): A's seal exists and equals the current A draft → the
  * blindness witness → B's brief written into B's worktree → the engine → B's draft read back and checked against the
- * planned unit ids → the ledger hashed and its read paths extracted (an `.a` read fails). Writes nothing in the main tree.
- * @returns {{b_bytes: string, b_run: {run_id, ledger_sha256, read_paths, worktree_commit}, engine_status}}
+ * planned unit ids and its numeric_expression parsed (unparseable → the same brief once more, then b_unparseable) → the ledger hashed and its read paths extracted (an `.a` read fails). Writes nothing in the main tree.
+ * @returns {{b_bytes: string, b_run: {run_id, ledger_sha256, read_paths, worktree_commit}, engine_status, attempts}}
  */
-export async function runKeyerB({ mainRoot = null, bRoot, shard, briefB, seal, aSha, aPaths = [], runEngine, git = gitIn, lsTree = gitLsTree(bRoot), fs = nodeFs }) {
+export async function runKeyerB({ mainRoot = null, bRoot, shard, briefB, seal, aSha, aPaths = [], runEngine, git = gitIn, lsTree = gitLsTree(bRoot), fs = nodeFs, maxAttempts = 2 }) {
   if (mainRoot && path.resolve(mainRoot) === path.resolve(bRoot)) throw new KeyingError('same_tree', 'keyer B must run in a separate worktree, never the authoring tree');
   if (briefB.sha256 && sha256(Buffer.from(briefB.text, 'utf8')) !== briefB.sha256) throw new KeyingError('brief_mismatch', `${shard.key}: B's brief differs from the recorded brief sha`);
   if (!seal || !seal.sha256 || !Number.isSafeInteger(seal.seal_id)) throw new KeyingError('seal_missing', `${shard.key}: A's draft is not sealed — seal before B runs`);
@@ -131,7 +133,32 @@ export async function runKeyerB({ mainRoot = null, bRoot, shard, briefB, seal, a
   fs.writeFileSync(path.join(bRoot, briefRel), briefB.text);
   const bAbs = path.join(bRoot, paths.b);
   fs.mkdirSync(path.dirname(bAbs), { recursive: true });
-  if (fs.existsSync(bAbs)) fs.rmSync(bAbs, { force: true }); // a previous failed attempt of B's own; never A's
+  for (let attempt = 1; ; attempt++) {
+    if (fs.existsSync(bAbs)) fs.rmSync(bAbs, { force: true }); // a previous failed attempt of B's own; never A's
+    try {
+      return { ...(await collectB({ bRoot, briefRel, bAbs, paths, shard, commit, runEngine, git, fs })), attempts: attempt };
+    } catch (err) {
+      // an unparseable draft is the model's slip (A1: 34 B statements): the same brief again, once; then refused
+      if (!(err instanceof KeyingError) || err.code !== 'b_unparseable' || attempt >= maxAttempts) throw err;
+    }
+  }
+}
+
+/** Every ⧉ DSL field of B's draft parses (numeric_expression; Spec 68 §7.4) → [] or the "<unit>: <code>" failures. PURE. */
+export function unparseableB(doc) {
+  const bad = [];
+  for (const u of (doc && Array.isArray(doc.units) ? doc.units : [])) {
+    try {
+      parseExpression(u && u.numeric_expression);
+    } catch (err) {
+      if (!(err instanceof DslError)) throw err;
+      bad.push(`${u && u.unit_id}: ${err.code}`);
+    }
+  }
+  return bad;
+}
+
+async function collectB({ bRoot, briefRel, bAbs, paths, shard, commit, runEngine, git, fs }) {
   const summary = await runEngine({ bRoot, briefRel });
   const after = git(bRoot, ['rev-parse', 'HEAD']);
   if (after !== commit) throw new KeyingError('b_head_moved', `${shard.key}: B's worktree moved ${commit.slice(0, 12)} → ${after.slice(0, 12)} during the run; the witness no longer holds`);
@@ -147,6 +174,8 @@ export async function runKeyerB({ mainRoot = null, bRoot, shard, briefB, seal, a
   if (!doc || doc.schema !== AUTHORED_SCHEMA || doc.keyer !== 'B' || doc.shard !== shard.key) throw new KeyingError('b_shape', `${shard.key}: not a ${AUTHORED_SCHEMA} keyer-B draft of this shard`);
   const cov = unitCoverage(doc, shard);
   if (cov.missing.length || cov.extra.length) throw new KeyingError('b_units_mismatch', `${shard.key}: missing ${cov.missing.join(', ') || '-'}; extra ${cov.extra.join(', ') || '-'}`);
+  const unparseable = unparseableB(doc);
+  if (unparseable.length) throw new KeyingError('b_unparseable', `${shard.key}: ${unparseable.join('; ')}`);
   if (!summary.ledger_path || !fs.existsSync(summary.ledger_path)) throw new KeyingError('ledger_missing', `${shard.key}: run ${summary.run_id} has no ledger at ${summary.ledger_path}`);
   const ledger = fs.readFileSync(summary.ledger_path);
   const readPaths = extractReadPaths(ledger.toString('utf8'));

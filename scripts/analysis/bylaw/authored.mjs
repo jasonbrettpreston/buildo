@@ -2,12 +2,12 @@
 //            A / ⧉ fields), §6.4 rules 4, 5, §7.4 (canonical agreement), §10 stage 5 (authored/<page>/<article>.{a,b}.json +
 //            <article>.prov.json); docs/specs/01-pipeline/69_mcbylaw_policy.md M-17 (+ dated notes 2026-10-06 / 2026-10-07:
 //            ranks_layers ⧉, calculation_handling status single-drafted A, the three keying conventions, conditional
-//            narrowing); docs/reports/mcbylaw-phase1-plan.md S6
+//            narrowing — applied at A1, dated note 2026-10-07 (A1)); docs/reports/mcbylaw-phase1-plan.md S6
 //
 // The authored-field model shared by the S6 authored-field gates (agree.mjs, clause.mjs, xref.mjs, shape.mjs,
 // keyer-prov.mjs). PURE except loadAuthored() (reads the committed authored/ tree; no clock, no network).
 //
-//   DOUBLE_KEYED / NARROWED_DOUBLE_KEYED / SINGLE_DRAFTED / ROW_SINGLE_DRAFTED / GENERATED_FIELDS   the ownership lists
+//   DOUBLE_KEYED (narrowed at A1) / NARROWED_OUT / SINGLE_DRAFTED / ROW_SINGLE_DRAFTED / GENERATED_FIELDS   the ownership lists
 //   getField(unit, path)                 dotted-path read ('calculation_handling.status')
 //   canonicalField(path, value, {unitId}?)   the canonical projection two drafts are compared on (§7.4; rules C1–C6)
 //   buildIndex(slice)                    rows / units / articles / sections / chapters / clause paths of a slice
@@ -60,27 +60,33 @@ export const WHOLE = 'whole';
 /** Gate state (Spec 68 §4): closed; a gate not run is never a PASS. */
 export const GATE_STATES = Object.freeze(['pass', 'fail', 'not_run']);
 
-/** The ⧉ set (Spec 68 §6, Spec 69 M-17 v0.5 note + 2026-10-06 note (ranks_layers) − 2026-10-07 note d (status → A)). */
-export const DOUBLE_KEYED = Object.freeze([
-  'archetype',
-  'target',
-  'bound',
+/**
+ * The ⧉ set — NARROWED (Spec 69 M-17 dated note 2026-10-07, A1 re-measure; Spec 68 §6): the M-17 note (c) pre-authorized
+ * narrowing to archetype / target / bound / numeric_expression if any ⧉ field stayed < 70 % at A1, and six did (application
+ * 61.2 %, not_modelled_reason 61.0 %, user_inputs 63.4 %, input_fidelity.status 0/5 over 546 units, after canonical rules
+ * C1–C6). Only these four are compared by G-AGREE and queued for adjudication.
+ */
+export const DOUBLE_KEYED = Object.freeze(['archetype', 'target', 'bound', 'numeric_expression']);
+/** The narrowed set (kept as a name for the M-17 note (c) wording); since the A1 narrowing it IS the ⧉ set. */
+export const NARROWED_DOUBLE_KEYED = DOUBLE_KEYED;
+/**
+ * The eleven fields that left the ⧉ set at the A1 narrowing: drafted once by keyer A (and expert-sampled, M-29), never
+ * compared or queued. Keyer B drafts of A1–A3 were keyed under the v0.5 set and still carry them — ignored, not a violation.
+ */
+export const NARROWED_OUT = Object.freeze([
   'requirement',
   'instrument',
   'evaluated_by_us',
   'ranks_layers',
   'condition',
   'applies_to',
-  'numeric_expression',
   'literals_not_expressed',
   'application',
   'calculation_handling.not_modelled_reason',
   'calculation_handling.user_inputs',
   'input_fidelity.status',
 ]);
-/** The narrowed set M-17 note (c) pre-authorizes, conditional on the A1 re-measure (applied by a dated note, never here). */
-export const NARROWED_DOUBLE_KEYED = Object.freeze(['archetype', 'target', 'bound', 'numeric_expression']);
-/** ⧉ fields a draft may omit (every other ⧉ field is written, "none" when unused): Ch.800 measurement rows only (§6). */
+/** Keyed fields a draft may omit (every other one is written, "none" when unused): Ch.800 measurement rows only (§6). */
 export const OPTIONAL_KEYED = Object.freeze(['input_fidelity.status']);
 /** Unit fields drafted once by keyer A (Spec 68 §6 "A"). */
 export const SINGLE_DRAFTED = Object.freeze([

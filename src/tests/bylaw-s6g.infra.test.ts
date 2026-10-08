@@ -5,8 +5,8 @@
 //
 // S6 authored-field gates on the REAL tree (offline): every fixture is cut from the live slice (current adoption,
 // slicer and vocab) and every gate selfTest() runs on it, so drift reds here; every gate runs on the real slice +
-// seeds + Spec 69 and passes with nothing
-// authored yet (every in-scope row `pending`, never `failed`); Spec 69 has no duplicate ruling id (lesson 10).
+// seeds + Spec 69 + the real authored tree: content findings on agreed units are reported (agreement ≠ correctness),
+// while a pending unit never carries a violation and is never `failed` (§4); Spec 69 has no duplicate ruling id (lesson 10).
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -52,7 +52,7 @@ describe('fixtures are cut from the LIVE slice, so slicer / vocab drift reds her
   }
 });
 
-describe('the S6 gates on the real tree (nothing authored yet → pass, every row pending)', () => {
+describe('the S6 gates on the real authored tree (Spec 68 §4: pending never fails a gate; findings attach to agreed units only)', () => {
   const live = FX.liveSlice();
   const vocab = readJson('scripts/seeds/bylaw/vocab.json');
   const adjudications = readJson('scripts/seeds/bylaw/adjudications.json');
@@ -63,20 +63,38 @@ describe('the S6 gates on the real tree (nothing authored yet → pass, every ro
   const shards = AU.loadAuthored(ROOT);
   const agree = AG.checkAgree({ shards, adjudications, vocab });
   const units = AG.agreedUnits(agree);
+  // Real drafts exist since A1 (4bd4d97e): content findings on AGREED units are real and are reported, not asserted away;
+  // what must hold is the §4 contract — a pending unit / row never carries a violation and is never `failed`.
+  const pendingIds = new Set([...agree.units].filter(([, r]: [string, Json]) => r.state === 'pending').map(([k]: [string, Json]) => k));
+  const agreedRows = new Set([...units.keys()].map((k: string) => AU.splitUnitId(k).reg));
+  const rowOf = (id: string) => AU.splitUnitId(id).reg;
+  // a violation names an agreed unit, a row holding one, or an authored file (parse / schema level) — never a pending unit
+  const attributed = (v: Json) => units.has(v.id) || agreedRows.has(rowOf(v.id)) || agreedRows.has(rowOf(v.id).replace(/@.*$/, '')) || v.id.startsWith(AU.AUTHORED_REL);
+  const gates = {
+    clause: CL.checkClause({ slice: live, units, vocab, adjudications }),
+    xref: XR.checkXref({ slice: live, units, vocab, external }),
+    shape: SH.checkShape({ slice: live, shards, vocab, agree }),
+  };
   it('G-AGREE passes (the real adjudications.json holds no orphan disagreement)', () => expect(agree.violations).toEqual([]));
-  it('G-CLAUSE passes', () => expect(CL.checkClause({ slice: live, units, vocab, adjudications }).violations).toEqual([]));
-  it('G-XREF passes', () => expect(XR.checkXref({ slice: live, units, vocab, external }).violations).toEqual([]));
-  it('G-SHAPE passes; every row is pending (M-45), none failed', () => {
-    const r = SH.checkShape({ slice: live, shards, vocab, agree });
-    expect(r.violations).toEqual([]);
-    expect(r.status).toBe('pass');
-    if (shards.length === 0) expect(r.counts.pending).toBe(live.rows.length);
-    expect(r.counts.failed).toBe(0);
+  for (const [gate, r] of Object.entries(gates)) {
+    it(`G-${gate.toUpperCase()} runs to a closed state; no violation names a pending unit; every one names an agreed unit, its row or an authored file`, () => {
+      expect(AU.GATE_STATES).toContain(r.status);
+      expect(r.violations.filter((v: Json) => pendingIds.has(v.id))).toEqual([]);
+      expect(r.violations.filter((v: Json) => !attributed(v))).toEqual([]);
+      if (!units.size) expect(r.violations).toEqual([]); // nothing agreed → nothing to fail
+    });
+  }
+  it('G-SHAPE: a row is failed only if it holds an agreed unit (M-45); with nothing authored every row is pending', () => {
+    const r = gates.shape;
+    expect(r.counts.failed).toBeLessThanOrEqual(agreedRows.size);
+    if (shards.length === 0) expect([r.counts.pending, r.counts.failed]).toEqual([live.rows.length, 0]);
   });
-  it('G-PROV keyer arm passes on the real authored tree', () => {
+  it('G-PROV keyer arm runs on the real authored tree to a closed state; every violation names a shard on disk', () => {
     const r = KP.checkKeyerProv({ shards, lsTree: KP.gitLsTree(ROOT), headTree: KP.gitLsTree(ROOT)('HEAD') || [], staged: [] });
-    expect(r.violations).toEqual([]);
-    expect(r.status).toBe(shards.length ? 'pass' : 'pass');
+    expect(AU.GATE_STATES).toContain(r.status);
+    const keys = new Set(shards.map((s: Json) => s.key));
+    expect(r.violations.filter((v: Json) => !keys.has(v.id) && !v.id.startsWith(AU.AUTHORED_REL))).toEqual([]);
+    if (!shards.length) expect(r.status).toBe('pass');
   });
   it('G-PROV ruling-id arm passes on the real Spec 69, ledger and adjudications (incl. the M-39 entry)', () => {
     const r = KP.checkRulingIds({ spec69Text, ledger, adjudications });
