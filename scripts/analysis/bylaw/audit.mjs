@@ -65,6 +65,8 @@ import { gateResult, violation } from './authored.mjs';
 import { stableStringify } from './snapshot.mjs';
 import { gitBlobOid, gitWitness, lf } from './git-witness.mjs';
 import { auditFixtures } from './audit-fixtures.mjs';
+import { createRequire } from 'node:module';
+const AUDIT_CONFIRMATIONS = createRequire(import.meta.url)('../../seeds/bylaw/audit-confirmations.json'); // data (G-EXC-LIT)
 
 export const BAR_SCHEMA = 'bylaw-audit-bar-v1';
 export const RECORD_SCHEMA = 'bylaw-expert-audit-v1';
@@ -148,7 +150,7 @@ export function buildPopulation({ rows = [], external = null, absence = null, ad
       required.add(id);
     }
   }
-  if (allRowIds.includes('900.1.10(3)')) confirmations['900.1.10(3)'] = ['implicit_override:900.1.10(3)'];
+  for (const c of AUDIT_CONFIRMATIONS.entries || []) if (allRowIds.includes(c.regulation_id)) confirmations[c.regulation_id] = [...c.confirmations];
   for (const a of (adjudications && adjudications.adjudications) || []) {
     if (!a || a.kind !== 'consolidation_mismatch') continue;
     const id = rowOfCitation(allRowIds, a.unit);
