@@ -34,7 +34,7 @@
  *   (iii) citations resolve  — every `Spec 1{19,20,21,22,23,24} §<n>` and every
  *         `Spec 124 R-<letter>` citation across docs/ src/ scripts/ tasks/ .cursor/
  *         resolves to a real heading in that spec (union 122a for the 122/123/124
- *         family) or, for an R-<letter> citation, a §5 register row — unless the exact
+ *         family) or, for an R-<letter> citation, a §5 register row (or a 124a LIVE REGISTER row, M18) — unless the exact
  *         citation string is listed in `known_dangling`. Widened to the whole 119-124
  *         family because the census that authorized this tool found a 49-site dangling
  *         citation (`Spec 121 §12b.6`) OUTSIDE the 122/123/124 family. This is a
@@ -53,7 +53,7 @@
  *   (v)   reader guard      — no declared move's `anchor` string appears inside any
  *         `reader_guards[].slices` entry (a program that slices spec prose by a
  *         heading string must not have that heading pulled out from under it).
- *   (vi)  totality           — every appendix (APPENDIX_SPECS: 122a, 124a) section headed
+ *   (vi)  totality           — every appendix (APPENDIX_SPECS: 122a, 124a, 69a) section headed
  *         `(moved from Spec N §x)` has a corresponding `moves[]` row. An undeclared
  *         move is itself RED — the manifest is the one place a move may be recorded.
  *
@@ -123,11 +123,14 @@ export const SPEC_FILES = {
   // shape check only — arm (iii)'s citation census stays the 119-124 family (CITATION_SECTION_RE), never widened here.
   68: '68_mcbylaw_standard.md',
   69: '69_mcbylaw_policy.md',
+  // Spec 69's §1 rulings register (move M19, 2026-10-07): a move DESTINATION like 124a, verified by arms (i)/(ii)/(vi).
+  // Its M-rows are still cited as "Spec 69 M-n" — 69a is where Spec 69's register physically lives.
+  '69a': '69a_mcbylaw_register.md',
 };
 // The family that shares 122a as a citation-resolution fallback (arm iii).
 const APPENDIX_FAMILY = new Set(['122', '123', '124']);
 // Every appendix a move may land in — arm (vi) totality runs over each one.
-const APPENDIX_SPECS = ['122a', '124a'];
+const APPENDIX_SPECS = ['122a', '124a', '69a'];
 // Grep roots for citation census (arm iii) — matches the plan's own census scope.
 const CITATION_ROOTS = ['docs', 'src', 'scripts', 'tasks', '.cursor'];
 
@@ -287,11 +290,26 @@ export function collectCitations(roots = CITATION_ROOTS.map((r) => path.join(REP
   return out;
 }
 
-/** Register-row ruling ids declared in Spec 124 §5 (`| R-X | ... |` table rows). Mirrors CITATION_RULING_RE's dot-OR-hyphen amendment arm (R-PACE-1). */
-export function extractRegisterRulingIds(spec124Text) {
+const REGISTER_ROW_RE = /^\|\s*(R-[A-Z]+(?:[.-][0-9]+)?)\s*\|/;
+// A 124a section holding LIVE register rows moved out of Spec 124 §5 (move M18, 2026-10-07): its `## ` heading says
+// "(moved from Spec 124 §5)" AND "LIVE REGISTER". Only rows under such a heading count — a register-shaped row inside
+// a HISTORICAL block (M08's worked-examples table carries `| R-B |`) is never a ruling.
+const LIVE_REGISTER_HEADING_RE = /^## .*\(moved from Spec 124 §5\).*LIVE REGISTER/;
+
+/** Register-row ruling ids declared in Spec 124 §5 (`| R-X | ... |` table rows), plus the LIVE REGISTER sections of
+ * Spec 124a when its text is passed (rows R-A..R-AI since M18). Mirrors CITATION_RULING_RE's dot-OR-hyphen amendment
+ * arm (R-PACE-1). */
+export function extractRegisterRulingIds(spec124Text, spec124aText = '') {
   const ids = new Set();
   for (const raw of lf(spec124Text).split('\n')) {
-    const m = /^\|\s*(R-[A-Z]+(?:[.-][0-9]+)?)\s*\|/.exec(raw.trim());
+    const m = REGISTER_ROW_RE.exec(raw.trim());
+    if (m) ids.add(m[1]);
+  }
+  let live = false;
+  for (const raw of lf(spec124aText || '').split('\n')) {
+    if (/^#{1,2} /.test(raw)) live = LIVE_REGISTER_HEADING_RE.test(raw);
+    if (!live) continue;
+    const m = REGISTER_ROW_RE.exec(raw.trim());
     if (m) ids.add(m[1]);
   }
   return ids;
@@ -309,7 +327,7 @@ export function checkCitationsResolve(citations, specTexts, knownDangling) {
   for (const [id, text] of Object.entries(specTexts)) {
     headingsBySpec[id] = extractResolvableNumbers(text);
   }
-  const registerIds = specTexts['124'] ? extractRegisterRulingIds(specTexts['124']) : new Set();
+  const registerIds = specTexts['124'] ? extractRegisterRulingIds(specTexts['124'], specTexts['124a']) : new Set();
   const dangling = [];
   const seen = new Set();
   for (const c of citations) {
@@ -371,7 +389,7 @@ export function locateBlock(specText, move) {
 export function buildStub(move, dateStr) {
   const isHeading = HEADING_ANCHOR_RE.test(move.anchor);
   const destFile = SPEC_FILES[move.to_spec] ? path.basename(SPEC_FILES[move.to_spec]) : `${move.to_spec}`;
-  const pointer = `**MOVED to \`${destFile}\` ${move.to_anchor} — ${dateStr} (Spec 124 §4 R-I(4)).** ${move.classification === 'HISTORICAL' ? 'Historical; ' : ''}${move.evidence}`.trim();
+  const pointer = `**MOVED to \`${destFile}\` ${move.to_anchor} — ${dateStr} (Spec 124 §4 R-I(4)).** ${move.classification === 'HISTORICAL' ? 'Historical; ' : move.classification === 'REGISTER' ? 'LIVE register rows, moved for the byte budget, still in force; ' : ''}${move.evidence}`.trim();
   if (isHeading) {
     return [move.anchor, '', pointer, ''];
   }
@@ -714,7 +732,7 @@ function doCheck() {
     for (const p of checkSystemMapDependencies(specTexts)) problems.push(`arm(v) ${p}`);
   }
 
-  // (vi) totality — every appendix in APPENDIX_SPECS (122a, 124a).
+  // (vi) totality — every appendix in APPENDIX_SPECS (122a, 124a, 69a).
   for (const appendixId of APPENDIX_SPECS) {
     const { undeclared } = checkTotality(specTexts[appendixId], manifest.moves);
     for (const u of undeclared) problems.push(`arm(vi) UNDECLARED MOVE — ${appendixId} heading "${u.text}" has no moves[] row`);

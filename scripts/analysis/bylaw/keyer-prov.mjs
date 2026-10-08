@@ -163,7 +163,7 @@ export function checkRulingIds({ spec69Text = '', ledger = null, adjudications =
   const v = [];
   const rulings = parseRulings(spec69Text);
   const counts = { rulings: rulings.size, ledger_rows: 0, adjudications: 0 };
-  if (rulings.size === 0) v.push(violation('rulings_empty', 'docs/specs/01-pipeline/69_mcbylaw_policy.md', 'the register parses to 0 rulings'));
+  if (rulings.size === 0) v.push(violation('rulings_empty', 'docs/specs/01-pipeline/69a_mcbylaw_register.md', 'the register parses to 0 rulings'));
   for (const id of duplicateRulings(spec69Text)) v.push(violation('ruling_duplicate', id, 'two register rows open with this id'));
   const rows = ledger && Array.isArray(ledger.rows) ? ledger.rows : [];
   rows.forEach((r, i) => {

@@ -22,6 +22,7 @@ const CL = await load('scripts/analysis/bylaw/clause.mjs');
 const XR = await load('scripts/analysis/bylaw/xref.mjs');
 const SH = await load('scripts/analysis/bylaw/shape.mjs');
 const KP = await load('scripts/analysis/bylaw/keyer-prov.mjs');
+const UN = await load('scripts/analysis/bylaw/universe.mjs');
 const SEEDS = path.join(ROOT, 'scripts', 'seeds', 'bylaw');
 const readJson = (rel: string) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
 
@@ -57,7 +58,7 @@ describe('the S6 gates on the real tree (nothing authored yet → pass, every ro
   const vocab = readJson('scripts/seeds/bylaw/vocab.json');
   const adjudications = readJson('scripts/seeds/bylaw/adjudications.json');
   const external = readJson('scripts/seeds/bylaw/external.json');
-  const spec69Text = fs.readFileSync(path.join(ROOT, 'docs/specs/01-pipeline/69_mcbylaw_policy.md'), 'utf8');
+  const spec69Text: string = UN.readSpec69Rulings(ROOT);
   const ledgerPath = path.join(SEEDS, 'ratchet-exceptions.json');
   const ledger = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) : { rows: [] };
   const shards = AU.loadAuthored(ROOT);
@@ -85,5 +86,21 @@ describe('the S6 gates on the real tree (nothing authored yet → pass, every ro
   });
   it('Spec 69 has no duplicate ruling id (lesson 10: the last row would silently win in parseRulings)', () => {
     expect(KP.duplicateRulings(spec69Text)).toEqual([]);
+  });
+});
+
+// Spec 69 §1 register moved to 69a (2026-10-07, spec-split move M19). Every ruling reader reads 69a + 69 through ONE
+// helper, so the move cannot silently shrink the register a gate parses (G-PROV's "0 rulings FAILS" catches only an
+// empty parse; a partial one would pass).
+describe('the Spec 69 register lives in 69a and every reader sees all of it (move M19)', () => {
+  const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+  it('69a holds the M-rows, Spec 69 holds none, and the helper text parses every M- and P-id', () => {
+    const reg = UN.parseRulings(read(UN.SPEC69A_REL));
+    const pol = UN.parseRulings(read(UN.SPEC69_REL));
+    const all = UN.parseRulings(UN.readSpec69Rulings(ROOT));
+    expect([...reg.keys()].filter((id: string) => id.startsWith('M-')).length).toBeGreaterThan(50);
+    expect([...pol.keys()].filter((id: string) => id.startsWith('M-'))).toEqual([]);
+    for (const id of ['M-0', 'M-19', 'M-56', 'M-72', 'P-1', 'P-8']) expect(all.has(id), id).toBe(true);
+    expect(all.size).toBe(reg.size + pol.size);
   });
 });

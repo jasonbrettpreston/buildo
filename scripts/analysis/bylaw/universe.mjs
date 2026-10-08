@@ -14,6 +14,7 @@
 //   checkUniverse({...})                          → {status: pass|fail|not_run, pass, violations, checked, counts}
 //   acceptUniverse({root, ruling})                → writes universe.lock.json + a ratchet-exceptions.json row
 //   parseRulings(spec69Text)                      → Map(id → 'RATIFIED' | 'PROPOSED' | 'RETIRED')
+//   readSpec69Rulings(root)                       → the 69a register + Spec 69 text every ruling reader parses (M19)
 //   selfTest()
 //
 // Reason codes (closed):
@@ -47,6 +48,14 @@ export const UNIVERSE_REL = 'scripts/seeds/bylaw/universe.json';
 export const LOCK_REL = 'scripts/seeds/bylaw/universe.lock.json';
 export const LEDGER_REL = 'scripts/seeds/bylaw/ratchet-exceptions.json';
 export const SPEC69_REL = 'docs/specs/01-pipeline/69_mcbylaw_policy.md';
+// Spec 69's §1 register (the M-rows + dated notes) lives in 69a since spec-split move M19 (2026-10-07); the §5 P-rows
+// stay in Spec 69. Every ruling reader goes through readSpec69Rulings, never a single-file read.
+export const SPEC69A_REL = 'docs/specs/01-pipeline/69a_mcbylaw_register.md';
+
+/** The text every Spec 69 ruling reader parses: the 69a register, then Spec 69 (P-rows). Throws if either is missing. */
+export function readSpec69Rulings(root) {
+  return [SPEC69A_REL, SPEC69_REL].map((rel) => fs.readFileSync(path.join(root, rel), 'utf8')).join('\n');
+}
 
 export const REASON_CODES = Object.freeze([
   'toc_root_missing',
@@ -451,7 +460,7 @@ export function universeInputs({ root, slice, pages, adoptionId }) {
     pageSet: JSON.parse(fs.readFileSync(path.join(seeds, 'page-set.json'), 'utf8')),
     pages,
     rows: slice.rows,
-    spec69Text: fs.readFileSync(path.join(root, SPEC69_REL), 'utf8'),
+    spec69Text: readSpec69Rulings(root),
     universe: JSON.parse(fs.readFileSync(path.join(root, UNIVERSE_REL), 'utf8')),
     vocab: JSON.parse(fs.readFileSync(path.join(seeds, 'vocab.json'), 'utf8')),
   };
@@ -480,7 +489,7 @@ export function acceptUniverse({ root, ruling, inputs }) {
   // ledger first, then the lock: a failure between the two leaves an orphan pin row (RED, re-accept repairs it),
   // never a lock that no ledger row authorizes
   const ledger = readJson(path.join(root, LEDGER_REL), { rows: [] });
-  ledger.rows = [...(ledger.rows || []), { adjudicated_by: 'operator', adoption_id: inputs.adoptionId, anchor: `**${ruling}**`, in_scope: r.counts.in_scope, in_scope_ids_sha256: r.counts.in_scope_ids_sha256, kind: 'universe_pin', ruling, spec_ref: SPEC69_REL }];
+  ledger.rows = [...(ledger.rows || []), { adjudicated_by: 'operator', adoption_id: inputs.adoptionId, anchor: `**${ruling}**`, in_scope: r.counts.in_scope, in_scope_ids_sha256: r.counts.in_scope_ids_sha256, kind: 'universe_pin', ruling, spec_ref: SPEC69A_REL }];
   writeAtomic(path.join(root, LEDGER_REL), stableStringify(ledger));
   writeAtomic(path.join(root, LOCK_REL), stableStringify(lock));
   return { counts: r.counts, lock };

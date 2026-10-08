@@ -32,6 +32,8 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const REGISTRY_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/execution-posture-disposition.json');
 const SCHEMA_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/step.schema.json');
 const SPEC124_PATH = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_standard_policy.md');
+// R-X (with R-A..R-AI) lives in Spec 124a §B7 since the P1-C9 register move (M18, 2026-10-07): live rows, read with Spec 124.
+const SPEC124A_PATH = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
 
 /** The four `execution.*` fields this registry covers — every one a frozen ENUM. */
 const POSTURE_FIELDS = ['on_row_error', 'on_batch_error', 'on_check_error', 'on_degrade'] as const;
@@ -142,7 +144,7 @@ describe('execution-posture-disposition (Spec 124 R-X/R-AX) — every execution.
   });
 
   it('(5) every `descriptive`/`retire` row is named in Spec 124\'s own R-X/R-AX text — a spec reader, not just a reader of this file, learns the declaration is inert', () => {
-    const spec = fs.readFileSync(SPEC124_PATH, 'utf8');
+    const spec = [SPEC124_PATH, SPEC124A_PATH].map((p) => fs.readFileSync(p, 'utf8')).join('\n');
     let namedCount = 0;
     for (const field of POSTURE_FIELDS) {
       for (const [, row] of Object.entries(registry.declarations[field] || {})) {
