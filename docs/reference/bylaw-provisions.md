@@ -5,7 +5,7 @@
 > byte-compares). Gate states and the five lines are printed by `--check` / `--validate`, never stored here.
 > A `pending` row is not yet authored: never quote it to a buyer as authoritative (Spec 69 P-1).
 
-- validated_against: adoption-3 · generator bylaw-provisions-v1 · slicer slice-v2 · normalizer norm-v1 · vocab vocab-v3
+- validated_against: adoption-3 · generator bylaw-provisions-v1 · slicer slice-v2 · normalizer norm-v1 · vocab vocab-v4
 - rows 1328 · in scope 1090 · out of scope 238 · awaiting a ruling 0 · unscoped 0 · clause units 4198 · source defects disclosed 9
 - row states (in scope): complete 0 · pending 1090 (stale 0) · failed 0
 - feeds (Spec 69 M-52), over 0 agreed LIMIT/PERMIT/PROHIBIT unit(s): none yet

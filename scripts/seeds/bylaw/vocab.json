@@ -1,6 +1,6 @@
 {
   "$comment": "McBylaw closed vocabularies (Spec 68 §6.5; S5). Every value a row, unit, rule or gate may carry comes from here; 'none' is written, never omitted. Versioned: a change bumps `version` and is reviewed. Evaluator-shaped views (building_type_residential, building_type_parent, lot_condition_threshold) are DERIVED from this file by scripts/analysis/bylaw/vocab.mjs evaluatorVocab(), never kept twice.",
-  "version": "vocab-v3",
+  "version": "vocab-v4",
   "max_snapshot_age_days": 90,
   "archetype": ["LIMIT", "PERMIT", "PROHIBIT", "REQUIRE", "DEFINE", "DISAPPLY", "INCLUDE", "PREVAILING", "PROCEDURAL", "UNUSUAL"],
   "bound": ["min", "max", "exact"],
@@ -304,6 +304,17 @@
   "field_failure_reason": ["verbatim_changed", "consolidation_mismatch", "eval_conflict"],
   "disclosure_reason": { "source_defect": ["garbled_character", "lead_in_without_items", "division_repeat", "marker_typo", "numbering_repeat", "heading_not_in_toc"] },
   "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "label_letter_unknown", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
+  "layer3": {
+    "$comment": "McBylaw Layer 3 report-field statuses and reasons (Spec 68 §11.1, Spec 69 M-64; PRE-LOCK FIX 2026-10-07 after the Phase 3 trial K2/K3). Equal to Spec 68 §11.1 in both directions. A parameterised status is written <status>:<param> (a clause, scenario, rule, target, form, field or input). A Layer 2 not_evaluated_reason (the top-level list) propagates unchanged at either level. Consumed by the planned Layer 3 step and the G-SHAPE status arm; no code reads it yet.",
+    "scenario_status": ["permitted", "not_permitted", "collapsed_into", "not_evaluated"],
+    "field_status": ["computed", "unregulated", "unlimited", "not_applicable", "not_buildable", "not_evaluated"],
+    "not_permitted_reason": ["requires_severance"],
+    "scenario_not_evaluated_reason": ["ambiguous_zone", "coa_factor_unfitted"],
+    "field_not_evaluated_reason": ["layer2_conflict", "no_producer", "insufficient_comps", "target_not_keyed"],
+    "propagates": "not_evaluated_reason",
+    "trial_name_map": { "layer1_unit_missing": "target_not_keyed", "lot_data_unavailable": "missing_input", "lot_flag_missing": "missing_input", "map_area_membership_unavailable": "map_area_not_held" },
+    "derived_unit": { "m2/unit": "Layer 3 report targets only (avg_unit_gfa_sqm): m2 ÷ units; never a literal, dsl_target or Layer 1 unit (Spec 69 M-72 note)" }
+  },
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
