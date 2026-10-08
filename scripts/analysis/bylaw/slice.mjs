@@ -357,7 +357,10 @@ export function slicePage(input) {
     if (rs.length !== 1) continue;
     const [s0, e0] = rs[0];
     const t = text.slice(s0, e0);
-    const letters = node.origin === 'table_cell' ? 0 : (node.path.replace(/~[a-z_0-9]+/g, '').match(/\(([^)]+)\)/g) || []).length - (node.parent.origin === 'root' && symClass(node.symbol) === 'N' ? 1 : 0);
+    // Letter levels already used above this cell = its non-numeric path groups ((3)(A) → 1: the list inside starts at (i)).
+    // Counting the regulation number too started an (A) cell's list at (a) (DeepSeek lens, executed 2026-10-07; latent on
+    // the pinned pages: 0 units changed).
+    const letters = node.origin === 'table_cell' ? 0 : (node.path.replace(/~[a-z_0-9]+/g, '').match(/\(([^)]+)\)/g) || []).filter((g) => !/^\(\d+\)$/.test(g)).length;
     if (letters >= LEVELS.length) continue;
     const lead = t.length - t.trimStart().length;
     const parsed = parseClauses(t.slice(lead), node.path, { atStart: node.origin === 'table_cell', cell: true, startLevel: Math.max(0, letters) });

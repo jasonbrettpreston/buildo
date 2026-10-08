@@ -150,3 +150,24 @@ describe('k7.mjs — the keying list over a fixture census + slice', () => {
     expect(() => K7.buildK7({ adoptionId: 'a', census: { ...census, excepted: { lots: 0 } }, groups: [], slice: fixtureSlice() })).toThrow(/census_invalid/);
   });
 });
+
+describe('inline-list depth under a lettered cell (DeepSeek error-paths lens, CRITICAL; executed 2026-10-07)', () => {
+  // The inline split's start level counted the regulation number as a letter level under any cell whose parent is
+  // not the article root: an (A) cell started at (a) instead of (i). On the 64 pinned pages the fix changes no unit
+  // (27,964 units, 0 added / removed / re-hashed): every inline split there sits under a regulation number or a table
+  // cell. It is latent, and these fixtures pin the rule.
+  const reg = (clauses: Json[]) => SL.sliceSnapshot({ pages: [ST.fixturePage({ articles: [{ id: '10.20.40.70', regs: [{ clauses, n: 3, text: 'Lead:', title: 'T' }], title: 'S' }] })] });
+  it('an (A) cell holding "(i) …; (ii) …" splits into (3)(A)(i) and (3)(A)(ii)', () => {
+    const s = reg([{ sym: 'A', text: 'the setback is: (i) 1.2 metres on one side; and (ii) 0.9 metres on the other side.' }, { sym: 'B', text: 'y.' }]);
+    expect(s.units.map((u: Json) => u.unit_id)).toEqual(['10.20.40.70(3)#(3)(A)(i)', '10.20.40.70(3)#(3)(A)(ii)', '10.20.40.70(3)#(3)(B)']);
+    expect(s.numbering.unproven).toEqual([]);
+  });
+  it('an (A)(i) cell holding "(a) …; (b) …" splits at the lower-case level', () => {
+    const s = reg([{ clauses: [{ sym: 'i', text: 'for a lot: (a) 1.2 metres; or (b) 0.9 metres.' }, { sym: 'ii', text: 'z.' }], sym: 'A', text: 'the setback is:' }]);
+    expect(s.units.map((u: Json) => u.unit_id)).toEqual(['10.20.40.70(3)#(3)(A)(i)(a)', '10.20.40.70(3)#(3)(A)(i)(b)', '10.20.40.70(3)#(3)(A)(ii)']);
+  });
+  it('the same holds under a Ch.900 list group: (28)[SSP](A) splits its (i) / (ii)', () => {
+    const s = sliceOf([exception(28, [{ sym: 'A', text: 'The minimum side yard setback is: (i) 1.2 metres; and (ii) 0.9 metres.' }], null)]);
+    expect(s.units.filter((u: Json) => u.regulation_id === '900.3.10(28)').map((u: Json) => u.unit_id)).toEqual(['900.3.10(28)#(28)[SSP](A)(i)', '900.3.10(28)#(28)[SSP](A)(ii)', '900.3.10(28)#(28)[PBS]']);
+  });
+});
