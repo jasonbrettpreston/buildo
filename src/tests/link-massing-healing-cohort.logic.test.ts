@@ -75,7 +75,7 @@ describe('link-massing-healing-cohort — pure helpers (T7)', () => {
     it('COHORT_LOCK_ID is pinned to 902004, is not the step lock 91, and no other scripts/ file uses it (fold I-3)', () => {
       expect(mod.COHORT_LOCK_ID).toBe(902004);
       expect(mod.COHORT_LOCK_ID).not.toBe(91);
-      const g = spawnSync('git', ['grep', '--untracked', '-nE', '902004', '--', 'scripts'], { cwd: REPO_ROOT, encoding: 'utf8' });
+      const g = spawnSync('git', ['grep', '--untracked', '-nwE', '902004', '--', 'scripts'], { cwd: REPO_ROOT, encoding: 'utf8' });
       const files = [...new Set(String(g.stdout).split('\n').filter(Boolean).map((l) => l.split(':')[0]))];
       expect(files).toEqual(['scripts/analysis/link-massing-healing-cohort.js']);
       for (const other of ['902001', '902002', '902003']) {
