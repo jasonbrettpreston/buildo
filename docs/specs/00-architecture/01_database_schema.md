@@ -19,7 +19,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 - **Edge Cases:** Composite PK requires both `permit_num` AND `revision_num` in all queries; `tier` CHECK rejects values outside 1-3; `confidence` CHECK rejects values outside 0-1; `est_const_cost` DECIMAL(15,2) overflows beyond 13 integer digits; migration runner is forward-only with no rollback. CoA FK to permits is intentionally omitted (composite PK incompatible with single-column reference) — enforced via CQA Tier 2 referential audit instead. PostgreSQL ENUMs deferred for `status` columns to accommodate upstream Toronto Open Data changes.
 
 <!-- DB_SCHEMA_START -->
-### Tables (87)
+### Tables (88)
 
 | Table | Columns | Indexes |
 |-------|---------|--------|
@@ -30,6 +30,7 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `archetype_cost_rates` | 7 | 0 |
 | `building_footprints` | 13 | 4 |
 | `coa_applications` | 146 | 23 |
+| `coa_notice_variances` | 29 | 3 |
 | `cost_estimates` | 16 | 1 |
 | `data_quality_snapshots` | 73 | 2 |
 | `device_tokens` | 6 | 2 |
@@ -356,6 +357,40 @@ Provide a normalized PostgreSQL schema storing 237K+ building permits with chang
 | `max_build_fsi` | NUMERIC(6,3) | YES | - |
 | `coa_fsi` | NUMERIC(6,3) | YES | - |
 | `realized_fsi_p90` | NUMERIC(6,3) | YES | - |
+
+#### `coa_notice_variances` (29 columns)
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|--------|
+| `variance_key` | TEXT | NO | - |
+| `source_family` | TEXT | NO | - |
+| `application_number` | CHARACTER VARYING(50) | NO | - |
+| `item_ordinal` | SMALLINT | NO | - |
+| `hearing_date` | DATE | NO | - |
+| `decision_mailed_on` | DATE | YES | - |
+| `decision` | TEXT | NO | - |
+| `decision_source` | TEXT | NO | - |
+| `cited_bylaw` | TEXT | YES | - |
+| `citation_kind` | TEXT | NO | - |
+| `regulation_id_as_cited` | TEXT | YES | - |
+| `exception_ref` | TEXT | YES | - |
+| `zoning_as_stated` | TEXT | YES | - |
+| `target` | TEXT | NO | - |
+| `target_status` | TEXT | NO | - |
+| `bound` | TEXT | YES | - |
+| `required_value` | NUMERIC | YES | - |
+| `required_unit` | TEXT | YES | - |
+| `proposed_value` | NUMERIC | YES | - |
+| `proposed_unit` | TEXT | YES | - |
+| `parse_status` | TEXT | NO | - |
+| `parse_confidence` | TEXT | NO | - |
+| `qualified` | BOOLEAN | NO | - |
+| `source_sha256` | CHARACTER(64) | NO | - |
+| `source_page` | INTEGER | NO | - |
+| `extractor_version` | TEXT | NO | - |
+| `vocab_version` | TEXT | NO | - |
+| `retired_at` | TIMESTAMP WITH TIME ZONE | YES | - |
+| `loaded_at` | TIMESTAMP WITH TIME ZONE | NO | now() |
 
 #### `cost_estimates` (16 columns)
 

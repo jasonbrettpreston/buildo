@@ -1,0 +1,82 @@
+{
+  "$comment": "SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D5. Closed sets of the CoA decision-notice ingestor. The CHECK-backed sets equal the CHECK constraints of migrations/252_coa_notice_variances.sql and the parser constants, both directions (src/tests/steps/load_coa_notices/vocab-check-parity.infra.test.ts). The emits-only sets equal the emits skeleton keys. Bump `version` whenever any value changes; it is stamped on every row as vocab_version.",
+  "version": "coa-vocab-1",
+  "check_backed": {
+    "source_family": ["toronto_ca_decision_pdf"],
+    "parse_status": ["pair", "no_required_value", "no_proposed_value", "unit_family_mismatch", "multi_value_ambiguous", "side_ambiguous", "no_split"],
+    "parse_confidence": ["high", "medium", "low"],
+    "target_status": ["mapped", "ambiguous", "unmapped"],
+    "decision": ["approved", "approved_with_conditions", "refused", "unknown"],
+    "decision_source": ["committee", "delegated"],
+    "citation_kind": ["chapter_regulation", "exception_clause", "former_bylaw_section", "none"],
+    "unit": ["m", "cm", "m2", "pct", "ratio", "storeys", "spaces", "units"],
+    "bound": ["min", "max", "exact"]
+  },
+  "emits_only": {
+    "doc_status": ["parsed", "sha_mismatch", "http_error", "timeout", "too_large", "extract_error", "no_text_layer", "no_notices_found", "excluded"],
+    "notice_status": ["variance_section_parsed", "no_variance_section", "not_minor_variance", "signature_page_duplicate", "duplicate_superseded", "duplicate_same_date_conflict"]
+  },
+  "unit_relabel": {
+    "m": "m",
+    "metre": "m",
+    "metres": "m",
+    "meter": "m",
+    "meters": "m",
+    "cm": "cm",
+    "centimetres": "cm",
+    "m2": "m2",
+    "m²": "m2",
+    "m�": "m2",
+    "metres²": "m2",
+    "square metre": "m2",
+    "square metres": "m2",
+    "sq m": "m2",
+    "sq. m": "m2",
+    "sq.m": "m2",
+    "%": "pct",
+    "percent": "pct",
+    "per cent": "pct",
+    "times": "ratio",
+    "storey": "storeys",
+    "storeys": "storeys",
+    "space": "spaces",
+    "spaces": "spaces",
+    "unit": "units",
+    "units": "units",
+    "dwelling unit": "units",
+    "dwelling units": "units"
+  },
+  "unit_family": {
+    "m": "length",
+    "cm": "length",
+    "m2": "area",
+    "pct": "pct",
+    "ratio": "ratio",
+    "storeys": "storeys",
+    "spaces": "count",
+    "units": "count"
+  },
+  "side_lexicon": {
+    "proposed": ["to permit", "proposed", "will be", "will have", "will encroach", "will project", "will cover", "will contain", "in this case", "the altered", "the new", "the existing"],
+    "required": ["required", "requires", "permitted", "permits", "maximum", "minimum", "shall", "must", "not exceed", "may encroach", "may project"]
+  },
+  "bound_phrases": {
+    "min": ["minimum", "at least", "not less than"],
+    "max": ["maximum", "not exceed", "not more than", "no more than", "up to"],
+    "exact": ["exactly"]
+  },
+  "compound_markers": ["plus", "by", "for each", "no less than", "where", "or"],
+  "qualified_markers": ["erected before", "for a corner lot", "if ", "where the lot", "provided that", "except", "despite"],
+  "segmentation": {
+    "$comment": "Structural constants of the notice text layout (not tunables): page-furniture lines at each page edge, the head window that decides 'minor variance', the decision-paragraph window, and the zone-label cap.",
+    "edge_lines": 2,
+    "head_window_chars": 400,
+    "decision_window_lines": 3,
+    "zone_label_max_chars": 120
+  },
+  "decision_lexicon": {
+    "refused": ["is refused", "not approved", "refused"],
+    "approved_with_conditions": ["approved on condition", "approved subject to", "approved with conditions"],
+    "approved": ["is approved", "application is approved", "approved"]
+  }
+}

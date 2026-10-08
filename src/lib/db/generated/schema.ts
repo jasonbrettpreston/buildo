@@ -1,4 +1,4 @@
-import { pgTable, pgSchema, index, check, bigint, varchar, text, timestamp, foreignKey, pgPolicy, uuid, boolean, unique, serial, date, numeric, integer, smallint, jsonb, doublePrecision, uniqueIndex, bigserial, geometry, primaryKey, pgView, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, pgSchema, index, check, bigint, varchar, text, timestamp, foreignKey, pgPolicy, uuid, boolean, unique, serial, date, numeric, integer, smallint, char, jsonb, doublePrecision, uniqueIndex, bigserial, geometry, primaryKey, pgView, pgMaterializedView, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 // MANUAL PATCH (re-apply after every `npm run db:generate`): drizzle-kit
@@ -2326,3 +2326,59 @@ export const mvMonthlyPermitStats = pgMaterializedView("mv_monthly_permit_stats"
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalValue: bigint("total_value", { mode: "number" }),
 }).as(sql`SELECT date_trunc('month'::text, issued_date::timestamp with time zone)::date AS month, permit_type, count(*)::integer AS permit_count, COALESCE(sum(est_const_cost), 0::numeric)::bigint AS total_value FROM permits WHERE issued_date IS NOT NULL GROUP BY (date_trunc('month'::text, issued_date::timestamp with time zone)), permit_type`);
+
+export const coaNoticeVariances = pgTable("coa_notice_variances", {
+	varianceKey: text("variance_key").primaryKey().notNull(),
+	sourceFamily: text("source_family").notNull(),
+	applicationNumber: varchar("application_number", { length: 50 }).notNull(),
+	itemOrdinal: smallint("item_ordinal").notNull(),
+	hearingDate: date("hearing_date").notNull(),
+	decisionMailedOn: date("decision_mailed_on"),
+	decision: text().notNull(),
+	decisionSource: text("decision_source").notNull(),
+	citedBylaw: text("cited_bylaw"),
+	citationKind: text("citation_kind").notNull(),
+	regulationIdAsCited: text("regulation_id_as_cited"),
+	exceptionRef: text("exception_ref"),
+	zoningAsStated: text("zoning_as_stated"),
+	target: text().notNull(),
+	targetStatus: text("target_status").notNull(),
+	bound: text(),
+	requiredValue: numeric("required_value"),
+	requiredUnit: text("required_unit"),
+	proposedValue: numeric("proposed_value"),
+	proposedUnit: text("proposed_unit"),
+	parseStatus: text("parse_status").notNull(),
+	parseConfidence: text("parse_confidence").notNull(),
+	qualified: boolean().notNull(),
+	sourceSha256: char("source_sha256", { length: 64 }).notNull(),
+	sourcePage: integer("source_page").notNull(),
+	extractorVersion: text("extractor_version").notNull(),
+	vocabVersion: text("vocab_version").notNull(),
+	retiredAt: timestamp("retired_at", { withTimezone: true, mode: 'string' }),
+	loadedAt: timestamp("loaded_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_coa_notice_variances_application").using("btree", table.applicationNumber.asc().nullsLast().op("text_ops")),
+	index("idx_coa_notice_variances_target_live").using("btree", table.target.asc().nullsLast().op("text_ops"), table.targetStatus.asc().nullsLast().op("text_ops")).where(sql`(retired_at IS NULL)`),
+	unique("uq_coa_notice_variances_item").on(table.sourceFamily, table.applicationNumber, table.itemOrdinal),
+	check("chk_cnv_bound", sql`(bound IS NULL) OR (bound = ANY (ARRAY['min'::text, 'max'::text, 'exact'::text]))`),
+	check("chk_cnv_citation_kind", sql`citation_kind = ANY (ARRAY['chapter_regulation'::text, 'exception_clause'::text, 'former_bylaw_section'::text, 'none'::text])`),
+	check("chk_cnv_cited_bylaw", sql`(cited_bylaw IS NULL) OR (cited_bylaw ~ '^[0-9][0-9-]*[A-Z]?$'::text)`),
+	check("chk_cnv_decision", sql`decision = ANY (ARRAY['approved'::text, 'approved_with_conditions'::text, 'refused'::text, 'unknown'::text])`),
+	check("chk_cnv_decision_source", sql`decision_source = ANY (ARRAY['committee'::text, 'delegated'::text])`),
+	check("chk_cnv_item_ordinal", sql`item_ordinal > 0`),
+	check("chk_cnv_pair_values", sql`(parse_status <> 'pair'::text) OR ((required_value IS NOT NULL) AND (proposed_value IS NOT NULL) AND (required_unit IS NOT NULL) AND (proposed_unit IS NOT NULL))`),
+	check("chk_cnv_parse_confidence", sql`parse_confidence = ANY (ARRAY['high'::text, 'medium'::text, 'low'::text])`),
+	check("chk_cnv_parse_status", sql`parse_status = ANY (ARRAY['pair'::text, 'no_required_value'::text, 'no_proposed_value'::text, 'unit_family_mismatch'::text, 'multi_value_ambiguous'::text, 'side_ambiguous'::text, 'no_split'::text])`),
+	check("chk_cnv_proposed_unit", sql`(proposed_unit IS NULL) OR (proposed_unit = ANY (ARRAY['m'::text, 'cm'::text, 'm2'::text, 'pct'::text, 'ratio'::text, 'storeys'::text, 'spaces'::text, 'units'::text]))`),
+	check("chk_cnv_proposed_value", sql`(proposed_value IS NULL) OR (proposed_value >= (0)::numeric)`),
+	check("chk_cnv_required_unit", sql`(required_unit IS NULL) OR (required_unit = ANY (ARRAY['m'::text, 'cm'::text, 'm2'::text, 'pct'::text, 'ratio'::text, 'storeys'::text, 'spaces'::text, 'units'::text]))`),
+	check("chk_cnv_required_value", sql`(required_value IS NULL) OR (required_value >= (0)::numeric)`),
+	check("chk_cnv_source_family", sql`source_family = 'toronto_ca_decision_pdf'::text`),
+	check("chk_cnv_source_page", sql`source_page > 0`),
+	check("chk_cnv_source_sha256", sql`source_sha256 ~ '^[0-9a-f]{64}$'::text`),
+	check("chk_cnv_target_coherent", sql`(target_status = 'mapped'::text) = (target <> ALL (ARRAY['unmapped'::text, 'ambiguous'::text]))`),
+	check("chk_cnv_target_sentinel", sql`(target_status = 'mapped'::text) OR (target = target_status)`),
+	check("chk_cnv_target_status", sql`target_status = ANY (ARRAY['mapped'::text, 'ambiguous'::text, 'unmapped'::text])`),
+	check("chk_cnv_variance_key", sql`variance_key = ((((source_family || '|'::text) || (application_number)::text) || '|'::text) || (item_ordinal)::text)`),
+]);
