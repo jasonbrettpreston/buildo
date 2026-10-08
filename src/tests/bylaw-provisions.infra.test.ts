@@ -60,14 +60,16 @@ describe('pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37
     expect(ps.pages.filter((p: Json) => p.role === 'toc_root').map((p: Json) => p.file)).toEqual(['ZBL_NewProvision_Chapter1.htm']);
   });
 
-  it('M-37 and every M-47 section and carve-in clause page is pinned; Ch.900 exception pages are not (M-15)', () => {
+  it('M-37 and every M-47 section and carve-in clause page is pinned; the Ch.900 exception pages are pinned by Q-K7a (M-15 note 2026-10-07)', () => {
     const m47 = ['1.20', '1.40', '150.15', '150.20', '150.22', '150.25', '150.30', '150.45', '150.48', '150.50', '200.10', '200.15', '200.20', '200.25', '970.30', '995.20', '995.30', '995.41', '995.50', '995.60'];
     for (const s of ['600.60', ...m47]) expect(sections.has(s)).toBe(true);
     for (const ch of ['220', '230']) expect([...sections].some((s) => String(s).startsWith(`${ch}.`))).toBe(true);
     const carve = ps.pages.flatMap((p: Json) => p.carve_in || []).sort();
     expect(carve).toEqual(['15.10.40.50', '40.10.20.10', '40.10.40.10', '80.10.40.40', '80.5.40.40']);
     for (const s of ['150.13', '970.10']) expect(sections.has(s)).toBe(true); // pinned in Phase 0, never sliced (M-47 defect)
-    for (const s of ['900.2', '900.3', '900.4', '900.5', '900.6']) expect(sections.has(s)).toBe(false);
+    // Operator Q-K7a 2026-10-07 (Spec 69 M-15 dated note): the residential exception pages are pinned for Phase 2 prep.
+    for (const s of ['900.2', '900.3', '900.4', '900.5', '900.6']) expect(ps.pages.find((p: Json) => p.section === s)?.basis).toBe('Q-K7a operator 2026-10-07');
+    expect(ps.phase0_not_carried).toEqual([]);
     // Operator S3 ruling 2026-10-07 (M-47 note): Ch.230 = residential sections only.
     // Ch.230: 230.5/.10/.90 live; the six zone-category sections are RETIRED (pinned, sha-checked, rows scoped out at S5).
     // Operator ruling 2026-10-07 (M-37 note, S4 rework): 600.10 and 600.50 are pinned RETIRED (adoption-2);

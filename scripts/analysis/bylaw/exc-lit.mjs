@@ -126,6 +126,7 @@ export const ALLOW_LIST = deepFreeze([
   { path: 'scripts/analysis/bylaw/definitions.mjs', function: 'FIXTURES', reason: 'self_test_fixture', note: 'G-READ definitions arm known-bad / good-twin fixtures (input_fidelity records keyed by definition id)' },
   { path: 'scripts/analysis/bylaw/definitions.mjs', function: 'matcherSelfTest', reason: 'self_test_fixture', note: 'definition-matcher fixtures: the expected term ids of the fixture rows' },
   { path: 'scripts/analysis/bylaw/exc-lit.mjs', function: 'selfTest', reason: 'self_test_fixture', note: "G-EXC-LIT's own known-bad sources (an id inside SQL text)" },
+  { path: 'scripts/analysis/bylaw/evaluate.mjs', function: 'precedenceFixtures', reason: 'self_test_fixture', note: 'G-EVAL (c) precedence fixtures (Spec 68 §7.5 rules 0–7); the fixture exceptions are declared authored per ruling (d)' },
   { path: 'scripts/analysis/bylaw/oracle-b/compare.mjs', function: 'bandUnit', reason: 'fixture_harness', note: 'the oracle A/B harness picks the RD band fixture unit from src/tests/fixtures/bylaw/eval-units.json' },
 ]);
 

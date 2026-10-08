@@ -42,6 +42,11 @@ const vocab = FX.REAL_VOCAB;
 const shardAt = (slice: Json) => FX.shardOf([clone(FX.GOOD['LIMIT×band']), clone(FX.GOOD['LIMIT×literal'])], { key: 'ch10_20/10.20.40.70', slice });
 const statusOf = (slice: Json, shards: Json[]) => SH.checkShape({ slice, shards, vocab }).rows.find((r: Json) => r.regulation_id === '10.20.40.70(3)').row_status;
 const baseLockText = fs.readFileSync(path.join(ROOT, LOCK_REL), 'utf8');
+// The A9 base is the CURRENT adoption (working tree = what a pre-commit sees staged), so its blob oracle is git's own hash of
+// the working-tree file — never HEAD, which lags the adoption mid-change. The git-witness suite below asserts only on the
+// already-COMMITTED lock (HEAD's blob), so every test holds both mid-change (staged) and committed.
+const git = (...args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }); // the lock is MBs since adoption-4
+const baseLockOid = git('hash-object', '--no-filters', LOCK_REL).trim();
 const nextId = 'adoption-next';
 const adoptions = [...readJson('scripts/seeds/bylaw/adoptions.json').adoptions, { adoption_id: nextId }];
 const GW = await load('scripts/analysis/bylaw/git-witness.mjs');
@@ -76,7 +81,7 @@ describe('red-team A9 on the real snapshot: an adopted text change to an authore
     expect(rec.stale).toEqual([BAND]);
     expect(rec.unflagged_changes).toEqual([]);
     expect(rec.sc7).toEqual({ changed_pinned: 1, newly_stale: 1, equal: true });
-    expect(rec.base_lock_blob).toBe(execFileSync('git', ['rev-parse', `HEAD:${LOCK_REL}`], { cwd: ROOT, encoding: 'utf8' }).trim());
+    expect(rec.base_lock_blob).toBe(baseLockOid);
   });
   it('the arm, bound to the adoption, passes with the unit counted stale (pending never fails a gate)', () => {
     const shard = shardAt(baseSlice);
@@ -130,6 +135,8 @@ describe('G-AUDIT git witness on this repository (-z, commit ids only)', () => {
   const w = AU.gitAuditWitness ? AU.gitAuditWitness(ROOT) : null;
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
   const parent = execFileSync('git', ['rev-parse', 'HEAD~1'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  const headLockOid = git('rev-parse', `HEAD:${LOCK_REL}`).trim(); // the committed lock — independent of the working tree
+  const headLockText = git('cat-file', 'blob', headLockOid);
   it('isAncestor: HEAD~1 → HEAD true, HEAD → HEAD~1 false, unknown commit → null', () => {
     expect(w.isAncestor(parent, head)).toBe(true);
     expect(w.isAncestor(head, parent)).toBe(false);
@@ -140,15 +147,16 @@ describe('G-AUDIT git witness on this repository (-z, commit ids only)', () => {
     expect(cs.length).toBeGreaterThan(0);
     for (const c of cs) expect(c).toMatch(/^[0-9a-f]{40}$/);
     const blob = w.blobAt(head, LOCK_REL);
-    expect(blob).toBe(SA.gitBlobOid(Buffer.from(baseLockText, 'utf8')));
-    expect(w.readBlob(blob)).toBe(baseLockText);
+    expect(blob).toBe(headLockOid);
+    expect(SA.gitBlobOid(Buffer.from(headLockText, 'utf8'))).toBe(blob);
+    expect(w.readBlob(blob)).toBe(headLockText);
     expect(w.blobAt(head, 'scripts/seeds/bylaw/expert-audit/no-such.json')).toBe(null);
   });
   it('lsTree gives path + blob id; readBlobs batches; pathsEver lists added paths; the base lock is a committed ancestor of HEAD', () => {
     const tree = w.lsTree(head, 'scripts/seeds/bylaw');
     const lock = tree.find((x: Json) => x.path === LOCK_REL);
     expect(lock.oid).toBe(w.blobAt(head, LOCK_REL));
-    expect(w.readBlobs([lock.oid, '0'.repeat(40)]).get(lock.oid)).toBe(baseLockText);
+    expect(w.readBlobs([lock.oid, '0'.repeat(40)]).get(lock.oid)).toBe(headLockText);
     expect(w.readBlobs([lock.oid, '0'.repeat(40)]).get('0'.repeat(40))).toBe(null);
     expect(w.pathsEver('scripts/seeds/bylaw')).toContain(LOCK_REL);
     const at = w.commitsTouching(LOCK_REL).filter((c: string) => w.blobAt(c, LOCK_REL) === lock.oid);

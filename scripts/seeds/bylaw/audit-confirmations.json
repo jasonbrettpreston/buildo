@@ -1,0 +1,6 @@
+{
+  "$comment": "G-AUDIT explicit confirmations (Spec 68 §9 G-AUDIT; Spec 69 M-29). Each entry forces the named row's interpretive reading onto the expert's confirmation list when the row exists in the table. Data, not code (G-EXC-LIT: no regulation id as an executable literal in McBylaw modules).",
+  "entries": [
+    { "regulation_id": "900.1.10(3)", "confirmations": ["implicit_override:900.1.10(3)"], "why": "the expert must confirm the implicit-override reading of 900.1.10(3) (G-AUDIT lane, 2026-10-07)" }
+  ]
+}
