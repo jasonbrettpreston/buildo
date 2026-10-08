@@ -12,9 +12,9 @@
     "69": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 218,
-        "bytes": 77652,
-        "commit": "mcbylaw-merge-2026-10-07"
+        "lines": 225,
+        "bytes": 85499,
+        "commit": "mcbylaw-p3fix-merge-2026-10-07 (69a register split in flight)"
       }
     },
     "122": {
