@@ -1,0 +1,399 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.60.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.60.40(1)#whole",
+      "archetype": "DEFINE",
+      "target": "height_m",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "an ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Measurement rule: in the Residential Zone category, the height of an ancillary building or structure is measured from average grade (not established grade) to its highest point.",
+        "gaps": "Defines height_m for ancillary buildings/structures only; the measurement base is average grade, which differs from the established-grade base of principal-building height. Not a Chapter 800 row, so input_fidelity is not keyed."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "separation_band"
+        ],
+        "if": "distance_to_residential_m < 1.8 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = 2.5 m @(2)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [
+          "separation_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure",
+          "separation_band": "from the residential building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "Maximum height 2.5 m for an ancillary building or structure in the Residential Zone category located less than 1.8 m from the residential building on the lot.",
+        "gaps": "distance_to_residential_m is a scenario value (where the ancillary building is placed); with no placement the arm cannot be selected."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = 4.0 m @(2)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Maximum height 4.0 m for an ancillary building or structure in the Residential Zone category in all other cases (located 1.8 m or more from the residential building).",
+        "gaps": "'In all other cases' is the complement of (2)(A); the 1.8 m threshold does not occur in this unit's text, so no condition is keyed and the lower 2.5 m max of (2)(A) governs where its condition holds."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(3)#whole",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_storeys = 1 storeys @(3)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "An ancillary building or structure in the Residential Zone category may not have more than one storey.",
+        "gaps": "The limit is written as the word 'one'; keyed as the numeral 1 storeys."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(4)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "2.5",
+          "clause": "(4)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "The top of an entrance into an ancillary building or structure in the Residential Zone category may be at most 2.5 m above the average elevation of the ground along the entrance.",
+        "gaps": "No DSL target fits: entrance_height_m is the elevation of a main pedestrian entrance / first floor above established grade, not the height of the top of an ancillary-building entrance (e.g. a garage door) above the ground along it. Keyed UNUSUAL; the 2.5 is the limit itself and no literal_not_expressed_reason fits exactly (threshold_used_in_application is the closest closed value)."
+      },
+      "disclosure": "The top of a door or opening into a garage, shed or other accessory building can be no more than 2.5 m above the ground along that entrance. We do not check entrance heights.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(5)#(5)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "any ancillary building",
+          "deck_or_platform": "a platform, such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "In the Residential Zone category, a platform (deck or similar structure, other than a green roof) may not be located on top of any ancillary building.",
+        "gaps": "Platform placement is a design fact; not evaluated."
+      },
+      "disclosure": "A deck or similar platform (other than a green roof) cannot be built on top of a garage, shed or other accessory building. We do not check platform placement.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.60.40(5)#(5)(B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1.2",
+          "clause": "(5)(B)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform",
+          "parking_space"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure",
+          "deck_or_platform": "a platform, such as a deck",
+          "parking_space": "a parking space"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "status": "not_modelled",
+        "description": "In the Residential Zone category, a platform (other than a green roof) more than 1.2 m above the ground at any point below it may not be attached to an ancillary building or structure containing a parking space.",
+        "gaps": "The 1.2 m test is on the platform's height above the ground below it; no lot_condition threshold token reads platform height, so it is not keyed as condition.if. Design fact; not evaluated."
+      },
+      "disclosure": "A deck or platform more than 1.2 m above the ground cannot be attached to a garage or other accessory building that holds a parking space. We do not check deck placement.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.60.40(1)": {
+      "explanation": "For accessory buildings and structures in residential zones, height is measured from the average ground level to the highest point of the building.",
+      "code_refs": "none"
+    },
+    "10.5.60.40(2)": {
+      "explanation": "An accessory building or structure in a residential zone can be at most 2.5 m tall if it is less than 1.8 m from the house, and at most 4.0 m tall otherwise.",
+      "code_refs": "none"
+    },
+    "10.5.60.40(3)": {
+      "explanation": "An accessory building or structure in a residential zone can have only one storey.",
+      "code_refs": "none"
+    },
+    "10.5.60.40(4)": {
+      "explanation": "The top of the entrance into an accessory building (for example a garage door) can be at most 2.5 m above the ground along that entrance.",
+      "code_refs": "none"
+    },
+    "10.5.60.40(5)": {
+      "explanation": "A deck or similar platform (not a green roof) cannot sit on top of an accessory building, and cannot be attached to a garage or other accessory building holding a parking space if the platform is more than 1.2 m above the ground.",
+      "code_refs": "none"
+    }
+  }
+}

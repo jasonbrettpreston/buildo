@@ -1,0 +1,115 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.50.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.8.50.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m <= 6.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_soft_landscaping_pct = 60.0 pct @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite",
+          "dwelling_unit": "residential building and an ancillary building",
+          "frontage_band": "lot frontage of 6.0 metres or less"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.8.50.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m > 6.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_soft_landscaping_pct = 85.0 pct @(1)(B)"],
+      "literals_not_expressed": [
+        {
+          "literal": "1.5 metres",
+          "clause": "(1)(B)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite",
+          "dwelling_unit": "residential building and an ancillary building",
+          "frontage_band": "lot frontage of greater than 6.0 metres"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.8.50.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["abuts_lane"],
+        "if": "abuts_lane"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_soft_landscaping_pct = 75.0 pct @(1)(C)"],
+      "literals_not_expressed": [
+        {
+          "literal": "1.5 metres",
+          "clause": "(1)(C)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a laneway suite",
+          "dwelling_unit": "residential building and an ancillary building",
+          "abuts_lane": "lot line abutting a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    }
+  ]
+}

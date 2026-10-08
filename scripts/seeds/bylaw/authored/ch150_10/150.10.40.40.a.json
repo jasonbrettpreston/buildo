@@ -1,0 +1,19 @@
+{"schema": "bylaw-authored-v1", "shard": "ch150_10/150.10.40.40", "keyer": "A",
+ "units": [
+  {"unit_id": "150.10.40.40(1)#whole", "archetype": "LIMIT", "target": "interior_floor_area_m2", "bound": "max", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none",
+   "literals_not_expressed": [{"literal": "45 percent", "clause": "(1)", "reason": "cross_reference_value"}, {"literal": "one", "clause": "(1)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": [], "building_types": ["secondary_suite"], "lot_conditions": [], "uses": ["secondary_suite_use"], "evidence": {"secondary_suite": "a secondary suite", "secondary_suite_use": "all secondary suites"}},
+   "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_secondary_suite"], "status": "not_modelled", "description": "The interior floor area of a secondary suite, or of all secondary suites together, must be no more than 45 percent of the interior floor area of the dwelling unit in which it is located.", "gaps": "The bound is 45 percent of the HOST dwelling unit's interior floor area, which is not a DSL input; writing it with interior_floor_area_m2 on both sides would be circular, so no expression is written and the 45 percent is listed as a value relative to another quantity. No zone is named (Chapter 150 applies wherever a secondary suite is permitted)."},
+   "disclosure": "A secondary suite can be at most 45% of the floor area of the home it is in; we do not have your interior floor plan.", "not_an_override": []},
+  {"unit_id": "150.10.40.40(2)#whole", "archetype": "PERMIT", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none",
+   "literals_not_expressed": [{"literal": "one", "clause": "(2)", "reason": "threshold_used_in_application"}],
+   "application": {"zones": [], "building_types": ["detached_house", "secondary_suite"], "lot_conditions": [], "uses": ["secondary_suite_use"], "evidence": {"detached_house": "one storey detached house", "secondary_suite": "a secondary suite", "secondary_suite_use": "the secondary suite may"}},
+   "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_secondary_suite", "current_stories"], "status": "not_modelled", "description": "Despite 150.10.40.40(1), a secondary suite in the basement of a one-storey detached house may occupy the whole basement.", "gaps": "Displaces the 45 percent cap of (1) for this case. 'One storey' is a fact about the house (current_stories) with no condition token; the basement location is a design input."},
+   "disclosure": "In a one-storey detached house, a basement secondary suite may take the whole basement; not evaluated.", "not_an_override": []}
+ ],
+ "rows": {
+  "150.10.40.40(1)": {"explanation": "A secondary suite (or all suites together) can be no more than 45% of the interior floor area of the home it is in.", "code_refs": "none"},
+  "150.10.40.40(2)": {"explanation": "In a one-storey detached house, a secondary suite in the basement may use the entire basement, even if that is more than 45%.", "code_refs": "none"}
+ }}

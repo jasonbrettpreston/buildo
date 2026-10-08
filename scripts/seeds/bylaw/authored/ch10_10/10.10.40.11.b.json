@@ -1,0 +1,52 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.11(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "5.0 vertical units",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "3.0 horizontal units",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "in the R zone",
+          "detached_house": "is a detached house",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    }
+  ]
+}

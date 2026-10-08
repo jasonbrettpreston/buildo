@@ -1,0 +1,53 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.31",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.60.31(1)#whole",
+      "archetype": "DEFINE",
+      "target": "separation_m",
+      "bound": "exact",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Clause 150.7.60.30(1)",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "separation_m < 150.7.60.30(1)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = existing(separation_m; enacted(569-2013)) @(1)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "101-2022",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing ancillary building",
+          "ancillary_building": "lawfully existing ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    }
+  ]
+}

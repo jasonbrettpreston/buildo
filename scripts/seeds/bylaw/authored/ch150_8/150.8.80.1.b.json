@@ -1,0 +1,86 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.8.80.1(1)#(1)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "duplex", "triplex", "fourplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit", "secondary_suite_use"],
+        "evidence": {
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house",
+          "townhouse": "townhouse, duplex, triplex",
+          "duplex": "duplex, triplex, or fourplex",
+          "triplex": "triplex, or fourplex",
+          "fourplex": "fourplex on the same lot",
+          "dwelling_unit": "dwelling units and secondary",
+          "secondary_suite_use": "secondary suites in a"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_laneway_suite"]}
+    },
+    {
+      "unit_id": "150.8.80.1(1)#(1)(B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["laneway_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "laneway_suite": "a laneway suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_laneway_suite"]}
+    },
+    {
+      "unit_id": "150.8.80.1(2)#whole",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["bicycle_parking_spaces = 2 units @(2)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["laneway_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "laneway_suite": "containing a laneway suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["has_laneway_suite"]}
+    }
+  ]
+}

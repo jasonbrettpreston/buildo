@@ -1,0 +1,680 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_7/150.7.60.60",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.60.60(1)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "50 percent",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "deck_or_platform": "a platform, such as a deck"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Interpretation rule: the exterior sides of a platform (deck, porch, balcony or similar) attached to or within 0.3 m of a garden-suite building are not main walls if at least 50% of the sides above the floor are open.",
+    "gaps": "Both numbers are thresholds deciding whether the platform sides count as main walls; no DSL variable exists for platform openness or distance to the suite building. No zone is named in the text."
+   },
+   "disclosure": "A deck or balcony on a garden suite whose sides are at least half open is not treated as part of the suite's walls. We do not model garden-suite platform design.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "10 percent",
+     "clause": "(2)(A)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "garden_suite": "of the garden suite",
+     "deck_or_platform": "a platform without main walls"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.20(11), a platform without main walls on a garden suite is permitted if its area (excluding a green roof) is less than 10% of the garden suite's interior floor area.",
+    "gaps": "The 10% is a strict 'less than' share of the suite's interior floor area; it could be read as a platform_area_m2 limit, but the percentage-of-area form has no clean DSL binding (pct literal against an m2 target), so it is keyed conservatively as a condition of the PERMIT with the literal listed. Displaces 10.5.60.20(11) for these platforms. No zone is named in the text."
+   },
+   "disclosure": "A deck on a garden suite must be smaller than 10% of the suite's floor area. We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "deck_or_platform": "the platform complies"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Condition of the platform permission: the platform must comply with the minimum setbacks and separation distances required for the garden-suite building.",
+    "gaps": "A non-numeric condition referring to the garden-suite setbacks (150.7.60.20) and separation (150.7.60.30); no requirement token fits. No zone is named in the text."
+   },
+   "disclosure": "A garden-suite deck must meet the same setbacks and separation distances as the garden suite itself. We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(C)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.5 metres",
+     "clause": "(2)(C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "deck_or_platform": "of a platform adjacent"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Condition of the platform permission: platform sides next to a side yard must be screened from the abutting lot by an opaque barrier at least 1.5 m high.",
+    "gaps": "The 1.5 m is a minimum barrier height; no DSL target exists for screening height, so the literal is listed. The unit text names no building type (the garden suite is named in (2)(A) and (2)(B), not in this arm), so building_types is 'any'. No zone is named in the text."
+   },
+   "disclosure": "The side of a garden-suite deck facing a side yard needs an opaque screen at least 1.5 m tall. We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(3)#(3)(A)",
+   "archetype": "LIMIT",
+   "target": "platform_height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "platform_height_m = 0.2 m @(3)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "deck_or_platform": "floor of a platform"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.40(5)(B), the floor of a garden-suite platform permitted by (2) (other than a green roof) may be no higher than 0.2 m above the floor of the storey it is accessed from.",
+    "gaps": "The height is measured above the floor of the access storey, not above established grade as platform_height_m's concept states; the closest target is used. The unit text names no building type (the garden suite is named only in (3)(B)), so building_types is 'any'. Displaces 10.5.60.40(5)(B). No zone is named."
+   },
+   "disclosure": "A garden-suite deck floor can be at most 0.2 m above the suite floor it opens from. We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(3)#(3)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "deck_or_platform": "floor of a platform"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "The floor of a garden-suite platform must be located on the first floor of the garden-suite building.",
+    "gaps": "A non-numeric location obligation with no requirement token; keyed as a limitation of the platform permission. 'first floor' is an ordinal, not a numeric limit. Displaces 10.5.60.40(5)(B). No zone is named."
+   },
+   "disclosure": "A garden-suite deck is only allowed at the suite's first floor (no upper-level decks). We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(4)#whole",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 1.5 m @(4)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(4)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "ancillary_building": "of the ancillary building",
+     "deck_or_platform": "a platform without main walls"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 150.7.60.60(2)(B), a platform without main walls (with its stairs or ramps) may encroach up to 1.5 m from the front main wall of the ancillary building into the separation required by 150.7.60.30(1), if the platform is no higher than 0.3 m above the average ground elevation along that wall.",
+    "gaps": "The 0.3 m platform-height threshold has no lot_condition token (building_height_band reads building height, not platform height), so the condition is left 'none' and the literal is listed. The encroachment is into the garden-suite separation distance only. No zone is named."
+   },
+   "disclosure": "A low garden-suite deck (no more than 0.3 m above ground) and its steps may extend up to 1.5 m into the required space between the suite and the house. We do not model garden-suite decks.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(A)",
+   "archetype": "LIMIT",
+   "target": "height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "height_m = 4.0 m @(5)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "ancillary_building": "of the ancillary building"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "A canopy, awning, similar structure or roof over a platform that encroaches into a required separation or setback may be at most 4.0 m above the average ground elevation along the abutting main wall of the ancillary building.",
+    "gaps": "height_m is the closest target, but here it applies to the encroaching canopy/awning/roof, not to the ancillary building itself, and is measured from average ground along the abutting wall rather than established grade. Canopies and awnings have no vocab.uses token. No zone is named."
+   },
+   "disclosure": "A canopy, awning or roof over a garden-suite deck that projects into a setback can be at most 4.0 m high. We do not model garden-suite canopies.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(B)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 1.5 m @(5)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "ancillary_building": "of the ancillary building"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "A canopy, awning or similar structure may encroach up to 1.5 m from the front main wall of the ancillary building into the separation required by 150.7.60.30(1).",
+    "gaps": "The encroachment is into the garden-suite separation distance only. Canopies have no vocab.uses token. No zone is named."
+   },
+   "disclosure": "A canopy or awning on the front of a garden suite may extend up to 1.5 m into the required space between the suite and the house. We do not model garden-suite canopies.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(C)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = min(50 pct × lot_line_setback_m; 1.5 m) @(5)(C)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite",
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "the ancillary building setbacks"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Between a rear or side lot line and the garden-suite building, on a main wall facing a street, a canopy, awning or similar structure may encroach into the setbacks of 150.7.60.20 by the lesser of 50% of the required setback or 1.5 m.",
+    "gaps": "'the lesser of 50 percent of the required building setback or 1.5 metres' is written as min(50 pct × lot_line_setback_m; 1.5 m); the 50 pct literal multiplies the required ancillary setback (lot_line_setback_m), so its unit is a share rather than the target's m. Applies only to a street-facing main wall, which has no lot_condition token, so condition is 'none'. No zone is named."
+   },
+   "disclosure": "On a garden-suite wall facing a street, a canopy or awning may project into the setback by up to half the required setback or 1.5 m, whichever is less. We do not model garden-suite canopies.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(6)#(6)(A)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(6)(A)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(6)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "On a garden-suite building, a pilaster, decorative column, cornice, sill, belt course or similar feature no closer than 0.3 m to a lot line may encroach up to 0.6 m into a setback of 150.7.60.20 or the separation of 150.7.60.30(1).",
+    "gaps": "The 0.3 m lot-line clearance is a precondition (a second target, encroachment_clearance_m, would be needed to express it), listed as a threshold. No zone is named."
+   },
+   "disclosure": "Decorative features on a garden suite (cornices, sills, columns) may project up to 0.6 m into setbacks if they stay at least 0.3 m from the lot line. We do not model these details.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(6)#(6)(B)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(6)(B)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(6)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "2.0 metres",
+     "clause": "(6)(B)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "On a garden-suite building, a chimney breast no closer than 0.3 m to a lot line and no wider than 2.0 m may encroach up to 0.6 m into a setback of 150.7.60.20 or the separation of 150.7.60.30(1).",
+    "gaps": "The 0.3 m clearance and 2.0 m width are preconditions of the encroachment; listed as thresholds. No zone is named."
+   },
+   "disclosure": "A chimney breast on a garden suite (up to 2.0 m wide) may project up to 0.6 m into setbacks if it stays at least 0.3 m from the lot line. We do not model these details.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(7)#(7)(A)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(7)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(7)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Wall-mounted equipment (vents, pipes, utility equipment, satellite dishes, antennae, air conditioners) on a main wall of a garden-suite building, no closer than 0.3 m to a lot line, may encroach up to 0.6 m into the setbacks of 150.7.60.20.",
+    "gaps": "The 0.6 m maximum is stated in the stem (7), so the statement cites (7). The 0.3 m clearance is a precondition, listed as a threshold. No zone is named."
+   },
+   "disclosure": "Wall-mounted equipment such as vents or air conditioners on a garden suite may project up to 0.6 m into setbacks if it stays at least 0.3 m from the lot line. We do not model these details.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.60(7)#(7)(B)",
+   "archetype": "LIMIT",
+   "target": "encroachment_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "encroachment_m = 0.6 m @(7)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(7)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Wall-mounted equipment on the front main wall of a garden-suite building, no closer than 0.3 m to a lot line, may encroach up to 0.6 m into the separation required by 150.7.60.30(1).",
+    "gaps": "The 0.6 m maximum is stated in the stem (7), so the statement cites (7). The 0.3 m clearance is a precondition, listed as a threshold. No zone is named."
+   },
+   "disclosure": "Wall-mounted equipment on the front of a garden suite may project up to 0.6 m into the required space between the suite and the house. We do not model these details.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.60.60(1)": {
+   "explanation": "A deck, porch or balcony attached to (or within 0.3 m of) a garden suite is not counted as part of the suite's walls if at least half of its sides are open.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(2)": {
+   "explanation": "A garden suite can have an open deck or platform if it is smaller than 10% of the suite's floor area, meets the suite's setbacks and separation distances, and is screened from neighbouring side yards by an opaque barrier at least 1.5 m high.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(3)": {
+   "explanation": "A garden-suite deck must be at the suite's first floor, no more than 0.2 m above the floor it opens from.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(4)": {
+   "explanation": "A low garden-suite deck (no more than 0.3 m above the ground) and its steps or ramp may extend up to 1.5 m from the suite's front wall into the required space between the suite and the house.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(5)": {
+   "explanation": "Canopies, awnings and roofs over a garden-suite deck may project into setbacks or the separation space: at most 4.0 m high, up to 1.5 m from the suite's front wall, and on a street-facing wall by the lesser of half the required setback or 1.5 m.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(6)": {
+   "explanation": "Decorative features and chimney breasts (up to 2.0 m wide) on a garden suite may project up to 0.6 m into setbacks or the separation space, if they stay at least 0.3 m from any lot line.",
+   "code_refs": "none"
+  },
+  "150.7.60.60(7)": {
+   "explanation": "Wall-mounted equipment such as vents, pipes, satellite dishes or air conditioners on a garden suite may project up to 0.6 m into setbacks or the separation space, if it stays at least 0.3 m from any lot line.",
+   "code_refs": "none"
+  }
+ }
+}

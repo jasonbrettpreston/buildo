@@ -1,0 +1,90 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.60.70(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["has_garden_suite"]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "lot_coverage_pct = 45 pct @(1)(A)"
+      ],
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["has_garden_suite"],
+        "uses": [],
+        "evidence": {
+          "R": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RD": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RS": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RT": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RM": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "ancillary_building": "an ancillary building containing a garden suite",
+          "has_garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["has_garden_suite"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["has_garden_suite"]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "lot_coverage_pct = 20 pct @(1)(B)",
+        "lot_coverage_pct = overlay(LC) @(1)(B)(i)",
+        "lot_coverage_pct = unregulated @(1)(B)(ii)"
+      ],
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["has_garden_suite", "overlay_mapped"],
+        "uses": [],
+        "evidence": {
+          "R": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RD": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RS": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RT": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "RM": "Lot Coverage Requirement for a Lot with a Garden Suite",
+          "ancillary_building": "the ancillary building containing a garden suite",
+          "has_garden_suite": "containing a garden suite",
+          "overlay_mapped": "a numerical value on the Lot Coverage Overlay Map"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["has_garden_suite"]
+      }
+    }
+  ]
+}

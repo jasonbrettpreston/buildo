@@ -1,0 +1,73 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.80.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.80.40(1)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m <= 7.6 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "7.6 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["parking_space", "private_garage"],
+        "evidence": {
+          "R": "lot in the R zone",
+          "parking_space": "vehicle entrance through the front main wall",
+          "private_garage": "vehicle entrance through the front main wall"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.40(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "access_from_lane",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["corner_lot", "abuts_lane"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["corner_lot", "abuts_lane"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "In the R zone",
+          "corner_lot": "on a corner lot",
+          "abuts_lane": "on a lot abutting a lane",
+          "parking_space": "vehicle access to any parking space on the lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

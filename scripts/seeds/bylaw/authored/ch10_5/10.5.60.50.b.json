@@ -1,0 +1,110 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.60.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.60.50(1)#whole",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "gross floor area of ancillary buildings"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.50(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m >= 12.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = 60.0 m2 @(2)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "ancillary buildings or structures on a lot",
+          "frontage_band": "lot frontage of 12.0 metres"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.50(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = 40.0 m2 @(2)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "ancillary buildings or structures on a lot",
+          "frontage_band": "in all other cases"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.60.50(3)#whole",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["separation_band"], "if": "distance_to_residential_m < 1.8 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = 10.0 m2 @(3)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["separation_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "ancillary_building": "ancillary building or structure located",
+          "separation_band": "less than 1.8 metres from a residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    }
+  ]
+}

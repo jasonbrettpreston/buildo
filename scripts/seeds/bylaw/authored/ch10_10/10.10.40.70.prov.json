@@ -1,0 +1,46 @@
+{
+  "a_seal": {
+    "seal_id": 149,
+    "sha256": "7d832bd5ca66f296d8f63db8449238e468fee487d224fb55509a598d5dc0e3fc"
+  },
+  "b_run": {
+    "ledger_sha256": "3dfb7510bf00b0e8fda0a5e9c1b04e423f50a69ceb3f175d6a7c59032483be19",
+    "read_paths": [],
+    "run_id": "20261008T013412Z-b23de926",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "briefs": {
+    "a": "a2acc92d026dd24f1218dbf37e1f66a9bfc725628606d3d58ce47f9d6f704b4b",
+    "b": "6338861f69094ffa544d3fe980d48614aeafced5211cc9ae2b8fdfd0ec8e6b5c"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.70",
+  "unit_shas": {
+    "10.10.40.70(1)#whole": "916ffa4c49ff2e7e57642ec10ce90ef3a1106caae1fa7f7ea6c69ce56a94f588",
+    "10.10.40.70(2)#whole": "d31a663163d4b9565792a975fe629a1a5432a69cf6aebd9ce2ff3c61a1faff17",
+    "10.10.40.70(3)#(3)(A)": "3a5afdfe4b7d750639c897d96e40751705f3487219de121a40d3a6b6ce10fb51",
+    "10.10.40.70(3)#(3)(B)": "30443cff18e22ab93e9e3215bd25a177c6d2ffd5d711f79c9f19485abccf0c1f",
+    "10.10.40.70(4)#(4)(A)": "ee7d9f760e45093d0e1b3c60e79b565143a81dcb37851f2ac3b01fbbc5b4a7bf",
+    "10.10.40.70(4)#(4)(B)": "2f54b9482507aa79e2e401557688b2e53757032396f58afb27397b3d67b558e4",
+    "10.10.40.70(4)#(4)(C)": "294421f8fd9ea081c1ee693d631ad618b761e0be3b022b8fcaee82ec27c8a611",
+    "10.10.40.70(4)#(4)(D)": "33242c84dd5be0424e93eaf8a47f90869c929b07b8c5a925429e358ee4a4f180",
+    "10.10.40.70(4)#(4)(E)": "8bad2f9700d174c9233d85d4cc70c33e12a88bc151371fdcc36744756b7c8022",
+    "10.10.40.70(4)#(4)(F)": "69647cf7278b16a85c42a533f74680252be3ed6c86fe308c2d37efe24a7e929d",
+    "10.10.40.70(4)#(4)(G)": "a4cbd2781250962e2451b2e98ddc08322aa1c0e248ab38b7430158bf45d6aefd",
+    "10.10.40.70(5)#(5)(A)": "4e8cea3ef68c45b5e7c236d5f3a1fb842bcb35c730a4c60bd7973d0e3c776c67",
+    "10.10.40.70(5)#(5)(B)": "d7f00b549b37c77051170563edb4f83864d447a53af30be5009915ba512f0867",
+    "10.10.40.70(5)#(5)(C)": "5ea3c51483e42d5336e40b7c95a257e7a028db1e971281a6f73a58314a5dea8e",
+    "10.10.40.70(5)#(5)(D)": "aa3b1ac5d34925c58b1bb1e90a22cfe534019f7a475c646dc15636d44754ce45",
+    "10.10.40.70(5)#(5)(E)": "483c3dc7c619cb824fc1ddb5c44b7e843461d942baefa1eeb414b31f22b123c3"
+  }
+}

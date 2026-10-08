@@ -1,0 +1,102 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.60.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.60.70(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["pool"],
+        "if": "pool = swimming_pool"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 5 pct @(1)"],
+      "literals_not_expressed": [
+        {"literal": "10.5.60.70(2)", "clause": "(1)(A)", "reason": "cross_reference_value"},
+        {"literal": "10.5.60.70(1)", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["pool"],
+        "uses": ["swimming_pool"],
+        "evidence": {
+          "R": "in the R zone",
+          "ancillary_building": "ancillary buildings and structures",
+          "swimming_pool": "outdoor swimming pool"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["pool"]}
+    },
+    {
+      "unit_id": "10.10.60.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["parking_rate = 1 ratio @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "5%", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "10.5.60.70(1)", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "in the R zone",
+          "ancillary_building": "ancillary buildings or structures",
+          "parking_space": "containing parking spaces"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.10.60.70(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["has_secondary_suite"],
+        "if": "has_secondary_suite = true"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 45 pct @(1)(C)(i)"],
+      "literals_not_expressed": [
+        {"literal": "5%", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "10.5.60.70(1)", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["has_secondary_suite"],
+        "uses": ["dwelling_unit", "secondary_suite_use"],
+        "evidence": {
+          "R": "in the R zone",
+          "detached_houseplex": "a lot with a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "has_secondary_suite": "a residential building with a secondary suite",
+          "dwelling_unit": "overall lot coverage of all buildings"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "has_secondary_suite"]}
+    }
+  ]
+}

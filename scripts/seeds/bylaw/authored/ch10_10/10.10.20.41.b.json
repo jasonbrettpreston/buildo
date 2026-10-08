@@ -1,0 +1,299 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.20.41",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.20.41(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house", "apartment_building"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_house": "a detached house may be converted",
+          "apartment_building": "converted to an apartment building",
+          "lawfully_existing": "lawfully existing building",
+          "dwelling_unit": "additional dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    },
+    {
+      "unit_id": "10.10.20.41(1)#(1)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_house": "considered as a detached house",
+          "dwelling_unit": "additional dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "four", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["semi_detached_house", "apartment_building"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R Zone",
+          "semi_detached_house": "portion of a semi-detached house",
+          "apartment_building": "more than four dwelling units",
+          "lawfully_existing": "lawfully existing building",
+          "dwelling_unit": "additional dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    },
+    {
+      "unit_id": "10.10.20.41(2)#(2)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R Zone",
+          "semi_detached_house": "remaining portion of the semi-detached house",
+          "dwelling_unit": "dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(2)#(2)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "four", "clause": "(2)(C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["semi_detached_house", "apartment_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R Zone",
+          "semi_detached_house": "portion of a semi-detached house",
+          "apartment_building": "considered to be an apartment building",
+          "dwelling_unit": "more than four dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(2)#(2)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R Zone",
+          "semi_detached_house": "originally constructed as a semi-detached house",
+          "dwelling_unit": "both dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(3)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    },
+    {
+      "unit_id": "10.10.20.41(4)#(4)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing, highlighted in bold type"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(4)#(4)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.20.41(5)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "detached_house": "lawfully existing detached house",
+          "semi_detached_house": "portion of a lawfully existing semi-detached house",
+          "lawfully_existing": "lawfully existing detached house",
+          "dwelling_unit": "Number of Dwelling Units on a Lot"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    },
+    {
+      "unit_id": "10.10.20.41(6)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "four", "clause": "(6)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "semi_detached_house": "converted semi-detached house",
+          "lawfully_existing": "lawfully existing",
+          "secondary_suite_use": "a secondary suite may not be in"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    }
+  ]
+}

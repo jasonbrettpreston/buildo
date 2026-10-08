@@ -1,0 +1,42 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.50(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(platform; enacted(438-86))"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "R": "In the R zone",
+          "lawfully_existing": "lawfully existing platform",
+          "deck_or_platform": "exterior sides of a lawfully existing platform"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    }
+  ]
+}

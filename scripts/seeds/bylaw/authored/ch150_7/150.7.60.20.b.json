@@ -1,0 +1,443 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.60.20(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "5.10.40.70.(2)",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "parts of an ancillary building",
+          "dwelling_unit": "containing a garden suite",
+          "garden_suite": "containing a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["depth_band"],
+        "if": "lot_depth_m > 45.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = max(1.5 m; proposed_height_m ÷ 2) @(2)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["depth_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "depth_band": "lot depth greater than 45.0 metres"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["depth_band"],
+        "if": "lot_depth_m ≤ 45.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = 1.5 m @(2)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["depth_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "depth_band": "in all other cases"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["abuts_named_street"],
+        "if": "not mapped(HT)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = 1.5 m + 1.5 m @(2)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "abuts_named_street": "the rear lot line abuts a lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["through_lot", "adjacent_lot_fronts_flanking_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = abutting_front_setback_m @(3)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["through_lot", "adjacent_lot_fronts_flanking_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "through_lot": "if it is on a through lot",
+          "adjacent_lot_fronts_flanking_street": "fronts on the street that abuts the rear lot line"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = 1.5 m @(3)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "through_lot": "on Through Lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["through_lot"],
+        "if": "not mapped(HT)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = max(150.7.60.20(3)(A); 6.0 m @(4)(B)) @(4)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["through_lot"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "parking_space": "and a parking space",
+          "dwelling_unit": "containing a garden suite",
+          "through_lot": "if it is on a through lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["through_lot"],
+        "if": "not mapped(HT)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "rear_setback_m = 6.0 m @(4)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["through_lot"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "parking_space": "and a parking space",
+          "dwelling_unit": "containing a garden suite",
+          "through_lot": "except if it is on a through lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["flanking_lot"],
+        "if": "not mapped(HT)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(1.5 m; min(0.1 ratio × lot_frontage_m; 3.0 m)) @(5)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["flanking_lot"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "flanking_lot": "the side lot line does not abut a street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(5)#(5)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(0.6 m; min(0.1 ratio × lot_frontage_m; 3.0 m)) @(5)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "flanking_lot": "Side Yard Setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["corner_lot", "adjacent_lot_fronts_flanking_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(1.5 m; (abutting_front_setback_m + side_setback_m) ÷ 2) @(6)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["corner_lot", "adjacent_lot_fronts_flanking_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "corner_lot": "if it is on a corner lot",
+          "adjacent_lot_fronts_flanking_street": "fronts on the street that abuts the side lot line"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["corner_lot"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(6.0 m; 150.7.60.20(6)(A)) @(6)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["corner_lot"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "parking_space": "contains a parking space",
+          "dwelling_unit": "containing a garden suite",
+          "corner_lot": "if it is on a corner lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.20(6)#(6)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(side_setback_m; 1.5 m) @(6)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "ancillary building containing a garden suite",
+          "dwelling_unit": "containing a garden suite",
+          "corner_lot": "Side Yard Setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    }
+  ]
+}

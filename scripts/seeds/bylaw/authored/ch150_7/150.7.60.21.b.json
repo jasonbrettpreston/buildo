@@ -1,0 +1,365 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.21",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.60.21(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "exact",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(ancillary_building) and lawfully_existing_status = true and existing(rear_setback_m) < required"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": ["rear_setback_m = existing(rear_setback_m) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "lawfully existing ancillary building",
+          "garden_suite": "containing a garden suite",
+          "lawfully_existing": "lawfully existing ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "exact",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(ancillary_building) and lawfully_existing_status = true and existing(side_setback_m) < required"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": ["side_setback_m = existing(side_setback_m) @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "ancillary_building": "lawfully existing ancillary building",
+          "garden_suite": "containing a garden suite",
+          "side_setback": "minimum side yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(garden_suite) and lawfully_existing_status = true"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "July 24, 2025",
+          "clause": "(2)(A)",
+          "reason": "illustrative_or_historic"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "garden_suite": "lawfully existing garden suite",
+          "side_setback": "side yard setback or rear yard setback",
+          "rear_setback": "rear yard setback less than required"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "July 24, 2025",
+          "clause": "(2)(B)",
+          "reason": "illustrative_or_historic"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "garden_suite": "Side yard setback or rear yard setback",
+          "building_permit": "pursuant to a building permit issued",
+          "side_setback": "no reduced side yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(2)#(2)(C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "garden_suite": "For a building constructed pursuant to",
+          "side_setback": "additions with side yard setbacks",
+          "rear_setback": "rear yard setbacks that would further increase"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(3)#(3)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "July 24, 2025",
+          "clause": "(3)(A)",
+          "reason": "illustrative_or_historic"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "lawfully_existing": "lawfully and lawfully existing",
+          "building_permit": "a building permit was lawfully issued",
+          "definition": "definitions provided in Zoning By-law 569-2013"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(3)#(3)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zoning_certificate": "request for a zoning certificate",
+          "building_permits": "Article I, Building Permits"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(3)#(3)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zoning_amendment": "complete application for a zoning by-law amendment",
+          "official_plan": "City of Toronto Official Plan Policy"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(3)#(3)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "200/96",
+          "clause": "(3)(D)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "Section 2",
+          "clause": "(3)(D)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "minor_variance": "complete application for a minor variance",
+          "planning_act": "under the Planning Act"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.7.60.21(3)#(3)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "site_plan": "complete application for site plan approval",
+          "official_plan": "City of Toronto Official Plan Policy"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

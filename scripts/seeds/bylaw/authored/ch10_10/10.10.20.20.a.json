@@ -1,0 +1,71 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.20.20", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.20.20(1)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {"literal": "1", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "21", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "23", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "2", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "3", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "4", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "20", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "5", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "6", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "19", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "26", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "13", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "25", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "24", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "28", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "8", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "9", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "10", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "11", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "27", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "12", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "22", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "14", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "15", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "18", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "16", "clause": "(1)", "reason": "cross_reference_value"},
+    {"literal": "17", "clause": "(1)", "reason": "cross_reference_value"}
+   ],
+   "application": {
+    "zones": ["R"],
+    "building_types": ["garden_suite", "laneway_suite", "secondary_suite"],
+    "lot_conditions": [],
+    "uses": ["secondary_suite_use"],
+    "evidence": {
+     "R": "permitted in the R zone",
+     "garden_suite": "Garden Suite (20)",
+     "laneway_suite": "Laneway Suite (19)",
+     "secondary_suite": "Secondary Suite (14)",
+     "secondary_suite_use": "Secondary Suite (14)"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Lists the uses permitted in the R zone only subject to the numbered conditions in Clause 10.10.20.100; the conditions themselves are keyed under 10.10.20.100.",
+    "gaps": "The numbers in brackets are reference numbers to the conditions in 10.10.20.100, keyed once each (distinct values) as cross_reference_value. Most listed uses (ambulance depot, office, retail, etc.) are non-residential and have no vocab.uses token; only the suite uses are tokenised. Whether garden/laneway/secondary suite belong in building_types or uses is ambiguous; both readings recorded."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.20.20(1)": {"explanation": "In the R zone, a number of uses (including secondary suites, garden suites and laneway suites, and various community and small commercial uses) are allowed only if they meet the specific conditions set out for each use in section 10.10.20.100.", "code_refs": "none"}
+ }
+}

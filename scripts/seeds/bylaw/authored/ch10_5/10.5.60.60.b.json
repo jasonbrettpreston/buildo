@@ -1,0 +1,45 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.60.60",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.60.60(1)#whole",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.3 m @(1)",
+        "encroachment_clearance_m = 0.15 m @(1)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building may encroach"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

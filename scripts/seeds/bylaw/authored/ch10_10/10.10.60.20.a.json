@@ -1,0 +1,107 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_10/10.10.60.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.60.20(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "lot_line_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_line_setback_m = 1.0 m @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "R": "in the R zone",
+     "ancillary_building": "for an ancillary building",
+     "parking_space": "containing a parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "In the R zone, an ancillary building containing a parking space (detached garage) must be at least 1.0 m from a rear or side lot line that abuts a street or lane, subject to 10.5.60.20(4).",
+    "gaps": "Target chosen as lot_line_setback_m (ancillary building setback) because the minimum applies to either a rear or a side lot line; the \"abutting a street or lane\" test is a disjunction (street or lane), so it is not keyed as a conjunctive condition token. Subject to 10.5.60.20(4) (not expressed)."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.10.60.20(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "lot_line_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_line_setback_m = unregulated @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "R": "in the R zone",
+     "ancillary_building": "for an ancillary building",
+     "parking_space": "containing a parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "No minimum setback is required for such a garage from a rear or side lot line that does not abut a street or lane.",
+    "gaps": "\"no minimum building setback is required\" keyed as unregulated (the by-law sets no limit). The \"does not abut a street or lane\" test is not keyed as a condition token (no negated street/lane token)."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.60.20(1)": {
+   "explanation": "In the R zone, a detached garage (an ancillary building with a parking space) must be at least 1.0 m from a rear or side lot line next to a street or lane, and needs no setback from a rear or side lot line that does not border a street or lane.",
+   "code_refs": "none"
+  }
+ }
+}

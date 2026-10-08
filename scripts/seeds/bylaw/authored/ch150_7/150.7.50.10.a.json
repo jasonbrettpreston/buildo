@@ -1,0 +1,43 @@
+{"schema": "bylaw-authored-v1", "shard": "ch150_7/150.7.50.10", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.50.10(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "rear_soft_landscaping_pct",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m > 6.0 m"},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["rear_soft_landscaping_pct = 50 pct @(1)(A)"],
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["garden_suite"], "lot_conditions": ["frontage_band"], "uses": [], "evidence": {"garden_suite": "containing a garden suite", "frontage_band": "lot frontage of greater than 6.0 metres"}},
+   "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite"], "status": "not_modelled", "description": "Despite 10.5.50.10(3), on a lot with a residential building and a garden suite, where the lot frontage is greater than 6.0 m, at least 50% of the area behind the residential building's rear main walls, across the full lot width, must be soft landscaping.", "gaps": "Applies only when a garden suite is proposed or present (user input). The measured area is the area between the rear main walls and the rear lot line across the full lot width, which is close to but not identical to the rear yard targeted by rear_soft_landscaping_pct. Displaces 10.5.50.10(3) for garden-suite lots. No zone is named in the text."},
+   "disclosure": "With a garden suite, at least half of the backyard area behind the house must be soft landscaping (grass, plants) on lots wider than 6.0 m. We apply this only when you tell us a garden suite is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.50.10(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "rear_soft_landscaping_pct",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 6.0 m"},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["rear_soft_landscaping_pct = 25 pct @(1)(B)"],
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["garden_suite"], "lot_conditions": ["frontage_band"], "uses": [], "evidence": {"garden_suite": "containing a garden suite", "frontage_band": "lot frontage of 6.0 metres or less"}},
+   "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["has_garden_suite"], "status": "not_modelled", "description": "Despite 10.5.50.10(3), on a lot with a residential building and a garden suite, where the lot frontage is 6.0 m or less, at least 25% of the area behind the residential building's rear main walls, across the full lot width, must be soft landscaping.", "gaps": "Applies only when a garden suite is proposed or present (user input). The measured area differs slightly from the rear yard targeted by rear_soft_landscaping_pct. Displaces 10.5.50.10(3) for garden-suite lots. No zone is named in the text."},
+   "disclosure": "With a garden suite on a lot 6.0 m wide or less, at least a quarter of the backyard area behind the house must be soft landscaping. We apply this only when you tell us a garden suite is planned.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.50.10(1)": {"explanation": "If the lot has a garden suite, at least 50% of the backyard area behind the house (measured across the full lot width) must be soft landscaping such as grass or plants; on lots 6.0 m wide or less the minimum is 25%. This replaces the usual rear-yard landscaping rule.", "code_refs": "none"}
+ }
+}

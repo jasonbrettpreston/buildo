@@ -1,0 +1,164 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.60.70",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.60.70(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "lot_coverage_pct = 5 pct @(1)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "swimming_pool"
+        ],
+        "evidence": {
+          "R": "in the R zone",
+          "ancillary_building": "ancillary buildings and structures",
+          "swimming_pool": "outdoor swimming pool"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In the R zone, ancillary buildings and structures may cover at most 5% of the lot area; the water surface area of an outdoor swimming pool or other water-holding ancillary structure is excluded from that coverage if it complies with 10.5.60.70(2).",
+        "gaps": "The 5% limit is the stem of (1), which every unit of this regulation repeats; there is no separate stem unit, so it is keyed as a LIMIT on each exception arm that leaves the limit in force ((A), (B)), with the arm's exclusion described here. It applies 'despite regulation 10.5.60.70(1)', i.e. it replaces the general ancillary coverage limit in the R zone. Arm (A) excludes pool / water-holding structure water surface area when it complies with 10.5.60.70(2); that exclusion needs the pool design and is not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.60.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "lot_coverage_pct = 5 pct @(1)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "parking_space",
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "in the R zone",
+          "ancillary_building": "ancillary buildings or structures",
+          "parking_space": "containing parking spaces",
+          "dwelling_unit": "per dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In the R zone, ancillary buildings and structures may cover at most 5% of the lot area; ancillary buildings or structures containing parking spaces are excluded from that coverage, up to one parking space per dwelling unit on the lot.",
+        "gaps": "The 5% limit is the stem of (1), which every unit of this regulation repeats; there is no separate stem unit, so it is keyed as a LIMIT on each exception arm that leaves the limit in force ((A), (B)), with the arm's exclusion described here. It applies 'despite regulation 10.5.60.70(1)', i.e. it replaces the general ancillary coverage limit in the R zone. Arm (B) excludes ancillary buildings/structures containing parking spaces, capped at one parking space per dwelling unit (a word, not a numeric literal); the excluded area depends on the parking design and unit count and is not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.60.70(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "5%",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "45",
+          "clause": "(1)(C)(i)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "in the R zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex a",
+          "has_secondary_suite": "a secondary suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type",
+          "has_secondary_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "The 5% maximum lot coverage for ancillary buildings and structures (10.10.60.70(1)) does not apply to a lot with a detached houseplex, a semi-detached houseplex or a residential building with a secondary suite, if the overall lot coverage of all buildings and structures on the lot does not exceed 45 percent of the lot area.",
+        "gaps": "Displaces the 5% limit of 10.10.60.70(1) (keyed on arms (A) and (B)). The subject is a disjunction (detached houseplex OR semi-detached houseplex OR a residential building with a secondary suite); condition tokens are a conjunction, so has_secondary_suite is not keyed as a condition and the subject is carried in application only. The 45 percent overall-coverage test covers all buildings and structures on the lot and has no threshold token, so it is not keyed as condition.if. Source text is missing 'or' between 'semi-detached houseplex' and 'a residential building'; read as a list."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.60.70(1)": {
+      "explanation": "In the R zone, garages, sheds and other accessory buildings together can cover no more than 5% of the lot, instead of the general accessory-building rule. Pool water surface (if the pool meets 10.5.60.70(2)) and accessory buildings holding parking (up to one space per home) are not counted. The 5% cap is lifted entirely for a lot with a detached or semi-detached houseplex, or a home with a secondary suite, as long as all buildings and structures together cover no more than 45% of the lot.",
+      "code_refs": "none"
+    }
+  }
+}

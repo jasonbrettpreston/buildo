@@ -1,0 +1,75 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.11",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.40.11(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "5.0",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "3.0",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "in the R zone",
+          "detached_house": "a detached house",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "roof_type",
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Roof slope limit for altered roofs of lawfully existing detached houses in the R zone (in addition to 10.5.40.11(3)): the altered roof may not be steeper than 5.0 vertical to 3.0 horizontal.",
+        "gaps": "The DSL has no roof-slope target, so the numeric limit cannot be keyed as a LIMIT; keyed UNUSUAL. The 5.0 and 3.0 literals are the slope limit itself; no literal_not_expressed_reason fits exactly, threshold_used_in_application is the closest closed value. Applies only to an altered roof of a lawfully existing building, which needs as-built facts we do not hold."
+      },
+      "disclosure": "For an existing detached house in the R zone, an altered roof may not be steeper than 5 units up for every 3 units across. We do not check roof slope; confirm it with your designer.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.40.11(1)": {
+      "explanation": "If you alter the roof of a lawfully existing detached house in the R zone, the new roof can be no steeper than 5 units of rise for every 3 units of run. This applies on top of the general roof-alteration rule in 10.5.40.11(3). We do not evaluate roof slope.",
+      "code_refs": "none"
+    }
+  }
+}

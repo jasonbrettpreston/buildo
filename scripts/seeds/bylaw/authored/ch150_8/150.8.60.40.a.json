@@ -1,0 +1,713 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_8/150.8.60.40",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.8.60.40(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "separation_band"
+    ],
+    "if": "distance_to_residential_m < 7.5 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "height_m = 4.0 m @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [
+     "separation_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite",
+     "separation_band": "located less than 7.5 metres"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.40(2)(B), a laneway-suite building located less than 7.5 m from the residential building on the lot may be at most 4.0 m high.",
+    "gaps": "The distance to the residential building is a scenario value. Displaces 10.5.60.40(2)(B) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite height rules apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "separation_band"
+    ],
+    "if": "distance_to_residential_m ≥ 7.5 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "height_m = 6.3 m @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [
+     "separation_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite",
+     "separation_band": "7.5 metres or more"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.40(2)(B), a laneway-suite building located 7.5 m or more from the residential building on the lot may be at most 6.3 m high.",
+    "gaps": "The distance to the residential building is a scenario value. Displaces 10.5.60.40(2)(B) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite height rules apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(2)#whole",
+   "archetype": "LIMIT",
+   "target": "height_storeys",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "height_storeys = 2 storeys @(2)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Despite 10.5.60.40(3), a laneway-suite building may have at most two storeys, subject to the height limits in (1).",
+    "gaps": "'two' is written as a word; expressed as 2 storeys. Displaces 10.5.60.40(3) for laneway suites. No zone is named."
+   },
+   "disclosure": "Laneway suite height rules apply only if you plan a laneway suite; we apply them when you tell us one is planned.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metres",
+     "clause": "(3)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Antennae on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.0 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.0 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metres",
+     "clause": "(3)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Flagpoles on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.0 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.0 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(C)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metres",
+     "clause": "(3)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "0.5 metres",
+     "clause": "(3)(C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Parapets for a green roof, if no closer than 0.5 m to the main walls, on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.0 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.0 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. The 0.5 m distance from the main walls is a precondition, listed as a threshold. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(D)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metres",
+     "clause": "(3)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Satellite dishes on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.0 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.0 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(E)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metres",
+     "clause": "(3)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Weather vanes on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.0 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.0 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(4)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(4)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Skylights on the roof of a laneway-suite building may exceed the building's permitted maximum height by 0.3 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 0.3 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.5 metres",
+     "clause": "(5)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Equipment for the functional operation of the building (electrical, utility, mechanical, ventilation), subject to (6), on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.5 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.5 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.5 metres",
+     "clause": "(5)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Structures or parts of the building used for its functional operation (enclosed stairwells, roof access, storage, chimneys, vents, water supply), subject to (6), on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.5 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.5 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(C)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.5 metres",
+     "clause": "(5)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Structures enclosing, screening or covering the elements in (5)(A) and (B), subject to (6), on the roof of a laneway-suite building may exceed the building's permitted maximum height by 1.5 metres.",
+    "gaps": "A permitted height allowance for a rooftop element; no DSL target exists for rooftop element height, so the 1.5 metres allowance (added to the cross-referenced maximum height) is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Small rooftop elements on a laneway suite may rise a little above the height limit. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(6)#(6)(A)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "30 percent",
+     "clause": "(6)(A)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Rooftop functional equipment and structures permitted by (5) must not cover more than 30% of the roof area, measured horizontally.",
+    "gaps": "A cap on roof area taken by rooftop elements; no DSL target exists for roof share, so the 30% is listed as not expressed. The unit text names no building type (it refers to elements permitted in (5), which concern laneway-suite buildings), so building_types is 'any'. No zone is named."
+   },
+   "disclosure": "Rooftop equipment on a laneway suite that exceeds the height limit may cover at most 30% of the roof. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(6)#(6)(B)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.5 metres",
+     "clause": "(6)(B)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "ancillary_building": "of the ancillary building"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Rooftop functional equipment and structures permitted by (5) must not be closer than 1.5 m to the main walls of the ancillary building.",
+    "gaps": "A minimum inset of rooftop elements from the main walls; no DSL target exists for it, so the 1.5 m is listed as not expressed. No zone is named."
+   },
+   "disclosure": "Rooftop equipment on a laneway suite that exceeds the height limit must be set back at least 1.5 m from the walls. We do not model rooftop elements.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.8.60.40(7)#whole",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "laneway_suite": "containing a laneway suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_laneway_suite"
+    ],
+    "status": "not_modelled",
+    "description": "Regulation 10.5.60.40(4) (entrance height) does not apply to an ancillary building containing a laneway suite.",
+    "gaps": "Displaces 10.5.60.40(4) for laneway suites (no displaces field in the template). No zone is named."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.8.60.40(1)": {
+   "explanation": "A laneway suite can be at most 4.0 m tall if it is less than 7.5 m from the house, or at most 6.3 m tall if it is 7.5 m or more away.",
+   "code_refs": "none"
+  },
+  "150.8.60.40(2)": {
+   "explanation": "A laneway suite can have at most two storeys, within the height limits above.",
+   "code_refs": "none"
+  },
+  "150.8.60.40(3)": {
+   "explanation": "Antennae, flagpoles, satellite dishes, weather vanes, and green-roof parapets set back at least 0.5 m from the walls may rise up to 1.0 m above a laneway suite's height limit.",
+   "code_refs": "none"
+  },
+  "150.8.60.40(4)": {
+   "explanation": "Skylights may rise up to 0.3 m above a laneway suite's height limit.",
+   "code_refs": "none"
+  },
+  "150.8.60.40(5)": {
+   "explanation": "Mechanical and utility equipment, roof access, stairwells, chimneys and vents, and the screens around them, may rise up to 1.5 m above a laneway suite's height limit, subject to the limits in (6).",
+   "code_refs": "none"
+  },
+  "150.8.60.40(6)": {
+   "explanation": "That rooftop equipment may cover at most 30% of the roof and must be at least 1.5 m from the suite's main walls.",
+   "code_refs": "none"
+  },
+  "150.8.60.40(7)": {
+   "explanation": "The general rule on the height of a building's entrance (10.5.60.40(4)) does not apply to a laneway suite.",
+   "code_refs": "none"
+  }
+ }
+}

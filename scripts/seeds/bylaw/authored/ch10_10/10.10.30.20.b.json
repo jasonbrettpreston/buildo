@@ -1,0 +1,73 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.30.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.30.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = label(f) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": ["label_value"], "uses": [], "evidence": {"zones": "In the R zone", "label_value": "letter \"f\""}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.30.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 6.0 m @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": ["label_value"], "uses": [], "evidence": {"zones": "In the R zone", "label_value": "does not have an \"f\" value"}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.30.20(1)#(1)(C)",
+      "archetype": "DEFINE",
+      "target": "required_lot_frontage_m",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.0 metre", "clause": "(1)(C)", "reason": "cross_reference_value"}
+      ],
+      "application": {"zones": ["R"], "building_types": ["semi_detached_house", "townhouse"], "lot_conditions": [], "uses": [], "evidence": {"zones": "In the R zone", "building_types": "for a semi-detached house"}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.10.30.20(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "exact",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["all_units_front_street"], "if": "not all_units_front_street"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 30.0 m @(1)(D)"],
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["townhouse"], "lot_conditions": ["all_units_front_street"], "uses": [], "evidence": {"zones": "In the R zone", "building_types": "a lot has a townhouse", "lot_conditions": "not fronting directly on a street"}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

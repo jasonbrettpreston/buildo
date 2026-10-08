@@ -1,0 +1,323 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.51",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.7.60.51(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "garden_suite": "A garden suite",
+          "lawfully_existing": "lawfully existing garden"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "has_garden_suite",
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "Transition: a garden suite may have gross floor area exceeding 150.7.60.50(2), (4) and (5) if it is a lawfully existing garden suite and no additions increasing the noncompliance are added after July 24, 2025.",
+        "gaps": "Relief from the garden suite GFA limits for lawfully existing garden suites (lawfully existing as extended by 150.7.60.51(2)(A)). Depends on as-built and permit history we do not hold. Not keyed PREVAILING: it is a transition exemption, not an alternate compliance path under a former by-law, section or schedule."
+      },
+      "disclosure": "An existing legal garden suite may keep floor area above the current garden suite limits, as long as nothing is added after July 24, 2025 that makes it less compliant. We do not hold building or permit history, so we apply the current limits.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "garden_suite": "A garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Transition: a garden suite may have gross floor area exceeding 150.7.60.50(2), (4) and (5) if built under a building permit issued after July 24, 2025 whose only excess gross floor area is that identified in a zoning certificate, zoning by-law amendment, minor variance or site plan approval applied for on or before July 24, 2025.",
+        "gaps": "Depends on permit and application history (zoning certificate, rezoning, minor variance, site plan approval filed on or before July 24, 2025) we do not hold. The sub-items (i)-(iv) are alternatives within this unit. Not keyed PREVAILING (no former by-law, section or schedule)."
+      },
+      "disclosure": "A garden suite built under a permit issued after July 24, 2025 may exceed the current floor area limits if the extra area was already shown in an application filed on or before that date. We do not hold application history, so we apply the current limits.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(1)#(1)(C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "garden_suite": "a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "For a garden suite built under (1)(B), no additions with excess gross floor area that would increase the noncompliance beyond that established by the founding building permit may be added after that permit is issued.",
+        "gaps": "Limits the (1)(B) transition relief; depends on permit history we do not hold."
+      },
+      "disclosure": "A garden suite that relied on the transition rule cannot later be enlarged beyond what its building permit allowed. We do not hold permit history.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(2)#(2)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "and lawfully existing"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "informational",
+        "description": "For 150.7.60.51(1), lawful, lawfully and lawfully existing include, in addition to the Chapter 800 definitions, buildings, structures or uses authorized or permitted on or before July 24, 2025 and for which a building permit was lawfully issued before July 24, 2025.",
+        "gaps": "Extends the lawfully existing term for the garden suite transition only; not a Chapter 800 measurement row, so input_fidelity is not keyed."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(2)#(2)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 150.7.60.51(1), a request for a zoning certificate means one that satisfies Article I, Building Permits, of Municipal Code Chapter 363.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(2)#(2)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 150.7.60.51(1), a complete application for a zoning by-law amendment means one that satisfies Official Plan Policy 5.5.2.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(2)#(2)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 150.7.60.51(1), a complete application for a minor variance means one that satisfies Section 2 of Ontario Regulation 200/96 under the Planning Act.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.51(2)#(2)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 150.7.60.51(1), a complete application for site plan approval means one that satisfies Official Plan Policy 5.5.2.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.7.60.51(1)": {
+      "explanation": "Transition rule: a garden suite may exceed the current floor area limits if it already legally existed (with no enlargements after July 24, 2025), or if it is built under a permit issued after that date whose extra floor area was already in a zoning certificate, rezoning, minor variance or site plan application filed by July 24, 2025. Such a suite cannot later be enlarged beyond what its permit allowed. We do not hold permit or application history, so we apply the current limits.",
+      "code_refs": "none"
+    },
+    "150.7.60.51(2)": {
+      "explanation": "Definitions for the garden suite transition rule: what counts as lawfully existing (including things permitted, with a building permit, before July 24, 2025) and what counts as a complete zoning certificate request, rezoning application, minor variance application or site plan application.",
+      "code_refs": "none"
+    }
+  }
+}

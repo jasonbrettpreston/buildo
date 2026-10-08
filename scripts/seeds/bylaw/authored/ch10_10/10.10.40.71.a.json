@@ -1,0 +1,70 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_10/10.10.40.71",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.40.71(1)#whole",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "abuts_named_street"
+    ]
+   },
+   "applies_to": {
+    "part": "map_area",
+    "refs": [
+     "Eglinton Avenue West",
+     "Eglinton Avenue East"
+    ]
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "0",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "10.5",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "abuts_named_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "abuts_named_street": "along Eglinton Avenue West"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "description": "The setback regulations 10.5.40.70(1) and 10.10.40.70(1)-(4) do not apply to a transportation use along Eglinton Avenue West and East, provided setbacks are between 0 and 10.5 m.",
+    "gaps": "Transportation use (Eglinton transit) has no vocab.uses token and is outside MaxBLD building types. The 0 to 10.5 m setback range is a proviso on the exemption with no DSL target for transit setbacks; recorded as threshold_used_in_application. Area is described by street, so applies_to is map_area. No zone named in the text."
+   },
+   "disclosure": "Transit facilities along Eglinton Avenue are exempt from the normal R-zone setbacks (setbacks between 0 and 10.5 m); this does not affect houses and is not evaluated.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.40.71(1)": {
+   "explanation": "Transit (transportation use) facilities along Eglinton Avenue East and West are exempt from the usual R-zone setback rules, as long as their setbacks are between 0 and 10.5 m. This does not affect residential buildings.",
+   "code_refs": "none"
+  }
+ }
+}

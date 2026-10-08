@@ -1,0 +1,11 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_5/10.5.60.60", "keyer": "A",
+ "units": [
+  {"unit_id": "10.5.60.60(1)#whole", "archetype": "LIMIT", "target": "encroachment_m", "bound": "max", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "numeric_expression": ["encroachment_m = 0.3 m @(1)", "encroachment_clearance_m = 0.15 m @(1)"], "literals_not_expressed": [],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["ancillary_building"], "lot_conditions": [], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "ancillary_building": "an ancillary building"}},
+   "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": [], "status": "not_modelled", "description": "The eaves of a roof on an ancillary building may encroach up to 0.3 metres into the required minimum building setback in 10.5.60.20, if the eaves are no closer than 0.15 metres to a lot line.", "gaps": "Mixed targets in one unit: the encroachment maximum (encroachment_m, max) and the clearance minimum (encroachment_clearance_m, min); the unit's bound field records the encroachment maximum. Ancillary building eaves are a design input."},
+   "disclosure": "Eaves on a shed or garage may project up to 0.3 m into the setback but must stay 0.15 m from the lot line; not evaluated.", "not_an_override": []}
+ ],
+ "rows": {
+  "10.5.60.60(1)": {"explanation": "The roof eaves of a shed, garage or other ancillary building may extend up to 0.3 m into its required setback, as long as they stay at least 0.15 m from the lot line.", "code_refs": "none"}
+ }}

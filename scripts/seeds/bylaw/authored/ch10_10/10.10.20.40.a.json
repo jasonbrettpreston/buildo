@@ -1,0 +1,374 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.20.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.20.40(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_house": "Detached House;",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a detached house. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "semi_detached_house": "Semi-Detached House;",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a semi detached house. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "types: (C) Townhouse",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a townhouse. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_houseplex": "Detached Houseplex;",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a detached houseplex. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "semi_detached_houseplex": "Semi-Detached Houseplex;",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a semi detached houseplex. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(F)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Clause (F) was deleted by By-law 648-2025; it has no effect.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(1)#(1)(G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "apartment_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "apartment_building": "Apartment Building.",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Permission: in the R zone a dwelling unit is permitted in a apartment building. Evaluated from the lot's zone and the chosen building type.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.10.20.40(2)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "townhouse",
+          "apartment_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "for the R zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi- detached houseplex",
+          "townhouse": "townhouse or apartment",
+          "apartment_building": "apartment building is"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Permission that applies despite 900.1.10(3) and 900.1.10(4)(A): a detached houseplex, semi-detached houseplex, townhouse or apartment building is permitted in the R zone if it complies with the R zone regulations and all other requirements of the By-law, or is authorized by a Section 45 minor variance. The building type permission is evaluated; compliance with all other regulations is the rest of the evaluation.",
+        "gaps": "Keyed PERMIT (the clause's effect is to permit the four types). It also sets precedence over the Chapter 900 exception regulations 900.1.10(3) and 900.1.10(4)(A) (a site-specific exception's narrower list of building types does not remove these permissions); ranks_layers is reserved for PROCEDURAL units so it is not keyed here. The minor-variance alternative is not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.20.40(1)": {
+      "explanation": "In the R zone, homes (dwelling units) may be built as a detached house, semi-detached house, townhouse, detached houseplex, semi-detached houseplex or apartment building. Item (F) was deleted and no longer applies.",
+      "code_refs": "none"
+    },
+    "10.10.20.40(2)": {
+      "explanation": "Even where a site-specific exception (Chapter 900) lists fewer building types, a detached houseplex, semi-detached houseplex, townhouse or apartment building is still permitted in the R zone as long as it meets the R zone rules and the rest of the By-law, or receives a minor variance.",
+      "code_refs": "none"
+    }
+  }
+}

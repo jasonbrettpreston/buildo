@@ -1,0 +1,81 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"],
+        "if": "mapped(major_street)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_length_m = 19.0 m @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "19.0 metres for a townhouse",
+          "major_street": "lot abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.40.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"],
+        "if": "mapped(major_street)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_length_m = 25.0 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "R": "In the R zone",
+          "apartment_building": "25.0 metres for an apartment building",
+          "major_street": "lot abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    }
+  ]
+}

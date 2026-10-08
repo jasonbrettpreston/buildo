@@ -1,0 +1,29 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.8.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["laneway_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"laneway_suite": "apply to laneway suites"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    }
+  ]
+}

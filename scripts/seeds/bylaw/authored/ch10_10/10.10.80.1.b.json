@@ -1,0 +1,350 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.80.1(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m \u2264 7.6 m or lot_frontage_m > 7.6 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "7.6 metres",
+          "clause": "(1)(A)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "7.6 metres",
+          "clause": "(1)(A)(ii)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "lot_conditions": "a lot frontage of 7.6 metres or less",
+          "uses": "a parking space located inside a building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "in a detached house, a semi-detached house or a townhouse",
+          "uses": "the parking space is in a detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "private_garage"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "vehicle entrance to the parking space is in the front main wall"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "private_garage"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "the driveway leading to the vehicle entrance in the building is removed"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "in a residential building other than an apartment building",
+          "uses": "the parking space is in a residential building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "private_garage"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "the vehicle entrance to the parking space is in the front main wall"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space", "private_garage"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "the driveway leading to the vehicle entrance in the building is removed"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "landscaping_type",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "the area of the removed driveway in the front yard must be landscaping",
+          "requirement": "the front yard must be landscaping"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(E)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "a parking space located in the front yard or side yard",
+          "requirement": "is authorized by a Section 45 Planning Act minor variance"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.10.80.1(2)#(2)(F)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "200.5.10.11(1)(C)",
+          "clause": "(2)(F)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "zones": "in the R zone",
+          "building_types": "located inside a building",
+          "uses": "for the parking space being converted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

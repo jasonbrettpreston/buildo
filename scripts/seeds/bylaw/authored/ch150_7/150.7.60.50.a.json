@@ -1,0 +1,287 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch150_7/150.7.60.50",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.60.50(1)#whole",
+   "archetype": "DEFINE",
+   "target": "fsi",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "The GFA of an ancillary building containing a garden suite is excluded from the lot's total GFA and FSI.",
+    "gaps": "Exclusion rule for the FSI / GFA measurement of the lot; names fsi as the variable it shapes."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.50(2)#whole",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "The GFA of the garden suite building must be less than the GFA of the residential building on the lot.",
+    "gaps": "A relative maximum (garden suite GFA < main building GFA): gfa_m2 is the suite building's own target and there is no DSL input for the main residential building's GFA, so no numeric_expression can be written."
+   },
+   "disclosure": "A garden suite must be smaller (in gross floor area) than the main house on the lot; we do not compare the two.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.50(3)#whole",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "The general maximum floor area for ancillary buildings in 10.5.60.50(2) does not apply to an ancillary building containing a garden suite.",
+    "gaps": "Displaces 10.5.60.50(2) for garden suite buildings; displaces[] is not a keyed field here."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(A)",
+   "archetype": "LIMIT",
+   "target": "gfa_m2",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "gfa_m2 = 120 m2 @(4)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "The maximum GFA of an ancillary building containing a garden suite is 120 m2.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(B)",
+   "archetype": "LIMIT",
+   "target": "gfa_m2",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "building_height_band"
+    ],
+    "if": "height_storeys = 1 storeys"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "gfa_m2 = 60 m2 @(4)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [
+     "building_height_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing",
+     "building_height_band": "that is one storey"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "Despite (4)(A), a one-storey garden suite building may have at most 60 m2 GFA.",
+    "gaps": "\"one storey\" written as a word, normalized to 1 storeys; the condition reads the suite building's storey count (height_storeys), under building_height_band as the nearest threshold token. Whether the suite is one storey is a design choice."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "150.7.60.50(5)#whole",
+   "archetype": "DEFINE",
+   "target": "gfa_m2",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "ancillary_building",
+     "garden_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "garden_suite": "containing a garden suite",
+     "ancillary_building": "an ancillary building containing"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "has_garden_suite"
+    ],
+    "description": "The GFA of a garden suite building may be reduced by the areas listed in 10.5.40.40(1), (2) and (3)(A) and (B) (GFA exclusions).",
+    "gaps": "Measurement rule incorporating the exclusion list in 10.5.40.40; could also be read as INCLUDE. The excluded areas depend on the suite design."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.60.50(1)": {
+   "explanation": "A garden suite building does not count toward the lot's total gross floor area or floor space index.",
+   "code_refs": "none"
+  },
+  "150.7.60.50(2)": {
+   "explanation": "A garden suite must have less gross floor area than the main house on the lot.",
+   "code_refs": "none"
+  },
+  "150.7.60.50(3)": {
+   "explanation": "The general floor area cap for sheds and other ancillary buildings does not apply to a building containing a garden suite.",
+   "code_refs": "none"
+  },
+  "150.7.60.50(4)": {
+   "explanation": "A garden suite building may have up to 120 m2 of gross floor area, or up to 60 m2 if it is one storey.",
+   "code_refs": "none"
+  },
+  "150.7.60.50(5)": {
+   "explanation": "When calculating a garden suite's gross floor area, the same areas excluded for other buildings under 10.5.40.40 may be left out.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,710 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_8/150.8.60.60",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.8.60.60(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "0.3",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "50",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "deck_or_platform": "a platform, such as"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "informational",
+        "description": "Exclusion rule: the exterior sides of a platform (deck, porch, balcony or similar) attached to or within 0.3 m of an ancillary building containing a laneway suite are not main walls if at least 50 percent of the exterior sides above the floor are open to the outside.",
+        "gaps": "0.3 m (proximity) and 50 percent (openness) are the tests for the exclusion; no lot_condition token reads them. Design facts; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "10",
+          "clause": "(2)(A)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "the laneway suite",
+          "deck_or_platform": "a platform without"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.20(11), a platform without main walls (per (1)) is permitted on a laneway suite building if its area, other than a green roof, is less than 10 percent of the laneway suite's interior floor area.",
+        "gaps": "The 10 percent test compares platform area with the suite's interior floor area (a ratio of two design values); no condition token reads it, and it is not keyed as a platform_area_m2 LIMIT because the clause frames it as a condition of the permission. Overrides 10.5.60.20(11)."
+      },
+      "disclosure": "A deck on a laneway suite is allowed if it is smaller than 10% of the suite's interior floor area. We do not check deck sizes.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "the ancillary building",
+          "laneway_suite": "a laneway suite",
+          "deck_or_platform": "a platform without"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.20(11), a platform without main walls is permitted on a laneway suite building if it complies with the required minimum building setbacks and separation distances for the ancillary building containing a laneway suite.",
+        "gaps": "The condition is compliance with the laneway suite setbacks and separation; the platform's placement is a design fact."
+      },
+      "disclosure": "A deck on a laneway suite must respect the same setbacks and separation distances as the laneway suite building. We do not check deck placement.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(2)#(2)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1.5",
+          "clause": "(2)(C)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "deck_or_platform": "a platform adjacent"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "The exterior sides of a laneway suite platform adjacent to a side yard must be visually screened from the abutting lot by an opaque barrier at least 1.5 m high.",
+        "gaps": "A screening obligation with a minimum barrier height; no vocab.requirement value or DSL target covers screening, so it is keyed UNUSUAL. The 1.5 m is the barrier minimum itself; threshold_used_in_application is the closest closed reason."
+      },
+      "disclosure": "A laneway suite deck facing a side yard must be screened from the neighbour by a solid barrier at least 1.5 m high. We do not check screening.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(3)#(3)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "0.2",
+          "clause": "(3)(A)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "deck_or_platform": "a platform permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.40(5)(B), the floor of a permitted laneway suite platform (other than a green roof) must be no higher than 0.2 m above the floor of the storey from which it gains access.",
+        "gaps": "The limit is measured from the floor of the access storey, not from grade, so platform_height_m (above established grade) does not fit; keyed UNUSUAL. The 0.2 is the limit itself; threshold_used_in_application is the closest closed reason. Overrides 10.5.60.40(5)(B). The unit text names no ancillary building or laneway suite directly; the platform is the one permitted under (2) on a laneway suite building."
+      },
+      "disclosure": "A laneway suite deck floor can be at most 0.2 m above the floor of the room it opens from. We do not check deck levels.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "platform_height_m = 4.0 m @(3)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3",
+          "clause": "(3)(B)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "deck_or_platform": "a platform permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.60.40(5)(B), the floor of a permitted laneway suite platform (other than a green roof) must be no higher than 4.0 m above average grade, unless it is attached to or within 0.3 m of a main wall facing a lane.",
+        "gaps": "Measured above average grade (platform_height_m is defined above established grade; the input approximates). The 'unless attached to or within 0.3 m of a main wall facing a lane' exception has no condition token and is not keyed; where it holds this limit does not apply. The unit text names no ancillary building or laneway suite directly; the platform is the one permitted under (2). Design value; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(4)#whole",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 1.5 m @(4)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3",
+          "clause": "(4)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "the ancillary building",
+          "deck_or_platform": "a platform without"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite (2)(B), a platform without main walls, with stairs or ramps to it, may encroach up to 1.5 m from the front main wall of the ancillary building into the separation required by 150.8.60.30(1), if the platform is no higher than 0.3 m above the average ground elevation along that front main wall.",
+        "gaps": "The 0.3 m height test has no condition token; not keyed. Displaces (2)(B) for the 150.8.60.30(1) separation only. Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "4.0",
+          "clause": "(5)(A)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "ancillary_building": "the ancillary building",
+          "deck_or_platform": "a platform which"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "A canopy, awning or similar structure, or a roof over a platform complying with (4), may encroach into a required separation or setback subject to a maximum height of 4.0 m above the average ground elevation along the abutting main wall of the ancillary building.",
+        "gaps": "A height cap on an encroaching canopy/awning; height_m is the height of the building the unit applies to and no element-height target exists, so it is keyed UNUSUAL. The 4.0 is the cap itself; threshold_used_in_application is the closest closed reason."
+      },
+      "disclosure": "A canopy, awning or roof over a deck that projects into a laneway suite's setback or separation area can be at most 4.0 m above the ground. We do not check canopies.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 1.5 m @(5)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "the ancillary building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "A canopy, awning or similar structure may encroach up to 1.5 m from the front main wall of the ancillary building into the separation required by 150.8.60.30(1).",
+        "gaps": "Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(5)#(5)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_lane"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.75 m @(5)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "abuts_lane"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "the ancillary building",
+          "laneway_suite": "a laneway suite",
+          "abuts_lane": "facing the lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Between a lane and the laneway suite building, a canopy, awning or similar structure may encroach up to 0.75 m from the main wall facing the lane into the setbacks required by 150.8.60.20.",
+        "gaps": "Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(6)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "A pilaster, decorative column, cornice, sill, belt course or similar architectural feature on a laneway suite building may encroach up to 0.6 m into a setback required by 150.8.60.20 or the separation required by 150.8.60.30(1).",
+        "gaps": "Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(6)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "2.0",
+          "clause": "(6)(B)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "A chimney breast on a laneway suite building may encroach up to 0.6 m into a setback required by 150.8.60.20 or the separation required by 150.8.60.30(1), if it is no wider than 2.0 m.",
+        "gaps": "The 2.0 m width is a condition of the encroachment (no condition token reads chimney width), not a separate limit. Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(7)#(7)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "abuts_lane"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(7)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [
+          "abuts_lane"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "abuts_lane": "facing a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Wall-mounted equipment (vents, pipes, utility equipment, satellite dishes, antennae, air conditioners) on a laneway suite building's main wall facing a lane may encroach up to 0.6 m into the lane-side setbacks required by 150.8.60.20.",
+        "gaps": "The 0.6 m value is in the stem (7); cited @(7). Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.60.60(7)#(7)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(7)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Wall-mounted equipment on the front main wall of a laneway suite building may encroach up to 0.6 m into the separation required by 150.8.60.30(1).",
+        "gaps": "The 0.6 m value is in the stem (7); cited @(7). Design element; not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.8.60.60(1)": {
+      "explanation": "The sides of a deck, porch or balcony attached to (or within 0.3 m of) a laneway suite are not counted as main walls if at least half of their area above the floor is open.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(2)": {
+      "explanation": "An open deck on a laneway suite is allowed if it is smaller than 10% of the suite's interior floor area, respects the suite's setbacks and separation, and is screened from the neighbouring lot on side-yard edges by a solid barrier at least 1.5 m high.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(3)": {
+      "explanation": "A laneway suite deck floor can be no more than 0.2 m above the floor it opens from, and no more than 4.0 m above the ground unless it is on (or within 0.3 m of) the wall facing the lane.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(4)": {
+      "explanation": "A low deck (no more than 0.3 m above the ground), with its stairs or ramps, may extend up to 1.5 m from the front of a laneway suite into the required space between the suite and the house.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(5)": {
+      "explanation": "Canopies, awnings and roofs over a permitted deck may project into a laneway suite's setbacks or separation if no more than 4.0 m high: up to 1.5 m from the front wall into the separation from the house, and up to 0.75 m from the lane-facing wall into the lane setback.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(6)": {
+      "explanation": "Decorative features (pilasters, columns, cornices, sills, belt courses) and chimney breasts no wider than 2.0 m may project up to 0.6 m into a laneway suite's setbacks or its separation from the house.",
+      "code_refs": "none"
+    },
+    "150.8.60.60(7)": {
+      "explanation": "Wall-mounted equipment such as vents, pipes, dishes and air conditioners may project up to 0.6 m from a laneway suite's lane-facing wall into the lane setback, or from its front wall into the separation from the house.",
+      "code_refs": "none"
+    }
+  }
+}

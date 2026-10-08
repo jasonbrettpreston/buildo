@@ -1,0 +1,217 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.80.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.7.80.1(1)#(1)(A)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite",
+          "detached_house",
+          "semi_detached_house",
+          "townhouse",
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "parking_space",
+          "dwelling_unit",
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house, townhouse",
+          "townhouse": "house, townhouse, detached",
+          "detached_houseplex": "detached houseplex or",
+          "semi_detached_houseplex": "semi-detached houseplex on",
+          "parking_space": "no parking spaces",
+          "dwelling_unit": "any dwelling units",
+          "secondary_suite_use": "and secondary suites"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_garden_suite",
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Despite 200.5.10.1(1) and 200.5.10.11(1)(C): if a lot has an ancillary building containing a garden suite, no parking spaces are required for any dwelling units and secondary suites in a detached house, semi-detached house, townhouse, detached houseplex or semi-detached houseplex on the same lot.",
+        "gaps": "Displaces the parking space requirements of 200.5.10.1(1) and 200.5.10.11(1)(C) for the listed house types on a lot with a garden suite. There is no lot_condition token for 'has a garden suite' (it is user input has_garden_suite), so the trigger is carried by user_inputs and application, not condition."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.80.1(1)#(1)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "parking_space"
+        ],
+        "evidence": {
+          "garden_suite": "a garden suite",
+          "parking_space": "no parking space"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "modelled",
+        "description": "Despite 200.5.10.1(1) and 200.5.10.11(1)(C), no parking space is required for a garden suite.",
+        "gaps": "Displaces the parking space requirements of 200.5.10.1(1) and 200.5.10.11(1)(C) for the garden suite itself."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.80.1(2)#whole",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "bicycle_parking_spaces = 2 units @(2)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "An ancillary building",
+          "garden_suite": "a garden suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "An ancillary building containing a garden suite must provide at least two bicycle parking spaces, within the garden suite or within any required separation distance or required building setbacks for the ancillary building.",
+        "gaps": "The minimum is written as the word 'two'; keyed as the numeral 2 units. The location rule (within the suite or the required separation/setbacks) is a design fact and is not evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.80.1(3)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "parking_space"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "lawfully_existing": "lawfully existing vehicle",
+          "parking_space": "a parking space"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "has_garden_suite",
+          "existing_driveway_type"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 10.5.80.40(3), if a lot has an ancillary building containing a garden suite, vehicle access to a parking space must be provided from a lawfully existing vehicle access.",
+        "gaps": "A non-numeric obligation (REQUIRE in substance), but no vocab.requirement value fits 'access from a lawfully existing vehicle access' (access_from_lane is a different obligation), so it is keyed UNUSUAL and disclosed. The lawfully_existing token refers to the vehicle access, not the building. Overrides 10.5.80.40(3)."
+      },
+      "disclosure": "On a lot with a garden suite, any parking must be reached from an existing legal driveway or vehicle access; a new vehicle access cannot be added. We do not hold driveway history, so we do not check this.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.7.80.1(1)": {
+      "explanation": "If a lot has a garden suite, no parking is required for the house or its units (detached, semi-detached, townhouse or houseplex, including secondary suites), and none is required for the garden suite itself.",
+      "code_refs": "none"
+    },
+    "150.7.80.1(2)": {
+      "explanation": "A garden suite must provide at least two bicycle parking spaces, inside the suite or within its required setbacks or separation area.",
+      "code_refs": "none"
+    },
+    "150.7.80.1(3)": {
+      "explanation": "On a lot with a garden suite, any car parking must use an existing legal vehicle access; you cannot add a new one for the suite.",
+      "code_refs": "none"
+    }
+  }
+}

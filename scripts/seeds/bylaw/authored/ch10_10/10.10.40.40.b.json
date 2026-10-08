@@ -1,0 +1,197 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = label(d) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"R": "In the R zone", "fsi": "floor space index"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.40.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(d)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = 0.6 ratio @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {"R": "In the R zone", "fsi": "floor space index", "label_value": "zone label does not include"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.10.40.40(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_houseplex": "does not apply to a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "secondary_suite_use": "residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []},
+      "displaces": ["(1)(A)", "(1)(B)"]
+    },
+    {
+      "unit_id": "10.10.40.40(1)#(1)(D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"], "if": "dwelling_units <= 60 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "60", "clause": "(1)(D)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "R": "In the R zone",
+          "townhouse": "does not apply to a townhouse",
+          "apartment_building": "apartment building with 60 dwelling units",
+          "major_street": "lot abutting a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []},
+      "displaces": ["(1)(A)", "(1)(B)"]
+    },
+    {
+      "unit_id": "10.10.40.40(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = 0.69 ratio @(2)(A)"],
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(2)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "October 15, 1953", "clause": "(2)(A)", "reason": "illustrative_or_historic"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "lot in the R zone",
+          "detached_house": "a detached house or a semi-detached house",
+          "semi_detached_house": "semi-detached house erected before",
+          "fsi": "overall floor space index for the lot"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.10.40.40(2)#(2)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "October 15, 1953", "clause": "(2)(B)", "reason": "illustrative_or_historic"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "lot in the R zone",
+          "detached_house": "a detached house or a semi-detached house",
+          "semi_detached_house": "semi-detached house erected before",
+          "side_setback_m": "closer to the side lot line"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.10.40.40(2)#(2)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "5", "clause": "(2)(C)", "reason": "illustrative_or_historic"},
+        {"literal": "October 15, 1953", "clause": "(2)(C)", "reason": "illustrative_or_historic"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "lot in the R zone",
+          "detached_house": "a detached house or a semi-detached house",
+          "semi_detached_house": "semi-detached house erected before"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    }
+  ]
+}

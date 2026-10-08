@@ -1,0 +1,100 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.80.200",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.80.200(1)#(1)(A)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m \u2264 7.6 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "one unit of a townhouse",
+          "clause": "(1)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "townhouse"
+        ],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "In the R zone",
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house",
+          "detached_houseplex": "detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "townhouse": "unit of a townhouse",
+          "frontage_band": "the lot frontage of the lot is 7.6 metres or less",
+          "parking_space": "no parking space is required for a lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.10.80.200(1)#(1)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m \u2264 7.6 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "a maximum of three lots",
+          "clause": "(1)(B)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "a maximum of one dwelling unit",
+          "clause": "(1)(B)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "R": "In the R zone",
+          "frontage_band": "a lot frontage of 7.6 metres or less",
+          "parking_space": "no parking space is required for a lot",
+          "dwelling_unit": "a maximum of one dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    }
+  ]
+}

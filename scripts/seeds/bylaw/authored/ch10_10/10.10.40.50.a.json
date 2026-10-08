@@ -1,0 +1,64 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.50",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.40.50(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "In the R zone",
+          "lawfully_existing": "lawfully existing platform",
+          "deck_or_platform": "existing platform that"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "Exclusion rule (in addition to 10.5.40.50(1)): in the R zone, the exterior sides of a lawfully existing platform that was lawfully enclosed under former City of Toronto By-law 438-86 are not main walls.",
+        "gaps": "Depends on as-built facts (a lawfully existing platform, lawfully enclosed under By-law 438-86) that we do not hold. The former by-law is referenced as the source of the enclosure's legality, not as an alternate compliance path, so it is not keyed as a PREVAILING instrument. No DSL variable is defined, so target is none."
+      },
+      "disclosure": "In the R zone, the outside sides of an existing platform that was legally enclosed under the old City of Toronto By-law 438-86 are not counted as main walls. We do not know whether your lot has such a platform.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.40.50(1)": {
+      "explanation": "In the R zone, if a deck or platform was legally enclosed under the former City of Toronto By-law 438-86, its outside sides are not treated as main walls (so main-wall rules do not apply to them). This adds to the general platform rule in 10.5.40.50(1).",
+      "code_refs": "none"
+    }
+  }
+}

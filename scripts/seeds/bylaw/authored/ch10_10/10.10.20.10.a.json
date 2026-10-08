@@ -1,0 +1,25 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_10/10.10.20.10", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.10.20.10(1)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": ["dwelling_unit"], "evidence": {"R": "the R zone", "dwelling_unit": "Dwelling Unit in a permitted residential building type"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Lists the uses permitted in the R zone: a dwelling unit in a permitted residential building type (per 10.10.20.40), a municipal shelter, and a park. A use permission, not a numeric limit.", "gaps": "Municipal Shelter and Park have no vocab.uses token and are not keyed. Building types are not named here (they come from 10.10.20.40), so building_types is 'any'."},
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.10.20.10(1)": {"explanation": "In the R (Residential) zone, homes are permitted as dwelling units inside one of the residential building types the by-law allows for that zone (listed separately in 10.10.20.40). Municipal shelters and parks are also permitted uses.", "code_refs": "none"}
+ }
+}

@@ -1,0 +1,175 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_7/150.7.60.30",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.7.60.30(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "building_height_band"
+        ],
+        "if": "proposed_height_m ≤ 4.0 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 4.0 m @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [
+          "building_height_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "building_height_band": "the height of"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "The main wall of an ancillary building containing a garden suite must be at least 4.0 m from the main wall of the residential building on the same lot if the ancillary building's height is no greater than 4.0 m.",
+        "gaps": "proposed_height_m is the height of the ancillary building containing the garden suite (a scenario value); for ancillary buildings 10.5.60.40(1) measures height from average grade rather than established grade, so the input approximates. Overrides 10.5.60.30(1) (general ancillary separation) for garden suites."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.30(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "building_height_band"
+        ],
+        "if": "proposed_height_m > 4.0 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 7.5 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [
+          "building_height_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "building_height_band": "the height of"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "partially_modelled",
+        "description": "The main wall of an ancillary building containing a garden suite must be at least 7.5 m from the main wall of the residential building on the same lot if the ancillary building's height is greater than 4.0 m.",
+        "gaps": "proposed_height_m is the height of the ancillary building containing the garden suite (a scenario value); for ancillary buildings 10.5.60.40(1) measures height from average grade rather than established grade, so the input approximates. Overrides 10.5.60.30(1) (general ancillary separation) for garden suites. Displaced by (1)(C) inside the area described there."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.7.60.30(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "building_height_band"
+        ],
+        "if": "proposed_height_m > 4.0 m"
+      },
+      "applies_to": {
+        "part": "map_area",
+        "refs": [
+          "Coxwell Avenue",
+          "Coxwell Boulevard",
+          "Massey Creek",
+          "the Don River",
+          "Sunrise Avenue",
+          "Victoria Park Avenue",
+          "Nursewood Park",
+          "Lake Ontario"
+        ]
+      },
+      "numeric_expression": [
+        "separation_m = 5.0 m @(1)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "garden_suite"
+        ],
+        "lot_conditions": [
+          "building_height_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "garden_suite": "a garden suite",
+          "building_height_band": "a height greater"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "map_area_not_held",
+        "user_inputs": [
+          "has_garden_suite"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 150.7.60.30(1)(B), an ancillary building containing a garden suite with a height greater than 4.0 m, on a lot in the area bounded by Coxwell Avenue, Coxwell Boulevard and Massey Creek (west), the Don River and Sunrise Avenue (north), Victoria Park Avenue and Nursewood Park (east) and Lake Ontario (south), must be at least 5.0 m from a residential building on the same lot.",
+        "gaps": "Displaces 150.7.60.30(1)(B) (7.5 m) within the described area. The area is described by streets and natural features; we hold no geometry for it, so whether a lot is inside cannot be determined. The measurement here is to 'a residential building', not main wall to main wall as in (A)/(B). proposed_height_m is the height of the ancillary building containing the garden suite (a scenario value); for ancillary buildings 10.5.60.40(1) measures height from average grade rather than established grade, so the input approximates. Overrides 10.5.60.30(1) (general ancillary separation) for garden suites."
+      },
+      "disclosure": "Inside the area bounded by Coxwell Ave/Coxwell Blvd/Massey Creek, the Don River/Sunrise Ave, Victoria Park Ave/Nursewood Park and Lake Ontario, a garden suite building taller than 4.0 m needs only 5.0 m (not 7.5 m) from the house. We cannot yet tell whether your lot is inside this area, so we apply the 7.5 m rule and flag this.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.7.60.30(1)": {
+      "explanation": "A garden suite building must be set back from the main house on the same lot: at least 4.0 m if the garden suite building is 4.0 m tall or less, and at least 7.5 m if it is taller. In one part of the east end (bounded by Coxwell, the Don River/Sunrise Ave, Victoria Park Ave/Nursewood Park and Lake Ontario) a taller garden suite needs only 5.0 m.",
+      "code_refs": "none"
+    }
+  }
+}

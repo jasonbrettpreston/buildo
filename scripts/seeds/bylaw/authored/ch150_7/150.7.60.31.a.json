@@ -1,0 +1,25 @@
+{"schema": "bylaw-authored-v1", "shard": "ch150_7/150.7.60.31", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.60.31(1)#whole",
+   "archetype": "DEFINE",
+   "target": "separation_m",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {"tokens": ["lawfully_existing"]},
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["ancillary_building", "garden_suite"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"ancillary_building": "lawfully existing ancillary building", "garden_suite": "containing a garden suite", "lawfully_existing": "a lawfully existing ancillary building"}},
+   "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "has_garden_suite"], "status": "not_modelled", "description": "If the existing separation between a lawfully existing ancillary building and a lawfully existing residential building on the same lot is less than the garden-suite separation required by 150.7.60.30(1), the existing separation becomes the required minimum.", "gaps": "Sets the minimum to an as-built value; the DSL existing(...) form needs a date or enactment the text does not give, so no expression is written and the unit is keyed as a DEFINE of separation_m rather than a LIMIT. Needs as-built separation data we do not hold. No zone is named in the text."},
+   "disclosure": "If an existing garage or shed is closer to the house than the garden-suite rules require, converting it to a garden suite can keep the existing distance. We do not hold as-built building separations.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.60.31(1)": {"explanation": "If a lawfully existing ancillary building (such as a garage) is closer to the house than the separation normally required for a garden suite, the existing distance is accepted as the required minimum.", "code_refs": "none"}
+ }
+}
