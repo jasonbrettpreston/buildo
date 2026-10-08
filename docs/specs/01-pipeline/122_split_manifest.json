@@ -1,6 +1,22 @@
 {
   "contract_version": 1,
   "budgets": {
+    "68": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 498,
+        "bytes": 82338,
+        "commit": "mcbylaw-s8-2026-10-07"
+      }
+    },
+    "69": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 185,
+        "bytes": 45933,
+        "commit": "mcbylaw-s8-2026-10-07"
+      }
+    },
     "122": {
       "headroom_pct": 10,
       "measured_at": {

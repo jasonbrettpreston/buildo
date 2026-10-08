@@ -5,7 +5,7 @@
 > a ref is shown to exist and a declared constant is compared; no code is executed against the table until Phase 3.
 
 - code_link version: 1
-- code_roots source: PROPOSED (S9; vocab.json carries no `code_roots` yet — S5 ratifies the list)
+- code_roots source: vocab.json `code_roots`
 - authored rows read: 0 (pending 0) · heuristic rows read: 0
 - input `docs/specs/00-architecture/01_database_schema.md` sha256 `fc6c072e5dbbc4cb`
 - input `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
@@ -14,6 +14,8 @@
 - input `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - input `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
 - input `scripts/lib/zoning-precedence.js` sha256 `b244072ff4e230d0`
+- input `scripts/seeds/bylaw/external.json` sha256 `32b0f893a8bdced2`
+- input `scripts/seeds/bylaw/vocab.json` sha256 `7dcb77fad6e544cb`
 - input `scripts/seeds/logic_variables.json` sha256 `b88c37eb26d6665d`
 - input `src/lib/db/generated/schema.ts` sha256 `e334d512b14f85a1`
 
@@ -23,7 +25,7 @@
 |---|---|---|
 | G-CODE (i) blocking | not_run | 0 violation(s) over 0 row(s) |
 | G-CODE (ii) report-only | — | 0 expects mismatch(es) |
-| feeds cross-check report-only | not_run (registry not declared) | 0 finding(s) over 0 unit(s) |
+| feeds cross-check report-only | — | 0 finding(s) over 0 unit(s) |
 | G-CODE (iv) report-only | — | 134 constants in 39 named declarations: by-law 0 · heuristic 0 · unmapped 134 |
 
 ## G-CODE (i) — blocking violations
@@ -36,7 +38,7 @@ None.
 
 ## feeds cross-check (report-only, Spec 69 M-52)
 
-None — `vocab.code_registry` is not declared yet (S5), so no unit is checked against it.
+None.
 
 ## G-CODE (iv) — root-module constants: by-law · heuristic · unmapped (Spec 69 M-46)
 
