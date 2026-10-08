@@ -1,0 +1,298 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.50",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.80.40.50(1)#(1)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "second",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "four",
+          "clause": "(1)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "one",
+          "clause": "(1)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "RM": "In the RM zone",
+          "deck_or_platform": "a deck or balcony",
+          "detached_house": "of a detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A detached house may have at most four platforms with access from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "No vocab.dsl_target counts platforms, so this numeric count limit cannot be keyed as a LIMIT; keyed UNUSUAL (conservative) and the counts are listed as unexpressed literals. Platform design (count, area, position) is a scenario detail we do not hold."
+      },
+      "disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.50(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "platform_area_m2 = 4.0 m2 @(1)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "second",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "RM": "In the RM zone",
+          "deck_or_platform": "a deck or balcony",
+          "detached_house": "of a detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Each platform with access from the second storey or above of a detached house may be at most 4.0 m2.",
+        "gaps": "Platform design (count, area, position) is a scenario detail we do not hold."
+      },
+      "disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "second",
+          "clause": "(2)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "three",
+          "clause": "(2)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "one",
+          "clause": "(2)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "RM": "In the RM zone",
+          "deck_or_platform": "a deck or balcony",
+          "semi_detached_house": "of a semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A semi-detached house may have at most three upper-storey platforms per dwelling unit, and at most one on each of the front, rear and exterior side of the unit.",
+        "gaps": "No vocab.dsl_target counts platforms, so this numeric count limit cannot be keyed as a LIMIT; keyed UNUSUAL (conservative) and the counts are listed as unexpressed literals. Platform design (count, area, position) is a scenario detail we do not hold."
+      },
+      "disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "platform_area_m2 = 4.0 m2 @(2)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "second",
+          "clause": "(2)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "RM": "In the RM zone",
+          "deck_or_platform": "a deck or balcony",
+          "semi_detached_house": "of a semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Each upper-storey platform of a semi-detached house may be at most 4.0 m2.",
+        "gaps": "Platform design (count, area, position) is a scenario detail we do not hold."
+      },
+      "disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 1.8 m @(2)(C)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "second",
+          "clause": "(2)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "RM": "In the RM zone",
+          "deck_or_platform": "a deck or balcony",
+          "semi_detached_house": "of a semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A rear upper-storey platform of a semi-detached house must be at least 1.8 m from the common wall dividing the dwelling units (or its projection to a lot line).",
+        "gaps": "Keyed on separation_m as the nearest target (distance to the common wall between units); no target names a distance from a party wall. Platform design (count, area, position) is a scenario detail we do not hold."
+      },
+      "disclosure": "Rules for upper-storey decks and balconies are not checked; confirm them with your designer.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.80.40.50(1)": {
+      "explanation": "A detached house in the RM zone may have at most four second-storey-or-higher decks or balconies (one per side), each no larger than 4.0 m2.",
+      "code_refs": "none"
+    },
+    "10.80.40.50(2)": {
+      "explanation": "A semi-detached house may have at most three upper decks or balconies per unit (one per side), each no larger than 4.0 m2, and a rear one must be at least 1.8 m from the shared wall.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,504 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.71",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.40.71(1)#(1)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "the Residential Zone category",
+          "RD": "the Residential Zone category",
+          "RS": "the Residential Zone category",
+          "RT": "the Residential Zone category",
+          "RM": "the Residential Zone category",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "If a lawfully existing building or structure is closer to the front lot line than the required minimum, its lawful setback is its minimum front yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT."
+      },
+      "disclosure": "Existing buildings that lawfully sit closer to a lot line than today's rules allow keep that setback; we cannot check existing building positions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(1)#(1)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "the Residential Zone category",
+          "RD": "the Residential Zone category",
+          "RS": "the Residential Zone category",
+          "RT": "the Residential Zone category",
+          "RM": "the Residential Zone category",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "If a lawfully existing building or structure is closer to the rear lot line than the required minimum, its lawful setback is its minimum rear yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT."
+      },
+      "disclosure": "Existing buildings that lawfully sit closer to a lot line than today's rules allow keep that setback; we cannot check existing building positions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(1)#(1)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "the Residential Zone category",
+          "RD": "the Residential Zone category",
+          "RS": "the Residential Zone category",
+          "RT": "the Residential Zone category",
+          "RM": "the Residential Zone category",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "If a lawfully existing building or structure is closer to a side lot line than the required minimum, its lawful setback is its minimum side yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT."
+      },
+      "disclosure": "Existing buildings that lawfully sit closer to a lot line than today's rules allow keep that setback; we cannot check existing building positions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "An addition or extension to a lawfully existing building relying on 10.5.40.71(1) must meet the required minimum setbacks or be authorized by a minor variance.",
+        "gaps": "Zones left empty: the unit text names no zone (10.5 = Residential Zone category)."
+      },
+      "disclosure": "Additions to a building that relies on its existing setbacks must meet the current setbacks or get a minor variance.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(3)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "if": "lot_frontage_m ≤ 12.2 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "frontage_band": "lot frontage of 12.2 metres or less",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "On a lot with frontage of 12.2 m or less, an addition above a lawfully existing building may use the lawful existing setbacks permitted by 10.5.40.71(1).",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. Zones left empty: the unit text names no zone."
+      },
+      "disclosure": "On narrow lots (12.2 m frontage or less) you may build up over an existing building at its existing setbacks; we cannot check existing setbacks.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(4)#(4)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "if": "lot_frontage_m < 9.0 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "frontage_band": "less than 9.0 metres",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "On a lot with frontage under 9.0 m, a rear or side addition to a lawfully existing building may use the existing lawful side yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. Zones left empty: the unit text names no zone."
+      },
+      "disclosure": "On lots under 9.0 m wide, a rear or side addition may keep the existing building's side setback; we cannot check existing setbacks.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(4)#(4)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "if": "lot_frontage_m ≥ 9.0 m and lot_frontage_m ≤ 12.2 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "50%",
+          "clause": "(4)(B)(i)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "frontage_band",
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "frontage_band": "9.0 metres to 12.2 metres",
+          "lawfully_existing": "a lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "On a lot with frontage of 9.0 m to 12.2 m, the side setback for a rear or side addition to a lawfully existing building is the greater of 50% of the required minimum side yard setback or the existing lawful side setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. The 50% applies to the zone's required side yard setback (a cross-referenced value). Zones left empty: the unit text names no zone."
+      },
+      "disclosure": "On lots 9.0 m to 12.2 m wide, a rear or side addition needs the greater of half the normal side setback or the existing setback; we cannot check existing setbacks.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(5)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing",
+          "abuts_lane"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "the Residential Zone category",
+          "RD": "the Residential Zone category",
+          "RS": "the Residential Zone category",
+          "RT": "the Residential Zone category",
+          "RM": "the Residential Zone category",
+          "lawfully_existing": "a lawfully existing building",
+          "abuts_lane": "centreline of a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "If a lawfully existing building or structure is closer to the original centreline of a lane than required, that lawful distance is its minimum distance from the lane centreline.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT."
+      },
+      "disclosure": "Existing buildings that lawfully sit closer to a lot line than today's rules allow keep that setback; we cannot check existing building positions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.71(6)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing",
+          "abuts_lane"
+        ],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "a lawfully existing building",
+          "abuts_lane": "centreline of a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "An addition above a lawfully existing building may keep the lawful existing distance from the original lane centreline permitted by 10.5.40.71(5).",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. Zones left empty: the unit text names no zone."
+      },
+      "disclosure": "Building up over an existing building near a lane may keep its existing distance from the lane; we cannot check this.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.40.71(1)": {
+      "explanation": "If an existing building was lawfully built closer to the front, rear or side lot line than today's minimum, its existing setback is treated as the minimum for that building.",
+      "code_refs": "none"
+    },
+    "10.5.40.71(2)": {
+      "explanation": "Additions to such a building must meet the current setbacks or be approved by a minor variance.",
+      "code_refs": "none"
+    },
+    "10.5.40.71(3)": {
+      "explanation": "On lots 12.2 m wide or narrower, you may build up over an existing building using its existing setbacks.",
+      "code_refs": "none"
+    },
+    "10.5.40.71(4)": {
+      "explanation": "For rear or side additions on narrow lots: under 9.0 m wide, the existing side setback may be kept; from 9.0 m to 12.2 m, the side setback is the greater of half the normal minimum or the existing setback.",
+      "code_refs": "none"
+    },
+    "10.5.40.71(5)": {
+      "explanation": "If an existing building lawfully sits closer to a lane's original centreline than today's rules allow, that distance is its minimum.",
+      "code_refs": "none"
+    },
+    "10.5.40.71(6)": {
+      "explanation": "Building up over such a building may keep that same distance from the lane.",
+      "code_refs": "none"
+    }
+  }
+}

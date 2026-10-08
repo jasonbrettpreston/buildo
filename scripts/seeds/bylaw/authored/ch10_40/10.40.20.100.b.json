@@ -1,0 +1,313 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.20.100",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.40.20.100(12)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["secondary_suite"],
+        "lot_conditions": [],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "RS": "the RS zone",
+          "secondary_suite": "A secondary suite",
+          "secondary_suite_use": "secondary suite in the RS zone"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(13)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "any": "seniors community house"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(15)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "any": "short-term rental"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(16)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["laneway_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "laneway_suite": "A laneway suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(17)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "garden_suite": "A garden suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(18)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "any": "multi-tenant house"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(4)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "any": "day nursery"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(5)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "any": "group home"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(8)#(8)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "place of worship"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(8)#(8)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "required_lot_area_m2 = 2000 m2 @(8)(B)(ii)",
+        "required_lot_frontage_m = 30 m @(8)(B)(iii)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "place of worship",
+          "major_street": "abutting a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(8)#(8)(C)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = 2000 m2 @(8)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "place of worship"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.20.100(8)#(8)(D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "place of worship",
+          "lawfully_existing": "a lawfully existing place of worship"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["lawfully_existing_status"]}
+    }
+  ]
+}

@@ -1,0 +1,313 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.11",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.40.11(1)#whole",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = existing(height_m; enacted(569-2013)) @(1)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "If a lawfully existing building or structure is taller than the permitted maximum height, its lawful height becomes its maximum height.",
+        "gaps": "Needs the as-built lawful height. The clause states no date for 'lawfully existing'; the existing() date argument is keyed as enacted(569-2013) (conservative reading), and the 'greater than the permitted maximum' test is carried by the lawfully_existing condition because the DSL has no atom comparing an existing value with another unit's limit."
+      },
+      "disclosure": "A building that legally exists and is already taller than today's limit keeps its existing height as its limit. We do not know as-built heights, so this is not applied.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "An addition or extension to a lawfully existing building covered by 10.5.40.11(1) must meet the permitted maximum height, or be authorized by a minor variance.",
+        "gaps": "The unit text names no zone; its scope follows 10.5.40.11(1) (Residential Zone category). The minor-variance arm is outside our evaluation."
+      },
+      "disclosure": "Additions to an over-height existing building must meet the normal height limit unless a minor variance is granted.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(3)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["roof_type", "lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "A roof alteration on a lawfully existing building covered by 10.5.40.11(1) may be built up to that building's lawful (existing) maximum height.",
+        "gaps": "Depends on as-built height and roof facts. The unit text names no zone; its scope follows 10.5.40.11(1)."
+      },
+      "disclosure": "A new roof on an over-height existing building may go up to the building's existing lawful height. We do not apply this because we lack as-built heights.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["main_wall_height_m = existing(main_wall_height_m; enacted(569-2013)) @(4)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "If the lawful height of the front and rear main walls of a lawfully existing building exceeds the permitted maximum main wall height, that lawful height becomes their maximum.",
+        "gaps": "Needs the as-built wall heights. The existing() date argument is keyed as enacted(569-2013) because the clause states no date (conservative reading)."
+      },
+      "disclosure": "Existing front and rear walls that are legally taller than today's limit keep their existing height as the limit. We do not know as-built wall heights.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["main_wall_height_m = existing(main_wall_height_m; enacted(569-2013)) @(4)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "If the lawful height of the side main walls of a lawfully existing building exceeds the permitted maximum main wall height, that lawful height becomes their maximum.",
+        "gaps": "Needs the as-built wall heights. The existing() date argument is keyed as enacted(569-2013) because the clause states no date (conservative reading)."
+      },
+      "disclosure": "Existing side walls that are legally taller than today's limit keep their existing height as the limit. We do not know as-built wall heights.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(5)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "New main walls of an addition to a lawfully existing building covered by 10.5.40.11(4) are subject to the main wall heights in 10.5.40.11(4).",
+        "gaps": "Includes 10.5.40.11(4), which depends on as-built wall heights. The unit text names no zone; its scope follows 10.5.40.11(4)."
+      },
+      "disclosure": "New walls of an addition may match the existing building's lawful wall heights. We cannot check this without as-built data.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(6)#whole",
+      "archetype": "LIMIT",
+      "target": "entrance_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["entrance_height_m = existing(entrance_height_m; enacted(569-2013)) @(6)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "If the lawful height of the first floor above established grade in a lawfully existing building exceeds the permitted maximum, that lawful first floor height becomes its maximum.",
+        "gaps": "Needs the as-built first floor height. The existing() date argument is keyed as enacted(569-2013) because the clause states no date (conservative reading)."
+      },
+      "disclosure": "An existing first floor that is legally higher above grade than today's limit keeps that height as its limit. We do not know as-built floor heights.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.11(7)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "An addition to a lawfully existing building covered by 10.5.40.11(6) may have a first floor above established grade up to the maximum height in 10.5.40.11(6).",
+        "gaps": "Depends on the as-built first floor height. The unit text names no zone; its scope follows 10.5.40.11(6)."
+      },
+      "disclosure": "An addition may match the existing building's lawful first floor height. We cannot check this without as-built data.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.40.11(1)": {
+      "explanation": "In residential zones, a legally existing building that is already taller than the current height limit may keep its existing height as its limit.",
+      "code_refs": "none"
+    },
+    "10.5.40.11(2)": {
+      "explanation": "An addition to such an over-height building must meet the normal maximum height, unless a minor variance is granted.",
+      "code_refs": "none"
+    },
+    "10.5.40.11(3)": {
+      "explanation": "A new or altered roof on such an over-height building may be built up to the building's existing lawful height.",
+      "code_refs": "none"
+    },
+    "10.5.40.11(4)": {
+      "explanation": "In residential zones, if a legally existing building's front and rear walls, or its side walls, are taller than the current main wall height limit, their existing height becomes the limit for that pair of walls.",
+      "code_refs": "none"
+    },
+    "10.5.40.11(5)": {
+      "explanation": "New main walls of an addition to such a building follow the wall heights allowed under 10.5.40.11(4).",
+      "code_refs": "none"
+    },
+    "10.5.40.11(6)": {
+      "explanation": "In residential zones, if a legally existing building's first floor sits higher above grade than the current limit, its existing first floor height becomes the limit.",
+      "code_refs": "none"
+    },
+    "10.5.40.11(7)": {
+      "explanation": "An addition to such a building may have its first floor at the same lawful height allowed under 10.5.40.11(6).",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.41",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.40.41(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "the Residential Zone category",
+          "RD": "the Residential Zone category",
+          "RS": "the Residential Zone category",
+          "RT": "the Residential Zone category",
+          "RM": "the Residential Zone category",
+          "lawfully_existing": "of lawfully existing buildings"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "If lawfully existing buildings on a lot exceed the permitted maximum floor space index, their lawful FSI becomes the maximum FSI for those buildings.",
+        "gaps": "The clause sets the limit to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT."
+      },
+      "disclosure": "Existing buildings lawfully built above today's floor space index may keep that floor area; we cannot check existing floor area.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.40.41(1)": {
+      "explanation": "If existing buildings on a lot were lawfully built with more floor area than the current floor space index allows, that existing floor space index is treated as the maximum for those buildings.",
+      "code_refs": "none"
+    }
+  }
+}

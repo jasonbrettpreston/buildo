@@ -1,0 +1,62 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.20.20",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.60.20.20(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "garden_suite",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "garden_suite": "Garden Suite (17)",
+          "laneway_suite": "Laneway Suite (16)",
+          "secondary_suite_use": "Secondary Suite (12)"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "has_secondary_suite",
+          "has_garden_suite",
+          "has_laneway_suite"
+        ],
+        "status": "informational",
+        "description": "Lists the uses permitted in the RT zone only if they meet the numbered conditions in Clause 10.60.20.100 (including garden suites, laneway suites, secondary suites, home occupations, day nurseries, group homes, places of worship and various commercial and institutional uses).",
+        "gaps": "The parenthesised numbers are references to regulations in 10.60.20.100 and are treated as regulation numbers (not literals). Most listed uses have no vocab.uses token; only suite-related tokens are keyed."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.60.20.20(1)": {
+      "explanation": "In the RT zone a range of uses, including secondary suites, garden suites and laneway suites, are allowed only if they meet the specific conditions set out for each in Clause 10.60.20.100.",
+      "code_refs": "none"
+    }
+  }
+}

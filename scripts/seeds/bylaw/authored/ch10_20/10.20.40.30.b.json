@@ -1,0 +1,104 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.30",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.30(1)#whole",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["required_frontage_band"],
+        "if": "required_lot_frontage_m <= 18.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_depth_m = 19.0 m @(1)"],
+      "literals_not_expressed": [
+        {"literal": "one storey", "clause": "(1)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "10.20.40.20(2)", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house", "detached_houseplex"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RD": "In the RD zone",
+          "detached_house": "detached house",
+          "detached_houseplex": "detached houseplex",
+          "required_frontage_band": "required minimum lot frontage of 18.0 metres or less"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.40.30(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["depth_band", "frontage_band"],
+        "if": "lot_depth_m >= 36.0 m and lot_frontage_m < 10.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_depth_m = 19.0 m @(2)(A)"],
+      "literals_not_expressed": [
+        {"literal": "10.20.40.20(1)", "clause": "(2)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["depth_band", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RD": "in the RD zone",
+          "detached_houseplex": "detached houseplex",
+          "depth_band": "lot depth of 36.0 metres or greater",
+          "frontage_band": "lot frontage of less than 10.0 metres"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.40.30(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["depth_band", "frontage_band"],
+        "if": "lot_depth_m >= 40.0 m and lot_frontage_m >= 10.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_depth_m = 19.0 m @(2)(B)"],
+      "literals_not_expressed": [
+        {"literal": "10.20.40.20(1)", "clause": "(2)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["depth_band", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RD": "in the RD zone",
+          "detached_houseplex": "detached houseplex",
+          "depth_band": "lot depth of 40.0 metres or greater",
+          "frontage_band": "lot frontage of 10.0 metres or greater"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

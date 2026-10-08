@@ -1,0 +1,206 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.50",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.20.40.50(1)#(1)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second", "clause": "(1)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "four", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RD": "the RD zone",
+          "detached_house": "of a detached house",
+          "deck_or_platform": "platform such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "deferred_phase2",
+        "user_inputs": ["building_type"],
+        "status": "not_modelled",
+        "description": "A detached house in the RD zone may have at most four platforms (decks or balconies) reached from the second storey or above, and at most one on each of the front, rear and each side.",
+        "gaps": "No DSL target exists for a count of platforms, so the limits four and one are listed as not expressed (closest closed reason; they are count limits); 'second' is the storey ordinal."
+      },
+      "disclosure": "Upper-storey decks and balconies on a detached house are limited to four in total and one per side; we do not check the number of platforms.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.20.40.50(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "second", "clause": "(1)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RD": "the RD zone",
+          "detached_house": "of a detached house",
+          "deck_or_platform": "platform such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "Each platform reached from the second storey or above of a detached house in the RD zone may be at most 4.0 square metres.",
+        "gaps": "Applies only to platforms with access from the second storey or above; that is a design fact, not a lot condition."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.20.40.50(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"], "if": "not mapped(LC)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RD": "the RD zone",
+          "lawfully_existing": "lawfully existing platform",
+          "deck_or_platform": "lawfully existing platform"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "Where the lot is not subject to lot coverage, the outside sides of a lawfully existing platform that was lawfully enclosed under former City of Toronto By-law 438-86 are not counted as main walls.",
+        "gaps": "Depends on the as-built history of a platform enclosure under the former by-law; 'not subject to lot coverage' is read as no Lot Coverage Overlay value (not mapped(LC))."
+      },
+      "disclosure": "An existing platform that was legally enclosed under the old City of Toronto by-law does not count as main walls where no lot coverage applies; we cannot see a building's history, so we do not apply this.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.20.40.50(3)#(3)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second", "clause": "(3)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "2", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform", "dwelling_unit"],
+        "evidence": {
+          "RD": "the RD zone",
+          "detached_houseplex": "of a detached houseplex",
+          "deck_or_platform": "platforms such as a deck",
+          "dwelling_unit": "each dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "deferred_phase2",
+        "user_inputs": ["building_type", "unit_count"],
+        "status": "not_modelled",
+        "description": "A detached houseplex in the RD zone may have at most 2 platforms reached from the second storey or above for each dwelling unit, with at most one on each of the unit's front and rear sides.",
+        "gaps": "No DSL target exists for a count of platforms, so the limits 2 and one are listed as not expressed (closest closed reason; they are count limits); 'second' is the storey ordinal."
+      },
+      "disclosure": "Upper-storey decks and balconies on a houseplex are limited to 2 per unit, one at the front and one at the rear; we do not check the number of platforms.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.20.40.50(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["corner_lot"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second", "clause": "(3)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["corner_lot"],
+        "uses": ["deck_or_platform", "dwelling_unit"],
+        "evidence": {
+          "RD": "the RD zone",
+          "detached_houseplex": "for a detached houseplex",
+          "corner_lot": "on a corner lot",
+          "deck_or_platform": "a platform permitted",
+          "dwelling_unit": "a dwelling unit facing"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "informational",
+        "description": "On a corner lot, a permitted upper-storey platform of a detached houseplex may also be placed on a main wall of a dwelling unit that faces a street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.20.40.50(1)": {
+      "explanation": "In the RD zone a detached house may have no more than four decks or balconies reached from the second storey or higher, one per side at most, and each can be no larger than 4.0 square metres.",
+      "code_refs": "none"
+    },
+    "10.20.40.50(2)": {
+      "explanation": "In the RD zone where lot coverage does not apply, the outside sides of an existing platform that was legally enclosed under the former City of Toronto By-law 438-86 are not treated as main walls.",
+      "code_refs": "none"
+    },
+    "10.20.40.50(3)": {
+      "explanation": "In the RD zone a detached houseplex may have up to 2 upper-storey decks or balconies per unit, one at the front and one at the rear; on a corner lot one may instead be on a wall facing the street.",
+      "code_refs": "none"
+    }
+  }
+}

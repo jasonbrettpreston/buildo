@@ -1,0 +1,128 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.50(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "four", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "In the RD zone", "detached_house": "of a detached house", "deck_or_platform": "such as a deck or balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]},
+      "input_fidelity": {"status": "unknown"}
+    },
+    {
+      "unit_id": "10.20.40.50(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "In the RD zone", "detached_house": "of a detached house", "deck_or_platform": "such as a deck or balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "input_fidelity": {"status": "unknown"}
+    },
+    {
+      "unit_id": "10.20.40.50(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "In the RD zone", "lawfully_existing": "lawfully existing platform", "deck_or_platform": "sides of a lawfully existing platform"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status"]},
+      "input_fidelity": {"status": "unknown"}
+    },
+    {
+      "unit_id": "10.20.40.50(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "2", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "In the RD zone", "detached_houseplex": "of a detached houseplex", "deck_or_platform": "such as a deck or balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type", "unit_count"]},
+      "input_fidelity": {"status": "unknown"}
+    },
+    {
+      "unit_id": "10.20.40.50(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["corner_lot"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["corner_lot"],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "In the RD zone", "detached_houseplex": "for a detached houseplex", "corner_lot": "on a corner lot", "deck_or_platform": "a platform permitted in (A)"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "input_fidelity": {"status": "unknown"}
+    }
+  ]
+}

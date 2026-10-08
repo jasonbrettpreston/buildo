@@ -1,0 +1,32 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_40/10.40.30.1", "keyer": "A",
+ "units": [
+  {"unit_id": "10.40.30.1(1)#(1)(A)", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["detached_houseplex"], "lot_conditions": [], "uses": [], "evidence": {"detached_houseplex": "a permitted detached houseplex"}},
+   "calculation_handling": {"not_modelled_reason": "ch900_backlog", "user_inputs": ["building_type"], "status": "informational", "description": "Where a Chapter 900 exception sets lot requirements for a detached house, a detached houseplex that is the only residential building on the lot is subject to those detached-house lot requirements (despite 900.1.10(3) and 900.1.10(4)(A)). Keyed PROCEDURAL: it governs how exception lot requirements map onto the houseplex, with no value of its own.", "gaps": "Depends on the Chapter 900 exception content; the 'only residential building on a lot' condition has no vocabulary token."},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.40.30.1(1)#(1)(B)", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["semi_detached_houseplex"], "lot_conditions": [], "uses": [], "evidence": {"semi_detached_houseplex": "a permitted semi-detached houseplex"}},
+   "calculation_handling": {"not_modelled_reason": "ch900_backlog", "user_inputs": ["building_type"], "status": "informational", "description": "Where a Chapter 900 exception sets lot requirements for a semi-detached house, a semi-detached houseplex that is the only residential building on the lot is subject to the exception's lot requirements for the portion of a semi-detached house that is one dwelling unit.", "gaps": "Depends on the Chapter 900 exception content; the 'only residential building on a lot' condition has no vocabulary token."},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.40.30.1(2)#whole", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "base > exception",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["detached_houseplex", "semi_detached_houseplex"], "lot_conditions": ["has_secondary_suite"], "uses": ["secondary_suite_use"], "evidence": {"detached_houseplex": "a detached houseplex", "semi_detached_houseplex": "semi-detached houseplex or", "has_secondary_suite": "with a secondary suite", "secondary_suite_use": "a secondary suite"}},
+   "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": ["building_type", "has_secondary_suite"], "status": "informational", "description": "For a detached houseplex, semi-detached houseplex or residential building with a secondary suite, if the base lot coverage under 10.40.30.40 is more permissive than the coverage carried in from a Chapter 900 exception under 10.40.30.1(1), the more permissive (base) coverage prevails. Ranked base > exception for lot coverage only.", "gaps": "The ranking is limited to lot coverage and to the listed building types."},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.40.30.1(1)": {"explanation": "If a site-specific exception (Chapter 900) sets lot requirements for a detached or semi-detached house, the same requirements apply to a detached or semi-detached houseplex that is the only home building on the lot.", "code_refs": "none"},
+  "10.40.30.1(2)": {"explanation": "For a houseplex or a house with a secondary suite, if the regular RS lot coverage rule is more generous than the coverage from a site-specific exception, the more generous rule applies.", "code_refs": "none"}
+ }
+}

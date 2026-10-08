@@ -1,0 +1,224 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:1075-2026/10.5.40.60",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.40.60(4)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "0.15",
+          "clause": "[instruction]",
+          "reason": "illustrative_or_historic"
+        },
+        {
+          "literal": "0.3",
+          "clause": "[instruction]",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Amending instruction (item 3 of By-law 1075-2026): replaces 0.15 with 0.3 in 10.5.40.60(4)(A) and restates 10.5.40.60(4).",
+        "gaps": "The new value 0.3 is keyed in the restated unit 10.5.40.60(4)@1075-2026#(4)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(4)@1075-2026#(4)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.3 m @(4)",
+        "encroachment_clearance_m = 0.3 m @(4)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "As amended: cladding added to the original outside surface of a main wall, or to an addition or extension, may extend up to 0.3 m into a required setback, if it stays at least 0.3 m from a lot line.",
+        "gaps": "The restated (4) has no (A)/(B) split; the 100-or-more-units 0.9 m allowance is not in the restated text."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)(C)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Amending instruction (item 27 of By-law 1075-2026): replaces the semicolon and 'and' at the end of 10.5.40.60(8)(C) with a period (punctuation only).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)(C)@1075-2026#(8)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(8)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "As amended: a wall-mounted antenna or antenna pole may extend up to 0.9 m into the required rear or side yard setback.",
+        "gaps": "Applies to the rear and side yard setbacks only. The restated clause text names no zone and omits the (8) stem's 0.3 m lot-line clearance, which continues to apply from the stem."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)(D)@1075-2026#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Amending instruction (item 26 of By-law 1075-2026): deletes 10.5.40.60(8)(D), the air-conditioner encroachment allowance.",
+        "gaps": "Displaces 10.5.40.60(8)(D) in full; no replacement value."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.40.60(4)@1075-2026": {
+      "explanation": "By-law 1075-2026 raises the allowance for added wall cladding from 0.15 m to 0.3 m into a required yard (including cladding on additions), still keeping 0.3 m from the lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(8)(C)@1075-2026": {
+      "explanation": "By-law 1075-2026 makes the antenna clause the last item of the list (punctuation only); antennas may still project up to 0.9 m into rear or side yards.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(8)(D)@1075-2026": {
+      "explanation": "By-law 1075-2026 deletes the rule that let wall-mounted air conditioners project up to 0.9 m into rear and side yards.",
+      "code_refs": "none"
+    }
+  }
+}

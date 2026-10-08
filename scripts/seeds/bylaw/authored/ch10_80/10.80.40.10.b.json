@@ -1,0 +1,350 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.40.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["overlay_mapped"], "if": "mapped(HT)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = overlay(HT) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "any": "building or structure on a lot"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["overlay_mapped"], "if": "not mapped(HT)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = by_type(detached_house: 10.0 m; semi_detached_house: 10.0 m; other: 12.0 m) @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "detached_house": "for a detached house or semi-detached house", "semi_detached_house": "for a detached house or semi-detached house"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = max(overlay(HT) @(1)(C)(i); 10.0 m @(1)(C)(ii)) @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "detached_houseplex": "for a detached houseplex or semi-detached houseplex", "semi_detached_houseplex": "for a detached houseplex or semi-detached houseplex"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_m = by_type(townhouse: max(13.0 m @(1)(D)(i); overlay(HT) @(1)(D)(i)); apartment_building: max(19.0 m @(1)(D)(ii); overlay(HT) @(1)(D)(ii))) @(1)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "major_street": "on a lot abutting a major street", "townhouse": "for a townhouse, the greater of 13.0 metres", "apartment_building": "for an apartment building, the greater of 19.0 metres"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["main_wall_height_m = max(7.0 m; height_m @10.80.40.10(1) - 2.5 m) @(2)(A)"],
+      "literals_not_expressed": [
+        {"literal": "70 percent", "clause": "(2)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "detached_house": "for a detached house or a semi-detached house", "semi_detached_house": "for a detached house or a semi-detached house"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m >= 7.5 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["main_wall_height_m = max(7.0 m; height_m @10.80.40.10(1) - 2.5 m) @(2)(B)"],
+      "literals_not_expressed": [
+        {"literal": "60 percent", "clause": "(2)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "50 percent", "clause": "(2)(B)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "40 percent", "clause": "(2)(B)(iii)", "reason": "threshold_used_in_application"},
+        {"literal": "12.0 metres", "clause": "(2)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "7.5 metres", "clause": "(2)(B)(ii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": ["frontage_band"],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "detached_house": "for a detached house or a semi-detached house", "semi_detached_house": "for a detached house or a semi-detached house", "frontage_band": "lot with a lot frontage of 12.0 metres or more"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(2)#(2)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "townhouse": "do not apply to townhouses or apartment buildings", "apartment_building": "do not apply to townhouses or apartment buildings", "major_street": "on a lot abutting a major street"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.10(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["overlay_mapped"], "if": "mapped(ST)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_storeys = overlay(ST) @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "any": "storeys in a building on a lot"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["overlay_mapped"], "if": "not mapped(ST)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_storeys = unlimited @(3)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "any": "storeys in a building on a lot"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(3)#(3)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "detached_houseplex": "does not apply to a detached houseplex or semi-detached houseplex", "semi_detached_houseplex": "does not apply to a detached houseplex or semi-detached houseplex"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.10(3)#(3)(D)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["height_storeys = by_type(townhouse: max(4 storeys @(3)(D)(i); overlay(ST) @(3)(D)(i)); apartment_building: max(6 storeys @(3)(D)(ii); overlay(ST) @(3)(D)(ii))) @(3)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {"RM": "on a lot in the RM zone", "major_street": "on a lot abutting a major street", "townhouse": "For a townhouse, the greater of four storeys", "apartment_building": "For an apartment building, the greater of six storeys"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(4)#whole",
+      "archetype": "LIMIT",
+      "target": "entrance_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["entrance_height_m = 1.2 m @(4)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "detached_house": "for a detached house or semi-detached house", "semi_detached_house": "for a detached house or semi-detached house"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.10(5)#(5)(A)",
+      "archetype": "DEFINE",
+      "target": "element_width_pct",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "detached_house": "on a detached house or a semi-detached house with two or more storeys", "semi_detached_house": "on a detached house or a semi-detached house with two or more storeys"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type", "current_stories"]}
+    },
+    {
+      "unit_id": "10.80.40.10(5)#(5)(B)",
+      "archetype": "LIMIT",
+      "target": "element_width_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["element_width_pct = 40 pct @(5)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "In the RM zone", "detached_house": "on a detached house or a semi-detached house with two or more storeys", "semi_detached_house": "on a detached house or a semi-detached house with two or more storeys"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type", "current_stories"]}
+    },
+    {
+      "unit_id": "10.80.40.10(6)#(6)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.0 vertical units", "clause": "(6)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "10.0 horizontal units", "clause": "(6)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "50 percent", "clause": "(6)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "1.4 metres", "clause": "(6)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "in the RM zone", "detached_house": "if a detached house or semi-detached house", "semi_detached_house": "if a detached house or semi-detached house"}
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type", "roof_type"]}
+    }
+  ]
+}

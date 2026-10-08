@@ -1,0 +1,492 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.40.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "in the RM zone",
+          "building_types": "buildings or structures"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["dwelling_units_max = label(u) @(2)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "on a lot in the RM zone",
+          "lot_conditions": "letter \"u\"",
+          "uses": "dwelling units permitted on the lot"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["dwelling_units_max = max(60 units @(2)(B); label(u) @(2)(B))"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "on a lot in the RM zone",
+          "building_types": "for an apartment building",
+          "lot_conditions": "abutting a major street",
+          "uses": "number of dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.1(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "building_width_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["individual_private_driveway"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_width_m = 5.0 m @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["individual_private_driveway"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the RM zone",
+          "building_types": "dwelling unit in a townhouse",
+          "lot_conditions": "individual private driveway",
+          "uses": "width of a dwelling unit"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "building_width_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_width_m = 6.0 m @(3)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the RM zone",
+          "building_types": "dwelling unit in a townhouse",
+          "uses": "minimum width of a dwelling unit"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(4)#(4)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "on a lot in the RM zone",
+          "building_types": "a detached houseplex",
+          "uses": "only residential building on a lot"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(4)#(4)(B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "on a lot in the RM zone",
+          "building_types": "a permitted semi-detached houseplex",
+          "uses": "only residential building on a lot"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(5)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "exception > base",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "on a lot in the RM zone",
+          "building_types": "detached houseplex or semi-detached houseplex",
+          "uses": "the more permissive regulation prevails"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "bedrooms",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["unit_count_band"], "if": "dwelling_units = 2 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["bedrooms = 4 ratio × dwelling_units @(6)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["unit_count_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "On a lot in the RM zone",
+          "building_types": "detached houseplex or semi-detached houseplex",
+          "lot_conditions": "with two dwelling units",
+          "uses": "number of bedrooms permitted"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.80.40.1(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "bedrooms",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["unit_count_band"], "if": "dwelling_units ≥ 3 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["bedrooms = 3 ratio × dwelling_units @(6)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["unit_count_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "On a lot in the RM zone",
+          "building_types": "detached houseplex or semi-detached houseplex",
+          "lot_conditions": "three or more dwelling units",
+          "uses": "number of bedrooms permitted"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.80.40.1(6)#(6)(C)",
+      "archetype": "DEFINE",
+      "target": "bedrooms",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["bedrooms = 1 units @(6)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "building_types": "in a residential building",
+          "uses": "a bachelor dwelling unit has one bedroom"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(7)#(7)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "building_types": "A detached houseplex or semi-detached houseplex",
+          "lot_conditions": "lawfully existing residential building",
+          "uses": "permitted maximum number of bedrooms"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status", "bedroom_count"]}
+    },
+    {
+      "unit_id": "10.80.40.1(7)#(7)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "building_types": "A detached houseplex or semi-detached houseplex",
+          "uses": "permitted maximum number of bedrooms"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["bedroom_count"]}
+    },
+    {
+      "unit_id": "10.80.40.1(7)#(7)(C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "building_types": "A detached houseplex or semi-detached houseplex",
+          "uses": "no bedrooms may be added"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["bedroom_count"]}
+    },
+    {
+      "unit_id": "10.80.40.1(8)#(8)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "building_types": "buildings, structures or uses authorized",
+          "uses": "definitions provided in Zoning By-law 569-2013"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["lawfully_existing_status"]}
+    },
+    {
+      "unit_id": "10.80.40.1(8)#(8)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "uses": "request for a zoning certificate that satisfies the requirements"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(8)#(8)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "uses": "complete application for a zoning by-law amendment"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(8)#(8)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "uses": "complete application for a minor variance"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.1(8)#(8)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": []},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "uses": "complete application for site plan approval"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    }
+  ]
+}

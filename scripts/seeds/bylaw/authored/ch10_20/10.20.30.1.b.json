@@ -1,0 +1,71 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.30.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.30.1(1)#(1)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["exception_area"],
+        "if": "mapped(900 exception)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "900.1.10(3)", "clause": "(1)(A)", "reason": "cross_reference_value"},
+        {"literal": "900.1.10(4)(A)", "clause": "(1)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["exception_area"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "detached_houseplex": "a permitted detached houseplex",
+          "dwelling_unit": "the only residential building on a lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.20.30.1(2)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "exception > base",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "900.1.10(3)", "clause": "(2)", "reason": "cross_reference_value"},
+        {"literal": "900.1.10(4)(A)", "clause": "(2)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "dwelling_unit": "residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

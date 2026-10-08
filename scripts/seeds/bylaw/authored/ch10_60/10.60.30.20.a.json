@@ -1,0 +1,289 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.30.20",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.60.30.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "label_value"
+        ],
+        "if": "labelled(f)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_frontage_m = label(f) × dwelling_units @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "all_units_front_street"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "In the RT zone",
+          "all_units_front_street": "fronting directly on a street",
+          "dwelling_unit": "for each dwelling unit",
+          "detached_house": "a detached house",
+          "semi_detached_house": "a semi-detached house",
+          "townhouse": "a townhouse with every dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ],
+        "status": "modelled",
+        "description": "Where the RT zone label has an \"f\" value, it is the required minimum lot frontage per dwelling unit for a lot with a detached house, a semi-detached house, or a townhouse whose units all front directly on a street.",
+        "gaps": "The townhouse arm applies only where every dwelling unit fronts directly on a street; because the building types are a disjunction, the all_units_front_street token is recorded in application but not keyed as a condition."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "label_value"
+        ],
+        "if": "not labelled(f)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_frontage_m = 6.0 m × dwelling_units @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "all_units_front_street"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "In the RT zone",
+          "all_units_front_street": "fronting directly on a street",
+          "dwelling_unit": "for each dwelling unit",
+          "detached_house": "a detached house",
+          "semi_detached_house": "a semi-detached house",
+          "townhouse": "a townhouse with every dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ],
+        "status": "modelled",
+        "description": "Where the zone label has no \"f\" value, the required minimum lot frontage is 6.0 m per dwelling unit for the same building types.",
+        "gaps": "The townhouse arm applies only where every dwelling unit fronts directly on a street; because the building types are a disjunction, the all_units_front_street token is recorded in application but not keyed as a condition."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1.0 metres",
+          "clause": "(1)(C)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "individual_private_driveway"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "in the RT zone",
+          "townhouse": "for a townhouse",
+          "individual_private_driveway": "an individual private driveway",
+          "dwelling_unit": "each dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ],
+        "status": "not_modelled",
+        "description": "The townhouse frontage requirement from (A) or (B) may be reduced by 1.0 m for each dwelling unit without an individual private driveway leading directly to its front.",
+        "gaps": "No DSL input counts the units without a private driveway, so the reduction cannot be expressed; the 1.0 m adjusts the cross-referenced (A)/(B) value."
+      },
+      "disclosure": "Townhouses may need 1.0 m less frontage per unit that has no driveway of its own; this reduction is not applied.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(non_residential_building: 30.0 m) @(1)(D)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "one",
+          "clause": "(1)(D)(i)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "townhouse",
+          "non_residential_building"
+        ],
+        "lot_conditions": [
+          "all_units_front_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "townhouse": "a townhouse with one or more",
+          "non_residential_building": "a non-residential building",
+          "all_units_front_street": "not fronting directly on a street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "A lot with a non-residential building, or with a townhouse that has one or more units not fronting directly on a street, needs at least 30.0 m of frontage.",
+        "gaps": "The townhouse arm needs the negation of all_units_front_street, which neither the token list nor by_type can express; only the non-residential arm is in the expression (conservative: the 30.0 m is not imposed on every townhouse)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(E)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_houseplex: 6.0 m; semi_detached_houseplex: 6.0 m) @(1)(E)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "a semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Despite (A) to (D), a lot with a detached or semi-detached houseplex needs at least 6.0 m of frontage (not per unit).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.60.30.20(1)": {
+      "explanation": "In the RT zone each home needs a minimum lot frontage: the \"f\" label value (or 6.0 m) per unit for detached, semi-detached and street-facing townhouses, 1.0 m less per townhouse unit without its own driveway, 30.0 m for non-residential buildings or townhouses with units not facing a street, and 6.0 m in total for a houseplex.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.30.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.30.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = label(f) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the RD zone",
+          "building_types": "the required minimum lot frontage",
+          "lot_conditions": "if a zone label includes the letter"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.30.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 12.0 m @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the RD zone",
+          "building_types": "the required minimum lot frontage",
+          "lot_conditions": "the zone label does not include"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.30.20(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street", "all_units_front_street", "individual_private_driveway"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 6.0 m × dwelling_units @(1)(C)(i)(a)", "required_lot_frontage_m = required_lot_frontage_m − 1.0 m × dwelling_units @(1)(C)(i)(b)"],
+      "literals_not_expressed": [
+        {"literal": "1.0 metre", "clause": "(1)(C)(i)(b)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street", "all_units_front_street", "individual_private_driveway"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the RD zone",
+          "building_types": "if a townhouse is located on a lot",
+          "lot_conditions": "a lot abutting a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.20.30.20(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street", "not all_units_front_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 30.0 m @(1)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "zones": "In the RD zone",
+          "building_types": "has a townhouse with one or more dwelling units",
+          "lot_conditions": "a lot abutting a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    }
+  ]
+}

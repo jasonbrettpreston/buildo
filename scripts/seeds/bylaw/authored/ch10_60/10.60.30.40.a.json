@@ -1,0 +1,214 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_60/10.60.30.40",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.60.30.40(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "mapped(LC)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_coverage_pct = overlay(LC) @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RT"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RT": "the RT zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the lot has a value on the Lot Coverage Overlay Map, that value is the maximum lot coverage as a percentage of lot area.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "not mapped(LC)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_coverage_pct = unregulated @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RT"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RT": "the RT zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the lot has no value on the Lot Coverage Overlay Map, no lot coverage limit applies.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(C)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_coverage_pct = 50 pct @(1)(C)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RT"
+    ],
+    "building_types": [
+     "townhouse",
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RT": "the RT zone",
+     "major_street": "a major street",
+     "townhouse": "a townhouse or",
+     "apartment_building": "apartment building is"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "modelled",
+    "description": "On a lot abutting a major street, maximum lot coverage for a townhouse or apartment building is 50% of the lot area, despite (A) and (B).",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(D)",
+   "archetype": "LIMIT",
+   "target": "lot_coverage_pct",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "overlay_mapped"
+    ],
+    "if": "overlay(LC) < 45 pct"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_coverage_pct = 45 pct @(1)(D)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RT"
+    ],
+    "building_types": [
+     "detached_houseplex",
+     "semi_detached_houseplex"
+    ],
+    "lot_conditions": [
+     "overlay_mapped",
+     "has_secondary_suite"
+    ],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RT": "the RT zone",
+     "overlay_mapped": "the Lot Coverage Overlay Map is less than",
+     "detached_houseplex": "contains detached houseplex",
+     "semi_detached_houseplex": "semi-detached houseplex or",
+     "has_secondary_suite": "with a secondary suite",
+     "secondary_suite_use": "a secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type",
+     "has_secondary_suite"
+    ],
+    "status": "modelled",
+    "description": "Where the Lot Coverage Overlay Map value is under 45% and the lot contains a detached or semi-detached houseplex or a residential building with a secondary suite, maximum lot coverage for all buildings and structures is 45%.",
+    "gaps": "The qualifying building cases are alternatives (or); they are carried in application, and only the overlay threshold is a condition token."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.60.30.40(1)": {
+   "explanation": "In the RT zone the maximum lot coverage is the number on the Lot Coverage Overlay Map, with no limit where the map shows none. On a major street, townhouses and apartment buildings may cover 50%; houseplexes and houses with a secondary suite may cover at least 45%.",
+   "code_refs": "none"
+  }
+ }
+}

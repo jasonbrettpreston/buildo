@@ -1,0 +1,33 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.20.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.20.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit", "energy_device"],
+        "evidence": {
+          "RM": "permitted in the RM zone",
+          "dwelling_unit": "Dwelling Unit in a permitted residential building type",
+          "energy_device": "Municipal Shelter Park"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

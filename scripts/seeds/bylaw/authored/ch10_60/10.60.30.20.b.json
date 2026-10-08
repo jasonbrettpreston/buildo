@@ -1,0 +1,145 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.30.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.30.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = label(f) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "In the RT zone",
+          "detached_house": "a detached house",
+          "semi_detached_house": "a semi-detached house",
+          "townhouse": "a townhouse with every dwelling unit",
+          "dwelling_unit": "for each dwelling unit",
+          "label_value": "if a zone label includes the letter"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(f)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 6.0 m @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "In the RT zone",
+          "detached_house": "a detached house",
+          "semi_detached_house": "a semi-detached house",
+          "townhouse": "a townhouse with every dwelling unit",
+          "dwelling_unit": "for each dwelling unit",
+          "label_value": "if the zone label does not include"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": [], "if": "not individual_private_driveway"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = required_lot_frontage_m - (1.0 m × dwelling_units) @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["individual_private_driveway"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "townhouse in the RT zone",
+          "townhouse": "for a townhouse in the RT zone",
+          "dwelling_unit": "for each dwelling unit",
+          "individual_private_driveway": "individual private driveway leading directly"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["all_units_front_street"], "if": "not all_units_front_street"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 30.0 m @(1)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["townhouse", "non_residential_building"],
+        "lot_conditions": ["all_units_front_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "In the RT zone",
+          "townhouse": "a townhouse with one or more dwelling units",
+          "non_residential_building": "a non-residential building",
+          "all_units_front_street": "not fronting directly on a street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.60.30.20(1)#(1)(E)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_frontage_m = 6.0 m @(1)(E)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "a semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    }
+  ]
+}

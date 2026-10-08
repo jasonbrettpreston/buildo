@@ -1,0 +1,33 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.20.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.20.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "RT zone",
+          "any": "permitted residential building type",
+          "dwelling_unit": "Dwelling Unit in a permitted residential building type"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    }
+  ]
+}

@@ -1,0 +1,1381 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.60",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.40.60(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = min(2.5 m; 50 pct × front_setback_m) @(1)(A)(i)",
+        "encroachment_clearance_m = side_setback_m @(1)(A)(i)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a front yard, a platform (deck, porch, balcony) with its floor no higher than the first storey may extend into the required front yard setback by the lesser of 2.5 m or 50% of that setback, if it stays at least the required side yard setback from a side lot line; enclosed space is allowed below it.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. The clearance is from a side lot line (encroachment_clearance_m = the required side yard setback). The 0.3 m in the stem is the applicability test (attached or within 0.3 m of a building)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = min(1.5 m; 50 pct × front_setback_m) @(1)(B)",
+        "encroachment_clearance_m = side_setback_m @(1)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a front yard, a platform with its floor higher than the first storey may extend into the required front yard setback by the lesser of 1.5 m or 50% of that setback, if it stays at least the required side yard setback from a side lot line.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. The 0.3 m in the stem is the applicability test (attached or within 0.3 m of a building)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = min(2.5 m; 50 pct × rear_setback_m) @(1)(C)",
+        "encroachment_clearance_m = max(0.3 m @(1)(C)(i); platform_height_m @(1)(C)(ii))"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a rear yard, a platform with its floor no higher than the first storey may extend into the required rear yard setback by the lesser of 2.5 m or 50% of that setback, if it stays from a side lot line at least the greater of 0.3 m or the height of the platform floor above the average ground at its side.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. (1)(C)(ii) is approximated by platform_height_m (platform height above established grade); the clause measures to the average ground elevation at the side of the platform. The first 0.3 m (stem) is the applicability test; the 0.3 m in (1)(C)(i) is expressed."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = min(1.5 m; 50 pct × rear_setback_m) @(1)(D)",
+        "encroachment_clearance_m = side_setback_m + entrance_height_m @(1)(D)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a rear yard, a platform with its floor higher than the first storey may extend into the required rear yard setback by the lesser of 1.5 m or 50% of that setback, if it stays from a side lot line at least the required side yard setback plus the height of the first floor above the average ground along the rear main wall.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. The vertical distance between the first floor and the average ground along the rear main wall is approximated by entrance_height_m (first floor above established grade). The 0.3 m in the stem is the applicability test."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(E)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 1.5 m @(1)(E)",
+        "encroachment_clearance_m = 0.3 m @(1)(E)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a side yard, a platform with its floor no higher than the first storey may extend up to 1.5 m into the required side yard setback, if it stays at least 0.3 m from the side lot line.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. The 0.3 m in the stem is the applicability test; the 0.3 m in (1)(E) is expressed as the clearance."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(F)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 1.5 m @(1)(F)(i)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(1)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "first",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "such as a deck"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "In a side yard, a platform with its floor higher than the first storey may extend up to 1.5 m into the required side yard setback only where the side yard abuts a street; otherwise it may not encroach at all.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey as stated; platform floor height is a design fact with no token or DSL input. (1)(F)(ii) (no encroachment where the side yard does not abut a street) has no literal and no per-yard street-abutment token, so only the 1.5 m street-side allowance is expressed. The 0.3 m in the stem is the applicability test."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "deck_or_platform": "above a platform"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A roof, canopy, awning or similar structure over a platform that meets 10.5.40.60(1) may encroach into a required setback as far as the platform it covers.",
+        "gaps": "The extent follows the covered platform's allowance under 10.5.40.60(1)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = min(2.5 m; 50 pct × front_setback_m) @(2)(B)(i)",
+        "encroachment_m = min(2.5 m; 50 pct × rear_setback_m) @(2)(B)(i)",
+        "encroachment_clearance_m = side_setback_m @(2)(B)(i)",
+        "encroachment_m = 1.5 m @(2)(B)(ii)",
+        "encroachment_clearance_m = 0.3 m @(2)(B)(ii)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "A canopy or awning not covering a platform may extend into a required setback: in a front or rear yard by the lesser of 2.5 m or 50% of the setback (keeping the required side yard setback from a side lot line); in a side yard by up to 1.5 m (keeping 0.3 m from the side lot line).",
+        "gaps": "The DSL has no yard dimension: each statement applies to the yard named in its cited clause. '50% of the required minimum building setback' is keyed against the front and rear yard setbacks respectively."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "element_width_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "element_width_m = 2.0 m @(3)(A)(ii)",
+        "encroachment_clearance_m = 0.6 m @(3)(A)(iii)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "1.5",
+          "clause": "(3)(A)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.0",
+          "clause": "(3)(A)(i)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "Exterior stairs may encroach into a required setback if they run no more than 1.5 horizontal for each 1.0 vertical, are no wider than 2.0 m, and stay at least 0.6 m from a lot line.",
+        "gaps": "The stair run-to-rise proportion (1.5 horizontal per 1.0 vertical) has no DSL target and is listed as not expressed (closest closed reason: a condition of the encroachment permission)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "element_width_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "element_width_m = 1.5 m @(3)(B)(ii)",
+        "encroachment_clearance_m = 0.6 m @(3)(B)(iii)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "15",
+          "clause": "(3)(B)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.0",
+          "clause": "(3)(B)(i)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "An uncovered ramp may encroach into a required setback if its slope is no steeper than 1 vertical in 15 horizontal, each sloped segment is no wider than 1.5 m, and it stays at least 0.6 m from a lot line.",
+        "gaps": "The ramp slope (15 horizontal per 1.0 vertical) has no DSL target and is listed as not expressed (closest closed reason: a condition of the encroachment permission)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_clearance_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_clearance_m = 0.6 m @(3)(C)(iii)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "first",
+          "clause": "(3)(C)(i)",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "3.0 square metres",
+          "clause": "(3)(C)(ii)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "partially_modelled",
+        "description": "An elevating device may encroach into a required setback if it rises no higher than the first floor, has an area of at most 3.0 square metres, and stays at least 0.6 m from a lot line.",
+        "gaps": "No DSL target exists for the area of an elevating device (platform_area_m2 is for decks/balconies), so the 3.0 square metre cap is listed as not expressed (closest closed reason: a condition of the encroachment permission)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.15 m @(4)(A)",
+        "encroachment_clearance_m = 0.3 m @(4)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Cladding added to the original outside surface of a main wall may extend up to 0.15 m into a required setback, if it stays at least 0.3 m from a lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "unit_count_band"
+        ],
+        "if": "dwelling_units ≥ 100 units"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(4)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "one",
+          "clause": "(4)(B)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "unit_count_band"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "unit_count_band": "100 or more dwelling units",
+          "dwelling_unit": "more dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "unit_count"
+        ],
+        "status": "modelled",
+        "description": "On a lot with 100 or more dwelling units, added cladding (including vents, pipes or utility equipment beneath it) may extend up to 0.9 m into a required setback, replacing (A).",
+        "gaps": "Lots with 100 or more units are outside the MaxBLD building-type scope; recorded for completeness."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(5)(A)",
+        "encroachment_clearance_m = 0.3 m @(5)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A pilaster, decorative column, cornice, sill, belt course or similar architectural feature may extend up to 0.6 m into a required setback, if it stays at least 0.3 m from a lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(5)#(5)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(5)(B)",
+        "element_width_m = 2.0 m @(5)(B)(i)",
+        "encroachment_clearance_m = 0.3 m @(5)(B)(ii)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A chimney breast may extend up to 0.6 m into a required setback, if it is no wider than 2.0 m and stays at least 0.3 m from a lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.75 m @(6)(A)",
+        "element_width_pct = 65 pct @(6)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A bay window, box window or similar window projection may extend up to 0.75 m into the required front or rear yard setback, if the projections take up no more than 65% of the width of that wall at each storey.",
+        "gaps": "The DSL has no yard dimension: each statement applies to the yard named in its cited clause."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(6)(B)",
+        "element_width_pct = 30 pct @(6)(B)(i)",
+        "encroachment_clearance_m = 0.6 m @(6)(B)(ii)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A window projection may extend up to 0.6 m into the required side yard setback, if the projections take up no more than 30% of the width of the side main wall at each storey and stay at least 0.6 m from the side lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(7)#(7)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A dormer may not have any of its walls closer to a lot line than the required minimum building setback (dormers do not encroach).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(7)#(7)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(7)(B)",
+        "encroachment_clearance_m = 0.3 m @(7)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Roof eaves may extend up to 0.9 m into a required setback, if they stay at least 0.3 m from a lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(A)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.6 m @(8)(A)",
+        "encroachment_clearance_m = 0.3 m @(8)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Wall-mounted vents, pipes or utility equipment may extend up to 0.6 m into the required rear or side yard setback, if they stay at least 0.3 m from a lot line.",
+        "gaps": "Applies to the rear and side yard setbacks only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(8)(B)",
+        "encroachment_clearance_m = 0.3 m @(8)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A wall-mounted satellite dish may extend up to 0.9 m into any required setback, if it stays at least 0.3 m from a lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(C)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(8)(C)",
+        "encroachment_clearance_m = 0.3 m @(8)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A wall-mounted antenna or antenna pole may extend up to 0.9 m into the required rear or side yard setback, if it stays at least 0.3 m from a lot line.",
+        "gaps": "Applies to the rear and side yard setbacks only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(D)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(8)(D)",
+        "encroachment_clearance_m = 0.3 m @(8)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "first",
+          "clause": "(8)(D)(ii)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "A wall-mounted air conditioner may extend up to 0.9 m into the required rear yard setback, and into the required side yard setback only if it is not above the first storey; it must stay at least 0.3 m from a lot line.",
+        "gaps": "The side-yard arm applies only to units not above the first storey (a design fact)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(E)",
+      "archetype": "LIMIT",
+      "target": "encroachment_clearance_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_clearance_m = 0.3 m @(8)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Public utility metering equipment (such as electric or gas meters) mounted on a wall may extend into any required setback, with no stated maximum, if it stays at least 0.3 m from a lot line.",
+        "gaps": "No maximum encroachment is stated for meters; only the 0.3 m lot-line clearance from the stem is a limit."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.40.60(1)": {
+      "explanation": "In residential zones, decks, porches and balconies may project into required yards: at or below the first storey up to 2.5 m (or half the setback) in front and rear yards and 1.5 m in side yards; above the first storey up to 1.5 m (or half the setback) front and rear, and into a side yard only where it faces a street. Each keeps a set distance from the side lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(2)": {
+      "explanation": "A roof or canopy over a permitted deck may project as far as the deck. Other canopies and awnings may project the lesser of 2.5 m or half the setback into front and rear yards, or 1.5 m into a side yard, keeping clear of the side lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(3)": {
+      "explanation": "Exterior stairs (no wider than 2.0 m), uncovered ramps (segments no wider than 1.5 m) and small elevating devices (up to 3.0 square metres, first floor only) may sit in required yards if they stay at least 0.6 m from a lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(4)": {
+      "explanation": "New cladding over an existing wall may project up to 0.15 m into a required yard (keeping 0.3 m from the lot line), or up to 0.9 m on lots with 100 or more units.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(5)": {
+      "explanation": "Decorative features such as cornices and sills, and chimney breasts up to 2.0 m wide, may project up to 0.6 m into required yards if they stay 0.3 m from the lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(6)": {
+      "explanation": "Bay and box windows may project up to 0.75 m into front or rear yards (covering at most 65% of the wall width) and 0.6 m into side yards (at most 30% of the wall width, 0.6 m from the lot line).",
+      "code_refs": "none"
+    },
+    "10.5.40.60(7)": {
+      "explanation": "Dormer walls may not project into required setbacks; roof eaves may project up to 0.9 m if they stay 0.3 m from the lot line.",
+      "code_refs": "none"
+    },
+    "10.5.40.60(8)": {
+      "explanation": "Wall-mounted equipment may project into required yards if it stays 0.3 m from the lot line: vents and pipes 0.6 m (rear/side), satellite dishes 0.9 m, antennas 0.9 m (rear/side), air conditioners 0.9 m (rear, or side if not above the first storey), and utility meters without a stated limit.",
+      "code_refs": "none"
+    }
+  }
+}

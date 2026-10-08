@@ -1,0 +1,289 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_80/10.80.30.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.80.30.20(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "labelled(f)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_frontage_m = label(f) @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the RM zone label carries an \"f\" value, that value is the required minimum lot frontage in metres.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "not labelled(f)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_frontage_m = by_type(detached_house: 12.0 m; detached_houseplex: 12.0 m; semi_detached_house: 15.0 m; apartment_building: 24.0 m; non_residential_building: 24.0 m) @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "detached_house",
+     "detached_houseplex",
+     "semi_detached_house",
+     "apartment_building",
+     "non_residential_building"
+    ],
+    "lot_conditions": [
+     "major_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "detached_house": "a detached house,",
+     "detached_houseplex": "each detached houseplex",
+     "semi_detached_house": "an entire semi-detached house",
+     "apartment_building": "each apartment building",
+     "non_residential_building": "a non-residential building",
+     "major_street": "a major street"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "Where the RM zone label has no \"f\" value, the required minimum lot frontage is 12.0 m for a detached house or detached houseplex, 15.0 m for an entire semi-detached house, and 24.0 m for an apartment building on a lot not abutting a major street or for a non-residential building.",
+    "gaps": "The 24.0 m apartment arm applies only where the lot does not abut a major street; by_type cannot carry that negated condition, so the arm is keyed unconditionally and the major-street case is governed by (D)/(E) and other units."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(C)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_frontage_m = required_lot_frontage_m × 50 pct @(1)(C)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "two",
+     "clause": "(1)(C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "semi_detached_house",
+     "apartment_building",
+     "semi_detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "semi_detached_house": "a semi-detached house or",
+     "apartment_building": "an apartment building is",
+     "semi_detached_houseplex": "a semi-detached houseplex"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "modelled",
+    "description": "For a semi-detached house or apartment building on two lots, and for a semi-detached houseplex, the required minimum lot frontage for each lot is 50% of the requirement in (A) or (B).",
+    "gaps": "The right-hand required_lot_frontage_m is the (A)/(B) requirement this clause halves; the DSL has no separate name for it."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(D)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street",
+     "all_units_front_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_frontage_m = dwelling_units × 6.0 m @(1)(D)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "1.0 metre",
+     "clause": "(1)(D)(i)(b)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "townhouse"
+    ],
+    "lot_conditions": [
+     "major_street",
+     "all_units_front_street",
+     "individual_private_driveway"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "townhouse": "a townhouse is",
+     "major_street": "a major street",
+     "all_units_front_street": "every dwelling unit fronting directly",
+     "individual_private_driveway": "an individual private driveway"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type",
+     "unit_count"
+    ],
+    "status": "partially_modelled",
+    "description": "On a lot abutting a major street, a townhouse with every unit fronting a street needs 6.0 m of lot frontage per dwelling unit, reduced by 1.0 m for each unit without its own private driveway to its front.",
+    "gaps": "The 1.0 m per-unit reduction needs a count of units without an individual private driveway, which no DSL input carries; it is not applied."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(E)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_frontage_m = 30.0 m @(1)(E)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "one",
+     "clause": "(1)(E)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "townhouse"
+    ],
+    "lot_conditions": [
+     "major_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "townhouse": "a townhouse with",
+     "major_street": "a major street"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "not_modelled",
+    "description": "On a lot abutting a major street with a townhouse having one or more units not fronting directly on a street, the required minimum lot frontage is 30.0 m.",
+    "gaps": "Whether any unit does not front a street is a design fact with no lot-condition token for the negative case; it needs user input."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.80.30.20(1)": {
+   "explanation": "In the RM zone the minimum lot frontage is the \"f\" number on the zone label; if none, 12.0 m for a detached house or houseplex, 15.0 m for a semi-detached house and 24.0 m for an apartment building off a major street or a non-residential building. Each lot of a split pair needs half. On a major street, a street-fronting townhouse needs 6.0 m per unit (less 1.0 m per unit without its own driveway), and other townhouses need 30.0 m.",
+   "code_refs": "none"
+  }
+ }
+}

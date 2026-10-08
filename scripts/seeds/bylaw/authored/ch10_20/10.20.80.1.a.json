@@ -1,0 +1,272 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_20/10.20.80.1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.20.80.1(1)#(1)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "An interior parking space in a residential building other than an apartment building may be converted to floor area for a use under 10.20.20.100(19) or (20) with no replacement parking required.",
+    "gaps": "Conversion to a non-residential use is outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.80.1(1)#(1)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "garage_entrance_faces_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "garage_entrance_faces_street"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located",
+     "garage_entrance_faces_street": "front main wall of the building"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Condition of the conversion: the vehicle entrance to the parking space is in the front main wall.",
+    "gaps": "Conversion to a non-residential use is outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.80.1(1)#(1)(C)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Condition of the conversion: the driveway to the vehicle entrance is removed and any front yard depression is filled to established grade.",
+    "gaps": "A physical-works obligation with no requirement token; outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.80.1(1)#(1)(D)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "landscaping_type",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "The removed driveway area in the front yard must be landscaping, but may still count as a permitted driveway for the soft landscaping calculation in 10.5.50.10(1)(D).",
+    "gaps": "Outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.80.1(1)#(1)(E)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "comply_or_minor_variance",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "A parking space in the front yard or a street side yard must comply with 10.5.80.10(3) or be authorized by a Section 45 Planning Act minor variance.",
+    "gaps": "Outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.80.1(1)#(1)(F)",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "parking_space": "A parking space located"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "Regulation 200.5.10.11(1)(C) does not apply to the parking space being converted.",
+    "gaps": "Outside the MaxBLD building types."
+   },
+   "disclosure": "Not assessed: converting a parking space to a non-residential use is outside the building types this report covers.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.20.80.1(1)": {
+   "explanation": "In the RD zone, a garage parking space in a house (not an apartment building) with its entrance in the front wall can be converted to space for certain small non-residential uses without replacing the parking, if the driveway is removed and landscaped. This report does not assess such conversions.",
+   "code_refs": "none"
+  }
+ }
+}

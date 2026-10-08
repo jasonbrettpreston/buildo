@@ -1,0 +1,102 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.70(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["one_abutting_building_within_15_m"],
+        "if": "abutting_front_setback_m <= 15.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["front_setback_m = abutting_front_setback_m @(1)(A)"],
+      "literals_not_expressed": [
+        {"literal": "15.0 metres", "clause": "(1)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["one_abutting_building_within_15_m"],
+        "uses": [],
+        "evidence": {
+          "Residential Zone category": "in the Residential Zone category",
+          "one_abutting_building_within_15_m": "15.0 metres or less from the subject lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.5.40.70(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["two_abutting_buildings_within_15_m"],
+        "if": "abutting_front_setback_m <= 15.0 m and abutting_front_setback_m <= 15.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["front_setback_m = (abutting_front_setback_m + abutting_front_setback_m) ÷ 2 @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "two", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "15.0 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["two_abutting_buildings_within_15_m"],
+        "uses": [],
+        "evidence": {
+          "Residential Zone category": "in the Residential Zone category",
+          "two_abutting_buildings_within_15_m": "15.0 metres or less from the subject lot"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.5.40.70(2)#whole",
+      "archetype": "LIMIT",
+      "target": "lane_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lane_setback_m = 2.5 m @(2)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": [],
+        "evidence": {
+          "Residential Zone category": "in the Residential Zone category",
+          "abuts_lane": "from the original centreline of a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

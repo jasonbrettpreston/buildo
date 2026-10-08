@@ -1,0 +1,127 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.30",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.40.40.30(1)#whole",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_depth_m = 19.0 m @(1)"],
+      "literals_not_expressed": [
+        {"literal": "one storey", "clause": "(1)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house", "semi_detached_house", "detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house, detached houseplex",
+          "detached_houseplex": "detached houseplex or",
+          "semi_detached_houseplex": "or semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "The rear main wall may be no more than 19.0 m from the required front yard setback (maximum building depth), not counting a one-storey extension that complies with 10.20.40.20(2).",
+        "gaps": "The one-storey rear extension allowance (10.20.40.20(2)) is keyed in that regulation, not here. The heading mentions a frontage range but the clause text states none."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.30(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["depth_band", "frontage_band"], "if": "lot_depth_m ≥ 36.0 m and lot_frontage_m < 10.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_length_m = 19.0 m @(2)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["depth_band", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "depth_band": "lot depth of 36.0 metres",
+          "frontage_band": "lot frontage of less than"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A detached or semi-detached houseplex on a lot at least 36.0 m deep with less than 10.0 m frontage may have a maximum building length of 19.0 m.",
+        "gaps": "The heading says building depth but the clause says building length; keyed verbatim as building_length_m (conservative reading of the operative text)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.30(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["depth_band", "frontage_band"], "if": "lot_depth_m ≥ 40.0 m and lot_frontage_m ≥ 10.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_length_m = 19.0 m @(2)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["depth_band", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "depth_band": "lot depth of 40.0 metres",
+          "frontage_band": "lot frontage of 10.0 metres"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A detached or semi-detached houseplex on a lot at least 40.0 m deep with at least 10.0 m frontage may have a maximum building length of 19.0 m.",
+        "gaps": "The heading says building depth but the clause says building length; keyed verbatim as building_length_m (conservative reading of the operative text)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.40.40.30(1)": {
+      "explanation": "In the RS zone, the back wall of a detached or semi-detached house or houseplex can be at most 19.0 m behind the required front yard setback, not counting a permitted one-storey rear extension.",
+      "code_refs": "none"
+    },
+    "10.40.40.30(2)": {
+      "explanation": "In the RS zone, a houseplex may be up to 19.0 m long if the lot is at least 36.0 m deep with under 10.0 m frontage, or at least 40.0 m deep with 10.0 m or more frontage.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,186 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.80.1(1)#(1)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "units_within_existing_building",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not building_type = apartment_building"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "residential_building": "the parking space is in a residential building",
+          "not_apartment": "other than an apartment building",
+          "parking_space": "the parking space is in a residential building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.60.80.1(1)#(1)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "vehicle_entrance": "the vehicle entrance to the parking space",
+          "front_main_wall": "is in the front main wall of the building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.80.1(1)#(1)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "access_from_lane",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "driveway_removed": "the driveway leading to the vehicle entrance",
+          "filled_to_grade": "filled to established grade"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.80.1(1)#(1)(D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "landscaping_type",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "10.5.50.10(1)(D)",
+          "clause": "(1)(D)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "front_yard_landscaping": "the area of the removed driveway in the front yard must be landscaping",
+          "soft_landscaping": "required soft landscaping"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.80.1(1)#(1)(E)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "Section 45",
+          "clause": "(1)(E)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "10.5.80.10(3)",
+          "clause": "(1)(E)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": ["corner_lot"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "front_or_side_yard_street": "located in the front yard or side yard abutting a street",
+          "minor_variance": "authorized by a Section 45 Planning Act minor variance"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.80.1(1)#(1)(F)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RT": "on a lot in the RT zone",
+          "does_not_apply": "does not apply for the parking space being converted"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_20/10.20.30.10",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.20.30.10(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "labelled(a)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_area_m2 = label(a) @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the RD zone label carries an \"a\" value, that value is the required minimum lot area in square metres.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.30.10(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_area_m2",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "not labelled(a)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "required_lot_area_m2 = required_lot_frontage_m × 30 m @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the RD zone label has no \"a\" value, the required minimum lot area is the required minimum lot frontage multiplied by 30 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.30.10(2)#whole",
+   "archetype": "LIMIT",
+   "target": "lot_area_per_unit_min_m2",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "labelled(au)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "lot_area_per_unit_min_m2 = label(au) @(2)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "townhouse"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone",
+     "townhouse": "in a townhouse"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type",
+     "unit_count"
+    ],
+    "status": "modelled",
+    "description": "Where the RD zone label carries an \"au\" value, that value is the required minimum lot area for each dwelling unit in a townhouse.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.20.30.10(1)": {
+   "explanation": "The minimum lot area in the RD zone is the \"a\" number on the zoning map label; if the label has none, it is the required lot frontage times 30 m.",
+   "code_refs": "none"
+  },
+  "10.20.30.10(2)": {
+   "explanation": "For a townhouse in the RD zone, an \"au\" number on the zoning map label sets the minimum lot area needed for each dwelling unit.",
+   "code_refs": "none"
+  }
+ }
+}

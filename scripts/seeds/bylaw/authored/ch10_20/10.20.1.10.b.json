@@ -1,0 +1,35 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.1.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.1.10(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "in the RD zone",
+          "any": "all lands, uses, buildings and structures"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

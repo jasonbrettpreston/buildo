@@ -1,0 +1,18 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_80/10.80.40.81", "keyer": "A",
+ "units": [
+  {"unit_id": "10.80.40.81(1)#whole", "archetype": "PERMIT", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["lawfully_existing"]}, "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none", "literals_not_expressed": [],
+   "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RM": "the RM zone", "lawfully_existing": "lawfully existing buildings on the same lot"}},
+   "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status"], "status": "not_modelled", "description": "Where the lawful separation between main walls of lawfully existing buildings on the same lot (or of one lawfully existing building) is less than the By-law requires, that existing distance becomes the minimum for those walls. Keyed PERMIT (relief for existing conditions) rather than LIMIT because the value is the as-built distance and the clause names no date for an existing() expression.", "gaps": "Needs as-built separation distances and lawful-existing status."},
+   "disclosure": "Lawfully existing buildings in the RM zone may keep their existing wall separations even if these are less than now required. We cannot measure existing buildings, so this is not evaluated.", "not_an_override": []},
+  {"unit_id": "10.80.40.81(2)#whole", "archetype": "REQUIRE", "target": "none", "bound": "none", "requirement": "comply_or_minor_variance", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["lawfully_existing"]}, "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none", "literals_not_expressed": [],
+   "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": ["lawfully_existing"], "uses": [], "evidence": {"RM": "the RM zone", "lawfully_existing": "a lawfully existing building"}},
+   "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status"], "status": "not_modelled", "description": "Any addition or extension to a lawfully existing building or structure covered by 10.80.40.81(1) must meet the required main-wall separation or be authorized by a Section 45 minor variance.", "gaps": "Needs as-built facts about the existing building."},
+   "disclosure": "Additions to such existing buildings must meet current separation rules or get a minor variance. This is not evaluated.", "not_an_override": []}
+ ],
+ "rows": {
+  "10.80.40.81(1)": {"explanation": "In the RM zone, if lawfully existing buildings have main walls closer together than the By-law now requires, the existing distance is accepted as their minimum.", "code_refs": "none"},
+  "10.80.40.81(2)": {"explanation": "Any addition to such a building must meet the current wall-separation rules, or be approved by a minor variance.", "code_refs": "none"}
+ }
+}

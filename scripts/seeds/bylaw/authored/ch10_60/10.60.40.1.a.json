@@ -1,0 +1,880 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.40.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.60.40.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "the RT zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Article 10.60.40 applies to buildings and structures in the RT zone, except ancillary buildings and structures, which follow Article 10.5.60.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "labelled(u)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "dwelling_units_max = label(u) @(2)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "dwelling_unit": "of dwelling units permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "unit_count"
+        ],
+        "status": "modelled",
+        "description": "Where the lot's RT zone label has a u value, that number is the maximum number of dwelling units on the lot.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "dwelling_units_max = max(60 units; label(u)) @(2)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "apartment_building": "an apartment building",
+          "major_street": "abutting a major street",
+          "dwelling_unit": "of dwelling units for"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "outside_maxbld_building_types",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ],
+        "status": "partially_modelled",
+        "description": "For an apartment building on a lot abutting a major street, the maximum number of dwelling units is the greater of 60 or the label's u value, replacing (A).",
+        "gaps": "Apartment buildings are outside the MaxBLD building-type scope. The unit text names no zone (its section is the RT zone); an absent u label is dropped from max()."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "building_width_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_width_m = 5.0 m @(3)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "individual_private_driveway"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "townhouse": "in a townhouse",
+          "individual_private_driveway": "individual private driveway leading",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "In the RT zone, a townhouse dwelling unit without its own private driveway leading directly to its front must be at least 5.0 m wide.",
+        "gaps": "The negated condition (the unit does NOT have an individual private driveway) has no token or DSL atom, so the condition is carried in application only. building_width_m is used for the width of one townhouse dwelling unit (no dedicated target)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "building_width_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_width_m = 6.0 m @(3)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "townhouse": "in a townhouse",
+          "dwelling_unit": "a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "In the RT zone, a townhouse dwelling unit must otherwise (with its own private driveway) be at least 6.0 m wide.",
+        "gaps": "'In all other cases' is the complement of (A) (units with an individual private driveway); no condition is keyed. building_width_m is used for the width of one townhouse dwelling unit."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(4)#(4)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "the permitted detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 900.1.10(3) and 900.1.10(4)(A), where a detached houseplex is the only residential building on a lot and the applicable Chapter 900 exception sets principal building requirements for a detached house, the houseplex is subject to the exception's building requirements for a detached house.",
+        "gaps": "Incorporates the principal building requirements of whichever Chapter 900 exception applies; exceptions are not yet keyed. 'The only residential building on a lot' has no condition token. The unit text names no zone (its section is the RT zone)."
+      },
+      "disclosure": "On a lot with a site-specific exception, a houseplex follows the exception's building rules for the matching house type. We have not yet loaded those exceptions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(4)#(4)(B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "semi_detached_houseplex": "a permitted semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Despite 900.1.10(3) and 900.1.10(4)(A), where a semi-detached houseplex is the only residential building on a lot and the applicable Chapter 900 exception sets principal building requirements for a semi-detached house, the houseplex is subject to the exception's building requirements for the portion of a semi-detached house that is one dwelling unit.",
+        "gaps": "Incorporates the principal building requirements of whichever Chapter 900 exception applies; exceptions are not yet keyed. 'The only residential building on a lot' has no condition token. The unit text names no zone (its section is the RT zone)."
+      },
+      "disclosure": "On a lot with a site-specific exception, a houseplex follows the exception's building rules for the matching house type. We have not yet loaded those exceptions.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(5)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "base > exception",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Despite 10.60.40.1(4), 900.1.10(3) and 900.1.10(4)(A), if a regulation in 10.60.40.10 or 10.60.40.40 for a houseplex is more permissive than the exception requirement applied through 10.60.40.1(4), the more permissive regulation prevails.",
+        "gaps": "Precedence is conditional (the more permissive regulation wins), not a fixed layer order; ranks_layers records that the base height (10.60.40.10) and FSI (10.60.40.40) regulations can prevail over the exception. Exceptions are not yet keyed. The unit text names no zone."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "bedrooms",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "unit_count_band"
+        ],
+        "if": "dwelling_units = 2 units"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "bedrooms = 4 units × dwelling_units @(6)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [
+          "unit_count_band"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "unit_count_band": "with two dwelling units",
+          "dwelling_unit": "number of dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type",
+          "unit_count",
+          "bedroom_count"
+        ],
+        "status": "modelled",
+        "description": "In the RT zone, a detached or semi-detached houseplex with two dwelling units may have at most four bedrooms per unit (four times the number of units).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "bedrooms",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "unit_count_band"
+        ],
+        "if": "dwelling_units ≥ 3 units"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "bedrooms = 3 units × dwelling_units @(6)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [
+          "unit_count_band"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "unit_count_band": "three or more dwelling units",
+          "dwelling_unit": "number of dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type",
+          "unit_count",
+          "bedroom_count"
+        ],
+        "status": "modelled",
+        "description": "In the RT zone, a detached or semi-detached houseplex with three or more dwelling units may have at most three bedrooms per unit (three times the number of units).",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(6)#(6)(C)",
+      "archetype": "DEFINE",
+      "target": "bedrooms",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "one",
+          "clause": "(6)(C)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "dwelling_unit": "a bachelor dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "bedroom_count"
+        ],
+        "status": "modelled",
+        "description": "For counting bedrooms under (A) and (B), a bachelor dwelling unit counts as one bedroom.",
+        "gaps": "A counting rule for the bedroom_count input, not a limit; the 'one' is listed as not expressed."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(7)#(7)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "A detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "lawfully_existing": "lawfully existing residential building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "lawfully_existing_status",
+          "bedroom_count"
+        ],
+        "status": "not_modelled",
+        "description": "A houseplex may exceed the bedroom maximum in 10.60.40.1(6) if it is a lawfully existing residential building and no bedrooms that would increase the non-compliance are added after June 26, 2025.",
+        "gaps": "Depends on the building's as-built bedroom count and history. The unit text names no zone."
+      },
+      "disclosure": "An existing houseplex that already has more bedrooms than the limit may keep them, but cannot add more. We cannot check a building's existing bedrooms.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(7)#(7)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "A detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [
+          "bedroom_count"
+        ],
+        "status": "not_modelled",
+        "description": "A houseplex may exceed the bedroom maximum if it was built under a building permit issued after June 26, 2025 with no more bedrooms per unit than shown in a zoning certificate, zoning by-law amendment, minor variance or site plan approval whose request or complete application was filed on or before June 26, 2025.",
+        "gaps": "Depends on permit and application filing history, which we do not hold. The unit text names no zone."
+      },
+      "disclosure": "Projects with planning applications filed on or before June 26, 2025 may keep the bedroom counts in those approvals. We do not have application history.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(7)#(7)(C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "A detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "bedroom_count"
+        ],
+        "status": "not_modelled",
+        "description": "For a building built under the (B) transition, no bedrooms may be added after the founding building permit is issued if they would increase the non-compliance beyond what that permit established.",
+        "gaps": "Depends on the founding building permit's bedroom counts. The unit text names no zone."
+      },
+      "disclosure": "A building that relied on the transition rule cannot later add bedrooms beyond its permit. We cannot check permit details.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(8)#(8)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "lawfully_existing": "and lawfully existing"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ],
+        "status": "informational",
+        "description": "For the bedroom transition in 10.60.40.1(7), lawful / lawfully / lawfully existing also include buildings, structures or uses authorized or permitted on or before June 26, 2025 for which a building permit was lawfully issued before June 26, 2025.",
+        "gaps": "Dates are not keyed as literals (date rule)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(8)#(8)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 10.60.40.1(7), a 'request for a zoning certificate' means one meeting Article I, Building Permits, of Municipal Code Chapter 363, Building Construction and Demolition.",
+        "gaps": "Policy, chapter, section and regulation numbers are references, not literals."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(8)#(8)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 10.60.40.1(7), a 'complete application for a zoning by-law amendment' means one meeting Official Plan Policy 5.5.2.",
+        "gaps": "Policy, chapter, section and regulation numbers are references, not literals."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(8)#(8)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 10.60.40.1(7), a 'complete application for a minor variance' means one meeting Section 2 of Ontario Regulation 200/96 under the Planning Act.",
+        "gaps": "Policy, chapter, section and regulation numbers are references, not literals."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.1(8)#(8)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "For 10.60.40.1(7), a 'complete application for site plan approval' means one meeting Official Plan Policy 5.5.2.",
+        "gaps": "Policy, chapter, section and regulation numbers are references, not literals."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.60.40.1(1)": {
+      "explanation": "The building rules in Article 10.60.40 apply to main buildings in the RT zone; ancillary buildings such as garages and sheds follow Article 10.5.60.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(2)": {
+      "explanation": "In the RT zone, the u number in the zone label caps the dwelling units on a lot; an apartment building on a major street may have at least 60 units.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(3)": {
+      "explanation": "In the RT zone, each townhouse unit must be at least 6.0 m wide, or 5.0 m if it has no private driveway of its own leading to its front.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(4)": {
+      "explanation": "Where a houseplex is the only home on a lot with a site-specific (Chapter 900) exception, it follows the exception's building rules for a detached house or for one half of a semi-detached house.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(5)": {
+      "explanation": "If the regular RT zone height or density rule for a houseplex is more generous than the exception's rule, the more generous rule applies.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(6)": {
+      "explanation": "In the RT zone, a houseplex may have up to four bedrooms per unit with two units, or three per unit with three or more units; a bachelor unit counts as one bedroom.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(7)": {
+      "explanation": "Houseplexes that existed, or had approvals or applications filed by June 26, 2025, may keep more bedrooms than the limit, but may not add more.",
+      "code_refs": "none"
+    },
+    "10.60.40.1(8)": {
+      "explanation": "Defines lawfully existing and the various complete applications used by the June 26, 2025 bedroom transition rule.",
+      "code_refs": "none"
+    }
+  }
+}

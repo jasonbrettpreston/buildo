@@ -1,0 +1,294 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.40(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["building_height_band"],
+        "if": "proposed_height_m > 2.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = if(proposed_height_m > 2.0 m; gfa_m2 + attic_area_m2; gfa_m2) @(1)(A)"],
+      "literals_not_expressed": [
+        {"literal": "1.4 metres", "clause": "(1)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "80%", "clause": "(1)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "gross floor area of a residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(1)#(1)(B)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lot_area_band"],
+        "if": "attic_area_m2 >= 10.0 m2"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = if(attic_area_m2 >= 10.0 m2; gfa_m2 + attic_area_m2; gfa_m2) @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "1.4 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "80%", "clause": "(1)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "gross floor area of a residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(2)#whole",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not more than 5 pct of the permitted maximum gross floor area of the building and not more than 20 m2"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = gfa_m2 - min(0.05 ratio × gfa_m2; 20 m2) @(2)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "Residential Zone category",
+          "uses": "not included in the gross floor area"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(3)#(3)(A)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = gfa_m2 - basement_area_m2 @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "gross floor area of a residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(3)#(3)(B)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["building_height_band"],
+        "if": "vertical_clearance_m > 4.5 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = gfa_m2 - min(void_area_m2; 0.10 ratio × gfa_m2) @(3)(B)"],
+      "literals_not_expressed": [
+        {"literal": "4.5 metres", "clause": "(3)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "gross floor area of a residential building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(3)#(3)(C)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = gfa_m2 - parking_space_area_m2 × min(dwelling_units; 1.0 units) @(3)(C)"],
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(3)(C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit", "parking_space"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "one parking space per dwelling unit"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "10.5.40.40(3)#(3)(D)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["frontage_band"],
+        "if": "lot_frontage_m > 12.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["gfa_m2 = gfa_m2 - parking_space_area_m2 × 1.0 units @(3)(D)"],
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(3)(D)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["dwelling_unit", "parking_space"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "in a detached house",
+          "lot_conditions": "lot frontage of more than 12.0 metres",
+          "uses": "one additional parking space"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "10.5.40.40(5)#(5)(A)",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = gfa_m2 ÷ lot_area_m2 @(5)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["non_residential_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "for a non-residential building",
+          "uses": "floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.40(5)#(5)(B)",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = (gfa_m2 + attic_area_m2 - reduced_area_m2) ÷ lot_area_m2 @(5)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex", "houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "other than an apartment building",
+          "uses": "floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.40(5)#(5)(C)",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = (gfa_m2 - apartment_reduced_area_m2) ÷ lot_area_m2 @(5)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "zones": "In the Residential Zone category",
+          "building_types": "for an apartment building",
+          "uses": "floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    }
+  ]
+}

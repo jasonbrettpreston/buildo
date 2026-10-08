@@ -1,0 +1,169 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.20.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.40.20.20(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [],
+        "if": "not mapped(RS-conditions)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "2",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "3",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "4",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "5",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "6",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "8",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "9",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "10",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "11",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "12",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "13",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "14",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "15",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "16",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "17",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "18",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "19",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "20",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "21",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "22",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "23",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "25",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "26",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RS": "permitted in the RS zone",
+          "any": "The following uses are permitted",
+          "dwelling_unit": "Multi-tenant House (18)"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    }
+  ]
+}

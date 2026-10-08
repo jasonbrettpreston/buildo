@@ -1,0 +1,230 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.80",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.80.40.80(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 5.5 m @(1)(A)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "one",
+          "clause": "(1)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "apartment_building",
+          "townhouse"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "apartment_building": "an apartment building",
+          "townhouse": "or townhouse has",
+          "dwelling_unit": "openings to dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Where facing main walls of the same apartment building or townhouse include one or more walls with no openings to dwelling units, they must be at least 5.5 m apart above ground.",
+        "gaps": "Whether the facing walls have openings to dwelling units is a design fact with no token or DSL input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.80(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 11.0 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "apartment_building",
+          "townhouse"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "apartment_building": "an apartment building",
+          "townhouse": "or townhouse has",
+          "dwelling_unit": "opening to a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Where each facing main wall of the same apartment building or townhouse has an opening to a dwelling unit, they must be at least 11.0 m apart above ground.",
+        "gaps": "Whether the facing walls have openings to dwelling units is a design fact with no token or DSL input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.80(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 5.5 m @(2)(A)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "two",
+          "clause": "(2)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "one",
+          "clause": "(2)(A)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "dwelling_unit": "openings to dwelling units"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Where two or more residential buildings are on the same lot and the main wall of one or more of them has no openings to dwelling units, the buildings must be at least 5.5 m apart above ground.",
+        "gaps": "The number of buildings on the lot and whether the facing walls have openings to dwelling units is a design fact with no token or DSL input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.40.80(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "separation_m = 11.0 m @(2)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "two",
+          "clause": "(2)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "dwelling_unit": "opening to a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "partially_modelled",
+        "description": "Where two or more residential buildings are on the same lot and each facing main wall has an opening to a dwelling unit, the buildings must be at least 11.0 m apart above ground.",
+        "gaps": "The number of buildings on the lot and whether the facing walls have openings to dwelling units is a design fact with no token or DSL input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.80.40.80(1)": {
+      "explanation": "In the RM zone, facing walls of the same apartment building or townhouse must be at least 5.5 m apart if any of them lacks windows or doors to units, and 11.0 m if all have them.",
+      "code_refs": "none"
+    },
+    "10.80.40.80(2)": {
+      "explanation": "In the RM zone, separate residential buildings on the same lot must be at least 5.5 m apart if a facing wall has no openings to units, and 11.0 m if every facing wall has one.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_5/10.5.40.70", "keyer": "A",
+ "units": [
+  {"unit_id": "10.5.40.70(1)#(1)(A)", "archetype": "LIMIT", "target": "front_setback_m", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["one_abutting_building_within_15_m"]}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["front_setback_m = abutting_front_setback_m @(1)(A)"],
+   "literals_not_expressed": [{"literal": "15.0 metres", "clause": "(1)(A)", "reason": "threshold_used_in_application"}],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": ["one_abutting_building_within_15_m"], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "one_abutting_building_within_15_m": "15.0 metres or less from the subject lot"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "partially_modelled", "description": "Front-yard averaging, one neighbour: where one abutting Residential-zone lot has a building fronting the same street within 15.0 m of the subject lot, the minimum front yard setback equals that building's front yard setback.", "gaps": "Needs the neighbouring building's front yard setback and its distance from the lot."},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.5.40.70(1)#(1)(B)", "archetype": "LIMIT", "target": "front_setback_m", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["two_abutting_buildings_within_15_m"]}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["front_setback_m = abutting_front_setback_m @(1)(B)"],
+   "literals_not_expressed": [{"literal": "15.0 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"}],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": ["two_abutting_buildings_within_15_m"], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "two_abutting_buildings_within_15_m": "between two abutting lots"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "partially_modelled", "description": "Front-yard averaging, two neighbours: where the lot is between two abutting Residential-zone lots, each with a building fronting the same street within 15.0 m, the minimum front yard setback is the average of those two buildings' front yard setbacks (abutting_front_setback_m read as the average of the abutting buildings).", "gaps": "Needs both neighbouring buildings' front yard setbacks and distances."},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.5.40.70(2)#whole", "archetype": "LIMIT", "target": "lane_setback_m", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["abuts_lane"]}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["lane_setback_m = 2.5 m @(2)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": ["abuts_lane"], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "abuts_lane": "centreline of a lane"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "partially_modelled", "description": "A building or structure must be at least 2.5 m from the original centreline of a lane.", "gaps": "Measured from the original lane centreline, not the lot line; needs lane centreline geometry."},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.5.40.70(1)": {"explanation": "Front-yard averaging: if a neighbouring house on the same street is within 15.0 m of your lot, your front setback must match it. If there are neighbouring houses on both sides, your front setback must be the average of the two.", "code_refs": "none"},
+  "10.5.40.70(2)": {"explanation": "Buildings must be at least 2.5 m from the original centreline of any lane.", "code_refs": "none"}
+ }
+}

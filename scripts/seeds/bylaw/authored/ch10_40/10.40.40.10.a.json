@@ -1,0 +1,799 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.40.40.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "overlay_mapped"
+        ],
+        "if": "mapped(HT)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = overlay(HT) @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "overlay_mapped"
+        ],
+        "uses": [],
+        "evidence": {
+          "overlay_mapped": "the Height Overlay Map",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "The maximum height of a building or structure in the RS zone is the HT value on the Height Overlay Map.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "overlay_mapped"
+        ],
+        "if": "not mapped(HT)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = 10.0 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "overlay_mapped"
+        ],
+        "uses": [],
+        "evidence": {
+          "overlay_mapped": "no numerical value following the letters",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Where the lot has no HT value on the Height Overlay Map, the maximum height is 10.0 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = max(overlay(HT) @(1)(C)(i); 10.0 m @(1)(C)(ii)) @(1)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex is the greater",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "For a detached or semi-detached houseplex, the maximum height is the greater of the HT value and 10.0 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_m = by_type(townhouse: max(13.0 m; overlay(HT)); apartment_building: max(19.0 m; overlay(HT))) @(1)(D)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "townhouse",
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "townhouse": "for a townhouse",
+          "apartment_building": "for an apartment building",
+          "major_street": "abutting a major street",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "On a lot abutting a major street, the maximum height is the greater of 13.0 m or HT for a townhouse, and the greater of 19.0 m or HT for an apartment building.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "70 percent",
+          "clause": "(2)(A)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "The maximum height of the exterior portion of main walls is the higher of 7.0 m above established grade or 2.5 m less than the maximum height in 10.40.40.10(1), applied to all side main walls for at least 70 percent of each side wall's width (option A).",
+        "gaps": "The 70 percent wall-width share selects which walls the limit governs; it is not expressed. Options (A) and (B) are alternatives (either may be used)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "main_wall_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "60 percent",
+          "clause": "(2)(B)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "12.0 metres",
+          "clause": "(2)(B)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "50 percent",
+          "clause": "(2)(B)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "7.5 metres",
+          "clause": "(2)(B)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "12.0 metres",
+          "clause": "(2)(B)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "40 percent",
+          "clause": "(2)(B)(iii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "7.5 metres",
+          "clause": "(2)(B)(iii)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Option (B): the same main wall height limit applied to all front and rear main walls for at least 60 / 50 / 40 percent of their total width, by lot frontage (12.0 m or more / over 7.5 m and under 12.0 m / 7.5 m or less).",
+        "gaps": "The frontage bands select the wall-width share, not the height value, so they are recorded as unexpressed thresholds."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(2)#(2)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "townhouse",
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "townhouse": "apply to townhouses",
+          "apartment_building": "or apartment buildings",
+          "major_street": "abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "informational",
+        "description": "The main wall height limits in (2)(A) and (2)(B) do not apply to townhouses or apartment buildings on a lot abutting a major street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "overlay_mapped"
+        ],
+        "if": "mapped(ST)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_storeys = overlay(ST) @(3)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "overlay_mapped"
+        ],
+        "uses": [],
+        "evidence": {
+          "overlay_mapped": "the Height Overlay Map",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "The maximum number of storeys is the ST value on the Height Overlay Map.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "overlay_mapped"
+        ],
+        "if": "not mapped(ST)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_storeys = unlimited @(3)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [
+          "overlay_mapped"
+        ],
+        "uses": [],
+        "evidence": {
+          "overlay_mapped": "no numerical value following the letters",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "Where the lot has no ST value, the number of storeys is not limited by this regulation.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(3)#(3)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "informational",
+        "description": "The ST storey limit in (3)(A) does not apply to a detached or semi-detached houseplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(3)#(3)(D)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "height_storeys = by_type(townhouse: max(4 storeys; overlay(ST)); apartment_building: max(6 storeys; overlay(ST))) @(3)(D)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "townhouse",
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "townhouse": "for a townhouse",
+          "apartment_building": "for an apartment building",
+          "major_street": "abutting a major street",
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "On a lot abutting a major street (excluding a mechanical penthouse), the maximum storeys are the greater of four or ST for a townhouse and the greater of six or ST for an apartment building.",
+        "gaps": "\"four\" and \"six\" are written as words; keyed as 4 storeys and 6 storeys."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(4)#whole",
+      "archetype": "LIMIT",
+      "target": "entrance_height_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "entrance_height_m = 1.2 m @(4)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "modelled",
+        "description": "For a residential building, the lowest point of a pedestrian entrance through the front wall or a side main wall may be no higher than 1.2 m above established grade.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(5)#(5)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "two",
+          "clause": "(5)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "roof_type"
+        ],
+        "status": "informational",
+        "description": "On a residential building of two or more storeys, dormer walls are not main walls if the dormer face is in a roof directly above a part of a main wall that does not exceed the maximum main wall height (and (B) is met).",
+        "gaps": "Dormer geometry is a design input we do not hold."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(5)#(5)(B)",
+      "archetype": "DEFINE",
+      "target": "element_width_pct",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "element_width_pct = 40 pct @(5)(B)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "two",
+          "clause": "(5)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "roof_type"
+        ],
+        "status": "informational",
+        "description": "For dormer walls not to count as main walls, the total width of dormer faces may be no more than 40 percent of the width of the main wall parts within the main wall height limit, measured at the uppermost storey below the roof.",
+        "gaps": "Keyed as DEFINE (a condition of the main-wall definition, not a free-standing limit); dormer widths are design inputs."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.10(6)#(6)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "1.0",
+          "clause": "(6)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "10.0",
+          "clause": "(6)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "50 percent",
+          "clause": "(6)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.4 metres",
+          "clause": "(6)(A)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RS"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "roof_type"
+        ],
+        "status": "not_modelled",
+        "description": "For a residential building with a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), additional main walls are permitted above the main wall height limit if the additional front and rear walls are set back at least 1.4 m from the front and rear main walls below.",
+        "gaps": "Roof slope is a design input with no lot-condition token; the 1.4 m step-back is a condition of the permission with no matching target."
+      },
+      "disclosure": "Flat-roofed homes may build extra wall height if the upper front and rear walls step back at least 1.4 m; we do not model roof form.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.40.40.10(1)": {
+      "explanation": "Maximum building height in the RS zone is the HT number on the Height Overlay Map, or 10.0 m where none is mapped; houseplexes get at least 10.0 m, and on major streets townhouses get at least 13.0 m and apartment buildings at least 19.0 m.",
+      "code_refs": "none"
+    },
+    "10.40.40.10(2)": {
+      "explanation": "Main walls (side walls, or front and rear walls for a share of their width that depends on frontage) may be no taller than the higher of 7.0 m or 2.5 m below the maximum height; this does not apply to townhouses or apartments on major streets.",
+      "code_refs": "none"
+    },
+    "10.40.40.10(3)": {
+      "explanation": "The maximum number of storeys is the ST number on the Height Overlay Map (unlimited where none is mapped, and not applied to houseplexes); on major streets townhouses may have at least four storeys and apartment buildings at least six.",
+      "code_refs": "none"
+    },
+    "10.40.40.10(4)": {
+      "explanation": "The front or side entrance of a home in the RS zone may be at most 1.2 m above the ground.",
+      "code_refs": "none"
+    },
+    "10.40.40.10(5)": {
+      "explanation": "On homes of two or more storeys, dormers do not count as main walls if they sit above walls within the wall-height limit and take up no more than 40 percent of that wall width.",
+      "code_refs": "none"
+    },
+    "10.40.40.10(6)": {
+      "explanation": "A flat-roofed home may add main walls above the wall-height limit if the extra front and rear walls are set back at least 1.4 m.",
+      "code_refs": "none"
+    }
+  }
+}

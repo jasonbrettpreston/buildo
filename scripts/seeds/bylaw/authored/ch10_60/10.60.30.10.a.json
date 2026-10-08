@@ -1,0 +1,36 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_60/10.60.30.10", "keyer": "A",
+ "units": [
+  {"unit_id": "10.60.30.10(1)#(1)(A)", "archetype": "LIMIT", "target": "required_lot_area_m2", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["label_value"], "if": "labelled(a)"}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["required_lot_area_m2 = label(a) @(1)(A)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["RT"], "building_types": ["any"], "lot_conditions": ["label_value"], "uses": [], "evidence": {"RT": "the RT zone", "label_value": "includes the letter \"a\""}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "modelled", "description": "Where the zone label has an 'a' value, it is the required minimum lot area in m2.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.60.30.10(1)#(1)(B)", "archetype": "LIMIT", "target": "required_lot_area_m2", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["label_value"], "if": "labelled(a)"}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["required_lot_area_m2 = 50 pct × label(a) @(1)(B)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["RT"], "building_types": ["semi_detached_house", "semi_detached_houseplex"], "lot_conditions": ["label_value"], "uses": [], "evidence": {"RT": "the RT zone", "semi_detached_house": "a semi-detached house is on two lots", "semi_detached_houseplex": "a semi-detached houseplex", "label_value": "following the letter \"a\""}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "For a semi-detached house on two lots, and for a semi-detached houseplex, the minimum lot area for each lot is 50% of the label 'a' value.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.60.30.10(1)#(1)(C)", "archetype": "LIMIT", "target": "required_lot_area_m2", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["label_value"], "if": "not labelled(a)"}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["required_lot_area_m2 = required_lot_frontage_m × 30 m @(1)(C)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["RT"], "building_types": ["any"], "lot_conditions": ["label_value"], "uses": [], "evidence": {"RT": "the RT zone", "label_value": "does not include an \"a\" value"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "modelled", "description": "Where the label has no 'a' value, the minimum lot area is the required minimum lot frontage × 30 m.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.60.30.10(2)#whole", "archetype": "LIMIT", "target": "lot_area_per_unit_min_m2", "bound": "min", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": {"tokens": ["label_value"], "if": "labelled(au)"}, "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": ["lot_area_per_unit_min_m2 = label(au) @(2)"],
+   "literals_not_expressed": [],
+   "application": {"zones": ["RT"], "building_types": ["townhouse"], "lot_conditions": ["label_value"], "uses": ["dwelling_unit"], "evidence": {"RT": "the RT zone", "townhouse": "in a townhouse", "label_value": "includes the letters \"au\"", "dwelling_unit": "each dwelling unit"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type", "unit_count"], "status": "modelled", "description": "Where the label has an 'au' value, it is the minimum lot area per dwelling unit in a townhouse.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.60.30.10(1)": {"explanation": "In the RT zone, the minimum lot area is the 'a' number in the zone label. For a semi-detached house split over two lots, or a semi-detached houseplex, each lot needs half of that. With no 'a' number, the minimum lot area is the required frontage times 30 m.", "code_refs": "none"},
+  "10.60.30.10(2)": {"explanation": "If the zone label has an 'au' number, a townhouse needs at least that much lot area for each unit.", "code_refs": "none"}
+ }
+}

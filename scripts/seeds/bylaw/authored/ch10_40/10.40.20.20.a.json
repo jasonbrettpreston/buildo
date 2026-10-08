@@ -1,0 +1,60 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_40/10.40.20.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.40.20.20(1)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RS"
+    ],
+    "building_types": [
+     "garden_suite",
+     "laneway_suite",
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RS": "the RS zone",
+     "garden_suite": "Garden Suite (17)",
+     "laneway_suite": "Laneway Suite (16)",
+     "secondary_suite": "Secondary Suite (12)",
+     "secondary_suite_use": "Secondary Suite (12)"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "partially_modelled",
+    "description": "Lists the uses permitted in the RS zone subject to the conditions in Clause 10.40.20.100, including garden suites, laneway suites and secondary suites.",
+    "gaps": "Most listed uses (institutional, commercial, utility) are outside the MaxBLD building types and are not assessed; the bracketed numbers are references to the conditions in 10.40.20.100."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.40.20.20(1)": {
+   "explanation": "In the RS zone a list of uses, including garden suites, laneway suites and secondary suites, is permitted only if each meets its matching condition in Clause 10.40.20.100.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,115 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = label(d) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "dwelling_unit": "floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.40.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(d)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = unlimited @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "dwelling_unit": "floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.40.40(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_houseplex", "houseplex"],
+        "lot_conditions": ["has_secondary_suite"],
+        "uses": ["dwelling_unit", "secondary_suite_use"],
+        "evidence": {
+          "detached_houseplex": "does not apply to a detached houseplex",
+          "houseplex": "does not apply to a detached houseplex",
+          "has_secondary_suite": "a residential building with a secondary suite",
+          "secondary_suite_use": "a residential building with a secondary suite",
+          "dwelling_unit": "does not apply to a detached houseplex"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["has_secondary_suite", "building_type"]}
+    },
+    {
+      "unit_id": "10.20.40.40(1)#(1)(D)",
+      "archetype": "DISAPPLY",
+      "target": "fsi",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street", "unit_count_band"], "if": "dwelling_units \u2264 60 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "60 dwelling units", "clause": "(1)(D)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street", "unit_count_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "townhouse": "do not apply to a townhouse",
+          "apartment_building": "or an apartment building with 60 dwelling units",
+          "major_street": "located on a lot abutting a major street",
+          "unit_count_band": "with 60 dwelling units or less",
+          "dwelling_unit": "with 60 dwelling units or less"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type", "unit_count"]}
+    }
+  ]
+}
