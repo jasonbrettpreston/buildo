@@ -1,5 +1,5 @@
 {
-  "$comment": "AUTHORED (S12, Spec 69 M-21; claude adjudicates, the operator confirms). The judgment inputs of the one-time legacy-id map built by scripts/analysis/bylaw/legacy.mjs. Everything else in the map is derived from the page. picks: a quote that matches more than one place on a page → the chosen candidate (checked to be one of the matches). relocate: a quote not in the cited article but found elsewhere on the page → the accepted location (checked). retire: a fragment retired with a closed reason (the 12 UNVERIFIED C-claims retire from the source's own result, not from here). external: a claim whose source is not a pinned by-law page → an external.json ref id; proposed_refs are the ref entries S12 proposes for external.json (the REF reason set needs the patch in the S12 report).",
+  "$comment": "AUTHORED (S12, Spec 69 M-21; claude adjudicates, the operator confirms). The judgment inputs of the one-time legacy-id map built by scripts/analysis/bylaw/legacy.mjs. Everything else in the map is derived from the page. picks: a quote that matches more than one place on a page → the chosen candidate (checked to be one of the matches). relocate: a quote not in the cited article but found elsewhere on the page → the accepted location (checked). retire: a fragment retired with a closed reason (the 12 UNVERIFIED C-claims retire from the source's own result, not from here). external: a claim whose source is not a pinned by-law page → an external.json ref id; proposed_refs are the ref entries S12 proposes for external.json (REF-1..3 landed in external.json 2026-10-07; proposed_refs is kept as the S12 record).",
   "adoption_id": "adoption-3",
   "external": {
     "H26": "REF-1",
@@ -11,6 +11,21 @@
     "spec58": "4a50e9589154a04d8b1b34eacf35f915a064d22a",
     "spec67": "9dd9494fd40be585e488ddf212b98abaaefd26a3",
     "spec78": "c0f50bd2d0b3b64fd0405b17f960672e53f53974"
+  },
+  "operator_confirmed": {
+    "date": "2026-10-07",
+    "decisions": [
+      "C15@ch10_5",
+      "C4@10.20.40.70",
+      "C4@10.40.40.70",
+      "C57@ch10_80",
+      "C6@ch10_20",
+      "C6@ch10_40",
+      "C6@ch10_60",
+      "H19@ch10_40",
+      "H20@ch10_60"
+    ],
+    "ruling": "operator 2026-10-07 (S12): the 5 picks, 2 relocations (H19, H20) and 2 C4 retirements are confirmed; REF-1..3 landed in external.json"
   },
   "picks": {
     "C15@ch10_5": "10.5.50.10(1)#(1)(C)",

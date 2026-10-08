@@ -98,6 +98,10 @@ describe('G-EVAL (c): §7.5 precedence fixtures — rules 0–7, conflicts, M-38
 });
 
 describe('precedence on the real fixture clauses', () => {
+  // operator ruling (d) 2026-10-07: an unauthored exception blocks every target, so the fixture exceptions (fully keyed
+  // here) are declared authored for these precedence checks
+  const CX = E.makeContext ? E.makeContext(VOCAB, { enactments: ENACT, authored: Object.fromEntries(['900.3.10(5)', '900.3.10(254)', '900.3.10(1462)', '900.3.10(1463)', 'SYN', '900.2.10(604)'].map((x) => [x, 'authored'])) }) : {};
+  const effX = (lot: Json, target: string): Json => E.effective(lot, target, E.loadCandidates(lot, UNITS).candidates, CX);
   it('600.60.40(2)(A) displaces only (1)(C)(ii): a sixplex in the overlay with HT 12.0 keeps 12.0 (Spec 68 §7.4)', () => {
     const six = { ...DERWYN, overlays: { HT: 12 }, map_areas: ['sixplex_overlay'], building_type: 'sixplex', vars: { ...DERWYN.vars, dwelling_units: 6 }, flags: { ...DERWYN.flags, lowest_level_joists_1_0_to_1_5_m_for_80_pct: true, lowest_level_ceiling_2_4_m_for_80_pct: true, lowest_level_contains_dwelling_unit: true } };
     expect(show(eff(six, 'height_m'))).toBe(12);
@@ -111,30 +115,31 @@ describe('precedence on the real fixture clauses', () => {
     expect([show(eff(corner, 'side_setback_m')), show(eff(corner, 'side_setback_street_m'))]).toEqual([1.5, 3]);
   });
   it('RD 5 (A) "Despite 10.20.40.70(3)" on a Derwyn-like lot in exception 900.3.10(5): 1.8 replaces the band 0.9', () => {
-    expect(show(eff({ ...DERWYN, exception: '900.3.10(5)' }, 'side_setback_m'))).toBe(1.8);
+    expect(show(effX({ ...DERWYN, exception: '900.3.10(5)' }, 'side_setback_m'))).toBe(1.8);
   });
   it('RD 254 INCLUDEs RD 1462 (loader): the gfa cap on 327.12 m² is min(0.6 × 327.12, 204) = 196.272', () => {
     const lot = { ...DERWYN, exception: '900.3.10(254)', building_type: 'detached_house' };
     expect(E.loadCandidates(lot, UNITS).log).toEqual(['INCLUDE 900.3.10(254)#SSP(C) → 900.3.10(1462) (depth 1)']);
-    expect(show(eff(lot, 'gfa_m2'))).toBe(196.272);
+    expect(show(effX(lot, 'gfa_m2'))).toBe(196.272);
   });
   it('RD 1463 PREVAILING: value unchanged, alternate path disclosed (rule 5)', () => {
-    const r = eff({ ...DERWYN, exception: '900.3.10(1463)' }, 'side_setback_m');
+    const r = effX({ ...DERWYN, exception: '900.3.10(1463)' }, 'side_setback_m');
     expect([r.value, r.disclosures.some((d: string) => d.includes('900.3.10(1463)#PBS(A)'))]).toEqual([0.9, true]);
   });
   it('M-38 through permitted() on the real 600.60.40(1)(B) and 900.1.10(3) units + a synthetic exception PROHIBIT', () => {
     const lot = { ...DERWYN, exception: 'SYN', map_areas: ['sixplex_overlay'], vars: { ...DERWYN.vars, dwelling_units: 6 } };
     const prohibit = { unit_id: 'SYN#SSP(A)', regulation_id: 'SYN', exception: 'SYN', layer: 'exception', archetype: 'PROHIBIT', target: 'none', bound: 'none', condition: { tokens: ['unit_count_band'], if: 'dwelling_units ≥ 5 units' }, applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['detached_houseplex'] }, displaces: [], numeric_expression: 'none' };
     const cands = [...E.loadCandidates(lot, UNITS).candidates, prohibit];
-    expect(E.permitted(lot, 'sixplex', cands, C).status).toBe('permitted');
-    expect(E.permitted({ ...lot, map_areas: [] }, 'sixplex', cands, C).status).toBe('prohibited');
-    expect(E.permitted({ ...lot, map_areas: undefined }, 'sixplex', cands, C)).toMatchObject({ status: 'not_evaluated', reason: 'map_area_not_held:sixplex_overlay' });
-    expect(E.permitted({ ...lot, zone: null }, 'sixplex', cands, C).status).toBe('not_evaluated');
+    expect(E.permitted(lot, 'sixplex', cands, CX).status).toBe('permitted');
+    expect(E.permitted({ ...lot, map_areas: [] }, 'sixplex', cands, CX).status).toBe('prohibited');
+    expect(E.permitted({ ...lot, map_areas: undefined }, 'sixplex', cands, CX)).toMatchObject({ status: 'not_evaluated', reason: 'map_area_not_held:sixplex_overlay' });
+    expect(E.permitted({ ...lot, zone: null }, 'sixplex', cands, CX).status).toBe('not_evaluated');
+    expect(E.permitted(lot, 'sixplex', cands, C)).toMatchObject({ status: 'not_evaluated', reason: 'exception_not_authored:SYN' }); // ruling (d)
   });
   it('R 604 prohibits an apartment building, not a detached houseplex', () => {
     const lot = { zone: 'R', label: {}, overlays: {}, vars: { dwelling_units: 6 }, flags: {}, exception: '900.2.10(604)', map_areas: ['sixplex_overlay'] };
     const cands = E.loadCandidates(lot, UNITS).candidates;
-    expect([E.permitted(lot, 'apartment_building', cands, C).status, E.permitted(lot, 'sixplex', cands, C).status]).toEqual(['prohibited', 'permitted']);
+    expect([E.permitted(lot, 'apartment_building', cands, CX).status, E.permitted(lot, 'sixplex', cands, CX).status]).toEqual(['prohibited', 'permitted']);
   });
   it('M-50 V12 on the real RT units: building type NULL → not_evaluated with the per-type values', () => {
     const r = eff(vec('V12').lot, 'side_setback_m');
@@ -250,7 +255,9 @@ describe('operator ruling 2026-10-07 (Spec 69 M-54 note): R-zone coverage unregu
   });
   it('absence does not apply when an exception candidate for lot_coverage_pct exists, even when it does not apply to the lot', () => {
     const lot = { ...rLot, exception: '900.2.10(9)' };
-    expect(show(effA(lot, [...UNITS, covEx]))).toBe(35);
+    const CA9 = E.makeContext(VOCAB, { enactments: ENACT, absences: ABS.rulings, authored: { '900.2.10(9)': 'authored' } });
+    expect(show(E.effective(lot, 'lot_coverage_pct', E.loadCandidates(lot, [...UNITS, covEx]).candidates, CA9))).toBe(35);
+    expect(show(effA(lot, [...UNITS, covEx]))).toBe('not_evaluated:exception_not_authored:900.2.10(9)'); // ruling (d): blocks the value too
     const notThisType = [...UNITS, { ...covEx, application: { zones: ['R'], building_types: ['townhouse'] } }];
     // hardening 2026-10-07 (Spec 69 M-60): an exception with no authored record never yields absence
     expect(show(effA(lot, notThisType))).toBe('not_evaluated:exception_not_authored:900.2.10(9)');

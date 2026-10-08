@@ -5,7 +5,8 @@
 //
 // G-READ external arm over scripts/seeds/bylaw/external.json. checkExternal(doc) is pure over its inputs; with
 // `seeds` it also reads manifest.json and, lazily, the pages/<key>.txt of a row whose url is a pinned by-law page.
-// Validated here: the seven EXT-* rows and `ref` entries (key set + closed reason). Counted, not validated:
+// Validated here: the seven EXT-* rows and `ref` entries (key set + closed reason: phase2_exception ·
+// other_zone_category · dataset_documentation, S12 operator ruling 2026-10-07). Counted, not validated:
 // `model_heuristic` entries (their arm, §6.3, lands with S9's classifier).
 //
 // Reason codes (closed set for the external arm):
@@ -44,7 +45,7 @@ export const EXCERPT_SEPARATOR = ' … ';
 const ROW_KINDS = Object.freeze({ governance_former_bylaw: 'EXT-gov-', provincial_precedence: 'EXT-prov-', risk_reference: 'EXT-risk-' });
 const OTHER_KINDS = Object.freeze({ ref: 'REF-', model_heuristic: 'HEUR-' });
 const STATUSES = Object.freeze(['verified_primary', 'verified_secondary', 'unverified']);
-const REF_REASONS = Object.freeze(['phase2_exception']);
+const REF_REASONS = Object.freeze(['phase2_exception', 'other_zone_category', 'dataset_documentation']);
 export const FEED_STRUCTURES = Object.freeze(['principal', 'suite', 'ancillary', 'any']);
 export const FEED_ASPECTS = Object.freeze(['envelope', 'landscaping', 'parking_access', 'use_permission', 'lot', 'measurement']);
 // Government hosts (equal to, or a subdomain of, one of these) count as primary.

@@ -270,9 +270,28 @@
     "parcel_of_urban_residential_land": { "meaning": "O. Reg. 299/19 / Planning Act s.35.1: a parcel of urban residential land (provincial scope, Spec 69 M-55); a lot input, never assumed" }
   },
   "provincial_scope": {
-    "$comment": "How a provincial unit's external.json scope (Spec 68 §6.1) maps to lot inputs (Spec 69 M-55; M-60). Every provincial term is mapped explicitly; an unmapped term is a provincialUnits() violation. building_type: the 569-2013 types a provincial principal building type names (rowhouse = 569-2013 townhouse, 800.50(865); houseplexes are NOT mapped: 800.50(181)(F)/(746)(F) keep a house with suites a house, and whether a duplex/triplex is a provincial 'detached house' is an open question, so it stays out of scope = the by-law stands).",
-    "land": { "parcel_of_urban_residential_land": { "flag": "parcel_of_urban_residential_land" } },
-    "building_type": { "detached_house": ["detached_house"], "semi_detached_house": ["semi_detached_house"], "rowhouse": ["townhouse"] },
+    "$comment": "How a provincial unit's external.json scope (Spec 68 §6.1) maps to lot inputs (Spec 69 M-55 + notes 2026-10-07; M-60). Every provincial term is mapped explicitly; an unmapped term is a provincialUnits() violation. building_type: the 569-2013 types a provincial principal building type names (rowhouse = 569-2013 townhouse, 800.50(865)); a conditional entry (operator ruling (b) 2026-10-07) maps a houseplex type and its listed children only while the lot's house + ancillary units are ≤ max_lot_units — neither the Planning Act nor O. Reg. 299/19 defines the building types, so the mapping is inferred from City staff statements (cited) and flagged for the M-29 expert sample; a 4–6-plex never maps. land (operator ruling (c) 2026-10-07): an explicit lot flag wins; else a declared citywide default, except parcels on the cited exclusion list, which are unknown (not_evaluated:missing_input when it matters).",
+    "land": {
+      "parcel_of_urban_residential_land": {
+        "flag": "parcel_of_urban_residential_land",
+        "default": true,
+        "evidence": "declared",
+        "citation": "Planning Act, R.S.O. 1990, c. P.13, s. 1(1) \"parcel of urban residential land\" (within an area of settlement, residential use permitted by by-law, served by municipal sewage works and a municipal drinking water system). Citywide default for lots in a 569-2013 residential zone: no primary citywide servicing statement exists (declared, not measured); Toronto Municipal Code Ch. 681 s. 681-11A(4) and Ch. 849 s. 849-14A show unsewered lots exist. Research: .cursor/mcbylaw/research-provincial-scope.md (2026-10-07).",
+        "exclusions": [
+          { "parcel_id": "5058948", "address": "224 Ridgewood Rd", "value": "unknown", "permits": ["13 215294 BLD (2014-02-11): new two storey dwelling with on-site septic system"] },
+          { "parcel_id": "5064862", "address": "140 Ridgewood Rd", "value": "unknown", "permits": ["25 189966 STS (2025-07-21): remove failed septic system, install new Class IV sewage system"] },
+          { "parcel_id": "5065341", "address": "128 Ridgewood Rd", "value": "unknown", "permits": ["23 101136 PSA (2023-02-16): existing septic tank and leaching bed to be restored"] },
+          { "parcel_id": "5209894", "address": "25 Meadowcliffe Dr", "value": "unknown", "permits": ["18 226470 STS (2018-09-21): replacement of sewage septic tank"] },
+          { "parcel_id": "5212538", "address": "30 Meadowcliffe Dr", "value": "unknown", "permits": ["24 100439 BLD (2024-01-18): new one storey house, new septic system"] },
+          { "parcel_id": "5370105", "address": "48 North Dr", "value": "unknown", "permits": ["15 215143 PSA (2016-08-15): install new septic system in front of new house"] }
+        ]
+      }
+    },
+    "building_type": {
+      "detached_house": ["detached_house", { "type": "detached_houseplex", "children": ["duplex", "triplex"], "max_lot_units": 3, "evidence": "inferred", "expert_sample": true, "citations": ["Multiplex Monitoring Program Final Report 2025-05-29 p. 29 (\"multiplexes of up to three units are also potentially impacted\" by O. Reg. 462/24)", "City of Toronto Expanding Housing Options page, O. Reg. 462/24 section (fetched 2026-10-07): the regulation applies to a lot with a maximum of three residential units, not to a new fourth unit (fourplex)", "Garden Suites Monitoring Program Final Report 2025-06-27 p. 20 (\"does not apply where there are more than three residential units on a lot\")", "Multiplex Study Final Report 2023-04-13 (Bill 23 \"authorizes duplexes and triplexes citywide\")"] }],
+      "semi_detached_house": ["semi_detached_house", { "type": "semi_detached_houseplex", "children": [], "max_lot_units": 3, "evidence": "inferred", "expert_sample": true, "citations": ["Multiplex Monitoring Program Final Report 2025-05-29 p. 29", "City of Toronto Expanding Housing Options page, O. Reg. 462/24 section (fetched 2026-10-07)", "Garden Suites Monitoring Program Final Report 2025-06-27 p. 20"] }],
+      "rowhouse": ["townhouse"]
+    },
     "house_units": "house_units",
     "ancillary_units": "ancillary_units"
   },
@@ -284,7 +303,7 @@
   "literal_not_expressed_reason": ["threshold_used_in_application", "cross_reference_value", "count_or_ordinal_not_a_limit", "illustrative_or_historic", "map_label_value"],
   "field_failure_reason": ["verbatim_changed", "consolidation_mismatch", "eval_conflict"],
   "disclosure_reason": { "source_defect": ["garbled_character", "lead_in_without_items", "division_repeat", "marker_typo", "numbering_repeat", "heading_not_in_toc"] },
-  "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
+  "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "label_letter_unknown", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
