@@ -1,0 +1,131 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.30.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.30.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped"],
+        "if": "mapped(LC)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = overlay(LC) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["overlay_mapped"],
+        "uses": [],
+        "evidence": {
+          "zones": "a lot in is in an area",
+          "overlay_mapped": "numerical value on the Lot Coverage Overlay Map",
+          "lot_coverage_pct": "permitted maximum lot coverage"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.30.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped"],
+        "if": "not mapped(LC)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = unregulated @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["overlay_mapped"],
+        "uses": [],
+        "evidence": {
+          "zones": "if a lot is not in an area",
+          "overlay_mapped": "not in an area with a numerical value on the Lot Coverage Overlay Map",
+          "lot_coverage_pct": "no lot coverage applies"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.20.30.40(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = by_type(townhouse: 50.0 pct; apartment_building: 50.0 pct) @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "zones": "the permitted maximum lot coverage",
+          "building_types": "for a townhouse or apartment building",
+          "major_street": "if a lot abuts a major street",
+          "lot_coverage_pct": "permitted maximum lot coverage for a townhouse"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.20.30.40(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "exact",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped", "has_secondary_suite"],
+        "if": "overlay(LC) < 45.0 pct"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 45.0 pct @(1)(D)"],
+      "literals_not_expressed": [
+        {
+          "literal": "45 percent",
+          "clause": "(1)(D)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex", "any"],
+        "lot_conditions": ["overlay_mapped", "has_secondary_suite"],
+        "uses": [],
+        "evidence": {
+          "zones": "the maximum lot coverage for all buildings",
+          "building_types": "the lot contains a detached houseplex",
+          "overlay_mapped": "the numerical value on the Lot Coverage Overlay Map is less than 45 percent",
+          "has_secondary_suite": "a residential building with a secondary suite",
+          "lot_coverage_pct": "the maximum lot coverage for all buildings and structures on the lot is 45 percent"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["has_secondary_suite", "building_type"]}
+    }
+  ]
+}

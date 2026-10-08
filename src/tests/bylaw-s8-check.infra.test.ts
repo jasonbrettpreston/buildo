@@ -60,7 +60,17 @@ describe('--check on the real snapshot (every gate run once)', () => {
     for (const g of GATES) expect([g.id, GATE_STATES.includes(real.gates[g.id].state)]).toEqual([g.id, true]);
     for (const g of GATES.filter((x: Json) => !x.built)) expect([g.id, real.gates[g.id].state]).toEqual([g.id, 'not_run']);
     // the arms that exist ran on the real snapshot and passed
-    for (const id of ['G-TEXT', 'G-PROV', 'G-DRIFT', 'G-READ', 'G-EVAL']) expect([id, real.gates[id].state, real.gates[id].violations]).toEqual([id, 'pass', []]);
+    for (const id of ['G-DRIFT', 'G-EVAL']) expect([id, real.gates[id].state, real.gates[id].violations]).toEqual([id, 'pass', []]);
+    // G-TEXT / G-PROV / G-READ each hold an authored-content arm not yet wired into --check (unit_pins,
+    // keyer_provenance, explanations). With no authored file they pass; once real drafts exist (A1, 4bd4d97e) that
+    // arm has input it cannot check, so the gate is not_run — never a silent pass (Spec 68 §4)
+    const authoredDir = path.join(ROOT, 'scripts/seeds/bylaw/authored');
+    const authored = fs.existsSync(authoredDir) ? fs.readdirSync(authoredDir, { recursive: true }).filter((f) => String(f).endsWith('.json')).length : 0;
+    const UNWIRED: Record<string, string> = { 'G-TEXT': 'unit_pins', 'G-PROV': 'keyer_provenance', 'G-READ': 'explanations' };
+    for (const [id, arm] of Object.entries(UNWIRED)) {
+      expect([id, real.gates[id].state, real.gates[id].violations]).toEqual([id, authored ? 'not_run' : 'pass', []]);
+      if (authored) expect([id, real.gates[id].arms.find((a: Json) => a.name === arm)?.state]).toEqual([id, 'not_run']);
+    }
     // G-UNIVERSE stays not_run until --accept pins the universe after the S4 re-slice; never a silent pass
     const locked = fs.existsSync(path.join(ROOT, 'scripts/seeds/bylaw/universe.lock.json'));
     expect(real.gates['G-UNIVERSE'].state).toBe(locked ? 'pass' : 'not_run');

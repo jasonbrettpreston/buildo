@@ -1,0 +1,115 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.40.40.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(d)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = label(d) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "permitted maximum floor space index",
+          "label_value": "letter \"d\" in the zone label"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(d)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = unlimited @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "any": "floor space index is not limited",
+          "label_value": "does not include a \"d\" value"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.40(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "secondary_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_houseplex": "does not apply to a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "secondary_suite": "residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "has_secondary_suite"]}
+    },
+    {
+      "unit_id": "10.40.40.40(1)#(1)(D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street", "unit_count_band"], "if": "dwelling_units <= 60 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street", "unit_count_band"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "townhouse": "does not apply to a townhouse",
+          "apartment_building": "an apartment building that has 60 dwelling units",
+          "major_street": "abutting a major street",
+          "unit_count_band": "has 60 dwelling units or less",
+          "dwelling_unit": "60 dwelling units or less"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]}
+    }
+  ]
+}

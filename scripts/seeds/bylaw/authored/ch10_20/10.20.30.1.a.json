@@ -1,0 +1,101 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.30.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.20.30.1(1)#(1)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex",
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a permitted detached houseplex",
+          "detached_house": "lot requirements for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "Where a Chapter 900 exception sets lot requirements for a detached house, a detached houseplex that is the only residential building on the lot takes those same exception lot requirements (despite 900.1.10(3) and 900.1.10(4)(A)).",
+        "gaps": "The 'only residential building on a lot' condition has no vocab.lot_condition token; the incorporated exception requirements depend on Chapter 900 exception text. Zones left empty: the unit text and stem name no zone (RD applies by chapter, 10.20)."
+      },
+      "disclosure": "If this lot is in a Chapter 900 exception area that sets lot requirements for detached houses, a detached houseplex here uses those exception requirements; we do not yet evaluate that substitution.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.20.30.1(2)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "base > exception",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "detached_houseplex"
+        ],
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a lot with a detached houseplex",
+          "has_secondary_suite": "with a secondary suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [
+          "building_type",
+          "has_secondary_suite"
+        ],
+        "status": "not_modelled",
+        "description": "For a lot with a detached houseplex or a residential building with a secondary suite, if the base maximum lot coverage in 10.20.30.40 is more permissive than the coverage applied through a Chapter 900 exception under 10.20.30.1(1), the more permissive (base) coverage prevails.",
+        "gaps": "The ranking is conditional (whichever is more permissive), not a fixed base-over-exception order; keyed as 'base > exception' because the base value only displaces the exception value when it is more permissive. The houseplex and secondary-suite arms are a disjunction, so no condition is keyed (a token list is a conjunction); both arms are recorded in application. Zones left empty: the unit text and stem name no zone (RD applies by chapter, 10.20)."
+      },
+      "disclosure": "For a houseplex or a home with a secondary suite in an exception area, the more generous of the base RD lot coverage and the exception's lot coverage applies; we do not yet perform this comparison.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.20.30.1(1)": {
+      "explanation": "If a site-specific Chapter 900 exception sets lot requirements for a detached house, a detached houseplex that is the only home on the lot must meet those same requirements.",
+      "code_refs": "none"
+    },
+    "10.20.30.1(2)": {
+      "explanation": "For a houseplex or a home with a secondary suite, if the standard RD lot coverage limit is more generous than the exception's limit, the more generous limit applies.",
+      "code_refs": "none"
+    }
+  }
+}

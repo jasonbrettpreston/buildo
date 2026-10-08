@@ -1,0 +1,90 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.30.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.30.1(1)#(1)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "permitted detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.60.30.1(1)#(1)(B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "semi_detached_houseplex": "permitted semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.60.30.1(2)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "base > exception",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["has_secondary_suite"],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a lot with a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex or a residential building",
+          "has_secondary_suite": "with a secondary suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

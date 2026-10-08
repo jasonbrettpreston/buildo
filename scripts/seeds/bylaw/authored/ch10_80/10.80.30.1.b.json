@@ -1,0 +1,165 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.30.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.30.1(1)#(1)(A)",
+      "archetype": "INCLUDE",
+      "target": "required_lot_area_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["exception_area"],
+        "if": "mapped(exception_area)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "900.1.10(3)",
+          "clause": "(1)(A)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "900.1.10(4)(A)",
+          "clause": "(1)(A)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "detached_houseplex", "semi_detached_houseplex", "semi_detached_house"],
+        "lot_conditions": ["exception_area"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "detached_house": "a detached house, then a permitted detached houseplex",
+          "detached_houseplex": "for a detached houseplex or semi-detached houseplex",
+          "semi_detached_house": "lot requirements for a detached house",
+          "semi_detached_houseplex": "a permitted semi-detached houseplex is subject",
+          "exception_area": "applicable Chapter 900 Exception contains lot requirements",
+          "dwelling_unit": "constitutes an individual dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.30.1(1)#(1)(B)",
+      "archetype": "INCLUDE",
+      "target": "required_lot_area_m2",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["exception_area"],
+        "if": "mapped(exception_area)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "900.1.10(3)",
+          "clause": "(1)(B)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "900.1.10(4)(A)",
+          "clause": "(1)(B)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["semi_detached_house", "semi_detached_houseplex", "detached_houseplex", "detached_house"],
+        "lot_conditions": ["exception_area"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "semi_detached_house": "lot requirements for the portion of a semi-detached house",
+          "semi_detached_houseplex": "a permitted semi-detached houseplex is subject",
+          "detached_houseplex": "for a detached houseplex or semi-detached houseplex",
+          "detached_house": "for a detached houseplex or semi-detached houseplex",
+          "exception_area": "applicable Chapter 900 Exception contains lot requirements",
+          "dwelling_unit": "constitutes an individual dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.30.1(2)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "exception > base",
+      "condition": {
+        "tokens": ["exception_area"],
+        "if": "mapped(exception_area)"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "10.80.30.1(1)",
+          "clause": "(2)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "900.1.10(3)",
+          "clause": "(2)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "900.1.10(4)(A)",
+          "clause": "(2)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "10.80.30.40",
+          "clause": "(2)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "detached_house", "semi_detached_house"],
+        "lot_conditions": ["exception_area"],
+        "uses": ["dwelling_unit", "secondary_suite_use"],
+        "evidence": {
+          "detached_houseplex": "a lot with a detached houseplex, semi-detached houseplex",
+          "semi_detached_houseplex": "a lot with a detached houseplex, semi-detached houseplex",
+          "detached_house": "apply to the lot under regulation 10.80.30.1(1)",
+          "semi_detached_house": "apply to the lot under regulation 10.80.30.1(1)",
+          "exception_area": "Chapter 900 Exceptions  More Permissive Lot Coverage",
+          "secondary_suite_use": "a residential building with a secondary suite",
+          "dwelling_unit": "a residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

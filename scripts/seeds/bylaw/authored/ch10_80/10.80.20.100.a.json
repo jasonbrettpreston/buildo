@@ -1,0 +1,597 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.20.100",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.80.20.100(14)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A multi-tenant house in the RM zone must comply with the specific use regulations in Section 150.25, which are incorporated by reference.",
+        "gaps": "Multi-tenant house has no vocab.uses or building_type token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(15)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "secondary_suite_use": "A secondary suite in"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A secondary suite in the RM zone must comply with the specific use regulations in Section 150.10, which are incorporated by reference.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(16)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A seniors community house in the RM zone must comply with the specific use regulations in Section 150.30, which are incorporated by reference.",
+        "gaps": "Seniors community house has no vocab.uses or building_type token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(18)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A short-term rental in the RM zone must comply with the specific use regulations in Section 150.13, which are incorporated by reference.",
+        "gaps": "Short-term rental has no vocab.uses token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(19)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone",
+          "laneway_suite": "A laneway suite in"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A laneway suite in the RM zone must comply with the specific use regulations in Section 150.8, which are incorporated by reference.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(20)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "garden_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone",
+          "garden_suite": "A garden suite in"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A garden suite in the RM zone must comply with the specific use regulations in Section 150.7, which are incorporated by reference.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(4)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A crisis care shelter in the RM zone must comply with the specific use regulations in Section 150.20, which are incorporated by reference.",
+        "gaps": "Crisis care shelter has no vocab.uses token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(5)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A day nursery in the RM zone must comply with the specific use regulations in Section 150.45, which are incorporated by reference.",
+        "gaps": "Day nursery has no vocab.uses token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(6)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "A group home or residential care home in the RM zone must comply with the specific use regulations in Section 150.15, which are incorporated by reference.",
+        "gaps": "Group home and residential care home have no vocab.uses token."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(9)#(9)(A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "non_residential_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone",
+          "non_residential_building": "a place of worship"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "outside_maxbld_building_types",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A place of worship in the RM zone must comply with the specific use regulations in Section 150.50.",
+        "gaps": "Places of worship are outside the MaxBLD residential building types."
+      },
+      "disclosure": "Rules for places of worship are not evaluated; MaxBLD covers residential buildings only.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(9)#(9)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street",
+          "lot_area_band",
+          "frontage_band"
+        ],
+        "if": "lot_area_m2 ≥ 2000 m2 and lot_frontage_m ≥ 30 m"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "non_residential_building"
+        ],
+        "lot_conditions": [
+          "major_street",
+          "lot_area_band",
+          "frontage_band"
+        ],
+        "uses": [],
+        "evidence": {
+          "major_street": "abutting a major street",
+          "lot_area_band": "a lot area of at least",
+          "frontage_band": "a lot frontage of at least",
+          "RM": "In the RM zone",
+          "non_residential_building": "a place of worship"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "outside_maxbld_building_types",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A place of worship must be on a lot with a front or side lot line abutting a major street on the Policy Areas Overlay Map, a lot area of at least 2,000 m2 and a lot frontage of at least 30 m.",
+        "gaps": "Keyed as a conditional permission (one unit, three lot requirements) rather than split into separate lot-area and frontage LIMITs, because units may not be split. Places of worship are outside the MaxBLD residential building types."
+      },
+      "disclosure": "Rules for places of worship are not evaluated; MaxBLD covers residential buildings only.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(9)#(9)(C)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "gfa_m2 = 2500 m2 @(9)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "non_residential_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone",
+          "non_residential_building": "a place of worship"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "outside_maxbld_building_types",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "not_modelled",
+        "description": "A place of worship must be in a building with no more than 2,500 m2 of gross floor area.",
+        "gaps": "Places of worship are outside the MaxBLD residential building types."
+      },
+      "disclosure": "Rules for places of worship are not evaluated; MaxBLD covers residential buildings only.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.100(9)#(9)(D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "non_residential_building"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone",
+          "non_residential_building": "existing place of worship",
+          "lawfully_existing": "a lawfully existing place"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "outside_maxbld_building_types",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ],
+        "status": "not_modelled",
+        "description": "A lawfully existing place of worship is exempt from the lot requirements in (9)(B) and the floor area limit in (9)(C).",
+        "gaps": "Places of worship are outside the MaxBLD residential building types."
+      },
+      "disclosure": "Rules for places of worship are not evaluated; MaxBLD covers residential buildings only.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.80.20.100(14)": {
+      "explanation": "A multi-tenant house in the RM zone must follow the rules in Section 150.25.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(15)": {
+      "explanation": "A secondary suite in the RM zone must follow the secondary suite rules in Section 150.10.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(16)": {
+      "explanation": "A seniors community house in the RM zone must follow the rules in Section 150.30.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(18)": {
+      "explanation": "A short-term rental in the RM zone must follow the rules in Section 150.13.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(19)": {
+      "explanation": "A laneway suite in the RM zone must follow the laneway suite rules in Section 150.8.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(20)": {
+      "explanation": "A garden suite in the RM zone must follow the garden suite rules in Section 150.7.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(4)": {
+      "explanation": "A crisis care shelter in the RM zone must follow the rules in Section 150.20.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(5)": {
+      "explanation": "A day nursery in the RM zone must follow the rules in Section 150.45.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(6)": {
+      "explanation": "A group home or residential care home in the RM zone must follow the rules in Section 150.15.",
+      "code_refs": "none"
+    },
+    "10.80.20.100(9)": {
+      "explanation": "A place of worship in the RM zone must follow Section 150.50, sit on a major-street lot of at least 2,000 m2 with at least 30 m of frontage, and have no more than 2,500 m2 of floor area, unless it already lawfully exists.",
+      "code_refs": "none"
+    }
+  }
+}

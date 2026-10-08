@@ -1,0 +1,125 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.30.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.40.30.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped"],
+        "if": "mapped(LC)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = overlay(LC) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["overlay_mapped"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "overlay_mapped": "Lot Coverage Overlay Map",
+          "any": "permitted maximum lot coverage"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.30.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped"],
+        "if": "not mapped(LC)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = unregulated @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["overlay_mapped"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "overlay_mapped": "Lot Coverage Overlay Map",
+          "any": "no lot coverage applies"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.30.40(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 50 pct @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "RS": "In the RS zone",
+          "townhouse": "for a townhouse or apartment building",
+          "apartment_building": "townhouse or apartment building is 50 percent",
+          "major_street": "abuts a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.30.40(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["overlay_mapped"],
+        "if": "mapped(LC) and overlay(LC) < 45 pct"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 45 pct @(1)(D)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "any"],
+        "lot_conditions": ["overlay_mapped"],
+        "uses": ["secondary_suite_use"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_houseplex": "contains a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex or a residential building",
+          "secondary_suite_use": "residential building with a secondary suite",
+          "overlay_mapped": "numerical value on the Lot Coverage Overlay Map"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

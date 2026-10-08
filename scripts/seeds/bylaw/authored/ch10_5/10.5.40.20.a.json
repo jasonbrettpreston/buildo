@@ -1,0 +1,18 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_5/10.5.40.20", "keyer": "A",
+ "units": [
+  {"unit_id": "10.5.40.20(1)#whole", "archetype": "DEFINE", "target": "building_length_m", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": "none", "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none", "literals_not_expressed": [],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Measurement rule: building length regulations apply to all main walls of a building, above and below ground, excluding footings.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.5.40.20(2)#whole", "archetype": "DEFINE", "target": "building_length_m", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": "none", "applies_to": {"part": "whole", "refs": []}, "numeric_expression": "none", "literals_not_expressed": [],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Exclusion rule: any part of a building or structure permitted to encroach into a required setback under 10.5.40.60 is excluded from building length.", "gaps": "none"},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.5.40.20(1)": {"explanation": "In residential zones, building length is measured along all main walls of the building, above and below ground. Footings are not counted.", "code_refs": "none"},
+  "10.5.40.20(2)": {"explanation": "Parts of a building that are allowed to project into a required setback, such as porches or bay windows permitted under 10.5.40.60, do not count toward building length.", "code_refs": "none"}
+ }
+}

@@ -1,0 +1,157 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "enacting:1075-2026/10.5.40.40",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#[instruction]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Amending instruction of By-law 1075-2026: removes \"and\" from the preceding item, re-punctuates the list and adds new regulation 10.5.40.40(3)(E) to Zoning By-law 569-2013.",
+    "gaps": "No zone is named in the instruction text, so application zones are left empty."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#(3)(E)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "New item 10.5.40.40(3)(E) (By-law 1075-2026): cladding added to the original exterior surface of a main wall, or to an addition or extension, including vents, pipes or utility equipment beneath the cladding, is added to the list in 10.5.40.40(3).",
+    "gaps": "The unit text carries only the list item, not the stem of 10.5.40.40(3), so the measurement it modifies is not stated here; keyed DEFINE (an inclusion/exclusion item in a measurement list) with target none, and no zone is named in the text. Whether cladding is added to an existing wall is an existing-building fact."
+   },
+   "disclosure": "Added exterior cladding on existing walls is treated under a special rule; this report does not account for it.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#[instruction]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Amending instruction of By-law 1075-2026: removes \"and\" from the preceding item, re-punctuates the list and adds new regulation 10.5.40.40(4)(J) to Zoning By-law 569-2013.",
+    "gaps": "No zone is named in the instruction text, so application zones are left empty."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#(4)(J)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "New item 10.5.40.40(4)(J) (By-law 1075-2026): cladding added to the original exterior surface of a main wall, or to an addition or extension, including vents, pipes or utility equipment beneath the cladding, is added to the list in 10.5.40.40(4).",
+    "gaps": "The unit text carries only the list item, not the stem of 10.5.40.40(4), so the measurement it modifies is not stated here; keyed DEFINE (an inclusion/exclusion item in a measurement list) with target none, and no zone is named in the text. Whether cladding is added to an existing wall is an existing-building fact."
+   },
+   "disclosure": "Added exterior cladding on existing walls is treated under a special rule; this report does not account for it.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.5.40.40(3)(E)@1075-2026": {
+   "explanation": "By-law 1075-2026 adds a new item to 10.5.40.40(3) covering cladding added to the outside of existing main walls, additions or extensions, including vents, pipes or equipment beneath it.",
+   "code_refs": "none"
+  },
+  "10.5.40.40(4)(J)@1075-2026": {
+   "explanation": "By-law 1075-2026 adds a new item to 10.5.40.40(4) covering cladding added to the outside of existing main walls, additions or extensions, including vents, pipes or equipment beneath it.",
+   "code_refs": "none"
+  }
+ }
+}

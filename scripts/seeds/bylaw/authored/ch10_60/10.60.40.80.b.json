@@ -1,0 +1,126 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.40.80",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.40.80(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 5.5 m @(1)(A)"],
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "In the RT zone", "any": "residential building"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["suite_wall_openings"]}
+    },
+    {
+      "unit_id": "10.60.40.80(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 11.0 m @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "In the RT zone", "any": "residential building"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["suite_wall_openings"]}
+    },
+    {
+      "unit_id": "10.60.40.80(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 5.5 m @(2)(A)"],
+      "literals_not_expressed": [
+        {"literal": "two", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "In the RT zone", "any": "residential buildings"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["suite_wall_openings"]}
+    },
+    {
+      "unit_id": "10.60.40.80(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 11.0 m @(2)(B)"],
+      "literals_not_expressed": [
+        {"literal": "two", "clause": "(2)(B)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "In the RT zone", "any": "residential buildings"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["suite_wall_openings"]}
+    },
+    {
+      "unit_id": "10.60.40.80(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 2.4 m @(2)(C)"],
+      "literals_not_expressed": [
+        {"literal": "two", "clause": "(2)(C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "In the RT zone", "any": "residential buildings"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    }
+  ]
+}

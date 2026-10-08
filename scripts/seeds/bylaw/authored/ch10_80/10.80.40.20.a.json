@@ -1,0 +1,350 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_80/10.80.40.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.80.40.20(1)#whole",
+   "archetype": "LIMIT",
+   "target": "building_length_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "building_length_m = 17.0 m @(1)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "detached_house": "a detached house",
+     "semi_detached_house": "a semi-detached house"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "modelled",
+    "description": "Maximum building length for a detached house or semi-detached house in the RM zone is 17.0 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(A)",
+   "archetype": "LIMIT",
+   "target": "height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "required_frontage_band"
+    ],
+    "if": "required_lot_frontage_m > 12.0 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "height_m = 5.0 m @(2)(A)",
+    "height_storeys = 1 storeys @(2)(A)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "2.0 metres",
+     "clause": "(2)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [
+     "required_frontage_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "detached_house": "a detached house",
+     "semi_detached_house": "semi-detached house may",
+     "required_frontage_band": "required minimum lot frontage of more than 12.0 metres"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "Where the required minimum lot frontage exceeds 12.0 m, a detached or semi-detached house may extend up to 2.0 m beyond the maximum building length if the extended part is no higher than 5.0 m and one storey.",
+    "gaps": "The limits apply to the extended part only; the 2.0 m extension allowance is the permission they qualify. The clause also limits the extension to one storey, carried as a second statement."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(B)",
+   "archetype": "LIMIT",
+   "target": "element_width_pct",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "required_frontage_band"
+    ],
+    "if": "required_lot_frontage_m > 12.0 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "element_width_pct = 50 pct @(2)(B)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "2.0 metres",
+     "clause": "(2)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [
+     "required_frontage_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "detached_house": "a detached house",
+     "semi_detached_house": "semi-detached house may",
+     "required_frontage_band": "required minimum lot frontage of more than 12.0 metres"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "The one-storey extension may be no wider than 50% of the width of the dwelling unit at its widest point.",
+    "gaps": "Applies to the extended part only."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(C)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "required_frontage_band"
+    ],
+    "if": "required_lot_frontage_m > 12.0 m"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "side_setback_m = 3.0 m @(2)(C)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "2.0 metres",
+     "clause": "(2)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house"
+    ],
+    "lot_conditions": [
+     "required_frontage_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "detached_house": "a detached house",
+     "semi_detached_house": "semi-detached house may",
+     "required_frontage_band": "required minimum lot frontage of more than 12.0 metres"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "The one-storey extension must be at least 3.0 m from each side lot line, other than the shared lot line between the two units of a semi-detached house.",
+    "gaps": "Applies to the extended part only."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.40.20(3)#(3)(A)",
+   "archetype": "LIMIT",
+   "target": "building_length_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "building_length_m = 19.0 m @(3)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "townhouse"
+    ],
+    "lot_conditions": [
+     "major_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "townhouse": "for a townhouse",
+     "major_street": "a major street"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "modelled",
+    "description": "On a lot abutting a major street, maximum building length for a townhouse is 19.0 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.80.40.20(3)#(3)(B)",
+   "archetype": "LIMIT",
+   "target": "building_length_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "building_length_m = 25.0 m @(3)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RM"
+    ],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street"
+    ],
+    "uses": [],
+    "evidence": {
+     "RM": "the RM zone",
+     "apartment_building": "for an apartment building",
+     "major_street": "a major street"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "modelled",
+    "description": "On a lot abutting a major street, maximum building length for an apartment building is 25.0 m.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.80.40.20(1)": {
+   "explanation": "In the RM zone a detached or semi-detached house can be at most 17.0 m long.",
+   "code_refs": "none"
+  },
+  "10.80.40.20(2)": {
+   "explanation": "Where the required lot frontage is over 12.0 m, a detached or semi-detached house may add a one-storey extension up to 2.0 m beyond the length limit, if it is no higher than 5.0 m, no wider than half the unit, and at least 3.0 m from each side lot line.",
+   "code_refs": "none"
+  },
+  "10.80.40.20(3)": {
+   "explanation": "On a major street in the RM zone, a townhouse can be up to 19.0 m long and an apartment building up to 25.0 m long.",
+   "code_refs": "none"
+  }
+ }
+}

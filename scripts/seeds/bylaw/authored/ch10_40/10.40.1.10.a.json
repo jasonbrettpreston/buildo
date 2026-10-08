@@ -1,0 +1,43 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.1.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.40.1.10(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RS": "the RS zone"}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "States that Section 10.40 applies to all lands, uses, buildings and structures in the RS zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.40.1.10(1)": {
+      "explanation": "The rules in Section 10.40 apply to every lot, use, building and structure in the RS (residential semi-detached) zone.",
+      "code_refs": "none"
+    }
+  }
+}

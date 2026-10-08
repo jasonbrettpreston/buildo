@@ -1,0 +1,345 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.40.70(1)#whole",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["front_setback_m = 6.0 m @(1)"],
+      "literals_not_expressed": [
+        {
+          "literal": "10.5.40.70(1)",
+          "clause": "(1)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "in the RM zone", "building_types": "minimum front yard setback"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.70(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_setback_m = 7.5 m @(2)(A)"],
+      "literals_not_expressed": [
+        {
+          "literal": "25%",
+          "clause": "(2)(B)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "in the RM zone", "building_types": "minimum rear yard setback"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.70(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_setback_m = 0.25 ratio × lot_depth_m @(2)(B)"],
+      "literals_not_expressed": [
+        {
+          "literal": "7.5 metres",
+          "clause": "(2)(A)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "in the RM zone", "building_types": "minimum rear yard setback"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.70(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = 1.2 m @(3)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "in the RM zone",
+          "building_types": "for a detached house or detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = 1.5 m @(3)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "in the RM zone",
+          "building_types": "for a semi-detached house or semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(3)#(3)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = 2.4 m @(3)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["apartment_building", "non_residential_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "zones": "in the RM zone",
+          "building_types": "for an apartment building, or a non-residential building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street", "depth_band"],
+        "if": "lot_depth_m <= 36.0 m and not mapped(HT)"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; max(6.0 m; min(front_setback_m @(3)(A); 6.0 m))) @(4)(A)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "36.0 metres",
+          "clause": "(4)(A)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "6.0 metres",
+          "clause": "(4)(A)(i)(a)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "3.0 metres",
+          "clause": "(4)(A)(i)(b)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "6.0 metres",
+          "clause": "(4)(A)(i)(c)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "literal": "36.0 metres",
+          "clause": "(4)(A)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "10.80.40.70(1)",
+          "clause": "(4)(A)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street", "depth_band"],
+        "uses": [],
+        "evidence": {
+          "building_types": "a townhouse or apartment building",
+          "lot_conditions": "on a lot abutting a major street",
+          "zones": "in the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_setback_m = 7.5 m @(4)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "building_types": "a townhouse or apartment building",
+          "lot_conditions": "on a lot abutting a major street",
+          "zones": "in the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(4)#(4)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street", "all_units_front_street"],
+        "if": "not all_units_front_street"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = if(all_units_front_street; 0.9 m; 7.5 m) @(4)(C)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street", "all_units_front_street"],
+        "uses": [],
+        "evidence": {
+          "building_types": "for a townhouse",
+          "lot_conditions": "front directly onto a street",
+          "zones": "in the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["building_type"]
+      }
+    },
+    {
+      "unit_id": "10.80.40.70(4)#(4)(D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["corner_lot"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(2.4 m @(4)(D)(i); 5.5 m @(4)(D)(ii); 7.5 m @(4)(D)(iii)) @(4)(D)",
+        "side_setback_street_m = 3.0 m @(4)(D)(iv)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "25.0 metres",
+          "clause": "(4)(D)(iii)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": ["corner_lot"],
+        "uses": [],
+        "evidence": {
+          "building_types": "for an apartment building",
+          "lot_conditions": "on a corner lot",
+          "zones": "in the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      }
+    }
+  ]
+}

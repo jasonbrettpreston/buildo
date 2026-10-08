@@ -1,0 +1,40 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.11(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.0 vertical units", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "4.0 horizontal units", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "50 percent", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "RD": "RD zone",
+          "any": "residential building",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    }
+  ]
+}

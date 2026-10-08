@@ -1,0 +1,203 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_20/10.20.40.40",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.20.40.40(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "fsi",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "fsi = label(d) @(1)(A)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Maximum floor space index in the RD zone is the \"d\" value in the zone label.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "fsi",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [],
+    "if": "not labelled(d)"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "fsi = unlimited @(1)(B)"
+   ],
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "modelled",
+    "description": "Where the zone label has no \"d\" value, floor space index is not limited by this regulation.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [
+     "has_secondary_suite"
+    ],
+    "uses": [
+     "secondary_suite_use"
+    ],
+    "evidence": {
+     "RD": "the RD zone",
+     "detached_houseplex": "a detached houseplex",
+     "has_secondary_suite": "with a secondary suite",
+     "secondary_suite_use": "a secondary suite"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type",
+     "has_secondary_suite"
+    ],
+    "status": "modelled",
+    "description": "The FSI limit in (A) and (B) does not apply to a detached houseplex or to a residential building with a secondary suite.",
+    "gaps": "The two exempt cases are alternatives (or); condition is left \"none\" because condition tokens are a conjunction, and the cases are carried in application instead."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street",
+     "unit_count_band"
+    ],
+    "if": "dwelling_units ≤ 60 units"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "townhouse",
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street",
+     "unit_count_band"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "the RD zone",
+     "townhouse": "a townhouse or",
+     "apartment_building": "an apartment building with",
+     "major_street": "a major street",
+     "unit_count_band": "60 dwelling units or less"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type",
+     "unit_count"
+    ],
+    "status": "modelled",
+    "description": "The FSI limits do not apply to a townhouse or an apartment building with 60 dwelling units or less on a lot abutting a major street.",
+    "gaps": "The 60-unit qualifier is read as applying to the apartment building; the condition grammar cannot scope it to one building type, so it is keyed for both (a townhouse above 60 units is not a realistic case)."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.20.40.40(1)": {
+   "explanation": "In the RD zone the maximum floor space index is the \"d\" number on the zone label; with no \"d\" number there is no FSI limit. Detached houseplexes, houses with a secondary suite, and townhouses or apartment buildings of up to 60 units on a major street are exempt.",
+   "code_refs": "none"
+  }
+ }
+}

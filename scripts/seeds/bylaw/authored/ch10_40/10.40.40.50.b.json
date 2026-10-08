@@ -1,0 +1,212 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.40.40.50(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "four", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_house": "of a detached house",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(1)(B)"],
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_house": "of a detached house",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "three", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "semi_detached_house": "of a semi-detached house",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(2)(B)"],
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(2)(B)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "semi_detached_house": "of a semi-detached house",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 1.8 m @(2)(C)"],
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(2)(C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "semi_detached_house": "of a semi-detached house",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "2", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "one", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_houseplex": "of a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "deck_or_platform": "a deck or balcony"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.40.40.50(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["corner_lot"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "second storey", "clause": "(3)(B)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["corner_lot"],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "RS": "In the RS zone",
+          "detached_houseplex": "of a detached houseplex",
+          "semi_detached_houseplex": "semi- detached houseplex",
+          "corner_lot": "on a corner lot",
+          "deck_or_platform": "a platform permitted in (A) above"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

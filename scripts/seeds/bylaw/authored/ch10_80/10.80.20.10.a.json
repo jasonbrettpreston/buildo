@@ -1,0 +1,15 @@
+{"schema": "bylaw-authored-v1", "shard": "ch10_80/10.80.20.10", "keyer": "A",
+ "units": [
+  {"unit_id": "10.80.20.10(1)#whole", "archetype": "PERMIT", "target": "none", "bound": "none", "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "numeric_expression": "none",
+   "literals_not_expressed": [],
+   "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": ["dwelling_unit"], "evidence": {"RM": "the RM zone", "dwelling_unit": "Dwelling Unit in a permitted residential building type"}},
+   "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "modelled", "description": "Permits a dwelling unit in a residential building type permitted by 10.80.20.40, plus Municipal Shelter and Park uses, in the RM zone.", "gaps": "Municipal Shelter and Park are not in the uses vocabulary and are outside MaxBLD scope."},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.80.20.10(1)": {"explanation": "In the RM zone, homes are permitted in any residential building type allowed by clause 10.80.20.40. Municipal shelters and parks are also permitted.", "code_refs": "none"}
+ }
+}

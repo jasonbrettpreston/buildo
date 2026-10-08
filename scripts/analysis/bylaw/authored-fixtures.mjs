@@ -189,7 +189,8 @@ export function agreeFixtures() {
     { name: 'pending never fails: a sealed .a with no .b', reason: null, input: { shards: [{ ...shardOf([g]), b: null }], vocab }, expect: (r) => r.counts.units_pending === 1 },
     { name: 'canonical agreement: 6 m ≡ 6.0 m, max args reordered', reason: null, input: { shards: [(() => { const s = shardOf([GOOD['LIMIT×formula']]); s.b.units[0].numeric_expression = ['height_m = max(10 m @(C)(ii); overlay(HT) @(C)(i)) @(C)']; return s; })()], vocab }, expect: (r) => r.counts.units_agreed === 1 },
     { name: 'no canonical form, no agreement: identical unparseable drafts stay pending', reason: null, input: { shards: [(() => { const s = shardOf([g]); s.a.units[0].numeric_expression = ['side_setback_m = 0.6 @(A)']; s.b.units[0].numeric_expression = ['side_setback_m = 0.6 @(A)']; return s; })()], vocab }, expect: (r) => r.counts.units_pending === 1 && r.counts.draft_failures === 2 },
-    { name: 'the Spec 68 §6 field name applies_to.part is adjudicable', reason: null, input: { shards: [(() => { const s = shardOf([g]); s.b.units[0].applies_to = { part: 'map_area' }; return s; })()], adjudications: { adjudications: [{ id: 'ADJ-P', kind: 'disagreement', unit: g.unit_id, field: 'applies_to.part', adjudicator: 'operator', decision: 'a', reason: 'the clause names no map' }] }, vocab }, expect: (r) => r.counts.units_adjudicated === 1 },
+    // applies_to left the ⧉ set at the A1 narrowing (M-17 dated note); the alias stays exercised with an explicit ⧉ set
+    { name: 'the Spec 68 §6 field name applies_to.part is adjudicable', reason: null, input: { doubleKeyed: [...DOUBLE_KEYED, 'applies_to'], shards: [(() => { const s = shardOf([g]); s.b.units[0].applies_to = { part: 'map_area' }; return s; })()], adjudications: { adjudications: [{ id: 'ADJ-P', kind: 'disagreement', unit: g.unit_id, field: 'applies_to.part', adjudicator: 'operator', decision: 'a', reason: 'the clause names no map' }] }, vocab }, expect: (r) => r.counts.units_adjudicated === 1 },
     { name: 'adjudicator_missing', reason: 'adjudicator_missing', input: { shards: [disagree()], adjudications: adj({ adjudicator: '' }), vocab } },
     { name: 'adjudicator_is_keyer', reason: 'adjudicator_is_keyer', input: { shards: [disagree()], adjudications: adj({ adjudicator: 'keyer-b:deepseek' }), vocab } },
     { name: 'adjudication_decision_invalid', reason: 'adjudication_decision_invalid', input: { shards: [disagree()], adjudications: adj({ decision: 'value' }), vocab } },
@@ -281,7 +282,7 @@ export function shapeFixtures() {
   bad('generated_field_authored', 'LIMIT×literal', (u) => (u.displaces = ['10.20.40.70(2)']));
   {
     const s = one(GOOD['LIMIT×literal']);
-    s[0].b.units[0].calculation_handling.status = 'modelled';
+    (s[0].b.units[0].calculation_handling ||= {}).status = 'modelled';
     out.push({ name: 'single_field_in_b', reason: 'single_field_in_b', input: { slice, shards: s, vocab } });
   }
   {

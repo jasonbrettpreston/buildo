@@ -1,0 +1,407 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.10(1)#whole",
+      "archetype": "DEFINE",
+      "target": "height_m",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "height of a building is the distance"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures on the roof of a building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures on the roof of a building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(2)#(2)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(C)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures on the roof of a building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(2)#(2)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(D)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures on the roof of a building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(2)#(2)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(2)(E)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures on the roof of a building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "5.0 metres", "clause": "(3)(A)", "reason": "cross_reference_value"},
+        {"literal": "1.0 metres", "clause": "(3)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "equipment used for the functional operation of the building"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "5.0 metres", "clause": "(3)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures or parts of the building used for the functional operation"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(3)#(3)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["building_height_band"], "if": "proposed_height_m > 15.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "5.0 metres", "clause": "(3)(C)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["building_height_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "structures that enclose, screen or cover the elements"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.10(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_coverage_pct = 30 pct @(4)(A)"],
+      "literals_not_expressed": [
+        {"literal": "10.5.40.10(3)", "clause": "(4)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "equipment, structures or parts of a building that exceed"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "element_width_pct",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": [], "if": "separation_m < 6.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["element_width_pct = 20 pct @(4)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "within 6.0 metres of a lot line abutting a street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.10(5)#(5)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["building_height_band"], "if": "proposed_height_m > 15.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "3.0 metres", "clause": "(5)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["building_height_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "unenclosed structures providing safety or wind protection"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.5.40.10(5)#(5)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["separation_band"], "if": "separation_m >= 2.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "3.0 metres", "clause": "(5)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["separation_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "no closer than 2.0 metres from the interior face"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    }
+  ]
+}

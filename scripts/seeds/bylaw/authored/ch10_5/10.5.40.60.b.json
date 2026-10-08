@@ -1,0 +1,612 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.60",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.60(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "2.5 metres", "clause": "(1)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "50%", "clause": "(1)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "50%", "clause": "(1)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "2.5 metres", "clause": "(1)(C)", "reason": "threshold_used_in_application"},
+        {"literal": "50%", "clause": "(1)(C)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)(C)(i)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(1)(D)", "reason": "threshold_used_in_application"},
+        {"literal": "50%", "clause": "(1)(D)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(1)(E)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)(E)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(1)#(1)(F)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(1)(F)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "attached to or less than", "uses": "deck, porch, balcony"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"zones": "Residential Zone category", "building_types": "In the Residential Zone category a canopy", "uses": "roof over a platform"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "2.5 metres", "clause": "(2)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "50%", "clause": "(2)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "1.5 metres", "clause": "(2)(B)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(2)(B)(ii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "In the Residential Zone category a canopy"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.5 horizontal units", "clause": "(3)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "1.0 vertical unit", "clause": "(3)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "2.0 metres", "clause": "(3)(A)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "0.6 metres", "clause": "(3)(A)(iii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "exterior stairs, pedestrian access ramp"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "15 horizontal units", "clause": "(3)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "1.0 vertical unit", "clause": "(3)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "1.5 metres", "clause": "(3)(B)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "0.6 metres", "clause": "(3)(B)(iii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "an uncovered ramp, if the ramp"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(3)#(3)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "3.0 square metres", "clause": "(3)(C)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "0.6 metres", "clause": "(3)(C)(iii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "an elevating device, if the elevating device"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(4)#(4)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.15 metres", "clause": "(4)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(4)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "cladding added to the original exterior surface"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(4)#(4)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["unit_count_band"], "if": "dwelling_units >= 100 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "100 or more dwelling units", "clause": "(4)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "0.9 metres", "clause": "(4)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["unit_count_band"],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "one or more residential buildings", "lot_conditions": "100 or more dwelling units"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": ["unit_count"]}
+    },
+    {
+      "unit_id": "10.5.40.60(5)#(5)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6 metres", "clause": "(5)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(5)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "architectural features on a building"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(5)#(5)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6 metres", "clause": "(5)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "2.0 metres", "clause": "(5)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(5)(B)(ii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "a chimney breast may encroach"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(6)#(6)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.75 metres", "clause": "(6)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "65%", "clause": "(6)(A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "bay window, box window"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(6)#(6)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6 metres", "clause": "(6)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "30%", "clause": "(6)(B)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "0.6 metres", "clause": "(6)(B)(ii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "bay window, box window"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(7)#(7)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "a dormer projecting from the surface"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(7)#(7)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9 metres", "clause": "(7)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(7)(B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "the eaves of a roof"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.6 metres", "clause": "(8)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(8)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "wall mounted equipment on a building"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9 metres", "clause": "(8)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(8)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "wall mounted equipment on a building"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9 metres", "clause": "(8)(C)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(8)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "antenna, or a pole used to hold an antenna"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9 metres", "clause": "(8)(D)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3 metres", "clause": "(8)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "air conditioner, a maximum of"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.5.40.60(8)#(8)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.3 metres", "clause": "(8)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"zones": "Residential Zone category", "building_types": "public utility metering equipment, such as electrical meters"}
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    }
+  ]
+}

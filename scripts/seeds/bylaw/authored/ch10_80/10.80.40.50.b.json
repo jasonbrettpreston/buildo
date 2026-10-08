@@ -1,0 +1,121 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.40.50(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_count = 4 units @(1)(A)"],
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RM": "In the RM zone", "detached_house": "of a detached house", "deck_or_platform": "platforms such as a deck"}
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.80.40.50(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RM": "In the RM zone", "detached_house": "of a detached house", "deck_or_platform": "platforms such as a deck"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_count = 3 units @(2)(A)"],
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RM": "In the RM zone", "semi_detached_house": "of a semi-detached house", "deck_or_platform": "platforms such as a deck"}
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["platform_area_m2 = 4.0 m2 @(2)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RM": "In the RM zone", "semi_detached_house": "of a semi-detached house", "deck_or_platform": "platforms such as a deck"}
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.80.40.50(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 1.8 m @(2)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RM": "In the RM zone", "semi_detached_house": "of a semi-detached house", "deck_or_platform": "a platform at the rear"}
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    }
+  ]
+}

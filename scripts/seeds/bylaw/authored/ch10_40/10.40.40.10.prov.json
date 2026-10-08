@@ -1,0 +1,45 @@
+{
+  "a_seal": {
+    "seal_id": 30,
+    "sha256": "f6faa9e5c9475554e34e9efe7c7ebed11e040e441065bf7e810ae7c3d906666f"
+  },
+  "b_run": {
+    "ledger_sha256": "9b688a37acb92e66d08b21e30de6ad96abbb9158469c1c30801add0018d38005",
+    "read_paths": [],
+    "run_id": "20261008T004659Z-b5fd5bb4",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "briefs": {
+    "a": "3a10b9e923acc621ef329421b9978bd7ba88bb26af6b1d727bdbd1a668dfcb62",
+    "b": "e5583e1b9f5262f986a62fe28c0b223818d4375d12b736131800d43fbc5cf459"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.10",
+  "unit_shas": {
+    "10.40.40.10(1)#(1)(A)": "087c66fd9994be5dc8ecd6f9d4d703dec771d0ad73f50d3ed58c7af9395c4239",
+    "10.40.40.10(1)#(1)(B)": "b0a979f91009b8a6a55365a37619174453fd5f5bcf411c501e3c5d9463eb5b5e",
+    "10.40.40.10(1)#(1)(C)": "76cedf24a9742f5423b04aa0edb178114fb8b9e3f773c3aa582388d8f8a37d16",
+    "10.40.40.10(1)#(1)(D)": "a04ada4b89ca6ef134fff9988ec8340ca6bea0634106f86dfe2390b43232666c",
+    "10.40.40.10(2)#(2)(A)": "98c6c988022d7b6ad5af40f68afaf78bf5eb8fdbd2090985cc67aa49524f0b73",
+    "10.40.40.10(2)#(2)(B)": "bd419e0acbdcd7d54cb8468cda933dd43ebf2b5fec2d490f8592cb31f7939b41",
+    "10.40.40.10(2)#(2)(C)": "45616727c3f316371968fa910f64fec105c34e6391b07688722fca1148d0fb96",
+    "10.40.40.10(3)#(3)(A)": "ef51f68a63ddb530fab98eb7cec2be1f0d353406f52a9dd14cd98ef762f2aa16",
+    "10.40.40.10(3)#(3)(B)": "d501c05162ff547bf5f81a0685745d6e0d7cf569c25cbc5fabb2bc9e2e2e2d9d",
+    "10.40.40.10(3)#(3)(C)": "17021557f9a1e36ecf3fe6f300bc87b3394aef286b034583d1dfe3139c4e56a1",
+    "10.40.40.10(3)#(3)(D)": "434f07267ba0122a13ef3107aba5c750d43a70b89a7935fe160be4af8705c542",
+    "10.40.40.10(4)#whole": "820fa1ba140484149ef17b9d3d1dcdc923632f2fc3ee3ca4b96ec68f361fb52e",
+    "10.40.40.10(5)#(5)(A)": "e00d05d173241088b347581a140a97df92b08115decba14b956cf6525e9f95f7",
+    "10.40.40.10(5)#(5)(B)": "46ee56f040551ff8833f200d295f405acd90fc10db92c14a13b5aee56e3a4c5e",
+    "10.40.40.10(6)#(6)(A)": "1e8070551b925b02339bfda2456e29f159bf2b6df8c79341352120d15d8b61b9"
+  }
+}

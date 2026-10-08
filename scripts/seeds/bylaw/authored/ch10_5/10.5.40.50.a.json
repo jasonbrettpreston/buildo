@@ -1,0 +1,400 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_5/10.5.40.50",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.5.40.50(1)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "50%",
+     "clause": "(1)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform, such as a deck"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "The exterior sides of a deck, porch, balcony or similar platform attached to or within 0.3 m of a building are not main walls if at least 50% of the sides above the floor are open.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.50(2)#whole",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(2)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform without main walls"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "A platform without main walls (deck, porch, balcony) attached to or within 0.3 m of a building must meet the required minimum building setbacks for the zone.",
+    "gaps": "The proposed platform is a design detail, not a lot input; the setback rules themselves are evaluated through their own units."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.50(3)#whole",
+   "archetype": "LIMIT",
+   "target": "platform_height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "platform_height_m = 0.2 m @(3)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "second",
+     "clause": "(3)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform, such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "For a residential building other than an apartment building, a deck or balcony at or above the second storey may be no higher than 0.2 m above the floor of the storey it is accessed from.",
+    "gaps": "The 0.2 m is measured from the accessing floor, not from established grade; the proposed platform is a design detail. Apartment buildings are excluded but the text names no positive building type, so building types are keyed as any."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(A)",
+   "archetype": "LIMIT",
+   "target": "platform_height_m",
+   "bound": "max",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": [
+    "platform_height_m = 1.2 m @(4)(A)"
+   ],
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(4)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "first",
+     "clause": "(4)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform, such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "A deck or balcony at or below the first storey of a residential building other than an apartment building may be no higher than 1.2 m above the ground below it; where attached to or within 0.3 m of a front wall, no higher than 1.2 m above established grade.",
+    "gaps": "The proposed platform is a design detail, not a lot input."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.2 metres",
+     "clause": "(4)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "0.3 metres",
+     "clause": "(4)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "first",
+     "clause": "(4)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform, such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "A low platform attached to or within 0.3 m of a side main wall may be no higher than the floor level it is accessed from.",
+    "gaps": "The limit is relative to an interior floor level, which no DSL input carries."
+   },
+   "disclosure": "A deck beside a side wall may be no higher than the floor it is reached from; this is not checked.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(C)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "numeric_expression": "none",
+   "literals_not_expressed": [
+    {
+     "literal": "1.2 metres",
+     "clause": "(4)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "0.3 metres",
+     "clause": "(4)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "first",
+     "clause": "(4)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "2.5 metres",
+     "clause": "(4)(C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "deck_or_platform": "a platform, such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "status": "not_modelled",
+    "description": "For a low platform attached to or within 0.3 m of a rear main wall, any part of its floor within 2.5 m of that wall may be no higher than the floor level it is accessed from.",
+    "gaps": "The limit is relative to an interior floor level, which no DSL input carries."
+   },
+   "disclosure": "A rear deck within 2.5 m of the house may be no higher than the floor it is reached from; this is not checked.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "10.5.40.50(1)": {
+   "explanation": "A deck, porch or balcony next to a house whose sides are at least half open does not count as having main walls.",
+   "code_refs": "none"
+  },
+  "10.5.40.50(2)": {
+   "explanation": "An open deck, porch or balcony attached to a house must meet the same minimum setbacks as the house.",
+   "code_refs": "none"
+  },
+  "10.5.40.50(3)": {
+   "explanation": "An upper-storey balcony or deck on a house may be at most 0.2 m above the floor it opens from.",
+   "code_refs": "none"
+  },
+  "10.5.40.50(4)": {
+   "explanation": "A ground-level deck on a house may be at most 1.2 m above the ground (1.2 m above grade at the front), and beside the side walls, or within 2.5 m of the rear wall, no higher than the floor it opens from.",
+   "code_refs": "none"
+  }
+ }
+}

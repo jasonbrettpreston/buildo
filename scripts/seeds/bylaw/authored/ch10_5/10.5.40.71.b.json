@@ -1,0 +1,308 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.71",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.71(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(front_setback_m; enacted(569-2013)) < front_setback_m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["front_setback_m = existing(front_setback_m; enacted(569-2013)) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "front_setback_m": "minimum front yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(rear_setback_m; enacted(569-2013)) < rear_setback_m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["rear_setback_m = existing(rear_setback_m; enacted(569-2013)) @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "rear_setback_m": "minimum rear yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(side_setback_m; enacted(569-2013)) < side_setback_m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = existing(side_setback_m; enacted(569-2013)) @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "side_setback_m": "minimum side yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "comply_or_minor_variance": "must comply with the required minimum building setbacks or be authorized"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(3)#whole",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing", "frontage_band"],
+        "if": "lot_frontage_m <= 12.2 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = existing(side_setback_m; enacted(569-2013)) @(3)"],
+      "literals_not_expressed": [
+        {"literal": "12.2 metres", "clause": "(3)", "reason": "threshold_used_in_application"},
+        {"literal": "10.5.40.71(2)", "clause": "(3)", "reason": "cross_reference_value"},
+        {"literal": "10.5.40.71(1)", "clause": "(3)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "frontage_band": "lot frontage of 12.2 metres or less"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing", "frontage_band"],
+        "if": "lot_frontage_m < 9.0 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["side_setback_m = existing(side_setback_m; enacted(569-2013)) @(4)(A)"],
+      "literals_not_expressed": [
+        {"literal": "9.0 metres", "clause": "(4)(A)", "reason": "threshold_used_in_application"},
+        {"literal": "10.5.40.71(2)", "clause": "(4)(A)", "reason": "cross_reference_value"},
+        {"literal": "10.5.40.71(1)", "clause": "(4)(A)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "frontage_band": "lot frontage of: (A) less than 9.0 metres",
+          "side_setback_m": "minimum building setback from a side lot line"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing", "frontage_band"],
+        "if": "lot_frontage_m >= 9.0 m and lot_frontage_m <= 12.2 m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": [
+        "side_setback_m = max(0.5 ratio × side_setback_m; existing(side_setback_m; enacted(569-2013))) @(4)(B)"
+      ],
+      "literals_not_expressed": [
+        {"literal": "9.0 metres", "clause": "(4)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "12.2 metres", "clause": "(4)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "10.5.40.71(2)", "clause": "(4)(B)", "reason": "cross_reference_value"},
+        {"literal": "10.5.40.71(1)", "clause": "(4)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "frontage_band"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "frontage_band": "9.0 metres to 12.2 metres",
+          "side_setback_m": "minimum side yard setback"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(5)#whole",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing", "abuts_lane"],
+        "if": "existing(lot_line_setback_m; enacted(569-2013)) < lot_line_setback_m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_line_setback_m = existing(lot_line_setback_m; enacted(569-2013)) @(5)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "abuts_lane"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "abuts_lane": "original centreline of a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.71(6)#whole",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing", "abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_line_setback_m = existing(lot_line_setback_m; enacted(569-2013)) @(6)"],
+      "literals_not_expressed": [
+        {"literal": "10.5.40.71(5)", "clause": "(6)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "abuts_lane"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building or structure",
+          "abuts_lane": "original centreline of a lane"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status", "building_type"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.30",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.80.40.30(1)#whole",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_depth_m = 19.0 m @(1)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "In the RM zone",
+          "detached_house": "a detached house or semi-detached house",
+          "semi_detached_house": "detached house or semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      }
+    }
+  ]
+}

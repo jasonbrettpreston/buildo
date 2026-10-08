@@ -1,0 +1,174 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.80.1(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house", "semi_detached_house", "townhouse", "detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space", "dwelling_unit"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "detached_house": "residential building other than an apartment",
+          "semi_detached_house": "residential building other than an apartment",
+          "townhouse": "residential building other than an apartment",
+          "detached_houseplex": "residential building other than an apartment",
+          "semi_detached_houseplex": "residential building other than an apartment",
+          "lawfully_existing": "parking space is in a residential building",
+          "parking_space": "parking space is in a residential building",
+          "dwelling_unit": "interior floor area for a use"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type", "existing_front_parking_pad"]}
+    },
+    {
+      "unit_id": "10.20.80.1(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["garage_entrance_faces_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["garage_entrance_faces_street"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "any": "parking space located inside a building",
+          "garage_entrance_faces_street": "vehicle entrance to the parking space is in the front main wall",
+          "parking_space": "vehicle entrance to the parking space"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["existing_front_parking_pad"]}
+    },
+    {
+      "unit_id": "10.20.80.1(1)#(1)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "any": "driveway leading to the vehicle entrance in the building",
+          "lawfully_existing": "driveway leading to the vehicle entrance",
+          "parking_space": "driveway leading to the vehicle entrance"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["existing_front_parking_pad", "existing_driveway_type"]}
+    },
+    {
+      "unit_id": "10.20.80.1(1)#(1)(D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "landscaping_type",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "any": "area of the removed driveway in the front yard",
+          "lawfully_existing": "area of the removed driveway",
+          "parking_space": "area of the removed driveway in the front yard"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["existing_driveway_type"]}
+    },
+    {
+      "unit_id": "10.20.80.1(1)#(1)(E)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "any": "parking space located in the front yard",
+          "lawfully_existing": "parking space located in the front yard",
+          "parking_space": "parking space located in the front yard or side yard"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["existing_front_parking_pad"]}
+    },
+    {
+      "unit_id": "10.20.80.1(1)#(1)(F)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "RD": "on a lot in the RD zone",
+          "any": "parking space being converted",
+          "lawfully_existing": "parking space being converted",
+          "parking_space": "parking space being converted"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    }
+  ]
+}

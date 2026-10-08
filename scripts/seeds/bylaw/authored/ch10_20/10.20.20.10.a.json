@@ -1,0 +1,46 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.20.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.20.20.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "the RD zone",
+          "dwelling_unit": "Dwelling Unit in a permitted residential building type"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Lists the uses permitted in the RD zone: a dwelling unit in a permitted residential building type (Clause 10.20.20.40) and a municipal shelter park. No numeric bound.",
+        "gaps": "Municipal Shelter Park has no vocab.uses token; it is not keyed as an application use."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.20.20.10(1)": {
+      "explanation": "In the RD (Residential Detached) zone, homes are allowed as dwelling units in the building types that Clause 10.20.20.40 permits; a municipal shelter park is also a permitted use.",
+      "code_refs": "none"
+    }
+  }
+}

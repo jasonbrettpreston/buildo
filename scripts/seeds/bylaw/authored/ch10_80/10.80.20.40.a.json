@@ -1,0 +1,395 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.20.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.80.20.40(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "detached_house": "(A) Detached House",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "A detached house is a permitted residential building type in the RM zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "semi_detached_house": "(B) Semi-Detached House",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "A semi-detached house is a permitted residential building type in the RM zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "detached_houseplex": "(C) Detached Houseplex",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "A detached houseplex is a permitted residential building type in the RM zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "semi_detached_houseplex"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "semi_detached_houseplex": "(D) Semi-Detached Houseplex",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "A semi-detached houseplex is a permitted residential building type in the RM zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(E)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Clause (E) was deleted by By-law 648-2025 and has no effect.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(F)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "label_value"
+        ],
+        "if": "not labelled(u) or label(u) ≥ 5 units"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "label_value",
+          "major_street"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "apartment_building": "(F) Apartment Building",
+          "label_value": "following the letter",
+          "major_street": "abutting major streets",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "An apartment building is permitted in the RM zone where the zone label has no u value or a u value of 5 or more; on lots abutting a major street these label tests do not apply.",
+        "gaps": "Arm (iii) lifts the label test on major-street lots (apartment permitted there regardless); a token cannot be OR-ed into the DSL if, so major_street is carried in application only. Apartment buildings are outside the MaxBLD building-type scope."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(1)#(1)(G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "label_value",
+          "major_street"
+        ],
+        "if": "not labelled(u) or label(u) ≥ 3 units"
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "label_value",
+          "major_street"
+        ],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RM": "the RM zone",
+          "townhouse": "(G) Townhouse, if",
+          "label_value": "following the letter",
+          "major_street": "abutting a major street",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "A townhouse is permitted in the RM zone where the zone label has no u value or a u value of 3 or more, and in any case only on a lot abutting a major street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.80.20.40(2)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "townhouse",
+          "apartment_building"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex, townhouse",
+          "townhouse": "townhouse or apartment building",
+          "apartment_building": "or apartment building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "Despite the Chapter 900 exception precedence rules 900.1.10(3) and 900.1.10(4)(A), a detached houseplex, semi-detached houseplex, townhouse or apartment building is permitted in the RM zone if it complies with the RM zone regulations and the rest of the By-law, or is authorized by a Section 45 Planning Act minor variance.",
+        "gaps": "Keyed as PERMIT (what the clause does); the precedence effect over 900.1.10(3)/(4)(A) for these building types is recorded in this description since ranks_layers is reserved for PROCEDURAL units. The minor-variance arm cannot be evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.80.20.40(1)": {
+      "explanation": "In the RM zone, homes are allowed in detached and semi-detached houses and houseplexes; apartment buildings where the zone label has no u value or one of 5 or more (or on a major street); and townhouses where the u value is absent or 3 or more, and only on a major street.",
+      "code_refs": "none"
+    },
+    "10.80.20.40(2)": {
+      "explanation": "Even if a site-specific (Chapter 900) exception would otherwise limit the building types, a houseplex, townhouse or apartment building is allowed in the RM zone if it meets the RM zone rules and the rest of the By-law, or gets a minor variance.",
+      "code_refs": "none"
+    }
+  }
+}

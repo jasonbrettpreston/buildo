@@ -1,0 +1,50 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.11",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.20.40.11(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "1.0", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "4.0", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "50 percent", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "RD": "the RD zone",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["roof_type", "lawfully_existing_status"],
+        "status": "not_modelled",
+        "description": "When the roof of a lawfully existing residential building in the RD zone is altered, no more than 50 percent of the horizontal roof area may have a slope flatter than 1 vertical to 4 horizontal.",
+        "gaps": "No DSL target exists for roof slope or the share of roof area at a given slope, and the rule depends on the as-built status of the building; the numbers are listed as not expressed (closest closed reason)."
+      },
+      "disclosure": "If you alter the roof of an existing house in the RD zone, most of the new roof (more than half its area) must keep a slope of at least 1 in 4. We do not check roof slope.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.20.40.11(1)": {
+      "explanation": "In the RD zone, an altered roof on a lawfully existing residential building cannot be flatter than a 1-in-4 slope over more than half of its horizontal roof area, in addition to the general roof rule in 10.5.40.11(3).",
+      "code_refs": "none"
+    }
+  }
+}

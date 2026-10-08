@@ -1,0 +1,65 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_80/10.80.40.30",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.80.40.30(1)#whole",
+      "archetype": "LIMIT",
+      "target": "building_depth_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_depth_m = 19.0 m @(1)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "one storey",
+          "clause": "(1)",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "application": {
+        "zones": [
+          "RM"
+        ],
+        "building_types": [
+          "detached_house",
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "the RM zone",
+          "detached_house": "a detached house",
+          "semi_detached_house": "or semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "In the RM zone, the rear main wall of a detached or semi-detached house may be no more than 19.0 m from the required minimum front yard setback (maximum building depth), not counting a one-storey extension that complies with 10.80.40.20(2).",
+        "gaps": "The one-storey rear extension allowance (10.80.40.20(2)) is keyed in that regulation, not here."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.80.40.30(1)": {
+      "explanation": "In the RM zone, the back wall of a detached or semi-detached house can be at most 19.0 m behind the required front yard setback, not counting a permitted one-storey rear extension.",
+      "code_refs": "none"
+    }
+  }
+}

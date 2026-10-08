@@ -1,0 +1,57 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.20.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.60.20.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "RT"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "evidence": {
+          "RT": "the RT zone",
+          "dwelling_unit": "Dwelling Unit in a permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "informational",
+        "description": "In the RT zone a dwelling unit is permitted in any residential building type permitted by 10.60.20.40; a municipal shelter and a park are also permitted uses.",
+        "gaps": "The permitted building types are keyed under 10.60.20.40; this unit carries no numeric value."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.60.20.10(1)": {
+      "explanation": "In the RT zone, homes are allowed in any of the residential building types listed in 10.60.20.40; municipal shelters and parks are also allowed.",
+      "code_refs": "none"
+    }
+  }
+}

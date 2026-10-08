@@ -1,0 +1,68 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.40.21",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.40.21(1)#whole",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "existing(building_length_m) > building_length_m"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["building_length_m = max(building_length_m; existing(building_length_m; lawfully_existing)) @(1)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "10.5.40.21(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

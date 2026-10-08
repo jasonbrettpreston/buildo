@@ -1,0 +1,158 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.80",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.80(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"],
+        "if": "not has_openings_to_dwelling_units"
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 2.0 m @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "townhouse": "a townhouse or an apartment building",
+          "apartment_building": "a townhouse or an apartment building",
+          "major_street": "on a lot abutting a major street",
+          "dwelling_unit": "openings to dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.20.40.80(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 5.5 m @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "townhouse": "a townhouse or an apartment building",
+          "apartment_building": "a townhouse or an apartment building",
+          "major_street": "on a lot abutting a major street",
+          "dwelling_unit": "openings to dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.20.40.80(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 11.0 m @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "townhouse": "a townhouse or an apartment building",
+          "apartment_building": "a townhouse or an apartment building",
+          "major_street": "on a lot abutting a major street",
+          "dwelling_unit": "opening to a dwelling unit"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.20.40.80(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 5.5 m @(2)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "townhouse": "two or more townhouses or apartment buildings",
+          "apartment_building": "two or more townhouses or apartment buildings",
+          "major_street": "the same lot abutting a major street",
+          "dwelling_unit": "openings to dwelling units"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.20.40.80(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": ["major_street"]
+      },
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["separation_m = 11.0 m @(2)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RD": "In the RD zone",
+          "townhouse": "two or more townhouses or apartment buildings",
+          "apartment_building": "two or more townhouses or apartment buildings",
+          "major_street": "the same lot abutting a major street",
+          "dwelling_unit": "opening to a dwelling unit"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    }
+  ]
+}

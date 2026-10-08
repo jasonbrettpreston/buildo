@@ -1,0 +1,109 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.40.20",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.60.40.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_length_m = 19.0 m @(1)(A)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "townhouse"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "townhouse": "for a townhouse",
+          "major_street": "abuts a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "On a lot abutting a major street, a townhouse may be at most 19.0 m long.",
+        "gaps": "Zones left empty: the unit text names no zone (10.60 = RT)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.60.40.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "building_length_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "major_street"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "building_length_m = 25.0 m @(1)(B)"
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "apartment_building"
+        ],
+        "lot_conditions": [
+          "major_street"
+        ],
+        "uses": [],
+        "evidence": {
+          "apartment_building": "for an apartment building",
+          "major_street": "abuts a major street"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "status": "modelled",
+        "description": "On a lot abutting a major street, an apartment building may be at most 25.0 m long.",
+        "gaps": "Zones left empty: the unit text names no zone (10.60 = RT)."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.60.40.20(1)": {
+      "explanation": "On a lot facing a major street, a townhouse can be at most 19.0 m long and an apartment building at most 25.0 m long.",
+      "code_refs": "none"
+    }
+  }
+}

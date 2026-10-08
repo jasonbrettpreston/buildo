@@ -1,0 +1,289 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.20.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.40.20.40(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "detached_house": "(A) Detached House",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A detached house is a permitted residential building type in the RS zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "semi_detached_house": "(B) Semi-detached House",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A semi-detached house is a permitted residential building type in the RS zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "detached_houseplex": "(C) Detached Houseplex",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A detached houseplex is a permitted residential building type in the RS zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "semi_detached_houseplex": "(D) Semi-Detached Houseplex",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A semi-detached houseplex is a permitted residential building type in the RS zone.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(E)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RS": "the RS Zone"}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Clause (E) was deleted by By-law 648-2025 and has no effect.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(F)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "townhouse": "(F) Townhouse if",
+          "major_street": "abuts a major street",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "A townhouse is a permitted residential building type in the RS zone only on a lot that abuts a major street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(1)#(1)(G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RS": "the RS Zone",
+          "apartment_building": "(G) Apartment Building if",
+          "major_street": "abuts a major street",
+          "dwelling_unit": "a dwelling unit is permitted"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "An apartment building is a permitted residential building type in the RS zone only on a lot that abuts a major street.",
+        "gaps": "Apartment buildings are outside the MaxBLD building-type scope; the permission is recorded."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.20.40(2)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "townhouse", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "the RS zone",
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex, townhouse",
+          "townhouse": "townhouse or apartment building",
+          "apartment_building": "or apartment building"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "status": "modelled",
+        "description": "Despite the Chapter 900 exception precedence rules 900.1.10(3) and 900.1.10(4)(A), a detached houseplex, semi-detached houseplex, townhouse or apartment building is permitted in the RS zone if it complies with the RS zone regulations and the rest of the By-law, or is authorized by a Section 45 Planning Act minor variance.",
+        "gaps": "Keyed as PERMIT (what the clause does); the precedence effect over 900.1.10(3)/(4)(A) for these building types is recorded in this description since ranks_layers is reserved for PROCEDURAL units. The minor-variance arm cannot be evaluated."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.40.20.40(1)": {
+      "explanation": "In the RS zone, homes are allowed in detached houses, semi-detached houses, detached houseplexes and semi-detached houseplexes; townhouses and apartment buildings are allowed only on lots that abut a major street.",
+      "code_refs": "none"
+    },
+    "10.40.20.40(2)": {
+      "explanation": "Even if a site-specific (Chapter 900) exception would otherwise limit the building types, a houseplex, townhouse or apartment building is allowed in the RS zone if it meets the RS zone rules and the rest of the By-law, or gets a minor variance.",
+      "code_refs": "none"
+    }
+  }
+}

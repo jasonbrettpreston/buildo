@@ -60,9 +60,9 @@ function setField(obj, p, value) {
   cur[ks[ks.length - 1]] = clone(value);
 }
 
-function canon(field, value, failures, who) {
+function canon(field, value, failures, who, unitId) {
   try {
-    return canonicalField(field, value);
+    return canonicalField(field, value, { unitId });
   } catch (err) {
     if (!(err instanceof DslError)) throw err;
     failures.push({ keyer: who, field, code: err.code });
@@ -101,8 +101,8 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
           continue;
         }
         counts.fields_compared++;
-        const ca = canon(f, va, failures, 'A');
-        const cb = canon(f, vb, failures, 'B');
+        const ca = canon(f, va, failures, 'A', id);
+        const cb = canon(f, vb, failures, 'B', id);
         const unparseable = ca.startsWith('!unparseable:') || cb.startsWith('!unparseable:'); // no canonical form → cannot agree (§7.4)
         if (ca === cb && !unparseable) counts.fields_agreed++;
         else {

@@ -1,0 +1,111 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.40.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = label(d) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "any": "permitted maximum floor space index"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.40.40(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(d)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["fsi = unlimited @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "any": "floor space index is not limited"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.40.40(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "secondary_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "detached_houseplex": "does not apply to a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex or a residential building",
+          "secondary_suite": "a residential building with a secondary suite"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.40.40(1)#(1)(D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["unit_count_band", "major_street"], "if": "dwelling_units ≤ 60 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "townhouse": "do not apply to a townhouse",
+          "apartment_building": "or an apartment building",
+          "major_street": "a lot abutting a major street"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["unit_count"]}
+    }
+  ]
+}

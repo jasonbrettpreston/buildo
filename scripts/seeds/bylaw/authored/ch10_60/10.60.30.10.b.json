@@ -1,0 +1,112 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_60/10.60.30.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.60.30.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(a)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_area_m2 = label(a) @(1)(A)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "any": "minimum lot area",
+          "label_value": "zone label includes"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.30.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_area_m2 = 50 pct × label(a) @(1)(B)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["semi_detached_house", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RT": "in the RT zone",
+          "semi_detached_house": "a semi-detached house is on two lots",
+          "semi_detached_houseplex": "for a semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "10.60.30.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "not labelled(a)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["required_lot_area_m2 = required_lot_frontage_m × 30 m @(1)(C)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": [],
+        "evidence": {
+          "RT": "In the RT zone",
+          "any": "minimum lot area",
+          "label_value": "the zone label does not include"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "10.60.30.10(2)#whole",
+      "archetype": "LIMIT",
+      "target": "lot_area_per_unit_min_m2",
+      "bound": "min",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(au)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": ["lot_area_per_unit_min_m2 = label(au) @(2)"],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "RT": "a lot in the RT zone",
+          "townhouse": "dwelling unit in a townhouse",
+          "label_value": "zone label applying to a lot",
+          "dwelling_unit": "for each dwelling unit in a townhouse"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}
