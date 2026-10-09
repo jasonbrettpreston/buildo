@@ -349,9 +349,35 @@ function resolveUnqualified(scope, column, catalog, writeColumns) {
       return { table: baseTable(s.writeTarget.rel), schema: s.writeTarget.schema };
     }
   }
+  if (scope.writeScope) {
+    const ws = writeScopeUnqualified(scope, column, catalog);
+    if (ws) return ws;
+  }
   if (lone) return lone;
   if ((scope.relations || []).length === 0 || (scope.derived && scope.derived.size > 0)) return { derived: true };
   return { error: true };
+}
+
+/** PostgreSQL system columns: never in information_schema.columns, never credited. */
+const SYSTEM_COLUMNS = new Set(['ctid', 'xmin', 'xmax', 'cmin', 'cmax', 'tableoid', 'oid']);
+
+/**
+ * WF3 write scope: an UPDATE/DELETE/INSERT statement's own unqualified-column candidates are its
+ * FROM/USING relations PLUS the write target (which sits in the parent target scope). Same rule as
+ * a SELECT scope: a lone candidate is credited (fence (ii)); 2+ candidates with no match refuse.
+ * A derived source in FROM/USING (CTE, subquery alias, function alias) or a system column stays derived.
+ */
+function writeScopeUnqualified(scope, column, catalog) {
+  if (SYSTEM_COLUMNS.has(column)) return { derived: true };
+  if (scope.hasDerivedFrom || scope.subselectRels.length > 0 || (scope.funcCols && scope.funcCols.size > 0)) return null;
+  const cands = scope.relations.filter((r) => !isDerived(scope, r.alias || r.rel));
+  const t = scope.parent && scope.parent.writeTarget ? scope.parent.writeTarget : null;
+  if (t) cands.push(t);
+  const tables = [...new Set(cands.map((r) => baseTable(r.rel)))];
+  if (tables.some((tb) => !Array.isArray(catalog[tb]))) return null;
+  if (tables.length === 1) return { table: tables[0], schema: cands[0].schema };
+  if (tables.length > 1) return { error: true };
+  return null;
 }
 
 /** Expand `*` / `t.*` from the catalog for one relation. */
@@ -537,7 +563,9 @@ function resolveNode(node, fp, catalog) {
     if (temp && Object.prototype.hasOwnProperty.call(catalog, target.relname)) {
       currentErrors.push(`FAIL:INPUT:temp-shadows:${target.relname}`);
     } else if (temp) {
+      currentNestedWrite = false;
       resolveScope(inner.query, catalog, reads, writes, excluded, true);
+      if (currentNestedWrite) return result('write', fp, reads, writes, excluded, null);
       const touched = Object.keys(reads).length > 0 || excluded.length > 0;
       return result(touched ? 'read' : 'utility', fp, reads, writes, excluded, null);
     }
@@ -571,8 +599,9 @@ function resolveNode(node, fp, catalog) {
   // --- SELECT ---
   if (key === 'SelectStmt') {
     if (isAdvisoryLockSelect(inner)) return result('utility', fp, {}, {}, [], null);
+    currentNestedWrite = false;
     resolveScope(inner, catalog, reads, writes, excluded, true);
-    return result('read', fp, reads, writes, excluded, null);
+    return result(currentNestedWrite ? 'write' : 'read', fp, reads, writes, excluded, null);
   }
 
   // --- Write statements ---
@@ -594,6 +623,19 @@ const SETOP_KINDS = new Set(['SETOP_UNION', 'SETOP_INTERSECT', 'SETOP_EXCEPT']);
  * FROM/JOIN relations, target list columns and WHERE/JOIN conditions.
  */
 function resolveScope(scopeNode, catalog, reads, writes, excluded, _topLevel, parent) {
+  // A data-modifying CTE body (INSERT/UPDATE/DELETE in WITH) is a write, not a read scope; its
+  // enclosing scope is threaded as `parent` so sibling CTE names bind (WF3 sql-witness DML CTE, 2026-10-08).
+  const dmlKey = stmtKind(scopeNode);
+  if (dmlKey === 'InsertStmt' || dmlKey === 'UpdateStmt' || dmlKey === 'DeleteStmt') {
+    currentNestedWrite = true;
+    resolveWrite(dmlKey, scopeNode[dmlKey], catalog, reads, writes, excluded, parent);
+    return;
+  }
+  // Closed set (as in resolveNode): any other statement node as a CTE body (e.g. MERGE in WITH, PG17+) is refused by name.
+  if (dmlKey && dmlKey !== 'SelectStmt' && /^[A-Z]/.test(dmlKey)) {
+    currentErrors.push(`FAIL:INPUT:unsupported:${dmlKey}`);
+    return;
+  }
   scopeNode = unwrap(scopeNode);
   if (!scopeNode || typeof scopeNode !== 'object') return;
 
@@ -791,10 +833,16 @@ function resolveCtes(inner, catalog, reads, writes, excluded, parent) {
   }
 }
 
+/** RETURNING target list: libpg-query 18 (PG18 grammar) puts it at `returningClause.exprs`; `returningList` is the pre-18 key. */
+function returningOf(inner) {
+  if (inner.returningClause && Array.isArray(inner.returningClause.exprs)) return inner.returningClause.exprs;
+  return inner.returningList;
+}
+
 /** Resolve INSERT / UPDATE / DELETE. */
-function resolveWrite(key, inner, catalog, reads, writes, excluded) {
+function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
   const target = topRelation(inner, key) || (inner.targetList ? null : null);
-  resolveCtes(inner, catalog, reads, writes, excluded, null);
+  resolveCtes(inner, catalog, reads, writes, excluded, parent || null);
 
   if (key === 'InsertStmt') {
     const targetRel = inner.relation && isRangeVar(inner.relation)
@@ -807,17 +855,18 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
       else for (const c of cols) recordWrite(writes, excluded, targetRel, c);
     }
     // INSERT ... SELECT: the query's columns are reads, correlated to the target.
-    const writeScope = buildWriteScope(inner, targetRel, cols);
+    const writeScope = buildWriteScope(inner, targetRel, cols, parent);
     if (inner.selectStmt) {
       resolveScope(inner.selectStmt, catalog, reads, writes, excluded, true, writeScope);
     }
     // RETURNING (e.g. `RETURNING (xmax = 0) AS is_insert`) belongs to the target row.
-    if (inner.returningList !== undefined) {
-      for (const visit of [writeScope, conflictScope(inner, targetRel, cols)]) {
-        walkExpr(inner.returningList, (n) => {
+    const returning = returningOf(inner);
+    if (returning !== undefined) {
+      for (const visit of [writeScope, conflictScope(inner, targetRel, cols, parent)]) {
+        walkExpr(returning, (n) => {
           if (isColumnRef(n)) applyColumn(n, visit, catalog, reads, writes, excluded, false);
         });
-        walk(inner.returningList, (n) => {
+        walk(returning, (n) => {
           if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, visit);
           const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
           if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, visit);
@@ -828,7 +877,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
     // the clause `EXCLUDED` is the proposed row; unqualified/LHS-declared columns
     // resolve to the INSERT target (its declared column list).
     if (inner.onConflictClause) {
-      const scope = conflictScope(inner, targetRel, cols);
+      const scope = conflictScope(inner, targetRel, cols, parent);
       const conflict = unwrap(inner.onConflictClause);
       // F8 (WF1 LDG-10 fold-1 item 6, registry-truth fold 12) — a `DO UPDATE SET <col> = …`
       // target is a WRITE of the INSERT target even when `<col>` is not in the INSERT column
@@ -879,7 +928,11 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
         if (res && typeof res.name === 'string') writeColumns.push(res.name);
       }
     }
-    const scope = buildWriteScope(inner, targetRel, writeColumns);
+    const scope = buildWriteScope(inner, targetRel, writeColumns, parent);
+    // WF3 write-scope relations: a FROM/USING relation is a read of the table even when no column of it is named.
+    for (const rel of scope.relations) {
+      if (!isDerived(scope, rel.alias || rel.rel)) recordRead(reads, excluded, rel, null);
+    }
     // SET targets -> writes; SET right-hand sides -> reads.
     if (Array.isArray(inner.targetList)) {
       for (const t of inner.targetList) {
@@ -897,12 +950,12 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
       }
     }
     // WHERE / FROM / RETURNING / guard columns -> reads.
-    for (const k of ['whereClause', 'fromClause', 'returningList']) {
-      if (inner[k] === undefined) continue;
-      walkExpr(inner[k], (n) => {
+    for (const k of [inner.whereClause, inner.fromClause, returningOf(inner)]) {
+      if (k === undefined) continue;
+      walkExpr(k, (n) => {
         if (isColumnRef(n)) applyColumn(n, scope, catalog, reads, writes, excluded, false);
       });
-      walk(inner[k], (n) => {
+      walk(k, (n) => {
         if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
         const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
         if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
@@ -916,13 +969,17 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
       ? makeRel(inner.relation.relname, inner.relation.schemaname, null)
       : null;
     if (targetRel) recordWrite(writes, excluded, targetRel, null);
-    const scope = buildWriteScope(inner, targetRel, []);
-    for (const k of ['whereClause', 'usingClause', 'returningList']) {
-      if (inner[k] === undefined) continue;
-      walkExpr(inner[k], (n) => {
+    const scope = buildWriteScope(inner, targetRel, [], parent);
+    // WF3 write-scope relations: a FROM/USING relation is a read of the table even when no column of it is named.
+    for (const rel of scope.relations) {
+      if (!isDerived(scope, rel.alias || rel.rel)) recordRead(reads, excluded, rel, null);
+    }
+    for (const k of [inner.whereClause, inner.usingClause, returningOf(inner)]) {
+      if (k === undefined) continue;
+      walkExpr(k, (n) => {
         if (isColumnRef(n)) applyColumn(n, scope, catalog, reads, writes, excluded, false);
       });
-      walk(inner[k], (n) => {
+      walk(k, (n) => {
         if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
         const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
         if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
@@ -938,8 +995,8 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded) {
  * columns resolving to the INSERT target's declared column list via a write-target
  * parent scope. RETURNING and the conflict clause both read the same target row.
  */
-function conflictScope(inner, targetRel, writeColumns) {
-  const scope = { relations: [], derived: new Set(), subselectRels: [], writeColumns: writeColumns || [] };
+function conflictScope(inner, targetRel, writeColumns, outer) {
+  const scope = { relations: [], derived: new Set(), subselectRels: [], writeColumns: writeColumns || [], parent: outer || null };
   if (targetRel) {
     scope.parent = {
       relations: [
@@ -950,6 +1007,7 @@ function conflictScope(inner, targetRel, writeColumns) {
       subselectRels: [],
       writeTarget: targetRel,
       writeColumns: writeColumns || [],
+      parent: outer || null,
     };
   }
   return scope;
@@ -961,8 +1019,8 @@ function conflictScope(inner, targetRel, writeColumns) {
  * `writeColumns` are the declared write columns, which resolve unqualified columns
  * inside `ON CONFLICT ... DO UPDATE` (the proposed row) to the target relation.
  */
-function buildWriteScope(inner, targetRel, writeColumns) {
-  const scope = { relations: [], derived: new Set(), subselectRels: [] };
+function buildWriteScope(inner, targetRel, writeColumns, outer) {
+  const scope = { relations: [], derived: new Set(), subselectRels: [], parent: outer || null, writeScope: true };
   // CTE names shadow table references of the same name.
   walk(inner, (n) => {
     if (isCommonTableExpr(n)) scope.derived.add(n.ctename);
@@ -971,8 +1029,9 @@ function buildWriteScope(inner, targetRel, writeColumns) {
     if (!isRangeVar(rv)) return;
     const alias = rv.alias && typeof rv.alias.aliasname === 'string' ? rv.alias.aliasname : null;
     // A FROM reference that names a CTE or a session temp is derived, never a real table.
-    if (scope.derived.has(rv.relname) || isSessionTemp(rv.schemaname, rv.relname)) {
+    if (scope.derived.has(rv.relname) || (!rv.schemaname && boundInChain(outer, rv.relname)) || isSessionTemp(rv.schemaname, rv.relname)) {
       scope.derived.add(alias || rv.relname);
+      scope.hasDerivedFrom = true;
       return;
     }
     scope.relations.push(makeRel(rv.relname, rv.schemaname, alias));
@@ -1011,6 +1070,7 @@ function buildWriteScope(inner, targetRel, writeColumns) {
       subselectRels: [],
       writeTarget: target,
       writeColumns: writeColumns || [],
+      parent: outer || null,
     };
     scope.parent = targetScope;
   }
@@ -1020,6 +1080,7 @@ function buildWriteScope(inner, targetRel, writeColumns) {
 // Pending resolution errors for the statement currently being resolved (module-level
 // because resolveStatement is synchronous and single-threaded).
 let currentErrors = [];
+let currentNestedWrite = false; // a data-modifying CTE was resolved inside the current SELECT
 
 /** init(): load the WASM module exactly once. */
 async function init() {
