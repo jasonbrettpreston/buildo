@@ -81,6 +81,21 @@ export function makeRepo(): string {
   return repo;
 }
 
+/**
+ * A fresh, isolated copy of a repo built by `makeRepo()` — byte-for-byte the same
+ * seed repo (same .git, same seed commit) in its OWN new temp dir, with ZERO git
+ * child processes. For suites that need a fresh seed repo per test: build the
+ * template once (`makeRepo()` in beforeAll), `cloneRepo(template)` in beforeEach.
+ * The copy is guarded exactly like makeRepo's (assertThrowawayRepo, fail-closed).
+ */
+export function cloneRepo(template: string): string {
+  assertThrowawayRepo(template);
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-test-'));
+  assertThrowawayRepo(repo);
+  fs.cpSync(template, repo, { recursive: true });
+  return repo;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS engine
 export const engineMod = require(path.join(REPO_ROOT, 'scripts/deepseek-exec.js'));
 // eslint-disable-next-line @typescript-eslint/no-require-imports

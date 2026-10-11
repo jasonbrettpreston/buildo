@@ -31,7 +31,7 @@
 //      against committed fixtures, green on the frozen shape and red on each
 //      known-bad one. This is what proves the battery WORKS while the real loop
 //      is empty.
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
@@ -40,6 +40,7 @@ import { pathToFileURL } from 'url';
 import { stripComments } from './script-source-scan';
 import { filterGateELedgerFindings } from '../../scripts/analysis/gates/compute-literals.mjs';
 import { loadLedger } from '../../scripts/analysis/gates/ledger.mjs';
+import { createExecMemo, prefetchJob } from './helpers/exec-memo';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'scripts/manifest.json');
@@ -48,6 +49,14 @@ const PROBE = path.join(REPO_ROOT, 'scripts/hooks/step-require-probe.cjs');
 const SHAPE_DRIVER = path.join(REPO_ROOT, 'scripts/hooks/check-step-shape.mjs');
 const ADVISORY_LOCK_TEST = path.join(REPO_ROOT, 'src/tests/pipeline-advisory-lock.infra.test.ts');
 const SHAPE_FIXTURES = 'scripts/steps/_schema/fixtures/shape';
+
+// Identical child processes (same cmd + args + cwd + FULL env) run ONCE per file and
+// every later caller reads that same real result — see helpers/exec-memo.ts. Calls
+// that pass an env override or a temp fixture path are distinct keys (distinct runs);
+// calls whose input is mutated between runs stay on the raw child_process function.
+// The anti-recursion scan below still sees each `memo.spawnSync('node', [STEP_VALIDATE, …])`
+// literal, so every step-validate spawn is still checked for --fast/--self-test-only.
+const memo = createExecMemo();
 
 // ONE compiler (S2, 2026-08-24): compileStepSchema is what `pipeline.step()`
 // itself validates with, so this suite and production cannot drift into two
@@ -197,7 +206,7 @@ interface ProbeResult {
 }
 
 function probe(relFile: string): ProbeResult {
-  const raw = execFileSync('node', [PROBE, relFile], {
+  const raw = memo.execFileSync('node', [PROBE, relFile], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     timeout: 60_000,
@@ -416,6 +425,16 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
 // ---------------------------------------------------------------------------
 
 describe('the fleet assertion — loaded.length === scope length (silent-import-death guard)', () => {
+  // Each converted file's probe is its OWN real child process (the probe's hermeticity is the
+  // point — scripts/hooks/step-require-probe.cjs header); prefetch() only runs them 4 at a time
+  // ahead of the test, into the same memo probe() reads (helpers/exec-memo.ts rule 6).
+  beforeAll(async () => {
+    await memo.prefetch(
+      CONVERTED.map((f) => prefetchJob.execFileSync('node', [PROBE, f], { cwd: REPO_ROOT, timeout: 60_000 })),
+      4,
+    );
+  }, 600_000);
+
   it('every converted step LOADS; none silently drops out', () => {
     // Under Spec 120 a step.json that fails to parse fails loudly. Under islands
     // a step whose MODULE throws at import becomes unloadable and disappears from
@@ -448,7 +467,7 @@ describe('the fleet assertion — loaded.length === scope length (silent-import-
 
 describe('prove-red — the shape rule fires on the unconverted corpus', () => {
   const report = JSON.parse(
-    execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
+    memo.execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
   ) as {
     converted: string[];
     blocking: Array<{ file: string; violations: Array<{ rule: string; line: number }> }>;
@@ -738,7 +757,7 @@ stderr=${clean.stderr}`).toBe(0);
 
   it('the driver REPORTS the compute corpus under --json (report shape only — gating is proven above)', () => {
     const report = JSON.parse(
-      execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
+      memo.execFileSync('node', [SHAPE_DRIVER, '--json'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 }),
     ) as { compute_rule?: string; compute?: Array<{ file: string; violations: unknown[] }> };
     expect(report.compute_rule).toBe(COMPUTE_RULE);
     expect((report.compute ?? []).map((f) => f.file).sort()).toEqual(COMPUTE_PAIRS.map((p) => p.compute).sort());
@@ -2764,6 +2783,24 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
     expect(CONVERTED.length).toBeGreaterThan(0);
   });
 
+  // The per-slug `--step=<slug> --fast` runs below (and the one `--self-test-only` the
+  // Rule 10/11/12 blocks read) are each their OWN real child process with exactly the
+  // args/options the test uses; prefetch() only runs them 4 at a time ahead of the tests,
+  // into the same memo the tests read (helpers/exec-memo.ts rule 6). A run that timed out
+  // or overflowed is not stored, and the test then runs it itself.
+  beforeAll(async () => {
+    const slugsWithReport = CONVERTED.map((f) => slugFor(f)).filter((s): s is string => Boolean(s) && reportPathFor(s as string) !== null);
+    await memo.prefetch(
+      [
+        ...slugsWithReport.map((slug) =>
+          prefetchJob.spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, timeout: 60_000, maxBuffer: 16 * 1024 * 1024 }),
+        ),
+        prefetchJob.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, timeout: 120_000 }),
+      ],
+      4,
+    );
+  }, 900_000);
+
   for (const relFile of CONVERTED) {
     const slug = slugFor(relFile);
     if (!slug) continue;
@@ -2789,7 +2826,7 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
         expect(committedIdx, `${slug}: no "${MARKER}" block found`).toBeGreaterThanOrEqual(0);
         const committedBlock = committed.slice(committedIdx);
 
-        const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], {
+        const run = memo.spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], {
           cwd: REPO_ROOT,
           encoding: 'utf8',
           timeout: 60_000,
@@ -2974,7 +3011,7 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
   });
 
   it('`--self-test-only` passes — the RED/GREEN in-memory proofs for deriveVitestExclusions/vitestSpawnArgs (no-exclude RED, three-spelling GREEN, purity, live non-vacuity, live tier-ownership) all fire correctly', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     expect(run.stdout).toContain('self-test PASSED');
   });
@@ -3038,13 +3075,13 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
   it('`--self-test-only` passes — the RED/GREEN in-memory proofs for findVerdictDerivationSites and checkSelfSkipNeverPass all fire correctly', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     expect(run.stdout).toContain('self-test PASSED');
   });
 
   it('a real `--step` run reports Rule 10 as enforced-green — VRD-SKIP closed, zero unsanctioned second derivations across the live VERDICT_LIBRARY_CORPUS', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 10 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3095,7 +3132,7 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
   });
 
   it('the SAME sanctioned sites still pass with no override at all — the fixture above is additive, never a narrowing of the real corpus', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*10\s*\|/.test(l.trim())) || '');
     expect(row).toContain('0 unsanctioned second derivations');
@@ -3116,7 +3153,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
   it('`--self-test-only` passes — the RED/GREEN in-memory proofs for checkOrderGuaranteesCited all fire correctly', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     expect(run.stdout).toContain('self-test PASSED');
   });
@@ -3132,7 +3169,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
   // never re-ran after that commit landed — updated to the CURRENT, intended
   // vocabulary; assert_schema genuinely has 0 pre_write checks either way.
   it('a step with NO when:"pre_write" checks reports Rule 11 vacuous (not enforced-green — Spec 121 §12b.6)', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3145,7 +3182,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
   // is now the runner's input-guard row (index.js measureInputGuards, measured BEFORE any phase), so link_massing
   // reports Rule 11 `vacuous` exactly like assert_schema above, and is pinned that way here.
   it('link_massing: 0 when:"pre_write" checks after A-1 ruling 4 — Rule 11 vacuous (the guard is the runner row)', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3158,7 +3195,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
     ['load_ravines', 2],
     ['link_wsib', 1],
   ])('%s: %d real when:"pre_write" check(s) each carry a live, non-rotted order_guarantee — Rule 11 enforced-green', (slug, count) => {
-    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*11\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 11 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3179,13 +3216,13 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
   it('`--self-test-only` passes — the RED/GREEN in-memory proofs for checkInterruptedPostureTruthful and runnerReachability all fire correctly', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     expect(run.stdout).toContain('self-test PASSED');
   });
 
   it('a step with recovery.interrupted "none" reports Rule 12 enforced-green, with no reachability claim to verify', () => {
-    const run = spawnSync('node', [STEP_VALIDATE, '--step=load_ravines', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, '--step=load_ravines', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3197,7 +3234,7 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
   // interrupted_why (every write is retract:"none" and every run is a full re-derive), so, like link_neighbourhoods
   // below, they make NO reachability claim. They are pinned to that row here rather than dropped.
   it.each([['link_massing'], ['link_parcels']])('%s: recovery.interrupted "none" (A29) — Rule 12 enforced-green, no reachability claim to verify', (slug) => {
-    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
@@ -3224,7 +3261,7 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
     // RE-DERIVED against the live source rather than assumed to have survived.
     ['enrich_parcels', 'enrich', 'runEnrichPhase'],
   ])('%s: shape=%s declares force_full_on_next_run and its runner (%s) is measured REACHABLE against the live scripts/lib/step/index.js', (slug, shape, fnName) => {
-    const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    const run = memo.spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
     const row = (run.stdout.split('\n').find((l) => /^\|\s*12\s*\|/.test(l.trim())) || '');
     expect(row, `no Rule 12 matrix row found; stdout=${run.stdout}`).not.toBe('');
