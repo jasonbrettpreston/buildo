@@ -28,9 +28,11 @@
 // every converted step, one word from the closed {PASS, FAIL} set each.
 
 import { describe, it, expect } from 'vitest';
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import * as stepValidateRaw from '../../scripts/analysis/step-validate.mjs';
+import { createExecMemo } from './helpers/exec-memo';
+
+const memo = createExecMemo(); // T5 and T5b run the identical `--all --fast` once — see helpers/exec-memo.ts
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const SCRIPT_REL = 'scripts/analysis/step-validate.mjs';
@@ -166,7 +168,7 @@ describe('gate V — the five-word verdict is derived only from the mapped gates
   // -------------------------------------------------------------------------
   describe('T5: live — --all --fast renders a closed-set five-word verdict per step', () => {
     it('T5: every converted step\'s scorecard block carries all 5 words, each PASS or FAIL', () => {
-      const run = spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
+      const run = memo.spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         timeout: 180_000,
@@ -184,7 +186,7 @@ describe('gate V — the five-word verdict is derived only from the mapped gates
     });
 
     it('T5b: the console summary line also carries all 5 words for every step', () => {
-      const run = spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
+      const run = memo.spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         timeout: 180_000,
