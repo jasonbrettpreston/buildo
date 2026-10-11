@@ -40,7 +40,7 @@ That only works if a human can *review the declaration before it becomes code*. 
   src/tests/surface-registry.infra.test.ts         the drift lock, with RED canaries
 ```
 
-The census is measured against the tree — file by file, route by route — and nothing in it is inferred from a filename. **Table column lists are not in the census at all**: they are read from `src/lib/db/generated/schema.ts`, which `npm run db:generate` (`drizzle-kit introspect`) produces from the live database, so the 84 tables below cannot drift from the database without that generator being stale.
+The census is measured against the tree — file by file, route by route — and nothing in it is inferred from a filename. **Table column lists are not in the census at all**: they are read from `src/lib/db/generated/schema.ts`, which `npm run db:generate` (`drizzle-kit introspect`) produces from the live database, so the 85 tables below cannot drift from the database without that generator being stale.
 
 **Researching a row** is a defined procedure with a reading order, an evidence standard and the closed vocabulary cheat-sheet: **docs/reports/2026-09-15-surface-research-brief.md**. Correcting this document means **correcting the census and regenerating**. The drift lock re-runs the generator and fails if the committed file differs by a byte.
 
@@ -7851,4 +7851,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 141 census rows and 84 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 141 census rows and 85 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*

@@ -1161,14 +1161,14 @@
       {
         "table": "parcels",
         "column": "zoning_enriched_at",
-        "when": "trg_parcels_geom_invalidation (migration 242) nulls zoning_enriched_at when parcels.geom changes — verified live (pg_trigger on parcels), the real re-eligibility signal for pass 1's own incremental scope predicate. Second re-eligibility signal (zoning-change scope, 2026-10-06): a load_zoning run that wrote after this step's last completed run makes pass 1's next incremental scope TRUE (readZoningChange) — every parcel, which crosses enrich_parcels_defer_threshold_rows and defers to the next --full.",
+        "when": "trg_parcels_geom_invalidation (migrations 242/251) nulls zoning_enriched_at when parcels.geom MATERIALLY changes (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate) — verified live (pg_trigger on parcels), the real re-eligibility signal for pass 1's own incremental scope predicate. Second re-eligibility signal (zoning-change scope, 2026-10-06): a load_zoning run that wrote after this step's last completed run makes pass 1's next incremental scope TRUE (readZoningChange) — every parcel, which crosses enrich_parcels_defer_threshold_rows and defers to the next --full.",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       },
       {
         "table": "parcels",
         "column": "massing_enriched_at",
-        "when": "trg_parcels_geom_invalidation (migration 242) nulls massing_enriched_at when parcels.geom changes — the same trigger, the re-eligibility signal for pass 2's own incremental scope predicate (parcel_buildings.linked_at > parcels.massing_enriched_at).",
+        "when": "trg_parcels_geom_invalidation (migrations 242/251) nulls massing_enriched_at when parcels.geom MATERIALLY changes (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate) — the same trigger, the re-eligibility signal for pass 2's own incremental scope predicate (parcel_buildings.linked_at > parcels.massing_enriched_at).",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       }

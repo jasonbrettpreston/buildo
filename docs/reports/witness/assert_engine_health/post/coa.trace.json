@@ -2,37 +2,17 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "coa",
-  "source_fingerprint": "89060617d20fc3bc9e8b0c8da2717335569c9db0a5d87c6e7b42a9b9aacebe5d",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "source_fingerprint": "8955ea6c013158d28f5b66b41156c1c2a6fcd4465ee942f2d699360bd5d7e610",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
-    "calls": 131,
-    "distinct": 28,
-    "utility": 16,
-    "tracer_self_ms": 32.908,
-    "wall_ms": 5910
+    "calls": 133,
+    "distinct": 18,
+    "utility": 6,
+    "tracer_self_ms": 33.172,
+    "wall_ms": 4737
   },
   "statements": [
-    {
-      "fingerprint": "00e00c324cf73bb4",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "1635c08c8de0a9ba",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
     {
       "fingerprint": "21dd0ae63c63676e",
       "kind": "read",
@@ -48,8 +28,8 @@
     {
       "fingerprint": "23265920758bf06c",
       "kind": "write",
-      "count": 103,
-      "rowCount": 103,
+      "count": 115,
+      "rowCount": 115,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -77,26 +57,6 @@
       "error": null
     },
     {
-      "fingerprint": "3218bd4f59094271",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "33b5f5419cddba83",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "34958cc103bfee4f",
       "kind": "read",
       "count": 1,
@@ -112,7 +72,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 100,
+      "rowCount": 112,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -199,16 +159,6 @@
       "error": null
     },
     {
-      "fingerprint": "9a73f71a26870c6d",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "afd4d45d41748e8c",
       "kind": "read",
       "count": 1,
@@ -231,45 +181,15 @@
       "error": null
     },
     {
-      "fingerprint": "b4a2a841523955f8",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "b8710e6c9c008f92",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
         "logic_variables"
       ],
-      "error": null
-    },
-    {
-      "fingerprint": "c0872393e07f2856",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
       "error": null
     },
     {
@@ -308,35 +228,15 @@
       "error": null
     },
     {
-      "fingerprint": "e5f9a77903ed9193",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 103,
+      "rowCount": 115,
       "reads": {},
       "writes": {},
       "excluded": [
         "pg_stat_user_tables"
       ],
-      "error": null
-    },
-    {
-      "fingerprint": "f5687a0365a1542c",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
       "error": null
     }
   ],

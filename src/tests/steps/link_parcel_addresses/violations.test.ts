@@ -759,10 +759,22 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         // Three independent measurements of the same table must agree: the harness's table_state, the harness's `rows`
         // invariant, and the step's own audit row final_link_count.
         expect(invariant(p, 'rows'), `${p.file}: ${TABLE} table_state row_count vs the rows invariant`).toBe(ts.row_count);
-        const audit = ((p as unknown as { summary?: { records_meta?: { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } } })
-          .summary?.records_meta?.audit_table?.rows ?? []).find((r) => r.metric === 'final_link_count');
-        expect(audit, `${p.file}: no final_link_count audit row`).toBeDefined();
-        expect(audit!.value, `${p.file}: ${TABLE} table_state row_count vs the step's own final_link_count`).toBe(ts.row_count);
+        // re-pinned 2026-10-10 fleet-night-3 recapture: the recaptured non-forced POSTs (sources.json,
+        // standalone.json) are `gate {reason:'no_upstream_changes', gated_skip:true}` — a skipped
+        // run emits no `final_link_count`, so the cross-check applies only to a genuinely-executed POST (HQ-1).
+        const records_meta = (p as unknown as { summary?: { records_meta?: { gate?: { reason?: string; gated_skip?: boolean }; terminal?: string } } })
+          .summary?.records_meta;
+        const gate = records_meta?.gate;
+        if (gate?.gated_skip === true) {
+          // A gated skip is the only way a POST may omit final_link_count; assert the skip explicitly.
+          expect(gate.reason, `${p.file}: gated skip must carry the no_upstream_changes reason`).toBe('no_upstream_changes');
+          expect(records_meta?.terminal, `${p.file}: gated skip must record terminal: skip_gated_no_activity`).toBe('skip_gated_no_activity');
+        } else {
+          const audit = ((p as unknown as { summary?: { records_meta?: { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } } })
+            .summary?.records_meta?.audit_table?.rows ?? []).find((r) => r.metric === 'final_link_count');
+          expect(audit, `${p.file}: no final_link_count audit row`).toBeDefined();
+          expect(audit!.value, `${p.file}: ${TABLE} table_state row_count vs the step's own final_link_count`).toBe(ts.row_count);
+        }
         // Insert-only MATERIALIZER (ON CONFLICT DO NOTHING, no retraction): links can only grow from the frozen PRE.
         expect(ts.row_count, `${p.file}: ${TABLE} POST row count fell below the frozen PRE ${LIVE_PAP_ROWS}`).toBeGreaterThanOrEqual(LIVE_PAP_ROWS);
         postRowCounts.add(ts.row_count);

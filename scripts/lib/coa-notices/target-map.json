@@ -1,0 +1,230 @@
+{
+  "$comment": "SPEC LINK: docs/specs/01-pipeline/129_source_coa_notices.md §D6; maps a CoA variance's REQUIRED sentence to ONE McBylaw dsl_target phrase set; ambiguity is fixed by adding none phrases, never by a tiebreak; T-MAP pins targets and units to scripts/seeds/bylaw/vocab.json.",
+  "version": "coa-target-map-2",
+  "entries": [
+    {
+      "target": "fsi",
+      "unit": "ratio",
+      "any": ["floor space index", "times the area of the lot", "times the lot area"],
+      "none": ["square metres or", "% of", "m .", "m² provided"]
+    },
+    {
+      "target": "gfa_m2",
+      "unit": "m2",
+      "any": ["gross floor area"],
+      "none": ["floor space index", "times the area of the lot", "times the lot area", " 2 ", "% of", "m ."]
+    },
+    {
+      "target": "lot_coverage_pct",
+      "unit": "pct",
+      "any": ["lot coverage", "coverage of the lot"],
+      "none": ["landscaping"]
+    },
+    {
+      "target": "height_m",
+      "unit": "m",
+      "any": [
+        "height of the building", "height of a building",
+        "building height",
+        "height of the dwelling",
+        "maximum height of"
+      ],
+      "none": [
+        "main wall",
+        "storey",
+        "platform",
+        "fence",
+        "eaves",
+        "first floor",
+        "pedestrian entrance",
+        "ancillary",
+        "accessory",
+        "garage",
+        "deck",
+        "porch",
+        "canopy",
+        "soffit"
+      ]
+    },
+    {
+      "target": "height_storeys",
+      "unit": "storeys",
+      "any": ["storeys"],
+      "none": ["metres", " m ", "coverage"]
+    },
+    {
+      "target": "main_wall_height_m",
+      "unit": "m",
+      "any": ["main wall", "main walls"],
+      "none": ["setback", "side yard", "length", "width", "windows", "first floor", "must be within", "% of"]
+    },
+    {
+      "target": "front_setback_m",
+      "unit": "m",
+      "any": ["front yard setback", "front building setback", "from the front lot line"],
+      "none": [
+        "landscaping",
+        "parking",
+        "driveway",
+        "platform",
+        "deck",
+        "porch",
+        "stairs",
+        "canopy",
+        "eaves",
+        "garage",
+        "% of"
+      ]
+    },
+    {
+      "target": "rear_setback_m",
+      "unit": "m",
+      "any": ["rear yard setback", "rear building setback", "from the rear lot line"],
+      "none": [
+        "landscaping",
+        "platform",
+        "deck",
+        "porch",
+        "stairs",
+        "eaves",
+        "ancillary",
+        "accessory",
+        "garage",
+        "canopy"
+      ]
+    },
+    {
+      "target": "side_setback_m",
+      "unit": "m",
+      "any": [
+        "side yard setback",
+        "side building setback",
+        "from the side lot line",
+        "from the north side lot line",
+        "from the south side lot line",
+        "from the east side lot line",
+        "from the west side lot line"
+      ],
+      "none": [
+        "abutting a street",
+        "abuts a street",
+        "flanking",
+        "landscaping",
+        "platform",
+        "deck",
+        "eaves",
+        "ancillary",
+        "accessory",
+        "garage",
+        "stairs",
+        "canopy",
+        "canopies"
+      ]
+    },
+    {
+      "target": "side_setback_street_m",
+      "unit": "m",
+      "any": [
+        "side yard abutting a street",
+        "side lot line that abuts a street",
+        "flanking street"
+      ],
+      "none": ["landscaping"]
+    },
+    {
+      "target": "building_length_m",
+      "unit": "m",
+      "any": ["building length", "length of the building", "length of the dwelling"],
+      "none": ["parking space", "driveway", "platform"]
+    },
+    {
+      "target": "building_depth_m",
+      "unit": "m",
+      "any": ["building depth", "depth of the building", "depth of the dwelling"],
+      "none": ["lot depth"]
+    },
+    {
+      "target": "required_lot_area_m2",
+      "unit": "m2",
+      "any": ["lot area"],
+      "none": [
+        "floor space index",
+        "times the area of the lot",
+        "times the lot area",
+        "coverage",
+        "landscaping",
+        "for each dwelling unit",
+        "per dwelling unit",
+        "floor area",
+        "% of the lot area",
+        "times to the lot area"
+      ]
+    },
+    {
+      "target": "required_lot_frontage_m",
+      "unit": "m",
+      "any": ["lot frontage"],
+      "none": [
+        "side yard",
+        "building length",
+        "building depth",
+        "setback",
+        "driveway",
+        "parking",
+        "width"
+      ]
+    },
+    {
+      "target": "front_soft_landscaping_pct",
+      "unit": "pct",
+      "any": ["front yard soft landscaping", "soft landscaping in the front yard"],
+      "none": []
+    },
+    {
+      "target": "front_landscaping_pct",
+      "unit": "pct",
+      "any": ["front yard landscaping", "landscaping in the front yard"],
+      "none": ["soft landscaping", "m ."]
+    },
+    {
+      "target": "rear_soft_landscaping_pct",
+      "unit": "pct",
+      "any": [
+        "rear yard soft landscaping",
+        "soft landscaping in the rear yard",
+        "rear yard for soft landscaping"
+      ],
+      "none": []
+    },
+    {
+      "target": "parking_spaces",
+      "unit": "units",
+      "any": ["parking spaces", "parking space"],
+      "none": ["length", "width", "bicycle", "per dwelling unit", "for each dwelling unit", "setback", "wide", "size", "metres", "lot line", "in front of", "set back"]
+    },
+    {
+      "target": "driveway_width_m",
+      "unit": "m",
+      "any": ["driveway width", "width of a driveway", "width of the driveway"],
+      "none": []
+    },
+    {
+      "target": "dwelling_units_max",
+      "unit": "units",
+      "any": ["dwelling units"],
+      "none": ["for each dwelling unit", "per dwelling unit", "lot area", "parking", "wall", "area of the dwelling units", "areas of the dwelling units"]
+    },
+    {
+      "target": "platform_area_m2",
+      "unit": "m2",
+      "any": ["area of a platform", "area of the platform", "platform area"],
+      "none": ["height", "setback", "encroach"]
+    },
+    {
+      "target": "encroachment_m",
+      "unit": "m",
+      "any": ["may encroach"],
+      "none": ["eaves"]
+    }
+  ]
+}

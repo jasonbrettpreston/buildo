@@ -1,0 +1,447 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-coa-notices.js",
+  "chain": "coa_notices",
+  "source_fingerprint": "c550b313c460a328f62be96137746eb29c2b2a420e4a63fdfc147531d9e1c375",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "header": {
+    "processes": 1,
+    "calls": 33,
+    "distinct": 21,
+    "utility": 11,
+    "tracer_self_ms": 108.339,
+    "wall_ms": 373929
+  },
+  "statements": [
+    {
+      "fingerprint": "21dd0ae63c63676e",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "21fa2e43cda219b6",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "44c04e85b23078d0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "decision"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "decision",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "471fb24dc552cf90",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "498f00c9586a03ae",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "hearing_date"
+        ],
+        "coa_notice_variances": [
+          "application_number",
+          "hearing_date",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6ef1895c202f8b18",
+      "kind": "write",
+      "count": 5,
+      "rowCount": 20,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "exception_ref",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "zoning_as_stated"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "application_number",
+          "bound",
+          "citation_kind",
+          "cited_bylaw",
+          "decision",
+          "decision_mailed_on",
+          "decision_source",
+          "exception_ref",
+          "extractor_version",
+          "hearing_date",
+          "item_ordinal",
+          "parse_confidence",
+          "parse_status",
+          "proposed_unit",
+          "proposed_value",
+          "qualified",
+          "regulation_id_as_cited",
+          "required_unit",
+          "required_value",
+          "retired_at",
+          "source_family",
+          "source_page",
+          "source_sha256",
+          "target",
+          "target_status",
+          "variance_key",
+          "vocab_version",
+          "zoning_as_stated"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "74217f283e595bf5",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
+      "params": [
+        [
+          "coa_notices:load_coa_notices"
+        ]
+      ]
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 39,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b17b1d9c05d0749e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {
+        "coa_notice_variances": [
+          "retired_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b8a78071c7561d75",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "retired_at",
+          "variance_key"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba271f702f1828b6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 720,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 6,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "fbcf6b28efdc36a4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_notice_variances": [
+          "application_number",
+          "item_ordinal",
+          "retired_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "24036:3",
+      "write_fingerprints": [
+        "21fa2e43cda219b6",
+        "6ef1895c202f8b18",
+        "b17b1d9c05d0749e"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "application_number",
+        "decision",
+        "hearing_date"
+      ],
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ]
+    },
+    "writes": {
+      "coa_notice_variances": [
+        "application_number",
+        "bound",
+        "citation_kind",
+        "cited_bylaw",
+        "decision",
+        "decision_mailed_on",
+        "decision_source",
+        "exception_ref",
+        "extractor_version",
+        "hearing_date",
+        "item_ordinal",
+        "parse_confidence",
+        "parse_status",
+        "proposed_unit",
+        "proposed_value",
+        "qualified",
+        "regulation_id_as_cited",
+        "required_unit",
+        "required_value",
+        "retired_at",
+        "source_family",
+        "source_page",
+        "source_sha256",
+        "target",
+        "target_status",
+        "variance_key",
+        "vocab_version",
+        "zoning_as_stated"
+      ]
+    }
+  },
+  "errors": []
+}

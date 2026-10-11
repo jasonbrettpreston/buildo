@@ -1974,6 +1974,7 @@ and registry-vs-code agreement.
 | **195** | `scripts/compute-storey-norms.js` | 5 — Compute (Spec 195/neighbourhood_storey_norms) | YES — `computed_at` |
 | **117** | `scripts/compute-parcel-cost-estimates.js` | 5 — Compute (Spec 88) — owning-spec lock 88 taken by classify-permits; 117 = next-free per the compute-phase-calibration precedent | **CORRECTED 2026-09-21 (batch-2 row 2.4 cutover)** — NO. Re-measured against `scripts/lib/compute/compute-parcel-cost-estimates.js`: `pipeline.getDbTimestamp` reads the DB clock into `RUN_AT` for elapsed-time bookkeeping only; no `computed_at` column exists on `parcels` and none is written. The prior `YES — computed_at` entry was never verified against the code. |
 | **107** | `scripts/quality/assert-parcel-sanity.js` | 6 — Quality (WF2; reuses the freed 107 slot, ex-assert-pre-permit-aging Phase G) | NO — read-only probe |
+| **129** | `scripts/load-coa-notices.js` | 4 — Load/Ingest (Spec 129; standalone chain `coa_notices`) | NO — the soft-retire stamp is written by the library MARK (`now()` in its UPDATE) and `loaded_at` is a DB default; the step binds no timestamp |
 | **4201** | `scripts/link-coa-to-parcels.js` | Phase D Wave 4 — CoA (Spec 42 §6.8 allocation 4201–4205) | YES — `parcel_linked_at` |
 | **4202** | `scripts/classify-coa-scope.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `scope_classified_at` |
 | **4203** | `scripts/classify-coa-trades.js` | Phase D Wave 4 — CoA (Spec 42 §6.8) | YES — `trade_classified_at` |

@@ -1,0 +1,40 @@
+{
+  "entries": {
+    "app_not_in_coa_applications": {
+      "value": 0,
+      "cost_ms": 25,
+      "at": "2026-10-10T22:55:55.208Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+      "run_id": null,
+      "chain": "coa_notices",
+      "sample_n": 3
+    },
+    "decision_disagree": {
+      "value": 8,
+      "cost_ms": 68,
+      "at": "2026-10-10T22:55:55.208Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+      "run_id": null,
+      "chain": "coa_notices",
+      "sample_n": 3
+    },
+    "ckan_hearing_offset": {
+      "value": 0,
+      "cost_ms": 63,
+      "at": "2026-10-10T22:55:55.208Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+      "run_id": null,
+      "chain": "coa_notices",
+      "sample_n": 3
+    },
+    "active_dup_items": {
+      "value": 0,
+      "cost_ms": 35,
+      "at": "2026-10-10T22:55:55.208Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+      "run_id": null,
+      "chain": "coa_notices",
+      "sample_n": 3
+    }
+  }
+}

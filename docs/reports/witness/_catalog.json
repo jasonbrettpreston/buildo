@@ -2,6 +2,15 @@
   "catalog_version": 1,
   "source": "information_schema.columns WHERE table_schema = 'public' (scripts/analysis/capture-witness.js snapshotCatalog)",
   "tables": {
+    "_backup_coa_link_street_type_20261010_213438": [
+      "coa_id",
+      "confidence",
+      "lead_id",
+      "match_type",
+      "matched_at",
+      "parcel_id",
+      "prior_parcel_linked_at"
+    ],
     "_backup_null_lot_20261001": [
       "backed_up_at",
       "lot_size_source",
@@ -31,7 +40,8 @@
       "longitude",
       "maint_stage",
       "place_name",
-      "retired_at"
+      "retired_at",
+      "street_type_normalized"
     ],
     "address_points_active": [
       "addr_num_normalized",
@@ -50,7 +60,8 @@
       "longitude",
       "maint_stage",
       "place_name",
-      "retired_at"
+      "retired_at",
+      "street_type_normalized"
     ],
     "address_points_cohort_bak_20261002t2313z": [
       "address_point_id",
@@ -61,6 +72,10 @@
       "latitude"
     ],
     "address_points_cohort_bak_20261005t2025z": [
+      "address_point_id",
+      "latitude"
+    ],
+    "address_points_cohort_bak_20261009t0358z": [
       "address_point_id",
       "latitude"
     ],
@@ -313,6 +328,10 @@
       "variance_key",
       "vocab_version",
       "zoning_as_stated"
+    ],
+    "coa_notice_variances_cohort_bak_20261010t2245z": [
+      "required_value",
+      "variance_key"
     ],
     "cost_estimates": [
       "complexity_score",
@@ -951,6 +970,14 @@
       "id",
       "lot_size_sqm"
     ],
+    "parcels_cohort_bak_20261009t0408z": [
+      "id",
+      "lot_size_sqm"
+    ],
+    "parcels_cohort_bak_20261009t1152z": [
+      "id",
+      "lot_size_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1553,6 +1580,18 @@
       "is_gta"
     ],
     "wsib_registry_cohort_bak_20261005t1819z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261009t0158z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261009t0202z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261009t2053z": [
       "id",
       "is_gta"
     ],

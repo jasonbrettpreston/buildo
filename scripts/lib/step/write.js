@@ -1166,6 +1166,21 @@ function buildWritePlan(writeSpec, descriptor) {
       .filter((c) => c.on_empty === 'preserve' || c.on_empty === 'preserve_null')
       .map((c) => [c.name, c.on_empty]),
   );
+
+  // GEOM-DRIFT WF3 COMMIT 2 — columns[].materiality (opt-in; absent on every target but parcels,
+  // so every other statement is byte-identical). The axis declares a SQL predicate
+  // `public.<sql_function>(<table>.<col>, EXCLUDED.<col>)`, computed ONCE here: when it is
+  // present, the materiality column's SET arm, its guard/WHERE term and each `carries[]`
+  // column's SET arm all switch from `IS DISTINCT FROM EXCLUDED.<c>` to
+  // `CASE WHEN <predicate> THEN EXCLUDED.<c> ELSE <table>.<c> END` — one geometric decision
+  // (a tolerance-aware "materially changed") replaces the byte-wise comparison for the whole
+  // carried family. Absent (the overwhelming majority of targets), `materialityCol` is null,
+  // `carried` is empty, every branch below is skipped and the rendered text is unchanged.
+  const materialityCol = writeSpec.columns.find((c) => c.materiality) || null;
+  const materialityExpr = materialityCol
+    ? `public.${materialityCol.materiality.sql_function}(${table}.${materialityCol.name}, EXCLUDED.${materialityCol.name})`
+    : null;
+  const carried = new Set(materialityCol ? (materialityCol.materiality.carries || []) : []);
   /**
    * `col = EXCLUDED.col`, or the empty/NULL-preserving form for a declared column.
    * Mirrors scripts/load-parcels.js's own forms BYTE-FOR-BYTE, rather than an
@@ -1174,6 +1189,9 @@ function buildWritePlan(writeSpec, descriptor) {
    * only these exact shapes reproduce it.
    */
   const columnSetExpr = (c) => {
+    if (materialityCol && (c === materialityCol.name || carried.has(c))) {
+      return `${c} = CASE WHEN ${materialityExpr} THEN EXCLUDED.${c} ELSE ${table}.${c} END`;
+    }
     if (onEmptyMode.get(c) === 'preserve_null') {
       return `${c} = COALESCE(EXCLUDED.${c}, ${table}.${c})`;
     }
@@ -1183,6 +1201,9 @@ function buildWritePlan(writeSpec, descriptor) {
     return `${c} = EXCLUDED.${c}`;
   };
   const columnGuardExpr = (c) => {
+    if (materialityCol && c === materialityCol.name) {
+      return materialityExpr;
+    }
     if (onEmptyMode.get(c) === 'preserve_null') {
       return `(EXCLUDED.${c} IS NOT NULL AND ${table}.${c} IS DISTINCT FROM EXCLUDED.${c})`;
     }
@@ -1210,9 +1231,14 @@ function buildWritePlan(writeSpec, descriptor) {
     const col = writeSpec.columns.find((c) => c.name === name);
     return !(col && col.bind === 'wkb_geometry');
   };
-  const changeOfComparison = (watched) => (watchedCastsToJsonb(watched)
-    ? `${table}.${watched}::jsonb IS DISTINCT FROM EXCLUDED.${watched}::jsonb`
-    : `${table}.${watched} IS DISTINCT FROM EXCLUDED.${watched}`);
+  const changeOfComparison = (watched) => {
+    if (materialityCol && watched === materialityCol.name) {
+      return materialityExpr;
+    }
+    return watchedCastsToJsonb(watched)
+      ? `${table}.${watched}::jsonb IS DISTINCT FROM EXCLUDED.${watched}::jsonb`
+      : `${table}.${watched} IS DISTINCT FROM EXCLUDED.${watched}`;
+  };
   const invalidatesSetArms = invalidatesHere.map(
     (e) => `${e.column} = CASE WHEN ${changeOfComparison(e.set_null_on_change_of)} THEN NULL ELSE ${table}.${e.column} END`,
   );
@@ -1227,7 +1253,7 @@ function buildWritePlan(writeSpec, descriptor) {
   const head = `INSERT INTO ${table} (${stepColumnNames.join(', ')})\nVALUES `;
   const tail = `\nON CONFLICT (${keys.join(', ')}) DO UPDATE SET `
     + `${[...updateColumns.map(columnSetExpr), ...invalidatesSetArms].join(', ')}\n`
-    + `  WHERE ${[...changeOfGuardColumns.map(changeOfComparison), ...guardColumns.map(columnGuardExpr)].join('\n     OR ')}\n`
+    + `  WHERE ${[...changeOfGuardColumns.map(changeOfComparison), ...guardColumns.filter((c) => !carried.has(c)).map(columnGuardExpr)].join('\n     OR ')}\n`
     + (defaulted.length > 0
       ? `-- declared but never written by this step (DB default): ${defaulted.map((c) => c.name).join(', ')}\n`
       : '')

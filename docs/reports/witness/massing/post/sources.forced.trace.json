@@ -3,14 +3,14 @@
   "step": "scripts\\load-massing.js",
   "chain": "sources",
   "source_fingerprint": "07af923006804f9430591a078c6454ae06e5800b996e8557af156dbb0bd79b08",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
     "calls": 96,
     "distinct": 18,
     "utility": 10,
-    "tracer_self_ms": 5704.03,
-    "wall_ms": 223484
+    "tracer_self_ms": 4704.255,
+    "wall_ms": 210917
   },
   "statements": [
     {
@@ -194,7 +194,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -253,7 +253,7 @@
   ],
   "transactions": [
     {
-      "client": "23300:3",
+      "client": "20244:3",
       "write_fingerprints": [
         "26ccff78d2c8f90e"
       ]

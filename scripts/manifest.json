@@ -35,6 +35,7 @@
     "compute_coa_cost_estimates": { "file": "scripts/compute-coa-cost-estimates.js", "supports_full": true, "supports_dry_run": true, "telemetry_tables": ["cost_estimates", "coa_applications"], "telemetry_null_cols": { "coa_applications": ["cost_classified_at", "estimated_cost"] } },
     "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_WSIB_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
+    "load_coa_notices":     { "file": "scripts/load-coa-notices.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["coa_notice_variances"] },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["trade_name", "mailing_address"] } },
     "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": false, "supports_dry_run": true, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["entities", "wsib_registry"] },
     "enrich_wsib_registry": { "file": "scripts/enrich-wsib.js",          "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_LIMIT": "6000" }, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["primary_phone", "primary_email", "website"] } },
@@ -113,6 +114,9 @@
     ],
     "wsib": [
       "enrich_wsib_registry"
+    ],
+    "coa_notices": [
+      "load_coa_notices"
     ],
     "deep_scrapes": [
       "inspections", "classify_inspection_status", "assert_network_health",

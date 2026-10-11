@@ -987,6 +987,45 @@
                   "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the empty-string-preserves-prior-value pattern recurs across every converted INGESTOR that carries address/name text columns (scripts/load-parcels.js ×5, scripts/load-address-points.js ×9 at git show 120b2b99), so it is a DECLARED axis the shared codegen executes rather than a per-step escape hatch. Founding case: load-parcels.js's mig-162 Day-1 critical-safety fix (WF1 #parcel-address-bridge) — a CKAN column-drop would otherwise NULL-overwrite 486K rows of pre-drift address data. preserve_null added 2026-09-24: the NULL-form of preserve for non-text columns — parcels.date_effective."
                 }
               },
+              "materiality": {
+                "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
+                "description": "GEOM-DRIFT WF3 COMMIT 2 (2026-10-08, operator ruling 2026-10-06 Q1-Q4). The column's change test is a declared SQL predicate instead of an exact IS DISTINCT FROM: the codegen renders M = public.<sql_function>(<table>.<col>, EXCLUDED.<col>) as the column's own SET (`col = CASE WHEN M THEN EXCLUDED.col ELSE <table>.col END`), as every set_null_on_change_of arm that watches it, and as its guard term. `carries` names sibling columns replaced ONLY together with this one (`c = CASE WHEN M THEN EXCLUDED.c ELSE <table>.c END`, no guard term of their own). `tolerance_from_config` names the logic variable the predicate reads (declared in config.logic_variables, bounds enforced at step start). Only a wkb_geometry-bound column may declare it; validate.js refuses the other mis-declarations.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sql_function",
+                  "tolerance_from_config",
+                  "carries"
+                ],
+                "properties": {
+                  "sql_function": {
+                    "type": "string",
+                    "pattern": "^[a-z_][a-z0-9_]*$",
+                    "description": "Rendered schema-qualified as public.<name>(old, new) RETURNS boolean."
+                  },
+                  "tolerance_from_config": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "description": "The logic variable the predicate reads; credited by step-conformance fromConfigRefs."
+                  },
+                  "carries": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Sibling step-written columns replaced only when M is true."
+                  }
+                },
+                "x-frozen": true,
+                "x-ruling": {
+                  "rungs_tried": [
+                    "rounding coordinates before the exact compare — refuted on measurement (7 dp still trips 30.9 % of rows, 6 dp 4.1 %; premise 2026-10-06)",
+                    "compute-authored SQL for the parcels target — per-step behaviour invisible to the descriptor, rejected for an INGESTOR by the operator ruling 2026-09-24"
+                  ],
+                  "why": "operator ruling 2026-10-06 (geom-drift WF3 Q1-Q4): a publisher-jittered float source needs a tolerance predicate against the STORED value; the predicate lives in migration 251 and the descriptor declares that the codegen uses it, so the comparator is visible in the descriptor rather than hidden in code."
+                }
+              },
               "derived_from_geometry": {
                   "description": "ADDED AT BATCH-2 PHASE 3 PREREQUISITE 0u (2026-09-24). This column's value is a MEASURE OF THE SOURCE GEOMETRY, computed DB-side by the geometry validator from the PRE-repair `geom` and bound on the SAME INSERT — no second statement and no compute-authored SQL. `measure` selects the PostGIS function (`geodesic_area` = `ST_Area(<geom>::geography)`), `unit` selects the unit the value is expressed in (`m2` = the measure's own unit, `ft2` = multiplied by the international-foot factor `10.7639104167`, a UNIT CONSTANT in scripts/lib/step/write.js, not a tunable), and `scale` is the `ROUND(…::numeric, <scale>)` precision. The rendered expression reproduces the legacy post-INSERT UPDATE in scripts/load-massing.js BYTE-FOR-BYTE once whitespace is normalised, because that statement's input expression is exactly the validator's `input.geom` at `geometry_srid: 3857` — which is why a declaring write must ALSO declare `geometry_srid` for the two to agree. Requires the write to bind exactly one `wkb_geometry` column (the measure reads it) and the column to be `step` or `insert_only` (`db_default` is never bound, so the computed value would be dropped); both are enforced by write.js#DerivedMeasureError. Pair it with `written` `insert_only` to reproduce the legacy semantics exactly — measured ONCE after the INSERT, never rewritten by the conflict UPDATE.",
                   "type": "object",
@@ -2037,13 +2076,14 @@
                   },
                   "format": {
                     "x-trust": "executed:scripts/lib/step/acquire.js#acquireExternal",
-                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD. `\"ckan_datastore\"` (0y, RE-FREEZE #30) = a primary acquired through paginated CKAN `datastore_search`; declared with a `ckan` block and `kind: \"http_api\"`, its bare `url` is the `datastore_search` endpoint, and its `acquired.source_dataset_version` comes from the resource's `package_show` metadata (never a content hash).",
+                    "description": "REQUIRED, per record-bearing external (WF2 batch-2 row 3.1 prerequisite 0b, Spec 122 §5.1) — the item's own allOf below requires it whenever `kind` is \"http_file\" and a non-empty `url` is declared, i.e. an external `runIngestPhase` actually acquires (a non-empty `url`, split by `role` since 0w). A `kind: \"filesystem\"` external with a `path` (0fs, RE-FREEZE #28) is also acquired and must declare `format` by the item's filesystem rule. A documentation-only external with no `url` (assert_schema's shared reference list, none of which is ever downloaded by the ASSERT archetype) declares no payload because none is ever fetched — scoping the requirement any wider would force a fabricated value onto an entry nothing reads. The PAYLOAD format of the bytes the download lands — the axis `kind` cannot express, because `kind` is a TRANSPORT enum. `shapefile_zip` = a zip archive holding exactly one `.shp` plus its companion `.dbf`; `csv` = a bare delimited text file parsed with `csv_options`; `geojson` = a bare FeatureCollection parsed with `parseGeoJson` (its per-feature properties become `record`, its geometry `JSON.stringify`d into `geojson`. The acquisition seam branches on THIS value and nothing else: any other value throws by name rather than falling through to the shapefile parser. `\"xlsx\"` (0w) is lookup-only: an external declaring it must declare role `\"lookup\"`, refused by name in acquire.js before the HEAD. `\"ckan_datastore\"` (0y, RE-FREEZE #30) = a primary acquired through paginated CKAN `datastore_search`; declared with a `ckan` block and `kind: \"http_api\"`, its bare `url` is the `datastore_search` endpoint, and its `acquired.source_dataset_version` comes from the resource's `package_show` metadata (never a content hash). `\"pdf_document_set\"` (RE-FREEZE #32, Spec 129 §11) = a pinned, sha256-verified SET of PDF documents named by a committed `manifest` (no `url`, no `path`): the arm reads and hashes the manifest, skips before any GET when sha256(<manifest sha256>:<staleness.logic_version>) equals the prior content_hash, fetches each document in sequence under the `pdf` block's host allowlist and `*_from_config` knobs, extracts its text IN MEMORY (scripts/lib/pdf-text.js) and hands it to compute.shapeDocument; nothing is written to disk.",
                     "enum": [
                       "shapefile_zip",
                       "csv",
                       "geojson",
                       "xlsx",
-                      "ckan_datastore"
+                      "ckan_datastore",
+                      "pdf_document_set"
                     ],
                     "x-frozen": true,
                     "x-ruling": {
@@ -2052,7 +2092,8 @@
                         "rung (a′) sniff the URL extension — behaviour inferred from a name (CLAUDE.md PD#10's exact anti-pattern; a .zip can hold a CSV)",
                         "rung (b)/(c) a check or shape rule cannot select a parser",
                         "0v: csv/shapefile arms wrong payload; sniff = PD#10; compute I/O banned",
-                        "0w: no parser reads a workbook; xlsx structure (sheet[0], header row 1) hard-wired like csv's agreed options"
+                        "0w: no parser reads a workbook; xlsx structure (sheet[0], header row 1) hard-wired like csv's agreed options",
+                        "RE-FREEZE #32 (pdf_document_set): (a) existing formats — the payload is PDF; (a′) an offline tool → CSV → filesystem moves the parser out of the step (Rules 1/2); multi-primary externals are format-bound with no PDF arm; a compute ctx.fetch cannot reach the ingest write; (b)/(c) a check or shape rule cannot acquire"
                       ],
                       "why": "acquire.js was dispatch-free (downloadArchive → extractArchive → locateShapefile → parseShapefile, unconditionally); three of the eight INGESTORs (address_points, parcels, load_wsib) are bare CSVs. A declared, required payload format is the only rung that makes the parser selection descriptor data."
                     }
@@ -2121,6 +2162,72 @@
                         "rung (e) compute reads the file — compute I/O is banned (Rule 2)"
                       ],
                       "why": "load_wsib's source is an annual manual download placed in data/; a declared repo-relative glob is the only rung that makes that input descriptor data, with absence a declared skip rather than a crash or a silent no-op"
+                    }
+                  },
+                  "manifest": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquirePdfDocumentSet",
+                    "description": "ADDED AT RE-FREEZE #32 (2026-10-07, Spec 129 §11). For format \"pdf_document_set\" ONLY: the repo-relative path of the committed, pinned document manifest (`{user_agent, documents:[{doc_id, url, sha256, hearing_date, kind, revision, session, panel, …}], excluded:[…]}`). Absolute paths and `..` are refused by name. The manifest bytes are the source version: their sha256, combined with staleness.logic_version, is the content hash the post_acquisition trigger compares — so a hand-bumped logic_version re-acquires an unchanged manifest.",
+                    "type": "string",
+                    "pattern": "^scripts/seeds/[A-Za-z0-9_./-]+\\.json$",
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "rung (a) reuse `url` — a document SET has no single URL, and a URL list in the descriptor would hide the per-document sha256 pins",
+                        "rung (a') reuse `path` (filesystem) — a path is a local payload, the manifest indexes remote payloads; conflating them reopens the 0fs A3/G3 refusals",
+                        "rung (e) compute reads the manifest — compute I/O is banned (Rule 2)"
+                      ],
+                      "why": "the pinned manifest is the only rung that makes the document set, its pins and its source version descriptor data"
+                    }
+                  },
+                  "pdf": {
+                    "x-trust": "executed:scripts/lib/step/acquire.js#acquirePdfDocumentSet",
+                    "description": "ADDED AT RE-FREEZE #32. For format \"pdf_document_set\" ONLY: `host_allowlist` (every request AND every redirect hop must be https to one of these hosts) and five logic-variable NAMES the arm resolves from ctx.config — the pace between document GETs (integer ms, floor 2000), the per-document byte cap, the page cap, the extracted-text character cap and the line-reconstruction y tolerance. A name that does not resolve to a positive number throws by name before any GET.",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "host_allowlist",
+                      "pace_ms_from_config",
+                      "max_doc_bytes_from_config",
+                      "max_pages_from_config",
+                      "max_text_chars_from_config",
+                      "line_y_tolerance_from_config"
+                    ],
+                    "properties": {
+                      "host_allowlist": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z0-9.-]+\\.[a-z]{2,}$"
+                        }
+                      },
+                      "pace_ms_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "max_doc_bytes_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "max_pages_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "max_text_chars_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "line_y_tolerance_from_config": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "hard-wire the allowlist and caps in acquire.js — hidden per-source policy (Rule 1)",
+                        "literal numbers in the descriptor — a second source of truth for operator knobs (Rule 3)"
+                      ],
+                      "why": "the allowlist is reviewed source policy (descriptor data); every numeric knob is a registered logic variable named here"
                     }
                   },
                   "license": {
@@ -2368,6 +2475,98 @@
                           "not": {
                             "properties": { "on_head_error": { "const": "warn_row" } },
                             "required": ["on_head_error"]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "x-rule": "RE-FREEZE #32 (Spec 129 §11): format \"pdf_document_set\" ⇔ `manifest` + `pdf`; it requires kind \"http_file\" and forbids `url`, `path`, `csv_options`, `ckan`, `target` and role \"lookup\" (a document set is ONE primary, acquired only through its manifest). `manifest`/`pdf` on any other format are refused.",
+                    "if": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "format"
+                          ],
+                          "properties": {
+                            "format": {
+                              "const": "pdf_document_set"
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "manifest"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "pdf"
+                          ]
+                        }
+                      ]
+                    },
+                    "then": {
+                      "allOf": [
+                        {
+                          "required": [
+                            "format",
+                            "manifest",
+                            "pdf",
+                            "kind"
+                          ]
+                        },
+                        {
+                          "properties": {
+                            "format": {
+                              "const": "pdf_document_set"
+                            },
+                            "kind": {
+                              "const": "http_file"
+                            }
+                          }
+                        },
+                        {
+                          "not": {
+                            "anyOf": [
+                              {
+                                "required": [
+                                  "url"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "path"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "csv_options"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "ckan"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "target"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "not": {
+                            "required": [
+                              "role"
+                            ],
+                            "properties": {
+                              "role": {
+                                "const": "lookup"
+                              }
+                            }
                           }
                         }
                       ]

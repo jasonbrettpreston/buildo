@@ -403,7 +403,8 @@ describe('converted.json — `pending` (declared data, not a code skip)', () => 
     for (const p of PENDING) {
       if (p.stage !== 'shape_clean_pending_recapture') continue;
       expect(
-        /commit 8 P6|P6\b/.test(p.reason),
+        // R-K.2: a bounded, NAMED deferral — load_coa_notices names Spec 129 §12 step 4 (2026-10-10)
+        /commit 8 P6|P6\b|restores shape_clean at: \S/.test(p.reason),
         `pending file ${p.file} declares "shape_clean_pending_recapture" but its reason text does not name the batched-recapture commit that restores "shape_clean" — an unbounded deferral is indistinguishable from silently dropping the promise`,
       ).toBe(true);
     }

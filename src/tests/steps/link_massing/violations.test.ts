@@ -199,7 +199,8 @@ const FIXTURE_MAX_AGE_DAYS = 180;
 const LIVE_ROWS = 520_492;
 // FLEET-2 §5 triage 2026-10-06: the POST captures were re-taken at a3418800 after the parcels/footprints reloads —
 // measured parcel_buildings row_count 534,989 in all three post/*.json. PRE stays the frozen 520,492 above.
-const POST_LIVE_ROWS = 534_989;
+// re-pinned 2026-10-10 fleet-night-3 recapture: parcel_buildings 534,989 → 535,039 (corpus drift).
+const POST_LIVE_ROWS = 535_039;
 const LIVE_LINKED_PARCELS = 485_135;
 const LIVE_PARCELS_WITH_CENTROID = 486_530;
 const LIVE_BUILDING_FOOTPRINTS = 427_077;
@@ -224,7 +225,9 @@ const LIVE_CODE_VERSION = 'v2-building-centroid-in-parcel';
  */
 // FLEET-2 §5 triage 2026-10-06: re-pinned after the corpus reload — three independent FULL re-derives at a3418800
 // (post/sources-full, post/sources-full-forced-1, post/standalone) all measured 84357131…; the peel-8b-era value was 329bbcb6ccd5c32d8b8e9ffca77ff255.
-const LM_D13_FIXED_HASH = '84357131681b91bff1a5c4db3eec9c7b';
+// re-pinned 2026-10-10 fleet-night-3 recapture: all three independent POSTs hash 94fecf0c… after the
+// parcel_buildings drift (534,989 → 535,039), so the twice-run determinism claim still holds.
+const LM_D13_FIXED_HASH = '94fecf0cf135181ace95663befffe338';
 
 // ONE compiler, the same one pipeline.step() validates with.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library

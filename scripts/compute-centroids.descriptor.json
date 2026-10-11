@@ -148,14 +148,14 @@
       {
         "table": "parcels",
         "column": "centroid_lat",
-        "when": "migration 245's trigger NULLs this column on any geom UPDATE (IS DISTINCT FROM) — documents 245's mechanism as it bears on this step's own eligibility scope; 245's trigger, not this step, does the invalidating (G3: this step's contract stays \"fill what's NULL\")",
+        "when": "the parcels geom trigger (migrations 245/251) NULLs this column on a MATERIAL geom change (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate, so sub-tolerance re-export jitter does not invalidate) — documents the trigger's mechanism as it bears on this step's own eligibility scope; the trigger, not this step, does the invalidating (G3: this step's contract stays \"fill what's NULL\")",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       },
       {
         "table": "parcels",
         "column": "centroid_lng",
-        "when": "migration 245's trigger NULLs this column on any geom UPDATE (IS DISTINCT FROM) — same mechanism as centroid_lat, declared per-column per the schema's own {table,column,when} shape",
+        "when": "the parcels geom trigger (migrations 245/251) NULLs this column on a MATERIAL geom change (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate, so sub-tolerance re-export jitter does not invalidate) — same mechanism as centroid_lat, declared per-column per the schema's own {table,column,when} shape",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       }

@@ -1168,6 +1168,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // here by name, not assumed.
   const hasUrl = (e) => typeof e.url === 'string' && e.url.length > 0;
   const hasPath = (e) => e.kind === 'filesystem' && typeof e.path === 'string' && e.path.length > 0;
+  // RE-FREEZE #32: a pdf_document_set is acquired through its pinned manifest (no url, no path).
+  const hasManifest = (e) => e.format === 'pdf_document_set' && typeof e.manifest === 'string' && e.manifest.length > 0;
   for (const e of descriptor.inputs.reads.externals) {
     if (Object.prototype.hasOwnProperty.call(e, 'path') && (hasUrl(e) || e.kind !== 'filesystem')) {
       throw new Error(`${tag} the external "${e.id}" declares a path with ${hasUrl(e) ? 'a url' : `kind "${String(e.kind)}"`}: a path is a kind "filesystem" payload location and the ONLY source of its external (0fs).`);
@@ -1175,11 +1177,11 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     if (e.role === 'lookup' && hasPath(e)) {
       throw new Error(`${tag} the external "${e.id}" is role "lookup" with a path: lookups are url-fetched xlsx side-sources; a local lookup is not supported (0fs).`);
     }
-    if (!hasUrl(e) && !hasPath(e)) {
+    if (!hasUrl(e) && !hasPath(e) && !hasManifest(e)) {
       throw new Error(`${tag} the external "${e.id}" carries neither a url nor a filesystem path, so this INGESTOR would declare it and never read it (0fs refusal, the CF-2 class).`);
     }
   }
-  const urled = descriptor.inputs.reads.externals.filter((e) => hasUrl(e) || hasPath(e));
+  const urled = descriptor.inputs.reads.externals.filter((e) => hasUrl(e) || hasPath(e) || hasManifest(e));
   const primaries = urled.filter((e) => e.role === undefined || e.role === 'primary');
   const lookups = urled.filter((e) => e.role === 'lookup');
   if (primaries.length !== 1) {
@@ -1241,6 +1243,16 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       + '`shapeRecord(record)` — the pure mapping from ONE parsed CSV row to the column values '
       + `outputs.writes[0] ("${writeSpec.table}") binds, \`null\` for a row the step refuses to load. `
       + 'compute.shapeRecord is ' + (compute.shapeRecord === undefined ? 'undefined' : typeof compute.shapeRecord) + '.');
+  }
+  // RE-FREEZE #32: a pdf_document_set INGESTOR owes the document seam — `shapeDocument(doc, {config})`
+  // (one document's in-memory text → parsed notices, no text out) and `reconcileDocuments(docResults,
+  // {config})` (all documents → {rows, stats}) — refused HERE, above the HEAD and the first GET, exactly
+  // like the csv/shapeRecord check above.
+  if (external.format === 'pdf_document_set'
+    && (typeof compute.shapeDocument !== 'function' || typeof compute.reconcileDocuments !== 'function')) {
+    throw new Error(`${tag} the external "${external.id}" declares format "pdf_document_set", so this INGESTOR must export `
+      + '`shapeDocument(doc, { config })` and `reconcileDocuments(docResults, { config })` (RE-FREEZE #32). '
+      + `compute.shapeDocument is ${typeof compute.shapeDocument}, compute.reconcileDocuments is ${typeof compute.reconcileDocuments}.`);
   }
   // ── THE LOOKUP CONSTRUCTION REFUSALS (0w part C2, 2026-09-28) ────────────────
   // ⚠️ ALL FOUR FIRE HERE, ABOVE THE `acquireExternal` CALL AND THE `assertWritePrivileges`
@@ -1431,6 +1443,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     // `ingestPrimaries` (brief 21). `undefined` on the single-primary path — the arm then
     // memoises per call, which is the byte-identical pre-0y behaviour.
     validatorCache,
+    // RE-FREEZE #32: only the pdf_document_set arm reads it (undefined → unread for every other format).
+    shapeDocument: external.format === 'pdf_document_set' ? compute.shapeDocument : undefined,
     preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
       descriptor,
       validators: { lastModified: head.lastModified, etag: head.etag },
@@ -1498,6 +1512,15 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // `keyProperty`/`coerceKey` are `undefined` because a lookup has NO key column: `parseXlsx`
   // returns RAW rows and never keys or coerces anything. `keyColumn` is handed in only for
   // `acquire.js`'s uniform signature; nothing on the xlsx arm reads it.
+  // RE-FREEZE #32: the document set's per-document results (no text) are reconciled ONCE, here, into
+  // the rows the shared tail writes. Every parsed item is a feature (rows_read = items); a dropped
+  // duplicate's item carries a drop reason that shapeRecord turns into a counted shaped_skipped, so
+  // row conservation holds. The arm's document_set block and the reconcile stats ride on acquired.
+  if (external.format === 'pdf_document_set') {
+    const rec = compute.reconcileDocuments(result.docResults, { config });
+    result.features = rec.rows.map((r) => ({ [keyColumn]: r[keyColumn], record: r }));
+    result.acquired = { ...result.acquired, rows_parsed: rec.rows.length, feature_count: rec.rows.length, reconcile: rec.stats };
+  }
   const lookupMaps = {};
   const lookupAcquired = {};
   // ⚠️ `compute.buildLookup` WAS RESOLVED HERE IN C1, INSIDE THIS LOOP — MOVED to the

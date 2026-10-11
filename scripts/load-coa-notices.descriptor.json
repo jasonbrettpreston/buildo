@@ -1,0 +1,1427 @@
+{
+  "identity": {
+    "name": "load_coa_notices",
+    "display_name": "CoA Decision-Notice Variances",
+    "owner": "data",
+    "description": "Reads a pinned, sha256-verified manifest of Toronto Committee of Adjustment Notice of Decision PDFs (2017 first), extracts each document's text IN MEMORY, parses every minor-variance item into one coa_notice_variances row, and stores VALUES ONLY - no PDF, no notice text, no names (Spec 129 §D3). A class-A guarded upsert with soft retire (retract departed_mark) in one step-scoped transaction, behind pre_write checks that refuse to write or retire from a bad parse or an incomplete acquisition. McBylaw Phase 2 oracle C.",
+    "lock": 129,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of coa_notice_variances (Spec 47 §A.5 lock registry row 129; Spec 129's own number, globally unused). The lock is declared here and acquired by the library from descriptor.identity.lock; scripts/load-coa-notices.js keeps `ADVISORY_LOCK_ID = 129` as a §5.4 source-text constant, asserted equal by src/tests/steps/load_coa_notices/violations.test.ts C-2. It holds across acquisition, parse, write and score, because a second concurrent run would fetch the same documents twice and race the soft retire.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "129",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [
+        {
+          "table": "coa_notice_variances",
+          "columns": [
+            "variance_key",
+            "retired_at"
+          ]
+        },
+        {
+          "table": "coa_applications",
+          "columns": [
+            "application_number",
+            "decision",
+            "hearing_date"
+          ]
+        }
+      ],
+      "externals": [
+        {
+          "id": "toronto:coa-decision-pdfs-2017",
+          "kind": "http_file",
+          "format": "pdf_document_set",
+          "manifest": "scripts/seeds/coa-notices/manifest-toronto-2017.json",
+          "pdf": {
+            "host_allowlist": [
+              "www.toronto.ca",
+              "web.archive.org"
+            ],
+            "pace_ms_from_config": "coa_notices_fetch_pace_ms",
+            "max_doc_bytes_from_config": "coa_notices_max_doc_bytes",
+            "max_pages_from_config": "coa_notices_max_pages",
+            "max_text_chars_from_config": "coa_notices_max_text_chars",
+            "line_y_tolerance_from_config": "coa_notices_line_y_tolerance"
+          },
+          "license": "https://www.toronto.ca/home/terms-of-use/"
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "coa_notice_variances",
+        "key": "variance_key",
+        "key_sql_type": "TEXT",
+        "columns": [
+          {
+            "name": "variance_key",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_family",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "application_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "item_ordinal",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "hearing_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "decision_mailed_on",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "decision",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "decision_source",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "cited_bylaw",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "citation_kind",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "regulation_id_as_cited",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "exception_ref",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zoning_as_stated",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "target",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "target_status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "bound",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "required_value",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "required_unit",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_value",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "proposed_unit",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "parse_status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "parse_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "qualified",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_sha256",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "source_page",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "extractor_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "vocab_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "retired_at",
+            "vocabulary": "none",
+            "written": "insert_only"
+          },
+          {
+            "name": "loaded_at",
+            "vocabulary": "none",
+            "written": "db_default"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "source_family",
+            "application_number",
+            "item_ordinal",
+            "hearing_date",
+            "decision_mailed_on",
+            "decision",
+            "decision_source",
+            "cited_bylaw",
+            "citation_kind",
+            "regulation_id_as_cited",
+            "exception_ref",
+            "zoning_as_stated",
+            "target",
+            "target_status",
+            "bound",
+            "required_value",
+            "required_unit",
+            "proposed_value",
+            "proposed_unit",
+            "parse_status",
+            "parse_confidence",
+            "qualified",
+            "source_sha256",
+            "source_page"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "Spec 129 §D9. Class A guarded upsert keyed on variance_key: a re-run over the same pinned manifest and extractor writes zero rows. The guard covers every VALUE column and excludes the version stamps (extractor_version, vocab_version), loaded_at and retired_at, so a version bump rewrites only rows whose values changed. SOFT RETIRE (retract departed_mark): a key the reconciled parse no longer yields is MARKED retired_at = now() and UNMARKED when it reappears, in the same transaction, behind the library's empty-set and mass-retire guards (coa_notices_retire_max_pct). No oracle row is ever deleted; consumers read retired_at IS NULL. The MARK is table-wide (scope none), which is why a second source family needs its own step or a scoped extension (Spec 129 §11).",
+            "liveness": {
+              "kind": "table",
+              "ref": "coa_notice_variances"
+            }
+          }
+        },
+        "retract": "departed_mark",
+        "retire_max_pct_from_config": "coa_notices_retire_max_pct"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 3,
+      "why": {
+        "text": "THREE write statements reach coa_notice_variances: the batched guarded upsert, the UNMARK UPDATE (keys back in the parse: retired_at -> NULL) and the MARK UPDATE (keys absent: retired_at = now(), first stamp kept) - the library departed_mark path. No DELETE exists. A run whose mass-retire guard suppresses the MARK traces 2 write fingerprints, so the witness capture must be a run the guard lets through.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "content_hash",
+        "position": "post_acquisition",
+        "external": "toronto:coa-decision-pdfs-2017"
+      },
+      {
+        "signal": "code_version",
+        "position": "post_acquisition",
+        "external": "toronto:coa-decision-pdfs-2017",
+        "emit_key": "coa_notices_load"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/compute/load-coa-notices.js",
+      "scripts/lib/coa-notices/parse-values.js",
+      "scripts/lib/pdf-text.js",
+      "scripts/lib/coa-notices/target-map.json",
+      "scripts/lib/coa-notices/vocab.json"
+    ],
+    "logic_version": "coa-extractor-3",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "on_prior_run_error_why": {
+      "text": "The prior completed run's coa_notices_load block carries the content_hash the skip compares against. A failed read must not degrade to 'first run' silently, and refusing is cheap because nothing has been fetched yet.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/staleness.js"
+      }
+    }
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_notice_variances",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 252 enables RLS on coa_notice_variances with ZERO policies (Spec 114 Class B). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS - indistinguishable from an unchanged manifest. The bypass is the precondition, checked before any document is fetched.",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_notice_variances"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "txn_scope": "step",
+    "statement_timeout": "none",
+    "step_timeout": "40m",
+    "batch": 2340,
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A variance item the reconcile drops (a superseded or same-date-conflicting duplicate notice) is a counted shaped_skipped reason, never a silent loss; per-document failures are closed doc_status values that FAIL the pre_write checks before any write.",
+      "liveness": {
+        "kind": "check",
+        "ref": "doc_acquire_failed"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a count the arm or the reconcile already measured (acquired.document_set / acquired.reconcile); a check that throws is a defect in this step, so it must redden the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-coa-notices.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": {
+      "timeout": "120000ms",
+      "timeout_from_config": "coa_notices_download_timeout_ms",
+      "retries": 0
+    },
+    "invocation": {
+      "coa_notices": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa_notices"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "doc_sha_mismatch",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a fetched document hashes differently from its pinned manifest sha256"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A document whose bytes changed since the pin must stop the run before any write: its parse would silently replace the pinned oracle. A re-pin is a reviewed manifest commit.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C1 (Spec 129 §10). The arm hashes every document in memory and compares the pinned sha256; a mismatch is a doc_status, never a silent re-pin.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "doc_acquire_failed",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a document ended http_error, timeout, too_large, extract_error or no_text_layer"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A document that could not be acquired or extracted must stop the run before any write: its rows would otherwise be soft-retired by the MARK.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C2 (Spec 129 §10). Not a rate: a single skipped document would retire that notice set, so the fix is moving a dead document to excluded[] by commit.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "pair_rate_569",
+      "kind": "bound",
+      "expect": {
+        "of": "pair items over items citing By-law 569-2013",
+        "direction": "min"
+      },
+      "limit": "value_min 0.85",
+      "limit_from_config": "coa_notices_pair_rate_warn_min",
+      "warn_limit": "value_min 0.8",
+      "warn_limit_from_config": "coa_notices_pair_rate_fail_min",
+      "severity": "FAIL",
+      "on_warn": "skip_write",
+      "order_guarantee": {
+        "guarantee": "An extractor regression (pair rate under the pre-registered bound) must not upsert or retire anything.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C3, pre-registered (Spec 129 §10): PASS >= 0.85 (the spike CI lower bound), WARN >= 0.80 with skip_write, FAIL below; a null rate (no 569 items) is unevaluable and reads FAIL. A first-run WARN is resolved only by extractor work under a new logic_version, never by editing the bound. LCN-D4 RULED 2026-10-07 (operator: fix the parser, bounds unchanged): the compound-sentence parse of coa-extractor-2 measures 0.888 on the spike corpus, 0.606 before (§5).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "notices_without_section_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "minor-variance notices with no REQUESTED VARIANCE(S) section, percent",
+        "direction": "max"
+      },
+      "limit": "pct <= 10",
+      "limit_from_config": "coa_notices_no_section_warn_max_pct",
+      "severity": "WARN",
+      "on_warn": "skip_write",
+      "order_guarantee": {
+        "guarantee": "A segmentation regression that loses variance sections must not retire the rows of the notices it lost.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C4 (spike 3.7 %). Signature pages and consent-only blocks are excluded from the denominator.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "mail_lag_out_of_bounds",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "decision_mailed_on minus the manifest hearing_date falls outside [0, coa_notices_mail_lag_max_days]"
+      },
+      "limit": "viol <= 0",
+      "limit_from_config": "coa_notices_mail_lag_viol_max",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "The hearing date comes from the document title, not the notice text; a title/date mismatch would misdate every law-at-hearing comparison, so it must stop the write.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C7a. The bounds are PROVISIONAL (14 days, 0 violations, from the spike 4-8 day lag) until build-manifest --measure (P0.4) measures every pinned document; the seed is updated in a commit before the first run if P0.4 says so.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "reason_totality",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a by-status map does not sum to its independently tallied total (docs, notices, items x3)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A counting defect means some notice or item went unaccounted, so nothing may be written or retired.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C9 - the same-loop counting check at doc, notice and item level.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "unit_target_mismatch",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a pair row is mapped to a target whose McBylaw unit family differs from its parsed unit"
+      },
+      "limit": "viol <= 0",
+      "limit_from_config": "coa_notices_unit_target_viol_max",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A target-map defect would put a value under the wrong rule for every consumer; it must stop the write.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C13, scoped to pair rows (P0.3 measured 0 over the spike pairs; 27 mismatches sit on non-pair rows whose values are not claimed).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "target_unit_mismatch_items",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "an item's pair is in one unit family but its keyword-mapped target is in another; it is stored as target_unit_mismatch (values not claimed) instead of a pair"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "order_guarantee": {
+        "guarantee": "An item whose unit family disagrees with its mapped target must stay visible on every run even when its values are not claimed.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "Operator ruling 2026-10-09 (Spec 129 §5, Path 2): such items are not claimed as pairs; this count keeps every one visible on every run (Spec 124 Rule 1). C13 stays FAIL viol <= 0 as the backstop for pairs.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "doc_pair_rate_floor",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a document with at least coa_notices_doc_pair_rate_min_items 569 items has a pair rate under coa_notices_doc_pair_rate_floor"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "on_warn": "skip_write",
+      "order_guarantee": {
+        "guarantee": "One document whose layout the extractor cannot read must not dilute into a passing aggregate and then be written.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C15 (spike per-panel rates 0.80-1.00).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "docs_no_notices",
+      "kind": "invariant",
+      "expect": {
+        "violation_when": "a parsed document contains no NOTICE OF DECISION block"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A document that yields no notices is a wrong document or a broken extraction; its rows must not be retired.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C16 - a document with no NOTICE OF DECISION block is a wrong document or a failed extraction; its notices would otherwise be retired.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "items_total_floor",
+      "kind": "bound",
+      "expect": {
+        "of": "items_total",
+        "direction": "min"
+      },
+      "limit": "value_min 1000",
+      "limit_from_config": "coa_notices_items_min",
+      "severity": "FAIL",
+      "order_guarantee": {
+        "guarantee": "A near-empty parse must not retire the oracle.",
+        "spec_ref": "docs/specs/01-pipeline/129_source_coa_notices.md",
+        "anchor": "no upsert and no MARK from a bad parse or an incomplete acquisition"
+      },
+      "why": {
+        "text": "C17 (spike: 1,020 items from 5 of 69 documents).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "direction_violation_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "bound-known pairs whose proposed value sits on the permitted side, percent",
+        "direction": "max"
+      },
+      "limit": "pct <= 5",
+      "limit_from_config": "coa_notices_direction_viol_max_pct",
+      "severity": "WARN",
+      "why": {
+        "text": "C14 - a variance that varies nothing means sides were swapped (P0.3: 0 of 339).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    },
+    {
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "id": "required_out_of_bounds",
+      "kind": "bound",
+      "expect": {
+        "of": "mapped required values outside the target-aware coa_notices_req_* ranges",
+        "direction": "max"
+      },
+      "limit": "viol <= 0",
+      "limit_from_config": "coa_notices_required_oob_max",
+      "severity": "WARN",
+      "why": {
+        "text": "C12 - target-aware plausibility of the required (law) side; sample variance keys ride in the row detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa-notices.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": [
+    {
+      "id": "app_not_in_coa_applications",
+      "sql": "SELECT count(DISTINCT v.application_number)::int FROM coa_notice_variances v LEFT JOIN coa_applications a ON a.application_number = v.application_number WHERE v.retired_at IS NULL AND a.application_number IS NULL",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-07T22:02:40.960Z",
+        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
+        "cost_ms": 69.1,
+        "sample_n": 6,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "declaration_measurement"
+        }
+      },
+      "why": {
+        "text": "P1 - the soft reference to coa_applications (no FK by design, Spec 129 §4): notices whose application number CKAN does not carry. 0 of 164 on the spike. Declared 2026-10-07 against the EMPTY table (value 0): the first real value comes from the first captured run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_notice_variances"
+        }
+      }
+    },
+    {
+      "id": "decision_disagree",
+      "sql": "SELECT count(DISTINCT v.application_number)::int FROM coa_notice_variances v JOIN coa_applications a ON a.application_number = v.application_number WHERE v.retired_at IS NULL AND (v.decision = 'refused') IS DISTINCT FROM (a.decision ILIKE '%refus%')",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-07T22:02:40.960Z",
+        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
+        "cost_ms": 68.2,
+        "sample_n": 6,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "declaration_measurement"
+        }
+      },
+      "why": {
+        "text": "P2 - refused per the notice vs refused per CKAN (G4: 16 = 16 on the spike). Declared 2026-10-07 against the EMPTY table (value 0): the first real value comes from the first captured run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_notice_variances"
+        }
+      }
+    },
+    {
+      "id": "ckan_hearing_offset",
+      "sql": "SELECT count(DISTINCT v.application_number)::int FROM coa_notice_variances v JOIN coa_applications a ON a.application_number = v.application_number WHERE v.retired_at IS NULL AND abs(v.hearing_date - a.hearing_date::date) > 1",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-07T22:02:40.960Z",
+        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
+        "cost_ms": 53.4,
+        "sample_n": 6,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "declaration_measurement"
+        }
+      },
+      "why": {
+        "text": "P3 - G11: CKAN hearing_date is +1 day for most notices (LCN-D3); more than 1 day is a wrong pin or a re-hearing. Declared 2026-10-07 against the EMPTY table (value 0): the first real value comes from the first captured run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_notice_variances"
+        }
+      }
+    },
+    {
+      "id": "active_dup_items",
+      "sql": "SELECT count(*)::int FROM (SELECT application_number, item_ordinal FROM coa_notice_variances WHERE retired_at IS NULL GROUP BY 1, 2 HAVING count(*) > 1) d",
+      "bound": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "source": "plausibility",
+      "frequency": "every_run",
+      "retighten_when": "zero rows",
+      "last_measured": {
+        "value": 0,
+        "at": "2026-10-07T22:02:40.960Z",
+        "commit": "9027972f5c5e5b8f345e439509a970140a14cd36",
+        "cost_ms": 50.9,
+        "sample_n": 6,
+        "source_run": {
+          "run_id": null,
+          "chain": null,
+          "event": "declaration_measurement"
+        }
+      },
+      "why": {
+        "text": "P4 - duplicate active items across source families, or left by a mass-guard-suppressed MARK (Known Failure Mode). Declared 2026-10-07 against the EMPTY table (value 0): the first real value comes from the first captured run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_notice_variances"
+        }
+      }
+    }
+  ],
+  "override": {
+    "force_full": "none",
+    "force_run": "COA_NOTICES_FORCE_RELOAD",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "coa_notices_load",
+      "type": "object",
+      "consumers": [],
+      "skeleton": {
+        "spec_version": "1.0",
+        "content_hash": null,
+        "source_dataset_version": null,
+        "skipped_reason": null,
+        "docs_total": 0,
+        "docs_by_status": {},
+        "docs_excluded": 0,
+        "bytes_fetched": 0,
+        "notices_by_status": {},
+        "items_total": 0,
+        "items_by_parse_status": {},
+        "items_by_target_status": {},
+        "items_by_confidence": {},
+        "pair_rate_569": null,
+        "doc_pair_rates": {},
+        "citation_multi": 0,
+        "consent_items_skipped": 0,
+        "qualified_items": 0,
+        "manifest_sha256": null,
+        "extractor_version": null,
+        "vocab_version": null
+      }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "plan D10 listing the emits as 17 separate typed keys",
+      "why": {
+        "text": "The INGESTOR runner reads its prior/skip block as records_meta[emits[0].key] (scripts/lib/step/index.js runIngestPhase emitsList(descriptor)[0]), and the content-hash skip compares the content_hash of that block (source-version.js validatorEqualityDecision). The 17 keys therefore live in ONE object emit, coa_notices_load (the ravine_load / centreline_load precedent), plus spec_version, content_hash, source_dataset_version and skipped_reason for the DS4 skip re-emit.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      },
+      "adjudicated_by": "orchestrator, implementation of the authorized WF1 plan (library constraint, measured)",
+      "date": "2026-10-07"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "Raw notice text lives in JS strings until garbage collection; the byte buffer is zero-filled but strings cannot be. No disk, log or column holds them (T-PII-4).",
+      "measured": "scripts/lib/pdf-text.js and the arm open no file (T-ACQ-11 spies, T-PII-4 token scan)",
+      "check_id": "none"
+    },
+    {
+      "what": "The consent-item rule (k) recognises a B-file number inside a variance item; mixed-notice layouts were not in the spike sample, so the first run reports consent_items_skipped for review.",
+      "measured": "spike corpus: 0 mixed notices (P2-12a, 5 PDFs)",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "load-coa-notices.notes.json"
+  },
+  "recovery": {
+    "reset": "TRUNCATE is never correct here - the table is an oracle re-derivable from the pinned manifest. Re-run with COA_NOTICES_FORCE_RELOAD=1, which bypasses the content-hash skip and rewrites through the same guarded upsert plus soft retire.",
+    "resume": "none",
+    "force": "COA_NOTICES_FORCE_RELOAD",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Rule 12 truthful posture (Spec 129 §D9): no retract all / full_only target, so this is not a destructive full retraction. One step-scoped transaction holds the upsert, UNMARK and MARK; a kill rolls all three back, and retire is soft and library-guarded.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The before-image mechanism mirrors a retraction's scope predicate as a SELECT; this target declares scope none and a SOFT retire (retired_at stamps, no DELETE), so no destroyed state exists to capture.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 249,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated + written.retired"
+    },
+    "records_new": {
+      "source": "written.inserted"
+    },
+    "records_updated": {
+      "source": "written.updated + written.retired"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "coa_notices_fetch_pace_ms",
+        "min": 2000,
+        "max": 60000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_download_timeout_ms",
+        "min": 1000,
+        "max": 600000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_max_doc_bytes",
+        "min": 1,
+        "max": 209715200,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_max_pages",
+        "min": 1,
+        "max": 5000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_max_text_chars",
+        "min": 1,
+        "max": 50000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_line_y_tolerance",
+        "min": 0.1,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_retire_max_pct",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_pair_rate_warn_min",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_pair_rate_fail_min",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_no_section_warn_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_mail_lag_max_days",
+        "min": 0,
+        "max": 3650,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_mail_lag_viol_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_unit_target_viol_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_doc_pair_rate_floor",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_doc_pair_rate_min_items",
+        "min": 1,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_items_min",
+        "min": 1,
+        "max": 10000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_direction_viol_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_required_oob_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_oob_sample_max",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_side_setback_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_side_setback_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_front_setback_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_front_setback_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_rear_setback_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_rear_setback_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_height_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_height_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_main_wall_height_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_main_wall_height_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_building_length_depth_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_building_length_depth_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_frontage_m_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_frontage_m_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_coverage_pct_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_coverage_pct_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_area_m2_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_lot_area_m2_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_fsi_min",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_notices_req_fsi_max",
+        "min": 0,
+        "max": 100000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa_notices": 1
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "skipped_content_hash",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pinned manifest and staleness.logic_version are unchanged since the last completed load: nothing is fetched, the prior block is re-emitted (DS4).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Every document parsed, every pre_write check passed, the guarded upsert and the soft retire committed.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_notice_variances"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A post WARN (direction, required range, precision sample) tripped with no FAIL; the load happened.",
+        "liveness": {
+          "kind": "check",
+          "ref": "direction_violation_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_doc_sha_mismatch",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check doc_sha_mismatch FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "doc_sha_mismatch"
+        }
+      }
+    },
+    {
+      "id": "failed_doc_acquire_failed",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check doc_acquire_failed FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "doc_acquire_failed"
+        }
+      }
+    },
+    {
+      "id": "failed_pair_rate_569",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check pair_rate_569 FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "pair_rate_569"
+        }
+      }
+    },
+    {
+      "id": "failed_mail_lag_out_of_bounds",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check mail_lag_out_of_bounds FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "mail_lag_out_of_bounds"
+        }
+      }
+    },
+    {
+      "id": "failed_reason_totality",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check reason_totality FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "reason_totality"
+        }
+      }
+    },
+    {
+      "id": "failed_unit_target_mismatch",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check unit_target_mismatch FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "unit_target_mismatch"
+        }
+      }
+    },
+    {
+      "id": "failed_docs_no_notices",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check docs_no_notices FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "docs_no_notices"
+        }
+      }
+    },
+    {
+      "id": "failed_items_total_floor",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "coa_notices_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The pre_write check items_total_floor FAILed: no transaction was opened and the table is untouched.",
+        "liveness": {
+          "kind": "check",
+          "ref": "items_total_floor"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The manifest could not be read or a seam refused (missing export, bad knob): nothing was fetched or written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 129 is held by another run; the library emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

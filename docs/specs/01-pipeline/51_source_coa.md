@@ -157,5 +157,6 @@ Tracked in `docs/reports/review_followups.md` row 160 as candidate for future "e
 
 ### Cross-Spec Dependencies
 - **Consumed by:** `chain_coa.md` (step 2)
+- **Consumed by:** `129_source_coa_notices.md` (`coa_notice_variances.application_number` is a soft reference to `coa_applications.application_number`; plausibility rows read `hearing_date` and the decision; this spec's PK text and CKAN hearing-date offset are filed as LCN-D2/LCN-D3 in `docs/reports/review_followups.md`)
 - **Relies on:** `pipeline_system.md` (SDK)
 </constraints>

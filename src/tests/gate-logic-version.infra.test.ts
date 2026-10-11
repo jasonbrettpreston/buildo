@@ -140,6 +140,47 @@ describe('logic-version (P2-C3) — logic_version closed rule + fingerprint_inpu
   });
 
   // -------------------------------------------------------------------------
+  // J1..J3 — gate #48 LOGIC-VERSION: a required `.json` IS a real import
+  // (Spec 122 §6.2 P2-C3 rule (2)). Recorded, not walked.
+  // -------------------------------------------------------------------------
+  it('J1: requireWalk records a required `.json` AND keeps walking its siblings', () => {
+    const map: Record<string, string> = {
+      'a.js': "require('./m.json'); require('./b')",
+      'b.js': '',
+      'm.json': '{}',
+    };
+    const read = (rel: string): string | null => map[rel] ?? null;
+    const got = gate.requireWalk('a.js', read);
+    expect(got.has('m.json'), [...got].join(',')).toBe(true);
+    expect(got.has('b.js'), [...got].join(',')).toBe(true);
+  });
+
+  it('J2: a required `.json` with no file behind it is NOT recorded', () => {
+    const map: Record<string, string> = {
+      'a.js': "require('./missing.json');",
+      'b.js': '',
+    };
+    const read = (rel: string): string | null => map[rel] ?? null;
+    const got = [...gate.requireWalk('a.js', read)];
+    expect(got).toEqual(['a.js']);
+  });
+
+  it('J3: RED — a fingerprint_inputs JSON the step does NOT require is still a violation', () => {
+    const fixture = d({
+      staleness: {
+        trigger: 'none',
+        logic_version: 'none',
+        fingerprint_inputs: ['scripts/lib/coa-notices/target-map.json'],
+      },
+    });
+    // Synthetic: the walk closure holds the step file only — the JSON is unreached.
+    const list = gate.fingerprintInputViolations(fixture, new Set<string>(['scripts/lib/compute/load-coa-notices.js']));
+    expect(list.length).toBe(1);
+    expect(list[0]?.item).toBe('staleness.fingerprint_inputs');
+    expect(list[0]?.detail).toContain('scripts/lib/coa-notices/target-map.json');
+  });
+
+  // -------------------------------------------------------------------------
   // F1..F5 — the fingerprint_inputs half (rule (2)).
   // -------------------------------------------------------------------------
   const imports = new Set<string>([

@@ -37,7 +37,7 @@ const ledger = require('../../scripts/lib/ledger.js') as {
   loadTraceStatements: () => Record<string, Stmt[]>;
 };
 
-const HARD_CHAINS = ['sources', 'wsib', 'permits', 'coa', 'entities', 'deep_scrapes'];
+const HARD_CHAINS = ['sources', 'wsib', 'permits', 'coa', 'entities', 'deep_scrapes', 'coa_notices'];
 const chains = (manifest as { chains: Record<string, string[]> }).chains;
 const scripts = (manifest as unknown as { scripts: Record<string, unknown> }).scripts;
 

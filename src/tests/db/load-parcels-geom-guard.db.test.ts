@@ -25,6 +25,10 @@
 //
 // WF3 lot-size 2026-10-01 (T-h..T-k): lot_size_sqm/sqft/source declare on_empty:preserve_null — a NULL parse never erases a stored lot.
 //
+// WF3 geom-drift Commit 2 (L1, L5, L11, L12, L13; T-g rewritten): the loader compares geom with the
+// tolerance predicate parcels_geom_materially_changed (migration 251) against the STORED shape, and
+// `geometry` is carried with geom — jitter / rotation / Polygon-vs-MultiPolygon writes nothing.
+//
 // Skipped unless BUILDO_TEST_DB=1 / DATABASE_URL is set (setup-testcontainer).
 
 import path from 'node:path';
@@ -153,6 +157,49 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
     return rows[0]!;
   }
 
+  /**
+   * Shift every vertex of a GeoJSON Point-free geometry by (dx, dy): add `dx` to every longitude
+   * and `dy` to every latitude. Handles Polygon and MultiPolygon recursion; a `[x, y]` number pair
+   * becomes `[x + dx, y + dy]`. Used to build immaterial (jitter) and material (move) fixtures.
+   */
+  function shifted(geojson: string, dx: number, dy = 0): string {
+    const shift = (node: unknown): unknown => {
+      if (Array.isArray(node)) {
+        if (node.length === 2 && typeof node[0] === 'number' && typeof node[1] === 'number') {
+          return [node[0] + dx, node[1] + dy];
+        }
+        return node.map(shift);
+      }
+      // A GeoJSON geometry is an OBJECT `{type, coordinates}`: recurse into `coordinates` so
+      // `shifted(G1, dx)` actually moves every vertex. Returning the object unchanged (the
+      // pre-fix behaviour) made this helper the identity and let L1/L5 pass vacuously.
+      if (node !== null && typeof node === 'object' && 'coordinates' in (node as Record<string, unknown>)) {
+        const geom = node as { coordinates: unknown };
+        return { ...(node as Record<string, unknown>), coordinates: shift(geom.coordinates) };
+      }
+      return node;
+    };
+    return JSON.stringify(shift(JSON.parse(geojson)));
+  }
+
+  /** The tolerance the geom drift guard reads (migration 251), as a number. */
+  async function tolOf(client: { query: (sql: string, values?: unknown[]) => Promise<{ rows: Array<{ v: unknown }> }> }): Promise<number> {
+    const { rows } = await client.query(
+      "SELECT variable_value::float8 AS v FROM logic_variables WHERE variable_key = 'parcels_geom_change_tolerance_deg'",
+    );
+    expect(rows).toHaveLength(1);
+    return Number(rows[0]!.v);
+  }
+
+  /** The stored shape as the loader's geom predicate sees it: the derived WKB (hex) and the raw geometry. */
+  async function storedOf(client: { query: (sql: string, values?: unknown[]) => Promise<{ rows: Array<{ geom_hex: string; geometry: unknown }> }> }): Promise<{ geom_hex: string; geometry: unknown }> {
+    const { rows } = await client.query(
+      "SELECT encode(ST_AsBinary(geom), 'hex') AS geom_hex, geometry FROM parcels WHERE parcel_id = $1",
+      [KEY],
+    );
+    return rows[0]!;
+  }
+
   /** The three lot columns the WF3 lot-size guard owns, as stored (WF3 2026-10-01, T-h..T-k). */
   async function lotOf(client: { query: (sql: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> }): Promise<Record<string, unknown>> {
     // NUMERIC arrives from pg as a string ('250.00'); cast so the assertions compare numbers.
@@ -209,6 +256,17 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
     expect(rows[0]!.valid).toBe(false);
   });
 
+  it('fixture sanity: shifted() really moves every vertex (a no-op helper would make L1/L5 pass vacuously)', () => {
+    const s = JSON.parse(shifted(G1, 1e-5, 2e-5));
+    const g = JSON.parse(G1);
+    expect(s.coordinates[0]).toHaveLength(g.coordinates[0].length);
+    s.coordinates[0].forEach((p: number[], i: number) => {
+      expect(p[0]).toBeCloseTo(g.coordinates[0][i][0] + 1e-5, 12);
+      expect(p[1]).toBeCloseTo(g.coordinates[0][i][1] + 2e-5, 12);
+    });
+    expect(shifted(G1, 0)).toBe(JSON.stringify(g));
+  });
+
   it('T-a [RED] WF3 2026-09-28: a stored INVALID (legacy unrepaired) geom converges on the next run — 1 row, valid geom, all 3 DEC-FENCE2 stamps NULLed', async () => {
     await inRollback(async (client) => {
       // The step's own insert, then the LEGACY arm's value: `ST_SetSRID(ST_GeomFromGeoJSON(...))`
@@ -230,6 +288,9 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
         [KEY],
       );
       expect(rows[0]!.valid, 'the stored geom is now the step\'s own repaired derivation').toBe(true);
+
+      const stored = await storedOf(client);
+      expect(stored.geometry, 'L13: the carried raw geometry is written with the repaired geom').toEqual(JSON.parse(NESTED));
 
       const stamps = await stampsOf(client);
       for (const column of STAMP_COLUMNS) {
@@ -302,14 +363,17 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
     });
   });
 
-  it('T-g [GREEN] WF3 2026-09-28 §5(ii): raw geometry differs but the derived geom is identical — writes 1 row, geom unchanged, all 3 stamps KEPT', async () => {
+  it('T-g [REWRITTEN C2, was count 1] WF3 geom-drift Commit 2 (Q3): raw geometry differs but the derived geom is identical — writes 0 rows, stored geom AND geometry kept, all 3 stamps KEPT', async () => {
     await inRollback(async (client) => {
       const wkb1 = await wkbOf(client, G1);
       const wkbMulti = await wkbOf(client, G1_AS_MULTI);
       expect(wkbMulti.equals(wkb1), 'fixture: both serialisations must derive the same geom').toBe(true);
       await setStamps(client);
+      const before = await storedOf(client);
 
-      expect(await upsert(client, rowFor(G1_AS_MULTI, wkbMulti)), 'geometry jsonb changed, so the geometry guard term fires').toBe(1);
+      // Before (WF3 2026-09-28 §5(ii)): toBe(1) — the raw geometry guard term fired. After: 0 (operator Q3).
+      expect(await upsert(client, rowFor(G1_AS_MULTI, wkbMulti)), 'geometry is carried with geom; an immaterial geom writes nothing').toBe(0);
+      expect(await storedOf(client)).toEqual(before);
 
       const stamps = await stampsOf(client);
       expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
@@ -403,6 +467,140 @@ describe.skipIf(!dbAvailable())('load-parcels.js — the write guard sees the de
       expect(lot.lot_size_sqm).toBe(300);
       expect(lot.lot_size_sqft).toBe(3229.17);
       expect(lot.lot_size_source).toBe('stated');
+    });
+  });
+
+  it('L1 [RED until C2] geom-drift: every vertex +1e-9° — 0 rows, stored geom/geometry bytes unchanged, 3 stamps kept', async () => {
+    await inRollback(async (client) => {
+      const J = 1e-9;
+      const jit = shifted(G1, J, J);
+      await setStamps(client);
+      const before = await storedOf(client);
+
+      expect(await upsert(client, rowFor(jit, await wkbOf(client, jit))), 'sub-mm jitter is immaterial').toBe(0);
+      expect(await storedOf(client)).toEqual(before);
+
+      const stamps = await stampsOf(client);
+      expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
+      expect(stamps.heritage_dataset_version_when_enriched).toBe('hv1');
+      expect(stamps.centreline_dataset_version_when_enriched).toBe('cv1');
+    });
+  });
+
+  it('L2 [RED until C2] geom-drift: the ring ROTATED to start at its 2nd vertex — 0 rows (ring rotation is not a shape change), stored bytes unchanged, 3 stamps kept', async () => {
+    await inRollback(async (client) => {
+      const rotated = JSON.stringify({
+        type: 'Polygon',
+        coordinates: [[[-79.39, 43.70], [-79.39, 43.71], [-79.40, 43.71], [-79.40, 43.70], [-79.39, 43.70]]],
+      });
+      await setStamps(client);
+      const before = await storedOf(client);
+
+      expect(await upsert(client, rowFor(rotated, await wkbOf(client, rotated))), 'a rotated ring is the same ring').toBe(0);
+      expect(await storedOf(client)).toEqual(before);
+
+      const stamps = await stampsOf(client);
+      expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
+      expect(stamps.heritage_dataset_version_when_enriched).toBe('hv1');
+      expect(stamps.centreline_dataset_version_when_enriched).toBe('cv1');
+    });
+  });
+
+  it('L5 [RED until C2] geom-drift: an address change WITH jitter — 1 row, the address lands, geom and geometry bytes unchanged, 3 stamps kept', async () => {
+    await inRollback(async (client) => {
+      const J = 1e-9;
+      await setStamps(client);
+      const before = await storedOf(client);
+      const jit = shifted(G1, J);
+
+      expect(await upsert(client, rowFor(jit, await wkbOf(client, jit), { address_number: '200' }))).toBe(1);
+
+      const { rows } = await client.query<{ address_number: string }>(
+        'SELECT address_number FROM parcels WHERE parcel_id = $1',
+        [KEY],
+      );
+      expect(rows[0]!.address_number).toBe('200');
+
+      const stored = await storedOf(client);
+      expect(stored.geom_hex).toBe(before.geom_hex);
+      expect(stored.geometry).toEqual(before.geometry);
+
+      const stamps = await stampsOf(client);
+      expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
+      expect(stamps.heritage_dataset_version_when_enriched).toBe('hv1');
+      expect(stamps.centreline_dataset_version_when_enriched).toBe('cv1');
+    });
+  });
+
+  it('L11 [RED until C2] geom-drift: 5 publishes each +0.6×tol in the same direction — writes [0,1,0,1,0] (compared against the STORED shape), stored geom is the last WRITTEN publish', async () => {
+    await inRollback(async (client) => {
+      const tol = await tolOf(client);
+      await setStamps(client);
+
+      const counts: number[] = [];
+      for (let k = 1; k <= 5; k += 1) {
+        const g = shifted(G1, 0.6 * k * tol);
+        counts.push(await upsert(client, rowFor(g, await wkbOf(client, g))));
+      }
+      expect(counts, 'the compare is against the STORED shape: a write happens only once the cumulative offset from the stored shape exceeds tol').toEqual([0, 1, 0, 1, 0]);
+
+      const lastWritten = await wkbOf(client, shifted(G1, 0.6 * 4 * tol));
+      const stored = await storedOf(client);
+      expect(stored.geom_hex).toBe(lastWritten.toString('hex'));
+    });
+  });
+
+  it('L12 [RED until C2] geom-drift: a material move (1e-5°) writes and NULLs stamps, then a jitter on the moved shape writes 0 rows and keeps the stamps', async () => {
+    await inRollback(async (client) => {
+      const J = 1e-9;
+      await setStamps(client);
+
+      const moved = shifted(G1, 1e-5);
+      expect(await upsert(client, rowFor(moved, await wkbOf(client, moved)))).toBe(1);
+
+      const afterMove = await stampsOf(client);
+      for (const column of STAMP_COLUMNS) {
+        expect(afterMove[column], `${column}: a material move can cross a ravine/HCD boundary`).toBeNull();
+      }
+
+      await setStamps(client);
+      const movedJit = shifted(moved, J);
+      expect(await upsert(client, rowFor(movedJit, await wkbOf(client, movedJit))), 'a jitter on the moved shape is immaterial').toBe(0);
+
+      const stamps = await stampsOf(client);
+      expect(stamps.ravine_dataset_version_when_enriched).toBe('rv1');
+      expect(stamps.heritage_dataset_version_when_enriched).toBe('hv1');
+      expect(stamps.centreline_dataset_version_when_enriched).toBe('cv1');
+    });
+  });
+
+  it('L13 [RED until C2] geom-drift (T-b2): a NULL stored geom is filled AND the carried raw geometry is written — 1 row, byte-equal WKB, geometry = incoming G1', async () => {
+    await inRollback(async (client) => {
+      const wkb1 = await wkbOf(client, G1);
+      await client.query('UPDATE parcels SET geom = NULL, geometry = $2::jsonb WHERE parcel_id = $1', [KEY, G2]);
+
+      expect(await upsert(client, rowFor(G1, wkb1))).toBe(1);
+
+      const stored = await storedOf(client);
+      expect(stored.geom_hex).toBe(wkb1.toString('hex'));
+      expect(stored.geometry).toEqual(JSON.parse(G1));
+    });
+  });
+
+  it('L3 [GREEN, kept] geom-drift fence: a 1 m move (1e-5°) writes and NULLs all 3 stamps, stored geometry is the moved one', async () => {
+    await inRollback(async (client) => {
+      await setStamps(client);
+
+      const m = shifted(G1, 1e-5);
+      expect(await upsert(client, rowFor(m, await wkbOf(client, m)))).toBe(1);
+
+      const stamps = await stampsOf(client);
+      for (const column of STAMP_COLUMNS) {
+        expect(stamps[column], `${column}: a real move can cross a ravine/HCD boundary`).toBeNull();
+      }
+
+      const stored = await storedOf(client);
+      expect(stored.geometry).toEqual(JSON.parse(m));
     });
   });
 });

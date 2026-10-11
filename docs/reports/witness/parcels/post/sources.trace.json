@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-parcels.js",
   "chain": "sources",
-  "source_fingerprint": "ae15fd6a8f747e01866c9e440c48237306c583b64d5ac54e809faddc7c3585b4",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "source_fingerprint": "9798faeacafc8e16eae3650b06a84b512fcf0a31b2ee27f68f4709e047db41be",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
     "calls": 162,
     "distinct": 14,
     "utility": 8,
-    "tracer_self_ms": 7469.585,
-    "wall_ms": 228577
+    "tracer_self_ms": 9045.674,
+    "wall_ms": 277239
   },
   "statements": [
     {
@@ -68,30 +68,10 @@
       ]
     },
     {
-      "fingerprint": "77d30c21e4d01ffb",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7bbcde9cfab6c79c",
-      "kind": "utility",
-      "count": 2,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7e9953ff29309ce6",
+      "fingerprint": "74861d67d045ac4d",
       "kind": "write",
       "count": 144,
-      "rowCount": 414,
+      "rowCount": 200,
       "reads": {
         "parcels": [
           "addr_num_normalized",
@@ -141,6 +121,26 @@
       "error": null
     },
     {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 1,
@@ -154,7 +154,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 5,
+      "rowCount": 6,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -188,7 +188,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -219,9 +219,9 @@
   ],
   "transactions": [
     {
-      "client": "26556:3",
+      "client": "22460:3",
       "write_fingerprints": [
-        "7e9953ff29309ce6"
+        "74861d67d045ac4d"
       ]
     }
   ],

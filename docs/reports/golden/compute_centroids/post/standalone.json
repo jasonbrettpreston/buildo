@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/compute-centroids.js",
   "chain": "none",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 15034,
+      "duration_ms": 17967,
       "parcels_processed": 1,
       "centroids_computed": 0,
       "failed_geometries": 1,
@@ -25,7 +25,7 @@
       "terminal": "backfilled_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "code_sha": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 6,
@@ -35,7 +35,7 @@
         "compute_rate: 0%",
         "geom_not_null_geometry_null_count: 1",
         "outside_polygon_count: 1716",
-        "pointonsurface_gt_1m_count: 139261",
+        "pointonsurface_gt_1m_count: 139280",
         "centroid_in_neighbour_parcel_count: 1528"
       ],
       "audit_table": {
@@ -109,7 +109,7 @@
           },
           {
             "metric": "parcels_total",
-            "value": 496510,
+            "value": 496536,
             "threshold": "value_min 0",
             "status": "INFO",
             "source": "invariant",
@@ -141,7 +141,7 @@
           },
           {
             "metric": "pointonsurface_gt_1m_count",
-            "value": 139261,
+            "value": 139280,
             "threshold": "viol == 0",
             "status": "WARN",
             "source": "invariant",
@@ -165,55 +165,55 @@
           },
           {
             "metric": "sys_parcels_total_duration_ms",
-            "value": 964,
+            "value": 1086,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centroid_null_count_duration_ms",
-            "value": 1186,
+            "value": 1490,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_geom_not_null_geometry_null_count_duration_ms",
-            "value": 86,
+            "value": 211,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_outside_polygon_count_duration_ms",
-            "value": 904,
+            "value": 1133,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_pointonsurface_gt_1m_count_duration_ms",
-            "value": 2756,
+            "value": 3114,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centroid_in_neighbour_parcel_count_duration_ms",
-            "value": 1256,
+            "value": 958,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_centroid_algorithm_drift_gt_1m_count_duration_ms",
-            "value": 2030,
+            "value": 1647,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 0.05,
+            "value": 0.04,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 21043,
+            "value": 24259,
             "threshold": null,
             "status": "INFO"
           }
@@ -246,16 +246,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=247 (floor 16)\"}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":15034,\"parcels_processed\":1,\"centroids_computed\":0,\"failed_geometries\":1,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"backfilled_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":6,\"errors\":[],\"warnings\":[\"failed_geometries: 1\",\"compute_rate: 0%\",\"geom_not_null_geometry_null_count: 1\",\"outside_polygon_count: 1716\",\"pointonsurface_gt_1m_count: 139261\",\"centroid_in_neighbour_parcel_count: 1528\"],\"audit_table\":{\"phase\":10,\"name\":\"Centroid Computation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroids_computed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"failed_geometries\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_rate\",\"value\":\"0%\",\"threshold\":\"pct >= 98\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_rows_changed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_max_shift_m\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_total\",\"value\":496510,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geom_not_null_geometry_null_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"outside_polygon_count\",\"value\":1716,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pointonsurface_gt_1m_count\",\"value\":139261,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_in_neighbour_parcel_count\",\"value\":1528,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_algorithm_drift_gt_1m_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"sys_parcels_total_duration_ms\",\"value\":964,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_null_count_duration_ms\",\"value\":1186,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_not_null_geometry_null_count_duration_ms\",\"value\":86,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_outside_polygon_count_duration_ms\",\"value\":904,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pointonsurface_gt_1m_count_duration_ms\",\"value\":2756,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_in_neighbour_parcel_count_duration_ms\",\"value\":1256,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_algorithm_drift_gt_1m_count_duration_ms\",\"value\":2030,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.05,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":21043,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 21.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute_centroids]\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=249 (floor 16)\"}\nPIPELINE_SUMMARY:{\"records_total\":1,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":17967,\"parcels_processed\":1,\"centroids_computed\":0,\"failed_geometries\":1,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"backfilled_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":6,\"errors\":[],\"warnings\":[\"failed_geometries: 1\",\"compute_rate: 0%\",\"geom_not_null_geometry_null_count: 1\",\"outside_polygon_count: 1716\",\"pointonsurface_gt_1m_count: 139280\",\"centroid_in_neighbour_parcel_count: 1528\"],\"audit_table\":{\"phase\":10,\"name\":\"Centroid Computation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroids_computed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"failed_geometries\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_rate\",\"value\":\"0%\",\"threshold\":\"pct >= 98\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_rows_changed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_max_shift_m\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_total\",\"value\":496536,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geom_not_null_geometry_null_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"outside_polygon_count\",\"value\":1716,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pointonsurface_gt_1m_count\",\"value\":139280,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_in_neighbour_parcel_count\",\"value\":1528,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_algorithm_drift_gt_1m_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"sys_parcels_total_duration_ms\",\"value\":1086,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_null_count_duration_ms\",\"value\":1490,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_not_null_geometry_null_count_duration_ms\",\"value\":211,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_outside_polygon_count_duration_ms\",\"value\":1133,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pointonsurface_gt_1m_count_duration_ms\",\"value\":3114,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_in_neighbour_parcel_count_duration_ms\",\"value\":958,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_algorithm_drift_gt_1m_count_duration_ms\",\"value\":1647,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.04,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":24259,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"geometry\",\"centroid_lat\",\"centroid_lng\"]},\"writes\":{\"parcels\":[\"centroid_lat\",\"centroid_lng\"]}}\n\n[compute_centroids] completed in 24.3s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2292,
+      "id": 2459,
       "pipeline": "compute_centroids",
       "status": "completed_with_warnings",
-      "started_at": "2026-10-05T19:26:41.346Z",
-      "completed_at": "2026-10-05T19:27:02.348Z",
-      "duration_ms": 21044,
+      "started_at": "2026-10-09T02:50:41.977Z",
+      "completed_at": "2026-10-09T02:51:06.210Z",
+      "duration_ms": 24260,
       "records_total": 1,
       "records_new": 0,
       "records_updated": 0,
@@ -266,14 +266,14 @@
           "compute_centroids_full_recompute_batch_size": 10000
         },
         "errors": [],
-        "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+        "code_sha": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
         "terminal": "backfilled_with_warnings",
         "warnings": [
           "failed_geometries: 1",
           "compute_rate: 0%",
           "geom_not_null_geometry_null_count: 1",
           "outside_polygon_count: 1716",
-          "pointonsurface_gt_1m_count: 139261",
+          "pointonsurface_gt_1m_count: 139280",
           "centroid_in_neighbour_parcel_count: 1528"
         ],
         "ledger_row": "owned",
@@ -345,7 +345,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 496510,
+              "value": 496536,
               "metric": "parcels_total",
               "source": "invariant",
               "status": "INFO",
@@ -377,7 +377,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 139261,
+              "value": 139280,
               "metric": "pointonsurface_gt_1m_count",
               "source": "invariant",
               "status": "WARN",
@@ -401,55 +401,55 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 964,
+              "value": 1086,
               "metric": "sys_parcels_total_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1186,
+              "value": 1490,
               "metric": "sys_centroid_null_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 86,
+              "value": 211,
               "metric": "sys_geom_not_null_geometry_null_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 904,
+              "value": 1133,
               "metric": "sys_outside_polygon_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 2756,
+              "value": 3114,
               "metric": "sys_pointonsurface_gt_1m_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 1256,
+              "value": 958,
               "metric": "sys_centroid_in_neighbour_parcel_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 2030,
+              "value": 1647,
               "metric": "sys_centroid_algorithm_drift_gt_1m_count_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 0.05,
+              "value": 0.04,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 21043,
+              "value": 24259,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -458,7 +458,7 @@
           "phase": 10,
           "verdict": "WARN"
         },
-        "duration_ms": 15034,
+        "duration_ms": 17967,
         "pool_errors": 0,
         "chain_run_id": null,
         "checks_failed": 0,
@@ -472,13 +472,13 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2291,
+  "pipeline_runs_max_id_before": 2458,
   "table_state": [
     {
       "table": "parcels",
-      "row_count": 496510,
+      "row_count": 496536,
       "ceiling_bypassed": "projected",
-      "content_hash": "ff8c8b8e69beb9ff4468fd89ad2957b0",
+      "content_hash": "e557c00374a4b9bbfde22654caff4e26",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -493,7 +493,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 1456
+    "parcels": 1657
   },
   "table_specs": {
     "parcels": {
@@ -512,7 +512,7 @@
   "invariants": [
     {
       "name": "parcels_total",
-      "value": "496510"
+      "value": "496536"
     },
     {
       "name": "centroid_null_count",
@@ -528,7 +528,7 @@
     },
     {
       "name": "pointonsurface_gt_1m_count",
-      "value": "139261"
+      "value": "139280"
     },
     {
       "name": "centroid_in_neighbour_parcel_count",
@@ -645,7 +645,7 @@
               "source": "invariant",
               "status": "INFO",
               "threshold": "value_min 0",
-              "value": 496510
+              "value": 496536
             },
             {
               "metric": "centroid_null_count",
@@ -677,7 +677,7 @@
               "source": "invariant",
               "status": "WARN",
               "threshold": "viol == 0",
-              "value": 139261
+              "value": 139280
             },
             {
               "metric": "centroid_in_neighbour_parcel_count",
@@ -719,7 +719,7 @@
           "compute_rate: 0%",
           "geom_not_null_geometry_null_count: 1",
           "outside_polygon_count: 1716",
-          "pointonsurface_gt_1m_count: 139261",
+          "pointonsurface_gt_1m_count: 139280",
           "centroid_in_neighbour_parcel_count: 1528"
         ]
       },
@@ -827,7 +827,7 @@
                 "source": "invariant",
                 "status": "INFO",
                 "threshold": "value_min 0",
-                "value": 496510
+                "value": 496536
               },
               {
                 "metric": "centroid_null_count",
@@ -859,7 +859,7 @@
                 "source": "invariant",
                 "status": "WARN",
                 "threshold": "viol == 0",
-                "value": 139261
+                "value": 139280
               },
               {
                 "metric": "centroid_in_neighbour_parcel_count",
@@ -901,7 +901,7 @@
             "compute_rate: 0%",
             "geom_not_null_geometry_null_count: 1",
             "outside_polygon_count: 1716",
-            "pointonsurface_gt_1m_count: 139261",
+            "pointonsurface_gt_1m_count: 139280",
             "centroid_in_neighbour_parcel_count: 1528"
           ]
         },
@@ -912,7 +912,7 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=247 (floor 16)\",\"tag\":\"[compute_centroids]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[compute_centroids] target: compute_centroids (descriptor.database) → database=postgres user=postgres migrations=249 (floor 16)\",\"tag\":\"[compute_centroids]\"}",
       "[compute_centroids] completed in <DUR>"
     ],
     "table_state": [
@@ -923,19 +923,19 @@
           "centroid_lat",
           "centroid_lng"
         ],
-        "content_hash": "ff8c8b8e69beb9ff4468fd89ad2957b0",
+        "content_hash": "e557c00374a4b9bbfde22654caff4e26",
         "order_by": "explicit",
         "order_columns": [
           "id"
         ],
-        "row_count": 496510,
+        "row_count": 496536,
         "table": "parcels"
       }
     ],
     "invariants": [
       {
         "name": "parcels_total",
-        "value": "496510"
+        "value": "496536"
       },
       {
         "name": "centroid_null_count",
@@ -951,7 +951,7 @@
       },
       {
         "name": "pointonsurface_gt_1m_count",
-        "value": "139261"
+        "value": "139280"
       },
       {
         "name": "centroid_in_neighbour_parcel_count",
@@ -975,19 +975,29 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 3192624,
+    "txid_before_run2": 3365751,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "backfilled_with_warnings"
     }
   },
-  "source_fingerprint": "23a74d7142a0c40da137edec4f29a387d7826bea481225c35a5a2f5c3c4164fe",
+  "capture_ledger_rows": [
+    {
+      "id": 2459,
+      "recorded_by": "step"
+    },
+    {
+      "id": 2460,
+      "recorded_by": "step"
+    }
+  ],
+  "source_fingerprint": "35bdeff1bebbeaa1989ad3c63c30d7f78b2a4aa75e683a51790607fc5feb9b25",
   "fingerprint_files": [
     "scripts/compute-centroids.descriptor.json",
     "scripts/compute-centroids.js",
     "scripts/compute-centroids.notes.json",
     "scripts/lib/compute/compute-centroids.js"
   ],
-  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
+  "lib_fingerprint": "42eb52a1152e816a8b0d1ddcef29bd87fb6df652bb9da30d6e3fe9fce3cad7f4"
 }

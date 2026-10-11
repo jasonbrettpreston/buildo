@@ -342,6 +342,102 @@ function assertInvalidatesTargetMatchesWrite(descriptor, findings) {
 }
 
 /**
+ * GEOM-DRIFT WF3 COMMIT 2 — the `columns[].materiality` cross-reference rules AJV
+ * cannot express.
+ *
+ * The axis declares a TOLERANCE predicate as a column's change test (a jittered
+ * source needs `public.<fn>(<table>.<col>, EXCLUDED.<col>)`, not an exact
+ * `IS DISTINCT FROM`). Every rule below is a cross-reference between the axis and
+ * some other declaration on the SAME target — the bound column's `bind`, its
+ * `on_empty`, the resolved guard set, the `set_null_on_change_of` watchers, the
+ * step-written set, and its own `carries` list. None of it is schema-expressible,
+ * so it lives here, where `pipeline.step()` runs it at construction.
+ *
+ * The `carries` list is checked against the watchers too: a carried column is
+ * replaced only when the materiality predicate fires, so a `set_null_on_change_of`
+ * naming it re-introduces the byte-wise `IS DISTINCT FROM` compare the axis exists
+ * to remove (DeepSeek lens on write.js, executed 2026-10-08).
+ */
+function assertMaterialityDeclared(descriptor, findings) {
+  const outputs = descriptor.outputs;
+  if (!outputs || outputs === 'none' || !Array.isArray(outputs.writes)) return;
+  const invalidates = Array.isArray(outputs.invalidates) ? outputs.invalidates : [];
+  outputs.writes.forEach((w, i) => {
+    const cols = w.columns || [];
+    const axisCols = cols.filter((c) => c.materiality);
+    if (axisCols.length === 0) return;
+
+    if (axisCols.length > 1) {
+      findings.push(
+        `  /outputs/writes/${i}: more than one materiality column (${axisCols.map((c) => c.name).join(', ')}) `
+        + `— one predicate per write target.`,
+      );
+    }
+
+    const guards = effectiveGuardColumns(w);
+    const watched = new Set(
+      invalidates
+        .filter((e) => e.table === w.table && e.set_null_on_change_of)
+        .map((e) => e.set_null_on_change_of),
+    );
+    const stepWritten = new Set(stepWrittenColumns(w));
+
+    cols.forEach((c, j) => {
+      if (!c.materiality) return;
+
+      if (c.bind !== 'wkb_geometry') {
+        findings.push(
+          `  /outputs/writes/${i}/columns/${j}: materiality on "${c.name}" requires bind "wkb_geometry" `
+          + '(the predicate compares PostGIS geometries).',
+        );
+      }
+      if (c.on_empty) {
+        findings.push(
+          `  /outputs/writes/${i}/columns/${j}: materiality on "${c.name}" cannot also declare on_empty `
+          + '(two SET forms for one column).',
+        );
+      }
+      if (!guards.includes(c.name) && !watched.has(c.name)) {
+        findings.push(
+          `  /outputs/writes/${i}/columns/${j}: materiality column "${c.name}" is neither in guard_columns `
+          + 'nor watched by a set_null_on_change_of — it would silently become write-once.',
+        );
+      }
+
+      const carries = (c.materiality && c.materiality.carries) || [];
+      for (const k of carries) {
+        const kc = cols.find((x) => x.name === k);
+        if (k === c.name) {
+          findings.push(`  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — carries the column itself.`);
+        }
+        if (!kc) {
+          findings.push(`  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — is not a declared column.`);
+        }
+        if (kc && !stepWritten.has(k)) {
+          findings.push(`  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — is not step-written.`);
+        }
+        if (kc && kc.on_empty) {
+          findings.push(`  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — declares on_empty.`);
+        }
+        if (guards.includes(k)) {
+          findings.push(
+            `  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — is also in guard_columns `
+            + '(a carried column has no guard term of its own).',
+          );
+        }
+        if (watched.has(k)) {
+          findings.push(
+            `  /outputs/writes/${i}/columns/${j}: materiality carries "${k}" — is also watched by a `
+            + `set_null_on_change_of (watch the materiality column "${c.name}" instead; a watched carried `
+            + 'column re-introduces the exact compare).',
+          );
+        }
+      }
+    });
+  });
+}
+
+/**
  * The SEMANTIC rules — everything true of a descriptor that JSON Schema cannot say
  * because it needs a cross-reference between two fields, or a shorthand expanded first.
  * Run AFTER AJV, so a structurally broken descriptor reports its shape errors rather
@@ -354,6 +450,7 @@ function semanticFindings(descriptor) {
   assertNoRetraction(descriptor, findings);
   assertBannedScalarFields(descriptor, findings);
   assertInvalidatesTargetMatchesWrite(descriptor, findings);
+  assertMaterialityDeclared(descriptor, findings);
   return findings;
 }
 
@@ -402,6 +499,7 @@ module.exports = {
   assertBannedScalarFields,
   assertGrandfathered,
   assertInvalidatesTargetMatchesWrite,
+  assertMaterialityDeclared,
   semanticFindings,
   validateDescriptor,
   GRANDFATHERED_VALUE_PATHS,

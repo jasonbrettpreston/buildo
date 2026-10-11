@@ -793,12 +793,12 @@
     },
     {
       "gate": "G",
-      "step": "compute_centroids",
-      "item": "nonzero:parcels",
+      "step": "link_parcel_addresses",
+      "item": "nonzero:parcel_address_points",
       "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
+      "why": "fleet-night-3 recapture (2026-10-09): every link_parcel_addresses capture is skip_gated_no_activity or 0/0 forced (no upstream change), and the recapture must refresh every golden lib_fingerprint, so the old 36-link sources.json cannot be kept (HQ-1, operator 2026-10-10).",
+      "closing_brief": "link_parcel_addresses healing cohort (perturb, relink, restore; the link_massing R-BR pattern), riding fleet recapture night 4 (QUEUE H5); the row goes orphan, and so RED, once a nonzero capture exists",
+      "filed": "2026-10-10",
       "adjudicated_by": "operator"
     },
     {
@@ -855,26 +855,6 @@
       "gate": "G",
       "step": "geocode_permits",
       "item": "nonzero:permits",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
-      "step": "enrich_ravines",
-      "item": "nonzero:parcels",
-      "disposition": "pending_recapture",
-      "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "G",
-      "step": "enrich_heritage",
-      "item": "nonzero:parcels",
       "disposition": "pending_recapture",
       "why": "measured 2026-09-26 (WF2 gate G, fast invariant #38) — no golden POST capture with records_new+records_updated > 0 for this write target (N2 zero-write class)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",

@@ -67,7 +67,15 @@
     "partial stages."
   ],
   "contract_version": 1,
-  "pending": [],
+  "pending": [
+    {
+      "file": "scripts/load-coa-notices.js",
+      "registers_at": "cutover (Spec 129 §12 step 6)",
+      "reason": "WF1 load_coa_notices (INGESTOR, net-new, converted from day one; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Commit A landed the table, the pure parser library and the manifest tool; commit B lands RE-FREEZE #32 (pdf_document_set) + descriptor/compute/shell/notes/seeds with the fleet recapture (stage shape_clean). The first pin, the first captures (run 1 / forced run 2 / skip run 3) and the precision samples follow; it registers at cutover, per Spec 124 R-K. flips at: violations.test.ts C-12..C-14. — restores shape_clean at: Spec 129 §12 step 4 (run-1/2/3 captures commit).",
+      "declared": "2026-10-07",
+      "stage": "shape_clean_pending_recapture"
+    }
+  ],
   "converted": [
     "scripts/quality/assert-schema.js",
     "scripts/load-ravines.js",
