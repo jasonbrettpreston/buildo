@@ -129,3 +129,45 @@ describe('pdf-text logic', () => {
     }
   });
 });
+
+describe('T-PDF-11 caller buffer is never detached', () => {
+  it('T-PDF-11 leaves a caller Buffer that owns its whole ArrayBuffer un-detached (the real fetch shape)', async () => {
+    const src = buildPdf([[{ x: 72, y: 720, text: 'hello' }]]);
+    const bytes = Buffer.alloc(src.length); // Buffer.alloc never uses the shared pool
+    src.copy(bytes);
+    expect(bytes.byteLength).toBe(bytes.buffer.byteLength); // precondition: owns the whole buffer
+    const before = bytes.byteLength;
+    const result = await extractPdfText(bytes, OPTS);
+    expect(result.status).toBe('ok');
+    expect(bytes.byteLength).toBe(before);
+    expect(() => bytes.fill(0)).not.toThrow();
+  });
+
+  it('T-PDF-11 leaves a Buffer caller un-detached (zero-fill still works)', async () => {
+    const bytes = buildPdf([[{ x: 72, y: 720, text: 'hello' }]]);
+    const before = bytes.byteLength;
+    expect(before).toBeGreaterThan(0);
+    const result = await extractPdfText(bytes, OPTS);
+    expect(result.status).toBe('ok');
+    expect(bytes.byteLength).toBe(before);
+    expect(() => bytes.fill(0)).not.toThrow();
+  });
+
+  it('T-PDF-11 leaves a plain Uint8Array caller un-detached (zero-fill still works)', async () => {
+    const u8 = new Uint8Array(buildPdf([[{ x: 72, y: 720, text: 'hello' }]]));
+    const before = u8.byteLength;
+    expect(before).toBeGreaterThan(0);
+    const result = await extractPdfText(u8, OPTS);
+    expect(result.status).toBe('ok');
+    expect(u8.byteLength).toBe(before);
+    expect(() => u8.fill(0)).not.toThrow();
+  });
+
+  it('T-PDF-11 leaves a pool-backed Buffer caller un-detached', async () => {
+    const small = Buffer.from(buildPdf([[{ x: 72, y: 720, text: 'hi' }]]).toString('latin1'), 'latin1');
+    const result = await extractPdfText(small, OPTS);
+    expect(result.status).toBe('ok');
+    expect(Buffer.from('pool-check').toString()).toBe('pool-check');
+    expect(() => small.fill(0)).not.toThrow();
+  });
+});

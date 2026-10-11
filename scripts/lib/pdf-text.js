@@ -165,15 +165,8 @@ async function extractPdfText(bytes, options = {}) {
   let loadingTask = null;
   try {
     const pdfjs = await loadPdfjs();
-    // pdf.js REQUIRES a plain `Uint8Array` and rejects a `Buffer` outright ("Please provide binary
-    // data as `Uint8Array`, rather than `Buffer`." — measured), even though Buffer IS a Uint8Array
-    // subclass. Build a no-copy view over the SAME memory: `new Uint8Array(buffer, offset, length)`
-    // for a Buffer (whose bytes may be a slice of a shared pool), or the bytes themselves when they
-    // are already a plain Uint8Array.
-    const data =
-      bytes instanceof Buffer
-        ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-        : new Uint8Array(bytes);
+    // pdf.js requires a plain Uint8Array and, when the view spans its whole ArrayBuffer, TRANSFERS that buffer to its worker port (detaching it). Hand it its OWN copy so the caller's buffer is never detached and the caller's zero-fill (Spec 122a §A24) runs on every path; the copy is released with loadingTask.destroy().
+    const data = Uint8Array.from(bytes);
     loadingTask = pdfjs.getDocument({
       data,
       isEvalSupported: false,
